@@ -3,20 +3,343 @@
 # |  tikz-cd.sty                                                        | #
 # | Implementation for LaTeXML                                          | #
 # |=====================================================================| #
-# | Part of LaTeXML:                                                    | #
+# | Part of LaTeXAI / LaTeXML:                                           | #
 # |  Public domain software, produced as part of work done by the       | #
 # |  United States Government & not subject to copyright in the US.     | #
-# |---------------------------------------------------------------------| #
-# | Bruce Miller <bruce.miller@nist.gov>                        #_#     | #
-# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
 # \=========================================================ooo==U==ooo=/ #
 package LaTeXML::Package::Pool;
 use strict;
 use warnings;
 use LaTeXML::Package;
+use LaTeXML::Core::Token;
+use LaTeXML::Core::Tokens;
 
-#**********************************************************************
-InputDefinitions('tikz-cd', type => 'sty', noltxml => 1);
-#**********************************************************************
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Structural binding for tikz-cd: maps commutative diagrams to an
+# alignment matrix with datameaning=commutative-diagram and structured
+# arrow constructs, rather than delegating to TikZ / SVG picture generation.
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+DefMacro('\tikzcdset{}', '');
+DefMacro('\tikzset{}',   '');
+
+# Reader for optional [options] on \tikzcd or \arrow
+DefParameterType('OptionalTikzCdOptions', sub {
+    my ($gullet) = @_;
+    $gullet->skipSpaces;
+    if ($gullet->ifNext(T_OTHER('['))) {
+      $gullet->readToken;    # consume '['
+      my @toks = ();
+      my $depth = 0;
+      while (defined(my $tok = $gullet->readToken)) {
+        if ($tok->equals(T_OTHER('['))) {
+          $depth++;
+          push(@toks, $tok);
+        }
+        elsif ($tok->equals(T_OTHER(']'))) {
+          if ($depth > 0) {
+            $depth--;
+            push(@toks, $tok);
+          }
+          else {
+            last;
+          }
+        }
+        else {
+          push(@toks, $tok);
+        }
+      }
+      return Tokens(@toks);
+    }
+    return;
+}, optional => 1, undigested => 1);
+
+# Define \tikzcd environment / macro
+# Syntax: \begin{tikzcd}[<options>] ... \end{tikzcd}
+DefMacro('\tikzcd OptionalTikzCdOptions', sub {
+    my ($gullet, $options) = @_;
+    my $name = 'tikzcd';
+    my $bindings = Tokens(
+      T_CS('\lx@gen@matrix@bindings'), T_BEGIN,
+      Explode("name=$name,datameaning=commutative-diagram"),
+      T_END,
+      T_CS('\lx@tikzcd@bindings'),
+      T_CS('\lx@ams@matrix@'), T_BEGIN,
+      Explode("name=$name,datameaning=commutative-diagram"),
+      T_END,
+      T_CS('\lx@begin@alignment')
+    );
+    return $bindings;
+});
+
+DefMacro('\endtikzcd', '\lx@end@alignment\lx@end@gen@matrix');
+
+DefPrimitive('\lx@tikzcd@bindings', sub {
+    Let("\\\\", '\lx@alignment@newline@noskip');
+    Let('\ar',    '\lx@tikzcd@arrow');
+    Let('\arrow', '\lx@tikzcd@arrow');
+    # Support \& as alignment separator inside tikzcd when needed
+    Let('\&', T_ALIGN);
+});
+
+# Arrow constructor for \arrow and \ar
+DefConstructor('\lx@tikzcd@arrow OptionalTikzCdOptions', sub {
+    my ($document, $opt_toks, %props) = @_;
+    my $direction = $props{direction} || 'r';
+    my $label_box = $props{label_box};
+    my $swap      = $props{swap} || 0;
+    my $style     = $props{style};
+    my $arrow_cs  = $props{arrow_cs} || '\rightarrow';
+    my $arrow_ch  = $props{arrow_char} || "\x{2192}";
+    my $meaning   = $props{meaning} || 'rightarrow';
+
+    my %extra_attr = ();
+    $extra_attr{direction} = $direction if defined $direction;
+    $extra_attr{style}     = $style     if defined $style;
+    $extra_attr{from}      = $props{from} if defined $props{from};
+    $extra_attr{to}        = $props{to}   if defined $props{to};
+
+    # Emit outer arrow application
+    $document->openElement('ltx:XMApp', role => 'ARROW', %extra_attr);
+
+    if (defined $label_box) {
+      my $label_role = $swap ? 'SUBSCRIPTOP' : 'SUPERSCRIPTOP';
+      $document->openElement('ltx:XMApp', role => 'ARROW');
+      $document->insertElement('ltx:XMTok', undef, role => $label_role, scriptpos => 'mid5');
+      $document->insertElement('ltx:XMTok', $arrow_ch,
+        name     => substr($arrow_cs, 1),
+        meaning  => $meaning,
+        role     => 'ARROW',
+        stretchy => 'true');
+      $document->insertElement('ltx:XMArg', $label_box);
+      $document->closeElement('ltx:XMApp');
+    }
+    else {
+      # Plain arrow token
+      $document->insertElement('ltx:XMTok', $arrow_ch,
+        name     => substr($arrow_cs, 1),
+        meaning  => $meaning,
+        role     => 'ARROW',
+        stretchy => 'true');
+    }
+
+    $document->closeElement('ltx:XMApp');
+  },
+  afterDigest => sub {
+    my ($stomach, $whatsit) = @_;
+    my $opt_toks = $whatsit->getArg(1);
+    my %parsed = parse_tikzcd_arrow_options($opt_toks, $stomach);
+    foreach my $k (keys %parsed) {
+      $whatsit->setProperty($k => $parsed{$k});
+    }
+    return;
+  }
+);
+
+# Direction map to character and control sequence
+our %DIR_MAP = (
+  'r'  => { cs => '\rightarrow',     char => "\x{2192}", meaning => 'rightarrow' },
+  'l'  => { cs => '\leftarrow',      char => "\x{2190}", meaning => 'leftarrow' },
+  'u'  => { cs => '\uparrow',        char => "\x{2191}", meaning => 'uparrow' },
+  'd'  => { cs => '\downarrow',      char => "\x{2193}", meaning => 'downarrow' },
+  'ur' => { cs => '\nearrow',        char => "\x{2197}", meaning => 'nearrow' },
+  'ul' => { cs => '\nwarrow',        char => "\x{2196}", meaning => 'nwarrow' },
+  'dr' => { cs => '\searrow',        char => "\x{2198}", meaning => 'searrow' },
+  'dl' => { cs => '\swarrow',        char => "\x{2199}", meaning => 'swarrow' },
+  'rr' => { cs => '\longrightarrow', char => "\x{27F6}", meaning => 'longrightarrow' },
+  'll' => { cs => '\longleftarrow',  char => "\x{27F5}", meaning => 'longleftarrow' },
+  'dd' => { cs => '\downarrow',      char => "\x{2193}", meaning => 'downarrow' },
+  'uu' => { cs => '\uparrow',        char => "\x{2191}", meaning => 'uparrow' },
+);
+
+sub parse_tikzcd_arrow_options {
+  my ($opt_toks, $stomach) = @_;
+  return () unless defined $opt_toks;
+
+  my @items = split_token_items($opt_toks);
+  my %res = (
+    direction => 'r',
+    swap      => 0,
+  );
+
+  foreach my $item_toks (@items) {
+    next unless scalar(@$item_toks);
+    my $item_str = ToString(Tokens(@$item_toks));
+    $item_str =~ s/^\s+//;
+    $item_str =~ s/\s+$//;
+    next unless length($item_str);
+
+    # Check for quoted label: "..." or "..."'
+    if ($item_str =~ /^\"(.*)\"('?)$/s) {
+      my $inner_str = $1;
+      $res{swap} = 1 if $2 eq "'";
+      # Extract tokens between quotes
+      my @label_tok_list = extract_quoted_tokens(@$item_toks);
+      if (@label_tok_list) {
+        $res{label_box} = $stomach->digest(Tokens(@label_tok_list));
+      }
+      next;
+    }
+
+    # Key-value pair
+    if ($item_str =~ /^([^=]+)=(.*)$/) {
+      my ($k, $v) = ($1, $2);
+      $k =~ s/^\s+//; $k =~ s/\s+$//;
+      $v =~ s/^\s+//; $v =~ s/\s+$//;
+      if ($k eq 'from') { $res{from} = $v; }
+      elsif ($k eq 'to') { $res{to} = $v; }
+      elsif ($k eq 'shift left' || $k eq 'shift right') { $res{shift} = "$k=$v"; }
+      elsif ($k eq 'bend left' || $k eq 'bend right') { $res{bend} = "$k=$v"; }
+      elsif ($k eq 'labels') {
+        $res{label_box} = $stomach->digest(Tokens(TokenizeInternal($v)));
+      }
+      next;
+    }
+
+    # Direction shortcut
+    my $low = lc($item_str);
+    if (exists $DIR_MAP{$low}) {
+      $res{direction} = $low;
+      next;
+    }
+
+    # Standalone flags
+    if ($low eq 'swap' || $low eq "'") {
+      $res{swap} = 1;
+    }
+    elsif ($low eq 'hook' || $low eq 'hookrightarrow') {
+      $res{style} = 'hook';
+      $res{meaning} = 'hookrightarrow';
+      $res{arrow_char} = "\x{21AA}";
+      $res{arrow_cs} = '\hookrightarrow';
+    }
+    elsif ($low eq "hook'") {
+      $res{style} = 'hook-left';
+      $res{swap} = 1;
+    }
+    elsif ($low eq 'tail') {
+      $res{style} = 'tail';
+    }
+    elsif ($low eq 'two heads' || $low eq 'twoheadrightarrow') {
+      $res{style} = 'twohead';
+      $res{meaning} = 'twoheadrightarrow';
+      $res{arrow_char} = "\x{21A0}";
+      $res{arrow_cs} = '\twoheadrightarrow';
+    }
+    elsif ($low eq 'dashed') {
+      $res{style} = 'dashed';
+    }
+    elsif ($low eq 'dash' || $low eq 'no head') {
+      $res{style} = 'dash';
+      $res{meaning} = 'minus';
+      $res{arrow_char} = "-";
+      $res{arrow_cs} = '-';
+    }
+    elsif ($low eq 'equal' || $low eq 'equals') {
+      $res{style} = 'equal';
+      $res{meaning} = 'equals';
+      $res{arrow_char} = "=";
+      $res{arrow_cs} = '=';
+    }
+    elsif ($low eq 'rightarrow') {
+      $res{meaning} = 'rightarrow';
+    }
+    elsif ($low eq 'leftarrow') {
+      $res{direction} = 'l';
+    }
+    elsif ($low eq 'leftrightarrow') {
+      $res{meaning} = 'leftrightarrow';
+      $res{arrow_char} = "\x{2194}";
+      $res{arrow_cs} = '\leftrightarrow';
+    }
+    elsif ($low eq 'Rightarrow') {
+      $res{meaning} = 'Rightarrow';
+      $res{arrow_char} = "\x{21D2}";
+      $res{arrow_cs} = '\Rightarrow';
+    }
+    elsif ($low eq 'Leftarrow') {
+      $res{meaning} = 'Leftarrow';
+      $res{arrow_char} = "\x{21D0}";
+      $res{arrow_cs} = '\Leftarrow';
+    }
+    elsif ($low eq 'Leftrightarrow') {
+      $res{meaning} = 'Leftrightarrow';
+      $res{arrow_char} = "\x{21D4}";
+      $res{arrow_cs} = '\Leftrightarrow';
+    }
+    elsif ($low eq 'maps to' || $low eq 'mapsto') {
+      $res{meaning} = 'mapsto';
+      $res{arrow_char} = "\x{21A6}";
+      $res{arrow_cs} = '\mapsto';
+    }
+  }
+
+  # Assign default direction arrow characters if not overridden by style
+  if (!defined $res{arrow_char}) {
+    my $d = $res{direction} || 'r';
+    my $info = $DIR_MAP{$d} || $DIR_MAP{'r'};
+    $res{arrow_cs}   = $info->{cs};
+    $res{arrow_char} = $info->{char};
+    $res{meaning}    = $info->{meaning} unless defined $res{meaning};
+  }
+
+  return %res;
+}
+
+sub split_token_items {
+  my ($tokens) = @_;
+  my @toks = $tokens->unlist;
+  my @items = ();
+  my @cur = ();
+  my $depth = 0;
+  my $in_quote = 0;
+
+  foreach my $t (@toks) {
+    my $s = ToString($t);
+    if ($s eq '"') {
+      $in_quote = !$in_quote;
+      push(@cur, $t);
+    }
+    elsif (!$in_quote && ($s eq '{' || $s eq '[')) {
+      $depth++;
+      push(@cur, $t);
+    }
+    elsif (!$in_quote && ($s eq '}' || $s eq ']')) {
+      $depth-- if $depth > 0;
+      push(@cur, $t);
+    }
+    elsif (!$in_quote && $depth == 0 && $s eq ',') {
+      push(@items, [@cur]);
+      @cur = ();
+    }
+    else {
+      push(@cur, $t);
+    }
+  }
+  push(@items, [@cur]) if @cur;
+  return @items;
+}
+
+sub extract_quoted_tokens {
+  my (@toks) = @_;
+  my @res = ();
+  my $collecting = 0;
+
+  foreach my $t (@toks) {
+    my $s = ToString($t);
+    if ($s eq '"') {
+      if ($collecting) {
+        last;
+      }
+      else {
+        $collecting = 1;
+        next;
+      }
+    }
+    push(@res, $t) if $collecting;
+  }
+  return @res;
+}
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 1;
