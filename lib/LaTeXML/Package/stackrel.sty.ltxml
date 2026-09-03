@@ -1,0 +1,63 @@
+# -*- CPERL -*-
+# /=====================================================================\ #
+# |  stackrel.sty                                                       | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+# | Part of LaTeXAI / LaTeXML:                                           | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# \=========================================================ooo==U==ooo=/ #
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+RequirePackage('amsmath');
+
+# Enhanced \stackrel taking optional [under] argument: \stackrel[under]{over}{base}
+DefConstructor('\stackrel OptionalInScriptStyle InScriptStyle {}',
+  "?#1("
+    . "<ltx:XMApp>"
+    . "<ltx:XMWrap role='UNDERACCENT'>#1</ltx:XMWrap>"
+    . "<ltx:XMApp>"
+    . "<ltx:XMWrap role='OVERACCENT'>#2</ltx:XMWrap>"
+    . "<ltx:XMArg>#3</ltx:XMArg>"
+    . "</ltx:XMApp>"
+    . "</ltx:XMApp>"
+    . ")("
+    . "<ltx:XMApp>"
+    . "<ltx:XMWrap role='OVERACCENT'>#2</ltx:XMWrap>"
+    . "<ltx:XMArg>#3</ltx:XMArg>"
+    . "</ltx:XMApp>"
+    . ")",
+  reversion => sub {
+    my ($whatsit, $under, $over, $base) = @_;
+    (T_CS('\stackrel'), ($under ? (T_OTHER('['), Revert($under), T_OTHER(']')) : ()),
+      T_BEGIN, Revert($over), T_END, T_BEGIN, Revert($base), T_END);
+  }
+);
+
+# \stackbin[under]{over}{base} creates a binary operator
+DefConstructor('\stackbin OptionalInScriptStyle InScriptStyle {}',
+  "?#1("
+    . "<ltx:XMApp role='BINOP'>"
+    . "<ltx:XMWrap role='UNDERACCENT'>#1</ltx:XMWrap>"
+    . "<ltx:XMApp role='BINOP'>"
+    . "<ltx:XMWrap role='OVERACCENT'>#2</ltx:XMWrap>"
+    . "<ltx:XMArg>#3</ltx:XMArg>"
+    . "</ltx:XMApp>"
+    . "</ltx:XMApp>"
+    . ")("
+    . "<ltx:XMApp role='BINOP'>"
+    . "<ltx:XMWrap role='OVERACCENT'>#2</ltx:XMWrap>"
+    . "<ltx:XMArg>#3</ltx:XMArg>"
+    . "</ltx:XMApp>"
+    . ")",
+  reversion => sub {
+    my ($whatsit, $under, $over, $base) = @_;
+    (T_CS('\stackbin'), ($under ? (T_OTHER('['), Revert($under), T_OTHER(']')) : ()),
+      T_BEGIN, Revert($over), T_END, T_BEGIN, Revert($base), T_END);
+  }
+);
+
+1;

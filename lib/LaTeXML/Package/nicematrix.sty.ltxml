@@ -1,0 +1,70 @@
+# -*- CPERL -*-
+# /=====================================================================\ #
+# |  nicematrix.sty                                                     | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+# | Part of LaTeXAI / LaTeXML:                                           | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# \=========================================================ooo==U==ooo=/ #
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+RequirePackage('amsmath');
+
+# Keyval sets for nicematrix
+DefKeyVal('nicematrix', 'nullify-dots', '', '');
+DefKeyVal('nicematrix', 'renew-dots',   '', '');
+DefKeyVal('nicematrix', 'renew-matrix', '', '');
+DefKeyVal('nicematrix', 'transparent',  '', '');
+DefKeyVal('nicematrix', 'light-syntax', '', '');
+
+# Matrix variants with optional keyvals
+DefMacro('\NiceMatrix OptionalKeyVals:nicematrix',
+  '\lx@ams@matrix{name=NiceMatrix,datameaning=matrix}');
+DefMacro('\endNiceMatrix', '\lx@end@ams@matrix');
+
+DefMacro('\pNiceMatrix OptionalKeyVals:nicematrix',
+  '\lx@ams@matrix{name=pNiceMatrix,datameaning=matrix,left=\lx@left(,right=\lx@right)}');
+DefMacro('\endpNiceMatrix', '\lx@end@ams@matrix');
+
+DefMacro('\bNiceMatrix OptionalKeyVals:nicematrix',
+  '\lx@ams@matrix{name=bNiceMatrix,datameaning=matrix,left=\lx@left[,right=\lx@right]}');
+DefMacro('\endbNiceMatrix', '\lx@end@ams@matrix');
+
+DefMacro('\BNiceMatrix OptionalKeyVals:nicematrix',
+  '\lx@ams@matrix{name=BNiceMatrix,datameaning=matrix,left=\lx@left\{,right=\lx@right\}}');
+DefMacro('\endBNiceMatrix', '\lx@end@ams@matrix');
+
+DefMacro('\vNiceMatrix OptionalKeyVals:nicematrix',
+  '\lx@ams@matrix{name=vNiceMatrix,delimitermeaning=determinant,datameaning=matrix,left=\lx@left|,right=\lx@right|}');
+DefMacro('\endvNiceMatrix', '\lx@end@ams@matrix');
+
+DefMacro('\VNiceMatrix OptionalKeyVals:nicematrix',
+  '\lx@ams@matrix{name=VNiceMatrix,delimitermeaning=norm,datameaning=matrix,left=\lx@left\|,right=\lx@right\|}');
+DefMacro('\endVNiceMatrix', '\lx@end@ams@matrix');
+
+# Tabular environment
+DefEnvironment('{NiceTabular} OptionalKeyVals:nicematrix {}',
+  "<ltx:tabular><ltx:tbody>#body</ltx:tbody></ltx:tabular>");
+
+# Helpers inside nicematrix
+DefMacro('\CodeAfter', sub {
+    my ($gullet) = @_;
+    # Gobble tokens until \end
+    while (defined(my $tok = $gullet->readToken)) {
+      if ($tok->equals(T_CS('\end'))) {
+        $gullet->unread($tok);
+        last;
+      }
+    }
+    return;
+});
+
+DefMacro('\NiceMatrixOptions{}', '');
+DefMacro('\NotEmpty', '');
+DefMacro('\Block[]{}{}', '#3');
+
+1;

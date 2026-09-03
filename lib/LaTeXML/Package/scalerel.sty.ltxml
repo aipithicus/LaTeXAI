@@ -1,0 +1,43 @@
+# -*- CPERL -*-
+# /=====================================================================\ #
+# |  scalerel.sty                                                       | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+# | Part of LaTeXAI / LaTeXML:                                           | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# \=========================================================ooo==U==ooo=/ #
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+# \scalerel*[max]{object}{reference} and \scalerel[max]{object}{reference}
+DefConstructor('\scalerel OptionalMatch:* [] {} {}',
+  "<ltx:XMWrap role='SCALE' stretchy='true'>#3</ltx:XMWrap>");
+
+# \stretchrel*[min]{object}{reference} and \stretchrel[min]{object}{reference}
+DefConstructor('\stretchrel OptionalMatch:* [] {} {}',
+  "<ltx:XMWrap role='STRETCH' stretchy='true'>#3</ltx:XMWrap>");
+
+# \scaleleftright[max]{left}{body}{right}
+DefConstructor('\scaleleftright [] {} {} {}',
+  "<ltx:XMWrap>"
+    . "<ltx:XMWrap stretchy='true'>#2</ltx:XMWrap>"
+    . "<ltx:XMArg>#3</ltx:XMArg>"
+    . "<ltx:XMWrap stretchy='true'>#4</ltx:XMWrap>"
+    . "</ltx:XMWrap>");
+
+# \stretchleftright[min]{left}{body}{right}
+DefConstructor('\stretchleftright [] {} {} {}',
+  "<ltx:XMWrap>"
+    . "<ltx:XMWrap stretchy='true'>#2</ltx:XMWrap>"
+    . "<ltx:XMArg>#3</ltx:XMArg>"
+    . "<ltx:XMWrap stretchy='true'>#4</ltx:XMWrap>"
+    . "</ltx:XMWrap>");
+
+# Dimension / width helpers
+DefMacro('\scaleobj{}{}',  '{\textstyle #2}');
+DefMacro('\stretchobj{}{}', '{\textstyle #2}');
+
+1;

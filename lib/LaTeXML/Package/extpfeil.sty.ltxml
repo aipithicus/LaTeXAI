@@ -1,0 +1,35 @@
+# -*- CPERL -*-
+# /=====================================================================\ #
+# |  extpfeil.sty                                                       | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+# | Part of LaTeXAI / LaTeXML:                                           | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# \=========================================================ooo==U==ooo=/ #
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+RequirePackage('amsmath');
+
+# Extensible arrows provided by extpfeil
+DefMathI('\lx@stretchy@twoheadrightarrow', undef, "\x{21A0}",
+  role => 'ARROW', stretchy => 'true', alias => '\twoheadrightarrow', meaning => 'twoheadrightarrow');
+DefMathI('\lx@stretchy@twoheadleftarrow', undef, "\x{219E}",
+  role => 'ARROW', stretchy => 'true', alias => '\twoheadleftarrow', meaning => 'twoheadleftarrow');
+DefMathI('\lx@stretchy@mapsto', undef, "\x{21A6}",
+  role => 'ARROW', stretchy => 'true', alias => '\mapsto', meaning => 'mapsto');
+
+DefMacro('\xtwoheadrightarrow', '\lx@long@arrow{\xtwoheadrightarrow}{\lx@stretchy@twoheadrightarrow}');
+DefMacro('\xtwoheadleftarrow',  '\lx@long@arrow{\xtwoheadleftarrow}{\lx@stretchy@twoheadleftarrow}');
+DefMacro('\xmapsto',            '\lx@long@arrow{\xmapsto}{\lx@stretchy@mapsto}');
+
+# \newextarrow{\command}{space}{symbol}
+DefMacro('\newextarrow DefToken {}{}', sub {
+    my ($gullet, $cs, $space, $sym) = @_;
+    DefMacroI($cs, undef, '\lx@long@arrow{' . ToString($cs) . '}{' . ToString($sym) . '}');
+});
+
+1;

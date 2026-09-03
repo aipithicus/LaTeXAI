@@ -1,0 +1,62 @@
+# -*- CPERL -*-
+# /=====================================================================\ #
+# |  extarrows.sty                                                      | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+# | Part of LaTeXAI / LaTeXML:                                           | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# \=========================================================ooo==U==ooo=/ #
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+RequirePackage('amsmath');
+
+# Stretchy symbols used in extensible arrows
+DefMathI('\lx@stretchy@longequal', undef, "=",
+  role => 'ARROW', stretchy => 'true', meaning => 'equals');
+DefMathI('\lx@stretchy@Longleftarrow', undef, "\x{21D0}",
+  role => 'ARROW', stretchy => 'true', alias => '\Leftarrow', meaning => 'Leftarrow');
+DefMathI('\lx@stretchy@Longrightarrow', undef, "\x{21D2}",
+  role => 'ARROW', stretchy => 'true', alias => '\Rightarrow', meaning => 'Rightarrow');
+DefMathI('\lx@stretchy@Longleftrightarrow', undef, "\x{21D4}",
+  role => 'ARROW', stretchy => 'true', alias => '\Leftrightarrow', meaning => 'Leftrightarrow');
+DefMathI('\lx@stretchy@leftrightarrow', undef, "\x{2194}",
+  role => 'ARROW', stretchy => 'true', alias => '\leftrightarrow', meaning => 'leftrightarrow');
+DefMathI('\lx@stretchy@hookrightarrow', undef, "\x{21AA}",
+  role => 'ARROW', stretchy => 'true', alias => '\hookrightarrow', meaning => 'hookrightarrow');
+DefMathI('\lx@stretchy@hookleftarrow', undef, "\x{21A9}",
+  role => 'ARROW', stretchy => 'true', alias => '\hookleftarrow', meaning => 'hookleftarrow');
+DefMathI('\lx@stretchy@rightharpoondown', undef, "\x{21C1}",
+  role => 'ARROW', stretchy => 'true', alias => '\rightharpoondown', meaning => 'rightharpoondown');
+DefMathI('\lx@stretchy@rightharpoonup', undef, "\x{21C0}",
+  role => 'ARROW', stretchy => 'true', alias => '\rightharpoonup', meaning => 'rightharpoonup');
+DefMathI('\lx@stretchy@leftharpoondown', undef, "\x{21BD}",
+  role => 'ARROW', stretchy => 'true', alias => '\leftharpoondown', meaning => 'leftharpoondown');
+DefMathI('\lx@stretchy@leftharpoonup', undef, "\x{21BC}",
+  role => 'ARROW', stretchy => 'true', alias => '\leftharpoonup', meaning => 'leftharpoonup');
+DefMathI('\lx@stretchy@rightleftharpoons', undef, "\x{21CC}",
+  role => 'ARROW', stretchy => 'true', alias => '\rightleftharpoons', meaning => 'rightleftharpoons');
+DefMathI('\lx@stretchy@leftrightharpoons', undef, "\x{21CB}",
+  role => 'ARROW', stretchy => 'true', alias => '\leftrightharpoons', meaning => 'leftrightharpoons');
+
+# Extensible arrows taking [under]{over}
+DefMacro('\xlongequal',          '\lx@long@arrow{\xlongequal}{\lx@stretchy@longequal}');
+DefMacro('\xLongleftarrow',       '\lx@long@arrow{\xLongleftarrow}{\lx@stretchy@Longleftarrow}');
+DefMacro('\xLongrightarrow',      '\lx@long@arrow{\xLongrightarrow}{\lx@stretchy@Longrightarrow}');
+DefMacro('\xLongleftrightarrow',  '\lx@long@arrow{\xLongleftrightarrow}{\lx@stretchy@Longleftrightarrow}');
+DefMacro('\xleftrightarrow',      '\lx@long@arrow{\xleftrightarrow}{\lx@stretchy@leftrightarrow}');
+DefMacro('\xlongleftrightarrow',  '\lx@long@arrow{\xlongleftrightarrow}{\lx@stretchy@leftrightarrow}');
+DefMacro('\xLeftrightarrow',      '\lx@long@arrow{\xLeftrightarrow}{\lx@stretchy@Longleftrightarrow}');
+DefMacro('\xhookrightarrow',      '\lx@long@arrow{\xhookrightarrow}{\lx@stretchy@hookrightarrow}');
+DefMacro('\xhookleftarrow',       '\lx@long@arrow{\xhookleftarrow}{\lx@stretchy@hookleftarrow}');
+DefMacro('\xrightharpoondown',    '\lx@long@arrow{\xrightharpoondown}{\lx@stretchy@rightharpoondown}');
+DefMacro('\xrightharpoonup',      '\lx@long@arrow{\xrightharpoonup}{\lx@stretchy@rightharpoonup}');
+DefMacro('\xleftharpoondown',     '\lx@long@arrow{\xleftharpoondown}{\lx@stretchy@leftharpoondown}');
+DefMacro('\xleftharpoonup',       '\lx@long@arrow{\xleftharpoonup}{\lx@stretchy@leftharpoonup}');
+DefMacro('\xrightleftharpoons',   '\lx@long@arrow{\xrightleftharpoons}{\lx@stretchy@rightleftharpoons}');
+DefMacro('\xleftrightharpoons',   '\lx@long@arrow{\xleftrightharpoons}{\lx@stretchy@leftrightharpoons}');
+
+1;

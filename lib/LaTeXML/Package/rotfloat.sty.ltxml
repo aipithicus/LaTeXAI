@@ -1,0 +1,41 @@
+# -*- CPERL -*-
+# /=====================================================================\ #
+# |  rotfloat.sty                                                       | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+# | Part of LaTeXAI / LaTeXML:                                           | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# \=========================================================ooo==U==ooo=/ #
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+RequirePackage('float');
+
+DefEnvironment('{sidewaystable} OptionalKeyVals:float',
+  "<ltx:table class='ltx_sidewaystable' angle='90'>"
+    . "#body"
+    . "</ltx:table>",
+  properties => sub { (placement => $_[1] && $_[1]->getValue('placement')); });
+
+DefEnvironment('{sidewaystable*} OptionalKeyVals:float',
+  "<ltx:table class='ltx_sidewaystable' angle='90'>"
+    . "#body"
+    . "</ltx:table>",
+  properties => sub { (placement => $_[1] && $_[1]->getValue('placement')); });
+
+DefEnvironment('{sidewaysfigure} OptionalKeyVals:float',
+  "<ltx:figure class='ltx_sidewaysfigure' angle='90'>"
+    . "#body"
+    . "</ltx:figure>",
+  properties => sub { (placement => $_[1] && $_[1]->getValue('placement')); });
+
+DefEnvironment('{sidewaysfigure*} OptionalKeyVals:float',
+  "<ltx:figure class='ltx_sidewaysfigure' angle='90'>"
+    . "#body"
+    . "</ltx:figure>",
+  properties => sub { (placement => $_[1] && $_[1]->getValue('placement')); });
+
+1;
