@@ -33,6 +33,8 @@ sub new {
   $$self{xpath}->registerFunction('match-font', \&LaTeXML::Common::Font::match_font);
   $self->registerNamespace('xml', $LaTeXML::Common::XML::XML_NS);
   $self->registerDocumentNamespace('xml', $LaTeXML::Common::XML::XML_NS);
+  $self->registerNamespace('capture', 'http://dlmf.nist.gov/LaTeXML/capture');
+  $self->registerDocumentNamespace('capture', 'http://dlmf.nist.gov/LaTeXML/capture');
   return $self; }
 
 sub setDocType {

@@ -80,7 +80,14 @@ sub openString {
         Info('misdefined', $encoding, $self, "input isn't valid under encoding $encoding"); } } }
 
   $$self{string} = $string;
-  $$self{buffer} = [(defined $string ? splitLines($string) : ())];
+  my @raw_lines = (defined $string ? splitLines($string) : ());
+  $$self{buffer} = [@raw_lines];
+  if ($STATE && defined $string) {
+    my $src_key = $$self{source} || '_anonymous_';
+    my $cache = $STATE->lookupValue('SOURCE_LINES_CACHE') || {};
+    $$cache{$src_key} = [@raw_lines];
+    $STATE->assignValue(SOURCE_LINES_CACHE => $cache);
+  }
   return; }
 
 sub initialize {
@@ -197,6 +204,12 @@ sub getLocator {
     $fromLine = $toLine;
     $fromCol  = $toCol; }
   return LaTeXML::Common::Locator->new($$self{source}, $fromLine, $fromCol + 1, $toLine, $toCol + 1); }
+
+sub getTokenStartLocator {
+  my ($self) = @_;
+  my $col  = $$self{last_token_start_col} // $$self{colno} // 0;
+  my $line = $$self{lineno} // 1;
+  return LaTeXML::Common::Locator->new($$self{source}, $line, $col + 1, $line, $col + 1); }
 
 sub getSource {
   my ($self) = @_;
@@ -343,10 +356,14 @@ sub readToken {
       $$self{skipping_spaces} = 0; }
 
     # ==== Extract next token from line.
+    my $start_col = $$self{colno};
     my ($ch, $cc) = getNextChar($self);
     my $token = (defined $cc ? $DISPATCH[$cc] : undef);
     $token = &$token($self, $ch) if ref $token eq 'CODE';
-    return $token if defined $token;    # Else, repeat till we get something or run out.
+    if (defined $token) {
+      $$self{last_token_start_col} = $start_col;
+      $$self{last_token_end_col}   = $$self{colno};
+      return $token; }
   }
   return; }
 

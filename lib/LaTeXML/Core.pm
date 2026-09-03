@@ -60,9 +60,11 @@ sub new {
   $options{inputencoding} = "utf-8" unless $options{inputencoding};
   $state->assignValue(PERL_INPUT_ENCODING => $options{inputencoding});
   $state->assignValue(NOMATHPARSE         => $options{nomathparse} || 0, 'global');
+  $state->assignValue(CAPTURE_PROVENANCE  => $options{capture} || 0, 'global');
   return bless { state => $state,
     nomathparse => $options{nomathparse} || 0,
     preload     => $options{preload},
+    capture     => $options{capture} || 0,
   }, $class; }
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

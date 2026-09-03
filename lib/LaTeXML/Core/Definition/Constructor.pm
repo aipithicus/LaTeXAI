@@ -72,6 +72,9 @@ sub getNumArgs {
 sub invoke {
   no warnings 'recursion';
   my ($self, $stomach) = @_;
+  my $start_locator = ($stomach->getGullet->can('getTokenStartLocator')
+    ? $stomach->getGullet->getTokenStartLocator
+    : $stomach->getGullet->getLocator);
   # Call any `Before' code.
   my $_tracing = $STATE->lookupValue('TRACING') || 0;
   my $tracing  = ($_tracing & TRACE_COMMANDS);
@@ -103,7 +106,12 @@ sub invoke {
     if (ref $value eq 'CODE') {
       $props{$key} = &$value($stomach, @args); } }
   $props{font}        = $font                           unless defined $props{font};
-  $props{locator}     = $stomach->getGullet->getLocator unless defined $props{locator};
+  if (!defined $props{locator}) {
+    my $end_locator = $stomach->getGullet->getLocator;
+    $props{locator} = ($start_locator && $end_locator
+      ? LaTeXML::Common::Locator->newRange($start_locator, $end_locator)
+      : ($start_locator || $end_locator));
+  }
   $props{mode}        = $mode                           unless defined $props{mode};
   $props{isMath}      = $ismath                         unless defined $props{isMath};
   $props{level}       = $stomach->getBoxingLevel;

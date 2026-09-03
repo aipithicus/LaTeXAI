@@ -29,6 +29,7 @@ my ($format, $destination, $help, $showversion)               = ('xml', '');
 my ($preamble, $postamble, $logfile)                          = (undef, undef, undef);
 my ($documentid);
 my $inputencoding;
+my $capture = 0;
 my $mode  = undef;
 my @paths = ();
 my (@preload);
@@ -49,6 +50,7 @@ GetOptions("destination=s" => \$destination,
   "bibtex"          => sub { $mode   = 'BibTeX'; },
   "init=s"          => \$initfile,
   "noparse"         => \$noparse,
+  "capture!"        => \$capture,
   "includestyles"   => \$includestyles,
   "inputencoding=s" => \$inputencoding,
   "comments!"       => \$comments,
@@ -89,7 +91,8 @@ eval {    # Catch errors
     includecomments => $comments,  inputencoding => $inputencoding,
     includestyles   => $includestyles,
     documentid      => $documentid,
-    nomathparse     => $noparse);
+    nomathparse     => $noparse,
+    capture         => $capture);
   # Now do all processing relative to that State, to capture all erros
   $latexml->withState(sub {
       my ($state) = @_;

@@ -104,7 +104,27 @@ sub getLocator {
 
 sub getSource {
   my ($self) = @_;
-  return $self; }
+  return $$self{source}; }
+
+sub getSourceFile {
+  my ($self) = @_;
+  return $$self{source}; }
+
+sub getFromLine {
+  my ($self) = @_;
+  return $$self{fromLine}; }
+
+sub getFromCol {
+  my ($self) = @_;
+  return $$self{fromCol}; }
+
+sub getToLine {
+  my ($self) = @_;
+  return $$self{toLine}; }
+
+sub getToCol {
+  my ($self) = @_;
+  return $$self{toCol}; }
 
 sub getFromLocator {
   my ($self) = @_;

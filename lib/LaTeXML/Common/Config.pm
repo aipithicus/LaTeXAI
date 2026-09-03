@@ -53,6 +53,7 @@ sub getopt_specification {
     "quiet"           => sub { $$opts{verbosity}--; },
     "verbose"         => sub { $$opts{verbosity}++; },
     "strict"          => \$$opts{strict},
+    "capture!"        => \$$opts{capture},
     "includestyles"   => \$$opts{includestyles},
     "inputencoding=s" => \$$opts{inputencoding},
     # Formats

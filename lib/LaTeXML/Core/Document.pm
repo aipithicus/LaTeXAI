@@ -367,11 +367,95 @@ sub finalize {
   #  return $$self{document}; }
   return $self; }
 
+our %SOURCE_FILE_CACHE = ();
+
+sub extract_source_slice {
+  my ($loc) = @_;
+  return unless $loc;
+  my $fromLine = $loc->can('getFromLine') ? $loc->getFromLine : $$loc{fromLine};
+  my $fromCol  = $loc->can('getFromCol')  ? $loc->getFromCol  : $$loc{fromCol};
+  my $toLine   = $loc->can('getToLine')   ? $loc->getToLine   : $$loc{toLine};
+  my $toCol    = $loc->can('getToCol')    ? $loc->getToCol    : $$loc{toCol};
+  return unless defined $fromLine;
+  $toLine = $fromLine unless defined $toLine;
+  $toCol  = $fromCol  unless defined $toCol;
+
+  my $source = $loc->can('getSourceFile') ? $loc->getSourceFile : $$loc{source};
+  my $lines = undef;
+  if (defined $source && length($source) && -f $source) {
+    if (!exists $SOURCE_FILE_CACHE{$source}) {
+      if (open(my $fh, '<:encoding(UTF-8)', $source)) {
+        my @l = <$fh>;
+        close($fh);
+        $SOURCE_FILE_CACHE{$source} = \@l;
+      }
+    }
+    $lines = $SOURCE_FILE_CACHE{$source};
+  }
+  elsif ($STATE) {
+    my $cache = $STATE->lookupValue('SOURCE_LINES_CACHE') || {};
+    $lines = (defined $source && length($source) ? $$cache{$source} : undef)
+      || $$cache{'_anonymous_'};
+    if (!$lines && %$cache) {
+      my @keys = sort keys %$cache;
+      $lines = $$cache{$keys[0]};
+    }
+  }
+  return unless $lines && @$lines;
+
+  my $res = '';
+  if ($fromLine == $toLine) {
+    my $line = $lines->[$fromLine - 1] // '';
+    my $start = ($fromCol ? $fromCol - 1 : 0);
+    if ($start > 0 && substr($line, $start - 1, 1) eq '$' && substr($line, $start, 1) ne '$') {
+      $start--;
+    }
+    elsif ($start > 1 && substr($line, $start - 2, 2) eq '\[' && substr($line, $start, 1) ne '\\') {
+      $start -= 2;
+    }
+    my $end = ($toCol ? $toCol - 1 : length($line));
+    my $len = $end - $start + 1;
+    $res = substr($line, $start, ($len > 0 ? $len : 0));
+  }
+  else {
+    my $first = $lines->[$fromLine - 1] // '';
+    my $first_start = ($fromCol ? $fromCol - 1 : 0);
+    if ($first_start > 0 && substr($first, $first_start - 1, 1) eq '$' && substr($first, $first_start, 1) ne '$') {
+      $first_start--;
+    }
+    elsif ($first_start > 1 && substr($first, $first_start - 2, 2) eq '\[' && substr($first, $first_start, 1) ne '\\') {
+      $first_start -= 2;
+    }
+    $res = substr($first, $first_start);
+    for (my $i = $fromLine; $i < $toLine - 1; $i++) {
+      $res .= ($lines->[$i] // '');
+    }
+    my $last = $lines->[$toLine - 1] // '';
+    my $last_end = ($toCol ? $toCol - 1 : length($last));
+    $res .= substr($last, 0, $last_end + 1);
+  }
+
+  if ($res =~ /^(\\\[.*?\\\])/s) {
+    $res = $1;
+  }
+  elsif ($res =~ /^(\\begin\{[^\}]+\}.*?\\end\{[^\}]+\})/s) {
+    $res = $1;
+  }
+  elsif ($res =~ /^(\$\$.*?\$\$)/s) {
+    $res = $1;
+  }
+  elsif ($res =~ /^(\$.*?\$)/s) {
+    $res = $1;
+  }
+  return $res;
+}
+
 sub finalize_rec {
   my ($self, $node) = @_;
   my $model = $$self{model};
   no warnings 'recursion';
   my $qname = $model->getNodeQName($node);
+  my $localname = $node->localname;
   # _standalone_font is typically for metadata that gets extracted out of context
   my $declared_font = ($node->getAttribute('_standalone_font')
     ? LaTeXML::Common::Font->textDefault : $LaTeXML::FONT);
@@ -444,6 +528,28 @@ sub finalize_rec {
         finalize_rec($self, $text);    # Now have to clean up the new node!
       }
     } }
+
+  # Provenance capture when --capture is active
+  if ($STATE && $STATE->lookupValue('CAPTURE_PROVENANCE') && $node->nodeType == XML_ELEMENT_NODE) {
+    if (my $box = getNodeBox($self, $node)) {
+      if (my $loc = $box->getLocator) {
+        my $loc_attr = $loc->toAttribute;
+        if (defined $loc_attr && length($loc_attr)) {
+          setAttribute($self, $node, 'capture:locator'  => $loc_attr);
+          setAttribute($self, $node, 'capture:file'     => $loc->getSourceFile) if defined $loc->getSourceFile;
+          setAttribute($self, $node, 'capture:fromLine' => $loc->getFromLine)   if defined $loc->getFromLine;
+          setAttribute($self, $node, 'capture:fromCol'  => $loc->getFromCol)    if defined $loc->getFromCol;
+          setAttribute($self, $node, 'capture:toLine'   => $loc->getToLine)     if defined $loc->getToLine;
+          setAttribute($self, $node, 'capture:toCol'    => $loc->getToCol)      if defined $loc->getToCol;
+          if ($node->localname eq 'Math') {
+            if (my $slice = extract_source_slice($loc)) {
+              setAttribute($self, $node, 'capture:source' => $slice);
+            }
+          }
+        }
+      }
+    }
+  }
 
   # Attributes (non-namespaced) that begin with "_" are for internal, temporary, Bookkeeping.
   # Remove them now.
@@ -1855,7 +1961,12 @@ sub openElementAt {
 
   foreach my $key (sort keys %attributes) {
     next if $key eq 'font';       # !!!
-    next if $key eq 'locator';    # !!!
+    if ($key eq 'locator') {
+      if ($STATE && $STATE->lookupValue('CAPTURE_PROVENANCE')) {
+        setAttribute($self, $newnode, 'capture:locator', $attributes{$key});
+      }
+      next;
+    }
     setAttribute($self, $newnode, $key, $attributes{$key}); }
   setNodeFont($self, $newnode, $font) if $font;
   if (my $box = $attributes{_box} || getNodeBox($self, $point) || $LaTeXML::BOX) {

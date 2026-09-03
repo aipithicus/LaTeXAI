@@ -161,6 +161,17 @@ sub getLocator {
     return $ml if defined $ml; }
   return; }
 
+sub getTokenStartLocator {
+  my ($self) = @_;
+  my $mouth  = $$self{mouth};
+  my $i      = 0;
+  while ((defined $mouth) && (!defined $$mouth{source})
+    && ($i < scalar(@{ $$self{mouthstack} }))) {
+    $mouth = $$self{mouthstack}[$i++][0]; }
+  my $loc = (defined $mouth && $mouth->can('getTokenStartLocator') ? $mouth->getTokenStartLocator : undef);
+  return $loc if defined $loc;
+  return $self->getLocator; }
+
 sub getSource {
   my ($self) = @_;
   my $source = defined $$self{mouth} && $$self{mouth}->getSource;
