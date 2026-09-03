@@ -1,0 +1,29 @@
+# -*- mode: Perl -*-
+# /=====================================================================\ #
+# |  tcolorbox                                                          | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+# | Part of LaTeXML:                                                    | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# |---------------------------------------------------------------------| #
+# | Deyan Ginev <deyan.ginev@nist.gov>                          #_#     | #
+# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
+# \=========================================================ooo==U==ooo=/ #
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+# used in tcbbreakable.code.tex assuming it was defined? so:
+DefRegister('\doublecol@number' => Number(0));
+# Ensure only unbreakable mode is possible
+DefMacro('\tcb@init@breakable', '\tcb@init@unbreakable', locked => 1);
+
+# Pre-define \tcb@use@autoparskip before loading the raw tcolorbox.sty,
+# as a safety net in case the pgfkeys initialization doesn't fully complete.
+DefMacroI('\tcb@use@autoparskip', undef, '\relax');
+
+InputDefinitions('tcolorbox', type => 'sty', noltxml => 1);
+
+1;

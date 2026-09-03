@@ -1,0 +1,129 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use FindBin;
+use lib "$FindBin::RealBin/../blib/lib", $FindBin::RealBin;
+use LaTeXML::Util::Pathname;
+use Carp;
+use Getopt::Long qw(:config no_ignore_case);
+use Pod::Usage;
+use MakeTools;
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Build the LaTeXML site
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Assume we're running from LaTeXML's doc directory.
+my $DOCDIR = $FindBin::RealBin;
+# Use latexml from blib!
+my $LATEXMLDIR = "$DOCDIR/..";
+$ENV{PATH} = "$LATEXMLDIR/blib/script:$ENV{PATH}";
+
+#my $WEBDIR = "/local/www/site/htdocs/DigitalMathLib/LaTeXML";
+my $WEBDIR = "/local/www/site/htdocs/LaTeXML";
+
+my $identity = "makesite (part of LaTeXML)";
+my ($force,  $help,       $verbosity) = (0, 0, 0);
+my ($dosite, $doexamples, $domanual)  = (1, 1, 1);
+GetOptions("force!" => \$force,
+  "help"      => \$help,
+  verbose     => sub { $verbosity++; },
+  quiet       => sub { $verbosity--; },
+  "site!"     => \$dosite,
+  "examples!" => \$doexamples,
+  "manual!"   => \$domanual,
+  "webdir=s"  => \$WEBDIR,
+) or pod2usage(-message => $identity, -exitval => 1, -verbose => 0, -output => \*STDERR);
+pod2usage(-message => $identity, -exitval => 1, -verbose => 2, -output => \*STDOUT) if $help;
+
+$WEBDIR = pathname_absolute($WEBDIR);
+
+BEGIN { $SIG{__DIE__} = \&confess; }
+
+# Sanity check
+if (!($dosite || $doexamples || $domanual)) {
+  heading("Nothing to do... (see --help)");
+  exit(0); }
+
+my $tmp;
+if (!(($tmp = pathname_mkdir($WEBDIR)) && -w $tmp)) {
+  die "Destination '$WEBDIR' is not writable; please set --webdir (see --help):\n  $!"; }
+
+#======================================================================
+setVerbosity($verbosity);
+
+heading("Copying resources");
+# copy images referenced from the CSS.
+copy("$DOCDIR/graphics/latexml.png", "$WEBDIR/images/latexml.png");
+copy("$DOCDIR/graphics/mascot.png",  "$WEBDIR/images/mascot.png");
+copy("$DOCDIR/graphics/scratch.png", "$WEBDIR/images/scratch.png");
+###copy("$DOCDIR/graphics/favicon.ico","$WEBDIR/images/favicon.ico");
+copy("$DOCDIR/latexmldoc.css", "$WEBDIR/latexmldoc.css");
+# And other things
+copy("$LATEXMLDIR/Changes", "$WEBDIR/Changes");
+
+getReleaseInfo("$WEBDIR/releases");
+
+if ($dosite) {
+  heading("Generating site pages");
+  latexml("$DOCDIR/site/index.tex", "$WEBDIR/index.html",
+    dependencies => ["$DOCDIR/sty/latexmldoc.sty.ltxml", "$DOCDIR/sty/latexmlreleases.tex"],
+    postoptions  => [
+      "--format=html5",
+      "--split",
+      "--css=latexmldoc.css",
+      "--nonumbersections",
+      "--splitnaming=labelrelative",
+      "--icon=favicon.ico",
+      "--javascript=LaTeXML-maybeMathjax.js",
+      "--path=$DOCDIR",
+    ],
+    force => $force);
+}
+
+if ($doexamples) {
+  heading("Generating examples");
+  my @examples = (qw(tabular));
+  foreach my $example (@examples) {
+    heading("Generating example $example");
+    my $source   = "$DOCDIR/site/examples/$example/$example.tex";
+    my $destname = "$WEBDIR/examples/$example/$example";
+    copy($source, "$destname.tex");
+    latexml($source, "$destname.html", force => $force);
+    pdflatex($source, force => $force);
+    copy("$DOCDIR/site/examples/$example/$example.pdf", "$destname.pdf"); }
+}
+
+if ($domanual) {
+  heading("Generating manual");
+  system("$DOCDIR/makemanual",
+    "--webdir", $WEBDIR,
+    ($force          ? ("--force") : ()),
+    ($verbosity == 0 ? ()
+      : ($verbosity > 0
+        ? (map { ("--verbose") } 1 .. $verbosity)
+        : (map { ("--quiet") } 1 .. (-$verbosity)))),
+  ) == 0 or die "Failed to make manual";
+}
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+__END__
+
+=head1 NAME
+
+C<makesite> makes LaTeXML's site
+
+=head1 SYNOPSIS
+
+makesite [options]
+
+Options:
+
+  --force   Forces rebuilding even when timestamps dont indicate it.
+  --help    Shows this help message.
+  --quiet   Runs more quietly
+  --verbose Runs more noisily
+  --webdir  Directory to place generated website in. Defaults to
+            '/local/www/site/htdocs/LaTeXML'
+
+=cut

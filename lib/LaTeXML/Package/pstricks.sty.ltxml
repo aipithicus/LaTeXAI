@@ -1,0 +1,44 @@
+# -*- mode: Perl -*-
+# /=====================================================================\ #
+# | pstricks.sty.ltxml                                                  | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+# | Part of LaTeXML                                                     | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# |---------------------------------------------------------------------| #
+# | Thanks to Ioan Alexandru Sucan <i.sucan@iu-bremen.de>               | #
+# | of the arXMLiv group for initial implementation                     | #
+# |    http://arxmliv.kwarc.info/                                       | #
+# | Released to the Public Domain                                       | #
+# |---------------------------------------------------------------------| #
+# | Bruce Miller <bruce.miller@nist.gov>                        #_#     | #
+# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
+# \=========================================================ooo==U==ooo=/ #
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+#  Implementation of the pstricks package. (incomplete)
+#  missing: \psgrid is missing most attributes
+#           shadow, doubleline and border support
+#           some special attributes for arrows
+#           fillstyle is assumed solid or none
+#           \pscustom and its special commands (chapters 20, 21, 22)
+#           \SpecialCoor is not supported
+#           overlays are not supported
+#           special box commands (Help part A, ...)
+
+RequirePackage('xcolor');
+
+# Load the raw pstricks.sty and pstricks.tex so that internal registers
+# (\pst@dima, etc.), utility macros (\pstheader, \pst@number, etc.),
+# conditionals (\ifpst@useCalc, etc.), and key-value handlers are available
+# for downstream raw packages (pst-3d.tex, pst-plot.tex, pstricks-add.tex, etc.).
+# The ltxml definitions below then override the user-facing commands.
+InputDefinitions('pstricks', type => 'sty', noltxml => 1);
+
+RequirePackage('pstricks_support');
+
+1;

@@ -1,0 +1,116 @@
+# -*- mode: Perl -*-
+# /=====================================================================\ #
+# |  aipproc                                                            | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+# | Part of LaTeXML:                                                    | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# |---------------------------------------------------------------------| #
+# | Thanks to the arXMLiv group for initial implementation              | #
+# |    http://arxmliv.kwarc.info/                                       | #
+# | Released to the Public Domain                                       | #
+# |---------------------------------------------------------------------| #
+# | Bruce Miller <bruce.miller@nist.gov>                        #_#     | #
+# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
+# \=========================================================ooo==U==ooo=/ #
+
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+# aipproc.cls
+#  American Institute of Physics Conference Proceedings.
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Class Options
+# Ignorable options
+foreach my $option (qw(10pt 11pt 12pt twoside onecolumn twocolumn
+  draft final referee
+  letter)) {
+  DeclareOption($option, undef); }
+
+my @aipproc_to_load = ();
+# Anything else gets passed to article.
+DeclareOption(undef, sub {
+    PassOptions('article', 'cls', ToString(Expand(T_CS('\CurrentOption')))); });
+
+my $aipproc_font = 'mathptmx';
+DeclareOption('mathptmx', sub { $aipproc_font = 'mathptmx'; });
+DeclareOption('mathptm',  sub { $aipproc_font = 'mathptm'; });
+DeclareOption('mathtime', sub { $aipproc_font = 'mathptmx'; });
+DeclareOption('mtpro',    sub { $aipproc_font = 'mathptmx'; });
+
+DeclareOption('varioref',    sub { });    # Need varioref
+DeclareOption('nonvarioref', sub { });    # Need varioref
+
+DeclareOption('tnotealph',   sub { });    # redefine \thefootnote
+DeclareOption('tnotesymbol', sub { });    # redefine \thefootnote
+
+DeclareOption('numberedheadings',   sub { });
+DeclareOption('unnumberedheadings', sub { });
+ProcessOptions();
+
+LoadClass('article');
+#RequirePackage('aa_support');
+RequirePackage($aipproc_font) if $aipproc_font;
+foreach my $pkg (@aipproc_to_load) {
+  RequirePackage($pkg); }
+RequirePackage('fixltx2e');
+RequirePackage('fontenc');
+RequirePackage('calc');
+RequirePackage('varioref');
+RequirePackage('times');
+RequirePackage('graphicx');
+RequirePackage('textcomp');
+RequirePackage('url');
+RequirePackage('textcase');
+RequirePackage('natbib');
+#======================================================================
+# Frontmatter
+DefMacro('\layoutstyle{}', '');
+
+# \author{name}[keys]  Use one \author per author;
+# various contact information is supplied via the optional keyvals
+my @aipproc_author_keys = (
+  [address    => '\lx@add@contact[role=address]{#1}'],
+  [altaddress => '\lx@add@contact[role=altaddress]{#1}'],
+  [email      => '\lx@add@contact[role=email]{#1}'],
+  [homepage   => '\lx@add@contact[role=url]{#1}'],
+  [thanks     => '\lx@add@contact[role=thanks]{#1}'],
+);
+DefMacro('\author{} RequiredKeyVals', sub {
+    my ($gullet, $author, $kv) = @_;
+    my @content = ($author);
+    foreach my $entry (@aipproc_author_keys) {
+      my ($key, $code) = @$entry;
+      if (my $value = $kv->getValue($key)) {
+        push(@content, Invocation($code, $value)); } }
+    return Invocation('\lx@add@author{#1}', Tokens(@content)); });
+
+DefMacroI('\keywordsname', undef, 'Keywords');
+DefMacro('\keywords{}',       '\lx@add@keywords[name={\keywordsname:~}]{#1}');
+DefMacro('\classification{}', '\lx@add@classification{#1}');
+
+DefMacro('\received{}',        '\lx@add@date[role=received]{#1}');
+DefMacro('\revised{}',         '\lx@add@date[role=revised]{#1}');
+DefMacro('\accepted{}',        '\lx@add@date[role=accepted]{#1}');
+DefMacro('\draftdate{}',       '\lx@add@date[role=draft]{#1}');
+DefMacro('\copyrightholder{}', '\lx@add@copyrightholder{#1}');
+DefMacro('\copyrightyear{}',   '\lx@add@copyrightyear{#1}');
+
+DefEnvironment('{theacknowledgments}', "<ltx:acknowledgements>#body</ltx:acknowledgements>");
+#======================================================================
+DefConstructor('\eqref Semiverbatim', "(<ltx:ref labelref='#label' _force_font='true'/>)",
+  properties      => sub { (label => CleanLabel($_[1])); },
+  enterHorizontal => 1);
+
+#======================================================================
+DefMacro('\source{}',           '\lx@note{source}{#1}');
+DefMacro('\spaceforfigure{}{}', '');
+
+DefMacro('\tablehead {}{}{}{}',           '\multicolumn{#1}{#2}{\parbox{#3}{#4}}');
+DefMacro('\tablenote OptionalMatch:* {}', '\footnote{#1}');
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+1;

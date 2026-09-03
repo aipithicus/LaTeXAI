@@ -1,0 +1,69 @@
+# -*- mode: Perl -*-
+# /=====================================================================\ #
+# |  TeX                                                                | #
+# | Core TeX Implementation for LaTeXML                                 | #
+# |=====================================================================| #
+# | Part of LaTeXML:                                                    | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# |---------------------------------------------------------------------| #
+# | Bruce Miller <bruce.miller@nist.gov>                        #_#     | #
+# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
+# \=========================================================ooo==U==ooo=/ #
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+use LaTeXML::Util::Pathname;
+
+#**********************************************************************
+# Core TeX; Built-in commands.  And plain.tex
+#**********************************************************************
+LoadPool('Base');
+LoadFormat('plain');
+
+#======================================================================
+# AutoLoad Trigger Hooks for LaTeX, AmSTeX,...
+# Auto-load the format according to the initial control-sequences seen
+#======================================================================
+# No, \documentclass isn't really a primitive -- It's not even TeX!
+# But we define a number of stubs here that will automatically load
+# the LaTeX pool (or AmSTeX.pool) (which will presumably redefine them), and then
+# stuff the token back to be reexecuted.
+foreach my $ltxtrigger (qw(documentclass
+  newcommand renewcommand newenvironment renewenvironment
+  NeedsTeXFormat ProvidesFile
+  ProvidesPackage RequirePackage PassOptionsToPackage
+  makeatletter makeatother
+  typeout begin listfiles nofiles)) {
+  DefAutoload($ltxtrigger, 'LaTeX.pool.ltxml'); }
+
+# Questionable...
+foreach my $ltx3trigger (qw(ExplSyntaxOn
+  ProvidesExplClass ProvidesExplPackage)) {
+  # DG: note that these auto-loads are not perfect --
+  #     if they are triggered with a raw .sty file for example,
+  #     the expl3 support will "expire" at the end of the current scope,
+  #     and e.g. \ExplSyntaxOn will once again be undefined.
+  DefAutoload($ltx3trigger, 'expl3.sty.ltxml'); }
+
+# Seemingly good candidates to trigger AmSTeX ??
+foreach my $amstrigger (qw(BlackBoxes NoBlackBoxes
+  TagsAsMath TagsAsText TagsOnLeft TagsOnRight CenteredTagsOnSplits TopOrBottomTagsOnSplits
+  LimitsOnInts NoLimitsOnInts LimitsOnNames NoLimitsOnNames LimitsOnSums NoLimitsOnSums
+  loadbold loadeufb loadeufm loadeurb loadeurm loadeusb
+  loadeusm loadmathfont loadmsam loadmsbm)) {
+  DefAutoload($amstrigger, 'AmSTeX.pool.ltxml'); }
+
+# Darn; we need to be even more clever, since we need to simulate an amstex command, as well.
+  # For example \documentstyle[...]{amsppt} must switch to AMSTeX mode, _NOT_ LaTeX mode!!!!
+DefMacro('\documentstyle OptionalSemiverbatim SkipSpaces Semiverbatim', sub {
+  my ($gullet, $options, $class) = @_;
+  LoadPool((ToString($class) =~ /^amsppt$/ ? "AmSTeX" : "LaTeX"));
+  (T_CS('\\documentstyle'),
+    ($options ? (T_OTHER('['), $options->unlist, T_OTHER(']')) : ()),
+    T_BEGIN, $class->unlist, T_END); });
+
+#======================================================================
+
+1;

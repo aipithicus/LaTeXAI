@@ -1,0 +1,77 @@
+name: Linux
+
+on: [push, pull_request]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.allow_failure }}
+    container:
+      image: ghcr.io/tkw1536/latexml-test-runtime:${{ matrix.texlive }}-${{ matrix.perl }}
+      env:
+        CI: true
+      options: --entrypoint ""
+
+    name: TexLive ${{ matrix.texlive }} / Perl ${{ matrix.perl }}
+    strategy:
+      matrix:
+        include:
+          - perl: "5.42"
+            texlive: none
+            allow_failure: true
+          - perl: "5.40"
+            texlive: none
+            allow_failure: false
+          - perl: "5.38"
+            texlive: none
+            allow_failure: false
+          - perl: "5.36"
+            texlive: none
+            allow_failure: false
+          - perl: "5.34"
+            texlive: none
+            allow_failure: false
+          - perl: "5.42"
+            texlive: 2025
+            allow_failure: true
+          - perl: "5.38"
+            texlive: 2024
+            allow_failure: false
+          - perl: "5.38"
+            texlive: 2023
+            allow_failure: false
+          - perl: "5.36"
+            texlive: 2022
+            allow_failure: false
+          - perl: "5.34"
+            texlive: 2021
+            allow_failure: true
+    
+    steps:
+      - uses: actions/checkout@v6
+      - name: Print Program Versions
+        shell: bash
+        run: |
+          source /usr/local/perlbrew/etc/bashrc
+          perl --version
+          cpanm --version
+          tex --version || true
+      - name: Install Dependencies
+        shell: bash
+        run: |
+          source /usr/local/perlbrew/etc/bashrc
+          cpanm -v --installdeps --notest .
+      - name: Run 'make'
+        shell: bash
+        run: |
+          source /usr/local/perlbrew/etc/bashrc
+          perl Makefile.PL
+          make
+      - name: Run 'make formats' for newer texlives
+        if: matrix.texlive >= 2023
+        run: make formats
+      - name: Run 'make test'
+        shell: bash
+        run: |
+          source /usr/local/perlbrew/etc/bashrc
+          make test

@@ -1,0 +1,31 @@
+# -*- mode: Perl -*-
+# /=====================================================================\ #
+# |  LaTeX                                                              | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+# | Part of LaTeXML:                                                    | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# |---------------------------------------------------------------------| #
+# | Bruce Miller <bruce.miller@nist.gov>                        #_#     | #
+# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
+# \=========================================================ooo==U==ooo=/ #
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+use LaTeXML::Util::Pathname;
+use List::Util qw(min max);
+
+#**********************************************************************
+# Organized following
+#  "LaTeX: A Document Preparation System"
+#   by Leslie Lamport
+#   2nd edition
+# Addison Wesley, 1994
+# Appendix C. Reference Manual
+#**********************************************************************
+LoadPool('TeX');
+LoadFormat('latex');
+#**********************************************************************
+1;

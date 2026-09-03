@@ -1,0 +1,122 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use FindBin;
+use lib "$FindBin::RealBin/../blib/lib", $FindBin::RealBin;
+use LaTeXML::Util::Pathname;
+use Carp;
+use Getopt::Long qw(:config no_ignore_case);
+use Pod::Usage;
+use MakeTools;
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Assume this script is in LaTeXML's doc directory!
+my $DOCDIR = $FindBin::RealBin;
+# Use latexml from blib!
+my $LATEXMLDIR = "$DOCDIR/..";
+$ENV{PATH}      = "$LATEXMLDIR/blib/script:$ENV{PATH}";
+$ENV{TEXINPUTS} = "$LATEXMLDIR/blib/lib/LaTeXML/texmf"
+  . ($ENV{TEXINPUTS} ? ":" . $ENV{TEXINPUTS} : '')
+  . "::";
+my $MANDIR = "$DOCDIR/manual";
+my $WEBDIR = "/local/www/site/htdocs/LaTeXML";
+
+my $identity = "makemanual (part of LaTeXML)";
+my ($force, $help, $validate, $verbosity) = (0, 0, 1, 0);
+my ($dopdf, $dohtml) = (undef, undef);
+GetOptions("force!" => \$force,
+  "help"      => \$help,
+  "pdf!"      => \$dopdf,
+  "html!"     => \$dohtml,
+  "xhtml!"    => \$dohtml,
+  "validate!" => \$validate,
+  "webdir=s"  => \$WEBDIR,
+  verbose     => sub { $verbosity++; },
+  quiet       => sub { $verbosity--; },
+) or pod2usage(-message => $identity, -exitval => 1, -verbose => 0, -output => \*STDERR);
+pod2usage(-message => $identity, -exitval => 1, -verbose => 2, -output => \*STDOUT) if $help;
+
+$WEBDIR = pathname_absolute($WEBDIR);
+
+BEGIN { $SIG{__DIE__} = \&confess; }
+
+if ((!defined $dopdf) && (!defined $dohtml)) {
+  $dopdf = $dohtml = 1; }
+elsif (!defined $dopdf) {
+  $dopdf = 1 if defined $dohtml && !$dohtml; }
+elsif (!defined $dohtml) {
+  $dohtml = 1 if defined $dopdf && !$dopdf; }
+
+# Sanity check
+if (!($dopdf || $dohtml)) {
+  heading("Nothing to do... (see --help)");
+  exit(0); }
+
+my $tmp;
+if (!(($tmp = pathname_mkdir($WEBDIR)) && -w $tmp)) {
+  die "Destination '$WEBDIR' is not writable; please set --webdir (see --help):\n  $!"; }
+
+#======================================================================
+# Generate Appendices from PODS, Schema, etc
+#======================================================================
+setVerbosity($verbosity);
+
+heading("Extracting Release, PODS and Schema info");
+getReleaseInfo("$WEBDIR/releases");
+system("$MANDIR/genpods" . ($force ? " --force" : "")) == 0
+  or warn "Failed to generate pods?";
+system("$MANDIR/genschema" . ($force ? " --force" : "")) == 0
+  or warn "Failed to generate schema documentation?";
+
+#======================================================================
+# Now generate the manual
+#======================================================================
+if ($dopdf) {
+  heading("Generating pdf of manual");
+  pdflatex("$MANDIR/manual.tex",
+    dependencies => ["$DOCDIR/sty/latexmldoc.sty", "$DOCDIR/sty/latexmlreleases.tex",
+      "$MANDIR/schema.tex", "$MANDIR/pods"],
+    indexoptions => [],
+    force        => $force);
+  copy("$MANDIR/manual.pdf", "$LATEXMLDIR/manual.pdf");
+  copy("$MANDIR/manual.pdf", "$WEBDIR/manual.pdf");
+}
+
+if ($dohtml) {
+  heading("Generating html of manual");
+  latexml("$MANDIR/manual.tex" => "$WEBDIR/manual/index.html",
+    dependencies => ["$DOCDIR/sty/latexmldoc.sty.ltxml", "$DOCDIR/sty/latexmlreleases.tex",
+      "$MANDIR/schema.tex", "$MANDIR/pods"],
+    postoptions => [
+      "--format=html5",
+      "--split", "--splitnaming=labelrelative", "--splitat=subsection",
+      "--sourcedir=$MANDIR",
+      "--urlstyle=server",
+      "--sitedirectory=$WEBDIR",
+      "--css=$DOCDIR/latexmldoc.css",
+      "--javascript=LaTeXML-maybeMathjax.js",
+      ($validate ? () : ("--novalidate")),
+      "--icon=$DOCDIR/favicon.ico"],
+    force => $force);
+  # but if only css needs updating...
+  copy("$MANDIR/../latexmldoc.css", "$WEBDIR/latexmldoc.css");
+}
+#======================================================================
+
+__END__
+
+=head1 NAME
+
+C<makemanual> - generate manual for LaTeXML
+
+=head1 SYNOPSIS
+
+makemanual [options]
+
+ Options:
+  --force           Force regeneration (default: only if needed)
+  --webdir          Directory to put website at. Defaults to
+                    '/local/www/site/htdocs/LaTeXML'
+  --help            Shows this help.
+
+=cut

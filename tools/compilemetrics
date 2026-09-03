@@ -1,0 +1,122 @@
+#!/usr/bin/perl -w
+# /=====================================================================\ #
+# |  compilemetrics                                                     | #
+# | Convert Tex Font Metrics to internal format                         | #
+# |=====================================================================| #
+# | support tools for LaTeXML:                                          | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# |---------------------------------------------------------------------| #
+# | Bruce Miller <bruce.miller@nist.gov>                        #_#     | #
+# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
+# \=========================================================ooo==U==ooo=/ #
+use strict;
+use warnings;
+use FindBin;
+# Assume we're in the tools directory of a development version of latexml (next to lib, blib..)
+use lib "$FindBin::RealBin/../blib/lib";
+use LaTeXML;
+use LaTeXML::Package;
+use LaTeXML::Common::Error;
+use LaTeXML::Common::Font::Metric;
+use Data::Dumper;
+
+#======================================================================
+# Convert a set of TeX Font Metrics into a prepared module
+#======================================================================
+# A little awkwardness in that we have to run within LaTeXML,
+# since the needed font encodings are embedded within (or only findable within) LaTeXML.
+
+my $MODULEPATH = "$FindBin::RealBin/../lib/LaTeXML/Common/Font/StandardMetrics.pm";
+my $FONTDIR    = '/usr/share/texlive/texmf-dist/fonts/tfm/public';
+# Should be using kpsewhich, but...
+my $SIZE = 10;
+my $HEADER;
+SetVerbosity(1);
+UseSTDERR();
+
+my $latexml = LaTeXML::Core->new();
+$latexml->withState(sub {
+    my ($state) = @_;
+    $latexml->initializeState();
+    LoadPool('LaTeX');
+    my $metrics = {
+      # Core TeX font/encodings
+      # serif_medium_upright
+      read_tfms('OT1', "$FONTDIR/cm", 'cmr', qw(5 6 7 8 9 10 12 17)),    # roman text
+      ## math_medium_italic
+      read_tfms('OML', "$FONTDIR/cm", 'cmmi', qw(5 6 7 8 9 10 12)),      # math italic
+      read_tfms('OMS', "$FONTDIR/cm", 'cmsy', qw(5 6 7 8 9 10)),         # math symbols
+      read_tfms('OMX', "$FONTDIR/cm", 'cmex', qw(10)),                   # math extension
+      ## sansserif_medium_upright
+      read_tfms('OT1', "$FONTDIR/cm", 'cmss', qw(8 9 10 12 17)),         # sans serif
+      ## sansserif_medium_italic
+      read_tfms('OT1', "$FONTDIR/cm", 'cmssi', qw(8 9 10 12 17)),        # sans serif italic
+      ## serif_bold_upright
+      read_tfms('OT1', "$FONTDIR/cm", 'cmbx', qw(5 6 7 8 9 10 12)),      # boldface extended
+      ## typewriter_medium_upright
+      read_tfms('OT1', "$FONTDIR/cm", 'cmtt', qw(8 9 10 12)),            # typewriter
+      ## typewriter_medium_slanted
+      read_tfms('OT1', "$FONTDIR/cm", 'cmsltt', qw(10)),                 # slanted typewriter
+      ## serif_medium_slanted
+      read_tfms('OT1', "$FONTDIR/cm", 'cmsl', qw(8 9 10 12)),            # slanted roman
+      ## serif_medium_italic
+      read_tfms('OT1', "$FONTDIR/cm", 'cmti', qw(7 8 9 10 12)),          # text italic
+      ## serif_medium_uprightitalic
+      read_tfms('OT1', "$FONTDIR/cm", 'cmu', qw(10)),                    # unslanted text italic
+      ## math_bold_italic
+      read_tfms('OML', "$FONTDIR/cm",               'cmmib', qw(10)),           # bold math italic
+      read_tfms('OMS', "$FONTDIR/cm",               'cmbsy', qw(10)),           # bold math symbols
+      read_tfms('OMS', "$FONTDIR/amsfonts/cmextra", 'cmbsy', qw(5 6 7 8 9)),    # bold math symbols
+      ## smallcaps_medium_upright
+      read_tfms('OT1', "$FONTDIR/cm", 'cmcsc', qw(10)),                         # caps and small caps
+      ## sansserif_bold_upright
+      read_tfms('OT1', "$FONTDIR/cm", 'cmssbx', qw(10)),                        # sans serif bold extended
+      ## AMS fonts
+      read_tfms('AMSa', "$FONTDIR/amsfonts/symbols", 'msam', qw(5 6 7 8 9 10)),
+      read_tfms('AMSb', "$FONTDIR/amsfonts/symbols", 'msbm', qw(5 6 7 8 9 10)),
+      ## Could include others; italic, bold,... How to access them?
+      ## Include some geometric symbols
+      read_tfms('ifgeo', "$FONTDIR/ifsym", 'ifgeo', qw(10)),
+    };
+
+    my $dumper = Data::Dumper->new([$metrics], [qw(STDMETRICS)]);
+    $dumper->Indent(0);
+    $dumper->Sortkeys(1);
+    my $FH;
+    open($FH, ">", $MODULEPATH);
+    print $FH $HEADER;
+    print $FH "our " . $dumper->Dump() . "\n";
+    print $FH "1;\n";
+    close($FH);
+    print STDERR "Wrote Standard font metrics to $MODULEPATH\n";
+    return; });
+
+sub read_tfms {
+  my ($encoding, $dir, $name, @sizes) = @_;
+  return map { $name . $_ => read_tfm($encoding, $dir . '/' . $name . $_ . '.tfm'); } @sizes; }
+
+sub read_tfm {
+  my ($encoding, $file) = @_;
+  LoadFontMap($encoding);
+  return LaTeXML::Common::Font::Metric->new($encoding, $file); }
+
+#======================================================================
+
+BEGIN {
+  $HEADER = << 'EoHeader';
+#!/usr/bin/perl -w
+# /=====================================================================\ #
+# |  Standard Font Metrics                                              | #
+# | Converted Tex Font Metrics for LaTeXML                              | #
+# |=====================================================================| #
+# | Bruce Miller <bruce.miller@nist.gov>                        #_#     | #
+# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
+# \=========================================================ooo==U==ooo=/ #
+# THIS IS A GENERATED FILE! DO NOT EDIT
+# (see LaTeXML/tools/compilemetrics)
+use strict;
+use warnings;
+package LaTeXML::Common::Font::StandardMetrics;
+EoHeader
+}

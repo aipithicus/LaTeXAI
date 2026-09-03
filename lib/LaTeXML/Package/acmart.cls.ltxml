@@ -1,0 +1,250 @@
+# -*- mode: Perl -*-
+# /=====================================================================\ #
+# | acmart.cls                                                          | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+# | Part of LaTeXML:                                                    | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# |---------------------------------------------------------------------| #
+# | Bruce Miller <bruce.miller@nist.gov>                        #_#     | #
+# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
+# \=========================================================ooo==U==ooo=/ #
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+#======================================================================
+LoadClass('amsart', withoptions => 1);
+RequirePackage('fancyhdr');
+RequirePackage('geometry');
+RequirePackage('comment');
+RequirePackage('natbib');
+RequirePackage('textcomp');
+RequirePackage('graphicx');
+RequirePackage('xcolor');
+#RequirePackage('totpages');
+RequirePackage('microtype');
+RequirePackage('hyperref');
+RequirePackage('caption');
+RequirePackage('float');
+#RequirePackage('environ');
+#RequirePackage('zi4');
+RequirePackage('setspace');
+RequirePackage('newtxmath');
+#RequirePackage('manyfoot');
+# RequirePackage('libertine');
+###
+### Added based on acmart.cls in texlive 2020
+RequirePackage('xkeyval');
+#RequirePackage('xstring');
+RequirePackage('iftex');
+RequirePackage('etoolbox');
+RequirePackage('booktabs');
+RequirePackage('refcount');
+RequirePackage('textcase');
+RequirePackage('hyperxmp');
+#RequirePackage('draftwatermark');
+#RequirePackage('cmap');
+#RequirePackage('pbalance');
+RequirePackage('balance');
+
+#======================================================================
+# Various bits of frontmatter
+DefMacro('\copyrightyear{}', '\lx@add@copyrightyear{#1}');
+# This should be keyvals!
+DefMacro('\setcopyright{}',        '\lx@add@copyright{#1}');
+DefMacro('\received[]{}',          '\lx@add@date[role=received]{#2}');
+DefMacro('\acmJournal{}',          '\lx@add@pubnote[role=journal]{#1}');
+DefMacro('\acmSubmissionID{}',     '\lx@add@pubnote[role=submissionid]{#1}');
+DefMacro('\acmConference[]{}{}{}', '\lx@add@pubnote[role=conference]{#2; #3; #4}');
+DefMacro('\acmBooktitle{}',        '\lx@add@pubnote[role=booktitle]{#1}');
+DefMacro('\acmArticle{}',          '\lx@add@pubnote[role=article]{#1}');
+DefMacro('\acmArticleSeq{}',       '\lx@add@pubnote[role=articleseq]{#1}');
+DefMacro('\acmDOI{}',              '\lx@add@pubnote[role=doi]{#1}');
+DefMacro('\acmISBN{}',             '\lx@add@pubnote[role=isbn]{#1}');
+DefMacro('\acmMonth{}',            '\lx@add@pubnote[role=publicationmonth]{#1}');
+DefMacro('\acmNumber{}',           '\lx@add@pubnote[role=number]{#1}');
+DefMacro('\acmPrice{}',            '\lx@add@pubnote[role=price,name={Price:~}]{#1}');
+DefMacro('\acmVolume{}',           '\lx@add@pubnote[role=volume]{#1}');
+DefMacro('\acmYear{}',             '\lx@add@date[role=published]{#1}');
+DefMacro('\subtitle{}',            '\lx@add@subtitle{#1}');
+DefMacro('\keywords{}',            '\lx@add@keywords{#1}');
+DefMacro('\terms{}',               '\lx@add@keywords{#1}');
+
+# Accessible figure descriptions
+NewCounter('acmlabel');
+DefConstructor('\Description[]{}', '^^<ltx:note xml:id="#id" class="ltx_nodisplay">#1</ltx:note>',
+  properties => sub { ('width' => Dimension(0), 'height' => Dimension(0), RefStepCounter('acmlabel')) },
+  beforeConstruct => sub {
+    my ($document, $whatsit) = @_;
+    # TODO: Is there something useful to do with the short description in our schema?
+    my $figure = $document->getElement;
+    $document->setAttribute($figure, 'aria:labelledby', $whatsit->getProperty('id'));
+    return; });
+
+# Use \author for EACH author, follow with \orcid, \affiliation, \email as needed.
+# Note that \affiliation can apply to all preceding authors without one
+DefMacro('\author{}',                '\lx@add@creator[role=author]{#1}');
+DefMacro('\editor{}',                '\lx@add@creator[role=editor]{#1}');
+DefMacro('\affiliation{}',           '\lx@add@contact[role=affiliation,annotate=new]{#1}');
+DefMacro('\additionalaffiliation{}', '\lx@add@contact[role=altaffiliation]{#1}');
+DefMacro('\email [] Semiverbatim',   '\lx@add@contact[role=email,name={email: }]{#2}');
+DefMacro('\orcid{}',                 '\lx@add@contact[role=orcid, name={OrcID: }]{#1}');
+
+# Internal structure to affiliation
+DefMacro('\lx@acm@addresspartsep', '');
+DefMacro('\lx@acm@addresspart{}{}',
+  '\ifx.#2.\else'
+    . '\lx@acm@addresspartsep\def\lx@acm@addresspartsep{,~}'
+    . '\lx@acm@addresspart@{#1}{#2}\fi');
+DefConstructor('\lx@acm@addresspart@{}{}',
+  "<ltx:text class='ltx_affiliation_#1' _noautoclose='1'>#2</ltx:text>",
+  enterHorizontal => 1, bounded => 1, sizer => '#2');
+DefMacro('\position{}',      '\lx@acm@addresspart{position}{#1}');
+DefMacro('\institution{}',   '\lx@acm@addresspart{institution}{#1}');
+DefMacro('\department{}',    '\lx@acm@addresspart{department}{#1}');
+DefMacro('\streetaddress{}', '\lx@acm@addresspart{streetaddress}{#1}');
+DefMacro('\city{}',          '\lx@acm@addresspart{city}{#1}');
+DefMacro('\state{}',         '\lx@acm@addresspart{state}{#1}');
+DefMacro('\postcode{}',      '\lx@acm@addresspart{postcode}{#1}');
+DefMacro('\country{}',       '\lx@acm@addresspart{country}{#1}');
+
+DefMacro('\titlenote{}',    '\lx@add@pubnote[role=note]{#1}');
+DefMacro('\subtitlenote{}', '\lx@add@pubnote[role=note]{#1}');
+DefMacro('\authornote{}',   '\lx@add@contact[role=note]{#1}');
+
+DefMacro('\abstract',    '\lx@begin@abstract');
+DefMacro('\endabstract', '\lx@end@abstract');
+
+# Ignorable stuff ?
+DefMacro('\shortauthors{}',                  '');
+DefMacro('\authornotemark[]',                '');
+DefMacro('\authorsaddresses{}',              '');
+DefMacro('\startPage',                       '');
+DefMacro('\settopmatter{}',                  '');
+DefMacro('\copyrightpermissionfootnoterule', '');
+
+DefMacro('\acmBadgeL', Tokens());
+# DefMacro('\acmBadgeR',Tokens());
+
+# basically use natbib
+Let('\citeN',      '\cite');
+Let('\cite',       '\citep');
+Let('\citeANP',    '\citeauthor');
+Let('\citeNN',     '\citeyearpar');
+Let('\citeyearNP', '\citeyear');
+Let('\citeyear',   '\citeyearpar');
+Let('\citeNP',     '\citealt');
+DefMacro('\shortcite{}', '\citeyear{#1}');
+
+# ??
+Let('\citeA', '\citeauthor');
+
+DefRegister('\fulltextwidth', Dimension(0));
+
+DefEnvironment('{printonly}',    '');
+DefEnvironment('{screenonly}',   '#body');
+DefEnvironment('{anonsuppress}', '');
+
+DefMacro('\ccsdesc[]{}', '\lx@add@pubnote[role=ccs,name={CCS:~}]{#2}');
+# Could embed this as XML in some namespace, or....
+# For now, just skip it.
+# DefEnvironment('{CCSXML}','#body');
+RequirePackage('comment');
+defineExcluded(undef, 'CCSXML');
+
+DefMacro('\acknowledgmentsname', 'Acknowledgements');
+DefConstructor('\acks', "<ltx:acknowledgements name='#name'>",
+  properties => sub { (name => Digest(T_CS('\acknowledgmentsname'))); });
+DefConstructor('\endacks', "</ltx:acknowledgements>");
+DefMacro('\grantsponsor Semiverbatim {} Semiverbatim',     'Sponsor #2 \url{#3}');
+DefMacro('\grantnum OptionalSemiverbatim Semiverbatim {}', 'Grant \##3');
+
+DefEnvironment('{teaserfigure}[]',
+  "<ltx:figure xml:id='#id' inlist='#inlist' class='ltx_teaserfigure' ?#1(placement='#1')>"
+    . "#tags"
+    . "#body"
+    . "</ltx:figure>",
+  mode         => 'internal_vertical',
+  beforeDigest => sub { beforeFloat('figure'); },
+  afterDigest  => sub { afterFloat($_[1]); });
+
+DefEnvironment('{marginfigure}[]',
+  "<ltx:figure xml:id='#id' inlist='#inlist' class='ltx_marginfigure' ?#1(placement='#1')>"
+    . "#tags"
+    . "#body"
+    . "</ltx:figure>",
+  mode         => 'internal_vertical',
+  beforeDigest => sub { beforeFloat('figure'); },
+  afterDigest  => sub { afterFloat($_[1]); });
+
+DefEnvironment('{margintable}[]',
+  "<ltx:table xml:id='#id' inlist='#inlist' class='ltx_margintable' ?#1(placement='#1')>"
+    . "#tags"
+    . "#body"
+    . "</ltx:table>",
+  mode         => 'internal_vertical',
+  beforeDigest => sub { beforeFloat('table'); },
+  afterDigest  => sub { afterFloat($_[1]); });
+
+DefMacroI('\sidebarname',  undef, 'Sidebar');
+DefMacroI('\fnum@sidebar', undef, '\sidebarname\nobreakspace\thesidebar');
+DefMacro('\format@title@sidebar{}', '\lx@tag{\fnum@sidebar: }#1');
+
+DefEnvironment('{sidebar}{} Undigested [] {}',
+  "<ltx:sidebar labels='#label' xml:id='#id'>"
+    #    . "#tags"
+    #    . "<ltx:title font='#titlefont' _force_font='true'>#title</ltx:title>"
+    #    . "<ltx:creator role='author'><ltx:personname href='#bio'>#4</ltx:personname></ltx:creator>"
+    . "#body"
+    . "</ltx:sidebar>");
+
+RawTeX(<<'EoTeX');
+\def\@acmplainbodyfont{\itshape}
+\def\@acmplainindent{\parindent}
+\def\@acmplainheadfont{\scshape}
+\def\@acmplainnotefont{\@empty}
+\newtheoremstyle{acmplain}%
+  {.5\baselineskip\@plus.2\baselineskip
+    \@minus.2\baselineskip}% space above
+  {.5\baselineskip\@plus.2\baselineskip
+    \@minus.2\baselineskip}% space below
+  {\@acmplainbodyfont}% body font
+  {\@acmplainindent}% indent amount
+  {\@acmplainheadfont}% head font
+  {.}% punctuation after head
+  {.5em}% spacing after head
+  {\thmname{#1}\thmnumber{ #2}\thmnote{ {\@acmplainnotefont(#3)}}}% head spec
+\def\@acmdefinitionbodyfont{\normalfont}
+\def\@acmdefinitionindent{\parindent}
+\def\@acmdefinitionheadfont{\itshape}
+\def\@acmdefinitionnotefont{\@empty}
+\newtheoremstyle{acmdefinition}%
+  {.5\baselineskip\@plus.2\baselineskip
+    \@minus.2\baselineskip}% space above
+  {.5\baselineskip\@plus.2\baselineskip
+    \@minus.2\baselineskip}% space below
+  {\@acmdefinitionbodyfont}% body font
+  {\@acmdefinitionindent}% indent amount
+  {\@acmdefinitionheadfont}% head font
+  {.}% punctuation after head
+  {.5em}% spacing after head
+  {\thmname{#1}\thmnumber{ #2}\thmnote{ {\@acmdefinitionnotefont(#3)}}}% head spec
+\theoremstyle{acmplain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{conjecture}[theorem]{Conjecture}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{acmdefinition}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{acmplain}
+EoTeX
+Let('\proof',    '\@proof');
+Let('\endproof', '\end@proof');
+
+#======================================================================
+1;

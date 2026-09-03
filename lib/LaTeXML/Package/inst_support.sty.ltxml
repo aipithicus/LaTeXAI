@@ -1,0 +1,47 @@
+# -*- mode: Perl -*-
+# /=====================================================================\ #
+# |  inst_support                                                       | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+# | Part of LaTeXML:                                                    | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# |---------------------------------------------------------------------| #
+# | Thanks to the arXMLiv group for initial implementation              | #
+# |    http://arxmliv.kwarc.info/                                       | #
+# | Released to the Public Domain                                       | #
+# |---------------------------------------------------------------------| #
+# | Bruce Miller <bruce.miller@nist.gov>                        #_#     | #
+# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
+# \=========================================================ooo==U==ooo=/ #
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+# This bit of code supports the \inst style institution markup
+# used by several document classes and styles [aa, llncs, sv]
+# HOWEVER, the care support is now built into Engine/Base_Utility
+# so this shouldn't be needed.
+
+# In inst style, the \author (used once for each author)
+# gets some "labels" which are used to connect to \affiliation
+# (also one per affiliation); the affailiation with the matching label
+# is attached to the author.
+
+# \author[marks]{author}
+DefMacro('\author{}',
+  '\lx@clear@creators[role=author]'
+    . '\lx@splitting{\lx@add@author}{\and\And,}{#1}');
+DefMacro('\institute{}',
+  '\lx@clear@frontmatter{ltx:contact}[role=affiliation]'
+    . '\lx@splitting{\lx@add@contact[role=affiliation,labelseq=affiliation]}{\and\And}{#1}');
+DefMacro('\inst{}', '\lx@request@frontmatter@annotation[affiliation]{#1}');
+
+Let('\at',      '\and');    # Actually this is different than \and, but...
+Let('\iand',    '\and');
+Let('\nand',    '\and');
+Let('\lastand', '\and');
+Let('\AND',     '\and');
+
+1;

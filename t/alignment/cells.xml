@@ -1,0 +1,432 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="tabularx"?>
+<?latexml package="rotating"?>
+<?latexml package="multirow"?>
+<?latexml package="makecell"?>
+<?latexml package="xcolor"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <section inlist="toc" xml:id="S1">
+    <tags>
+      <tag>1</tag>
+      <tag role="refnum">1</tag>
+      <tag role="typerefnum">§1</tag>
+    </tags>
+    <title><tag close=" ">1</tag>makecell</title>
+    <para xml:id="S1.p1">
+      <tabular vattach="middle">
+        <tr>
+          <td align="center" border="l r t">Cell text</td>
+          <td align="center" border="r t">28–31</td>
+        </tr>
+        <tr>
+          <td align="center" border="l r t"> <tabular vattach="middle">
+              <tr>
+                <td align="center" class="ltx_nopad_r">Multilined</td>
+              </tr>
+              <tr>
+                <td align="center" class="ltx_nopad_r">cell text</td>
+              </tr>
+            </tabular></td>
+          <td align="center" border="r t">28–31</td>
+        </tr>
+        <tr>
+          <td align="center" border="l r t"><tabular vattach="middle">
+              <tr>
+                <td align="left" class="ltx_nopad_r">Left aligned</td>
+              </tr>
+              <tr>
+                <td align="left" class="ltx_nopad_r">cell text</td>
+              </tr>
+            </tabular></td>
+          <td align="center" border="r t">37–43</td>
+        </tr>
+        <tr>
+          <td align="center" border="l r t"> <tabular vattach="middle">
+              <tr>
+                <td align="right" class="ltx_nopad_r">Right aligned</td>
+              </tr>
+              <tr>
+                <td align="right" class="ltx_nopad_r">cell text</td>
+              </tr>
+            </tabular></td>
+          <td align="center" border="r t">37–43</td>
+        </tr>
+        <tr>
+          <td align="center" border="l r t"> <tabular vattach="bottom">
+              <tr>
+                <td align="center" class="ltx_nopad_r">Bottom aligned</td>
+              </tr>
+              <tr>
+                <td align="center" class="ltx_nopad_r">cell text</td>
+              </tr>
+            </tabular></td>
+          <td align="center" border="r t">52–58</td>
+        </tr>
+        <tr>
+          <td align="center" border="l r t"><tabular vattach="middle">
+              <tr>
+                <td align="left" class="ltx_nopad_r" vattach="top"><inline-block vattach="top" width="85.4pt">
+                    <p>Cell long text with predefined width</p>
+                  </inline-block></td>
+              </tr>
+            </tabular></td>
+          <td align="center" border="r t">52–58</td>
+        </tr>
+        <tr>
+          <td align="center" border="b l r t"><tabular vattach="middle">
+              <tr>
+                <td align="left" class="ltx_nopad_r" vattach="top"><inline-block vattach="top" width="85.4pt">
+                    <p>Cell long…</p>
+                  </inline-block></td>
+              </tr>
+            </tabular></td>
+          <td align="center" border="b r t">52–58</td>
+        </tr>
+      </tabular>
+    </para>
+  </section>
+  <section inlist="toc" xml:id="S2">
+    <tags>
+      <tag>2</tag>
+      <tag role="refnum">2</tag>
+      <tag role="typerefnum">§2</tag>
+    </tags>
+    <title><tag close=" ">2</tag>thead</title>
+    <para xml:id="S2.p1">
+      <tabular vattach="middle">
+        <thead>
+          <tr>
+            <td align="left" border="l r t" thead="column row"> <tabular rowsep="-1.7pt" vattach="middle">
+                <tr>
+                  <td align="center" class="ltx_nopad_r"><text color="#FF0000" font="bold">First column head</text></td>
+                </tr>
+              </tabular></td>
+            <td align="center" border="r t" thead="column row"> <tabular rowsep="-1.7pt" vattach="middle">
+                <tr>
+                  <td align="center" class="ltx_nopad_r"><text color="#FF0000" font="bold">Second</text></td>
+                </tr>
+                <tr>
+                  <td align="center" class="ltx_nopad_r"><text color="#FF0000" font="bold">multlined</text></td>
+                </tr>
+                <tr>
+                  <td align="center" class="ltx_nopad_r"><text color="#FF0000" font="bold">column head</text></td>
+                </tr>
+              </tabular></td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td align="left" border="b l r t">Left column text</td>
+            <td align="center" border="b r t">28–31</td>
+          </tr>
+        </tbody>
+      </tabular>
+    </para>
+  </section>
+  <section inlist="toc" xml:id="S3">
+    <tags>
+      <tag>3</tag>
+      <tag role="refnum">3</tag>
+      <tag role="typerefnum">§3</tag>
+    </tags>
+    <title><tag close=" ">3</tag>rothead</title>
+    <para xml:id="S3.p1">
+      <tabular vattach="middle">
+        <thead>
+          <tr>
+            <td align="left" border="l r t" thead="column row"> <tabular rowsep="-1.7pt" vattach="middle">
+                <tr>
+                  <td align="center" class="ltx_nopad_r"><text color="#FF0000" font="bold">First column head</text></td>
+                </tr>
+              </tabular></td>
+            <td align="center" border="r t" thead="column row"> <tabular rowsep="-1.7pt" vattach="middle">
+                <tr>
+                  <td align="center" class="ltx_nopad_r" thead="column row"><inline-block angle="90" depth="0.0pt" height="96.1pt" innerdepth="9.5pt" innerheight="14.5pt" innerwidth="96.1pt" width="24.0pt" xtranslate="-36.0pt" ytranslate="-36.0pt">
+                      <p><text color="#FF0000" font="bold"><tabular rowsep="-1.7pt" vattach="middle">
+                            <tr>
+                              <td align="left" class="ltx_nopad_r" vattach="top"><inline-block vattach="top" width="90.1pt">
+                                  <p>Second multilined</p>
+                                </inline-block></td>
+                            </tr>
+                            <tr>
+                              <td align="left" class="ltx_nopad_r" vattach="top"><inline-block vattach="top" width="90.1pt">
+                                  <p>column head</p>
+                                </inline-block></td>
+                            </tr>
+                          </tabular></text></p>
+                    </inline-block></td>
+                </tr>
+              </tabular></td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td align="left" border="b l r t">Left column text</td>
+            <td align="center" border="b r t">28–31</td>
+          </tr>
+        </tbody>
+      </tabular>
+    </para>
+  </section>
+  <section inlist="toc" xml:id="S4">
+    <tags>
+      <tag>4</tag>
+      <tag role="refnum">4</tag>
+      <tag role="typerefnum">§4</tag>
+    </tags>
+    <title><tag close=" ">4</tag>Cell settings: cellset, cellalign, cellgape, cellrotangle</title>
+  </section>
+  <section inlist="toc" xml:id="S5">
+    <tags>
+      <tag>5</tag>
+      <tag role="refnum">5</tag>
+      <tag role="typerefnum">§5</tag>
+    </tags>
+    <title><tag close=" ">5</tag>Head settings:theadfont,theadset, theadalign, theadgape, rotheadgape</title>
+  </section>
+  <section inlist="toc" xml:id="S6">
+    <tags>
+      <tag>6</tag>
+      <tag role="refnum">6</tag>
+      <tag role="typerefnum">§6</tag>
+    </tags>
+    <title><tag close=" ">6</tag>Height/Depth settings: gape, Gape, bottopstrut,topstrut,botstrut</title>
+  </section>
+  <section inlist="toc" xml:id="S7">
+    <tags>
+      <tag>7</tag>
+      <tag role="refnum">7</tag>
+      <tag role="typerefnum">§7</tag>
+    </tags>
+    <title><tag close=" ">7</tag>Vertical space: setcellgapes, makegapedcells, nomakegapedcells</title>
+  </section>
+  <section inlist="toc" xml:id="S8">
+    <tags>
+      <tag>8</tag>
+      <tag role="refnum">8</tag>
+      <tag role="typerefnum">§8</tag>
+    </tags>
+    <title><tag close=" ">8</tag>Multirow: multirowcell, multirowthead</title>
+    <para xml:id="S8.p1">
+      <tabular vattach="middle">
+        <tbody>
+          <tr>
+            <td align="left" border="l r t" rowspan="2" thead="column row"> <tabular rowsep="-1.7pt" vattach="middle">
+                <tr>
+                  <td align="center" class="ltx_nopad_r"><text color="#FF0000" font="bold">First …</text></td>
+                </tr>
+              </tabular></td>
+            <td align="center" border="r t" colspan="2"> <tabular rowsep="-1.7pt" vattach="middle">
+                <tr>
+                  <td align="center" class="ltx_nopad_r"><text color="#FF0000" font="bold">Multicolumn head</text></td>
+                </tr>
+              </tabular></td>
+          </tr>
+          <tr>
+            <td align="center" border="r t" thead="column row"> <tabular rowsep="-1.7pt" vattach="middle">
+                <tr>
+                  <td align="center" class="ltx_nopad_r"><text color="#FF0000" font="bold">Second …</text></td>
+                </tr>
+              </tabular></td>
+            <td align="center" border="r t" thead="column row"> <tabular rowsep="-1.7pt" vattach="middle">
+                <tr>
+                  <td align="center" class="ltx_nopad_r"><text color="#FF0000" font="bold">Third …</text></td>
+                </tr>
+              </tabular></td>
+          </tr>
+          <tr>
+            <td align="left" border="l r t">Cell text</td>
+            <td align="center" border="r t">A</td>
+            <td align="center" border="r t" rowspan="2"> <tabular vattach="middle">
+                <tr>
+                  <td align="center" class="ltx_nopad_r">28–31</td>
+                </tr>
+              </tabular></td>
+          </tr>
+          <tr>
+            <td align="left" border="l r t"> <tabular vattach="middle">
+                <tr>
+                  <td align="center" class="ltx_nopad_r">Multilined</td>
+                </tr>
+                <tr>
+                  <td align="center" class="ltx_nopad_r">Cell text</td>
+                </tr>
+              </tabular></td>
+            <td align="center" border="r t">B</td>
+          </tr>
+          <tr>
+            <td align="left" border="l r t"><tabular vattach="middle">
+                <tr>
+                  <td align="left" class="ltx_nopad_r">Left …</td>
+                </tr>
+              </tabular></td>
+            <td align="center" border="r t">C</td>
+            <td align="center" border="r t" rowspan="2"><tabular vattach="middle">
+                <tr>
+                  <td align="left" class="ltx_nopad_r">37–43</td>
+                </tr>
+              </tabular></td>
+          </tr>
+          <tr>
+            <td align="left" border="l r t"> <tabular vattach="middle">
+                <tr>
+                  <td align="right" class="ltx_nopad_r">Right …</td>
+                </tr>
+              </tabular></td>
+            <td align="center" border="r t">D</td>
+          </tr>
+          <tr>
+            <td align="left" border="l r t"> <tabular vattach="bottom">
+                <tr>
+                  <td align="center" class="ltx_nopad_r">Bottom …</td>
+                </tr>
+              </tabular></td>
+            <td align="center" border="r t">E</td>
+            <td align="center" border="b r t" rowspan="5"> <tabular vattach="middle">
+                <tr>
+                  <td align="right" class="ltx_nopad_r">37–43</td>
+                </tr>
+                <tr>
+                  <td align="right" class="ltx_nopad_r">52–58</td>
+                </tr>
+              </tabular></td>
+          </tr>
+          <tr>
+            <td align="left" border="l r t"><tabular vattach="middle">
+                <tr>
+                  <td align="left" class="ltx_nopad_r" vattach="top"><inline-block vattach="top" width="142.3pt">
+                      <p>Cell …</p>
+                    </inline-block></td>
+                </tr>
+              </tabular></td>
+            <td align="center" border="r t">F</td>
+          </tr>
+          <tr>
+            <td align="left" border="b l r t"><tabular vattach="middle">
+                <tr>
+                  <td align="left" class="ltx_nopad_r" vattach="top"><inline-block vattach="top" width="142.3pt">
+                      <p>Cell …</p>
+                    </inline-block></td>
+                </tr>
+              </tabular></td>
+            <td align="center" border="b r t">G</td>
+          </tr>
+        </tbody>
+      </tabular>
+    </para>
+  </section>
+  <section inlist="toc" xml:id="S9">
+    <tags>
+      <tag>9</tag>
+      <tag role="refnum">9</tag>
+      <tag role="typerefnum">§9</tag>
+    </tags>
+    <title><tag close=" ">9</tag>Numbered Lines</title>
+    <para xml:id="S9.p1">
+      <tabular vattach="middle">
+        <tr>
+          <td border="l r t"/>
+          <td border="r t"/>
+          <td border="r t"/>
+          <td border="r t"/>
+          <td border="r t"/>
+          <td border="r t"/>
+        </tr>
+        <tr>
+          <td align="center" border="l r t">1</td>
+          <td align="center" border="r t">2</td>
+          <td align="center" border="r t">3</td>
+          <td align="center" border="r t">4</td>
+          <td align="center" border="r t">5</td>
+          <td align="center" border="r t">6</td>
+        </tr>
+        <tr>
+          <td border="l r t"/>
+          <td border="r t"/>
+          <td border="r t"/>
+          <td align="center" border="r t">4</td>
+          <td align="center" border="r t">5</td>
+          <td align="center" border="r t">6</td>
+        </tr>
+        <tr>
+          <td align="center" border="l r t">(1)</td>
+          <td align="center" border="r t">(2)</td>
+          <td align="center" border="r t">(3)</td>
+          <td align="center" border="r t">(4)</td>
+          <td align="center" border="r t">(5)</td>
+          <td align="center" border="r t">(6)</td>
+        </tr>
+        <tr>
+          <td align="center" border="b l r t">column 1</td>
+          <td align="center" border="b r t">column 2</td>
+          <td align="center" border="b r t">column 3</td>
+          <td align="center" border="b r t">column 4</td>
+          <td align="center" border="b r t">column 5</td>
+          <td align="center" border="b r t">column 6</td>
+        </tr>
+      </tabular>
+    </para>
+  </section>
+  <section inlist="toc" xml:id="S10">
+    <tags>
+      <tag>10</tag>
+      <tag role="refnum">10</tag>
+      <tag role="typerefnum">§10</tag>
+    </tags>
+    <title><tag close=" ">10</tag>Diagonally divided</title>
+    <para xml:id="S10.p1">
+      <tabular vattach="middle">
+        <thead>
+          <tr>
+            <td align="left" border="l r t" class="ltx_nopad" thead="column row"><picture height="41.34" tex="\diaghead(4,1){\hskip 119.50148pt}{{\color[rgb]{1,0,0}\shortstack[r]{Diag \\&#10;Column Head I}}}{{\color[rgb]{1,0,0}\shortstack[l]{Diag Column \\&#10;Head II}}}" width="165.35" xml:id="S10.p1.pic1">
+                <line points="0,0, 165.35,41.3375" stroke="#000000" stroke-width="0.4"/>
+                <g innerheight="26.21" innerwidth="107.77" transform="translate(57.58,0)">
+                  <inline-block>
+                    <inline-block align="right">
+                      <p><text color="#FF0000" font="bold">Diag</text></p>
+                      <p><text color="#FF0000" font="bold">Column Head I</text></p>
+                    </inline-block>
+                  </inline-block>
+                </g>
+                <g innerheight="26.21" innerwidth="97.73" transform="translate(0,15.1275)">
+                  <inline-block>
+                    <inline-block align="left">
+                      <p><text color="#FF0000" font="bold">Diag Column</text></p>
+                      <p><text color="#FF0000" font="bold">Head II</text></p>
+                    </inline-block>
+                  </inline-block>
+                </g>
+              </picture></td>
+            <td align="center" border="r t" thead="column row"> <tabular rowsep="-1.7pt" vattach="middle">
+                <tr>
+                  <td align="center" class="ltx_nopad_r"><text color="#FF0000" font="bold">Second</text></td>
+                </tr>
+                <tr>
+                  <td align="center" class="ltx_nopad_r"><text color="#FF0000" font="bold">column</text></td>
+                </tr>
+              </tabular></td>
+            <td align="center" border="r t" thead="column row"> <tabular rowsep="-1.7pt" vattach="middle">
+                <tr>
+                  <td align="center" class="ltx_nopad_r"><text color="#FF0000" font="bold">Third</text></td>
+                </tr>
+                <tr>
+                  <td align="center" class="ltx_nopad_r"><text color="#FF0000" font="bold">column</text></td>
+                </tr>
+              </tabular></td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td align="left" border="b l r t">one</td>
+            <td align="center" border="b r t">two</td>
+            <td align="center" border="b r t">three</td>
+          </tr>
+        </tbody>
+      </tabular>
+    </para>
+  </section>
+</document>
