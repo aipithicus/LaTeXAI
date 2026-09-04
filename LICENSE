@@ -16,25 +16,11 @@ See http://creativecommons.org/about/cc0.
 Note that, according to http://www.gnu.org/licences/license-list.html#PublicDomain,
 public domain is compatible with GPL.
 
-We would appreciate acknowledgement if the software is used.
-
-CONTRIBUTOR NOTICE:
-  Contributions of software patches and enhancements to this project
-are welcome; such contributions are assumed to be under the same terms
-as the software itself.  Specifically, if you contribute code, documention,
-text samples or any other material, you are asserting and acknowledging that:
-you are the copyright holder of the material or that it is in the public domain;
-it does not contain any patented material; and that you waive any copyright
-protections and dedicate the material to the public domain.
-
-DISCLAIMER:
-  LaTeXML is an experimental system provided by NIST as a public service.
-
 The software is expressly provided "AS IS." NIST makes NO warranty of
 any kind, express, implied, in fact or arising by operation of law,
 including, without limitation, the implied warranty of
 merchantability, fitness for a particular purpose, non-infringement
-and data accuracy. nist neither represents nor warrants that the
+and data accuracy. NIST neither represents nor warrants that the
 operation of the software will be uninterrupted or error-free, or that
 any defects will be corrected. NIST does not warrant or make any
 representations regarding the use of the software or the results

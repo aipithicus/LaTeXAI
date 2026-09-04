@@ -6,7 +6,11 @@
 # Old Makefiles
 Makefile.old
 private/
-.codex/ 
+build/
+temp/
+.codex/
+.ignore 
+
 .mcp.json
 # Ignore perltidy files
 *.tdy
