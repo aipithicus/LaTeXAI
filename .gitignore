@@ -5,6 +5,8 @@
 **/\.\#*
 # Old Makefiles
 Makefile.old
+private/
+.codex/ 
 .mcp.json
 # Ignore perltidy files
 *.tdy
@@ -56,3 +58,8 @@ tools/travis/dist
 .vscode/
 # from Mac OS
 .DS_Store
+# Disposable working files; see scratch/README.md
+scratch/*
+!scratch/README.md
+# Codex project config carries machine-local paths, same as .mcp.json
+.codex/

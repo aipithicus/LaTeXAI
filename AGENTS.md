@@ -59,7 +59,7 @@ Facts that save a round trip:
 - **Branch:** work directly on `main`. Root commit `414081a` is the pristine upstream snapshot; keep it that way.
 - **Commits:** one concern per commit, conventional prefixes by layer — `feat(Core):`, `feat(Package):`, `fix(Post):`, `test:`, `chore:`, `docs:`.
 - **New bindings:** `lib/LaTeXML/Package/<pkg>.sty.ltxml`, header comment naming the package version emulated, then `1;` at the end. Add a `t/` pair when the binding changes structure.
-- **Ignored, never committed:** `blib/`, `*.log`, `*.aux`, `Makefile`, `MYMETA.*`, `pm_to_blib`. Scratch `.tex` inputs for probes do not belong at the repo root; keep them in a session scratchpad or ask where they should live.
+- **Ignored, never committed:** `blib/`, `*.log`, `*.aux`, `Makefile`, `MYMETA.*`, `pm_to_blib`. Disposable working files (probe `.tex` inputs, output dumps, test transcripts, helper scripts) go under `scratch/<actor-or-task>/`, which is gitignored; see `scratch/README.md`. Nothing at the repo root, nothing under `.codex/` or other tool dotdirs. Test fixtures go in `t/<suite>/`; runtime test output goes through `File::Temp`.
 - **No compat shims.** Superseded fork surfaces are deleted, not aliased.
 
 ---
