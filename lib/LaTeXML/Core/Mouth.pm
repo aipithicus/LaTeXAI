@@ -19,7 +19,7 @@ use LaTeXML::Common::Error;
 use LaTeXML::Core::Token;
 use LaTeXML::Core::Tokens;
 use LaTeXML::Util::Pathname;
-use Encode qw(decode);
+use Encode qw(decode encode);
 use base qw(LaTeXML::Common::Object);
 
 our $READLINE_PROGRESS_QUANTUM = 25;
@@ -39,9 +39,11 @@ sub create {
     my ($dir, $name, $ext) = pathname_split($source);
     $options{source}      = $source;
     $options{shortsource} = "$name.$ext";
+    $options{source_kind} = (pathname_is_url($source) ? 'url' : 'virtual');
     return $class->new($options{content}, %options); }
   elsif ($source =~ s/^literal://) {    # we've supplied literal data
     $options{source} = '';              # the source does not have a corresponding file name
+    $options{source_kind} = 'literal';
     return $class->new($source, %options); }
   elsif (!defined $source) {
     return $class->new('', %options); }
@@ -59,6 +61,7 @@ sub new {
   #$options{shortsource} = "String"           unless defined $options{shortsource};
   my $self = bless { source => $options{source},
     shortsource    => $options{shortsource},
+    source_kind    => $options{source_kind},
     fordefinitions => ($options{fordefinitions} ? 1 : 0),
     at_letter      => ($options{at_letter}      ? 1 : 0),
     notes          => ($options{notes}          ? 1 : 0),
@@ -69,6 +72,26 @@ sub new {
 
 sub openString {
   my ($self, $string) = @_;
+  my $registry = ($STATE && $STATE->lookupValue('CAPTURE_PROVENANCE'))
+    ? $STATE->lookupValue('SOURCE_REGISTRY') : undef;
+  if ($registry && defined $string
+    && (defined $$self{source} || $$self{source_kind} || length($string))) {
+    my $encoding = $STATE->lookupValue('PERL_INPUT_ENCODING') || 'UTF-8';
+    my $raw;
+    if (utf8::is_utf8($string)) {
+      $raw = encode('UTF-8', $string);
+      $encoding = 'UTF-8'; }
+    else {
+      $raw = $string; }
+    my $kind = $$self{source_kind}
+      || (defined $$self{source} && length($$self{source}) ? 'virtual' : 'literal');
+    $$self{source_id} = $registry->registerSource(
+      kind => $kind, display => $$self{source}, encoding => $encoding, raw => $raw);
+    my @records = $registry->getLines($$self{source_id});
+    $$self{buffer}       = [map { $$_{decoded} } @records];
+    $$self{line_records} = [@records];
+    $$self{string}       = join('', map { $$_{decoded} . $$_{terminator} } @records);
+    return; }
   #  if (0){
   if (defined $string) {
     if    (utf8::is_utf8($string)) { }                                    # If already utf7
@@ -80,14 +103,7 @@ sub openString {
         Info('misdefined', $encoding, $self, "input isn't valid under encoding $encoding"); } } }
 
   $$self{string} = $string;
-  my @raw_lines = (defined $string ? splitLines($string) : ());
-  $$self{buffer} = [@raw_lines];
-  if ($STATE && defined $string) {
-    my $src_key = $$self{source} || '_anonymous_';
-    my $cache = $STATE->lookupValue('SOURCE_LINES_CACHE') || {};
-    $$cache{$src_key} = [@raw_lines];
-    $STATE->assignValue(SOURCE_LINES_CACHE => $cache);
-  }
+  $$self{buffer} = [(defined $string ? splitLines($string) : ())];
   return; }
 
 sub initialize {
@@ -153,6 +169,7 @@ sub getNextLine {
   my ($self) = @_;
   return unless scalar(@{ $$self{buffer} });
   my $line = shift(@{ $$self{buffer} });
+  $$self{current_line_record} = shift(@{ $$self{line_records} }) if $$self{line_records};
   return $line; }
 
 sub hasMoreInput {
@@ -176,12 +193,14 @@ sub getNextChar {
         && (($c2 = $$self{chars}[$$self{colno} + 2]) =~ /^[0-9a-f]$/)) {
         $ch = chr(hex($c1 . $c2));
         splice(@{ $$self{chars} }, $$self{colno} - 1, 4, $ch);
+        $self->_spliceCaptureSpans($$self{colno} - 1, 4);
         $$self{nchars} -= 3; }
       else {    # OR ^^ followed by a SINGLE Control char type code???
         my $c  = $$self{chars}[$$self{colno} + 1];
         my $cn = ord($c);
         $ch = chr($cn + ($cn >= 64 ? -64 : 64));
         splice(@{ $$self{chars} }, $$self{colno} - 1, 3, $ch);
+        $self->_spliceCaptureSpans($$self{colno} - 1, 3);
         $$self{nchars} -= 2; }
       $cc = $STATE->lookupCatcode($ch) // CC_OTHER; }
     return ($ch, $cc); }
@@ -203,13 +222,77 @@ sub getLocator {
   else {
     $fromLine = $toLine;
     $fromCol  = $toCol; }
-  return LaTeXML::Common::Locator->new($$self{source}, $fromLine, $fromCol + 1, $toLine, $toCol + 1); }
+  my $occurrence = $$self{last_token_occurrence};
+  return LaTeXML::Common::Locator->new($$self{source}, $fromLine, $fromCol + 1, $toLine, $toCol + 1,
+    $$self{source_id},
+    ($occurrence ? $$occurrence{byteStart} : undef),
+    ($occurrence ? $$occurrence{byteEnd} : undef)); }
 
 sub getTokenStartLocator {
   my ($self) = @_;
   my $col  = $$self{last_token_start_col} // $$self{colno} // 0;
   my $line = $$self{lineno} // 1;
-  return LaTeXML::Common::Locator->new($$self{source}, $line, $col + 1, $line, $col + 1); }
+  my $occurrence = $$self{last_token_occurrence};
+  return LaTeXML::Common::Locator->new($$self{source}, $line, $col + 1, $line, $col + 1,
+    $$self{source_id},
+    ($occurrence ? $$occurrence{byteStart} : undef),
+    ($occurrence ? $$occurrence{byteEnd} : undef)); }
+
+sub getLastTokenOccurrence {
+  my ($self) = @_;
+  return $$self{last_token_occurrence}; }
+
+sub getSourceId {
+  my ($self) = @_;
+  return $$self{source_id}; }
+
+sub _prepareCaptureLine {
+  my ($self, $line, $eolch) = @_;
+  my $record = $$self{current_line_record};
+  if (!$record || !$$self{source_id}) {
+    $$self{capture_spans} = undef;
+    return; }
+  my @graphemes = @{ $$record{graphemes} || [] };
+  my @spans = map { +{%$_} } @{ $$record{spans} || [] };
+  if ($$self{source}) {
+    while (@graphemes && $graphemes[-1] eq ' ') {
+      pop(@graphemes); pop(@spans); } }
+  if (defined $eolch) {
+    push(@spans, {
+        byteStart => $$record{rawContentEnd}, byteEnd => $$record{rawEnd}, synthetic => 1,
+      }); }
+  $$self{capture_spans} = \@spans;
+  return; }
+
+sub _spliceCaptureSpans {
+  my ($self, $start, $width) = @_;
+  return unless $$self{capture_spans};
+  my @removed = splice(@{ $$self{capture_spans} }, $start, $width);
+  return unless @removed;
+  splice(@{ $$self{capture_spans} }, $start, 0, {
+      byteStart => $removed[0]{byteStart}, byteEnd => $removed[-1]{byteEnd},
+    });
+  return; }
+
+sub _captureOccurrence {
+  my ($self, $token, $start_col, $end_col) = @_;
+  my $spans = $$self{capture_spans};
+  return unless $$self{source_id} && $spans && defined $start_col && defined $end_col
+    && $end_col > $start_col && defined $$spans[$start_col];
+  my @used = @$spans[$start_col .. $end_col - 1];
+  return if grep { !defined $_ || $$_{synthetic} } @used;
+  return {
+    token     => $token,
+    sourceId  => $$self{source_id},
+    source    => $$self{source},
+    byteStart => $used[0]{byteStart},
+    byteEnd   => $used[-1]{byteEnd},
+    fromLine  => $$self{lineno},
+    fromCol   => $start_col + 1,
+    toLine    => $$self{lineno},
+    toCol     => $end_col,
+    generated => 0,
+  }; }
 
 sub getSource {
   my ($self) = @_;
@@ -321,6 +404,7 @@ sub readToken {
         $$self{at_eof} = 1;
         $$self{chars}  = [];
         $$self{nchars} = 0;
+        $$self{last_token_occurrence} = undef;
         return $eoftoken if $eoftoken;
         return; }
       # Remove trailing spaces from external sources
@@ -330,20 +414,25 @@ sub readToken {
 
       $$self{chars}  = splitChars($line);
       $$self{nchars} = scalar(@{ $$self{chars} });
+      $self->_prepareCaptureLine($line, $eolch);
       # In state N, skip leading spaces & ignored, possibly decoding (trailing space removed above)
       my ($ch, $cc);
       while ((($ch, $cc) = getNextChar($self)) && (defined $ch)
         && (($cc == CC_SPACE) || ($cc == CC_IGNORE))) { }
       if ((defined $ch) && ($cc == CC_EOL)) {    # Eolch already? empty line!
         $$self{colno} = $$self{nchars};          # ignore rest of line.
+        $$self{last_token_occurrence} = undef;
         return T_CS('\par'); }
       elsif (($$self{nchars} == 0) || ($$self{colno} > $$self{nchars})) {    # Past end of line?
             # If upcoming line is empty, and there is no recognizable EOL, fake one
-        return T_MARKER('EOL') if $read_mode && ((!defined $eolch) || ($eolch ne "\r")); }
+        if ($read_mode && ((!defined $eolch) || ($eolch ne "\r"))) {
+          $$self{last_token_occurrence} = undef;
+          return T_MARKER('EOL'); } }
       else {    # Back up over peeked char
         $$self{colno}--; }
       # Sneak a comment out, every so often.
       if ((($$self{lineno} % $READLINE_PROGRESS_QUANTUM) == 0) && $STATE->lookupValue('INCLUDE_COMMENTS')) {
+        $$self{last_token_occurrence} = undef;
         return T_COMMENT("**** " . ($$self{shortsource} || 'String') . " Line $$self{lineno} ****"); }
     }
     if ($$self{skipping_spaces}) {    # In state S, skip spaces
@@ -363,6 +452,7 @@ sub readToken {
     if (defined $token) {
       $$self{last_token_start_col} = $start_col;
       $$self{last_token_end_col}   = $$self{colno};
+      $$self{last_token_occurrence} = $self->_captureOccurrence($token, $start_col, $$self{colno});
       return $token; }
   }
   return; }

@@ -28,6 +28,11 @@ sub new {
   my ($class, $pathname) = @_;
   my ($dir, $name, $ext) = pathname_split($pathname);
   my $self = bless { source => $pathname, shortsource => "$name.$ext" }, $class;
+  if ($STATE && $STATE->lookupValue('CAPTURE_PROVENANCE')) {
+    if (my $registry = $STATE->lookupValue('SOURCE_REGISTRY')) {
+      $$self{source_id} = $registry->registerSource(
+        kind => 'virtual', display => $pathname,
+        encoding => ($STATE->lookupValue('PERL_INPUT_ENCODING') || 'UTF-8')); } }
   ProgressSpinup("Loading $$self{source}");
   return $self; }
 
@@ -46,7 +51,12 @@ sub getLocator {
   my ($pkg, $file, $line);
   while (($pkg, $file, $line) = caller($frame++)) {
     last if $file eq $path; }
-  return LaTeXML::Common::Locator->new($$self{source}, $line ? $line : undef); }
+  return LaTeXML::Common::Locator->new($$self{source}, $line ? $line : undef,
+    undef, undef, undef, $$self{source_id}); }
+
+sub getSourceId {
+  my ($self) = @_;
+  return $$self{source_id}; }
 
 sub getSource {
   my ($self) = @_;

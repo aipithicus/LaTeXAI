@@ -343,8 +343,11 @@ sub hardYankProcessing {
   $state->assignValue('current_environment', undef, 'global');
   # then reset the gullet
   $$gullet{pushback}         = [];
+  $$gullet{pushback_occurrences} = [];
   $$gullet{mouthstack}       = [];
   $$gullet{pending_comments} = [];
+  $$gullet{pending_comment_occurrences} = [];
+  $$gullet{current_occurrence} = undef;
   $$gullet{mouth}            = LaTeXML::Core::Mouth->new();
   return; }
 

@@ -60,6 +60,9 @@
         <ref name="BackMatter.class"/>
       </choice>
     </zeroOrMore>
+    <optional>
+      <ref name="capture.ledger"/>
+    </optional>
   </define>
   <!-- ====================================================================== -->
   <define name="sectional-block">

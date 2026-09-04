@@ -169,6 +169,12 @@ our @CATCODE_ABSORBABLE = (    # [CONSTANT]
 sub invokeToken {
   no warnings 'recursion';
   my ($self, $token) = @_;
+  my $gullet_occurrence = $$self{gullet}->getCurrentOccurrence;
+  my $token_occurrence = ($gullet_occurrence && $$gullet_occurrence{token}
+      && $$gullet_occurrence{token} eq $token)
+    ? $gullet_occurrence
+    : ($LaTeXML::CURRENT_OCCURRENCE || $gullet_occurrence);
+  local $LaTeXML::CURRENT_OCCURRENCE = $token_occurrence;
 INVOKE:
   ProgressStep() if ($$self{progress}++ % $DIGESTION_PROGRESS_QUANTUM) == 0;
   push(@{ $$self{token_stack} }, $token);
@@ -203,8 +209,11 @@ INVOKE:
   # but it isn't expanded in the gullet, but later when digesting, in math mode (? I think)
   elsif ($meaning->isExpandable) {
     my $gullet = $$self{gullet};
-    $gullet->unread($meaning->invoke($gullet));
+    my $invocation_occurrence = $gullet->getCurrentOccurrence;
+    my $expansion = $meaning->invoke($gullet);
+    $gullet->unreadExpansion($expansion, $meaning, $invocation_occurrence);
     $token = $gullet->readXToken();    # replace the token by it's expansion!!!
+    $LaTeXML::CURRENT_OCCURRENCE = $gullet->getCurrentOccurrence if $token;
     pop(@{ $$self{token_stack} });
     goto INVOKE if $token; }
   elsif ($meaning->isaDefinition) {    # Otherwise, a normal primitive or constructor

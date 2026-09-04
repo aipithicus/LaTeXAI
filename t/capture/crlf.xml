@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML" xmlns:capture="http://dlmf.nist.gov/LaTeXML/capture" capture:base="CAPTURE_BASE" capture:byteEnd="41" capture:byteStart="25" capture:file="crlf.tex" capture:fromCol="1" capture:fromLine="2" capture:locator="crlf.tex#textrange(from=2;1,to=2;16)" capture:toCol="16" capture:toLine="2">
+  <resource capture:byteEnd="41" capture:byteStart="25" capture:file="crlf.tex" capture:fromCol="1" capture:fromLine="2" capture:locator="crlf.tex#textrange(from=2;1,to=2;16)" capture:toCol="16" capture:toLine="2" src="LaTeXML.css" type="text/css"/>
+  <resource capture:byteEnd="41" capture:byteStart="25" capture:file="crlf.tex" capture:fromCol="1" capture:fromLine="2" capture:locator="crlf.tex#textrange(from=2;1,to=2;16)" capture:toCol="16" capture:toLine="2" src="ltx-article.css" type="text/css"/>
+  <para capture:byteEnd="49" capture:byteStart="43" capture:file="crlf.tex" capture:fromCol="1" capture:fromLine="3" capture:locator="crlf.tex#textrange(from=3;1,to=3;6)" capture:toCol="6" capture:toLine="3" xml:id="p1">
+    <p capture:byteEnd="49" capture:byteStart="43" capture:file="crlf.tex" capture:fromCol="1" capture:fromLine="3" capture:locator="crlf.tex#textrange(from=3;1,to=3;6)" capture:toCol="6" capture:toLine="3"><Math capture:byteEnd="49" capture:byteStart="43" capture:file="crlf.tex" capture:fromCol="1" capture:fromLine="3" capture:locator="crlf.tex#textrange(from=3;1,to=3;6)" capture:provenance="source" capture:source="$crlf$" capture:toCol="6" capture:toLine="3" mode="inline" tex="crlf" text="c * r * l * f" xml:id="p1.m1">
+        <XMath capture:byteEnd="49" capture:byteStart="43" capture:file="crlf.tex" capture:fromCol="1" capture:fromLine="3" capture:locator="crlf.tex#textrange(from=3;1,to=3;6)" capture:toCol="6" capture:toLine="3">
+          <XMApp capture:byteEnd="49" capture:byteStart="43" capture:file="crlf.tex" capture:fromCol="1" capture:fromLine="3" capture:locator="crlf.tex#textrange(from=3;1,to=3;6)" capture:toCol="6" capture:toLine="3">
+            <XMTok capture:byteEnd="49" capture:byteStart="43" capture:file="crlf.tex" capture:fromCol="1" capture:fromLine="3" capture:locator="crlf.tex#textrange(from=3;1,to=3;6)" capture:toCol="6" capture:toLine="3" meaning="times" role="MULOP">⁢</XMTok>
+            <XMTok capture:byteEnd="45" capture:byteStart="44" capture:file="crlf.tex" capture:fromCol="3" capture:fromLine="3" capture:locator="crlf.tex#textrange(from=3;3,to=3;3)" capture:toCol="3" capture:toLine="3" font="italic" role="UNKNOWN">c</XMTok>
+            <XMTok capture:byteEnd="46" capture:byteStart="45" capture:file="crlf.tex" capture:fromCol="4" capture:fromLine="3" capture:locator="crlf.tex#textrange(from=3;4,to=3;4)" capture:toCol="4" capture:toLine="3" font="italic" role="UNKNOWN">r</XMTok>
+            <XMTok capture:byteEnd="47" capture:byteStart="46" capture:file="crlf.tex" capture:fromCol="5" capture:fromLine="3" capture:locator="crlf.tex#textrange(from=3;5,to=3;5)" capture:toCol="5" capture:toLine="3" font="italic" role="UNKNOWN">l</XMTok>
+            <XMTok capture:byteEnd="48" capture:byteStart="47" capture:file="crlf.tex" capture:fromCol="6" capture:fromLine="3" capture:locator="crlf.tex#textrange(from=3;6,to=3;6)" capture:toCol="6" capture:toLine="3" font="italic" role="UNKNOWN">f</XMTok>
+          </XMApp>
+        </XMath>
+      </Math></p>
+  </para>
+  <capture:ledger>
+    <capture:engine capture="true" includestyles="false" lexematize="false" noparse="false" revision="CAPTURE_REVISION" version="0.8.8">
+      <capture:preload name="LaTeX.pool"/>
+    </capture:engine>
+    <capture:packages>
+      <capture:package diagnostic="missing-request-occurrence" kind="package" name="textcomp" options="" resolved="../../lib/LaTeXML/Package/textcomp.sty.ltxml" route="binding"/>
+      <capture:package kind="class" name="article" options="" requestByteEnd="14" requestByteStart="0" requestFile="crlf.tex" resolved="../../lib/LaTeXML/Package/article.cls.ltxml" route="binding"/>
+    </capture:packages>
+    <capture:math callsiteOnly="0" crossSource="0" display="0" failedCells="0" inline="1" parser="run" source="1" total="1" unlocated="0" unparsed="0"/>
+    <capture:encoding substitutions="0"/>
+    <capture:messages errors="0" warnings="0"/>
+  </capture:ledger>
+</document>

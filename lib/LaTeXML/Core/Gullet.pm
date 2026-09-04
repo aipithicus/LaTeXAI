@@ -31,7 +31,9 @@ use base qw(LaTeXML::Common::Object);
 sub new {
   my ($class, %options) = @_;
   return bless {
-    mouth     => undef, mouthstack => [], pushback => [], autoclose => 1, pending_comments => [],
+    mouth     => undef, mouthstack => [], pushback => [], pushback_occurrences => [],
+    current_occurrence => undef, autoclose => 1,
+    pending_comments => [], pending_comment_occurrences => [],
     verbosity => $options{verbosity} || 0,
     progress  => 0,
   }, $class; }
@@ -48,9 +50,12 @@ our $TOKEN_PROGRESS_QUANTUM = 30000;
 sub openMouth {
   my ($self, $mouth, $noautoclose) = @_;
   return unless $mouth;
-  unshift(@{ $$self{mouthstack} }, [$$self{mouth}, $$self{pushback}, $$self{autoclose}]) if $$self{mouth};
+  unshift(@{ $$self{mouthstack} }, [$$self{mouth}, $$self{pushback},
+      $$self{pushback_occurrences}, $$self{autoclose}, $$self{current_occurrence}]) if $$self{mouth};
   $$self{mouth}     = $mouth;
   $$self{pushback}  = [];
+  $$self{pushback_occurrences} = [];
+  $$self{current_occurrence} = undef;
   $$self{autoclose} = !$noautoclose;
   return; }
 
@@ -61,9 +66,12 @@ sub closeMouth {
     Error('unexpected', $next, $self, "Closing mouth with input remaining '$next'"); }
   $$self{mouth}->finish;
   if (@{ $$self{mouthstack} }) {
-    ($$self{mouth}, $$self{pushback}, $$self{autoclose}) = @{ shift(@{ $$self{mouthstack} }) }; }
+    ($$self{mouth}, $$self{pushback}, $$self{pushback_occurrences},
+      $$self{autoclose}, $$self{current_occurrence}) = @{ shift(@{ $$self{mouthstack} }) }; }
   else {
     $$self{pushback}  = [];
+    $$self{pushback_occurrences} = [];
+    $$self{current_occurrence} = undef;
     $$self{mouth}     = LaTeXML::Core::Mouth->new();
     $$self{autoclose} = 1; }
   return; }
@@ -84,7 +92,9 @@ sub flushMouth {
   my $mouth = $$self{mouth};
   # Put the remainder of Mouth's current line at the END of the pushback stack, to be read
   while (!$mouth->isEOL) {
-    push(@{ $$self{pushback} }, $mouth->readToken); }
+    my $token = $mouth->readToken;
+    push(@{ $$self{pushback} }, $token);
+    push(@{ $$self{pushback_occurrences} }, $mouth->getLastTokenOccurrence); }
   $mouth->finish;    # then finish the mouth (it'll get closed on next read)
   return; }
 
@@ -97,6 +107,8 @@ sub flush {
     my $entry = shift @{ $$self{mouthstack} };
     $$entry[0]->finish; }
   $$self{pushback}   = [];
+  $$self{pushback_occurrences} = [];
+  $$self{current_occurrence} = undef;
   $$self{mouth}      = LaTeXML::Core::Mouth->new();
   $$self{mouthstack} = [];
   return; }
@@ -163,6 +175,9 @@ sub getLocator {
 
 sub getTokenStartLocator {
   my ($self) = @_;
+  if (my $occurrence = $$self{current_occurrence}) {
+    if (my $locator = $self->occurrenceToLocator($occurrence)) {
+      return $locator->getFromLocator; } }
   my $mouth  = $$self{mouth};
   my $i      = 0;
   while ((defined $mouth) && (!defined $$mouth{source})
@@ -171,6 +186,101 @@ sub getTokenStartLocator {
   my $loc = (defined $mouth && $mouth->can('getTokenStartLocator') ? $mouth->getTokenStartLocator : undef);
   return $loc if defined $loc;
   return $self->getLocator; }
+
+sub getCurrentOccurrence {
+  my ($self) = @_;
+  return $$self{current_occurrence}; }
+
+sub occurrenceToLocator {
+  my ($self, $occurrence) = @_;
+  return unless $occurrence;
+  my ($kind, $resolved) = $self->resolveOccurrence($occurrence);
+  return unless $resolved && ($kind eq 'source' || $kind eq 'callsite');
+  return LaTeXML::Common::Locator->new(
+    $$resolved{source}, $$resolved{fromLine}, $$resolved{fromCol},
+    $$resolved{toLine}, $$resolved{toCol}, $$resolved{sourceId},
+    $$resolved{byteStart}, $$resolved{byteEnd}); }
+
+sub resolveOccurrence {
+  my ($self, $occurrence) = @_;
+  return ('unlocated', undef) unless $occurrence;
+  return ('callsite', $$occurrence{authorCallsite}) if $$occurrence{authorCallsite};
+  return ('source', $occurrence) if defined $$occurrence{sourceId};
+  if (my $origin = $$occurrence{origin}) {
+    return ('cross-source', $origin) if $$origin{crossSource};
+    return $self->resolveOccurrence($origin); }
+  return ('unlocated', undef); }
+
+sub _underlyingOccurrence {
+  my ($self, $occurrence) = @_;
+  return unless $occurrence;
+  return $occurrence if defined $$occurrence{sourceId};
+  if (my $origin = $$occurrence{origin}) {
+    return $origin if $$origin{crossSource};
+    return $self->_underlyingOccurrence($origin); }
+  return $$occurrence{authorCallsite}; }
+
+sub _cloneOccurrence {
+  my ($occurrence, $token) = @_;
+  return unless $occurrence;
+  return { %$occurrence, (defined $token ? (token => $token) : ()) }; }
+
+sub _rangeOccurrence {
+  my ($self, $from, $to) = @_;
+  my $first = $self->_underlyingOccurrence($from);
+  my $last  = $self->_underlyingOccurrence($to || $from);
+  return unless $first && $last;
+  if ($$first{crossSource} || $$last{crossSource}
+    || !defined $$first{sourceId} || !defined $$last{sourceId}
+    || $$first{sourceId} ne $$last{sourceId}) {
+    return { crossSource => 1, startOccurrence => $first, endOccurrence => $last }; }
+  return {
+    sourceId  => $$first{sourceId},
+    source    => $$first{source},
+    byteStart => $$first{byteStart},
+    byteEnd   => $$last{byteEnd},
+    fromLine  => $$first{fromLine},
+    fromCol   => $$first{fromCol},
+    toLine    => $$last{toLine},
+    toCol     => $$last{toCol},
+    generated => 0,
+  }; }
+
+sub _definitionIsAuthor {
+  my ($self, $definition) = @_;
+  return 0 unless $definition && $definition->can('getLocator');
+  my $locator = $definition->getLocator;
+  return 0 unless $locator;
+  my $source = $locator->can('getSourceFile') ? $locator->getSourceFile : undef;
+  return 0 if defined $source && $source =~ /\.(?:ltxml|latexml)$/i;
+  return 1 if defined $locator->getSourceId;
+  return defined($source) && $source !~ /\.(?:ltxml|latexml)$/i; }
+
+sub unreadExpansion {
+  my ($self, $tokens, $definition, $invocation) = @_;
+  return unless $tokens;
+  return $self->unread($tokens)
+    unless $STATE && $STATE->lookupValue('CAPTURE_PROVENANCE');
+  $invocation ||= $$self{current_occurrence};
+  my $end = $$self{current_occurrence} || $invocation;
+  my $origin = $self->_rangeOccurrence($invocation, $end) || $invocation;
+  my $author = $$invocation{authorCallsite};
+  my $frame_id;
+  if (!$author && $self->_definitionIsAuthor($definition)) {
+    $author = $self->_underlyingOccurrence($invocation);
+    if ($author && !$$author{crossSource}) {
+      my $registry = $STATE && $STATE->lookupValue('SOURCE_REGISTRY');
+      $frame_id = ($registry ? $registry->nextFrameId : undef);
+      $author = { %$author, authorFrameId => $frame_id }; }
+    else { $author = undef; } }
+  my $occurrence = {
+    generated      => 1,
+    origin         => $origin,
+    authorCallsite => $author,
+    definitionOrigin => ($author ? 'author' : 'engine'),
+    frameId        => $frame_id,
+  };
+  return $self->unreadWithOccurrence($occurrence, $tokens); }
 
 sub getSource {
   my ($self) = @_;
@@ -215,7 +325,44 @@ sub show_pushback {
 # Get the next pending comment token (if any)
 sub getPendingComment {
   my ($self) = @_;
-  return shift @{ $$self{pending_comments} } }
+  my $token = shift @{ $$self{pending_comments} };
+  return $token unless $STATE && $STATE->lookupValue('CAPTURE_PROVENANCE');
+  $$self{current_occurrence} = shift @{ $$self{pending_comment_occurrences} } if $token;
+  return $token; }
+
+sub _shiftPushback {
+  my ($self) = @_;
+  my $token = shift(@{ $$self{pushback} });
+  my $occurrence = shift(@{ $$self{pushback_occurrences} });
+  $$self{current_occurrence} = $occurrence;
+  return $token; }
+
+sub _unshiftPushback {
+  my ($self, $token, $occurrence) = @_;
+  return unless defined $token;
+  unshift(@{ $$self{pushback} }, $token);
+  unshift(@{ $$self{pushback_occurrences} }, _cloneOccurrence($occurrence, $token));
+  return; }
+
+sub _pushPushback {
+  my ($self, $token, $occurrence) = @_;
+  return unless defined $token;
+  push(@{ $$self{pushback} }, $token);
+  push(@{ $$self{pushback_occurrences} }, _cloneOccurrence($occurrence, $token));
+  return; }
+
+sub _readMouthToken {
+  my ($self) = @_;
+  my $token = $$self{mouth}->readToken();
+  $$self{current_occurrence} = ($token && $$self{mouth}->can('getLastTokenOccurrence'))
+    ? $$self{mouth}->getLastTokenOccurrence : undef;
+  return $token; }
+
+sub _holdComment {
+  my ($self, $token) = @_;
+  push(@{ $$self{pending_comments} }, $token);
+  push(@{ $$self{pending_comment_occurrences} }, _cloneOccurrence($$self{current_occurrence}, $token));
+  return; }
 
 # Note that every char (token) comes through here (maybe even twice, through args parsing),
 # So, be Fast & Clean!  This method only reads from the current input stream (Mouth).
@@ -243,6 +390,8 @@ sub handleMarker {
 
 sub handleTemplate {
   my ($self, $alignment, $token, $type, $hidden) = @_;
+  my $capturing = $STATE && $STATE->lookupValue('CAPTURE_PROVENANCE');
+  my $template_occurrence = $capturing ? $$self{current_occurrence} : undef;
   Debug("Halign $alignment: ALIGNMENT Column ended at " . Stringify($token)
       . " type $type [" . Stringify($STATE->lookupMeaning($token)) . "]"
       . "@ " . ToString(getLocator($self)))
@@ -258,11 +407,23 @@ sub handleTemplate {
   Debug("Halign $alignment: column after " . ToString($post)) if $LaTeXML::DEBUG{halign};
   if ((($type eq 'cr') || ($type eq 'crcr'))
     && $$alignment{in_row} && !$alignment->currentRow->{pseudorow}) {
-    unshift(@{ $$self{pushback} }, T_CS('\lx@alignment@row@after')); }
+    if ($capturing) {
+      _unshiftPushback($self, T_CS('\lx@alignment@row@after'), $template_occurrence); }
+    else {
+      unshift(@{ $$self{pushback} }, T_CS('\lx@alignment@row@after')); } }
   if ($arg) {
-    unshift(@{ $$self{pushback} }, T_BEGIN, $arg->unlist, T_END); }
-  unshift(@{ $$self{pushback} }, $token);
-  unshift(@{ $$self{pushback} }, $post->unlist);
+    if ($capturing) {
+      foreach my $item (reverse(T_BEGIN, $arg->unlist, T_END)) {
+        _unshiftPushback($self, $item, $template_occurrence); } }
+    else {
+      unshift(@{ $$self{pushback} }, T_BEGIN, $arg->unlist, T_END); } }
+  if ($capturing) {
+    _unshiftPushback($self, $token, $template_occurrence);
+    foreach my $item (reverse($post->unlist)) {
+      _unshiftPushback($self, $item, $template_occurrence); } }
+  else {
+    unshift(@{ $$self{pushback} }, $token);
+    unshift(@{ $$self{pushback} }, $post->unlist); }
   return; }
 
 # If it is a column ending token, Returns the token, a keyword and whether it is "hidden"
@@ -293,17 +454,17 @@ sub readToken {
   #  my $token = shift(@{$$self{pushback}});
   my ($token, $cc, $atoken, $atype, $ahidden);
   while (1) {
-    while (($token = shift(@{ $$self{pushback} }))
+    while (($token = _shiftPushback($self))
       && $CATCODE_HOLD[$cc = $$token[1]]) {
       if ($cc == CC_COMMENT) {
-        push(@{ $$self{pending_comments} }, $token); }
+        _holdComment($self, $token); }
       elsif ($cc == CC_MARKER) {
         handleMarker($self, $token); } }
     # Not in pushback, use the current mouth
     if (!defined $token) {
-      while (($token = $$self{mouth}->readToken()) && $CATCODE_HOLD[$cc = $$token[1]]) {
+      while (($token = _readMouthToken($self)) && $CATCODE_HOLD[$cc = $$token[1]]) {
         if ($cc == CC_COMMENT) {
-          push(@{ $$self{pending_comments} }, $token); }    # What to do with comments???
+          _holdComment($self, $token); }    # What to do with comments???
         elsif ($cc == CC_MARKER) {
           handleMarker($self, $token); } } }
     ProgressStep() if ($$self{progress}++ % $TOKEN_PROGRESS_QUANTUM) == 0;
@@ -323,8 +484,10 @@ sub readToken {
       handleTemplate($self, $LaTeXML::READING_ALIGNMENT, $token, $atype, $ahidden); }
     elsif ((defined $token) && ($$token[1] == CC_CS) && ($$token[0] eq '\dont_expand')) {
       my $unexpanded    = readToken($self);         # Replace next token with a special \relax
+      my $unexpanded_occurrence = $$self{current_occurrence};
       my $special_relax = T_CS('\special_relax');
       $$special_relax[2] = $unexpanded; # Smuggle the unexpanded token in the "meaning" slot of \special_relax
+      $$self{current_occurrence} = _cloneOccurrence($unexpanded_occurrence, $special_relax);
       return $special_relax; }
     else {
       last; } }
@@ -341,33 +504,82 @@ sub readToken {
 # This might be needed in more places?
 sub peekToken {
   my ($self) = @_;
+  unless ($STATE && $STATE->lookupValue('CAPTURE_PROVENANCE')) {
+    local $LaTeXML::ALIGN_STATE = 1000000;
+    if (my $token = readToken($self)) {
+      unshift(@{ $$self{pushback} }, $token);
+      return $token; }
+    return; }
+  my $prior_occurrence = $$self{current_occurrence};
   local $LaTeXML::ALIGN_STATE = 1000000;    # Inhibit readToken from processing {}!!!
   if (my $token = readToken($self)) {
-    unshift(@{ $$self{pushback} }, $token);
+    my $occurrence = $$self{current_occurrence};
+    _unshiftPushback($self, $token, $occurrence);
+    $$self{current_occurrence} = $prior_occurrence;
     return $token; }
   return; }
 
 # Unread tokens are assumed to be not-yet expanded.
 sub unread {
   my ($self, @tokens) = @_;
+  unless ($STATE && $STATE->lookupValue('CAPTURE_PROVENANCE')) {
+    my $level = 0;
+    my $pb    = $$self{pushback};
+    while (@tokens) {
+      my $token = pop(@tokens);
+      my $r     = ref $token;
+      if    (!defined $token) { }
+      elsif ($r eq 'LaTeXML::Core::Tokens') {
+        push(@tokens, @$token); }
+      elsif ($r eq 'LaTeXML::Core::Token') {
+        my $cc = $$token[1];
+        if    ($cc == CC_BEGIN) { $level--; }
+        elsif ($cc == CC_END)   { $level++; }
+        unshift(@$pb, $token); }
+      else {
+        Error('misdefined', $r, undef, "Expected a Token, got " . Stringify($_));
+        unshift(@$pb, T_OTHER($token)); } }
+    $LaTeXML::ALIGN_STATE += $level;
+    return; }
+  return $self->unreadWithOccurrence($$self{current_occurrence}, @tokens); }
+
+sub unreadWithOccurrence {
+  my ($self, $occurrence, @tokens) = @_;
+  my @flat = _flattenUnreadTokens(@tokens);
+  my @occurrences = map { _cloneOccurrence($occurrence, $_) } @flat;
+  return $self->unreadWithOccurrences(\@occurrences, @flat); }
+
+sub unreadWithOccurrences {
+  my ($self, $occurrences, @tokens) = @_;
+  my @flat = _flattenUnreadTokens(@tokens);
+  my @occurrences = @{ $occurrences || [] };
   my $level = 0;
-  my $pb    = $$self{pushback};
-  while (@tokens) {
-    my $token = pop(@tokens);
-    my $r     = ref $token;
-    if    (!defined $token) { }
-    elsif ($r eq 'LaTeXML::Core::Tokens') {
-      push(@tokens, @$token); }
-    elsif ($r eq 'LaTeXML::Core::Token') {
+  for (my $i = $#flat ; $i >= 0 ; $i--) {
+    my $token = $flat[$i];
+    my $occurrence = $occurrences[$i];
+    my $r = ref $token;
+    if ($r eq 'LaTeXML::Core::Token') {
       my $cc = $$token[1];
       if    ($cc == CC_BEGIN) { $level--; }    # Retract scanned braces
       elsif ($cc == CC_END)   { $level++; }
-      unshift(@$pb, $token); }
+      _unshiftPushback($self, $token, $occurrence); }
     else {
-      Error('misdefined', $r, undef, "Expected a Token, got " . Stringify($_));
-      unshift(@$pb, T_OTHER($token)); } }
+      Error('misdefined', $r, undef, "Expected a Token, got " . Stringify($token));
+      _unshiftPushback($self, T_OTHER($token), $occurrence); } }
   $LaTeXML::ALIGN_STATE += $level;
   return; }
+
+sub _flattenUnreadTokens {
+  my (@tokens) = @_;
+  my @flat = ();
+  foreach my $token (@tokens) {
+    my $r = ref $token;
+    if (!defined $token) { }
+    elsif ($r eq 'LaTeXML::Core::Tokens') {
+      push(@flat, _flattenUnreadTokens(@$token)); }
+    else {
+      push(@flat, $token); } }
+  return @flat; }
 
 # Read the next non-expandable token (expanding tokens until there's a non-expandable one).
 # Note that most tokens pass through here, so be Fast & Clean! readToken is folded in.
@@ -388,15 +600,15 @@ sub readXToken {
   $fully_expand = $toplevel unless defined $fully_expand;
   my ($token, $cc, $defn, $atoken, $atype, $ahidden);
   while (1) {
-    while (($token = shift(@{ $$self{pushback} })) && $CATCODE_HOLD[$cc = $$token[1]]) {
+    while (($token = _shiftPushback($self)) && $CATCODE_HOLD[$cc = $$token[1]]) {
       if ($cc == CC_COMMENT) {
-        push(@{ $$self{pending_comments} }, $token); }
+        _holdComment($self, $token); }
       elsif ($cc == CC_MARKER) {
         handleMarker($self, $token); } }
     if (!defined $token) {    # Else read from current mouth
-      while (($token = $$self{mouth}->readToken()) && $CATCODE_HOLD[$cc = $$token[1]]) {
+      while (($token = _readMouthToken($self)) && $CATCODE_HOLD[$cc = $$token[1]]) {
         if ($cc == CC_COMMENT) {
-          push(@{ $$self{pending_comments} }, $token); }
+          _holdComment($self, $token); }
         elsif ($cc == CC_MARKER) {
           handleMarker($self, $token); } } }
     ProgressStep() if ($$self{progress}++ % $TOKEN_PROGRESS_QUANTUM) == 0;
@@ -405,7 +617,11 @@ sub readXToken {
       closeMouth($self); }    # Next input stream.
     elsif (($cc == CC_CS) && ($$token[0] eq '\dont_expand')) {
       my $unexpanded = readToken($self);
-      return ($for_conditional && ($$unexpanded[1] == CC_ACTIVE) ? $unexpanded : T_CS('\special_relax')); }
+      my $unexpanded_occurrence = $$self{current_occurrence};
+      my $result = ($for_conditional && ($$unexpanded[1] == CC_ACTIVE)
+        ? $unexpanded : T_CS('\special_relax'));
+      $$self{current_occurrence} = _cloneOccurrence($unexpanded_occurrence, $result);
+      return $result; }
     ## Wow!!!!! See TeX the Program \S 309
     elsif (!$LaTeXML::ALIGN_STATE    # SHOULD count nesting of { }!!! when SCANNED (not digested)
       && $LaTeXML::READING_ALIGNMENT
@@ -420,11 +636,16 @@ sub readXToken {
         || ($$defn{isProtected} && !$fully_expand)) {
         return $token; }
       else {
+        my $invocation_occurrence = $$self{current_occurrence};
         local $LaTeXML::CURRENT_TOKEN = $token;
         no warnings 'recursion';
         my $expansion = $defn->invoke($self);
         # add the newly expanded tokens back into the gullet stream, in the ordinary case.
-        unread($self, $expansion) if $expansion; } }
+        if ($expansion) {
+          if ($STATE && $STATE->lookupValue('CAPTURE_PROVENANCE')) {
+            $self->unreadExpansion($expansion, $defn, $invocation_occurrence); }
+          else {
+            unread($self, $expansion); } } } }
     elsif ($$token[1] == CC_CS && !(defined $defn)) {
       $STATE->generateErrorStub($self, $token);       # cs SHOULD have defn by now; report early!
       return $token; }
@@ -468,13 +689,14 @@ sub readBalanced {
   while (1) {
     if (@{ $$self{pending_comments} }) {
       push(@tokens, @{ $$self{pending_comments} });
-      $$self{pending_comments} = []; }
+      $$self{pending_comments} = [];
+      $$self{pending_comment_occurrences} = []; }
     # Examine pushback first
-    while (($token = shift(@{ $$self{pushback} })) && $CATCODE_HOLD[$cc = $$token[1]]) {
+    while (($token = _shiftPushback($self)) && $CATCODE_HOLD[$cc = $$token[1]]) {
       if    ($cc == CC_COMMENT) { push(@tokens, $token); }
       elsif ($cc == CC_MARKER)  { handleMarker($self, $token); } }
     if (!defined $token) {    # Else read from current mouth
-      while (($token = $$self{mouth}->readToken()) && $CATCODE_HOLD[$cc = $$token[1]]) {
+      while (($token = _readMouthToken($self)) && $CATCODE_HOLD[$cc = $$token[1]]) {
         if    ($cc == CC_COMMENT) { push(@tokens, $token); }
         elsif ($cc == CC_MARKER)  { handleMarker($self, $token); } } }
     ProgressStep() if ($$self{progress}++ % $TOKEN_PROGRESS_QUANTUM) == 0;
@@ -506,6 +728,7 @@ sub readBalanced {
       && ((ref $defn) ne 'LaTeXML::Core::Token')    # an actual definition
       && $defn->isExpandable
       && (!$$defn{isProtected} || $fully_expand)) { # is this the right logic here? don't expand unless di
+      my $invocation_occurrence = $$self{current_occurrence};
       local $LaTeXML::CURRENT_TOKEN = $token;
       my $r;
       no warnings 'recursion';
@@ -523,7 +746,11 @@ sub readBalanced {
             push(@tokens, $t); } }
       }
       else {    # otherwise, prepend to pushback to be expanded further.
-        unread($self, $expansion) if $expansion; } }
+        if ($expansion) {
+          if ($STATE && $STATE->lookupValue('CAPTURE_PROVENANCE')) {
+            $self->unreadExpansion($expansion, $defn, $invocation_occurrence); }
+          else {
+            unread($self, $expansion); } } } }
     else {
       if ($expanded && ($$token[1] == CC_CS) && !(defined $defn)) {
         $STATE->generateErrorStub($self, $token); }    # cs SHOULD have defn by now; report early!
@@ -551,6 +778,7 @@ sub readRawLine {
     @tokens = grep { $_->getCatcode != CC_MARKER } @tokens;    # Remove
     map { LaTeXML::Core::Definition::stopProfiling($_, 'expand') } @markers; }
   $$self{pushback} = [];
+  $$self{pushback_occurrences} = [];
   # If we still have peeked tokens, we ONLY want to combine it with the remainder
   # of the current line from the Mouth (NOT reading a new line)
   if (@tokens) {
@@ -606,28 +834,58 @@ sub skipFiller {
 
 sub ifNext {
   my ($self, $token) = @_;
+  unless ($STATE && $STATE->lookupValue('CAPTURE_PROVENANCE')) {
+    if (my $tok = readToken($self)) {
+      unread($self, $tok);
+      return $tok->equals($token); }
+    else { return 0; } }
+  my $prior_occurrence = $$self{current_occurrence};
   if (my $tok = readToken($self)) {
-    unread($self, $tok);
+    my $occurrence = $$self{current_occurrence};
+    $self->unreadWithOccurrence($occurrence, $tok);
+    $$self{current_occurrence} = $prior_occurrence;
     return $tok->equals($token); }
   else { return 0; } }
 
 # Match the input against one of the Token or Tokens in @choices; return the matching one or undef.
 sub readMatch {
   my ($self, @choices) = @_;
+  unless ($STATE && $STATE->lookupValue('CAPTURE_PROVENANCE')) {
+    foreach my $choice (@choices) {
+      my @tomatch = $choice->unlist;
+      my @matched = ();
+      my $token;
+      while (@tomatch && defined($token = readToken($self))
+        && push(@matched, $token) && ($token->equals($tomatch[0]) ||
+          ($$token[2] && ($$token[0] eq '\special_relax') && $$token[2]->equals($tomatch[0])))) {
+        shift(@tomatch);
+        if ($$token[1] == CC_SPACE) {
+          while (defined($token = readToken($self)) && ($$token[1] == CC_SPACE)) {
+            push(@matched, $token); }
+          unread($self, $token) if defined $token; } }
+      return $choice unless @tomatch;
+      unread($self, @matched); }
+    return; }
   foreach my $choice (@choices) {
     my @tomatch = $choice->unlist;
     my @matched = ();
+    my @matched_occurrences = ();
     my $token;
     while (@tomatch && defined($token = readToken($self))
-      && push(@matched, $token) && ($token->equals($tomatch[0]) ||
+      && push(@matched, $token) && push(@matched_occurrences, _cloneOccurrence($$self{current_occurrence}, $token))
+      && ($token->equals($tomatch[0]) ||
         ($$token[2] && ($$token[0] eq '\special_relax') && $$token[2]->equals($tomatch[0])))) {
       shift(@tomatch);
       if ($$token[1] == CC_SPACE) {    # If this was space, SKIP any following!!!
         while (defined($token = readToken($self)) && ($$token[1] == CC_SPACE)) {
-          push(@matched, $token); }
+          push(@matched, $token);
+          push(@matched_occurrences, _cloneOccurrence($$self{current_occurrence}, $token)); }
         unread($self, $token) if defined $token; } }
     return $choice unless @tomatch;    # All matched!!!
-    unread($self, @matched);           # Put 'em back and try next!
+    if ($STATE && $STATE->lookupValue('CAPTURE_PROVENANCE')) {
+      $self->unreadWithOccurrences(\@matched_occurrences, @matched); }
+    else {
+      unread($self, @matched); }           # Put 'em back and try next!
   }
   return; }
 
@@ -636,17 +894,35 @@ sub readMatch {
 # AND, macros are expanded.
 sub readKeyword {
   my ($self, @keywords) = @_;
+  unless ($STATE && $STATE->lookupValue('CAPTURE_PROVENANCE')) {
+    skipSpaces($self);
+    foreach my $keyword (@keywords) {
+      $keyword = ToString($keyword) if ref $keyword;
+      my @tomatch = split('', uc($keyword));
+      my @matched = ();
+      my $tok;
+      while (@tomatch && defined($tok = readXToken($self, 0)) && push(@matched, $tok)
+        && (uc($$tok[0]) eq $tomatch[0])) {
+        shift(@tomatch); }
+      return $keyword unless @tomatch;
+      unread($self, @matched); }
+    return; }
   skipSpaces($self);
   foreach my $keyword (@keywords) {
     $keyword = ToString($keyword) if ref $keyword;
     my @tomatch = split('', uc($keyword));
     my @matched = ();
+    my @matched_occurrences = ();
     my $tok;
     while (@tomatch && defined($tok = readXToken($self, 0)) && push(@matched, $tok)
+      && push(@matched_occurrences, _cloneOccurrence($$self{current_occurrence}, $tok))
       && (uc($$tok[0]) eq $tomatch[0])) {
       shift(@tomatch); }
     return $keyword unless @tomatch;    # All matched!!!
-    unread($self, @matched); }          # Put 'em back tand try next!
+    if ($STATE && $STATE->lookupValue('CAPTURE_PROVENANCE')) {
+      $self->unreadWithOccurrences(\@matched_occurrences, @matched); }
+    else {
+      unread($self, @matched); } }         # Put 'em back tand try next!
   return; }
 
 # Return a (balanced) sequence tokens until a match against one of the Tokens in @delims.
@@ -707,7 +983,10 @@ sub readUntilBrace {
   while (defined($token = readToken($self))) {
     if ($$token[1] == CC_BEGIN) {    # INLINE Catcode
       $LaTeXML::ALIGN_STATE--;
-      unshift(@{ $$self{pushback} }, $token);    # Unread
+      if ($STATE && $STATE->lookupValue('CAPTURE_PROVENANCE')) {
+        _unshiftPushback($self, $token, $$self{current_occurrence}); }
+      else {
+        unshift(@{ $$self{pushback} }, $token); }    # Unread
       last; }
     push(@tokens, $token); }
   return TokensI(@tokens); }

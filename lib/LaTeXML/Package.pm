@@ -2676,8 +2676,42 @@ my $require_options = {    # [CONSTANT]
 # the standard texmf directories.  Maybe even use kpsewhich itself (INSTEAD of pathname_find ???)
 # Another potentially useful option might be that if we are reading a raw file,
 # perhaps it should just get digested immediately, since it shouldn't contribute any boxes.
+sub recordCapturePackageRequest {
+  my ($kind, $name, $options, $resolved, $occurrence) = @_;
+  return unless $STATE && $STATE->lookupValue('CAPTURE_PROVENANCE');
+  my $registry = $STATE->lookupValue('SOURCE_REGISTRY');
+  return unless $registry;
+  my $route = (!$resolved ? 'missing' : ($resolved =~ /\.ltxml$/i ? 'binding' : 'raw'));
+  my %record = (
+    kind    => $kind,
+    name    => $name,
+    options => join(',', @{ $options || [] }),
+    route   => $route,
+  );
+  $record{resolved} = $registry->pathName($resolved) if $resolved;
+  if ($occurrence) {
+    my $gullet = $STATE->getStomach->getGullet;
+    my ($origin_kind, $resolved_occurrence) = $gullet->resolveOccurrence($occurrence);
+    if (($origin_kind eq 'source' || $origin_kind eq 'callsite')
+      && $resolved_occurrence && defined $$resolved_occurrence{sourceId}) {
+      $record{requestFile} = $registry->sourceName($$resolved_occurrence{sourceId});
+      $record{requestByteStart} = $$resolved_occurrence{byteStart};
+      $record{requestByteEnd} = $$resolved_occurrence{byteEnd}; }
+    else {
+      $record{diagnostic} = 'unresolved-request-occurrence';
+      $registry->recordDiagnostic('package-request', name => $name,
+        reason => $record{diagnostic}); } }
+  else {
+    $record{diagnostic} = 'missing-request-occurrence';
+    $registry->recordDiagnostic('package-request', name => $name,
+      reason => $record{diagnostic}); }
+  $registry->recordPackageRequest(\%record);
+  return; }
+
 sub RequirePackage {
   my ($package, %options) = @_;
+  my $capture_occurrence = $LaTeXML::CAPTURE_REQUEST_OCCURRENCE;
+  local $LaTeXML::CAPTURE_REQUEST_OCCURRENCE = undef;
   $package = ToString($package) if ref $package;
   if ($options{raw}) {
     delete $options{raw}; $options{notex} = 0;
@@ -2694,6 +2728,7 @@ sub RequirePackage {
     withoptions => !($options{options} && @{ $options{options} }),
     %options);
   maybeRequireDependencies($package, $options{type} || 'sty') unless $success;
+  recordCapturePackageRequest('package', $package, $options{options}, $success, $capture_occurrence);
   return; }
 
 my $loadclass_options = {    # [CONSTANT]
@@ -2701,6 +2736,8 @@ my $loadclass_options = {    # [CONSTANT]
 
 sub LoadClass {
   my ($class, %options) = @_;
+  my $capture_occurrence = $LaTeXML::CAPTURE_REQUEST_OCCURRENCE;
+  local $LaTeXML::CAPTURE_REQUEST_OCCURRENCE = undef;
   $options{notex} = 1
     if !defined $options{notex} && !LookupValue('INCLUDE_CLASSES') && !$options{noltxml};
   # Top-level requires can be limited to local sources via searchpaths_only => 1
@@ -2711,6 +2748,7 @@ sub LoadClass {
   # Note that we'll handle errors specifically for this case.
   if (my $success = InputDefinitions($class, type => 'cls', notex => $options{notex}, handleoptions => 1, noerror => 1,
       %options)) {
+    recordCapturePackageRequest('class', $class, $options{options}, $success, $capture_occurrence);
     return $success; }
   else {
     $STATE->noteStatus(missing => $class . '.cls');
@@ -2730,6 +2768,7 @@ sub LoadClass {
       maybeReportSearchPaths());
     if (my $success = InputDefinitions($alternate, type => 'cls', noerror => 1, handleoptions => 1, %options)) {
       maybeRequireDependencies($class, 'cls');
+      recordCapturePackageRequest('class', $class, $options{options}, $success, $capture_occurrence);
       return $success; }
     else {
       Fatal('missing_file', $alternate . '.cls.ltxml', $STATE->getStomach->getGullet,

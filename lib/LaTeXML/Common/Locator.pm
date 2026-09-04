@@ -19,10 +19,12 @@ use LaTeXML::Util::Pathname;
 use LaTeXML::Util::WWW;
 
 sub new {
-  my ($class, $source, $fromLine, $fromCol, $toLine, $toCol) = @_;
+  my ($class, $source, $fromLine, $fromCol, $toLine, $toCol,
+    $sourceId, $byteStart, $byteEnd) = @_;
   my $locator = bless { source => $source,
     fromLine => $fromLine, fromCol => $fromCol,
-    toLine   => $toLine,   toCol   => $toCol
+    toLine   => $toLine,   toCol   => $toCol,
+    sourceId => $sourceId, byteStart => $byteStart, byteEnd => $byteEnd,
   }, $class;
   return $locator; }
 
@@ -32,8 +34,13 @@ sub newRange {
   # make sure that either parameters are defined
   return $to   unless defined($from);
   return $from unless defined($to);
-  # bail if we have differnt sources
-  return unless ($$from{source} || '') eq ($$to{source} || '');
+  # Source ids, when present, are the identity. Path text remains the
+  # compatibility fallback for locators created outside capture mode.
+  if (defined $$from{sourceId} || defined $$to{sourceId}) {
+    return unless defined $$from{sourceId} && defined $$to{sourceId}
+      && $$from{sourceId} eq $$to{sourceId}; }
+  else {
+    return unless ($$from{source} || '') eq ($$to{source} || ''); }
   # the end coordinates depend on
   my ($toLine, $toCol);
   if ($to->isRange) {
@@ -42,7 +49,10 @@ sub newRange {
   else {
     $toLine = $$to{fromLine};
     $toCol  = $$to{fromCol}; }
-  return new($class, $$from{source}, $$from{fromLine}, $$from{fromCol}, $toLine, $toCol); }
+  my $byteStart = $$from{byteStart};
+  my $byteEnd = defined $$to{byteEnd} ? $$to{byteEnd} : $$to{byteStart};
+  return new($class, $$from{source}, $$from{fromLine}, $$from{fromCol}, $toLine, $toCol,
+    $$from{sourceId}, $byteStart, $byteEnd); }
 
 sub isRange {
   my ($self) = @_;
@@ -126,13 +136,27 @@ sub getToCol {
   my ($self) = @_;
   return $$self{toCol}; }
 
+sub getSourceId {
+  my ($self) = @_;
+  return $$self{sourceId}; }
+
+sub getByteStart {
+  my ($self) = @_;
+  return $$self{byteStart}; }
+
+sub getByteEnd {
+  my ($self) = @_;
+  return $$self{byteEnd}; }
+
 sub getFromLocator {
   my ($self) = @_;
-  return LaTeXML::Common::Locator->new($$self{source}, $$self{fromLine}, $$self{fromCol}); }
+  return LaTeXML::Common::Locator->new($$self{source}, $$self{fromLine}, $$self{fromCol},
+    undef, undef, $$self{sourceId}, $$self{byteStart}, $$self{byteStart}); }
 
 sub getToLocator {
   my ($self) = @_;
-  return LaTeXML::Common::Locator->new($$self{source}, $$self{toLine}, $$self{toCol}); }
+  return LaTeXML::Common::Locator->new($$self{source}, $$self{toLine}, $$self{toCol},
+    undef, undef, $$self{sourceId}, $$self{byteEnd}, $$self{byteEnd}); }
 
 #**********************************************************************
 1;

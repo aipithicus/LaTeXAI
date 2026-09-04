@@ -18,6 +18,7 @@ use LaTeXML::Common::Object;
 use LaTeXML::Core::List;
 use LaTeXML::Common::Error;
 use LaTeXML::Common::XML;
+use LaTeXML::Version;
 use LaTeXML::Util::Radix;
 use Unicode::Normalize;
 use Data::Dumper;
@@ -363,92 +364,189 @@ sub finalize {
   if (my $root = getDocument($self)->documentElement) {
     local $LaTeXML::FONT = LaTeXML::Common::Font->textDefault;
     finalize_rec($self, $root);
-    set_RDFa_prefixes(getDocument($self), $STATE->lookupValue('RDFa_prefixes')); }
+    set_RDFa_prefixes(getDocument($self), $STATE->lookupValue('RDFa_prefixes'));
+    appendCaptureLedger($self, $root)
+      if $STATE && $STATE->lookupValue('CAPTURE_PROVENANCE'); }
   #  return $$self{document}; }
   return $self; }
 
-our %SOURCE_FILE_CACHE = ();
+sub _captureSetUnlocated {
+  my ($self, $node, $registry, $reason) = @_;
+  setAttribute($self, $node, 'capture:provenance' => 'unlocated');
+  setAttribute($self, $node, 'capture:unlocatedReason' => $reason);
+  $registry->recordDiagnostic('unlocated-math', reason => $reason) if $registry;
+  return; }
 
-sub extract_source_slice {
-  my ($loc) = @_;
-  return unless $loc;
-  my $fromLine = $loc->can('getFromLine') ? $loc->getFromLine : $$loc{fromLine};
-  my $fromCol  = $loc->can('getFromCol')  ? $loc->getFromCol  : $$loc{fromCol};
-  my $toLine   = $loc->can('getToLine')   ? $loc->getToLine   : $$loc{toLine};
-  my $toCol    = $loc->can('getToCol')    ? $loc->getToCol    : $$loc{toCol};
-  return unless defined $fromLine;
-  $toLine = $fromLine unless defined $toLine;
-  $toCol  = $fromCol  unless defined $toCol;
+sub _captureEndpoint {
+  my ($gullet, $occurrence, $edge) = @_;
+  my ($kind, $resolved) = $gullet->resolveOccurrence($occurrence);
+  if ($kind eq 'cross-source' && $resolved) {
+    $resolved = ($edge eq 'start' ? $$resolved{startOccurrence} : $$resolved{endOccurrence});
+    while ($resolved && $$resolved{crossSource}) {
+      $resolved = ($edge eq 'start' ? $$resolved{startOccurrence} : $$resolved{endOccurrence}); }
+    return ('source', $resolved) if $resolved && defined $$resolved{sourceId}; }
+  return ($kind, $resolved); }
 
-  my $source = $loc->can('getSourceFile') ? $loc->getSourceFile : $$loc{source};
-  my $lines = undef;
-  if (defined $source && length($source) && -f $source) {
-    if (!exists $SOURCE_FILE_CACHE{$source}) {
-      if (open(my $fh, '<:encoding(UTF-8)', $source)) {
-        my @l = <$fh>;
-        close($fh);
-        $SOURCE_FILE_CACHE{$source} = \@l;
-      }
-    }
-    $lines = $SOURCE_FILE_CACHE{$source};
-  }
-  elsif ($STATE) {
-    my $cache = $STATE->lookupValue('SOURCE_LINES_CACHE') || {};
-    $lines = (defined $source && length($source) ? $$cache{$source} : undef)
-      || $$cache{'_anonymous_'};
-    if (!$lines && %$cache) {
-      my @keys = sort keys %$cache;
-      $lines = $$cache{$keys[0]};
-    }
-  }
-  return unless $lines && @$lines;
+sub _captureCarrierSpan {
+  my ($self, $node, $box) = @_;
+  if ($box && $box->can('getProperty')) {
+    return $box->getProperty('captureSpan') if $box->getProperty('captureSpan'); }
 
-  my $res = '';
-  if ($fromLine == $toLine) {
-    my $line = $lines->[$fromLine - 1] // '';
-    my $start = ($fromCol ? $fromCol - 1 : 0);
-    if ($start > 0 && substr($line, $start - 1, 1) eq '$' && substr($line, $start, 1) ne '$') {
-      $start--;
-    }
-    elsif ($start > 1 && substr($line, $start - 2, 2) eq '\[' && substr($line, $start, 1) ne '\\') {
-      $start -= 2;
-    }
-    my $end = ($toCol ? $toCol - 1 : length($line));
-    my $len = $end - $start + 1;
-    $res = substr($line, $start, ($len > 0 ? $len : 0));
-  }
-  else {
-    my $first = $lines->[$fromLine - 1] // '';
-    my $first_start = ($fromCol ? $fromCol - 1 : 0);
-    if ($first_start > 0 && substr($first, $first_start - 1, 1) eq '$' && substr($first, $first_start, 1) ne '$') {
-      $first_start--;
-    }
-    elsif ($first_start > 1 && substr($first, $first_start - 2, 2) eq '\[' && substr($first, $first_start, 1) ne '\\') {
-      $first_start -= 2;
-    }
-    $res = substr($first, $first_start);
-    for (my $i = $fromLine; $i < $toLine - 1; $i++) {
-      $res .= ($lines->[$i] // '');
-    }
-    my $last = $lines->[$toLine - 1] // '';
-    my $last_end = ($toCol ? $toCol - 1 : length($last));
-    $res .= substr($last, 0, $last_end + 1);
-  }
+  # MathFork and alignment rewrites synthesize Math carriers after digestion.
+  # Their nearest boxed ancestor is still the source-backed constructor that
+  # owns the carrier, so inherit its recorded span rather than rediscovering
+  # delimiters from serialized text.
+  my $ancestor = $node && $node->parentNode;
+  while ($ancestor && $ancestor->nodeType == XML_ELEMENT_NODE) {
+    my $ancestor_box = getNodeBox($self, $ancestor);
+    if ($ancestor_box && $ancestor_box->can('getProperty')) {
+      return $ancestor_box->getProperty('captureSpan')
+        if $ancestor_box->getProperty('captureSpan'); }
+    $ancestor = $ancestor->parentNode; }
+  return; }
 
-  if ($res =~ /^(\\\[.*?\\\])/s) {
-    $res = $1;
-  }
-  elsif ($res =~ /^(\\begin\{[^\}]+\}.*?\\end\{[^\}]+\})/s) {
-    $res = $1;
-  }
-  elsif ($res =~ /^(\$\$.*?\$\$)/s) {
-    $res = $1;
-  }
-  elsif ($res =~ /^(\$.*?\$)/s) {
-    $res = $1;
-  }
-  return $res;
+sub _captureMath {
+  my ($self, $node, $box, $registry) = @_;
+  return _captureSetUnlocated($self, $node, $registry, 'missing-carrier-box') unless $box;
+  my $span = _captureCarrierSpan($self, $node, $box);
+  return _captureSetUnlocated($self, $node, $registry, 'missing-capture-span') unless $span;
+  my ($start, $end) = ($$span{startOccurrence}, $$span{endOccurrence});
+  return _captureSetUnlocated($self, $node, $registry, 'missing-start-occurrence') unless $start;
+  return _captureSetUnlocated($self, $node, $registry, 'missing-end-occurrence') unless $end;
+  my $gullet = $STATE->getStomach->getGullet;
+  my ($start_kind, $start_occurrence) = _captureEndpoint($gullet, $start, 'start');
+  my ($end_kind,   $end_occurrence)   = _captureEndpoint($gullet, $end,   'end');
+
+  if ($start_kind eq 'source' && $end_kind eq 'source'
+    && $start_occurrence && $end_occurrence) {
+    if ($$start_occurrence{sourceId} eq $$end_occurrence{sourceId}) {
+      my ($source_id, $byte_start, $byte_end) = (
+        $$start_occurrence{sourceId}, $$start_occurrence{byteStart}, $$end_occurrence{byteEnd});
+      my $slice = $registry->decodedSlice($source_id, $byte_start, $byte_end);
+      return _captureSetUnlocated($self, $node, $registry, 'invalid-source-interval')
+        unless defined $slice;
+      setAttribute($self, $node, 'capture:provenance' => 'source');
+      setAttribute($self, $node, 'capture:file'       => $registry->sourceName($source_id));
+      setAttribute($self, $node, 'capture:byteStart'  => $byte_start);
+      setAttribute($self, $node, 'capture:byteEnd'    => $byte_end);
+      setAttribute($self, $node, 'capture:source'     => $slice);
+      return; }
+    setAttribute($self, $node, 'capture:provenance' => 'cross-source');
+    setAttribute($self, $node, 'capture:startFile'  => $registry->sourceName($$start_occurrence{sourceId}));
+    setAttribute($self, $node, 'capture:byteStart'  => $$start_occurrence{byteStart});
+    setAttribute($self, $node, 'capture:endFile'    => $registry->sourceName($$end_occurrence{sourceId}));
+    setAttribute($self, $node, 'capture:byteEnd'    => $$end_occurrence{byteEnd});
+    return; }
+
+  if ($start_kind eq 'callsite' && $end_kind eq 'callsite'
+    && $start_occurrence && $end_occurrence
+    && defined $$start_occurrence{authorFrameId}
+    && defined $$end_occurrence{authorFrameId}
+    && $$start_occurrence{authorFrameId} eq $$end_occurrence{authorFrameId}) {
+    my $source_id = $$start_occurrence{sourceId};
+    my ($byte_start, $byte_end) = ($$start_occurrence{byteStart}, $$start_occurrence{byteEnd});
+    my $slice = $registry->decodedSlice($source_id, $byte_start, $byte_end);
+    return _captureSetUnlocated($self, $node, $registry, 'invalid-callsite-interval')
+      unless defined $slice;
+    setAttribute($self, $node, 'capture:provenance'  => 'callsite-only');
+    setAttribute($self, $node, 'capture:callsiteFile'  => $registry->sourceName($source_id));
+    setAttribute($self, $node, 'capture:callsiteStart' => $byte_start);
+    setAttribute($self, $node, 'capture:callsiteEnd'   => $byte_end);
+    setAttribute($self, $node, 'capture:callsite'      => $slice);
+    return; }
+
+  my $reason = ($start_kind ne $end_kind ? 'mixed-endpoint-provenance'
+    : ($start_kind eq 'callsite' ? 'distinct-author-invocations'
+      : 'unresolved-endpoint-provenance'));
+  return _captureSetUnlocated($self, $node, $registry, $reason);
 }
+
+sub _captureBoolean {
+  return $_[0] ? 'true' : 'false'; }
+
+sub _captureEngineVersion {
+  return "$LaTeXML::VERSION" if defined $LaTeXML::VERSION;
+  # The command-line driver loads LaTeXML.pm, but direct Core consumers need
+  # the same mandatory ledger value without depending on driver side effects.
+  eval { require LaTeXML; 1; };
+  return defined $LaTeXML::VERSION ? "$LaTeXML::VERSION" : 'unknown'; }
+
+sub _captureElement {
+  my ($document, $parent, $name, %attributes) = @_;
+  my $namespace = 'http://dlmf.nist.gov/LaTeXML/capture';
+  my $element = $document->createElementNS($namespace, 'capture:' . $name);
+  foreach my $key (sort keys %attributes) {
+    $element->setAttribute($key, $attributes{$key}) if defined $attributes{$key}; }
+  $parent->appendChild($element);
+  return $element; }
+
+sub appendCaptureLedger {
+  my ($self, $root) = @_;
+  my $registry = $STATE->lookupValue('SOURCE_REGISTRY');
+  return unless $registry;
+  my $document = getDocument($self);
+  my $options = $STATE->lookupValue('CAPTURE_OPTIONS') || {};
+  my $ledger = _captureElement($document, $root, 'ledger');
+  my $engine = _captureElement($document, $ledger, 'engine',
+    version       => _captureEngineVersion(),
+    revision      => $LaTeXML::Version::REVISION,
+    capture       => 'true',
+    includestyles => _captureBoolean($$options{includestyles}),
+    noparse       => _captureBoolean($$options{noparse}),
+    lexematize    => _captureBoolean($STATE->lookupValue('LEXEMATIZE_MATH')));
+  foreach my $preload (@{ $$options{preload} || [] }) {
+    _captureElement($document, $engine, 'preload', name => $preload); }
+
+  my $packages = _captureElement($document, $ledger, 'packages');
+  foreach my $record ($registry->getPackageRequests) {
+    _captureElement($document, $packages, 'package', %$record); }
+
+  my @math = $self->findnodes('descendant-or-self::ltx:Math');
+  my %partition = (source => 0, 'callsite-only' => 0, 'cross-source' => 0, unlocated => 0);
+  my ($inline, $display, $unparsed) = (0, 0, 0);
+  foreach my $math (@math) {
+    my $provenance = $math->getAttributeNS('http://dlmf.nist.gov/LaTeXML/capture', 'provenance') || 'unlocated';
+    $partition{$provenance}++ if exists $partition{$provenance};
+    my $is_display = (($math->getAttribute('mode') || '') eq 'display');
+    if (!$is_display) {
+      my $ancestor = $math->parentNode;
+      while ($ancestor && $ancestor->nodeType == XML_ELEMENT_NODE) {
+        my $name = $ancestor->localname || '';
+        if ($name eq 'equation' || $name eq 'equationgroup') {
+          $is_display = 1;
+          last; }
+        $ancestor = $ancestor->parentNode; } }
+    if ($is_display) { $display++; }
+    else             { $inline++; }
+    my $class = $math->getAttribute('class') || '';
+    $unparsed++ if $class =~ /(?:^|\s)ltx_math_unparsed(?:\s|$)/; }
+  my %math_attributes = (
+    total        => scalar(@math),
+    inline       => $inline,
+    display      => $display,
+    source       => $partition{source},
+    callsiteOnly => $partition{'callsite-only'},
+    crossSource  => $partition{'cross-source'},
+    unlocated    => $partition{unlocated},
+    unparsed     => $unparsed,
+    parser       => ($STATE->lookupValue('CAPTURE_PARSER') || 'not-run'),
+  );
+  $math_attributes{failedCells} = $STATE->lookupValue('CAPTURE_FAILED_CELLS')
+    if $math_attributes{parser} eq 'run';
+  _captureElement($document, $ledger, 'math', %math_attributes);
+
+  my @events = $registry->getEncodingEvents;
+  my $encoding = _captureElement($document, $ledger, 'encoding', substitutions => scalar(@events));
+  foreach my $event (@events) {
+    _captureElement($document, $encoding, 'event',
+      file        => $registry->sourceName($$event{sourceId}),
+      byteStart   => $$event{byteStart},
+      byteEnd     => $$event{byteEnd},
+      replacement => $$event{replacement}); }
+  _captureElement($document, $ledger, 'messages',
+    errors   => ($STATE->getStatus('error') || 0),
+    warnings => ($STATE->getStatus('warning') || 0));
+  return; }
 
 sub finalize_rec {
   my ($self, $node) = @_;
@@ -531,24 +629,34 @@ sub finalize_rec {
 
   # Provenance capture when --capture is active
   if ($STATE && $STATE->lookupValue('CAPTURE_PROVENANCE') && $node->nodeType == XML_ELEMENT_NODE) {
+    my $registry = $STATE->lookupValue('SOURCE_REGISTRY');
+    if ($registry && $node->localname eq 'document') {
+      if (my $base = $registry->getBase) {
+        $base =~ s!\\!/!g;
+        setAttribute($self, $node, 'capture:base' => $base); } }
     if (my $box = getNodeBox($self, $node)) {
       if (my $loc = $box->getLocator) {
         my $loc_attr = $loc->toAttribute;
         if (defined $loc_attr && length($loc_attr)) {
           setAttribute($self, $node, 'capture:locator'  => $loc_attr);
-          setAttribute($self, $node, 'capture:file'     => $loc->getSourceFile) if defined $loc->getSourceFile;
+          my $source_id = $loc->can('getSourceId') ? $loc->getSourceId : undef;
+          my $file = ($registry && defined $source_id
+            ? $registry->sourceName($source_id) : $loc->getSourceFile);
+          setAttribute($self, $node, 'capture:file' => $file)
+            if $node->localname ne 'Math' && defined $file;
           setAttribute($self, $node, 'capture:fromLine' => $loc->getFromLine)   if defined $loc->getFromLine;
           setAttribute($self, $node, 'capture:fromCol'  => $loc->getFromCol)    if defined $loc->getFromCol;
           setAttribute($self, $node, 'capture:toLine'   => $loc->getToLine)     if defined $loc->getToLine;
           setAttribute($self, $node, 'capture:toCol'    => $loc->getToCol)      if defined $loc->getToCol;
-          if ($node->localname eq 'Math') {
-            if (my $slice = extract_source_slice($loc)) {
-              setAttribute($self, $node, 'capture:source' => $slice);
-            }
-          }
+          setAttribute($self, $node, 'capture:byteStart' => $loc->getByteStart)
+            if $node->localname ne 'Math' && $loc->can('getByteStart') && defined $loc->getByteStart;
+          setAttribute($self, $node, 'capture:byteEnd' => $loc->getByteEnd)
+            if $node->localname ne 'Math' && $loc->can('getByteEnd') && defined $loc->getByteEnd;
         }
       }
     }
+    _captureMath($self, $node, getNodeBox($self, $node), $registry)
+      if $node->localname eq 'Math';
   }
 
   # Attributes (non-namespaced) that begin with "_" are for internal, temporary, Bookkeeping.

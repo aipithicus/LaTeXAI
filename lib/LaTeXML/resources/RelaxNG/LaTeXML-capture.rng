@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Capture-only extension.  This module owns the sole foreign child admitted
+     by the aggregate LaTeXML schema. -->
+<grammar ns="http://dlmf.nist.gov/LaTeXML/capture"
+  xmlns="http://relaxng.org/ns/structure/1.0"
+  datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <define name="capture.boolean">
+    <choice><value>true</value><value>false</value></choice>
+  </define>
+  <define name="capture.count">
+    <data type="nonNegativeInteger"/>
+  </define>
+  <define name="capture.ledger">
+    <element name="ledger">
+      <element name="engine">
+        <attribute name="version"><text/></attribute>
+        <attribute name="revision"><text/></attribute>
+        <attribute name="capture"><ref name="capture.boolean"/></attribute>
+        <attribute name="includestyles"><ref name="capture.boolean"/></attribute>
+        <attribute name="noparse"><ref name="capture.boolean"/></attribute>
+        <attribute name="lexematize"><ref name="capture.boolean"/></attribute>
+        <zeroOrMore>
+          <element name="preload">
+            <attribute name="name"><text/></attribute>
+            <empty/>
+          </element>
+        </zeroOrMore>
+      </element>
+      <element name="packages">
+        <zeroOrMore>
+          <element name="package">
+            <attribute name="kind"><choice><value>package</value><value>class</value></choice></attribute>
+            <attribute name="name"><text/></attribute>
+            <attribute name="options"><text/></attribute>
+            <attribute name="route"><choice><value>binding</value><value>raw</value><value>missing</value></choice></attribute>
+            <optional><attribute name="resolved"><text/></attribute></optional>
+            <optional><attribute name="requestFile"><text/></attribute></optional>
+            <optional><attribute name="requestByteStart"><ref name="capture.count"/></attribute></optional>
+            <optional><attribute name="requestByteEnd"><ref name="capture.count"/></attribute></optional>
+            <optional><attribute name="diagnostic"><text/></attribute></optional>
+            <empty/>
+          </element>
+        </zeroOrMore>
+      </element>
+      <element name="math">
+        <attribute name="total"><ref name="capture.count"/></attribute>
+        <attribute name="inline"><ref name="capture.count"/></attribute>
+        <attribute name="display"><ref name="capture.count"/></attribute>
+        <attribute name="source"><ref name="capture.count"/></attribute>
+        <attribute name="callsiteOnly"><ref name="capture.count"/></attribute>
+        <attribute name="crossSource"><ref name="capture.count"/></attribute>
+        <attribute name="unlocated"><ref name="capture.count"/></attribute>
+        <attribute name="unparsed"><ref name="capture.count"/></attribute>
+        <attribute name="parser"><choice><value>run</value><value>not-run</value></choice></attribute>
+        <optional><attribute name="failedCells"><ref name="capture.count"/></attribute></optional>
+        <empty/>
+      </element>
+      <element name="encoding">
+        <attribute name="substitutions"><ref name="capture.count"/></attribute>
+        <zeroOrMore>
+          <element name="event">
+            <attribute name="file"><text/></attribute>
+            <attribute name="byteStart"><ref name="capture.count"/></attribute>
+            <attribute name="byteEnd"><ref name="capture.count"/></attribute>
+            <attribute name="replacement"><value>U+0020</value></attribute>
+            <empty/>
+          </element>
+        </zeroOrMore>
+      </element>
+      <element name="messages">
+        <attribute name="errors"><ref name="capture.count"/></attribute>
+        <attribute name="warnings"><ref name="capture.count"/></attribute>
+        <empty/>
+      </element>
+    </element>
+  </define>
+</grammar>

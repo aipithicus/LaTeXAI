@@ -20,7 +20,7 @@ sub new {
   my ($class,   $url,  %options) = @_;
   my ($urlbase, $name, $ext)     = url_split($url);
   $STATE->assignValue(URLBASE => $urlbase) if defined $urlbase;
-  my $self = bless { source => $url, shortsource => $name }, $class;
+  my $self = bless { source => $url, shortsource => $name, source_kind => 'url' }, $class;
   $$self{fordefinitions} = 1 if $options{fordefinitions};
   $$self{at_letter}      = 1 if $options{at_letter};
   $$self{notes}          = 1 if $options{notes};

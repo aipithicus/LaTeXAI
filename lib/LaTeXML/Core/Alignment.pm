@@ -912,7 +912,9 @@ sub ReadAlignmentTemplate {
       $gullet->unread($op); }
     elsif (defined($defn = $STATE->lookupDefinition(T_CS('\NC@rewrite@' . ToString($op))))
       && $defn->isExpandable) {
-      $gullet->unread($defn->invoke($gullet, 1)); }
+      my $invocation_occurrence = $gullet->getCurrentOccurrence;
+      my $expansion = $defn->invoke($gullet, 1);
+      $gullet->unreadExpansion($expansion, $defn, $invocation_occurrence); }
     elsif ($cc == CC_BEGIN) {    # Wrong, but a safety valve
       $gullet->unread($gullet->readBalanced); }
     else {

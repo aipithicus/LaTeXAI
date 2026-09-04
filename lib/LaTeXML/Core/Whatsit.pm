@@ -82,6 +82,15 @@ sub setBody {
   # And copy any otherwise undefined properties from the trailer
   if ($trailer) {
     $$self{properties}{locator} = LaTeXML::Common::Locator->newRange($self->getLocator, $trailer->getLocator);
+    if ($STATE && $STATE->lookupValue('CAPTURE_PROVENANCE')) {
+      my $span = $$self{properties}{captureSpan};
+      my $trailer_span = $trailer->can('getProperty') ? $trailer->getProperty('captureSpan') : undef;
+      if ($span) {
+        $$self{properties}{captureSpan} = {
+          startOccurrence => $$span{startOccurrence},
+          endOccurrence   => ($trailer_span
+            ? $$trailer_span{endOccurrence} : $$span{endOccurrence}),
+        }; } }
     my %trailerhash = $trailer->getProperties;
     foreach my $prop (keys %trailerhash) {
       $$self{properties}{$prop} = $trailer->getProperty($prop) unless defined $$self{properties}{$prop}; } }

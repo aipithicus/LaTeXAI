@@ -72,9 +72,14 @@ sub getNumArgs {
 sub invoke {
   no warnings 'recursion';
   my ($self, $stomach) = @_;
-  my $start_locator = ($stomach->getGullet->can('getTokenStartLocator')
-    ? $stomach->getGullet->getTokenStartLocator
-    : $stomach->getGullet->getLocator);
+  my $gullet = $stomach->getGullet;
+  my $capturing = $STATE->lookupValue('CAPTURE_PROVENANCE');
+  my $start_occurrence = $capturing
+    ? ($LaTeXML::CURRENT_OCCURRENCE || $gullet->getCurrentOccurrence) : undef;
+  my $start_locator = ($capturing && $start_occurrence
+    ? $gullet->occurrenceToLocator($start_occurrence)
+    : ($gullet->can('getTokenStartLocator')
+      ? $gullet->getTokenStartLocator : $gullet->getLocator));
   # Call any `Before' code.
   my $_tracing = $STATE->lookupValue('TRACING') || 0;
   my $tracing  = ($_tracing & TRACE_COMMANDS);
@@ -92,6 +97,8 @@ sub invoke {
   # Parse AND digest the arguments to the Constructor
   my $parms = $$self{parameters};
   my @args  = ($parms ? $parms->readArgumentsAndDigest($stomach, $self) : ());
+  my $end_occurrence = $capturing
+    ? ($gullet->getCurrentOccurrence || $start_occurrence) : undef;
   Debug($self->tracingArgs(@args)) if $tracing && @args;
   my $nargs = $self->getNumArgs;
   @args = @args[0 .. $nargs - 1];
@@ -107,11 +114,16 @@ sub invoke {
       $props{$key} = &$value($stomach, @args); } }
   $props{font}        = $font                           unless defined $props{font};
   if (!defined $props{locator}) {
-    my $end_locator = $stomach->getGullet->getLocator;
+    my $end_locator = ($end_occurrence
+      ? $gullet->occurrenceToLocator($end_occurrence) : $gullet->getLocator);
     $props{locator} = ($start_locator && $end_locator
       ? LaTeXML::Common::Locator->newRange($start_locator, $end_locator)
       : ($start_locator || $end_locator));
   }
+  $props{captureSpan} = {
+    startOccurrence => $start_occurrence,
+    endOccurrence   => $end_occurrence,
+  } if $capturing && !defined $props{captureSpan};
   $props{mode}        = $mode                           unless defined $props{mode};
   $props{isMath}      = $ismath                         unless defined $props{isMath};
   $props{level}       = $stomach->getBoxingLevel;
@@ -119,6 +131,7 @@ sub invoke {
   # Now create the Whatsit, itself.
   my $whatsit = LaTeXML::Core::Whatsit->new($self, [@args], %props);
   # Call any 'After' code.
+  local $LaTeXML::CAPTURE_REQUEST_OCCURRENCE = $start_occurrence;
   my @post = $self->executeAfterDigest($stomach, $whatsit);
   if (my $cap = $$self{captureBody}) {
     $whatsit->setBody(@post, $stomach->digestNextBody((ref $cap ? $cap : undef))); @post = (); }

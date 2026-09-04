@@ -21,6 +21,7 @@ use LaTeXML::Core::Token;
 use LaTeXML::Core::Tokens;
 use LaTeXML::Core::Stomach;
 use LaTeXML::Core::Document;
+use LaTeXML::Core::SourceRegistry;
 use LaTeXML::Common::Model;
 use LaTeXML::MathParser;
 use LaTeXML::Util::Pathname;
@@ -65,6 +66,7 @@ sub new {
     nomathparse => $options{nomathparse} || 0,
     preload     => $options{preload},
     capture     => $options{capture} || 0,
+    includestyles => $options{includestyles} || 0,
   }, $class; }
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -141,6 +143,18 @@ sub digestFile {
   return
     $self->withState(sub {
       my ($state) = @_;
+      if ($$self{capture}) {
+        my $root_kind = (pathname_is_literaldata($request) ? 'literal'
+          : (pathname_is_url($request) ? 'url' : 'file'));
+        my $registry = LaTeXML::Core::SourceRegistry->new(
+          root_request => $request, root_kind => $root_kind);
+        $state->assignValue(SOURCE_REGISTRY => $registry, 'global');
+        $state->assignValue(CAPTURE_OPTIONS => {
+            capture       => 1,
+            includestyles => ($$self{includestyles} ? 1 : 0),
+            noparse       => ($$self{nomathparse} ? 1 : 0),
+            preload       => [@{ $$self{preload} || [] }],
+          }, 'global'); }
       ProgressSpinup("Digesting $mode $name");
       $self->initializeState($mode . ".pool", @{ $$self{preload} || [] }) unless $options{noinitialize};
       $state->assignValue(SOURCEFILE      => $request) if (!pathname_is_literaldata($request));
@@ -288,7 +302,17 @@ sub convertDocument {
           $rule->rewrite($document, $document->getDocument->documentElement); }
         ProgressSpindown("Rewriting"); }
 
-      LaTeXML::MathParser->new(lexematize => $state->lookupValue('LEXEMATIZE_MATH'))->parseMath($document) unless $$self{nomathparse};
+      if (!$$self{nomathparse}) {
+        my $parser = LaTeXML::MathParser->new(
+          lexematize => $state->lookupValue('LEXEMATIZE_MATH'));
+        $parser->parseMath($document);
+        if ($$self{capture}) {
+          my $failed = 0;
+          $failed += $_ foreach values %{ $$parser{failed} || {} };
+          $state->assignValue(CAPTURE_PARSER => 'run', 'global');
+          $state->assignValue(CAPTURE_FAILED_CELLS => $failed, 'global'); } }
+      elsif ($$self{capture}) {
+        $state->assignValue(CAPTURE_PARSER => 'not-run', 'global'); }
       ProgressSpinup("Finalizing");
       my $xmldoc = $document->finalize();
       ProgressSpindown("Finalizing");

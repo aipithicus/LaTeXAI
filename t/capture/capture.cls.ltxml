@@ -1,0 +1,5 @@
+# -*- CPERL -*-
+package LaTeXML::Package::Pool;
+use LaTeXML::Package;
+LoadClass('article');
+1;

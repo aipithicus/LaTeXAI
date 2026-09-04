@@ -21,7 +21,7 @@ use base qw(LaTeXML::Core::Mouth);
 sub new {
   my ($class, $pathname, %options) = @_;
   my ($dir,   $name,     $ext)     = pathname_split($pathname);
-  my $self = bless { source => $pathname, shortsource => "$name.$ext" }, $class;
+  my $self = bless { source => $pathname, shortsource => "$name.$ext", source_kind => 'file' }, $class;
   $$self{fordefinitions} = 1 if $options{fordefinitions};
   $$self{at_letter}      = 1 if $options{at_letter};
   $$self{notes}          = 1 if $options{notes};
@@ -41,6 +41,12 @@ sub openFile {
     Error('I/O', 'open', $self, "Can't open $pathname for reading", $!); }
   $$self{IN}     = $IN;
   $$self{buffer} = [];
+  $$self{line_records} = [];
+  if ($IN && $STATE && $STATE->lookupValue('CAPTURE_PROVENANCE')) {
+    if (my $registry = $STATE->lookupValue('SOURCE_REGISTRY')) {
+      $$self{source_id} = $registry->registerSource(
+        kind => 'file', display => $pathname,
+        encoding => ($STATE->lookupValue('PERL_INPUT_ENCODING') || 'UTF-8')); } }
   return; }
 
 sub finish {
@@ -65,10 +71,17 @@ sub getNextLine {
       close($fh); $$self{IN} = undef;
       return; }
     else {
-      push(@{ $$self{buffer} }, LaTeXML::Core::Mouth::splitLines($line)); } }
+      if ($$self{source_id} && (my $registry = $STATE->lookupValue('SOURCE_REGISTRY'))) {
+        my @records = $registry->appendRaw($$self{source_id}, $line);
+        push(@{ $$self{buffer} }, map { $$_{decoded} } @records);
+        push(@{ $$self{line_records} }, @records); }
+      else {
+        push(@{ $$self{buffer} }, LaTeXML::Core::Mouth::splitLines($line)); } } }
 
   my $line = shift(@{ $$self{buffer} });
-  if (defined $line) {
+  if ($$self{source_id}) {
+    $$self{current_line_record} = shift(@{ $$self{line_records} }); }
+  elsif (defined $line) {
     if (my $encoding = $STATE->lookupValue('PERL_INPUT_ENCODING')) {
      # Note that if chars in the input cannot be decoded, they are replaced by \x{FFFD}
      # I _think_ that for TeX's behaviour we actually should turn such un-decodeable chars in to space(?).

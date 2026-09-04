@@ -124,7 +124,7 @@ sub skipConditionalBody {
   my $stack = $STATE->lookupValue('if_stack');
   while (1) {
     my ($t, $cond_type);
-    while ($t = shift(@{ $$gullet{pushback} }) || $$gullet{mouth}->readToken()) {
+    while ($t = $gullet->_shiftPushback() || $gullet->_readMouthToken()) {
       my $cc = $$t[1];
       if    ($cc == CC_BEGIN) { $LaTeXML::ALIGN_STATE++; }
       elsif ($cc == CC_END)   { $LaTeXML::ALIGN_STATE--; }

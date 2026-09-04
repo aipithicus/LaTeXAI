@@ -24,6 +24,7 @@
   <include href="urn:x-LaTeXML:RelaxNG:LaTeXML-picture.rng"/>
   <include href="urn:x-LaTeXML:RelaxNG:LaTeXML-structure.rng"/>
   <include href="urn:x-LaTeXML:RelaxNG:LaTeXML-bib.rng"/>
+  <include href="urn:x-LaTeXML:RelaxNG:LaTeXML-capture.rng"/>
   <define name="Inline.model">
     <a:documentation>Combined model for inline content.</a:documentation>
     <zeroOrMore>
