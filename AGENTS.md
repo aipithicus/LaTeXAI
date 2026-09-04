@@ -21,7 +21,7 @@ Behavioral expectations, development loop, and repository conventions for AI age
 
 ## 2. Development Loop
 
-**Run through the `pwsh_exec` MCP.** Its PowerShell profile sources `latexAI-aliases.ps1` from `science-facility/mcp/pwsh_exec/scripts/pwsh/`, which resolves Strawberry Perl from `$env:PORTABLE_ROOT` and points every CLI at this checkout with `-I lib -I blib/lib`. Ambient `PATH` is bypassed on purpose: Bash and MSYS resolve a different `perl` first, and stock LaTeXML is not installed anywhere.
+**Run through the `pwsh_exec` MCP.** Its PowerShell profile sources `latexAI-aliases.ps1` from `science-facility/mcp/pwsh_exec/scripts/pwsh/`, which resolves Strawberry Perl from the dedicated `$env:PERL_ROOT` (User scope; `PERL_HOME` is its `perl\` subdirectory) and points every CLI at this checkout with `-I lib -I blib/lib`. Ambient `PATH` is bypassed on purpose: the Bash tool and MSYS resolve a different `perl` first, and stock LaTeXML is not installed anywhere. If the aliases warn that `PERL_ROOT` is unset, the shell was launched without the User environment; fix the launch, do not hardcode a path.
 
 | Alias | Expands to | Use |
 | :--- | :--- | :--- |
@@ -38,7 +38,7 @@ Facts that save a round trip:
 - `blib/lib` holds only the compiled `MathGrammar.pm` and `Version.pm`; bindings and pools are read from `lib/`. After editing the grammar, regenerate with `perl Makefile.PL` then `gmake` (about 20 s).
 - **No TeX distribution is installed.** Passthrough and hybrid bindings (tikz, pgfplots, algorithmic, xcolor, listings, cleveref, …) try to load the raw `.sty` via `kpsewhich` and error out. Real-paper runs need `--includestyles` plus a preload binding that raises `MAX_ERRORS` and turns on `LEXEMATIZE_MATH`; toy probes with `lmath` do not.
 - `--capture` (fork feature) emits `capture:*` provenance attributes on every element and `capture:source` on `ltx:Math`. `--noparse`, `--tex` and `--preload` are unchanged upstream switches; `--tex` output is the expansion oracle for drift measurements.
-- Fallback without the aliases: `& "$env:PORTABLE_ROOT\strawberry-perl\perl\bin\perl.exe" -I lib -I blib/lib bin/latexml …`.
+- Fallback without the aliases: `& "$env:PERL_ROOT\perl\bin\perl.exe" -I lib -I blib/lib bin/latexml …`.
 
 ---
 
