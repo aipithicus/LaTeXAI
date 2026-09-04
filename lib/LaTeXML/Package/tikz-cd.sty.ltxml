@@ -196,6 +196,27 @@ sub parse_tikzcd_arrow_options {
       next;
     }
 
+    # Case-sensitive arrow styles must be recognized before other option names
+    # are folded to lower case.
+    if ($item_str eq 'Rightarrow') {
+      $res{meaning} = 'Rightarrow';
+      $res{arrow_char} = "\x{21D2}";
+      $res{arrow_cs} = '\Rightarrow';
+      next;
+    }
+    elsif ($item_str eq 'Leftarrow') {
+      $res{meaning} = 'Leftarrow';
+      $res{arrow_char} = "\x{21D0}";
+      $res{arrow_cs} = '\Leftarrow';
+      next;
+    }
+    elsif ($item_str eq 'Leftrightarrow') {
+      $res{meaning} = 'Leftrightarrow';
+      $res{arrow_char} = "\x{21D4}";
+      $res{arrow_cs} = '\Leftrightarrow';
+      next;
+    }
+
     # Direction shortcut
     my $low = lc($item_str);
     if (exists $DIR_MAP{$low}) {
@@ -251,21 +272,6 @@ sub parse_tikzcd_arrow_options {
       $res{meaning} = 'leftrightarrow';
       $res{arrow_char} = "\x{2194}";
       $res{arrow_cs} = '\leftrightarrow';
-    }
-    elsif ($low eq 'Rightarrow') {
-      $res{meaning} = 'Rightarrow';
-      $res{arrow_char} = "\x{21D2}";
-      $res{arrow_cs} = '\Rightarrow';
-    }
-    elsif ($low eq 'Leftarrow') {
-      $res{meaning} = 'Leftarrow';
-      $res{arrow_char} = "\x{21D0}";
-      $res{arrow_cs} = '\Leftarrow';
-    }
-    elsif ($low eq 'Leftrightarrow') {
-      $res{meaning} = 'Leftrightarrow';
-      $res{arrow_char} = "\x{21D4}";
-      $res{arrow_cs} = '\Leftrightarrow';
     }
     elsif ($low eq 'maps to' || $low eq 'mapsto') {
       $res{meaning} = 'mapsto';
