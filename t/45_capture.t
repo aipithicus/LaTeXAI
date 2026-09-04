@@ -21,6 +21,7 @@ use LaTeXML::Core;
 
 my $LTX_NS     = 'http://dlmf.nist.gov/LaTeXML';
 my $CAPTURE_NS = 'http://dlmf.nist.gov/LaTeXML/capture';
+my $CD_NS      = 'http://dlmf.nist.gov/LaTeXML/cd';
 my $ROOT        = abs_path(File::Spec->catdir($FindBin::Bin, '..'));
 my $FIXTURES    = File::Spec->catdir($ROOT, 't', 'capture');
 my $TEMP        = tempdir('latexml-capture-XXXXXX', TMPDIR => 1, CLEANUP => 1);
@@ -55,6 +56,7 @@ sub xpath {
   my $xc = XML::LibXML::XPathContext->new($document);
   $xc->registerNs(ltx     => $LTX_NS);
   $xc->registerNs(capture => $CAPTURE_NS);
+  $xc->registerNs(cd      => $CD_NS);
   return $xc; }
 
 sub cattr {
@@ -341,6 +343,46 @@ foreach my $name (qw(capture-special capturebinding captureraw capturemissing)) 
   like($request_slice, qr/^\\(?:documentclass|usepackage)$/, "case 14 $name range addresses its request token"); }
 assert_partition($routes_xml, 'package-route fixture');
 
+# Case 15: tikz-cd arrows carry explicit, parser-stable edge metadata.
+my ($tikzcd) = convert_document(File::Spec->catfile($FIXTURES, 'tikzcd.tex'));
+my $tikzcd_xml = $tikzcd->getDocument;
+my $tikzcd_xc = xpath($tikzcd_xml);
+my @diagrams = $tikzcd_xc->findnodes('//ltx:XMArray');
+is(scalar(@diagrams), 2, 'case 15 preserves both commutative-diagram arrays');
+my @diagram_meanings = $tikzcd_xc->findnodes(
+  '//ltx:XMApp[ltx:XMTok[@meaning="commutative-diagram"] and ltx:XMRef]');
+is(scalar(@diagram_meanings), 2, 'case 15 preserves each array datameaning');
+my @arrows = $tikzcd_xc->findnodes('//ltx:XMApp[@role="ARROW" and @cd:from]');
+is(scalar(@arrows), 7, 'case 15 emits seven structured diagram edges');
+foreach my $arrow (@arrows) {
+  foreach my $name (qw(from to dir label labelpos style)) {
+    ok($arrow->hasAttributeNS($CD_NS, $name), "case 15 every edge carries cd:$name"); } }
+my %edges = map { $_->getAttributeNS($CD_NS, 'label') => $_ } @arrows;
+my %expected_edges = (
+  f => ['1-1', '1-2', 'r',  'above', 'plain'],
+  g => ['1-1', '2-1', 'd',  'below', 'plain'],
+  h => ['1-2', '2-2', 'd',  'above', 'plain'],
+  k => ['2-1', '2-2', 'r',  'above', 'plain'],
+  '\qlabel' => ['1-1', '2-2', 'r',  'below', 'bend left=30,shift right=1ex,hook,Rightarrow'],
+  p => ['1-2', '2-1', 'r',  'above', 'bend right=15,tail,Leftarrow'],
+  s => ['2-1', '1-2', 'UR', 'above', 'shift left=2pt,twohead,Leftrightarrow'],
+);
+foreach my $label (sort keys %expected_edges) {
+  ok($edges{$label}, "case 15 retains unexpanded label $label");
+  next unless $edges{$label};
+  is_deeply([
+      map { $edges{$label}->getAttributeNS($CD_NS, $_) }
+        qw(from to dir labelpos style)
+    ], $expected_edges{$label}, "case 15 edge $label metadata"); }
+my @capitalized = $tikzcd_xc->findnodes(
+  '//ltx:XMTok[@name="Rightarrow" or @name="Leftarrow" or @name="Leftrightarrow"]');
+is_deeply([sort map { $_->getAttribute('name') } @capitalized],
+  [qw(Leftarrow Leftrightarrow Rightarrow)], 'case 15 capitalized arrow styles survive parsing');
+my @tikzcd_unparsed = $tikzcd_xc->findnodes(
+  '//ltx:Math[contains(concat(" ", normalize-space(@class), " "), " ltx_math_unparsed ")]');
+is(scalar(@tikzcd_unparsed), 0, 'case 15 every diagram cell parses');
+assert_partition($tikzcd_xml, 'tikz-cd fixture');
+
 my @ledgers = $routes_xc->findnodes('/ltx:document/capture:ledger');
 is(scalar(@ledgers), 1, 'capture document has exactly one ledger');
 my @ledger_children = grep { $_->nodeType == XML_ELEMENT_NODE } $ledgers[0]->childNodes;
@@ -365,6 +407,7 @@ unlike($capture_off_raw, qr{capture:ledger}, 'capture-off has no ledger');
 
 validate_capture_document($crlf, 'capture-crlf');
 validate_capture_document($routes, 'capture-routes');
+validate_capture_document($tikzcd, 'capture-tikzcd');
 
 done_testing();
 

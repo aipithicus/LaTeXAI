@@ -1,0 +1,18 @@
+\documentclass{article}
+\usepackage{tikz-cd}
+\newcommand{\qlabel}{q}
+\begin{document}
+\[
+\begin{tikzcd}
+A \arrow[r,"f"] \arrow[d,"g"'] & B \arrow[d,"h"] \\
+C \arrow[r,"k"] & D
+\end{tikzcd}
+\]
+\[
+\begin{tikzcd}
+A \arrow[from=1-1,to=2-2,bend left=30,shift right=1ex,hook,"\qlabel"',Rightarrow]
+  & B \arrow[from=1-2,to=2-1,bend right=15,tail,"p",Leftarrow] \\
+C \arrow[UR,shift left=2pt,two heads,"s",Leftrightarrow] & D
+\end{tikzcd}
+\]
+\end{document}

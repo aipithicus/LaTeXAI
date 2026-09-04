@@ -35,6 +35,8 @@ sub new {
   $self->registerDocumentNamespace('xml', $LaTeXML::Common::XML::XML_NS);
   $self->registerNamespace('capture', 'http://dlmf.nist.gov/LaTeXML/capture');
   $self->registerDocumentNamespace('capture', 'http://dlmf.nist.gov/LaTeXML/capture');
+  $self->registerNamespace('cd', 'http://dlmf.nist.gov/LaTeXML/cd');
+  $self->registerDocumentNamespace('cd', 'http://dlmf.nist.gov/LaTeXML/cd');
   return $self; }
 
 sub setDocType {

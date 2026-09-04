@@ -93,14 +93,21 @@ DefConstructor('\lx@tikzcd@arrow OptionalTikzCdOptions', sub {
     my $arrow_ch  = $props{arrow_char} || "\x{2192}";
     my $meaning   = $props{meaning} || 'rightarrow';
 
-    my %extra_attr = ();
-    $extra_attr{direction} = $direction if defined $direction;
-    $extra_attr{style}     = $style     if defined $style;
-    $extra_attr{from}      = $props{from} if defined $props{from};
-    $extra_attr{to}        = $props{to}   if defined $props{to};
+    my %edge_attr = (
+      'cd:from'     => $props{edge_from},
+      'cd:to'       => $props{edge_to},
+      'cd:dir'      => (defined $props{dir} ? $props{dir} : $direction),
+      'cd:label'    => (defined $props{label_source} ? $props{label_source} : ''),
+      'cd:labelpos' => ($swap ? 'below' : 'above'),
+      'cd:style'    => (defined $style && length($style) ? $style : 'plain'),
+    );
 
     # Emit outer arrow application
-    $document->openElement('ltx:XMApp', role => 'ARROW', %extra_attr);
+    my $edge_node = $document->openElement('ltx:XMApp', role => 'ARROW', %edge_attr);
+    foreach my $name (qw(label style)) {
+      if (!length($edge_attr{"cd:$name"})) {
+        $edge_node->setAttributeNS(
+          'http://dlmf.nist.gov/LaTeXML/cd', "cd:$name", ''); } }
 
     if (defined $label_box) {
       my $label_role = $swap ? 'SUBSCRIPTOP' : 'SUPERSCRIPTOP';
@@ -129,6 +136,17 @@ DefConstructor('\lx@tikzcd@arrow OptionalTikzCdOptions', sub {
     my ($stomach, $whatsit) = @_;
     my $opt_toks = $whatsit->getArg(1);
     my %parsed = parse_tikzcd_arrow_options($opt_toks, $stomach);
+    my $alignment = $STATE->lookupValue('Alignment');
+    my $origin = ($alignment
+      ? join('-', $alignment->currentRowNumber, $alignment->currentColumnNumber)
+      : undef);
+    my $from = valid_tikzcd_coordinate($parsed{from})
+      || valid_tikzcd_coordinate($origin);
+    my $to = valid_tikzcd_coordinate($parsed{to})
+      || resolve_tikzcd_direction($from, $parsed{direction});
+    $parsed{origin} = $origin if defined $origin;
+    $parsed{edge_from} = $from if defined $from;
+    $parsed{edge_to} = $to if defined $to;
     foreach my $k (keys %parsed) {
       $whatsit->setProperty($k => $parsed{$k});
     }
@@ -157,8 +175,11 @@ sub parse_tikzcd_arrow_options {
   return () unless defined $opt_toks;
 
   my @items = split_token_items($opt_toks);
+  my @styles = ();
   my %res = (
     direction => 'r',
+    dir       => 'r',
+    label_source => '',
     swap      => 0,
   );
 
@@ -173,6 +194,7 @@ sub parse_tikzcd_arrow_options {
     if ($item_str =~ /^\"(.*)\"('?)$/s) {
       my $inner_str = $1;
       $res{swap} = 1 if $2 eq "'";
+      $res{label_source} = $inner_str;
       # Extract tokens between quotes
       my @label_tok_list = extract_quoted_tokens(@$item_toks);
       if (@label_tok_list) {
@@ -188,9 +210,14 @@ sub parse_tikzcd_arrow_options {
       $v =~ s/^\s+//; $v =~ s/\s+$//;
       if ($k eq 'from') { $res{from} = $v; }
       elsif ($k eq 'to') { $res{to} = $v; }
-      elsif ($k eq 'shift left' || $k eq 'shift right') { $res{shift} = "$k=$v"; }
-      elsif ($k eq 'bend left' || $k eq 'bend right') { $res{bend} = "$k=$v"; }
+      elsif ($k eq 'shift left' || $k eq 'shift right') {
+        $res{shift} = "$k=$v";
+        push(@styles, "$k=$v"); }
+      elsif ($k eq 'bend left' || $k eq 'bend right') {
+        $res{bend} = "$k=$v";
+        push(@styles, "$k=$v"); }
       elsif ($k eq 'labels') {
+        $res{label_source} = $v;
         $res{label_box} = $stomach->digest(Tokens(TokenizeInternal($v)));
       }
       next;
@@ -202,18 +229,21 @@ sub parse_tikzcd_arrow_options {
       $res{meaning} = 'Rightarrow';
       $res{arrow_char} = "\x{21D2}";
       $res{arrow_cs} = '\Rightarrow';
+      push(@styles, 'Rightarrow');
       next;
     }
     elsif ($item_str eq 'Leftarrow') {
       $res{meaning} = 'Leftarrow';
       $res{arrow_char} = "\x{21D0}";
       $res{arrow_cs} = '\Leftarrow';
+      push(@styles, 'Leftarrow');
       next;
     }
     elsif ($item_str eq 'Leftrightarrow') {
       $res{meaning} = 'Leftrightarrow';
       $res{arrow_char} = "\x{21D4}";
       $res{arrow_cs} = '\Leftrightarrow';
+      push(@styles, 'Leftrightarrow');
       next;
     }
 
@@ -221,6 +251,7 @@ sub parse_tikzcd_arrow_options {
     my $low = lc($item_str);
     if (exists $DIR_MAP{$low}) {
       $res{direction} = $low;
+      $res{dir} = $item_str;
       next;
     }
 
@@ -229,54 +260,58 @@ sub parse_tikzcd_arrow_options {
       $res{swap} = 1;
     }
     elsif ($low eq 'hook' || $low eq 'hookrightarrow') {
-      $res{style} = 'hook';
+      push(@styles, 'hook');
       $res{meaning} = 'hookrightarrow';
       $res{arrow_char} = "\x{21AA}";
       $res{arrow_cs} = '\hookrightarrow';
     }
     elsif ($low eq "hook'") {
-      $res{style} = 'hook-left';
+      push(@styles, 'hook-left');
       $res{swap} = 1;
     }
     elsif ($low eq 'tail') {
-      $res{style} = 'tail';
+      push(@styles, 'tail');
     }
     elsif ($low eq 'two heads' || $low eq 'twoheadrightarrow') {
-      $res{style} = 'twohead';
+      push(@styles, 'twohead');
       $res{meaning} = 'twoheadrightarrow';
       $res{arrow_char} = "\x{21A0}";
       $res{arrow_cs} = '\twoheadrightarrow';
     }
     elsif ($low eq 'dashed') {
-      $res{style} = 'dashed';
+      push(@styles, 'dashed');
     }
     elsif ($low eq 'dash' || $low eq 'no head') {
-      $res{style} = 'dash';
+      push(@styles, 'dash');
       $res{meaning} = 'minus';
       $res{arrow_char} = "-";
       $res{arrow_cs} = '-';
     }
     elsif ($low eq 'equal' || $low eq 'equals') {
-      $res{style} = 'equal';
+      push(@styles, 'equal');
       $res{meaning} = 'equals';
       $res{arrow_char} = "=";
       $res{arrow_cs} = '=';
     }
     elsif ($low eq 'rightarrow') {
       $res{meaning} = 'rightarrow';
+      push(@styles, 'rightarrow');
     }
     elsif ($low eq 'leftarrow') {
       $res{direction} = 'l';
+      push(@styles, 'leftarrow');
     }
     elsif ($low eq 'leftrightarrow') {
       $res{meaning} = 'leftrightarrow';
       $res{arrow_char} = "\x{2194}";
       $res{arrow_cs} = '\leftrightarrow';
+      push(@styles, 'leftrightarrow');
     }
     elsif ($low eq 'maps to' || $low eq 'mapsto') {
       $res{meaning} = 'mapsto';
       $res{arrow_char} = "\x{21A6}";
       $res{arrow_cs} = '\mapsto';
+      push(@styles, 'mapsto');
     }
   }
 
@@ -289,8 +324,31 @@ sub parse_tikzcd_arrow_options {
     $res{meaning}    = $info->{meaning} unless defined $res{meaning};
   }
 
+  $res{style} = (@styles ? join(',', @styles) : 'plain');
+
   return %res;
 }
+
+sub valid_tikzcd_coordinate {
+  my ($coordinate) = @_;
+  return unless defined $coordinate;
+  return unless $coordinate =~ /^\s*([1-9][0-9]*)-([1-9][0-9]*)\s*$/;
+  return "$1-$2"; }
+
+sub resolve_tikzcd_direction {
+  my ($origin, $direction) = @_;
+  my $coordinate = valid_tikzcd_coordinate($origin);
+  return unless defined $coordinate;
+  my ($row, $column) = split('-', $coordinate, 2);
+  foreach my $step (split('', ($direction || 'r'))) {
+    if    ($step eq 'r') { $column++; }
+    elsif ($step eq 'l') { $column--; }
+    elsif ($step eq 'u') { $row--; }
+    elsif ($step eq 'd') { $row++; }
+    else { return; }
+  }
+  return if $row < 1 || $column < 1;
+  return "$row-$column"; }
 
 sub split_token_items {
   my ($tokens) = @_;
