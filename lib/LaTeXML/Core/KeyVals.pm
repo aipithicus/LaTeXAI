@@ -258,7 +258,7 @@ sub readFrom {
       $self->addValue($key, $value, $isDefault, 0) if (!$silenceMissing || $self->canResolveKeyValFor($key)); }
 
     # we finish if we have the last element
-    last if $delim->equals($until); }
+    last if !$delim || $delim->equals($until); }
 
   # rebuild and return nothing
   $self->rebuild;
