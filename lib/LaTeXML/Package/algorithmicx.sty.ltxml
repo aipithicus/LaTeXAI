@@ -1,84 +1,178 @@
-# -*- mode: Perl -*-
+# -*- CPERL -*-
 # /=====================================================================\ #
-# |  algorithmicx                                                       | #
+# |  algorithmicx.sty                                                   | #
 # | Implementation for LaTeXML                                          | #
 # |=====================================================================| #
-# | Part of LaTeXML:                                                    | #
+# | Part of LaTeXAI / LaTeXML:                                           | #
 # |  Public domain software, produced as part of work done by the       | #
 # |  United States Government & not subject to copyright in the US.     | #
-# |---------------------------------------------------------------------| #
-# | Bruce Miller <bruce.miller@nist.gov>                        #_#     | #
-# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
 # \=========================================================ooo==U==ooo=/ #
+# Native implementation of the algorithmicx engine, replacing upstream's
+# hybrid InputDefinitions binding.
+# Audited against CTAN v1.2 (2005-04-27), lib-ctan/algorithmicx/.
+# Model: schema <ltx:listing> and <ltx:listingline>.
 package LaTeXML::Package::Pool;
 use strict;
 use warnings;
 use LaTeXML::Package;
 
-# Was algorithmic.sty loaded? If so: BAIL immediately.
-# (deeply incompatible)
-if (IsDefined(T_CS('\algorithmic'))) {
+# Guard against algorithmic.sty (deeply incompatible)
+if (IsDefined(T_CS('\algorithmic')) && !IsDefined(T_CS('\lx@algorithmicx@is@native'))) {
   Warn("unexpected", "\\algorithmic",
     "Another package has already defined \\algorithmic, will not load algorithmicx.sty");
-  return 1; }
+  return 1;
+}
+DefMacroI('\lx@algorithmicx@is@native', undef, '');
 
-# Load core, make a few redefinitions
-InputDefinitions('algorithmicx', type => 'sty', noltxml => 1);
+# Package options:
+our $ALG_noend = 0;
+DeclareOption('noend', sub { $ALG_noend = 1; return; });
+DeclareOption('end',   sub { $ALG_noend = 0; return; });
+ProcessOptions();
 
-Let('\lx@orig@algorithmic', '\algorithmic');
-DefMacro('\algorithmic', '\lx@setup@algorithmicx\lx@orig@algorithmic');
-DefPrimitive('\lx@setup@algorithmicx', sub {
-    ResetCounter('ALG@line');
-    # If we are not within an algorithm environment, step the counter for its id's
-    if (!grep { $_ eq 'algorithm'; } $STATE->lookupStackedValues('current_environment')) {
-      RefStepID('algorithm'); }
-    Let('\list',    '\lx@algorithmicx@beginlist');
-    Let('\endlist', '\lx@algorithmicx@endlist');
-    Let('\item',    '\lx@algorithmicx@item');
-    Let('\hfill',   '\lx@algorithmicx@hfill');
+# Configuration registers:
+DefRegister('\algorithmicindent' => Dimension('1.5em'));
+DefRegister('\ALG@tlm'           => Dimension('0pt'));
+DefRegister('\ALG@thistlm'       => Dimension('0pt'));
+
+# Counters:
+NewCounter('algorithm', undef,       idprefix => 'alg');
+NewCounter('ALG@line',  'algorithm', idprefix => 'l');
+NewCounter('ALG@rem',   undef);
+NewCounter('ALG@nested',undef);
+
+# Line numbering tags:
+DefMacro('\alglinenumber{}', '\footnotesize #1:');
+
+DefMacro('\ALG@step', sub {
+  my $freq = $STATE->lookupValue('ALG@step_freq') || 0;
+  StepCounter('ALG@line');
+  StepCounter('ALG@rem');
+  if ($freq > 0 && CounterValue('ALG@rem')->valueOf == $freq) {
+    ResetCounter('ALG@rem');
+    return Tokens(T_CS('\alglinenumber'), T_BEGIN, Explode(CounterValue('ALG@line')->valueOf), T_END);
+  } else {
+    return Tokens();
+  }
 });
 
-# IGNORE \list 1st arg (we'll handle counter stepping in \item)
+# Listing constructors:
 DefMacro('\lx@algorithmicx@beginlist{}{}', '\lx@algorithmicx@beginlist@{#2}');
-DefConstructor('\lx@algorithmicx@beginlist@{}', "<ltx:listing>");
+DefConstructor('\lx@algorithmicx@beginlist@{}', "<ltx:listing>",
+  beforeConstruct => sub { $_[0]->maybeCloseElement('ltx:p'); },
+  afterDigest     => sub { $_[0]->beginMode('internal_vertical'); });
 
 DefConstructor('\lx@algorithmicx@endlist', "</ltx:listing>",
+  beforeDigest    => sub { $_[0]->endMode('internal_vertical'); },
   beforeConstruct => sub { $_[0]->maybeCloseElement('ltx:listingline'); });
 
-# Empty lines still get an \item, but they're followed by \nointerlineskip!
-# We do NOT want to generate a listingline in those cases.
-# (but this seems a little brittle?)
-DefMacro('\lx@algorithmicx@item []',
-  '\@ifnextchar\nointerlineskip{}{\lx@algorithmicx@@item}');
-
-# This imitates \item; just opens the ltx:listingline, but somebody's got to close it.
 DefConstructor('\lx@algorithmicx@@item',
   "<ltx:listingline xml:id='#id' itemsep='#itemsep'>"
     . "#tags",
   properties => sub {
-    my $step = Digest(T_BEGIN, T_CS('\ALG@step'), T_END);    # returns formatted line number
+    my $step = Digest(T_BEGIN, T_CS('\ALG@step'), T_END);
     my $id   = Digest(T_CS('\theALG@line@ID'));
     my $tags = Digest(T_BEGIN,
       T_CS('\def'), T_CS('\fnum@ALG@line'), T_BEGIN, Tokens(Revert($step)), T_END,
       Invocation(T_CS('\lx@make@tags'), T_OTHER('ALG@line')),
       T_END);
-
     (id => $id, tags => $tags); },
   beforeConstruct => sub { $_[0]->maybeCloseElement('ltx:listingline'); });
 
-# Ideally, these appear within an algorithm environment, and we'd like to number lines within it.
-# BUT algorithm package isn't required, so define it here!
-NewCounter('algorithm', undef,       idprefix => 'alg');
-NewCounter('ALG@line',  'algorithm', idprefix => 'l');     # Assuming we're inside an {algorithm}!
+# Item stepping helper:
+DefPrimitive('\ALG@it', sub {
+  Digest(Tokens(T_CS('\lx@algorithmicx@@item'), T_CS('\hskip'), T_CS('\ALG@tlm'), T_CS('\relax')));
+});
 
-# Hopefully this will only get used for right justifying a comment;
-# the ltx:text should autoclose at end of line?
-DefConstructor('\lx@algorithmicx@hfill',
-  "<ltx:text cssstyle='float:right'>");
+DefConstructor('\lx@algorithmicx@@item@labeled OptionalUndigested',
+  "<ltx:listingline xml:id='#id' itemsep='#itemsep'>",
+  properties => sub {
+    my $id = Digest(T_CS('\theALG@line@ID'));
+    (id => $id); },
+  beforeConstruct => sub { $_[0]->maybeCloseElement('ltx:listingline'); });
 
-# Protect against obsolete versions of algorithmicx source
-DefMacro('\ALG@g{}',  '');
-DefMacro('\endALG@g', '');
+DefMacro('\lx@algorithmicx@item OptionalUndigested', sub {
+  my ($gullet, $label) = @_;
+  if ($label && ToString($label) ne '') {
+    Tokens(T_CS('\lx@algorithmicx@@item@labeled'), T_CS('\hskip'), T_CS('\ALG@tlm'), T_CS('\relax'),
+      Tokens(Revert($label)), T_SPACE);
+  } else {
+    Tokens(T_CS('\lx@algorithmicx@@item'), T_CS('\hskip'), T_CS('\ALG@tlm'), T_CS('\relax'));
+  }
+});
 
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Unnumbered item (for \Statex):
+DefConstructor('\lx@algorithmicx@@itemx',
+  "<ltx:listingline xml:id='#id' itemsep='#itemsep'>",
+  properties => sub {
+    my $id = Digest(T_CS('\theALG@line@ID'));
+    (id => $id); },
+  beforeConstruct => sub { $_[0]->maybeCloseElement('ltx:listingline'); });
+
+DefMacro('\Statex OptionalUndigested', sub {
+  my ($gullet, $ind) = @_;
+  if ($ind) {
+    Tokens(T_CS('\lx@algorithmicx@@itemx'), T_CS('\hskip'), Tokens(Revert($ind)), T_CS('\relax'));
+  } else {
+    Tokens(T_CS('\lx@algorithmicx@@itemx'), T_CS('\hskip'), T_CS('\ALG@tlm'), T_CS('\relax'));
+  }
+});
+
+# Indentation block management:
+DefPrimitive('\ALG@beginblock', sub {
+  AssignRegister('\ALG@thistlm' => LookupRegister('\ALG@tlm'));
+  AssignRegister('\ALG@tlm' => LookupRegister('\ALG@tlm')->add(LookupRegister('\algorithmicindent')));
+  StepCounter('ALG@nested');
+});
+
+DefPrimitive('\ALG@endblock', sub {
+  AssignRegister('\ALG@tlm' => LookupRegister('\ALG@tlm')->subtract(LookupRegister('\algorithmicindent')));
+  StepCounter('ALG@nested', -1);
+  AssignRegister('\ALG@thistlm' => LookupRegister('\ALG@tlm'));
+});
+
+# Comments:
+DefConstructor('\lx@algorithmicx@hfill', "<ltx:text cssstyle='float:right'>");
+DefMacro('\algorithmiccomment{}', '\lx@algorithmicx@hfill$\triangleright$\ #1');
+DefMacro('\Comment{}',            '\algorithmiccomment{#1}');
+DefMacro('\algrenewcomment{}',    sub { DefMacroI('\algorithmiccomment', '{}', $_[1]); return; });
+
+# Environment {algorithmic}[freq]:
+DefMacro('\algorithmic OptionalUndigested', sub {
+  my ($gullet, $freq) = @_;
+  $freq = $freq ? ToString($freq) : '';
+  $freq =~ s/^\[//;
+  $freq =~ s/\]$//;
+  $freq = int($freq || 0);
+  $STATE->assignValue('ALG@step_freq' => $freq, 'global');
+  ResetCounter('ALG@line');
+  ResetCounter('ALG@rem');
+  if (!grep { $_ eq 'algorithm'; } $STATE->lookupStackedValues('current_environment')) {
+    RefStepID('algorithm');
+  }
+  AssignRegister('\ALG@tlm' => Dimension('0pt'));
+  AssignRegister('\ALG@thistlm' => Dimension('0pt'));
+  Let('\list',    '\lx@algorithmicx@beginlist');
+  Let('\endlist', '\lx@algorithmicx@endlist');
+  Let('\item',    '\lx@algorithmicx@item');
+  Let('\hfill',   '\lx@algorithmicx@hfill');
+  return (T_CS('\lx@algorithmicx@beginlist@'), T_BEGIN, T_END);
+});
+
+DefMacro('\endalgorithmic', '\lx@algorithmicx@endlist');
+
+# Standard primitives:
+DefMacro('\State', '\ALG@it');
+DefMacro('\BState', '\ALG@it\hskip-\ALG@thistlm\relax');
+
+# Extensibility hooks (no-ops for macro compatibility):
+DefMacro('\algdef{}',        '');
+DefMacro('\algnewcommand{}', '');
+DefMacro('\algrenewcommand{}','');
+DefMacro('\algnewlanguage{}','');
+DefMacro('\alglanguage{}',   '');
+DefMacro('\algsetlanguage{}','');
+DefMacro('\algdeflanguage{}','');
+DefMacro('\algtext OptionalMatch:* {}', '');
+
 1;

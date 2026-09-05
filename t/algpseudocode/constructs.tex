@@ -1,0 +1,39 @@
+\documentclass{article}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\begin{document}
+\begin{algorithm}
+\caption{Comprehensive Pseudocode Constructs}\label{alg:constructs}
+\begin{algorithmic}[1]
+\Require $n \ge 0$
+\Ensure $res \ge 0$
+\Function{Factorial}{$n$}
+  \If{$n \le 1$}
+    \State \Return $1$
+  \Else
+    \State \Return $n \times \Call{Factorial}{n - 1}$
+  \EndIf
+\EndFunction
+\Statex
+\Procedure{Main}{}
+  \State $x \gets 5$
+  \State $res \gets \Call{Factorial}{x}$ \Comment{Compute 5!}
+  \For{$i \gets 1$ \textbf{to} $x$}
+    \State $sum \gets sum + i$
+  \EndFor
+  \ForAll{$v \in V$}
+    \State $visited[v] \gets \textbf{false}$
+  \EndFor
+  \Loop
+    \State $x \gets x - 1$
+    \If{$x = 0$}
+      \State \textbf{break}
+    \EndIf
+  \EndLoop
+  \Repeat
+    \State $step \gets step + 1$
+  \Until{$step = 10$}
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+\end{document}

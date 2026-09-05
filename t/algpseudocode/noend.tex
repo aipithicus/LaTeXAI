@@ -1,0 +1,25 @@
+\documentclass{article}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\begin{document}
+\begin{algorithm}
+\caption{Noend Pseudocode}\label{alg:noend}
+\begin{algorithmic}[1]
+\Procedure{BinarySearch}{$A, n, target$}
+  \State $low \gets 0$
+  \State $high \gets n - 1$
+  \While{$low \le high$}
+    \State $mid \gets \lfloor (low + high) / 2 \rfloor$
+    \If{$A[mid] = target$}
+      \State \Return $mid$
+    \ElsIf{$A[mid] < target$}
+      \State $low \gets mid + 1$
+    \Else
+      \State $high \gets mid - 1$
+    \EndIf
+  \EndWhile
+  \State \Return $-1$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+\end{document}

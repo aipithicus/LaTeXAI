@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="algorithm"?>
+<?latexml package="algpseudocode"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <float class="ltx_float_algorithm" framed="top" inlist="loa" labels="LABEL:alg:freq3" xml:id="alg1">
+    <tags>
+      <tag><text font="bold">Algorithm 1</text></tag>
+      <tag role="refnum">1</tag>
+      <tag role="typerefnum">Algorithm 1</tag>
+    </tags>
+    <toccaption><tag close=" ">1</tag>Frequency 3 Numbering</toccaption>
+    <caption><tag close=" "><text font="bold">Algorithm 1</text></tag> Frequency 3 Numbering</caption>
+    <listing>
+      <listingline xml:id="alg1.l1"><tags>
+          <tag role="refnum">1</tag>
+        </tags>Initial step
+</listingline>
+      <listingline xml:id="alg1.l2"><tags>
+          <tag role="refnum">2</tag>
+        </tags>Second step
+</listingline>
+      <listingline xml:id="alg1.l3"><tags>
+          <tag><text fontsize="80%">3:</text></tag>
+          <tag role="refnum">3</tag>
+        </tags>Third step
+</listingline>
+      <listingline xml:id="alg1.l4"><tags>
+          <tag role="refnum">4</tag>
+        </tags>Fourth step
+</listingline>
+      <listingline xml:id="alg1.l5"><tags>
+          <tag role="refnum">5</tag>
+        </tags>Fifth step
+</listingline>
+      <listingline xml:id="alg1.l6"><tags>
+          <tag><text fontsize="80%">6:</text></tag>
+          <tag role="refnum">6</tag>
+        </tags>Sixth step
+</listingline>
+    </listing>
+  </float>
+  <float class="ltx_float_algorithm" framed="top" inlist="loa" labels="LABEL:alg:unnum" xml:id="alg2">
+    <tags>
+      <tag><text font="bold">Algorithm 2</text></tag>
+      <tag role="refnum">2</tag>
+      <tag role="typerefnum">Algorithm 2</tag>
+    </tags>
+    <toccaption><tag close=" ">2</tag>Unnumbered Pseudocode</toccaption>
+    <caption><tag close=" "><text font="bold">Algorithm 2</text></tag> Unnumbered Pseudocode</caption>
+    <listing>
+      <listingline xml:id="alg2.l1"><tags>
+          <tag role="refnum">1</tag>
+        </tags>First task
+</listingline>
+      <listingline xml:id="alg2.l2"><tags>
+          <tag role="refnum">2</tag>
+        </tags>Second task
+</listingline>
+    </listing>
+  </float>
+</document>

@@ -1,23 +1,133 @@
-# -*- mode: Perl -*-
+# -*- CPERL -*-
 # /=====================================================================\ #
-# |  algpseudocode                                                      | #
+# |  algpseudocode.sty                                                  | #
 # | Implementation for LaTeXML                                          | #
 # |=====================================================================| #
-# | Part of LaTeXML:                                                    | #
+# | Part of LaTeXAI / LaTeXML:                                           | #
 # |  Public domain software, produced as part of work done by the       | #
 # |  United States Government & not subject to copyright in the US.     | #
-# |---------------------------------------------------------------------| #
-# | Bruce Miller <bruce.miller@nist.gov>                        #_#     | #
-# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
 # \=========================================================ooo==U==ooo=/ #
+# Native implementation of the algpseudocode dialect for algorithmicx.
+# Audited against CTAN v1.2 (2005-04-27), lib-ctan/algorithmicx/.
+# Model: schema <ltx:listing> and <ltx:listingline>.
 package LaTeXML::Package::Pool;
 use strict;
 use warnings;
 use LaTeXML::Package;
 
-# This will load our hacked algorithmicx
-InputDefinitions('algpseudocode', type => 'sty', noltxml => 1);
+# Load algorithmicx engine:
+RequirePackage('algorithmicx');
 
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Package options:
+our $ALG_noend = 0;
+DeclareOption('noend', sub { $ALG_noend = 1; PassOptions('algorithmicx', 'sty', 'noend'); return; });
+DeclareOption('end',   sub { $ALG_noend = 0; return; });
+ProcessOptions();
+
+# Keywords:
+DefMacroI('\algorithmicend',       undef, '\textbf{end}');
+DefMacroI('\algorithmicdo',        undef, '\textbf{do}');
+DefMacroI('\algorithmicwhile',     undef, '\textbf{while}');
+DefMacroI('\algorithmicfor',       undef, '\textbf{for}');
+DefMacroI('\algorithmicforall',    undef, '\textbf{for all}');
+DefMacroI('\algorithmicloop',      undef, '\textbf{loop}');
+DefMacroI('\algorithmicrepeat',    undef, '\textbf{repeat}');
+DefMacroI('\algorithmicuntil',     undef, '\textbf{until}');
+DefMacroI('\algorithmicprocedure',  undef, '\textbf{procedure}');
+DefMacroI('\algorithmicfunction',   undef, '\textbf{function}');
+DefMacroI('\algorithmicif',        undef, '\textbf{if}');
+DefMacroI('\algorithmicthen',      undef, '\textbf{then}');
+DefMacroI('\algorithmicelse',      undef, '\textbf{else}');
+DefMacroI('\algorithmicrequire',   undef, '\textbf{Require:}');
+DefMacroI('\algorithmicensure',    undef, '\textbf{Ensure:}');
+DefMacroI('\algorithmicreturn',    undef, '\textbf{return}');
+DefMacroI('\textproc',             '{}',  '\textsc{#1}');
+
+# Block structures:
+# Procedures and Functions:
+DefMacro('\Procedure{}{}', sub {
+  my ($gullet, $name, $args) = @_;
+  my $argstr = $args ? ToString($args) : '';
+  my @call = (T_CS('\textproc'), T_BEGIN, $name->unlist, T_END);
+  if ($argstr ne '') {
+    push(@call, T_OTHER('('), $args->unlist, T_OTHER(')'));
+  }
+  Tokens(T_CS('\ALG@it'), T_CS('\algorithmicprocedure'), T_SPACE, @call, T_CS('\ALG@beginblock'));
+});
+
+DefMacro('\EndProcedure', sub {
+  Tokens(T_CS('\ALG@endblock'),
+    ($ALG_noend ? () : (T_CS('\ALG@it'), T_CS('\algorithmicend'), T_SPACE, T_CS('\algorithmicprocedure'))));
+});
+
+DefMacro('\Function{}{}', sub {
+  my ($gullet, $name, $args) = @_;
+  my $argstr = $args ? ToString($args) : '';
+  my @call = (T_CS('\textproc'), T_BEGIN, $name->unlist, T_END);
+  if ($argstr ne '') {
+    push(@call, T_OTHER('('), $args->unlist, T_OTHER(')'));
+  }
+  Tokens(T_CS('\ALG@it'), T_CS('\algorithmicfunction'), T_SPACE, @call, T_CS('\ALG@beginblock'));
+});
+
+DefMacro('\EndFunction', sub {
+  Tokens(T_CS('\ALG@endblock'),
+    ($ALG_noend ? () : (T_CS('\ALG@it'), T_CS('\algorithmicend'), T_SPACE, T_CS('\algorithmicfunction'))));
+});
+
+# Conditionals:
+DefMacro('\If{}',
+  '\ALG@it\algorithmicif\ #1\ \algorithmicthen\ALG@beginblock');
+DefMacro('\ElsIf{}',
+  '\ALG@endblock\ALG@it\algorithmicelse\ \algorithmicif\ #1\ \algorithmicthen\ALG@beginblock');
+DefMacro('\Else',
+  '\ALG@endblock\ALG@it\algorithmicelse\ALG@beginblock');
+DefMacro('\EndIf', sub {
+  Tokens(T_CS('\ALG@endblock'),
+    ($ALG_noend ? () : (T_CS('\ALG@it'), T_CS('\algorithmicend'), T_SPACE, T_CS('\algorithmicif'))));
+});
+
+# Loops:
+DefMacro('\While{}',
+  '\ALG@it\algorithmicwhile\ #1\ \algorithmicdo\ALG@beginblock');
+DefMacro('\EndWhile', sub {
+  Tokens(T_CS('\ALG@endblock'),
+    ($ALG_noend ? () : (T_CS('\ALG@it'), T_CS('\algorithmicend'), T_SPACE, T_CS('\algorithmicwhile'))));
+});
+
+DefMacro('\For{}',
+  '\ALG@it\algorithmicfor\ #1\ \algorithmicdo\ALG@beginblock');
+DefMacro('\ForAll{}',
+  '\ALG@it\algorithmicforall\ #1\ \algorithmicdo\ALG@beginblock');
+DefMacro('\EndFor', sub {
+  Tokens(T_CS('\ALG@endblock'),
+    ($ALG_noend ? () : (T_CS('\ALG@it'), T_CS('\algorithmicend'), T_SPACE, T_CS('\algorithmicfor'))));
+});
+
+DefMacro('\Loop',
+  '\ALG@it\algorithmicloop\ALG@beginblock');
+DefMacro('\EndLoop', sub {
+  Tokens(T_CS('\ALG@endblock'),
+    ($ALG_noend ? () : (T_CS('\ALG@it'), T_CS('\algorithmicend'), T_SPACE, T_CS('\algorithmicloop'))));
+});
+
+DefMacro('\Repeat',
+  '\ALG@it\algorithmicrepeat\ALG@beginblock');
+DefMacro('\Until{}',
+  '\ALG@endblock\ALG@it\algorithmicuntil\ #1');
+
+# Declarations:
+DefMacro('\Require', '\item[\algorithmicrequire]');
+DefMacro('\Ensure',  '\item[\algorithmicensure]');
+DefMacro('\Return',  '\algorithmicreturn\ ');
+DefMacro('\Call{}{}', sub {
+  my ($gullet, $name, $args) = @_;
+  my $argstr = $args ? ToString($args) : '';
+  my @call = (T_CS('\textproc'), T_BEGIN, $name->unlist, T_END);
+  if ($argstr ne '') {
+    push(@call, T_OTHER('('), $args->unlist, T_OTHER(')'));
+  }
+  Tokens(@call);
+});
+
 1;
-

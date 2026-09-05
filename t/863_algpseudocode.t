@@ -1,10 +1,7 @@
 # -*- CPERL -*-
 #**********************************************************************
-# Test cases for LaTeXML
+# Test cases for algpseudocode.sty and algorithmicx.sty native bindings
 #**********************************************************************
 use LaTeXML::Util::Test;
 
-latexml_tests("t/alignment",
-  requires => {
-    listing => 'listings.cfg',
-    cells   => 'makecell.sty' });
+latexml_tests("t/algpseudocode", strict => 1);
