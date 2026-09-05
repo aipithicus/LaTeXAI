@@ -1,0 +1,15 @@
+\documentclass{article}
+\usepackage{rotfloat}
+\begin{document}
+\begin{sidewaystable}[p]
+  \begin{tabular}{cc} $a$ & $b$ \\ $c$ & $d$ \end{tabular}
+  \caption{Rotated table}\label{tab:rotated}
+\end{sidewaystable}
+\begin{sidewaystable*}[!ht]
+  Wide table. \caption{Wide rotated table}\label{tab:wide}
+\end{sidewaystable*}
+\begin{table}
+  Ordinary table. \caption{After rotation}\label{tab:after}
+\end{table}
+References: \ref{tab:rotated}, \ref{tab:wide}, \ref{tab:after}.
+\end{document}

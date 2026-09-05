@@ -7,6 +7,18 @@
 # |  Public domain software, produced as part of work done by the       | #
 # |  United States Government & not subject to copyright in the US.     | #
 # \=========================================================ooo==U==ooo=/ #
+# Native built-in float subset, audited against rotfloat 1.2 (2004-01-04),
+# lib-ctan/rotfloat/tex/latex/rotfloat/rotfloat.sty, TeX Live revision 79618,
+# and the package documentation. CTAN gives no date; the runfile supplies it.
+# Model: float.sty.ltxml and rotating.sty.ltxml's beforeFloat/afterFloat loop.
+# Covers sidewaysfigure/sidewaystable and their starred forms, placement,
+# captions, numbering and labels. The established class and 90-degree trace
+# are retained; page-dependent rotation and custom floats generated through
+# restylefloat are not implemented here. Inherited float styling no-ops do
+# not implement rotfloat's dynamic sideways-environment generation.
+# The raw source also requires rotating, whose binding executes the ifthen
+# passthrough. This native subset uses float and the engine float primitives
+# directly; it does not load rotating or expose its unrelated environments.
 package LaTeXML::Package::Pool;
 use strict;
 use warnings;
@@ -14,28 +26,17 @@ use LaTeXML::Package;
 
 RequirePackage('float');
 
-DefEnvironment('{sidewaystable} OptionalKeyVals:float',
-  "<ltx:table class='ltx_sidewaystable' angle='90'>"
-    . "#body"
-    . "</ltx:table>",
-  properties => sub { (placement => $_[1] && $_[1]->getValue('placement')); });
-
-DefEnvironment('{sidewaystable*} OptionalKeyVals:float',
-  "<ltx:table class='ltx_sidewaystable' angle='90'>"
-    . "#body"
-    . "</ltx:table>",
-  properties => sub { (placement => $_[1] && $_[1]->getValue('placement')); });
-
-DefEnvironment('{sidewaysfigure} OptionalKeyVals:float',
-  "<ltx:figure class='ltx_sidewaysfigure' angle='90'>"
-    . "#body"
-    . "</ltx:figure>",
-  properties => sub { (placement => $_[1] && $_[1]->getValue('placement')); });
-
-DefEnvironment('{sidewaysfigure*} OptionalKeyVals:float',
-  "<ltx:figure class='ltx_sidewaysfigure' angle='90'>"
-    . "#body"
-    . "</ltx:figure>",
-  properties => sub { (placement => $_[1] && $_[1]->getValue('placement')); });
+foreach my $type (qw(table figure)) {
+  foreach my $star ('', '*') {
+    DefEnvironment('{sideways' . $type . $star . '}[]',
+      "<ltx:$type xml:id='#id' inlist='#inlist' ?#1(placement='#1')"
+        . " class='ltx_sideways$type' angle='90'>#tags#body</ltx:$type>",
+      mode         => 'internal_vertical',
+      beforeDigest => sub {
+        beforeFloat($type, double => ($star ? 1 : 0));
+        AssignRegister('\hsize' => LookupRegister('\textheight')); },
+      afterDigest  => sub { afterFloat($_[1]); });
+  }
+}
 
 1;

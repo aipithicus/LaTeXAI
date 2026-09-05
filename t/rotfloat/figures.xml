@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="rotfloat"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <figure inlist="lof" labels="LABEL:fig:before" placement="ht" xml:id="S0.F1">
+    <tags>
+      <tag>Figure 1</tag>
+      <tag role="refnum">1</tag>
+      <tag role="typerefnum">Figure 1</tag>
+    </tags>
+    <p>Ordinary figure.</p>
+    <toccaption><tag close=" ">1</tag>Before rotation</toccaption>
+    <caption><tag close=": ">Figure 1</tag>Before rotation</caption>
+  </figure>
+  <figure angle="90" class="ltx_sidewaysfigure" inlist="lof" labels="LABEL:fig:rotated" placement="p" xml:id="S0.F2">
+    <tags>
+      <tag>Figure 2</tag>
+      <tag role="refnum">2</tag>
+      <tag role="typerefnum">Figure 2</tag>
+    </tags>
+    <p><Math mode="inline" tex="a+b=c" text="a + b = c" xml:id="S0.F2.m1">
+        <XMath>
+          <XMApp>
+            <XMTok meaning="equals" role="RELOP">=</XMTok>
+            <XMApp>
+              <XMTok meaning="plus" role="ADDOP">+</XMTok>
+              <XMTok font="italic" role="UNKNOWN">a</XMTok>
+              <XMTok font="italic" role="UNKNOWN">b</XMTok>
+            </XMApp>
+            <XMTok font="italic" role="UNKNOWN">c</XMTok>
+          </XMApp>
+        </XMath>
+      </Math>.</p>
+    <toccaption><tag close=" ">2</tag>Short rotated</toccaption>
+    <caption><tag close=": ">Figure 2</tag>Rotated figure</caption>
+  </figure>
+  <figure angle="90" class="ltx_sidewaysfigure" inlist="lof" labels="LABEL:fig:wide" placement="H" xml:id="S0.F3">
+    <tags>
+      <tag>Figure 3</tag>
+      <tag role="refnum">3</tag>
+      <tag role="typerefnum">Figure 3</tag>
+    </tags>
+    <p><Math mode="inline" tex="x=y" text="x = y" xml:id="S0.F3.m1">
+        <XMath>
+          <XMApp>
+            <XMTok meaning="equals" role="RELOP">=</XMTok>
+            <XMTok font="italic" role="UNKNOWN">x</XMTok>
+            <XMTok font="italic" role="UNKNOWN">y</XMTok>
+          </XMApp>
+        </XMath>
+      </Math>.</p>
+    <toccaption><tag close=" ">3</tag>Wide rotated figure</toccaption>
+    <caption><tag close=": ">Figure 3</tag>Wide rotated figure</caption>
+  </figure>
+  <para xml:id="p1">
+    <p>References: <ref labelref="LABEL:fig:before"/>, <ref labelref="LABEL:fig:rotated"/>, <ref labelref="LABEL:fig:wide"/>.</p>
+  </para>
+</document>

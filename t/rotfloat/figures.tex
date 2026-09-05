@@ -1,0 +1,14 @@
+\documentclass{article}
+\usepackage{rotfloat}
+\begin{document}
+\begin{figure}[ht]
+  Ordinary figure. \caption{Before rotation}\label{fig:before}
+\end{figure}
+\begin{sidewaysfigure}[p]
+  $a+b=c$. \caption[Short rotated]{Rotated figure}\label{fig:rotated}
+\end{sidewaysfigure}
+\begin{sidewaysfigure*}[H]
+  $x=y$. \caption{Wide rotated figure}\label{fig:wide}
+\end{sidewaysfigure*}
+References: \ref{fig:before}, \ref{fig:rotated}, \ref{fig:wide}.
+\end{document}
