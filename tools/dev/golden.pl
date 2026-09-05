@@ -41,7 +41,7 @@ foreach my $tex (@cases) {
     warn "golden.pl: $tex: refusing to write golden from a conversion that reported "
       . $core->getStatusMessage . "\n";
     $failures++; next; }
-  open(my $out, '>:raw', $xml) or do { warn "golden.pl: cannot write $xml: $!\n"; $failures++; next; };
+  open(my $out, '>:encoding(UTF-8)', $xml) or do { warn "golden.pl: cannot write $xml: $!\n"; $failures++; next; };
   print {$out} $dom->toString(1);
   close($out);
   print STDERR "golden.pl: wrote $xml (" . $core->getStatusMessage . ")\n"; }
