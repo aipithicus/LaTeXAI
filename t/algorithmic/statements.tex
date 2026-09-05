@@ -1,0 +1,19 @@
+\documentclass{article}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\begin{document}
+\begin{algorithm}
+\caption{Basic Statements}\label{alg:statements}
+\begin{algorithmic}[1]
+\REQUIRE $x \ge 0$
+\ENSURE $y \ge 0$
+\STATE $y \gets 0$ \COMMENT{initialize}
+\STMT $x \gets x + 1$
+\PRINT $x$
+\IF{$x > 0$ \AND \NOT \FALSE}
+  \STATE $y \gets \TRUE$
+\ENDIF
+\RETURN $y$
+\end{algorithmic}
+\end{algorithm}
+\end{document}

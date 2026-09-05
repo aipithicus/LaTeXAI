@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="algorithm"?>
+<?latexml package="algorithmic"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <float class="ltx_float_algorithm" framed="top" inlist="loa" labels="LABEL:alg:nested" xml:id="alg1">
+    <tags>
+      <tag><text font="bold">Algorithm 1</text></tag>
+      <tag role="refnum">1</tag>
+      <tag role="typerefnum">Algorithm 1</tag>
+    </tags>
+    <toccaption><tag close=" ">1</tag>Nested Control Structures</toccaption>
+    <caption><tag close=" "><text font="bold">Algorithm 1</text></tag> Nested Control Structures</caption>
+    <listing>
+      <listingline xml:id="alg1.l1"><tags>
+          <tag><text fontsize="80%">1:</text></tag>
+          <tag role="refnum">1</tag>
+        </tags> <text font="bold">inputs</text></listingline>
+      <listingline xml:id="alg1.l2"><tags>
+          <tag><text fontsize="80%">2:</text></tag>
+          <tag role="refnum">2</tag>
+        </tags>  Input parameters
+</listingline>
+      <listingline xml:id="alg1.l3"><tags>
+          <tag><text fontsize="80%">3:</text></tag>
+          <tag role="refnum">3</tag>
+        </tags> <text font="bold">outputs</text></listingline>
+      <listingline xml:id="alg1.l4"><tags>
+          <tag><text fontsize="80%">4:</text></tag>
+          <tag role="refnum">4</tag>
+        </tags>  Output results
+</listingline>
+      <listingline xml:id="alg1.l5"><tags>
+          <tag><text fontsize="80%">5:</text></tag>
+          <tag role="refnum">5</tag>
+        </tags> <text font="bold">globals</text> </listingline>
+      <listingline xml:id="alg1.l6"><tags>
+          <tag><text fontsize="80%">6:</text></tag>
+          <tag role="refnum">6</tag>
+        </tags> Global constants
+</listingline>
+      <listingline xml:id="alg1.l7"><tags>
+          <tag><text fontsize="80%">7:</text></tag>
+          <tag role="refnum">7</tag>
+        </tags> <text font="bold">do</text></listingline>
+      <listingline xml:id="alg1.l8"><tags>
+          <tag><text fontsize="80%">8:</text></tag>
+          <tag role="refnum">8</tag>
+        </tags>  <text font="bold">if</text> <Math mode="inline" tex="a&lt;b" text="a &lt; b" xml:id="alg1.l8.m1">
+          <XMath>
+            <XMApp>
+              <XMTok meaning="less-than" role="RELOP">&lt;</XMTok>
+              <XMTok font="italic" role="UNKNOWN">a</XMTok>
+              <XMTok font="italic" role="UNKNOWN">b</XMTok>
+            </XMApp>
+          </XMath>
+        </Math> <text font="bold">then</text>
+</listingline>
+      <listingline xml:id="alg1.l9"><tags>
+          <tag><text fontsize="80%">9:</text></tag>
+          <tag role="refnum">9</tag>
+        </tags>   <Math mode="inline" tex="min\leftarrow a" text="m * i * n leftarrow a" xml:id="alg1.l9.m1">
+          <XMath>
+            <XMApp>
+              <XMTok name="leftarrow" role="ARROW">←</XMTok>
+              <XMApp>
+                <XMTok meaning="times" role="MULOP">⁢</XMTok>
+                <XMTok font="italic" role="UNKNOWN">m</XMTok>
+                <XMTok font="italic" role="UNKNOWN">i</XMTok>
+                <XMTok font="italic" role="UNKNOWN">n</XMTok>
+              </XMApp>
+              <XMTok font="italic" role="UNKNOWN">a</XMTok>
+            </XMApp>
+          </XMath>
+        </Math>
+</listingline>
+      <listingline xml:id="alg1.l10"><tags>
+          <tag><text fontsize="80%">10:</text></tag>
+          <tag role="refnum">10</tag>
+        </tags>  <text font="bold">else</text> <text font="bold">if</text> <Math mode="inline" tex="a&gt;b" text="a &gt; b" xml:id="alg1.l10.m1">
+          <XMath>
+            <XMApp>
+              <XMTok meaning="greater-than" role="RELOP">&gt;</XMTok>
+              <XMTok font="italic" role="UNKNOWN">a</XMTok>
+              <XMTok font="italic" role="UNKNOWN">b</XMTok>
+            </XMApp>
+          </XMath>
+        </Math> <text font="bold">then</text>
+</listingline>
+      <listingline xml:id="alg1.l11"><tags>
+          <tag><text fontsize="80%">11:</text></tag>
+          <tag role="refnum">11</tag>
+        </tags>   <Math mode="inline" tex="min\leftarrow b" text="m * i * n leftarrow b" xml:id="alg1.l11.m1">
+          <XMath>
+            <XMApp>
+              <XMTok name="leftarrow" role="ARROW">←</XMTok>
+              <XMApp>
+                <XMTok meaning="times" role="MULOP">⁢</XMTok>
+                <XMTok font="italic" role="UNKNOWN">m</XMTok>
+                <XMTok font="italic" role="UNKNOWN">i</XMTok>
+                <XMTok font="italic" role="UNKNOWN">n</XMTok>
+              </XMApp>
+              <XMTok font="italic" role="UNKNOWN">b</XMTok>
+            </XMApp>
+          </XMath>
+        </Math>
+</listingline>
+      <listingline xml:id="alg1.l12"><tags>
+          <tag><text fontsize="80%">12:</text></tag>
+          <tag role="refnum">12</tag>
+        </tags>  <text font="bold">else</text></listingline>
+      <listingline xml:id="alg1.l13"><tags>
+          <tag><text fontsize="80%">13:</text></tag>
+          <tag role="refnum">13</tag>
+        </tags>   <Math mode="inline" tex="min\leftarrow 0" text="m * i * n leftarrow 0" xml:id="alg1.l13.m1">
+          <XMath>
+            <XMApp>
+              <XMTok name="leftarrow" role="ARROW">←</XMTok>
+              <XMApp>
+                <XMTok meaning="times" role="MULOP">⁢</XMTok>
+                <XMTok font="italic" role="UNKNOWN">m</XMTok>
+                <XMTok font="italic" role="UNKNOWN">i</XMTok>
+                <XMTok font="italic" role="UNKNOWN">n</XMTok>
+              </XMApp>
+              <XMTok meaning="0" role="NUMBER">0</XMTok>
+            </XMApp>
+          </XMath>
+        </Math>
+</listingline>
+      <listingline xml:id="alg1.l14"><tags>
+          <tag><text fontsize="80%">14:</text></tag>
+          <tag role="refnum">14</tag>
+        </tags>  <text font="bold">end</text> <text font="bold">if</text></listingline>
+      <listingline xml:id="alg1.l15"><tags>
+          <tag><text fontsize="80%">15:</text></tag>
+          <tag role="refnum">15</tag>
+        </tags>  <text font="bold">for</text> <Math mode="inline" tex="i\leftarrow 1" text="i leftarrow 1" xml:id="alg1.l15.m1">
+          <XMath>
+            <XMApp>
+              <XMTok name="leftarrow" role="ARROW">←</XMTok>
+              <XMTok font="italic" role="UNKNOWN">i</XMTok>
+              <XMTok meaning="1" role="NUMBER">1</XMTok>
+            </XMApp>
+          </XMath>
+        </Math> <text font="bold">to</text> <Math mode="inline" tex="n" text="n" xml:id="alg1.l15.m2">
+          <XMath>
+            <XMTok font="italic" role="UNKNOWN">n</XMTok>
+          </XMath>
+        </Math> <text font="bold">do</text>
+</listingline>
+      <listingline xml:id="alg1.l16"><tags>
+          <tag><text fontsize="80%">16:</text></tag>
+          <tag role="refnum">16</tag>
+        </tags>   <text font="bold">for all</text> <Math mode="inline" tex="v\in V" text="v element-of V" xml:id="alg1.l16.m1">
+          <XMath>
+            <XMApp>
+              <XMTok meaning="element-of" name="in" role="RELOP">∈</XMTok>
+              <XMTok font="italic" role="UNKNOWN">v</XMTok>
+              <XMTok font="italic" role="UNKNOWN">V</XMTok>
+            </XMApp>
+          </XMath>
+        </Math> <text font="bold">do</text>
+</listingline>
+      <listingline xml:id="alg1.l17"><tags>
+          <tag><text fontsize="80%">17:</text></tag>
+          <tag role="refnum">17</tag>
+        </tags>    <text font="bold">while</text> <Math mode="inline" tex="count&gt;0" text="c * o * u * n * t &gt; 0" xml:id="alg1.l17.m1">
+          <XMath>
+            <XMApp>
+              <XMTok meaning="greater-than" role="RELOP">&gt;</XMTok>
+              <XMApp>
+                <XMTok meaning="times" role="MULOP">⁢</XMTok>
+                <XMTok font="italic" role="UNKNOWN">c</XMTok>
+                <XMTok font="italic" role="UNKNOWN">o</XMTok>
+                <XMTok font="italic" role="UNKNOWN">u</XMTok>
+                <XMTok font="italic" role="UNKNOWN">n</XMTok>
+                <XMTok font="italic" role="UNKNOWN">t</XMTok>
+              </XMApp>
+              <XMTok meaning="0" role="NUMBER">0</XMTok>
+            </XMApp>
+          </XMath>
+        </Math> <text font="bold">do</text>
+</listingline>
+      <listingline xml:id="alg1.l18"><tags>
+          <tag><text fontsize="80%">18:</text></tag>
+          <tag role="refnum">18</tag>
+        </tags>     <Math mode="inline" tex="count\leftarrow count-1" text="c * o * u * n * t leftarrow c * o * u * n * t - 1" xml:id="alg1.l18.m1">
+          <XMath>
+            <XMApp>
+              <XMTok name="leftarrow" role="ARROW">←</XMTok>
+              <XMApp>
+                <XMTok meaning="times" role="MULOP">⁢</XMTok>
+                <XMTok font="italic" role="UNKNOWN">c</XMTok>
+                <XMTok font="italic" role="UNKNOWN">o</XMTok>
+                <XMTok font="italic" role="UNKNOWN">u</XMTok>
+                <XMTok font="italic" role="UNKNOWN">n</XMTok>
+                <XMTok font="italic" role="UNKNOWN">t</XMTok>
+              </XMApp>
+              <XMApp>
+                <XMTok meaning="minus" role="ADDOP">-</XMTok>
+                <XMApp>
+                  <XMTok meaning="times" role="MULOP">⁢</XMTok>
+                  <XMTok font="italic" role="UNKNOWN">c</XMTok>
+                  <XMTok font="italic" role="UNKNOWN">o</XMTok>
+                  <XMTok font="italic" role="UNKNOWN">u</XMTok>
+                  <XMTok font="italic" role="UNKNOWN">n</XMTok>
+                  <XMTok font="italic" role="UNKNOWN">t</XMTok>
+                </XMApp>
+                <XMTok meaning="1" role="NUMBER">1</XMTok>
+              </XMApp>
+            </XMApp>
+          </XMath>
+        </Math>
+</listingline>
+      <listingline xml:id="alg1.l19"><tags>
+          <tag><text fontsize="80%">19:</text></tag>
+          <tag role="refnum">19</tag>
+        </tags>    <text font="bold">end</text> <text font="bold">while</text></listingline>
+      <listingline xml:id="alg1.l20"><tags>
+          <tag><text fontsize="80%">20:</text></tag>
+          <tag role="refnum">20</tag>
+        </tags>   <text font="bold">end</text> <text font="bold">for</text></listingline>
+      <listingline xml:id="alg1.l21"><tags>
+          <tag><text fontsize="80%">21:</text></tag>
+          <tag role="refnum">21</tag>
+        </tags>  <text font="bold">end</text> <text font="bold">for</text></listingline>
+      <listingline xml:id="alg1.l22"><tags>
+          <tag><text fontsize="80%">22:</text></tag>
+          <tag role="refnum">22</tag>
+        </tags>  <text font="bold">loop</text></listingline>
+      <listingline xml:id="alg1.l23"><tags>
+          <tag><text fontsize="80%">23:</text></tag>
+          <tag role="refnum">23</tag>
+        </tags>   Process next item
+</listingline>
+      <listingline xml:id="alg1.l24"><tags>
+          <tag><text fontsize="80%">24:</text></tag>
+          <tag role="refnum">24</tag>
+        </tags>  <text font="bold">end</text> <text font="bold">loop</text></listingline>
+      <listingline xml:id="alg1.l25"><tags>
+          <tag><text fontsize="80%">25:</text></tag>
+          <tag role="refnum">25</tag>
+        </tags>  <text font="bold">repeat</text></listingline>
+      <listingline xml:id="alg1.l26"><tags>
+          <tag><text fontsize="80%">26:</text></tag>
+          <tag role="refnum">26</tag>
+        </tags>   <Math mode="inline" tex="step\leftarrow step+1" text="s * t * e * p leftarrow s * t * e * p + 1" xml:id="alg1.l26.m1">
+          <XMath>
+            <XMApp>
+              <XMTok name="leftarrow" role="ARROW">←</XMTok>
+              <XMApp>
+                <XMTok meaning="times" role="MULOP">⁢</XMTok>
+                <XMTok font="italic" role="UNKNOWN">s</XMTok>
+                <XMTok font="italic" role="UNKNOWN">t</XMTok>
+                <XMTok font="italic" role="UNKNOWN">e</XMTok>
+                <XMTok font="italic" role="UNKNOWN">p</XMTok>
+              </XMApp>
+              <XMApp>
+                <XMTok meaning="plus" role="ADDOP">+</XMTok>
+                <XMApp>
+                  <XMTok meaning="times" role="MULOP">⁢</XMTok>
+                  <XMTok font="italic" role="UNKNOWN">s</XMTok>
+                  <XMTok font="italic" role="UNKNOWN">t</XMTok>
+                  <XMTok font="italic" role="UNKNOWN">e</XMTok>
+                  <XMTok font="italic" role="UNKNOWN">p</XMTok>
+                </XMApp>
+                <XMTok meaning="1" role="NUMBER">1</XMTok>
+              </XMApp>
+            </XMApp>
+          </XMath>
+        </Math>
+</listingline>
+      <listingline xml:id="alg1.l27"><tags>
+          <tag><text fontsize="80%">27:</text></tag>
+          <tag role="refnum">27</tag>
+        </tags>  <text font="bold">until</text> <Math mode="inline" tex="step=max" text="s * t * e * p = m * a * x" xml:id="alg1.l27.m1">
+          <XMath>
+            <XMApp>
+              <XMTok meaning="equals" role="RELOP">=</XMTok>
+              <XMApp>
+                <XMTok meaning="times" role="MULOP">⁢</XMTok>
+                <XMTok font="italic" role="UNKNOWN">s</XMTok>
+                <XMTok font="italic" role="UNKNOWN">t</XMTok>
+                <XMTok font="italic" role="UNKNOWN">e</XMTok>
+                <XMTok font="italic" role="UNKNOWN">p</XMTok>
+              </XMApp>
+              <XMApp>
+                <XMTok meaning="times" role="MULOP">⁢</XMTok>
+                <XMTok font="italic" role="UNKNOWN">m</XMTok>
+                <XMTok font="italic" role="UNKNOWN">a</XMTok>
+                <XMTok font="italic" role="UNKNOWN">x</XMTok>
+              </XMApp>
+            </XMApp>
+          </XMath>
+        </Math>
+</listingline>
+    </listing>
+  </float>
+</document>

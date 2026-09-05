@@ -1,59 +1,124 @@
-# -*- mode: Perl -*-
+# -*- CPERL -*-
 # /=====================================================================\ #
-# |  algorithmic                                                        | #
+# |  algorithmic.sty                                                    | #
 # | Implementation for LaTeXML                                          | #
 # |=====================================================================| #
-# | Part of LaTeXML:                                                    | #
+# | Part of LaTeXAI / LaTeXML:                                           | #
 # |  Public domain software, produced as part of work done by the       | #
 # |  United States Government & not subject to copyright in the US.     | #
-# |---------------------------------------------------------------------| #
-# | Bruce Miller <bruce.miller@nist.gov>                        #_#     | #
-# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
 # \=========================================================ooo==U==ooo=/ #
+# Native implementation of the classic algorithmic pseudocode environment,
+# replacing upstream's hybrid InputDefinitions binding with an autonomous
+# native definition. Audited against CTAN v0.1 (2009-08-24), TeX Live
+# revision 78101, lib-ctan/algorithms/tex/latex/algorithms/algorithmic.sty.
+# Model: schema <ltx:listing> and <ltx:listingline>.
 package LaTeXML::Package::Pool;
 use strict;
 use warnings;
 use LaTeXML::Package;
 
-# Was algorithmicx.sty loaded? If so: BAIL immediately.
-# (deeply incompatible)
-if (IsDefined(T_CS('\algorithmic'))) {
+# Guard against algorithmicx.sty (deeply incompatible)
+if (IsDefined(T_CS('\algorithmic')) && !IsDefined(T_CS('\lx@algorithmic@is@native'))) {
   Warn("unexpected", "\\algorithmic",
     "Another package has already defined \\algorithmic, will not load algorithmic.sty");
-  return 1; }
+  return 1;
+}
+DefMacroI('\lx@algorithmic@is@native', undef, '');
 
-# Read in the LaTeX definitions and redefine a few things strategically.
-InputDefinitions('algorithmic', type => 'sty', noltxml => 1);
+# Package options:
+our $ALC_noend = 0;
+DeclareOption('noend', sub { $ALC_noend = 1; return; });
+ProcessOptions();
 
-Let('\lx@orig@algorithmic', '\algorithmic');
-DefMacro('\algorithmic', '\lx@setup@algorithmic\lx@orig@algorithmic');
-DefPrimitive('\lx@setup@algorithmic', sub {
-    ResetCounter('ALC@line');
-    # If we are not within an algorithm environment, step the counter for its id's
-    if (!grep { $_ eq 'algorithm'; } $STATE->lookupStackedValues('current_environment')) {
-      RefStepID('algorithm'); }
-    Let('\list',    '\lx@algorithmic@beginlist');
-    Let('\endlist', '\lx@algorithmic@endlist');
-    Let('\item',    '\lx@algorithmic@item');
-    Let('\hfill',   '\lx@algorithmic@hfill');
+# Configuration registers:
+DefRegister('\algorithmicindent' => Dimension('1em'));
+DefRegister('\ALC@tlm'           => Dimension('0.5em'));
+DefMacroI('\ALC@linenodelimiter', undef, ':');
+DefMacroI('\ALC@linenosize',      undef, '\footnotesize');
+
+# Configuration command \algsetup{...}:
+DefKeyVal('ALG', 'indent', 'Dimension');
+DefKeyVal('ALG', 'linenodelimiter', '');
+DefKeyVal('ALG', 'linenosize', '');
+DefPrimitive('\algsetup RequiredKeyVals:ALG', sub {
+  my ($stomach, $kv) = @_;
+  if ($kv) {
+    if (my $ind = $kv->getValue('indent')) {
+      AssignRegister('\algorithmicindent' => $ind);
+    }
+    if (defined(my $delim = $kv->getValue('linenodelimiter'))) {
+      DefMacroI('\ALC@linenodelimiter', undef, $delim);
+    }
+    if (defined(my $size = $kv->getValue('linenosize'))) {
+      DefMacroI('\ALC@linenosize', undef, $size);
+    }
+  }
+  return;
 });
 
-DefConstructor('\lx@algorithmic@beginlist{}{}', "<ltx:listing>",
+# Keywords:
+DefMacroI('\algorithmicrequire', undef, '\textbf{Require:}');
+DefMacroI('\algorithmicensure',  undef, '\textbf{Ensure:}');
+DefMacroI('\algorithmiccomment', '{}',  '\{#1\}');
+DefMacroI('\algorithmicend',     undef, '\textbf{end}');
+DefMacroI('\algorithmicif',      undef, '\textbf{if}');
+DefMacroI('\algorithmicthen',    undef, '\textbf{then}');
+DefMacroI('\algorithmicelse',    undef, '\textbf{else}');
+DefMacroI('\algorithmicelsif',   undef, '\algorithmicelse\ \algorithmicif');
+DefMacroI('\algorithmicendif',   undef, '\algorithmicend\ \algorithmicif');
+DefMacroI('\algorithmicfor',     undef, '\textbf{for}');
+DefMacroI('\algorithmicforall',  undef, '\textbf{for all}');
+DefMacroI('\algorithmicdo',      undef, '\textbf{do}');
+DefMacroI('\algorithmicendfor',  undef, '\algorithmicend\ \algorithmicfor');
+DefMacroI('\algorithmicwhile',   undef, '\textbf{while}');
+DefMacroI('\algorithmicendwhile',undef, '\algorithmicend\ \algorithmicwhile');
+DefMacroI('\algorithmicloop',    undef, '\textbf{loop}');
+DefMacroI('\algorithmicendloop', undef, '\algorithmicend\ \algorithmicloop');
+DefMacroI('\algorithmicrepeat',  undef, '\textbf{repeat}');
+DefMacroI('\algorithmicuntil',   undef, '\textbf{until}');
+DefMacroI('\algorithmicprint',   undef, '\textbf{print}');
+DefMacroI('\algorithmicreturn',  undef, '\textbf{return}');
+DefMacroI('\algorithmictrue',    undef, '\textbf{true}');
+DefMacroI('\algorithmicfalse',   undef, '\textbf{false}');
+DefMacroI('\algorithmicand',     undef, '\textbf{and}');
+DefMacroI('\algorithmicor',      undef, '\textbf{or}');
+DefMacroI('\algorithmicxor',     undef, '\textbf{xor}');
+DefMacroI('\algorithmicnot',     undef, '\textbf{not}');
+DefMacroI('\algorithmicto',      undef, '\textbf{to}');
+DefMacroI('\algorithmicinputs',  undef, '\textbf{inputs}');
+DefMacroI('\algorithmicoutputs', undef, '\textbf{outputs}');
+DefMacroI('\algorithmicglobals', undef, '\textbf{globals}');
+DefMacroI('\algorithmicbody',    undef, '\textbf{do}');
+
+# Right-justified comments:
+DefConstructor('\lx@algorithmic@hfill', "<ltx:text cssstyle='float:right'>");
+
+# Counters:
+NewCounter('algorithm', undef,       idprefix => 'alg');
+NewCounter('ALC@line',  'algorithm', idprefix => 'l');
+NewCounter('ALC@rem',   undef);
+
+# Line numbering tag formatting:
+DefMacro('\fnum@ALC@line', sub {
+  my $rem  = CounterValue('ALC@rem')->valueOf;
+  my $freq = $STATE->lookupValue('ALC@step_freq') || 0;
+  if ($freq > 0 && $rem == 0) {
+    Tokens(T_BEGIN, T_CS('\ALC@linenosize'), Explode(CounterValue('ALC@line')->valueOf),
+      T_CS('\ALC@linenodelimiter'), T_END);
+  } else {
+    Tokens();
+  }
+});
+
+# Listing and listingline constructors:
+DefConstructor('\lx@algorithmic@beginlist', "<ltx:listing>",
   beforeConstruct => sub { $_[0]->maybeCloseElement('ltx:p'); },
-  afterDigest     => sub { Let('\list', '\lx@algorithmic@beginlist@inner');
-                       $_[0]->beginMode('internal_vertical'); });    # NOT nested list!
+  afterDigest     => sub { $_[0]->beginMode('internal_vertical'); });
 
 DefConstructor('\lx@algorithmic@endlist', "</ltx:listing>",
-  beforeDigest=>sub { $_[0]->endMode('internal_vertical'); },
+  beforeDigest    => sub { $_[0]->endMode('internal_vertical'); },
   beforeConstruct => sub { $_[0]->maybeCloseElement('ltx:listingline'); });
 
-DefConstructor('\lx@algorithmic@beginlist@inner{}{}', "",
-  afterDigest => sub { Let('\endlist', '\relax'); });                # NOT nested list!
-
-DefMacro('\lx@algorithmic@item OptionalUndigested',
-  '\lx@algorithmic@item@@ [#1]\hskip\ALC@tlm\relax');
-
-# This imitates \item; just opens the ltx:listingline, but somebody's got to close it.
 DefConstructor('\lx@algorithmic@item@@ OptionalUndigested',
   "<ltx:listingline xml:id='#id' itemsep='#itemsep'>"
     . "#tags",
@@ -63,13 +128,136 @@ DefConstructor('\lx@algorithmic@item@@ OptionalUndigested',
     (id => $id, tags => $tags); },
   beforeConstruct => sub { $_[0]->maybeCloseElement('ltx:listingline'); });
 
-NewCounter('algorithm', undef,       idprefix => 'alg');
-NewCounter('ALC@line',  'algorithm', idprefix => 'l');     # Assuming we're inside an {algorithm}!
-DefMacro('\fnum@ALC@line', '\ALC@lno');
+# Item primitive: step line counter and open listingline with indentation:
+DefPrimitive('\ALC@it', sub {
+  my ($stomach) = @_;
+  my $freq = $STATE->lookupValue('ALC@step_freq') || 0;
+  StepCounter('ALC@rem');
+  if ($freq > 0 && CounterValue('ALC@rem')->valueOf == $freq) {
+    ResetCounter('ALC@rem');
+  }
+  StepCounter('ALC@line');
+  Digest(Tokens(T_CS('\lx@algorithmic@item@@'), T_CS('\hskip'), T_CS('\ALC@tlm'), T_CS('\relax')));
+});
 
-# Hopefully this will only get used for right justifying a comment;
-# the ltx:text should autoclose at end of line?
-DefConstructor('\lx@algorithmic@hfill',
-  "<ltx:text cssstyle='float:right'>");
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Indentation block helpers:
+DefPrimitive('\ALC@pushindent', sub {
+  AssignRegister('\ALC@tlm' => LookupRegister('\ALC@tlm')->add(LookupRegister('\algorithmicindent')));
+});
+DefPrimitive('\ALC@popindent', sub {
+  AssignRegister('\ALC@tlm' => LookupRegister('\ALC@tlm')->subtract(LookupRegister('\algorithmicindent')));
+});
+
+# Environment {algorithmic}[freq]:
+DefMacro('\algorithmic OptionalUndigested', sub {
+  my ($gullet, $freq) = @_;
+  $freq = $freq ? ToString($freq) : '';
+  $freq =~ s/^\[//;
+  $freq =~ s/\]$//;
+  $freq = int($freq || 0);
+  $STATE->assignValue('ALC@step_freq' => $freq, 'global');
+  ResetCounter('ALC@line');
+  ResetCounter('ALC@rem');
+  # If not inside an algorithm float, step the algorithm ID for uniqueness:
+  if (!grep { $_ eq 'algorithm'; } $STATE->lookupStackedValues('current_environment')) {
+    RefStepID('algorithm');
+  }
+  # Initial indentation matches \labelsep (0.5em):
+  AssignRegister('\ALC@tlm' => Dimension('0.5em'));
+  return T_CS('\lx@algorithmic@beginlist');
+});
+
+DefMacro('\endalgorithmic', '\lx@algorithmic@endlist');
+
+# Statements:
+DefMacro('\STATE', '\ALC@it');
+DefMacro('\STMT',  '\ALC@it');
+
+# Require and Ensure:
+DefMacro('\item OptionalUndigested', '\lx@algorithmic@item@@ [#1]\hskip\ALC@tlm\relax');
+DefMacro('\REQUIRE', '\item[\algorithmicrequire]');
+DefMacro('\ENSURE',  '\item[\algorithmicensure]');
+
+# Simple statements:
+DefMacro('\PRINT',  '\ALC@it\algorithmicprint{}\ ');
+DefMacro('\RETURN', '\ALC@it\algorithmicreturn{}\ ');
+DefMacro('\TRUE',   '\algorithmictrue{}');
+DefMacro('\FALSE',  '\algorithmicfalse{}');
+DefMacro('\AND',    '\algorithmicand{}\ ');
+DefMacro('\OR',     '\algorithmicor{}\ ');
+DefMacro('\XOR',    '\algorithmicxor{}\ ');
+DefMacro('\NOT',    '\algorithmicnot{}\ ');
+DefMacro('\TO',     '\algorithmicto{}\ ');
+
+# Comments:
+DefMacro('\COMMENT{}', '\lx@algorithmic@hfill\algorithmiccomment{#1}');
+
+# Conditionals:
+DefMacro('\IF OptionalUndigested {}',
+  '\ALC@it\algorithmicif\ #2\ \algorithmicthen'
+  . '\if.#1.\else\ \COMMENT{#1}\fi'
+  . '\ALC@pushindent');
+DefMacro('\ELSE OptionalUndigested',
+  '\ALC@popindent\ALC@it\algorithmicelse'
+  . '\if.#1.\else\ \COMMENT{#1}\fi'
+  . '\ALC@pushindent');
+DefMacro('\ELSIF OptionalUndigested {}',
+  '\ALC@popindent\ALC@it\algorithmicelsif\ #2\ \algorithmicthen'
+  . '\if.#1.\else\ \COMMENT{#1}\fi'
+  . '\ALC@pushindent');
+DefMacro('\ENDIF', sub {
+  Tokens(T_CS('\ALC@popindent'),
+    ($ALC_noend ? () : (T_CS('\ALC@it'), T_CS('\algorithmicendif'))));
+});
+
+# Loops:
+DefMacro('\FOR OptionalUndigested {}',
+  '\ALC@it\algorithmicfor\ #2\ \algorithmicdo'
+  . '\if.#1.\else\ \COMMENT{#1}\fi'
+  . '\ALC@pushindent');
+DefMacro('\FORALL OptionalUndigested {}',
+  '\ALC@it\algorithmicforall\ #2\ \algorithmicdo'
+  . '\if.#1.\else\ \COMMENT{#1}\fi'
+  . '\ALC@pushindent');
+DefMacro('\ENDFOR', sub {
+  Tokens(T_CS('\ALC@popindent'),
+    ($ALC_noend ? () : (T_CS('\ALC@it'), T_CS('\algorithmicendfor'))));
+});
+
+DefMacro('\WHILE OptionalUndigested {}',
+  '\ALC@it\algorithmicwhile\ #2\ \algorithmicdo'
+  . '\if.#1.\else\ \COMMENT{#1}\fi'
+  . '\ALC@pushindent');
+DefMacro('\ENDWHILE', sub {
+  Tokens(T_CS('\ALC@popindent'),
+    ($ALC_noend ? () : (T_CS('\ALC@it'), T_CS('\algorithmicendwhile'))));
+});
+
+DefMacro('\LOOP OptionalUndigested',
+  '\ALC@it\algorithmicloop'
+  . '\if.#1.\else\ \COMMENT{#1}\fi'
+  . '\ALC@pushindent');
+DefMacro('\ENDLOOP', sub {
+  Tokens(T_CS('\ALC@popindent'),
+    ($ALC_noend ? () : (T_CS('\ALC@it'), T_CS('\algorithmicendloop'))));
+});
+
+DefMacro('\REPEAT OptionalUndigested',
+  '\ALC@it\algorithmicrepeat'
+  . '\if.#1.\else\ \COMMENT{#1}\fi'
+  . '\ALC@pushindent');
+DefMacro('\UNTIL{}', '\ALC@popindent\ALC@it\algorithmicuntil\ #1');
+
+# Inputs / Outputs / Globals / Body blocks:
+DefMacro('\INPUTS OptionalUndigested',
+  '\ALC@it\algorithmicinputs\if.#1.\else\ \COMMENT{#1}\fi\ALC@pushindent');
+DefMacro('\ENDINPUTS',  '\ALC@popindent');
+DefMacro('\OUTPUTS OptionalUndigested',
+  '\ALC@it\algorithmicoutputs\if.#1.\else\ \COMMENT{#1}\fi\ALC@pushindent');
+DefMacro('\ENDOUTPUTS', '\ALC@popindent');
+DefMacro('\GLOBALS',    '\ALC@it\algorithmicglobals\ ');
+DefMacro('\BODY OptionalUndigested',
+  '\ALC@it\algorithmicbody\if.#1.\else\ \COMMENT{#1}\fi\ALC@pushindent');
+DefMacro('\ENDBODY',    '\ALC@popindent');
+
 1;

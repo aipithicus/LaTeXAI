@@ -1,0 +1,40 @@
+\documentclass{article}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\begin{document}
+\begin{algorithm}
+\caption{Nested Control Structures}\label{alg:nested}
+\begin{algorithmic}[1]
+\INPUTS
+  \STATE Input parameters
+\ENDINPUTS
+\OUTPUTS
+  \STATE Output results
+\ENDOUTPUTS
+\GLOBALS
+  \STATE Global constants
+\BODY
+  \IF{$a < b$}
+    \STATE $min \gets a$
+  \ELSIF{$a > b$}
+    \STATE $min \gets b$
+  \ELSE
+    \STATE $min \gets 0$
+  \ENDIF
+  \FOR{$i \gets 1$ \TO $n$}
+    \FORALL{$v \in V$}
+      \WHILE{$count > 0$}
+        \STATE $count \gets count - 1$
+      \ENDWHILE
+    \ENDFOR
+  \ENDFOR
+  \LOOP
+    \STATE Process next item
+  \ENDLOOP
+  \REPEAT
+    \STATE $step \gets step + 1$
+  \UNTIL{$step = max$}
+\ENDBODY
+\end{algorithmic}
+\end{algorithm}
+\end{document}
