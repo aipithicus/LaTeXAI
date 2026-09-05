@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="tikz-cd"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML" xmlns:cd="http://dlmf.nist.gov/LaTeXML/cd">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <equation xml:id="S0.Ex1">
+      <Math mode="display" tex="\begin{tikzcd}A\lx@tikzcd@arrow r,bend left=15,shift left=1ex,dashed,&quot;f&quot;&amp;B\end%&#10;{tikzcd}" text="commutative-diagram@(Array[[A  absent, B]])" xml:id="S0.Ex1.m1">
+        <XMath>
+          <XMDual>
+            <XMApp>
+              <XMTok meaning="commutative-diagram"/>
+              <XMRef idref="S0.Ex1.m1.1"/>
+            </XMApp>
+            <XMArray xml:id="S0.Ex1.m1.1">
+              <XMRow>
+                <XMCell align="center">
+                  <XMApp>
+                    <XMApp cd:dir="r" cd:from="1-1" cd:label="f" cd:labelpos="above" cd:style="bend left=15,shift left=1ex,dashed" cd:to="1-2" role="ARROW">
+                      <XMApp role="ARROW">
+                        <XMTok role="SUPERSCRIPTOP" scriptpos="mid5"/>
+                        <XMTok font="italic" meaning="rightarrow" name="rightarrow" role="ARROW" stretchy="true">→</XMTok>
+                        <XMTok font="italic" fontsize="70%" role="UNKNOWN">f</XMTok>
+                      </XMApp>
+                    </XMApp>
+                    <XMTok font="italic" role="UNKNOWN">A</XMTok>
+                    <XMTok meaning="absent"/>
+                  </XMApp>
+                </XMCell>
+                <XMCell align="center">
+                  <XMTok font="italic" role="UNKNOWN">B</XMTok>
+                </XMCell>
+              </XMRow>
+            </XMArray>
+          </XMDual>
+        </XMath>
+      </Math>
+    </equation>
+    <equation xml:id="S0.Ex2">
+      <Math mode="display" tex="\begin{tikzcd}A\lx@tikzcd@arrow r,bend right=25,shift right=2pt,tail,&quot;g&quot;&amp;B\end%&#10;{tikzcd}" text="commutative-diagram@(Array[[A  absent, B]])" xml:id="S0.Ex2.m1">
+        <XMath>
+          <XMDual>
+            <XMApp>
+              <XMTok meaning="commutative-diagram"/>
+              <XMRef idref="S0.Ex2.m1.1"/>
+            </XMApp>
+            <XMArray xml:id="S0.Ex2.m1.1">
+              <XMRow>
+                <XMCell align="center">
+                  <XMApp>
+                    <XMApp cd:dir="r" cd:from="1-1" cd:label="g" cd:labelpos="above" cd:style="bend right=25,shift right=2pt,tail" cd:to="1-2" role="ARROW">
+                      <XMApp role="ARROW">
+                        <XMTok role="SUPERSCRIPTOP" scriptpos="mid5"/>
+                        <XMTok font="italic" meaning="rightarrow" name="rightarrow" role="ARROW" stretchy="true">→</XMTok>
+                        <XMTok font="italic" fontsize="70%" role="UNKNOWN">g</XMTok>
+                      </XMApp>
+                    </XMApp>
+                    <XMTok font="italic" role="UNKNOWN">A</XMTok>
+                    <XMTok meaning="absent"/>
+                  </XMApp>
+                </XMCell>
+                <XMCell align="center">
+                  <XMTok font="italic" role="UNKNOWN">B</XMTok>
+                </XMCell>
+              </XMRow>
+            </XMArray>
+          </XMDual>
+        </XMath>
+      </Math>
+    </equation>
+  </para>
+</document>

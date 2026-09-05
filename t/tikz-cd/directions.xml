@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="tikz-cd"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML" xmlns:cd="http://dlmf.nist.gov/LaTeXML/cd">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <equation xml:id="S0.Ex1">
+      <Math class="ltx_math_unparsed" mode="display" tex="\begin{tikzcd}a&amp;b&amp;c&amp;d&amp;e\\&#10;f&amp;g&amp;h&amp;i&amp;j\\&#10;k&amp;l&amp;m\lx@tikzcd@arrow r\lx@tikzcd@arrow l\lx@tikzcd@arrow u\lx@tikzcd@arrow d%&#10;\lx@tikzcd@arrow ur\lx@tikzcd@arrow ul\lx@tikzcd@arrow dr\lx@tikzcd@arrow dl%&#10;\lx@tikzcd@arrow rr\lx@tikzcd@arrow ll\lx@tikzcd@arrow dd\lx@tikzcd@arrow uu&amp;n%&#10;&amp;o\\&#10;p&amp;q&amp;s&amp;t&amp;u\\&#10;v&amp;w&amp;x&amp;y&amp;z\end{tikzcd}" text="commutative-diagram@(Array[[a, b, c, d, e], [f, g, h, i, j], [k, l, [m→←↑↓↗↖↘↙⟶⟵↓↑], n, o], [p, q, s, t, u], [v, w, x, y, z]])" xml:id="S0.Ex1.m1">
+        <XMath>
+          <XMDual>
+            <XMApp>
+              <XMTok meaning="commutative-diagram"/>
+              <XMRef idref="S0.Ex1.m1.1"/>
+            </XMApp>
+            <XMArray xml:id="S0.Ex1.m1.1">
+              <XMRow>
+                <XMCell align="center">
+                  <XMTok font="italic" role="UNKNOWN">a</XMTok>
+                </XMCell>
+                <XMCell align="center">
+                  <XMTok font="italic" role="UNKNOWN">b</XMTok>
+                </XMCell>
+                <XMCell align="center">
+                  <XMTok font="italic" role="UNKNOWN">c</XMTok>
+                </XMCell>
+                <XMCell align="center">
+                  <XMTok font="italic" role="UNKNOWN">d</XMTok>
+                </XMCell>
+                <XMCell align="center">
+                  <XMTok font="italic" role="UNKNOWN">e</XMTok>
+                </XMCell>
+              </XMRow>
+              <XMRow>
+                <XMCell align="center">
+                  <XMTok font="italic" role="UNKNOWN">f</XMTok>
+                </XMCell>
+                <XMCell align="center">
+                  <XMTok font="italic" role="UNKNOWN">g</XMTok>
+                </XMCell>
+                <XMCell align="center">
+                  <XMTok font="italic" role="UNKNOWN">h</XMTok>
+                </XMCell>
+                <XMCell align="center">
+                  <XMTok font="italic" role="UNKNOWN">i</XMTok>
+                </XMCell>
+                <XMCell align="center">
+                  <XMTok font="italic" role="UNKNOWN">j</XMTok>
+                </XMCell>
+              </XMRow>
+              <XMRow>
+                <XMCell align="center">
+                  <XMTok font="italic" role="UNKNOWN">k</XMTok>
+                </XMCell>
+                <XMCell align="center">
+                  <XMTok font="italic" role="UNKNOWN">l</XMTok>
+                </XMCell>
+                <XMCell align="center">
+                  <XMArg rule="Anything,">
+                    <XMTok font="italic" role="UNKNOWN">m</XMTok>
+                    <XMApp cd:dir="r" cd:from="3-3" cd:labelpos="above" cd:style="plain" cd:to="3-4" role="ARROW">
+                      <XMTok font="italic" meaning="rightarrow" name="rightarrow" role="ARROW" stretchy="true">→</XMTok>
+                    </XMApp>
+                    <XMApp cd:dir="l" cd:from="3-3" cd:labelpos="above" cd:style="plain" cd:to="3-2" role="ARROW">
+                      <XMTok font="italic" meaning="leftarrow" name="leftarrow" role="ARROW" stretchy="true">←</XMTok>
+                    </XMApp>
+                    <XMApp cd:dir="u" cd:from="3-3" cd:labelpos="above" cd:style="plain" cd:to="2-3" role="ARROW">
+                      <XMTok font="italic" meaning="uparrow" name="uparrow" role="ARROW" stretchy="true">↑</XMTok>
+                    </XMApp>
+                    <XMApp cd:dir="d" cd:from="3-3" cd:labelpos="above" cd:style="plain" cd:to="4-3" role="ARROW">
+                      <XMTok font="italic" meaning="downarrow" name="downarrow" role="ARROW" stretchy="true">↓</XMTok>
+                    </XMApp>
+                    <XMApp cd:dir="ur" cd:from="3-3" cd:labelpos="above" cd:style="plain" cd:to="2-4" role="ARROW">
+                      <XMTok font="italic" meaning="nearrow" name="nearrow" role="ARROW" stretchy="true">↗</XMTok>
+                    </XMApp>
+                    <XMApp cd:dir="ul" cd:from="3-3" cd:labelpos="above" cd:style="plain" cd:to="2-2" role="ARROW">
+                      <XMTok font="italic" meaning="nwarrow" name="nwarrow" role="ARROW" stretchy="true">↖</XMTok>
+                    </XMApp>
+                    <XMApp cd:dir="dr" cd:from="3-3" cd:labelpos="above" cd:style="plain" cd:to="4-4" role="ARROW">
+                      <XMTok font="italic" meaning="searrow" name="searrow" role="ARROW" stretchy="true">↘</XMTok>
+                    </XMApp>
+                    <XMApp cd:dir="dl" cd:from="3-3" cd:labelpos="above" cd:style="plain" cd:to="4-2" role="ARROW">
+                      <XMTok font="italic" meaning="swarrow" name="swarrow" role="ARROW" stretchy="true">↙</XMTok>
+                    </XMApp>
+                    <XMApp cd:dir="rr" cd:from="3-3" cd:labelpos="above" cd:style="plain" cd:to="3-5" role="ARROW">
+                      <XMTok font="italic" meaning="longrightarrow" name="longrightarrow" role="ARROW" stretchy="true">⟶</XMTok>
+                    </XMApp>
+                    <XMApp cd:dir="ll" cd:from="3-3" cd:labelpos="above" cd:style="plain" cd:to="3-1" role="ARROW">
+                      <XMTok font="italic" meaning="longleftarrow" name="longleftarrow" role="ARROW" stretchy="true">⟵</XMTok>
+                    </XMApp>
+                    <XMApp cd:dir="dd" cd:from="3-3" cd:labelpos="above" cd:style="plain" cd:to="5-3" role="ARROW">
+                      <XMTok font="italic" meaning="downarrow" name="downarrow" role="ARROW" stretchy="true">↓</XMTok>
+                    </XMApp>
+                    <XMApp cd:dir="uu" cd:from="3-3" cd:labelpos="above" cd:style="plain" cd:to="1-3" role="ARROW">
+                      <XMTok font="italic" meaning="uparrow" name="uparrow" role="ARROW" stretchy="true">↑</XMTok>
+                    </XMApp>
+                  </XMArg>
+                </XMCell>
+                <XMCell align="center">
+                  <XMTok font="italic" role="UNKNOWN">n</XMTok>
+                </XMCell>
+                <XMCell align="center">
+                  <XMTok font="italic" role="UNKNOWN">o</XMTok>
+                </XMCell>
+              </XMRow>
+              <XMRow>
+                <XMCell align="center">
+                  <XMTok font="italic" role="UNKNOWN">p</XMTok>
+                </XMCell>
+                <XMCell align="center">
+                  <XMTok font="italic" role="UNKNOWN">q</XMTok>
+                </XMCell>
+                <XMCell align="center">
+                  <XMTok font="italic" role="UNKNOWN">s</XMTok>
+                </XMCell>
+                <XMCell align="center">
+                  <XMTok font="italic" role="UNKNOWN">t</XMTok>
+                </XMCell>
+                <XMCell align="center">
+                  <XMTok font="italic" role="UNKNOWN">u</XMTok>
+                </XMCell>
+              </XMRow>
+              <XMRow>
+                <XMCell align="center">
+                  <XMTok font="italic" role="UNKNOWN">v</XMTok>
+                </XMCell>
+                <XMCell align="center">
+                  <XMTok font="italic" role="UNKNOWN">w</XMTok>
+                </XMCell>
+                <XMCell align="center">
+                  <XMTok font="italic" role="UNKNOWN">x</XMTok>
+                </XMCell>
+                <XMCell align="center">
+                  <XMTok font="italic" role="UNKNOWN">y</XMTok>
+                </XMCell>
+                <XMCell align="center">
+                  <XMTok font="italic" role="UNKNOWN">z</XMTok>
+                </XMCell>
+              </XMRow>
+            </XMArray>
+          </XMDual>
+        </XMath>
+      </Math>
+    </equation>
+  </para>
+</document>

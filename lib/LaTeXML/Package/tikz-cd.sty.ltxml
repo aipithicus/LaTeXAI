@@ -7,6 +7,25 @@
 # |  Public domain software, produced as part of work done by the       | #
 # |  United States Government & not subject to copyright in the US.     | #
 # \=========================================================ooo==U==ooo=/ #
+# Native structural subset of tikz-cd 1.0 (2021-05-04), audited against
+# lib-ctan/tikz-cd/tex/latex/tikz-cd/tikz-cd.sty and
+# tex/generic/tikz-cd/tikzlibrarycd.code.tex, TeX Live revision 77682,
+# plus the package documentation. Model: amscd's generic matrix bindings.
+# This replaces the upstream TikZ passthrough: raw tikz-cd requires tikz and
+# loads cd (matrix, quotes, arrows.meta); this binding requires no packages,
+# executes no raw TikZ, and defines tikzset/tikzcdset locally for the bounded
+# layout no-ops below. Loading it does not expose TikZ's unrelated surface.
+# Covers the tikzcd matrix, arrow/ar bracket syntax, the twelve DIR_MAP
+# directions, one quoted math label with prime/swap, numeric from/to, and
+# the style branches listed below. Case-insensitive direction shortcuts are
+# an existing fork extension. Bends/shifts/decorations retain cd:style traces;
+# exact path geometry and orientation of composite glyphs are not rendered.
+# Dense adjacent edges can retain explicit parser residue. Endpoint resolution
+# keeps the existing explicit-to precedence and direction-relative-to-from
+# convention; general source-order routing semantics remain a design follow-up.
+# Old brace syntax/rar-family commands, multiple or styled quote labels,
+# arbitrary/named routes, other arrow styles and non-layout settings are
+# unsupported. They must not silently become a default rightward edge.
 package LaTeXML::Package::Pool;
 use strict;
 use warnings;
@@ -20,8 +39,25 @@ use LaTeXML::Core::Tokens;
 # arrow constructs, rather than delegating to TikZ / SVG picture generation.
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-DefMacro('\tikzcdset{}', '');
-DefMacro('\tikzset{}',   '');
+sub check_tikzcd_layout_options {
+  my ($options) = @_;
+  return unless defined $options;
+  foreach my $item (split_token_items($options)) {
+    my $text = ToString(Tokens(@$item));
+    $text =~ s/^\s+|\s+$//g;
+    next unless length($text);
+    # Grid spacing/baseline are page layout, not nodes, labels or edges.
+    next if $text =~ /^(?:row sep|column sep|sep|baseline)\s*=\s*\S/s;
+    next if $text eq 'cramped';
+    # The existing local binding already makes \& an alignment separator.
+    next if $text =~ /^ampersand replacement\s*=\s*\\&$/;
+    Error('unsupported', 'tikzcd-setting', undef,
+      "Unsupported tikz-cd setting (not silently ignored): $text");
+  }
+  return;
+}
+DefMacro('\tikzcdset{}', sub { check_tikzcd_layout_options($_[1]); return; });
+DefMacro('\tikzset{}',   sub { check_tikzcd_layout_options($_[1]); return; });
 
 # Reader for optional [options] on \tikzcd or \arrow
 DefParameterType('OptionalTikzCdOptions', sub {
@@ -31,17 +67,28 @@ DefParameterType('OptionalTikzCdOptions', sub {
       $gullet->readToken;    # consume '['
       my @toks = ();
       my $depth = 0;
+      my $braces = 0;
+      my $closed = 0;
       while (defined(my $tok = $gullet->readToken)) {
-        if ($tok->equals(T_OTHER('['))) {
+        if ($tok->getCatcode == CC_BEGIN) {
+          $braces++;
+          push(@toks, $tok);
+        }
+        elsif ($tok->getCatcode == CC_END) {
+          $braces-- if $braces;
+          push(@toks, $tok);
+        }
+        elsif (!$braces && $tok->equals(T_OTHER('['))) {
           $depth++;
           push(@toks, $tok);
         }
-        elsif ($tok->equals(T_OTHER(']'))) {
+        elsif (!$braces && $tok->equals(T_OTHER(']'))) {
           if ($depth > 0) {
             $depth--;
             push(@toks, $tok);
           }
           else {
+            $closed = 1;
             last;
           }
         }
@@ -49,6 +96,7 @@ DefParameterType('OptionalTikzCdOptions', sub {
           push(@toks, $tok);
         }
       }
+      Error('expected', 'tikzcd-options-end', undef, 'Unterminated tikz-cd options') unless $closed;
       return Tokens(@toks);
     }
     return;
@@ -58,6 +106,7 @@ DefParameterType('OptionalTikzCdOptions', sub {
 # Syntax: \begin{tikzcd}[<options>] ... \end{tikzcd}
 DefMacro('\tikzcd OptionalTikzCdOptions', sub {
     my ($gullet, $options) = @_;
+    check_tikzcd_layout_options($options);
     my $name = 'tikzcd';
     my $bindings = Tokens(
       T_CS('\lx@gen@matrix@bindings'), T_BEGIN,
@@ -172,10 +221,16 @@ our %DIR_MAP = (
 
 sub parse_tikzcd_arrow_options {
   my ($opt_toks, $stomach) = @_;
-  return () unless defined $opt_toks;
+  unless (defined $opt_toks) {
+    Error('unsupported', 'tikzcd-arrow-syntax', undef,
+      'Use bracket arrow syntax with a direction or numeric target; old brace syntax is unsupported');
+    return ();
+  }
 
   my @items = split_token_items($opt_toks);
   my @styles = ();
+  my $labels = 0;
+  my $has_target = 0;
   my %res = (
     direction => 'r',
     dir       => 'r',
@@ -192,13 +247,15 @@ sub parse_tikzcd_arrow_options {
 
     # Check for quoted label: "..." or "..."'
     if ($item_str =~ /^\"(.*)\"('?)$/s) {
+      Error('unsupported', 'tikzcd-multiple-labels', undef,
+        'Multiple labels on one edge are not implemented') if $labels++;
       my $inner_str = $1;
       $res{swap} = 1 if $2 eq "'";
       $res{label_source} = $inner_str;
       # Extract tokens between quotes
       my @label_tok_list = extract_quoted_tokens(@$item_toks);
       if (@label_tok_list) {
-        $res{label_box} = $stomach->digest(Tokens(@label_tok_list));
+        $res{label_box} = $stomach->digest(Tokens(T_BEGIN, T_CS('\scriptstyle'), @label_tok_list, T_END));
       }
       next;
     }
@@ -209,16 +266,17 @@ sub parse_tikzcd_arrow_options {
       $k =~ s/^\s+//; $k =~ s/\s+$//;
       $v =~ s/^\s+//; $v =~ s/\s+$//;
       if ($k eq 'from') { $res{from} = $v; }
-      elsif ($k eq 'to') { $res{to} = $v; }
+      elsif ($k eq 'to') { $res{to} = $v; $has_target = 1; }
       elsif ($k eq 'shift left' || $k eq 'shift right') {
         $res{shift} = "$k=$v";
         push(@styles, "$k=$v"); }
       elsif ($k eq 'bend left' || $k eq 'bend right') {
         $res{bend} = "$k=$v";
         push(@styles, "$k=$v"); }
-      elsif ($k eq 'labels') {
-        $res{label_source} = $v;
-        $res{label_box} = $stomach->digest(Tokens(TokenizeInternal($v)));
+      else {
+        # In the source, labels= is a style for every label, not label text.
+        Error('unsupported', 'tikzcd-arrow-option', undef,
+          "Unsupported tikz-cd arrow option: $item_str");
       }
       next;
     }
@@ -252,6 +310,15 @@ sub parse_tikzcd_arrow_options {
     if (exists $DIR_MAP{$low}) {
       $res{direction} = $low;
       $res{dir} = $item_str;
+      $has_target = 1;
+      next;
+    }
+
+    # Only direction shortcuts have the fork's case-folding extension.
+    # In particular, source Mapsto is not the ordinary mapsto style.
+    if ($item_str ne $low) {
+      Error('unsupported', 'tikzcd-arrow-option', undef,
+        "Unsupported tikz-cd arrow option: $item_str");
       next;
     }
 
@@ -267,7 +334,6 @@ sub parse_tikzcd_arrow_options {
     }
     elsif ($low eq "hook'") {
       push(@styles, 'hook-left');
-      $res{swap} = 1;
     }
     elsif ($low eq 'tail') {
       push(@styles, 'tail');
@@ -298,7 +364,9 @@ sub parse_tikzcd_arrow_options {
       push(@styles, 'rightarrow');
     }
     elsif ($low eq 'leftarrow') {
-      $res{direction} = 'l';
+      $res{meaning} = 'leftarrow';
+      $res{arrow_char} = "\x{2190}";
+      $res{arrow_cs} = '\leftarrow';
       push(@styles, 'leftarrow');
     }
     elsif ($low eq 'leftrightarrow') {
@@ -313,6 +381,18 @@ sub parse_tikzcd_arrow_options {
       $res{arrow_cs} = '\mapsto';
       push(@styles, 'mapsto');
     }
+    else {
+      Error('unsupported', 'tikzcd-arrow-option', undef,
+        "Unsupported tikz-cd arrow option: $item_str");
+    }
+  }
+
+  Error('unsupported', 'tikzcd-target', undef,
+    'An explicit supported direction or numeric to= target is required') unless $has_target;
+  foreach my $end (qw(from to)) {
+    Error('unsupported', 'tikzcd-coordinate', undef,
+      "Only positive numeric row-column coordinates are implemented: $end=$res{$end}")
+      if defined $res{$end} && !valid_tikzcd_coordinate($res{$end});
   }
 
   # Assign default direction arrow characters if not overridden by style
@@ -332,6 +412,7 @@ sub parse_tikzcd_arrow_options {
 sub valid_tikzcd_coordinate {
   my ($coordinate) = @_;
   return unless defined $coordinate;
+  $coordinate =~ s/^\s*\{(.*)\}\s*$/$1/s;
   return unless $coordinate =~ /^\s*([1-9][0-9]*)-([1-9][0-9]*)\s*$/;
   return "$1-$2"; }
 

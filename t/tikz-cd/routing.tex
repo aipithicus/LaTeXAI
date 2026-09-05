@@ -1,0 +1,17 @@
+\documentclass{article}
+\usepackage{tikz-cd}
+\newcommand{\lab}{\frac{p}{q}}
+\begin{document}
+\[
+\begin{tikzcd}
+A\arrow[r,from=1-2,to=2-1,"f"] & B \\
+C\arrow[from=2-1,to=1-2,"g"] & D
+\end{tikzcd}
+\]
+\[
+\begin{tikzcd}
+A\arrow[dr,from={1-2},to={2-1},"h"] & B \\
+C & D
+\end{tikzcd}
+\]
+\end{document}

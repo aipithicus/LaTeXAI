@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="tikz-cd"?>
+<?latexml package="amsmath"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML" xmlns:cd="http://dlmf.nist.gov/LaTeXML/cd">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <equation xml:id="S0.Ex1">
+      <Math mode="display" tex="\begin{tikzcd}A\lx@tikzcd@arrow r,&quot;f&quot;&amp;B\end{tikzcd}" text="commutative-diagram@(Array[[A  absent, B]])" xml:id="S0.Ex1.m1">
+        <XMath>
+          <XMDual>
+            <XMApp>
+              <XMTok meaning="commutative-diagram"/>
+              <XMRef idref="S0.Ex1.m1.1"/>
+            </XMApp>
+            <XMArray xml:id="S0.Ex1.m1.1">
+              <XMRow>
+                <XMCell align="center">
+                  <XMApp>
+                    <XMApp cd:dir="r" cd:from="1-1" cd:label="f" cd:labelpos="above" cd:style="plain" cd:to="1-2" role="ARROW">
+                      <XMApp role="ARROW">
+                        <XMTok role="SUPERSCRIPTOP" scriptpos="mid5"/>
+                        <XMTok font="italic" meaning="rightarrow" name="rightarrow" role="ARROW" stretchy="true">→</XMTok>
+                        <XMTok font="italic" fontsize="70%" role="UNKNOWN">f</XMTok>
+                      </XMApp>
+                    </XMApp>
+                    <XMTok font="italic" role="UNKNOWN">A</XMTok>
+                    <XMTok meaning="absent"/>
+                  </XMApp>
+                </XMCell>
+                <XMCell align="center">
+                  <XMTok font="italic" role="UNKNOWN">B</XMTok>
+                </XMCell>
+              </XMRow>
+            </XMArray>
+          </XMDual>
+        </XMath>
+      </Math>
+    </equation>
+    <equation xml:id="S0.Ex2">
+      <Math mode="display" tex="\begin{tikzcd}A\lx@tikzcd@arrow r,&quot;g&quot;'&amp;B\end{tikzcd}" text="commutative-diagram@(Array[[A  absent, B]])" xml:id="S0.Ex2.m1">
+        <XMath>
+          <XMDual>
+            <XMApp>
+              <XMTok meaning="commutative-diagram"/>
+              <XMRef idref="S0.Ex2.m1.1"/>
+            </XMApp>
+            <XMArray xml:id="S0.Ex2.m1.1">
+              <XMRow>
+                <XMCell align="center">
+                  <XMApp>
+                    <XMApp cd:dir="r" cd:from="1-1" cd:label="g" cd:labelpos="below" cd:style="plain" cd:to="1-2" role="ARROW">
+                      <XMApp role="ARROW">
+                        <XMTok role="SUBSCRIPTOP" scriptpos="mid5"/>
+                        <XMTok font="italic" meaning="rightarrow" name="rightarrow" role="ARROW" stretchy="true">→</XMTok>
+                        <XMTok font="italic" fontsize="70%" role="UNKNOWN">g</XMTok>
+                      </XMApp>
+                    </XMApp>
+                    <XMTok font="italic" role="UNKNOWN">A</XMTok>
+                    <XMTok meaning="absent"/>
+                  </XMApp>
+                </XMCell>
+                <XMCell align="center">
+                  <XMTok font="italic" role="UNKNOWN">B</XMTok>
+                </XMCell>
+              </XMRow>
+            </XMArray>
+          </XMDual>
+        </XMath>
+      </Math>
+    </equation>
+    <equation xml:id="S0.Ex3">
+      <Math mode="display" tex="\begin{tikzcd}A\lx@tikzcd@arrow r,swap,&quot;h&quot;&amp;B\end{tikzcd}" text="commutative-diagram@(Array[[A  absent, B]])" xml:id="S0.Ex3.m1">
+        <XMath>
+          <XMDual>
+            <XMApp>
+              <XMTok meaning="commutative-diagram"/>
+              <XMRef idref="S0.Ex3.m1.1"/>
+            </XMApp>
+            <XMArray xml:id="S0.Ex3.m1.1">
+              <XMRow>
+                <XMCell align="center">
+                  <XMApp>
+                    <XMApp cd:dir="r" cd:from="1-1" cd:label="h" cd:labelpos="below" cd:style="plain" cd:to="1-2" role="ARROW">
+                      <XMApp role="ARROW">
+                        <XMTok role="SUBSCRIPTOP" scriptpos="mid5"/>
+                        <XMTok font="italic" meaning="rightarrow" name="rightarrow" role="ARROW" stretchy="true">→</XMTok>
+                        <XMTok font="italic" fontsize="70%" role="UNKNOWN">h</XMTok>
+                      </XMApp>
+                    </XMApp>
+                    <XMTok font="italic" role="UNKNOWN">A</XMTok>
+                    <XMTok meaning="absent"/>
+                  </XMApp>
+                </XMCell>
+                <XMCell align="center">
+                  <XMTok font="italic" role="UNKNOWN">B</XMTok>
+                </XMCell>
+              </XMRow>
+            </XMArray>
+          </XMDual>
+        </XMath>
+      </Math>
+    </equation>
+    <equation xml:id="S0.Ex4">
+      <Math mode="display" tex="\begin{tikzcd}A\lx@tikzcd@arrow r,&quot;&quot;&amp;B\end{tikzcd}" text="commutative-diagram@(Array[[A  absent, B]])" xml:id="S0.Ex4.m1">
+        <XMath>
+          <XMDual>
+            <XMApp>
+              <XMTok meaning="commutative-diagram"/>
+              <XMRef idref="S0.Ex4.m1.1"/>
+            </XMApp>
+            <XMArray xml:id="S0.Ex4.m1.1">
+              <XMRow>
+                <XMCell align="center">
+                  <XMApp>
+                    <XMApp cd:dir="r" cd:from="1-1" cd:labelpos="above" cd:style="plain" cd:to="1-2" role="ARROW">
+                      <XMTok font="italic" meaning="rightarrow" name="rightarrow" role="ARROW" stretchy="true">→</XMTok>
+                    </XMApp>
+                    <XMTok font="italic" role="UNKNOWN">A</XMTok>
+                    <XMTok meaning="absent"/>
+                  </XMApp>
+                </XMCell>
+                <XMCell align="center">
+                  <XMTok font="italic" role="UNKNOWN">B</XMTok>
+                </XMCell>
+              </XMRow>
+            </XMArray>
+          </XMDual>
+        </XMath>
+      </Math>
+    </equation>
+    <equation xml:id="S0.Ex5">
+      <Math mode="display" tex="\begin{tikzcd}A\lx@tikzcd@arrow r,&quot;{\lab}&quot;&amp;B\end{tikzcd}" text="commutative-diagram@(Array[[A  absent, B]])" xml:id="S0.Ex5.m1">
+        <XMath>
+          <XMDual>
+            <XMApp>
+              <XMTok meaning="commutative-diagram"/>
+              <XMRef idref="S0.Ex5.m1.1"/>
+            </XMApp>
+            <XMArray xml:id="S0.Ex5.m1.1">
+              <XMRow>
+                <XMCell align="center">
+                  <XMApp>
+                    <XMApp cd:dir="r" cd:from="1-1" cd:label="{\lab}" cd:labelpos="above" cd:style="plain" cd:to="1-2" role="ARROW">
+                      <XMApp role="ARROW">
+                        <XMTok role="SUPERSCRIPTOP" scriptpos="mid5"/>
+                        <XMTok font="italic" meaning="rightarrow" name="rightarrow" role="ARROW" stretchy="true">→</XMTok>
+                        <XMApp>
+                          <XMTok mathstyle="script" meaning="divide" role="FRACOP"/>
+                          <XMTok font="italic" fontsize="50%" role="UNKNOWN">p</XMTok>
+                          <XMTok font="italic" fontsize="50%" role="UNKNOWN">q</XMTok>
+                        </XMApp>
+                      </XMApp>
+                    </XMApp>
+                    <XMTok font="italic" role="UNKNOWN">A</XMTok>
+                    <XMTok meaning="absent"/>
+                  </XMApp>
+                </XMCell>
+                <XMCell align="center">
+                  <XMTok font="italic" role="UNKNOWN">B</XMTok>
+                </XMCell>
+              </XMRow>
+            </XMArray>
+          </XMDual>
+        </XMath>
+      </Math>
+    </equation>
+    <equation xml:id="S0.Ex6">
+      <Math mode="display" tex="\begin{tikzcd}A\lx@tikzcd@arrow r,&quot;{[a,b]}&quot;&amp;B\end{tikzcd}" text="commutative-diagram@(Array[[A  absent, B]])" xml:id="S0.Ex6.m1">
+        <XMath>
+          <XMDual>
+            <XMApp>
+              <XMTok meaning="commutative-diagram"/>
+              <XMRef idref="S0.Ex6.m1.1"/>
+            </XMApp>
+            <XMArray xml:id="S0.Ex6.m1.1">
+              <XMRow>
+                <XMCell align="center">
+                  <XMApp>
+                    <XMApp cd:dir="r" cd:from="1-1" cd:label="{[a,b]}" cd:labelpos="above" cd:style="plain" cd:to="1-2" role="ARROW">
+                      <XMApp role="ARROW">
+                        <XMTok role="SUPERSCRIPTOP" scriptpos="mid5"/>
+                        <XMTok font="italic" meaning="rightarrow" name="rightarrow" role="ARROW" stretchy="true">→</XMTok>
+                        <XMDual>
+                          <XMApp>
+                            <XMTok meaning="closed-interval"/>
+                            <XMRef idref="S0.Ex6.m1.1.1"/>
+                            <XMRef idref="S0.Ex6.m1.1.2"/>
+                          </XMApp>
+                          <XMWrap>
+                            <XMTok fontsize="70%" role="OPEN" stretchy="false">[</XMTok>
+                            <XMTok font="italic" fontsize="70%" role="UNKNOWN" xml:id="S0.Ex6.m1.1.1">a</XMTok>
+                            <XMTok fontsize="70%" role="PUNCT">,</XMTok>
+                            <XMTok font="italic" fontsize="70%" role="UNKNOWN" xml:id="S0.Ex6.m1.1.2">b</XMTok>
+                            <XMTok fontsize="70%" role="CLOSE" stretchy="false">]</XMTok>
+                          </XMWrap>
+                        </XMDual>
+                      </XMApp>
+                    </XMApp>
+                    <XMTok font="italic" role="UNKNOWN">A</XMTok>
+                    <XMTok meaning="absent"/>
+                  </XMApp>
+                </XMCell>
+                <XMCell align="center">
+                  <XMTok font="italic" role="UNKNOWN">B</XMTok>
+                </XMCell>
+              </XMRow>
+            </XMArray>
+          </XMDual>
+        </XMath>
+      </Math>
+    </equation>
+    <equation xml:id="S0.Ex7">
+      <Math mode="display" tex="\begin{tikzcd}A\lx@tikzcd@arrow r,&quot;{\text{]}}&quot;&amp;B\end{tikzcd}" text="commutative-diagram@(Array[[A  absent, B]])" xml:id="S0.Ex7.m1">
+        <XMath>
+          <XMDual>
+            <XMApp>
+              <XMTok meaning="commutative-diagram"/>
+              <XMRef idref="S0.Ex7.m1.1"/>
+            </XMApp>
+            <XMArray xml:id="S0.Ex7.m1.1">
+              <XMRow>
+                <XMCell align="center">
+                  <XMApp>
+                    <XMApp cd:dir="r" cd:from="1-1" cd:label="{\text{]}}" cd:labelpos="above" cd:style="plain" cd:to="1-2" role="ARROW">
+                      <XMApp role="ARROW">
+                        <XMTok role="SUPERSCRIPTOP" scriptpos="mid5"/>
+                        <XMTok font="italic" meaning="rightarrow" name="rightarrow" role="ARROW" stretchy="true">→</XMTok>
+                        <XMText><text fontsize="70%">]</text></XMText>
+                      </XMApp>
+                    </XMApp>
+                    <XMTok font="italic" role="UNKNOWN">A</XMTok>
+                    <XMTok meaning="absent"/>
+                  </XMApp>
+                </XMCell>
+                <XMCell align="center">
+                  <XMTok font="italic" role="UNKNOWN">B</XMTok>
+                </XMCell>
+              </XMRow>
+            </XMArray>
+          </XMDual>
+        </XMath>
+      </Math>
+    </equation>
+  </para>
+</document>

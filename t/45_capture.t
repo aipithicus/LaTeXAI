@@ -361,7 +361,7 @@ foreach my $name (qw(capture-special capturebinding captureraw capturemissing)) 
 assert_partition($routes_xml, 'package-route fixture');
 
 # Case 15: tikz-cd arrows carry explicit, parser-stable edge metadata.
-my ($tikzcd) = convert_document(File::Spec->catfile($FIXTURES, 'tikzcd.tex'));
+my ($tikzcd) = convert_document(File::Spec->catfile($ROOT, 't', 'tikz-cd', 'tikzcd.tex'));
 my $tikzcd_xml = $tikzcd->getDocument;
 my $tikzcd_xc = xpath($tikzcd_xml);
 my @diagrams = $tikzcd_xc->findnodes('//ltx:XMArray');
