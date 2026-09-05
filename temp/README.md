@@ -11,7 +11,7 @@ Layout:
 
 | Path | Holds |
 | :--- | :--- |
-| `temp/logs/` | every `*.latexml.log` and `latexmlpost` log, from probes and tests alike; the jobname is in the filename, so this is flat |
+| `temp/logs/<runstamp>/` | every `*.latexml.log` and `latexmlpost` log, from probes and tests alike, grouped by run; `LATEXAI_RUNSTAMP` or minted per process |
 | `temp/t/<test>/` | output a test driver writes to disk |
 | `temp/bindings/<pkg>/` | intermediates while minting a binding: census, stub, probes, before/after outputs |
 | `temp/<actor-or-task>/` | anything else, named for who or what produced it (`temp/codex-1/`, `temp/tokenize-drift/`) |
