@@ -7,6 +7,14 @@
 # |  Public domain software, produced as part of work done by the       | #
 # |  United States Government & not subject to copyright in the US.     | #
 # \=========================================================ooo==U==ooo=/ #
+# Native binding for stackrel 1.3 (2016-05-16). Written from package
+# documentation; audited against lib-ctan/stackrel/provenance.json,
+# TeX Live oberdiek revision 79461, tex/latex/oberdiek/stackrel.sty.
+# Model: the AMS over/under-accent constructors, with the RELOP/BINOP
+# classes used by the engine's \mathrel/\mathbin bindings.
+# Covers \stackrel[under]{over}{base} and \stackbin[under]{over}{base},
+# including empty labels. There are no no-ops. Raw etexcmds/pdftexcmds
+# provide empty-token tests; native argument handling replaces that work.
 package LaTeXML::Package::Pool;
 use strict;
 use warnings;
@@ -17,15 +25,15 @@ RequirePackage('amsmath');
 # Enhanced \stackrel taking optional [under] argument: \stackrel[under]{over}{base}
 DefConstructor('\stackrel OptionalInScriptStyle InScriptStyle {}',
   "?#1("
-    . "<ltx:XMApp>"
+    . "<ltx:XMApp role='RELOP'>"
     . "<ltx:XMWrap role='UNDERACCENT'>#1</ltx:XMWrap>"
-    . "<ltx:XMApp>"
+    . "<ltx:XMApp role='RELOP'>"
     . "<ltx:XMWrap role='OVERACCENT'>#2</ltx:XMWrap>"
     . "<ltx:XMArg>#3</ltx:XMArg>"
     . "</ltx:XMApp>"
     . "</ltx:XMApp>"
     . ")("
-    . "<ltx:XMApp>"
+    . "<ltx:XMApp role='RELOP'>"
     . "<ltx:XMWrap role='OVERACCENT'>#2</ltx:XMWrap>"
     . "<ltx:XMArg>#3</ltx:XMArg>"
     . "</ltx:XMApp>"
