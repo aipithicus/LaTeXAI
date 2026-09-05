@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="scalerel"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <equation xml:id="S0.Ex1">
+      <Math mode="display" tex="\scaleleftright{(}{a+b}{)}" text="a + b" xml:id="S0.Ex1.m1">
+        <XMath>
+          <XMDual class="ltx_scaleleftright">
+            <XMRef idref="S0.Ex1.m1.1"/>
+            <XMWrap>
+              <XMTok role="OPEN" stretchy="true">(</XMTok>
+              <XMApp xml:id="S0.Ex1.m1.1">
+                <XMTok meaning="plus" role="ADDOP">+</XMTok>
+                <XMTok font="italic" role="UNKNOWN">a</XMTok>
+                <XMTok font="italic" role="UNKNOWN">b</XMTok>
+              </XMApp>
+              <XMTok role="CLOSE" stretchy="true">)</XMTok>
+            </XMWrap>
+          </XMDual>
+        </XMath>
+      </Math>
+    </equation>
+    <equation xml:id="S0.Ex2">
+      <Math class="ltx_math_unparsed" mode="display" tex="\scaleleftright[2em]{.}{a}{|}" text="a@|" xml:id="S0.Ex2.m1">
+        <XMath>
+          <XMWrap class="ltx_scaleleftright">
+            <XMTok font="italic" role="UNKNOWN">a</XMTok>
+            <XMTok role="VERTBAR" stretchy="true">|</XMTok>
+          </XMWrap>
+        </XMath>
+      </Math>
+    </equation>
+    <equation xml:id="S0.Ex3">
+      <Math mode="display" tex="\stretchleftright{[}{a+b}{]}" text="delimited-[]@(a + b)" xml:id="S0.Ex3.m1">
+        <XMath>
+          <XMDual class="ltx_stretchleftright">
+            <XMApp>
+              <XMTok meaning="delimited-[]"/>
+              <XMRef idref="S0.Ex3.m1.1"/>
+            </XMApp>
+            <XMWrap>
+              <XMTok role="OPEN" stretchy="true">[</XMTok>
+              <XMApp xml:id="S0.Ex3.m1.1">
+                <XMTok meaning="plus" role="ADDOP">+</XMTok>
+                <XMTok font="italic" role="UNKNOWN">a</XMTok>
+                <XMTok font="italic" role="UNKNOWN">b</XMTok>
+              </XMApp>
+              <XMTok role="CLOSE" stretchy="true">]</XMTok>
+            </XMWrap>
+          </XMDual>
+        </XMath>
+      </Math>
+    </equation>
+    <equation xml:id="S0.Ex4">
+      <Math class="ltx_math_unparsed" mode="display" tex="\stretchleftright[200]{|}{a}{.}" text="|@a" xml:id="S0.Ex4.m1">
+        <XMath>
+          <XMWrap class="ltx_stretchleftright">
+            <XMTok role="VERTBAR" stretchy="true">|</XMTok>
+            <XMTok font="italic" role="UNKNOWN">a</XMTok>
+          </XMWrap>
+        </XMath>
+      </Math>
+    </equation>
+  </para>
+</document>

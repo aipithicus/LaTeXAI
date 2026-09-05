@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="scalerel"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <equation xml:id="S0.Ex1">
+      <Math mode="display" tex="x_{\scaleobj{2}{\frac{a}{b}}}" text="x _ (a / b)" xml:id="S0.Ex1.m1">
+        <XMath>
+          <XMApp>
+            <XMTok role="SUBSCRIPTOP" scriptpos="post1"/>
+            <XMTok font="italic" role="UNKNOWN">x</XMTok>
+            <XMApp class="ltx_scaleobj">
+              <XMTok mathstyle="script" meaning="divide" role="FRACOP"/>
+              <XMTok font="italic" fontsize="50%" role="UNKNOWN">a</XMTok>
+              <XMTok font="italic" fontsize="50%" role="UNKNOWN">b</XMTok>
+            </XMApp>
+          </XMApp>
+        </XMath>
+      </Math>
+    </equation>
+    <equation xml:id="S0.Ex2">
+      <Math mode="display" tex="x^{\stretchobj{2}{\frac{a}{b}}}" text="x ^ (a / b)" xml:id="S0.Ex2.m1">
+        <XMath>
+          <XMApp>
+            <XMTok role="SUPERSCRIPTOP" scriptpos="post1"/>
+            <XMTok font="italic" role="UNKNOWN">x</XMTok>
+            <XMApp class="ltx_stretchobj">
+              <XMTok mathstyle="script" meaning="divide" role="FRACOP"/>
+              <XMTok font="italic" fontsize="50%" role="UNKNOWN">a</XMTok>
+              <XMTok font="italic" fontsize="50%" role="UNKNOWN">b</XMTok>
+            </XMApp>
+          </XMApp>
+        </XMath>
+      </Math>
+    </equation>
+  </para>
+</document>

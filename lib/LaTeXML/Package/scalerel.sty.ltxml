@@ -1,12 +1,25 @@
 # -*- CPERL -*-
 # /=====================================================================\ #
 # |  scalerel.sty                                                       | #
-# | Implementation for LaTeXML                                          | #
+# | Native mathematical subset for LaTeXML                              | #
 # |=====================================================================| #
 # | Part of LaTeXAI / LaTeXML:                                           | #
 # |  Public domain software, produced as part of work done by the       | #
 # |  United States Government & not subject to copyright in the US.     | #
 # \=========================================================ooo==U==ooo=/ #
+# Emulates scalerel 1.8 (2016-12-29); audited against the package
+# documentation and lib-ctan/scalerel/tex/latex/scalerel/scalerel.sty,
+# TeX Live revision 79618. Model: native TeX XMWrap math grouping and
+# lx@left/lx@right delimiter constructors, with the caller's math style.
+# Supports scalerel/stretchrel (star and optional constraint),
+# scaleleftright/stretchleftright, and scaleobj in math mode. The existing
+# stretchobj is a fork extension, absent from the package source.
+# Scaling kind is retained as a class; numeric sizing/reference geometry
+# remains in the reverted TeX, not a computed physical transform. Text-mode
+# scaling and the other source commands are not implemented. One-sided
+# delimiters may retain ltx_math_unparsed, as in native left/right math.
+# Raw calc/graphicx/etoolbox dependencies perform geometric measurements;
+# this native subset does not load them or inherit their unrelated surface.
 package LaTeXML::Package::Pool;
 use strict;
 use warnings;
@@ -14,30 +27,42 @@ use LaTeXML::Package;
 
 # \scalerel*[max]{object}{reference} and \scalerel[max]{object}{reference}
 DefConstructor('\scalerel OptionalMatch:* [] {} {}',
-  "<ltx:XMWrap role='SCALE' stretchy='true'>#3</ltx:XMWrap>");
+  "<ltx:XMWrap class='ltx_scalerel' stretchy='true'>#3</ltx:XMWrap>?#1()(#4)");
 
 # \stretchrel*[min]{object}{reference} and \stretchrel[min]{object}{reference}
 DefConstructor('\stretchrel OptionalMatch:* [] {} {}',
-  "<ltx:XMWrap role='STRETCH' stretchy='true'>#3</ltx:XMWrap>");
+  "<ltx:XMWrap class='ltx_stretchrel' stretchy='true'>#3</ltx:XMWrap>?#1()(#4)");
 
+# TeXDelimiter keeps a literal dot invisible and marks real delimiters
+# stretchy, rather than relying on a wrapper attribute lost by parsing.
 # \scaleleftright[max]{left}{body}{right}
-DefConstructor('\scaleleftright [] {} {} {}',
-  "<ltx:XMWrap>"
-    . "<ltx:XMWrap stretchy='true'>#2</ltx:XMWrap>"
+DefConstructor('\scaleleftright [] Undigested {} Undigested',
+  "<ltx:XMWrap class='ltx_scaleleftright'>"
+    . "#left"
     . "<ltx:XMArg>#3</ltx:XMArg>"
-    . "<ltx:XMWrap stretchy='true'>#4</ltx:XMWrap>"
-    . "</ltx:XMWrap>");
+    . "#right"
+    . "</ltx:XMWrap>",
+  properties => sub {
+    my ($stomach, $max, $left, $body, $right) = @_;
+    return (left => Digest(Tokens(T_CS('\lx@left'), $left->unlist)),
+      right => Digest(Tokens(T_CS('\lx@right'), $right->unlist))); });
 
 # \stretchleftright[min]{left}{body}{right}
-DefConstructor('\stretchleftright [] {} {} {}',
-  "<ltx:XMWrap>"
-    . "<ltx:XMWrap stretchy='true'>#2</ltx:XMWrap>"
+DefConstructor('\stretchleftright [] Undigested {} Undigested',
+  "<ltx:XMWrap class='ltx_stretchleftright'>"
+    . "#left"
     . "<ltx:XMArg>#3</ltx:XMArg>"
-    . "<ltx:XMWrap stretchy='true'>#4</ltx:XMWrap>"
-    . "</ltx:XMWrap>");
+    . "#right"
+    . "</ltx:XMWrap>",
+  properties => sub {
+    my ($stomach, $min, $left, $body, $right) = @_;
+    return (left => Digest(Tokens(T_CS('\lx@left'), $left->unlist)),
+      right => Digest(Tokens(T_CS('\lx@right'), $right->unlist))); });
 
 # Dimension / width helpers
-DefMacro('\scaleobj{}{}',  '{\textstyle #2}');
-DefMacro('\stretchobj{}{}', '{\textstyle #2}');
+DefConstructor('\scaleobj {} {}',
+  "<ltx:XMWrap class='ltx_scaleobj' stretchy='true'>#2</ltx:XMWrap>");
+DefConstructor('\stretchobj {} {}',
+  "<ltx:XMWrap class='ltx_stretchobj' stretchy='true'>#2</ltx:XMWrap>");
 
 1;
