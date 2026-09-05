@@ -1,0 +1,24 @@
+\documentclass{article}
+\usepackage{extpfeil}
+\newextarrow{\customright}{0599}{\relbar\relbar\rightarrow}
+\newextarrow{\customleft}{0599}{\leftarrow\relbar\relbar}
+\newextarrow{\customboth}{0599}{\leftarrow\relbar\rightarrow}
+\newextarrow{\customRight}{0599}{\Relbar\Relbar\Rightarrow}
+\newextarrow{\customLeft}{0599}{\Leftarrow\Relbar\Relbar}
+\newextarrow{\customBoth}{0599}{\Leftarrow\Relbar\Rightarrow}
+\newextarrow{\customtwoheadright}{05{40}0}{\relbar\relbar\twoheadrightarrow}
+\newextarrow{\customtwoheadleft}{500{40}}{\twoheadleftarrow\relbar\relbar}
+\newextarrow{\custommap}{0599}{{\mapstochar\relbar}\relbar\rightarrow}
+\newextarrow{\customequal}{5599}{\Relbar\Relbar\Relbar}
+\begin{document}
+\[ A \customright[u]{v} B \]
+\[ A \customleft{v} B \]
+\[ A \customboth{v} B \]
+\[ A \customRight{v} B \]
+\[ A \customLeft{v} B \]
+\[ A \customBoth{v} B \]
+\[ A \customtwoheadright{v} B \]
+\[ A \customtwoheadleft{v} B \]
+\[ A \custommap{v} B \]
+\[ A \customequal[]{} B \]
+\end{document}

@@ -7,6 +7,21 @@
 # |  Public domain software, produced as part of work done by the       | #
 # |  United States Government & not subject to copyright in the US.     | #
 # \=========================================================ooo==U==ooo=/ #
+# Native binding for extpfeil 0.4 (2009-10-31, from the source header;
+# the CTAN catalogue does not supply a date). Written from documentation;
+# audited against lib-ctan/extpfeil/provenance.json, TeX Live revision 77682.
+# Model: amsmath.sty.ltxml's \lx@long@arrow and stretchy symbols.
+# The five stock arrows retain their two-headed, mapping, equality and
+# opposing-arrow distinctions and their [under]{over} labels.
+# \newextarrow accepts the standard single/double/two-headed arrow,
+# mapsto and equality fill triples listed below, with literal numeric
+# padding values. Unknown composite fills
+# are rejected, leaving the requested command undefined rather than
+# emitting their pieces as separate operands. The twoarrows/bigtwoarrows/
+# bigRelbar helpers remain undefined pending a composite-arrow decision.
+# The raw amssymb/mathtools/stmaryrd dependencies construct these glyphs
+# geometrically. This native symbol model needs only the AMS arrow helper;
+# it does not execute those packages or inherit their unrelated surfaces.
 package LaTeXML::Package::Pool;
 use strict;
 use warnings;
@@ -21,15 +36,63 @@ DefMathI('\lx@stretchy@twoheadleftarrow', undef, "\x{219E}",
   role => 'ARROW', stretchy => 'true', alias => '\twoheadleftarrow', meaning => 'twoheadleftarrow');
 DefMathI('\lx@stretchy@mapsto', undef, "\x{21A6}",
   role => 'ARROW', stretchy => 'true', alias => '\mapsto', meaning => 'mapsto');
+DefMathI('\lx@stretchy@longequal', undef, '=',
+  role => 'ARROW', stretchy => 'true', meaning => 'equals');
+DefMathI('\lx@stretchy@tofrom', undef, "\x{21C4}",
+  role => 'ARROW', stretchy => 'true', alias => '\rightleftarrows', meaning => 'rightleftarrows');
+DefMathI('\lx@stretchy@leftrightarrow', undef, "\x{2194}",
+  role => 'ARROW', stretchy => 'true', alias => '\leftrightarrow', meaning => 'leftrightarrow');
+DefMathI('\lx@stretchy@Rightarrow', undef, "\x{21D2}",
+  role => 'ARROW', stretchy => 'true', alias => '\Rightarrow', meaning => 'Rightarrow');
+DefMathI('\lx@stretchy@Leftarrow', undef, "\x{21D0}",
+  role => 'ARROW', stretchy => 'true', alias => '\Leftarrow', meaning => 'Leftarrow');
+DefMathI('\lx@stretchy@Leftrightarrow', undef, "\x{21D4}",
+  role => 'ARROW', stretchy => 'true', alias => '\Leftrightarrow', meaning => 'Leftrightarrow');
 
 DefMacro('\xtwoheadrightarrow', '\lx@long@arrow{\xtwoheadrightarrow}{\lx@stretchy@twoheadrightarrow}');
 DefMacro('\xtwoheadleftarrow',  '\lx@long@arrow{\xtwoheadleftarrow}{\lx@stretchy@twoheadleftarrow}');
 DefMacro('\xmapsto',            '\lx@long@arrow{\xmapsto}{\lx@stretchy@mapsto}');
+DefMacro('\xlongequal',         '\lx@long@arrow{\xlongequal}{\lx@stretchy@longequal}');
+DefMacro('\xtofrom',            '\lx@long@arrow{\xtofrom}{\lx@stretchy@tofrom}');
 
-# \newextarrow{\command}{space}{symbol}
+# \newextarrow{\command}{spacing}{left fill right}: source lines 42-44.
+# These triples identify a single standard arrow, represented by the same
+# AMS stretchy symbol as the package's stock arrows. Arbitrary composites
+# need a representation of the composition, not three independent operands.
+my %extpfeil_fill = (
+  '\relbar\relbar\rightarrow' => '\lx@stretchy@rightarrow',
+  '\leftarrow\relbar\relbar' => '\lx@stretchy@leftarrow',
+  '\leftarrow\relbar\rightarrow' => '\lx@stretchy@leftrightarrow',
+  '\Relbar\Relbar\Rightarrow' => '\lx@stretchy@Rightarrow',
+  '\Leftarrow\Relbar\Relbar' => '\lx@stretchy@Leftarrow',
+  '\Leftarrow\Relbar\Rightarrow' => '\lx@stretchy@Leftrightarrow',
+  '\relbar\relbar\twoheadrightarrow' => '\lx@stretchy@twoheadrightarrow',
+  '\twoheadleftarrow\relbar\relbar' => '\lx@stretchy@twoheadleftarrow',
+  '{\mapstochar\relbar}\relbar\rightarrow' => '\lx@stretchy@mapsto',
+  '\Relbar\Relbar\Relbar' => '\lx@stretchy@longequal');
+# Spacing controls label padding, not arrow direction, head count or label
+# content. Like the AMS model, this binding leaves that geometric padding
+# to the renderer; no mathematical token or label is consumed as furniture.
 DefMacro('\newextarrow DefToken {}{}', sub {
-    my ($gullet, $cs, $space, $sym) = @_;
-    DefMacroI($cs, undef, '\lx@long@arrow{' . ToString($cs) . '}{' . ToString($sym) . '}');
+    my ($gullet, $cs, $space, $fill) = @_;
+    my $key = ToString($fill);
+    $key =~ s/\s+//g;
+    my $padding = ToString($space);
+    $padding =~ s/\s+//g;
+    if ($padding !~ /^(?:[0-9]|\{[+-]?[0-9]+\}){4}$/) {
+      Error('unsupported', 'extpfeil-padding', $gullet,
+        '\newextarrow requires four literal numeric padding values');
+      return; }
+    if (IsDefined($cs)) {
+      Error('redefined', $cs, $gullet, '\newextarrow requires an undefined command');
+      return; }
+    my $arrow = $extpfeil_fill{$key};
+    if (!$arrow) {
+      Error('unsupported', 'extpfeil-fill', $gullet,
+        'Unsupported composite arrow fill in \newextarrow: ' . ToString($fill));
+      return; }
+    DefMacroI($cs, undef, '\lx@long@arrow{' . ToString($cs) . '}{' . $arrow . '}');
+    return;
 });
 
 1;

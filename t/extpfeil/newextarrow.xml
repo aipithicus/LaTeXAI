@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="extpfeil"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <equation xml:id="S0.Ex1">
+      <Math mode="display" tex="A\customright[u]{v}B" text="A u@(v@(rightarrow)) B" xml:id="S0.Ex1.m1">
+        <XMath>
+          <XMApp>
+            <XMApp role="ARROW">
+              <XMTok font="italic" fontsize="70%" role="UNDERACCENT">u</XMTok>
+              <XMApp role="ARROW">
+                <XMTok font="italic" fontsize="70%" role="OVERACCENT">v</XMTok>
+                <XMTok name="rightarrow" role="ARROW" stretchy="true">→</XMTok>
+              </XMApp>
+            </XMApp>
+            <XMTok font="italic" role="UNKNOWN">A</XMTok>
+            <XMTok font="italic" role="UNKNOWN">B</XMTok>
+          </XMApp>
+        </XMath>
+      </Math>
+    </equation>
+    <equation xml:id="S0.Ex2">
+      <Math mode="display" tex="A\customleft{v}B" text="A v@(leftarrow) B" xml:id="S0.Ex2.m1">
+        <XMath>
+          <XMApp>
+            <XMApp role="ARROW">
+              <XMTok font="italic" fontsize="70%" role="OVERACCENT">v</XMTok>
+              <XMTok name="leftarrow" role="ARROW" stretchy="true">←</XMTok>
+            </XMApp>
+            <XMTok font="italic" role="UNKNOWN">A</XMTok>
+            <XMTok font="italic" role="UNKNOWN">B</XMTok>
+          </XMApp>
+        </XMath>
+      </Math>
+    </equation>
+    <equation xml:id="S0.Ex3">
+      <Math mode="display" tex="A\customboth{v}B" text="A v@(leftrightarrow) B" xml:id="S0.Ex3.m1">
+        <XMath>
+          <XMApp>
+            <XMApp role="ARROW">
+              <XMTok font="italic" fontsize="70%" role="OVERACCENT">v</XMTok>
+              <XMTok meaning="leftrightarrow" role="ARROW" stretchy="true">↔</XMTok>
+            </XMApp>
+            <XMTok font="italic" role="UNKNOWN">A</XMTok>
+            <XMTok font="italic" role="UNKNOWN">B</XMTok>
+          </XMApp>
+        </XMath>
+      </Math>
+    </equation>
+    <equation xml:id="S0.Ex4">
+      <Math mode="display" tex="A\customRight{v}B" text="A v@(Rightarrow) B" xml:id="S0.Ex4.m1">
+        <XMath>
+          <XMApp>
+            <XMApp role="ARROW">
+              <XMTok font="italic" fontsize="70%" role="OVERACCENT">v</XMTok>
+              <XMTok meaning="Rightarrow" role="ARROW" stretchy="true">⇒</XMTok>
+            </XMApp>
+            <XMTok font="italic" role="UNKNOWN">A</XMTok>
+            <XMTok font="italic" role="UNKNOWN">B</XMTok>
+          </XMApp>
+        </XMath>
+      </Math>
+    </equation>
+    <equation xml:id="S0.Ex5">
+      <Math mode="display" tex="A\customLeft{v}B" text="A v@(Leftarrow) B" xml:id="S0.Ex5.m1">
+        <XMath>
+          <XMApp>
+            <XMApp role="ARROW">
+              <XMTok font="italic" fontsize="70%" role="OVERACCENT">v</XMTok>
+              <XMTok meaning="Leftarrow" role="ARROW" stretchy="true">⇐</XMTok>
+            </XMApp>
+            <XMTok font="italic" role="UNKNOWN">A</XMTok>
+            <XMTok font="italic" role="UNKNOWN">B</XMTok>
+          </XMApp>
+        </XMath>
+      </Math>
+    </equation>
+    <equation xml:id="S0.Ex6">
+      <Math mode="display" tex="A\customBoth{v}B" text="A v@(Leftrightarrow) B" xml:id="S0.Ex6.m1">
+        <XMath>
+          <XMApp>
+            <XMApp role="ARROW">
+              <XMTok font="italic" fontsize="70%" role="OVERACCENT">v</XMTok>
+              <XMTok meaning="Leftrightarrow" role="ARROW" stretchy="true">⇔</XMTok>
+            </XMApp>
+            <XMTok font="italic" role="UNKNOWN">A</XMTok>
+            <XMTok font="italic" role="UNKNOWN">B</XMTok>
+          </XMApp>
+        </XMath>
+      </Math>
+    </equation>
+    <equation xml:id="S0.Ex7">
+      <Math mode="display" tex="A\customtwoheadright{v}B" text="A v@(twoheadrightarrow) B" xml:id="S0.Ex7.m1">
+        <XMath>
+          <XMApp>
+            <XMApp role="ARROW">
+              <XMTok font="italic" fontsize="70%" role="OVERACCENT">v</XMTok>
+              <XMTok meaning="twoheadrightarrow" role="ARROW" stretchy="true">↠</XMTok>
+            </XMApp>
+            <XMTok font="italic" role="UNKNOWN">A</XMTok>
+            <XMTok font="italic" role="UNKNOWN">B</XMTok>
+          </XMApp>
+        </XMath>
+      </Math>
+    </equation>
+    <equation xml:id="S0.Ex8">
+      <Math mode="display" tex="A\customtwoheadleft{v}B" text="A v@(twoheadleftarrow) B" xml:id="S0.Ex8.m1">
+        <XMath>
+          <XMApp>
+            <XMApp role="ARROW">
+              <XMTok font="italic" fontsize="70%" role="OVERACCENT">v</XMTok>
+              <XMTok meaning="twoheadleftarrow" role="ARROW" stretchy="true">↞</XMTok>
+            </XMApp>
+            <XMTok font="italic" role="UNKNOWN">A</XMTok>
+            <XMTok font="italic" role="UNKNOWN">B</XMTok>
+          </XMApp>
+        </XMath>
+      </Math>
+    </equation>
+    <equation xml:id="S0.Ex9">
+      <Math mode="display" tex="A\custommap{v}B" text="A v@(mapsto) B" xml:id="S0.Ex9.m1">
+        <XMath>
+          <XMApp>
+            <XMApp role="ARROW">
+              <XMTok font="italic" fontsize="70%" role="OVERACCENT">v</XMTok>
+              <XMTok meaning="mapsto" role="ARROW" stretchy="true">↦</XMTok>
+            </XMApp>
+            <XMTok font="italic" role="UNKNOWN">A</XMTok>
+            <XMTok font="italic" role="UNKNOWN">B</XMTok>
+          </XMApp>
+        </XMath>
+      </Math>
+    </equation>
+    <equation xml:id="S0.Ex10">
+      <Math mode="display" tex="A\customequal[]{}B" text="A absent@(=) B" xml:id="S0.Ex10.m1">
+        <XMath>
+          <XMApp>
+            <XMApp role="ARROW">
+              <XMTok meaning="absent" role="OVERACCENT"/>
+              <XMTok meaning="equals" name="lx@stretchy@longequal" role="ARROW" stretchy="true">=</XMTok>
+            </XMApp>
+            <XMTok font="italic" role="UNKNOWN">A</XMTok>
+            <XMTok font="italic" role="UNKNOWN">B</XMTok>
+          </XMApp>
+        </XMath>
+      </Math>
+    </equation>
+  </para>
+</document>
