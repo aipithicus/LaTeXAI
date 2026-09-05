@@ -1,0 +1,31 @@
+\documentclass{article}
+\usepackage{amssymb}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\begin{document}
+
+\begin{algorithm}
+\caption{Euclidean Algorithm}\label{alg:euclid}
+\begin{algorithmic}[1]
+\REQUIRE $a, b \in \mathbb{N}$ with $a \ge b$
+\ENSURE $\gcd(a, b)$
+\STATE $r \leftarrow a \bmod b$\label{line:alc:mod}
+\WHILE{$r \ne 0$}\label{line:alc:while}
+  \STATE $a \leftarrow b$
+  \STATE $b \leftarrow r$
+  \STATE $r \leftarrow a \bmod b$
+\ENDWHILE\label{line:alc:endwhile}
+\RETURN $b$\label{line:alc:ret}
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithmic}[1]
+\STATE Standalone computation\label{line:alc:standalone}
+\end{algorithmic}
+
+In Algorithm~\ref{alg:euclid}, line~\ref{line:alc:mod} initializes the remainder.
+The loop spanning lines~\ref{line:alc:while}--\ref{line:alc:endwhile} reduces the inputs,
+and line~\ref{line:alc:ret} returns the result.
+Standalone line~\ref{line:alc:standalone} executes outside any float.
+
+\end{document}

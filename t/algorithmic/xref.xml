@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="amssymb"?>
+<?latexml package="algorithm"?>
+<?latexml package="algorithmic"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <float class="ltx_float_algorithm" framed="top" inlist="loa" labels="LABEL:alg:euclid" xml:id="alg1">
+    <tags>
+      <tag><text font="bold">Algorithm 1</text></tag>
+      <tag role="refnum">1</tag>
+      <tag role="typerefnum">Algorithm 1</tag>
+    </tags>
+    <toccaption><tag close=" ">1</tag>Euclidean Algorithm</toccaption>
+    <caption><tag close=" "><text font="bold">Algorithm 1</text></tag> Euclidean Algorithm</caption>
+    <listing>
+      <listingline xml:id="alg1.l0"><tags>
+          <tag><text fontsize="80%">0:</text></tag>
+          <tag role="refnum">0</tag>
+        </tags> <Math mode="inline" tex="a,b\in\mathbb{N}" text="list@(a, b) element-of N" xml:id="alg1.l0.m1">
+          <XMath>
+            <XMApp>
+              <XMTok meaning="element-of" name="in" role="RELOP">∈</XMTok>
+              <XMDual>
+                <XMApp>
+                  <XMTok meaning="list"/>
+                  <XMRef idref="alg1.l0.m1.1"/>
+                  <XMRef idref="alg1.l0.m1.2"/>
+                </XMApp>
+                <XMWrap>
+                  <XMTok font="italic" role="UNKNOWN" xml:id="alg1.l0.m1.1">a</XMTok>
+                  <XMTok role="PUNCT">,</XMTok>
+                  <XMTok font="italic" role="UNKNOWN" xml:id="alg1.l0.m1.2">b</XMTok>
+                </XMWrap>
+              </XMDual>
+              <XMTok font="blackboard" role="UNKNOWN">N</XMTok>
+            </XMApp>
+          </XMath>
+        </Math> with <Math mode="inline" tex="a\geq b" text="a &gt;= b" xml:id="alg1.l0.m2">
+          <XMath>
+            <XMApp>
+              <XMTok meaning="greater-than-or-equals" name="geq" role="RELOP">≥</XMTok>
+              <XMTok font="italic" role="UNKNOWN">a</XMTok>
+              <XMTok font="italic" role="UNKNOWN">b</XMTok>
+            </XMApp>
+          </XMath>
+        </Math>
+</listingline>
+      <listingline xml:id="alg1.l0a"><tags>
+          <tag><text fontsize="80%">0:</text></tag>
+          <tag role="refnum">0</tag>
+        </tags> <Math mode="inline" tex="\gcd(a,b)" text="gcd@(a, b)" xml:id="alg1.l0a.m1">
+          <XMath>
+            <XMDual>
+              <XMApp>
+                <XMRef idref="alg1.l0a.m1.1"/>
+                <XMRef idref="alg1.l0a.m1.2"/>
+                <XMRef idref="alg1.l0a.m1.3"/>
+              </XMApp>
+              <XMApp>
+                <XMTok meaning="gcd" role="OPFUNCTION" scriptpos="post" xml:id="alg1.l0a.m1.1">gcd</XMTok>
+                <XMWrap>
+                  <XMTok role="OPEN" stretchy="false">(</XMTok>
+                  <XMTok font="italic" role="UNKNOWN" xml:id="alg1.l0a.m1.2">a</XMTok>
+                  <XMTok role="PUNCT">,</XMTok>
+                  <XMTok font="italic" role="UNKNOWN" xml:id="alg1.l0a.m1.3">b</XMTok>
+                  <XMTok role="CLOSE" stretchy="false">)</XMTok>
+                </XMWrap>
+              </XMApp>
+            </XMDual>
+          </XMath>
+        </Math>
+</listingline>
+      <listingline labels="LABEL:line:alc:mod" xml:id="alg1.l1"><tags>
+          <tag><text fontsize="80%">1:</text></tag>
+          <tag role="refnum">1</tag>
+        </tags> <Math mode="inline" tex="r\leftarrow a\bmod b" text="r leftarrow modulo@(a, b)" xml:id="alg1.l1.m1">
+          <XMath>
+            <XMApp>
+              <XMTok name="leftarrow" role="ARROW">←</XMTok>
+              <XMTok font="italic" role="UNKNOWN">r</XMTok>
+              <XMApp>
+                <XMTok meaning="modulo" name="bmod" role="MODIFIEROP">mod</XMTok>
+                <XMTok font="italic" role="UNKNOWN">a</XMTok>
+                <XMTok font="italic" role="UNKNOWN">b</XMTok>
+              </XMApp>
+            </XMApp>
+          </XMath>
+        </Math>
+</listingline>
+      <listingline labels="LABEL:line:alc:while" xml:id="alg1.l2"><tags>
+          <tag><text fontsize="80%">2:</text></tag>
+          <tag role="refnum">2</tag>
+        </tags> <text font="bold">while</text> <Math mode="inline" tex="r\neq 0" text="r not-equals 0" xml:id="alg1.l2.m1">
+          <XMath>
+            <XMApp>
+              <XMTok meaning="not-equals" name="neq" role="RELOP">≠</XMTok>
+              <XMTok font="italic" role="UNKNOWN">r</XMTok>
+              <XMTok meaning="0" role="NUMBER">0</XMTok>
+            </XMApp>
+          </XMath>
+        </Math> <text font="bold">do</text>
+</listingline>
+      <listingline xml:id="alg1.l3"><tags>
+          <tag><text fontsize="80%">3:</text></tag>
+          <tag role="refnum">3</tag>
+        </tags>  <Math mode="inline" tex="a\leftarrow b" text="a leftarrow b" xml:id="alg1.l3.m1">
+          <XMath>
+            <XMApp>
+              <XMTok name="leftarrow" role="ARROW">←</XMTok>
+              <XMTok font="italic" role="UNKNOWN">a</XMTok>
+              <XMTok font="italic" role="UNKNOWN">b</XMTok>
+            </XMApp>
+          </XMath>
+        </Math>
+</listingline>
+      <listingline xml:id="alg1.l4"><tags>
+          <tag><text fontsize="80%">4:</text></tag>
+          <tag role="refnum">4</tag>
+        </tags>  <Math mode="inline" tex="b\leftarrow r" text="b leftarrow r" xml:id="alg1.l4.m1">
+          <XMath>
+            <XMApp>
+              <XMTok name="leftarrow" role="ARROW">←</XMTok>
+              <XMTok font="italic" role="UNKNOWN">b</XMTok>
+              <XMTok font="italic" role="UNKNOWN">r</XMTok>
+            </XMApp>
+          </XMath>
+        </Math>
+</listingline>
+      <listingline xml:id="alg1.l5"><tags>
+          <tag><text fontsize="80%">5:</text></tag>
+          <tag role="refnum">5</tag>
+        </tags>  <Math mode="inline" tex="r\leftarrow a\bmod b" text="r leftarrow modulo@(a, b)" xml:id="alg1.l5.m1">
+          <XMath>
+            <XMApp>
+              <XMTok name="leftarrow" role="ARROW">←</XMTok>
+              <XMTok font="italic" role="UNKNOWN">r</XMTok>
+              <XMApp>
+                <XMTok meaning="modulo" name="bmod" role="MODIFIEROP">mod</XMTok>
+                <XMTok font="italic" role="UNKNOWN">a</XMTok>
+                <XMTok font="italic" role="UNKNOWN">b</XMTok>
+              </XMApp>
+            </XMApp>
+          </XMath>
+        </Math>
+</listingline>
+      <listingline labels="LABEL:line:alc:endwhile" xml:id="alg1.l6"><tags>
+          <tag><text fontsize="80%">6:</text></tag>
+          <tag role="refnum">6</tag>
+        </tags> <text font="bold">end</text> <text font="bold">while</text>
+</listingline>
+      <listingline labels="LABEL:line:alc:ret" xml:id="alg1.l7"><tags>
+          <tag><text fontsize="80%">7:</text></tag>
+          <tag role="refnum">7</tag>
+        </tags> <text font="bold">return</text> <Math mode="inline" tex="b" text="b" xml:id="alg1.l7.m1">
+          <XMath>
+            <XMTok font="italic" role="UNKNOWN">b</XMTok>
+          </XMath>
+        </Math>
+</listingline>
+    </listing>
+  </float>
+  <para xml:id="p1">
+    <listing>
+      <listingline labels="LABEL:line:alc:standalone" xml:id="algx1.l1"><tags>
+          <tag><text fontsize="80%">1:</text></tag>
+          <tag role="refnum">1</tag>
+        </tags> Standalone computation
+</listingline>
+    </listing>
+  </para>
+  <para xml:id="p2">
+    <p>In Algorithm <ref labelref="LABEL:alg:euclid"/>, line <ref labelref="LABEL:line:alc:mod"/> initializes the remainder.
+The loop spanning lines <ref labelref="LABEL:line:alc:while"/>–<ref labelref="LABEL:line:alc:endwhile"/> reduces the inputs,
+and line <ref labelref="LABEL:line:alc:ret"/> returns the result.
+Standalone line <ref labelref="LABEL:line:alc:standalone"/> executes outside any float.</p>
+  </para>
+</document>

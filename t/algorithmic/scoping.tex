@@ -1,0 +1,21 @@
+\documentclass{article}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\begin{document}
+
+\begin{algorithm}
+\caption{Algorithm with custom dot delimiter}\label{alg:dot}
+\algsetup{linenodelimiter=.}
+\begin{algorithmic}[1]
+\STATE Step with dot delimiter
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+\caption{Algorithm with default colon delimiter}\label{alg:colon}
+\begin{algorithmic}[1]
+\STATE Step with restored colon delimiter
+\end{algorithmic}
+\end{algorithm}
+
+\end{document}

@@ -26,13 +26,15 @@ if (IsDefined(T_CS('\algorithmic')) && !IsDefined(T_CS('\lx@algorithmic@is@nativ
 DefMacroI('\lx@algorithmic@is@native', undef, '');
 
 # Package options:
-our $ALC_noend = 0;
-DeclareOption('noend', sub { $ALC_noend = 1; return; });
+AssignValue('algorithmic_noend', 0);
+DeclareOption('noend', sub { AssignValue('algorithmic_noend', 1, 'global'); return; });
 ProcessOptions();
 
 # Configuration registers:
 DefRegister('\algorithmicindent' => Dimension('1em'));
 DefRegister('\ALC@tlm'           => Dimension('0.5em'));
+AssignValue('ALC_linenodelimiter' => ':', 'global');
+AssignValue('ALC_linenosize'      => Tokens(T_CS('\footnotesize')), 'global');
 DefMacroI('\ALC@linenodelimiter', undef, ':');
 DefMacroI('\ALC@linenosize',      undef, '\footnotesize');
 
@@ -47,10 +49,10 @@ DefPrimitive('\algsetup RequiredKeyVals:ALG', sub {
       AssignRegister('\algorithmicindent' => $ind);
     }
     if (defined(my $delim = $kv->getValue('linenodelimiter'))) {
-      DefMacroI('\ALC@linenodelimiter', undef, $delim);
+      AssignValue('ALC_linenodelimiter' => $delim);
     }
     if (defined(my $size = $kv->getValue('linenosize'))) {
-      DefMacroI('\ALC@linenosize', undef, $size);
+      AssignValue('ALC_linenosize' => $size);
     }
   }
   return;
@@ -103,8 +105,13 @@ DefMacro('\fnum@ALC@line', sub {
   my $rem  = CounterValue('ALC@rem')->valueOf;
   my $freq = $STATE->lookupValue('ALC@step_freq') || 0;
   if ($freq > 0 && $rem == 0) {
-    Tokens(T_BEGIN, T_CS('\ALC@linenosize'), Explode(CounterValue('ALC@line')->valueOf),
-      T_CS('\ALC@linenodelimiter'), T_END);
+    my $delim = $STATE->lookupValue('ALC_linenodelimiter');
+    $delim = defined($delim) ? $delim : ':';
+    my $size  = $STATE->lookupValue('ALC_linenosize');
+    my @size_tokens = (ref($size) && $size->can('unlist')) ? $size->unlist : (T_CS('\footnotesize'));
+    my @delim_tokens = (ref($delim) && $delim->can('unlist')) ? $delim->unlist : Explode(ToString($delim));
+    Tokens(T_BEGIN, @size_tokens, Explode(CounterValue('ALC@line')->valueOf),
+      @delim_tokens, T_END);
   } else {
     Tokens();
   }
@@ -207,7 +214,7 @@ DefMacro('\ELSIF OptionalUndigested {}',
   . '\ALC@pushindent');
 DefMacro('\ENDIF', sub {
   Tokens(T_CS('\ALC@popindent'),
-    ($ALC_noend ? () : (T_CS('\ALC@it'), T_CS('\algorithmicendif'))));
+    ($STATE->lookupValue('algorithmic_noend') ? () : (T_CS('\ALC@it'), T_CS('\algorithmicendif'))));
 });
 
 # Loops:
@@ -221,7 +228,7 @@ DefMacro('\FORALL OptionalUndigested {}',
   . '\ALC@pushindent');
 DefMacro('\ENDFOR', sub {
   Tokens(T_CS('\ALC@popindent'),
-    ($ALC_noend ? () : (T_CS('\ALC@it'), T_CS('\algorithmicendfor'))));
+    ($STATE->lookupValue('algorithmic_noend') ? () : (T_CS('\ALC@it'), T_CS('\algorithmicendfor'))));
 });
 
 DefMacro('\WHILE OptionalUndigested {}',
@@ -230,7 +237,7 @@ DefMacro('\WHILE OptionalUndigested {}',
   . '\ALC@pushindent');
 DefMacro('\ENDWHILE', sub {
   Tokens(T_CS('\ALC@popindent'),
-    ($ALC_noend ? () : (T_CS('\ALC@it'), T_CS('\algorithmicendwhile'))));
+    ($STATE->lookupValue('algorithmic_noend') ? () : (T_CS('\ALC@it'), T_CS('\algorithmicendwhile'))));
 });
 
 DefMacro('\LOOP OptionalUndigested',
@@ -239,7 +246,7 @@ DefMacro('\LOOP OptionalUndigested',
   . '\ALC@pushindent');
 DefMacro('\ENDLOOP', sub {
   Tokens(T_CS('\ALC@popindent'),
-    ($ALC_noend ? () : (T_CS('\ALC@it'), T_CS('\algorithmicendloop'))));
+    ($STATE->lookupValue('algorithmic_noend') ? () : (T_CS('\ALC@it'), T_CS('\algorithmicendloop'))));
 });
 
 DefMacro('\REPEAT OptionalUndigested',
