@@ -57,7 +57,8 @@ sub latexml_tests {
         SKIP: {
             skip("No file $test.xml", 1) unless (-f "$test.xml");
             next unless check_requirements($test, 1, $$requires{'*'}, $$requires{$name});
-            latexml_ok("$test.tex", "$test.xml", $test, $options{compare}, $options{core_options}); } }
+            latexml_ok("$test.tex", "$test.xml", $test, $options{compare}, $options{core_options},
+              $options{strict}); } }
         # Carry out any post-processing tests
         foreach my $name (@post_tests) {
           my $test = "$directory/$name";
@@ -126,8 +127,8 @@ sub do_fail {
 
 # NOTE: This assumes you will have successfully loaded LaTeXML.
 sub latexml_ok {
-  my ($texpath, $xmlpath, $name, $compare_kind, $core_options) = @_;
-  if (my $texstrings = process_texfile(texpath => $texpath, name => $name, core_options => $core_options, compare_kind => $compare_kind)) {
+  my ($texpath, $xmlpath, $name, $compare_kind, $core_options, $strict) = @_;
+  if (my $texstrings = process_texfile(texpath => $texpath, name => $name, core_options => $core_options, compare_kind => $compare_kind, strict => $strict)) {
     if (my $xmlstrings = process_xmlfile($xmlpath, $name, $compare_kind)) {
       return is_strings($texstrings, $xmlstrings, $name); } } }
 
@@ -153,6 +154,14 @@ sub convert_texfile_as_test {
     my $dom = eval { $latexml->convertFile($texpath); };
     if (!$dom) {
       do_fail($name, "Couldn't convert $texpath: " . @!); return; }
+    # LaTeXAI: a strict suite fails on any error the engine counted (status 2 = errors,
+    # 3 = fatal), not only on a golden mismatch. Undefined macros, missing packages and
+    # the like leave no trace in the digested XML, so without this a golden generated
+    # from a broken run passes forever. Cases named *fatal* are exempt, as upstream's are.
+    elsif ($options{strict} && $name !~ /fatal/ && $latexml->getStatusCode >= 2) {
+      do_fail($name, "strict: conversion of $texpath reported "
+          . $latexml->getStatusMessage . " (status " . $latexml->getStatusCode . ")");
+      return; }
     else {
       return $dom; } } }
 

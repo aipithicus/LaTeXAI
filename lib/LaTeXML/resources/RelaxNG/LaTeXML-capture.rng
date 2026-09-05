@@ -34,6 +34,7 @@
             <attribute name="options"><text/></attribute>
             <attribute name="route"><choice><value>binding</value><value>raw</value><value>missing</value></choice></attribute>
             <optional><attribute name="resolved"><text/></attribute></optional>
+            <optional><attribute name="requestOrigin"><choice><value>source</value><value>transitive</value></choice></attribute></optional>
             <optional><attribute name="requestFile"><text/></attribute></optional>
             <optional><attribute name="requestByteStart"><ref name="capture.count"/></attribute></optional>
             <optional><attribute name="requestByteEnd"><ref name="capture.count"/></attribute></optional>

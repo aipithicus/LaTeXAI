@@ -22,8 +22,8 @@
       <capture:preload name="LaTeX.pool"/>
     </capture:engine>
     <capture:packages>
-      <capture:package diagnostic="missing-request-occurrence" kind="package" name="textcomp" options="" resolved="../../lib/LaTeXML/Package/textcomp.sty.ltxml" route="binding"/>
-      <capture:package kind="class" name="article" options="" requestByteEnd="14" requestByteStart="0" requestFile="crlf.tex" resolved="../../lib/LaTeXML/Package/article.cls.ltxml" route="binding"/>
+      <capture:package kind="package" name="textcomp" options="" requestOrigin="transitive" resolved="../../lib/LaTeXML/Package/textcomp.sty.ltxml" route="binding"/>
+      <capture:package kind="class" name="article" options="" requestByteEnd="14" requestByteStart="0" requestFile="crlf.tex" requestOrigin="source" resolved="../../lib/LaTeXML/Package/article.cls.ltxml" route="binding"/>
     </capture:packages>
     <capture:math callsiteOnly="0" crossSource="0" display="0" failedCells="0" inline="1" parser="run" source="1" total="1" unlocated="0" unparsed="0"/>
     <capture:encoding substitutions="0"/>

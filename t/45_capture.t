@@ -11,6 +11,7 @@ use Digest::SHA qw(sha256_hex);
 use Encode qw(decode encode FB_DEFAULT);
 use File::Spec;
 use File::Temp qw(tempdir);
+use File::Path qw(make_path);
 use FindBin;
 use IPC::Open3;
 use Symbol qw(gensym);
@@ -166,9 +167,15 @@ sub validate_capture_document {
   my $input = File::Spec->catfile($TEMP, "$name.xml");
   my $output = File::Spec->catfile($TEMP, "$name-post.xml");
   write_raw($input, encode('UTF-8', $document->toString(1)));
+  # Development-loop conventions (docs/testing.md): lib/ is the whole include
+  # path (tools/dev/generate.pl puts the generated modules there), and every
+  # CLI log goes to temp/logs/ rather than the working directory.
+  my $logdir = File::Spec->catdir($ROOT, 'temp', 'logs');
+  make_path($logdir);
   my ($status, $messages) = run_command(
-    $^X, '-I', File::Spec->catdir($ROOT, 'lib'), '-I', File::Spec->catdir($ROOT, 'blib', 'lib'),
+    $^X, '-I', File::Spec->catdir($ROOT, 'lib'),
     File::Spec->catfile($ROOT, 'bin', 'latexmlpost'), '--quiet', '--quiet', '--validate',
+    '--log=' . File::Spec->catfile($logdir, "45_capture-$name.latexmlpost.log"),
     "--destination=$output", $input);
   is($status, 0, "$name passes latexmlpost --validate") or diag($messages);
   ok(-s $output, "$name validation produced a document");
@@ -324,6 +331,13 @@ my $routes_xml = $routes->getDocument;
 my $routes_xc = xpath($routes_xml);
 my @requests = $routes_xc->findnodes('/ltx:document/capture:ledger/capture:packages/capture:package');
 my %requests = map { $_->getAttribute('name') => $_ } @requests;
+# Transitive loads (a binding's RequirePackage) are ordinary, not diagnostics.
+my @transitive = grep { ($_->getAttribute('requestOrigin') // '') eq 'transitive' } @requests;
+ok(scalar(@transitive), 'case 14 records transitive package loads');
+ok(!grep({ $_->hasAttribute('requestByteStart') } @transitive), 'case 14 transitive loads carry no request range');
+is(scalar(grep { $_->hasAttribute('diagnostic') } @requests), 0, 'case 14 no ordinary request carries a diagnostic');
+is(scalar(grep { ($_->getAttribute('requestOrigin') // '') eq 'source' } @requests), 4,
+  'case 14 the four document requests are source-origin');
 foreach my $name (qw(capture-special capturebinding captureraw capturemissing)) {
   ok($requests{$name}, "case 14 records $name"); }
 is($requests{'capture-special'}->getAttribute('kind'), 'class', 'case 14 records the requested kind');

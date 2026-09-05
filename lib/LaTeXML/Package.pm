@@ -2694,6 +2694,7 @@ sub recordCapturePackageRequest {
     my ($origin_kind, $resolved_occurrence) = $gullet->resolveOccurrence($occurrence);
     if (($origin_kind eq 'source' || $origin_kind eq 'callsite')
       && $resolved_occurrence && defined $$resolved_occurrence{sourceId}) {
+      $record{requestOrigin} = 'source';
       $record{requestFile} = $registry->sourceName($$resolved_occurrence{sourceId});
       $record{requestByteStart} = $$resolved_occurrence{byteStart};
       $record{requestByteEnd} = $$resolved_occurrence{byteEnd}; }
@@ -2702,9 +2703,10 @@ sub recordCapturePackageRequest {
       $registry->recordDiagnostic('package-request', name => $name,
         reason => $record{diagnostic}); } }
   else {
-    $record{diagnostic} = 'missing-request-occurrence';
-    $registry->recordDiagnostic('package-request', name => $name,
-      reason => $record{diagnostic}); }
+    # No occurrence token: the request came from a binding's RequirePackage or
+    # LoadClass, not from the document. That is ordinary transitive loading and
+    # is recorded as such, not as a diagnostic.
+    $record{requestOrigin} = 'transitive'; }
   $registry->recordPackageRequest(\%record);
   return; }
 
