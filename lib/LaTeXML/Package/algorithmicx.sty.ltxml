@@ -25,9 +25,9 @@ if (IsDefined(T_CS('\algorithmic')) && !IsDefined(T_CS('\lx@algorithmicx@is@nati
 DefMacroI('\lx@algorithmicx@is@native', undef, '');
 
 # Package options:
-our $ALG_noend = 0;
-DeclareOption('noend', sub { $ALG_noend = 1; return; });
-DeclareOption('end',   sub { $ALG_noend = 0; return; });
+AssignValue('algorithmicx_noend', 0);
+DeclareOption('noend', sub { AssignValue('algorithmicx_noend', 1, 'global'); return; });
+DeclareOption('end',   sub { AssignValue('algorithmicx_noend', 0, 'global'); return; });
 ProcessOptions();
 
 # Configuration registers:
@@ -164,6 +164,10 @@ DefMacro('\endalgorithmic', '\lx@algorithmicx@endlist');
 # Standard primitives:
 DefMacro('\State', '\ALG@it');
 DefMacro('\BState', '\ALG@it\hskip-\ALG@thistlm\relax');
+DefMacro('\algorithmiccomment{}', '\lx@algorithmicx@hfill\(\triangleright\) #1');
+DefMacro('\algrenewcomment{}',    '\renewcommand{\algorithmiccomment}[1]{#1}');
+DefMacro('\Comment{}',            '\algorithmiccomment{#1}');
+DefMacro('\algref{}{}',           '\ref{#1}.\ref{#2}');
 
 # Extensibility hooks (no-ops for macro compatibility):
 DefMacro('\algdef{}',        '');

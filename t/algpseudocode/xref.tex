@@ -1,0 +1,40 @@
+\documentclass{article}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\begin{document}
+
+\begin{algorithm}
+\caption{Binary Search}\label{alg:binsearch}
+\begin{algorithmic}[1]
+\Require Sorted array $A$, key $k$\label{line:req}
+\Ensure Index of $k$ or $-1$\label{line:ens}
+\State $l \gets 1$\label{line:initl}
+\State $r \gets n$\label{line:initr}
+\While{$l \le r$}\label{line:while}
+  \State $m \gets \lfloor (l + r) / 2 \rfloor$\label{line:mid}
+  \If{$A[m] = k$}\label{line:if}
+    \State \Return $m$\label{line:retm}
+  \ElsIf{$A[m] < k$}\label{line:elsif}
+    \State $l \gets m + 1$\label{line:right}
+  \Else\label{line:else}
+    \State $r \gets m - 1$\label{line:left}
+  \EndIf\label{line:endif}
+\EndWhile\label{line:endwhile}
+\State \Return $-1$\label{line:retfail}
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithmic}[1]
+\State $x \gets 42$\label{line:standalone}
+\end{algorithmic}
+
+In Algorithm~\ref{alg:binsearch}, line~\ref{line:req} states inputs and line~\ref{line:ens} states outputs.
+Initialization occurs at lines~\ref{line:initl} and~\ref{line:initr}.
+The loop at line~\ref{line:while} computes the midpoint at line~\ref{line:mid}.
+The match condition is checked at line~\ref{line:if}, returning at line~\ref{line:retm}.
+Branching continues at lines~\ref{line:elsif}, \ref{line:right}, \ref{line:else}, and \ref{line:left}.
+The loop terminates at line~\ref{line:endwhile}, falling through to line~\ref{line:retfail}.
+Referenced hierarchically: \algref{alg:binsearch}{line:mid}.
+Standalone line~\ref{line:standalone} sits outside any float.
+
+\end{document}

@@ -19,9 +19,8 @@ use LaTeXML::Package;
 RequirePackage('algorithmicx');
 
 # Package options:
-our $ALG_noend = 0;
-DeclareOption('noend', sub { $ALG_noend = 1; PassOptions('algorithmicx', 'sty', 'noend'); return; });
-DeclareOption('end',   sub { $ALG_noend = 0; return; });
+DeclareOption('noend', sub { AssignValue('algorithmicx_noend', 1, 'global'); PassOptions('algorithmicx', 'sty', 'noend'); return; });
+DeclareOption('end',   sub { AssignValue('algorithmicx_noend', 0, 'global'); return; });
 ProcessOptions();
 
 # Keywords:
@@ -57,7 +56,7 @@ DefMacro('\Procedure{}{}', sub {
 
 DefMacro('\EndProcedure', sub {
   Tokens(T_CS('\ALG@endblock'),
-    ($ALG_noend ? () : (T_CS('\ALG@it'), T_CS('\algorithmicend'), T_SPACE, T_CS('\algorithmicprocedure'))));
+    ($STATE->lookupValue('algorithmicx_noend') ? () : (T_CS('\ALG@it'), T_CS('\algorithmicend'), T_SPACE, T_CS('\algorithmicprocedure'))));
 });
 
 DefMacro('\Function{}{}', sub {
@@ -72,7 +71,7 @@ DefMacro('\Function{}{}', sub {
 
 DefMacro('\EndFunction', sub {
   Tokens(T_CS('\ALG@endblock'),
-    ($ALG_noend ? () : (T_CS('\ALG@it'), T_CS('\algorithmicend'), T_SPACE, T_CS('\algorithmicfunction'))));
+    ($STATE->lookupValue('algorithmicx_noend') ? () : (T_CS('\ALG@it'), T_CS('\algorithmicend'), T_SPACE, T_CS('\algorithmicfunction'))));
 });
 
 # Conditionals:
@@ -84,7 +83,7 @@ DefMacro('\Else',
   '\ALG@endblock\ALG@it\algorithmicelse\ALG@beginblock');
 DefMacro('\EndIf', sub {
   Tokens(T_CS('\ALG@endblock'),
-    ($ALG_noend ? () : (T_CS('\ALG@it'), T_CS('\algorithmicend'), T_SPACE, T_CS('\algorithmicif'))));
+    ($STATE->lookupValue('algorithmicx_noend') ? () : (T_CS('\ALG@it'), T_CS('\algorithmicend'), T_SPACE, T_CS('\algorithmicif'))));
 });
 
 # Loops:
@@ -92,7 +91,7 @@ DefMacro('\While{}',
   '\ALG@it\algorithmicwhile\ #1\ \algorithmicdo\ALG@beginblock');
 DefMacro('\EndWhile', sub {
   Tokens(T_CS('\ALG@endblock'),
-    ($ALG_noend ? () : (T_CS('\ALG@it'), T_CS('\algorithmicend'), T_SPACE, T_CS('\algorithmicwhile'))));
+    ($STATE->lookupValue('algorithmicx_noend') ? () : (T_CS('\ALG@it'), T_CS('\algorithmicend'), T_SPACE, T_CS('\algorithmicwhile'))));
 });
 
 DefMacro('\For{}',
@@ -101,14 +100,14 @@ DefMacro('\ForAll{}',
   '\ALG@it\algorithmicforall\ #1\ \algorithmicdo\ALG@beginblock');
 DefMacro('\EndFor', sub {
   Tokens(T_CS('\ALG@endblock'),
-    ($ALG_noend ? () : (T_CS('\ALG@it'), T_CS('\algorithmicend'), T_SPACE, T_CS('\algorithmicfor'))));
+    ($STATE->lookupValue('algorithmicx_noend') ? () : (T_CS('\ALG@it'), T_CS('\algorithmicend'), T_SPACE, T_CS('\algorithmicfor'))));
 });
 
 DefMacro('\Loop',
   '\ALG@it\algorithmicloop\ALG@beginblock');
 DefMacro('\EndLoop', sub {
   Tokens(T_CS('\ALG@endblock'),
-    ($ALG_noend ? () : (T_CS('\ALG@it'), T_CS('\algorithmicend'), T_SPACE, T_CS('\algorithmicloop'))));
+    ($STATE->lookupValue('algorithmicx_noend') ? () : (T_CS('\ALG@it'), T_CS('\algorithmicend'), T_SPACE, T_CS('\algorithmicloop'))));
 });
 
 DefMacro('\Repeat',

@@ -1,0 +1,52 @@
+\documentclass{article}
+\usepackage{amsmath,amssymb}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\title{Autonomous Verification of Pseudocode Bindings}
+\author{Aipithicus Sapienscens \and Codex Scientiae}
+\date{September 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We present a rigorous treatment of algorithmic listings within structured XML
+and HTML pipelines. By decoupling native compilation from external TeX distribution
+artifacts, conversion achieves full autonomy and determinism.
+\end{abstract}
+
+\section{Introduction}
+Algorithmic specifications require precise cross-referencing between formal proofs
+and implementation steps. In this work, we formalize the line-addressing model.
+
+\section{Algorithm Description}
+Consider the relaxation algorithm presented in Algorithm~\ref{alg:relaxation}.
+
+\begin{algorithm}[ht]
+\caption{Dynamic Path Relaxation}\label{alg:relaxation}
+\begin{algorithmic}[1]
+\Require Directed graph $G = (V, E)$, source vertex $s \in V$
+\Ensure Shortest path estimates $d[u]$ for all $u \in V$
+\State Initialize $d[v] \gets \infty$ for all $v \in V \setminus \{s\}$\label{line:init}
+\State $d[s] \gets 0$\label{line:source}
+\For{$i \gets 1$ \textbf{to} $|V| - 1$}\label{line:for}
+  \ForAll{$(u, v) \in E$}\label{line:forall}
+    \If{$d[u] + w(u, v) < d[v]$}\label{line:check}
+      \State $d[v] \gets d[u] + w(u, v)$\Comment{Relax edge $(u, v)$}\label{line:relax}
+    \EndIf
+  \EndFor
+\EndFor
+\State \Return $d$\label{line:ret}
+\end{algorithmic}
+\end{algorithm}
+
+\section{Complexity and Verification}
+As demonstrated in Algorithm~\ref{alg:relaxation}, initialization takes place in
+lines~\ref{line:init}--\ref{line:source}. The relaxation loop (line~\ref{line:for})
+iterates over all edges at line~\ref{line:forall}. The triangle inequality is checked
+at line~\ref{line:check}, triggering the update at line~\ref{line:relax}.
+Direct compound reference: \algref{alg:relaxation}{line:relax}.
+The overall running time is $\mathcal{O}(|V| \cdot |E|)$.
+
+\end{document}

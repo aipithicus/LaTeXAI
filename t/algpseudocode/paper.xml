@@ -1,0 +1,470 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="amsmath,amssymb"?>
+<?latexml package="algorithm"?>
+<?latexml package="algpseudocode"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML" class="ltx_authors_1line">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <title>Autonomous Verification of Pseudocode Bindings</title>
+  <creator role="author">
+    <personname>Aipithicus Sapienscens</personname>
+  </creator>
+  <creator before="  " role="author">
+    <personname>Codex Scientiae</personname>
+  </creator>
+  <date role="creation">September 2026</date>
+  <abstract name="Abstract">
+    <p>We present a rigorous treatment of algorithmic listings within structured XML
+and HTML pipelines. By decoupling native compilation from external TeX distribution
+artifacts, conversion achieves full autonomy and determinism.</p>
+  </abstract>
+  <section inlist="toc" xml:id="S1">
+    <tags>
+      <tag>1</tag>
+      <tag role="refnum">1</tag>
+      <tag role="typerefnum">§1</tag>
+    </tags>
+    <title><tag close=" ">1</tag>Introduction</title>
+    <para xml:id="S1.p1">
+      <p>Algorithmic specifications require precise cross-referencing between formal proofs
+and implementation steps. In this work, we formalize the line-addressing model.</p>
+    </para>
+  </section>
+  <section inlist="toc" xml:id="S2">
+    <tags>
+      <tag>2</tag>
+      <tag role="refnum">2</tag>
+      <tag role="typerefnum">§2</tag>
+    </tags>
+    <title><tag close=" ">2</tag>Algorithm Description</title>
+    <para xml:id="S2.p1">
+      <p>Consider the relaxation algorithm presented in Algorithm <ref labelref="LABEL:alg:relaxation"/>.</p>
+    </para>
+    <float class="ltx_float_algorithm" framed="top" inlist="loa" labels="LABEL:alg:relaxation" placement="ht" xml:id="alg1">
+      <tags>
+        <tag><text font="bold">Algorithm 1</text></tag>
+        <tag role="refnum">1</tag>
+        <tag role="typerefnum">Algorithm 1</tag>
+      </tags>
+      <toccaption><tag close=" ">1</tag>Dynamic Path Relaxation</toccaption>
+      <caption><tag close=" "><text font="bold">Algorithm 1</text></tag> Dynamic Path Relaxation</caption>
+      <listing>
+        <listingline xml:id="alg1.l0"><text font="bold">Require:</text> Directed graph <Math mode="inline" tex="G=(V,E)" text="G = open-interval@(V, E)" xml:id="alg1.l0.m1">
+            <XMath>
+              <XMApp>
+                <XMTok meaning="equals" role="RELOP">=</XMTok>
+                <XMTok font="italic" role="UNKNOWN">G</XMTok>
+                <XMDual>
+                  <XMApp>
+                    <XMTok meaning="open-interval"/>
+                    <XMRef idref="alg1.l0.m1.1"/>
+                    <XMRef idref="alg1.l0.m1.2"/>
+                  </XMApp>
+                  <XMWrap>
+                    <XMTok role="OPEN" stretchy="false">(</XMTok>
+                    <XMTok font="italic" role="UNKNOWN" xml:id="alg1.l0.m1.1">V</XMTok>
+                    <XMTok role="PUNCT">,</XMTok>
+                    <XMTok font="italic" role="UNKNOWN" xml:id="alg1.l0.m1.2">E</XMTok>
+                    <XMTok role="CLOSE" stretchy="false">)</XMTok>
+                  </XMWrap>
+                </XMDual>
+              </XMApp>
+            </XMath>
+          </Math>, source vertex <Math mode="inline" tex="s\in V" text="s element-of V" xml:id="alg1.l0.m2">
+            <XMath>
+              <XMApp>
+                <XMTok meaning="element-of" name="in" role="RELOP">∈</XMTok>
+                <XMTok font="italic" role="UNKNOWN">s</XMTok>
+                <XMTok font="italic" role="UNKNOWN">V</XMTok>
+              </XMApp>
+            </XMath>
+          </Math>
+</listingline>
+        <listingline xml:id="alg1.l0a"><text font="bold">Ensure:</text> Shortest path estimates <Math mode="inline" tex="d[u]" text="d * delimited-[]@(u)" xml:id="alg1.l0a.m1">
+            <XMath>
+              <XMApp>
+                <XMTok meaning="times" role="MULOP">⁢</XMTok>
+                <XMTok font="italic" role="UNKNOWN">d</XMTok>
+                <XMDual>
+                  <XMApp>
+                    <XMTok meaning="delimited-[]"/>
+                    <XMRef idref="alg1.l0a.m1.1"/>
+                  </XMApp>
+                  <XMWrap>
+                    <XMTok role="OPEN" stretchy="false">[</XMTok>
+                    <XMTok font="italic" role="UNKNOWN" xml:id="alg1.l0a.m1.1">u</XMTok>
+                    <XMTok role="CLOSE" stretchy="false">]</XMTok>
+                  </XMWrap>
+                </XMDual>
+              </XMApp>
+            </XMath>
+          </Math> for all <Math mode="inline" tex="u\in V" text="u element-of V" xml:id="alg1.l0a.m2">
+            <XMath>
+              <XMApp>
+                <XMTok meaning="element-of" name="in" role="RELOP">∈</XMTok>
+                <XMTok font="italic" role="UNKNOWN">u</XMTok>
+                <XMTok font="italic" role="UNKNOWN">V</XMTok>
+              </XMApp>
+            </XMath>
+          </Math>
+</listingline>
+        <listingline labels="LABEL:line:init" xml:id="alg1.l1"><tags>
+            <tag><text fontsize="80%">1:</text></tag>
+            <tag role="refnum">1</tag>
+          </tags>Initialize <Math mode="inline" tex="d[v]\leftarrow\infty" text="d * delimited-[]@(v) leftarrow infinity" xml:id="alg1.l1.m1">
+            <XMath>
+              <XMApp>
+                <XMTok name="leftarrow" role="ARROW">←</XMTok>
+                <XMApp>
+                  <XMTok meaning="times" role="MULOP">⁢</XMTok>
+                  <XMTok font="italic" role="UNKNOWN">d</XMTok>
+                  <XMDual>
+                    <XMApp>
+                      <XMTok meaning="delimited-[]"/>
+                      <XMRef idref="alg1.l1.m1.1"/>
+                    </XMApp>
+                    <XMWrap>
+                      <XMTok role="OPEN" stretchy="false">[</XMTok>
+                      <XMTok font="italic" role="UNKNOWN" xml:id="alg1.l1.m1.1">v</XMTok>
+                      <XMTok role="CLOSE" stretchy="false">]</XMTok>
+                    </XMWrap>
+                  </XMDual>
+                </XMApp>
+                <XMTok meaning="infinity" name="infty" role="ID">∞</XMTok>
+              </XMApp>
+            </XMath>
+          </Math> for all <Math mode="inline" tex="v\in V\setminus\{s\}" text="v element-of V set-minus set@(s)" xml:id="alg1.l1.m2">
+            <XMath>
+              <XMApp>
+                <XMTok meaning="element-of" name="in" role="RELOP">∈</XMTok>
+                <XMTok font="italic" role="UNKNOWN">v</XMTok>
+                <XMApp>
+                  <XMTok meaning="set-minus" name="setminus" role="ADDOP">∖</XMTok>
+                  <XMTok font="italic" role="UNKNOWN">V</XMTok>
+                  <XMDual>
+                    <XMApp>
+                      <XMTok meaning="set"/>
+                      <XMRef idref="alg1.l1.m2.1"/>
+                    </XMApp>
+                    <XMWrap>
+                      <XMTok role="OPEN" stretchy="false">{</XMTok>
+                      <XMTok font="italic" role="UNKNOWN" xml:id="alg1.l1.m2.1">s</XMTok>
+                      <XMTok role="CLOSE" stretchy="false">}</XMTok>
+                    </XMWrap>
+                  </XMDual>
+                </XMApp>
+              </XMApp>
+            </XMath>
+          </Math>
+</listingline>
+        <listingline labels="LABEL:line:source" xml:id="alg1.l2"><tags>
+            <tag><text fontsize="80%">2:</text></tag>
+            <tag role="refnum">2</tag>
+          </tags><Math mode="inline" tex="d[s]\leftarrow 0" text="d * delimited-[]@(s) leftarrow 0" xml:id="alg1.l2.m1">
+            <XMath>
+              <XMApp>
+                <XMTok name="leftarrow" role="ARROW">←</XMTok>
+                <XMApp>
+                  <XMTok meaning="times" role="MULOP">⁢</XMTok>
+                  <XMTok font="italic" role="UNKNOWN">d</XMTok>
+                  <XMDual>
+                    <XMApp>
+                      <XMTok meaning="delimited-[]"/>
+                      <XMRef idref="alg1.l2.m1.1"/>
+                    </XMApp>
+                    <XMWrap>
+                      <XMTok role="OPEN" stretchy="false">[</XMTok>
+                      <XMTok font="italic" role="UNKNOWN" xml:id="alg1.l2.m1.1">s</XMTok>
+                      <XMTok role="CLOSE" stretchy="false">]</XMTok>
+                    </XMWrap>
+                  </XMDual>
+                </XMApp>
+                <XMTok meaning="0" role="NUMBER">0</XMTok>
+              </XMApp>
+            </XMath>
+          </Math>
+</listingline>
+        <listingline labels="LABEL:line:for" xml:id="alg1.l3"><tags>
+            <tag><text fontsize="80%">3:</text></tag>
+            <tag role="refnum">3</tag>
+          </tags><text font="bold">for</text> <Math mode="inline" tex="i\leftarrow 1" text="i leftarrow 1" xml:id="alg1.l3.m1">
+            <XMath>
+              <XMApp>
+                <XMTok name="leftarrow" role="ARROW">←</XMTok>
+                <XMTok font="italic" role="UNKNOWN">i</XMTok>
+                <XMTok meaning="1" role="NUMBER">1</XMTok>
+              </XMApp>
+            </XMath>
+          </Math> <text font="bold">to</text> <Math mode="inline" tex="|V|-1" text="absolute-value@(V) - 1" xml:id="alg1.l3.m2">
+            <XMath>
+              <XMApp>
+                <XMTok meaning="minus" role="ADDOP">-</XMTok>
+                <XMDual>
+                  <XMApp>
+                    <XMTok meaning="absolute-value"/>
+                    <XMRef idref="alg1.l3.m2.1"/>
+                  </XMApp>
+                  <XMWrap>
+                    <XMTok role="OPEN" stretchy="false">|</XMTok>
+                    <XMTok font="italic" role="UNKNOWN" xml:id="alg1.l3.m2.1">V</XMTok>
+                    <XMTok role="CLOSE" stretchy="false">|</XMTok>
+                  </XMWrap>
+                </XMDual>
+                <XMTok meaning="1" role="NUMBER">1</XMTok>
+              </XMApp>
+            </XMath>
+          </Math> <text font="bold">do</text>
+</listingline>
+        <listingline labels="LABEL:line:forall" xml:id="alg1.l4"><tags>
+            <tag><text fontsize="80%">4:</text></tag>
+            <tag role="refnum">4</tag>
+          </tags>  <text font="bold">for all</text> <Math mode="inline" tex="(u,v)\in E" text="open-interval@(u, v) element-of E" xml:id="alg1.l4.m1">
+            <XMath>
+              <XMApp>
+                <XMTok meaning="element-of" name="in" role="RELOP">∈</XMTok>
+                <XMDual>
+                  <XMApp>
+                    <XMTok meaning="open-interval"/>
+                    <XMRef idref="alg1.l4.m1.1"/>
+                    <XMRef idref="alg1.l4.m1.2"/>
+                  </XMApp>
+                  <XMWrap>
+                    <XMTok role="OPEN" stretchy="false">(</XMTok>
+                    <XMTok font="italic" role="UNKNOWN" xml:id="alg1.l4.m1.1">u</XMTok>
+                    <XMTok role="PUNCT">,</XMTok>
+                    <XMTok font="italic" role="UNKNOWN" xml:id="alg1.l4.m1.2">v</XMTok>
+                    <XMTok role="CLOSE" stretchy="false">)</XMTok>
+                  </XMWrap>
+                </XMDual>
+                <XMTok font="italic" role="UNKNOWN">E</XMTok>
+              </XMApp>
+            </XMath>
+          </Math> <text font="bold">do</text>
+</listingline>
+        <listingline labels="LABEL:line:check" xml:id="alg1.l5"><tags>
+            <tag><text fontsize="80%">5:</text></tag>
+            <tag role="refnum">5</tag>
+          </tags>   <text font="bold">if</text> <Math mode="inline" tex="d[u]+w(u,v)&lt;d[v]" text="d * delimited-[]@(u) + w * open-interval@(u, v) &lt; d * delimited-[]@(v)" xml:id="alg1.l5.m1">
+            <XMath>
+              <XMApp>
+                <XMTok meaning="less-than" role="RELOP">&lt;</XMTok>
+                <XMApp>
+                  <XMTok meaning="plus" role="ADDOP">+</XMTok>
+                  <XMApp>
+                    <XMTok meaning="times" role="MULOP">⁢</XMTok>
+                    <XMTok font="italic" role="UNKNOWN">d</XMTok>
+                    <XMDual>
+                      <XMApp>
+                        <XMTok meaning="delimited-[]"/>
+                        <XMRef idref="alg1.l5.m1.1"/>
+                      </XMApp>
+                      <XMWrap>
+                        <XMTok role="OPEN" stretchy="false">[</XMTok>
+                        <XMTok font="italic" role="UNKNOWN" xml:id="alg1.l5.m1.1">u</XMTok>
+                        <XMTok role="CLOSE" stretchy="false">]</XMTok>
+                      </XMWrap>
+                    </XMDual>
+                  </XMApp>
+                  <XMApp>
+                    <XMTok meaning="times" role="MULOP">⁢</XMTok>
+                    <XMTok font="italic" role="UNKNOWN">w</XMTok>
+                    <XMDual>
+                      <XMApp>
+                        <XMTok meaning="open-interval"/>
+                        <XMRef idref="alg1.l5.m1.2"/>
+                        <XMRef idref="alg1.l5.m1.3"/>
+                      </XMApp>
+                      <XMWrap>
+                        <XMTok role="OPEN" stretchy="false">(</XMTok>
+                        <XMTok font="italic" role="UNKNOWN" xml:id="alg1.l5.m1.2">u</XMTok>
+                        <XMTok role="PUNCT">,</XMTok>
+                        <XMTok font="italic" role="UNKNOWN" xml:id="alg1.l5.m1.3">v</XMTok>
+                        <XMTok role="CLOSE" stretchy="false">)</XMTok>
+                      </XMWrap>
+                    </XMDual>
+                  </XMApp>
+                </XMApp>
+                <XMApp>
+                  <XMTok meaning="times" role="MULOP">⁢</XMTok>
+                  <XMTok font="italic" role="UNKNOWN">d</XMTok>
+                  <XMDual>
+                    <XMApp>
+                      <XMTok meaning="delimited-[]"/>
+                      <XMRef idref="alg1.l5.m1.4"/>
+                    </XMApp>
+                    <XMWrap>
+                      <XMTok role="OPEN" stretchy="false">[</XMTok>
+                      <XMTok font="italic" role="UNKNOWN" xml:id="alg1.l5.m1.4">v</XMTok>
+                      <XMTok role="CLOSE" stretchy="false">]</XMTok>
+                    </XMWrap>
+                  </XMDual>
+                </XMApp>
+              </XMApp>
+            </XMath>
+          </Math> <text font="bold">then</text>
+</listingline>
+        <listingline labels="LABEL:line:relax" xml:id="alg1.l6"><tags>
+            <tag><text fontsize="80%">6:</text></tag>
+            <tag role="refnum">6</tag>
+          </tags>     <Math mode="inline" tex="d[v]\leftarrow d[u]+w(u,v)" text="d * delimited-[]@(v) leftarrow d * delimited-[]@(u) + w * open-interval@(u, v)" xml:id="alg1.l6.m1">
+            <XMath>
+              <XMApp>
+                <XMTok name="leftarrow" role="ARROW">←</XMTok>
+                <XMApp>
+                  <XMTok meaning="times" role="MULOP">⁢</XMTok>
+                  <XMTok font="italic" role="UNKNOWN">d</XMTok>
+                  <XMDual>
+                    <XMApp>
+                      <XMTok meaning="delimited-[]"/>
+                      <XMRef idref="alg1.l6.m1.1"/>
+                    </XMApp>
+                    <XMWrap>
+                      <XMTok role="OPEN" stretchy="false">[</XMTok>
+                      <XMTok font="italic" role="UNKNOWN" xml:id="alg1.l6.m1.1">v</XMTok>
+                      <XMTok role="CLOSE" stretchy="false">]</XMTok>
+                    </XMWrap>
+                  </XMDual>
+                </XMApp>
+                <XMApp>
+                  <XMTok meaning="plus" role="ADDOP">+</XMTok>
+                  <XMApp>
+                    <XMTok meaning="times" role="MULOP">⁢</XMTok>
+                    <XMTok font="italic" role="UNKNOWN">d</XMTok>
+                    <XMDual>
+                      <XMApp>
+                        <XMTok meaning="delimited-[]"/>
+                        <XMRef idref="alg1.l6.m1.2"/>
+                      </XMApp>
+                      <XMWrap>
+                        <XMTok role="OPEN" stretchy="false">[</XMTok>
+                        <XMTok font="italic" role="UNKNOWN" xml:id="alg1.l6.m1.2">u</XMTok>
+                        <XMTok role="CLOSE" stretchy="false">]</XMTok>
+                      </XMWrap>
+                    </XMDual>
+                  </XMApp>
+                  <XMApp>
+                    <XMTok meaning="times" role="MULOP">⁢</XMTok>
+                    <XMTok font="italic" role="UNKNOWN">w</XMTok>
+                    <XMDual>
+                      <XMApp>
+                        <XMTok meaning="open-interval"/>
+                        <XMRef idref="alg1.l6.m1.3"/>
+                        <XMRef idref="alg1.l6.m1.4"/>
+                      </XMApp>
+                      <XMWrap>
+                        <XMTok role="OPEN" stretchy="false">(</XMTok>
+                        <XMTok font="italic" role="UNKNOWN" xml:id="alg1.l6.m1.3">u</XMTok>
+                        <XMTok role="PUNCT">,</XMTok>
+                        <XMTok font="italic" role="UNKNOWN" xml:id="alg1.l6.m1.4">v</XMTok>
+                        <XMTok role="CLOSE" stretchy="false">)</XMTok>
+                      </XMWrap>
+                    </XMDual>
+                  </XMApp>
+                </XMApp>
+              </XMApp>
+            </XMath>
+          </Math><text cssstyle="float:right"><Math mode="inline" tex="\triangleright" text="triangleright" xml:id="alg1.l6.m2">
+              <XMath>
+                <XMTok name="triangleright" role="ADDOP">⊳</XMTok>
+              </XMath>
+            </Math> Relax edge <Math mode="inline" tex="(u,v)" text="open-interval@(u, v)" xml:id="alg1.l6.m3">
+              <XMath>
+                <XMDual>
+                  <XMApp>
+                    <XMTok meaning="open-interval"/>
+                    <XMRef idref="alg1.l6.m3.1"/>
+                    <XMRef idref="alg1.l6.m3.2"/>
+                  </XMApp>
+                  <XMWrap>
+                    <XMTok role="OPEN" stretchy="false">(</XMTok>
+                    <XMTok font="italic" role="UNKNOWN" xml:id="alg1.l6.m3.1">u</XMTok>
+                    <XMTok role="PUNCT">,</XMTok>
+                    <XMTok font="italic" role="UNKNOWN" xml:id="alg1.l6.m3.2">v</XMTok>
+                    <XMTok role="CLOSE" stretchy="false">)</XMTok>
+                  </XMWrap>
+                </XMDual>
+              </XMath>
+            </Math>
+</text></listingline>
+        <listingline xml:id="alg1.l7"><tags>
+            <tag><text fontsize="80%">7:</text></tag>
+            <tag role="refnum">7</tag>
+          </tags>   <text font="bold">end</text> <text font="bold">if</text></listingline>
+        <listingline xml:id="alg1.l8"><tags>
+            <tag><text fontsize="80%">8:</text></tag>
+            <tag role="refnum">8</tag>
+          </tags>  <text font="bold">end</text> <text font="bold">for</text></listingline>
+        <listingline xml:id="alg1.l9"><tags>
+            <tag><text fontsize="80%">9:</text></tag>
+            <tag role="refnum">9</tag>
+          </tags><text font="bold">end</text> <text font="bold">for</text></listingline>
+        <listingline labels="LABEL:line:ret" xml:id="alg1.l10"><tags>
+            <tag><text fontsize="80%">10:</text></tag>
+            <tag role="refnum">10</tag>
+          </tags><text font="bold">return</text> <Math mode="inline" tex="d" text="d" xml:id="alg1.l10.m1">
+            <XMath>
+              <XMTok font="italic" role="UNKNOWN">d</XMTok>
+            </XMath>
+          </Math>
+</listingline>
+      </listing>
+    </float>
+  </section>
+  <section inlist="toc" xml:id="S3">
+    <tags>
+      <tag>3</tag>
+      <tag role="refnum">3</tag>
+      <tag role="typerefnum">§3</tag>
+    </tags>
+    <title><tag close=" ">3</tag>Complexity and Verification</title>
+    <para xml:id="S3.p1">
+      <p>As demonstrated in Algorithm <ref labelref="LABEL:alg:relaxation"/>, initialization takes place in
+lines <ref labelref="LABEL:line:init"/>–<ref labelref="LABEL:line:source"/>. The relaxation loop (line <ref labelref="LABEL:line:for"/>)
+iterates over all edges at line <ref labelref="LABEL:line:forall"/>. The triangle inequality is checked
+at line <ref labelref="LABEL:line:check"/>, triggering the update at line <ref labelref="LABEL:line:relax"/>.
+Direct compound reference: <ref labelref="LABEL:alg:relaxation"/>.<ref labelref="LABEL:line:relax"/>.
+The overall running time is <Math mode="inline" tex="\mathcal{O}(|V|\cdot|E|)" text="O * (absolute-value@(V) cdot absolute-value@(E))" xml:id="S3.p1.m1">
+          <XMath>
+            <XMApp>
+              <XMTok meaning="times" role="MULOP">⁢</XMTok>
+              <XMTok font="caligraphic" role="UNKNOWN">O</XMTok>
+              <XMDual>
+                <XMRef idref="S3.p1.m1.3"/>
+                <XMWrap>
+                  <XMTok role="OPEN" stretchy="false">(</XMTok>
+                  <XMApp xml:id="S3.p1.m1.3">
+                    <XMTok name="cdot" role="MULOP">⋅</XMTok>
+                    <XMDual>
+                      <XMApp>
+                        <XMTok meaning="absolute-value"/>
+                        <XMRef idref="S3.p1.m1.1"/>
+                      </XMApp>
+                      <XMWrap>
+                        <XMTok role="OPEN" stretchy="false">|</XMTok>
+                        <XMTok font="italic" role="UNKNOWN" xml:id="S3.p1.m1.1">V</XMTok>
+                        <XMTok role="CLOSE" stretchy="false">|</XMTok>
+                      </XMWrap>
+                    </XMDual>
+                    <XMDual>
+                      <XMApp>
+                        <XMTok meaning="absolute-value"/>
+                        <XMRef idref="S3.p1.m1.2"/>
+                      </XMApp>
+                      <XMWrap>
+                        <XMTok role="OPEN" stretchy="false">|</XMTok>
+                        <XMTok font="italic" role="UNKNOWN" xml:id="S3.p1.m1.2">E</XMTok>
+                        <XMTok role="CLOSE" stretchy="false">|</XMTok>
+                      </XMWrap>
+                    </XMDual>
+                  </XMApp>
+                  <XMTok role="CLOSE" stretchy="false">)</XMTok>
+                </XMWrap>
+              </XMDual>
+            </XMApp>
+          </XMath>
+        </Math>.</p>
+    </para>
+  </section>
+</document>
