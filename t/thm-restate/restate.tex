@@ -1,0 +1,45 @@
+\documentclass{article}
+\usepackage{amsthm}
+\usepackage{thm-restate}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+
+\begin{document}
+
+\section{Introduction}
+
+Here is our primary result:
+\begin{restatable}[Main Convergence]{theorem}{thmConvergence}
+\label{thm:conv}
+Let $(x_n)_{n=1}^\infty$ be a sequence such that $x_n \to x^*$ as $n \to \infty$.
+Then for any continuous function $f$, we have:
+\begin{equation}\label{eq:limit}
+\lim_{n \to \infty} f(x_n) = f(x^*).
+\end{equation}
+\end{restatable}
+
+An intervening theorem to advance the counter:
+\begin{theorem}
+Every bounded sequence has a convergent subsequence.
+\end{theorem}
+
+A deferred lemma declared with restatable*:
+\begin{restatable*}{lemma}{lemBound}
+There exists a constant $M > 0$ such that $|f(x)| \le M$ for all $x$.
+\end{restatable*}
+
+\section{Appendix: Deferred Proofs}
+
+Here we recall Theorem \ref{thm:conv}:
+\thmConvergence*
+
+And here we instantiate the deferred lemma:
+\lemBound*
+
+A final theorem to verify counter continuity:
+\begin{theorem}
+The limit is unique.
+\end{theorem}
+
+\end{document}

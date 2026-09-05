@@ -1,6 +1,7 @@
 # -*- mode: Perl -*-
 # /=====================================================================\ #
-# |  thm-restate.sty.ltxml                                              | #
+# |  thm-restate                                                        | #
+# | Implementation for LaTeXML                                          | #
 # |=====================================================================| #
 # | Part of LaTeXML:                                                    | #
 # |  Public domain software, produced as part of work done by the       | #
@@ -14,18 +15,84 @@ use strict;
 use warnings;
 use LaTeXML::Package;
 
+# Emulates thm-restate (from thmtools 0.76, 2023-05-04), TeX Live revision 77682.
+# Replaces earlier stub that merely emitted a "See \ref{...}" reference.
+
+NewCounter('thmt@dummyctr', undef);
+
 RawTeX(<<'EoTeX');
-\newenvironment{restatable}[3][]{%
-  \begin{#2}[#1]%
-    \label{restatable:#3}
-    \expandafter\gdef\csname #3\endcsname{\lx@thm@restate{#3}\@ifstar{}{}}
+\makeatletter
+\newtoks\thmt@toks
+\long\def\thmt@collect@body#1#2\end#3{%
+  \expandafter\thmt@toks\expandafter{\the\thmt@toks #2}%
+  \def\thmttmpa{#3}%
+  \ifx\thmttmpa\@currenvir
+    \expandafter\@firstoftwo
+  \else
+    \expandafter\@secondoftwo
+  \fi{%
+    \expandafter#1\expandafter{\the\thmt@toks}%
   }{%
- \end{\@currenvir}%
+    \expandafter\thmt@toks\expandafter{\the\thmt@toks\end{#3}}%
+    \thmt@collect@body{#1}%
+  }%
 }
+
+\def\thmt@replay#1#2#3#4{%
+  \ifcsname thmt@stored@num@#3\endcsname
+    \begingroup
+    \c@thmt@dummyctr=0\relax
+    \expandafter\let\csname c@#2\endcsname=\c@thmt@dummyctr
+    \expandafter\edef\csname the#2\endcsname{\csname thmt@stored@num@#3\endcsname}%
+    \let\label=\@gobble
+    \begin{#2}[#1]#4\end{#2}%
+    \endgroup
+  \else
+    \begin{#2}[#1]%
+      \label{thmt@@#3}%
+      \expandafter\xdef\csname thmt@stored@num@#3\endcsname{\csname the#2\endcsname}%
+      #4%
+    \end{#2}%
+  \fi
+}
+
+\newif\ifthmt@thisistheone
+
+\newenvironment{thmt@restatable}[3][]{%
+  \thmt@toks{}%
+  \long\def\thmrst@store##1{%
+    \ifthmt@thisistheone
+      \begin{#2}[#1]%
+        \label{thmt@@#3}%
+        \expandafter\xdef\csname thmt@stored@num@#3\endcsname{\csname the#2\endcsname}%
+        ##1%
+      \end{#2}%
+    \fi
+    \expandafter\gdef\csname #3\endcsname{%
+      \@ifstar{%
+        \thmt@replay{#1}{#2}{#3}{##1}%
+      }{%
+        \thmt@replay{#1}{#2}{#3}{##1}%
+      }%
+    }%
+  }%
+  \thmt@collect@body\thmrst@store
+}{%
+}
+
+\newenvironment{restatable}{%
+  \thmt@thisistheonetrue\thmt@restatable
+}{%
+  \endthmt@restatable
+}
+
+\newenvironment{restatable*}{%
+  \thmt@thisistheonefalse\thmt@restatable
+}{%
+  \endthmt@restatable
+}
+\makeatother
 EoTeX
 
-# Let's not bother copying the whole thing, but just refer to it!
-DefMacro('\lx@thm@restate{}', 'See \ref{restatable:#1}');
-
-#======================================================================
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 1;
