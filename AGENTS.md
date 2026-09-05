@@ -28,6 +28,7 @@ Behavioral expectations, development loop, and repository conventions for AI age
 | `lgen [--force]` | `perl tools/dev/generate.pl` | compile the grammar and stamp the version into `lib/`; idempotent, about 1 s |
 | `lctan [opts] <pkg>…` | `perl tools/dev/fetch-ctan.pl` | vendor a package's runfiles and metadata into `lib-ctan/<pkg>/`; see `docs/recipes/fetch-ctan.md` |
 | `lgold [--force] t/<suite>/<case>.tex` | `perl tools/dev/golden.pl` | write a fixture's golden with the driver's own configuration; refuses on engine errors. Never write goldens with `lxml` |
+| `lrun [stamp]` | sets `LATEXAI_RUNSTAMP` | start a named run so every log in this command lands under one `temp/logs/<stamp>/` |
 | `lxml` | `perl -I lib bin/latexml --log=temp/logs/<job>.latexml.log` | digest a file or `literal:` string to `ltx` XML |
 | `lxmlp` | `… bin/latexmlpost` | post-processing, only when an oracle comparison needs it |
 | `lxmlc` | `… bin/latexmlc` | combined driver |
@@ -37,7 +38,7 @@ Behavioral expectations, development loop, and repository conventions for AI age
 Facts that save a round trip:
 
 - Run `lgen` after a fresh clone and after editing `lib/LaTeXML/MathGrammar`. It writes the gitignored `lib/LaTeXML/MathGrammar.pm` and `lib/LaTeXML/Version.pm`; with those in place `-I lib` is the whole include path. `Makefile.PL`, the Makefile, and `blib/` are untouched and remain the path to an installable distribution; nothing in the development loop runs them.
-- The CLI aliases default `--log` into `temp/logs/`, named after the job as `latexml` itself would. Pass `--log=` yourself to override. A `.latexml.log` at the repository root means something bypassed the aliases.
+- The CLI aliases default `--log` into `temp/logs/<runstamp>/`, named after the job as `latexml` itself would. The stamp is `LATEXAI_RUNSTAMP` if set, else minted per process (per `pwsh_exec` command); `lrun` sets it so several invocations in one command share a directory, and `ltst` passes it to the drivers. Pass `--log=` yourself to override. A `.latexml.log` at the repository root means something bypassed the aliases.
 - The version flag is `--VERSION` (uppercase). `--version` prints usage.
 - **No TeX distribution is installed.** Passthrough and hybrid bindings (tikz, pgfplots, algorithmic, xcolor, listings, cleveref, …) try to load the raw `.sty` via `kpsewhich` and error out. Real-paper runs need `--includestyles` plus a preload binding that raises `MAX_ERRORS` and turns on `LEXEMATIZE_MATH`; toy probes with `lmath` do not.
 - `--capture` (fork feature) emits `capture:*` provenance attributes on every element and `capture:source` on `ltx:Math`. `--noparse`, `--tex` and `--preload` are unchanged upstream switches; `--tex` output is the expansion oracle for drift measurements.

@@ -57,7 +57,7 @@ Suites are grouped by what they exercise, following upstream's numbering by engi
 | `50`–`59` | structure, namespaces, alignment, theorems, AMS |
 | `60`–`69` | graphics |
 | `70`–`79` | parsing |
-| `80`–`89` | complex documents and one suite per package or class: `t/<pkg>/` driven by `t/8N_<pkg>.t`, as upstream does for `babel`, `moderncv`, `expl3` |
+| `80`–`89` | complex documents and one suite per package or class: `t/<pkg>/` driven by `t/8N_<pkg>.t`, as upstream does for `babel`, `moderncv`, `expl3`; when the two-digit slots run out, three digits keep the order (`t/851_extarrows.t`), as upstream's `931_epub.t` does |
 | `90`–`99` | post-processing and driver behaviour; candidates for removal with the Post arm |
 
 ## 3. Binding fixtures
@@ -74,7 +74,7 @@ A binding that replaces an existing passthrough or hybrid keeps the same case na
 
 ## 5. Where output goes
 
-- **Logs.** Every `latexml` and `latexmlpost` run writes `<jobname>.latexml.log` to the current directory unless told otherwise. Tests and aliases pass `--log` so the file lands in `temp/logs/`. A log at the repository root is a bug in whatever wrote it.
+- **Logs.** Every `latexml` and `latexmlpost` run writes `<jobname>.latexml.log` to the current directory unless told otherwise. Tests and aliases pass `--log` so the file lands under `temp/logs/<runstamp>/`, one directory per run. The stamp is `LATEXAI_RUNSTAMP` when set, otherwise minted when the aliases load (once per `pwsh_exec` command) or when a bespoke driver starts. `lrun` sets the variable for the current process, so `lrun; ltst t/851_extarrows.t; lxml …` in one command groups everything under one stamp, and `ltst` exports it to the drivers it runs. A log at the repository root is a bug in whatever wrote it.
 - **Driver output.** The shared driver writes its comparison copy beside the fixture and deletes it. Bespoke drivers write to `File::Temp` or to `temp/t/<test>/`, never beside the fixture and never to the root.
 - **Witnesses.** Generated into `temp/bindings/<pkg>/` or `temp/t/<test>/`, then moved beside the fixture by hand when they are meant to be kept.
 

@@ -14,7 +14,13 @@
 $script:LaTeXAIRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..\..')).Path
 $script:LaTeXAILib  = Join-Path $script:LaTeXAIRoot 'lib'
 $script:LaTeXAIBin  = Join-Path $script:LaTeXAIRoot 'bin'
-$script:LaTeXAILogs = Join-Path $script:LaTeXAIRoot 'temp\logs'
+# Logs are grouped by run: temp/logs/<runstamp>/. The stamp is LATEXAI_RUNSTAMP
+# when the caller set one (so a batch of commands shares a directory), else it
+# is minted when this file loads. Under the pwsh_exec MCP that is once per
+# command, since the server starts a fresh pwsh each time; set the variable in
+# the same command string to group several invocations.
+$script:LaTeXAIRunStamp = if ($env:LATEXAI_RUNSTAMP) { $env:LATEXAI_RUNSTAMP } else { Get-Date -Format 'yyyyMMdd_HHmmss' }
+$script:LaTeXAILogs = Join-Path $script:LaTeXAIRoot "temp\logs\$script:LaTeXAIRunStamp"
 $script:LaTeXAIGen  = Join-Path $script:LaTeXAIRoot 'tools\dev\generate.pl'
 $script:LaTeXAICtan = Join-Path $script:LaTeXAIRoot 'tools\dev\fetch-ctan.pl'
 $script:LaTeXAIGold = Join-Path $script:LaTeXAIRoot 'tools\dev\golden.pl'
@@ -27,9 +33,23 @@ if (-not $script:PerlRoot) {
     Write-Warning "latexai-aliases: PERL_ROOT (or PERL_HOME) is not set; lxml/ltst/lmath/lgen will not work in this session."
 }
 $script:StrawberryPerl = Join-Path $script:PerlRoot 'perl\bin\perl.exe'
-$script:ProveExe       = Join-Path $script:PerlRoot 'perl\bin\prove.bat'
+# The plain prove script, run through our perl. prove.bat re-locates itself
+# through PATH (perl -S), which fails whenever Strawberry is not on PATH; the
+# whole point of these wrappers is to never depend on PATH.
+$script:ProveScript    = Join-Path $script:PerlRoot 'perl\bin\prove'
 
 function Get-LaTeXAIRoot { $script:LaTeXAIRoot }
+function Get-LaTeXAIRunStamp { $script:LaTeXAIRunStamp }
+
+# Start a named run: every alias and every test driver in this process (and in
+# child processes) logs under temp/logs/<stamp>/ until the process ends.
+function New-LaTeXAIRun {
+    param([string]$Stamp = (Get-Date -Format 'yyyyMMdd_HHmmss'))
+    $env:LATEXAI_RUNSTAMP = $Stamp
+    $script:LaTeXAIRunStamp = $Stamp
+    $script:LaTeXAILogs = Join-Path $script:LaTeXAIRoot "temp\logs\$Stamp"
+    return $Stamp
+}
 
 # latexml names its log after the job: <source-basename>.latexml.log, or
 # latexml.log for a literal. Reproduce that so every CLI run lands in
@@ -54,7 +74,11 @@ function Invoke-LaTeXMLPost { & $script:StrawberryPerl -I $script:LaTeXAILib (Jo
 function Invoke-LaTeXMLC    { & $script:StrawberryPerl -I $script:LaTeXAILib (Join-Path $script:LaTeXAIBin 'latexmlc')    @(Add-LaTeXAILogDefault $args) }
 
 # Test runner: Strawberry's prove with the LaTeXAI lib on the include path.
-function Invoke-LaTeXMLTest { & $script:ProveExe -I $script:LaTeXAILib @args }
+# Bespoke drivers read LATEXAI_RUNSTAMP so their logs join this run's directory.
+function Invoke-LaTeXMLTest {
+    $env:LATEXAI_RUNSTAMP = $script:LaTeXAIRunStamp
+    & $script:StrawberryPerl $script:ProveScript -I $script:LaTeXAILib @args
+}
 
 # Regenerate MathGrammar.pm and Version.pm into lib/ (idempotent; --force to redo).
 function Invoke-LaTeXAIGenerate { & $script:StrawberryPerl $script:LaTeXAIGen @args }
@@ -92,6 +116,7 @@ function Get-LaTeXAIAliases {
         'lgen'  = 'Invoke-LaTeXAIGenerate' # perl tools/dev/generate.pl [--force]
         'lctan' = 'Invoke-LaTeXAIFetchCtan' # perl tools/dev/fetch-ctan.pl [opts] <pkg>...
         'lgold' = 'Invoke-LaTeXAIGolden'    # perl tools/dev/golden.pl [--force] t/<suite>/<case>.tex
+        'lrun'  = 'New-LaTeXAIRun'          # start a named run: logs group under temp/logs/<stamp>/
         'lmath' = 'Test-LaTeXMLMath'      # probe a math literal
     }
 }

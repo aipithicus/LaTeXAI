@@ -12,6 +12,7 @@ use Encode qw(decode encode FB_DEFAULT);
 use File::Spec;
 use File::Temp qw(tempdir);
 use File::Path qw(make_path);
+use POSIX ();
 use FindBin;
 use IPC::Open3;
 use Symbol qw(gensym);
@@ -26,6 +27,7 @@ my $CD_NS      = 'http://dlmf.nist.gov/LaTeXML/cd';
 my $ROOT        = abs_path(File::Spec->catdir($FindBin::Bin, '..'));
 my $FIXTURES    = File::Spec->catdir($ROOT, 't', 'capture');
 my $TEMP        = tempdir('latexml-capture-XXXXXX', TMPDIR => 1, CLEANUP => 1);
+my $RUNSTAMP    = $ENV{LATEXAI_RUNSTAMP} || POSIX::strftime('%Y%m%d_%H%M%S', localtime);
 my $CAPTURE_OFF_SHA256 = 'e3e9a5333291657d3de1f8ff9f8c85146ddd2ccf3582d09e12173530d67cb927';
 
 chdir($ROOT) or die "Cannot enter $ROOT: $!";
@@ -169,8 +171,9 @@ sub validate_capture_document {
   write_raw($input, encode('UTF-8', $document->toString(1)));
   # Development-loop conventions (docs/testing.md): lib/ is the whole include
   # path (tools/dev/generate.pl puts the generated modules there), and every
-  # CLI log goes to temp/logs/ rather than the working directory.
-  my $logdir = File::Spec->catdir($ROOT, 'temp', 'logs');
+  # CLI log goes under temp/logs/<runstamp>/ rather than the working directory.
+  # The stamp is shared with the aliases through LATEXAI_RUNSTAMP when set.
+  my $logdir = File::Spec->catdir($ROOT, 'temp', 'logs', $RUNSTAMP);
   make_path($logdir);
   my ($status, $messages) = run_command(
     $^X, '-I', File::Spec->catdir($ROOT, 'lib'),
