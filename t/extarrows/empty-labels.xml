@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="extarrows"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <equation xml:id="S0.Ex1">
+      <Math mode="display" tex="A\xlongleftarrow[]{}B" text="A absent@(leftarrow) B" xml:id="S0.Ex1.m1">
+        <XMath>
+          <XMApp>
+            <XMApp role="ARROW">
+              <XMTok meaning="absent" role="OVERACCENT"/>
+              <XMTok name="leftarrow" role="ARROW" stretchy="true">←</XMTok>
+            </XMApp>
+            <XMTok font="italic" role="UNKNOWN">A</XMTok>
+            <XMTok font="italic" role="UNKNOWN">B</XMTok>
+          </XMApp>
+        </XMath>
+      </Math>
+    </equation>
+    <equation xml:id="S0.Ex2">
+      <Math mode="display" tex="A\xlongrightarrow{}B" text="A absent@(rightarrow) B" xml:id="S0.Ex2.m1">
+        <XMath>
+          <XMApp>
+            <XMApp role="ARROW">
+              <XMTok meaning="absent" role="OVERACCENT"/>
+              <XMTok name="rightarrow" role="ARROW" stretchy="true">→</XMTok>
+            </XMApp>
+            <XMTok font="italic" role="UNKNOWN">A</XMTok>
+            <XMTok font="italic" role="UNKNOWN">B</XMTok>
+          </XMApp>
+        </XMath>
+      </Math>
+    </equation>
+  </para>
+</document>

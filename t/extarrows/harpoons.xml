@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="extarrows"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <equation xml:id="S0.Ex1">
+      <Math mode="display" tex="A\xleftharpoondown[u]{v}B" text="A u@(v@(leftharpoondown)) B" xml:id="S0.Ex1.m1">
+        <XMath>
+          <XMApp>
+            <XMApp role="ARROW">
+              <XMTok font="italic" fontsize="70%" role="UNDERACCENT">u</XMTok>
+              <XMApp role="ARROW">
+                <XMTok font="italic" fontsize="70%" role="OVERACCENT">v</XMTok>
+                <XMTok meaning="leftharpoondown" role="ARROW" stretchy="true">↽</XMTok>
+              </XMApp>
+            </XMApp>
+            <XMTok font="italic" role="UNKNOWN">A</XMTok>
+            <XMTok font="italic" role="UNKNOWN">B</XMTok>
+          </XMApp>
+        </XMath>
+      </Math>
+    </equation>
+    <equation xml:id="S0.Ex2">
+      <Math mode="display" tex="A\xleftharpoonup{v}B" text="A v@(leftharpoonup) B" xml:id="S0.Ex2.m1">
+        <XMath>
+          <XMApp>
+            <XMApp role="ARROW">
+              <XMTok font="italic" fontsize="70%" role="OVERACCENT">v</XMTok>
+              <XMTok meaning="leftharpoonup" role="ARROW" stretchy="true">↼</XMTok>
+            </XMApp>
+            <XMTok font="italic" role="UNKNOWN">A</XMTok>
+            <XMTok font="italic" role="UNKNOWN">B</XMTok>
+          </XMApp>
+        </XMath>
+      </Math>
+    </equation>
+    <equation xml:id="S0.Ex3">
+      <Math mode="display" tex="A\xrightharpoondown{v}B" text="A v@(rightharpoondown) B" xml:id="S0.Ex3.m1">
+        <XMath>
+          <XMApp>
+            <XMApp role="ARROW">
+              <XMTok font="italic" fontsize="70%" role="OVERACCENT">v</XMTok>
+              <XMTok meaning="rightharpoondown" role="ARROW" stretchy="true">⇁</XMTok>
+            </XMApp>
+            <XMTok font="italic" role="UNKNOWN">A</XMTok>
+            <XMTok font="italic" role="UNKNOWN">B</XMTok>
+          </XMApp>
+        </XMath>
+      </Math>
+    </equation>
+    <equation xml:id="S0.Ex4">
+      <Math mode="display" tex="A\xrightharpoonup{v}B" text="A v@(rightharpoonup) B" xml:id="S0.Ex4.m1">
+        <XMath>
+          <XMApp>
+            <XMApp role="ARROW">
+              <XMTok font="italic" fontsize="70%" role="OVERACCENT">v</XMTok>
+              <XMTok meaning="rightharpoonup" role="ARROW" stretchy="true">⇀</XMTok>
+            </XMApp>
+            <XMTok font="italic" role="UNKNOWN">A</XMTok>
+            <XMTok font="italic" role="UNKNOWN">B</XMTok>
+          </XMApp>
+        </XMath>
+      </Math>
+    </equation>
+    <equation xml:id="S0.Ex5">
+      <Math mode="display" tex="A\xleftrightharpoons{v}B" text="A v@(leftrightharpoons) B" xml:id="S0.Ex5.m1">
+        <XMath>
+          <XMApp>
+            <XMApp role="ARROW">
+              <XMTok font="italic" fontsize="70%" role="OVERACCENT">v</XMTok>
+              <XMTok meaning="leftrightharpoons" role="ARROW" stretchy="true">⇋</XMTok>
+            </XMApp>
+            <XMTok font="italic" role="UNKNOWN">A</XMTok>
+            <XMTok font="italic" role="UNKNOWN">B</XMTok>
+          </XMApp>
+        </XMath>
+      </Math>
+    </equation>
+    <equation xml:id="S0.Ex6">
+      <Math mode="display" tex="A\xrightleftharpoons{v}B" text="A v@(rightleftharpoons) B" xml:id="S0.Ex6.m1">
+        <XMath>
+          <XMApp>
+            <XMApp role="ARROW">
+              <XMTok font="italic" fontsize="70%" role="OVERACCENT">v</XMTok>
+              <XMTok meaning="rightleftharpoons" role="ARROW" stretchy="true">⇌</XMTok>
+            </XMApp>
+            <XMTok font="italic" role="UNKNOWN">A</XMTok>
+            <XMTok font="italic" role="UNKNOWN">B</XMTok>
+          </XMApp>
+        </XMath>
+      </Math>
+    </equation>
+  </para>
+</document>

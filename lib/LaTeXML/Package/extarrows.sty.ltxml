@@ -7,6 +7,14 @@
 # |  Public domain software, produced as part of work done by the       | #
 # |  United States Government & not subject to copyright in the US.     | #
 # \=========================================================ooo==U==ooo=/ #
+# Native binding for extarrows 1.2.0 (2020-03-12).
+# Written from package documentation; audited against the vendored source
+# recorded in lib-ctan/extarrows/provenance.json, TeX Live revision 78315.
+# Model: amsmath.sty.ltxml's \lx@long@arrow and stretchy arrow symbols.
+# Implements all nine package arrows with [under]{over} labels. There are
+# no deliberate no-ops. Existing fork extensions, absent from this source,
+# are the two xhook arrows, four single xharpoons and two paired xharpoons;
+# their output is retained and covered separately by the package suite.
 package LaTeXML::Package::Pool;
 use strict;
 use warnings;
@@ -49,6 +57,8 @@ DefMacro('\xLongrightarrow',      '\lx@long@arrow{\xLongrightarrow}{\lx@stretchy
 DefMacro('\xLongleftrightarrow',  '\lx@long@arrow{\xLongleftrightarrow}{\lx@stretchy@Longleftrightarrow}');
 DefMacro('\xleftrightarrow',      '\lx@long@arrow{\xleftrightarrow}{\lx@stretchy@leftrightarrow}');
 DefMacro('\xlongleftrightarrow',  '\lx@long@arrow{\xlongleftrightarrow}{\lx@stretchy@leftrightarrow}');
+DefMacro('\xlongleftarrow',       '\lx@long@arrow{\xlongleftarrow}{\lx@stretchy@leftarrow}');
+DefMacro('\xlongrightarrow',      '\lx@long@arrow{\xlongrightarrow}{\lx@stretchy@rightarrow}');
 DefMacro('\xLeftrightarrow',      '\lx@long@arrow{\xLeftrightarrow}{\lx@stretchy@Longleftrightarrow}');
 DefMacro('\xhookrightarrow',      '\lx@long@arrow{\xhookrightarrow}{\lx@stretchy@hookrightarrow}');
 DefMacro('\xhookleftarrow',       '\lx@long@arrow{\xhookleftarrow}{\lx@stretchy@hookleftarrow}');
