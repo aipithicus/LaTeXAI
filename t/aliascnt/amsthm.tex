@@ -1,0 +1,29 @@
+\documentclass{article}
+\usepackage{amsthm}
+\usepackage{aliascnt}
+
+\newtheorem{theorem}{Theorem}
+\newaliascnt{lemma}{theorem}
+\newtheorem{lemma}[lemma]{Lemma}
+\aliascntresetthe{lemma}
+
+\begin{document}
+
+\begin{theorem}\label{thm:first}
+Every compact metric space is complete.
+\end{theorem}
+
+\begin{lemma}\label{lem:cauchy}
+A Cauchy sequence in a compact metric space has a convergent subsequence.
+\end{lemma}
+
+\begin{theorem}\label{thm:second}
+The continuous image of a compact space is compact.
+\end{theorem}
+
+References:
+Theorem \ref{thm:first},
+Lemma \ref{lem:cauchy},
+Theorem \ref{thm:second}.
+
+\end{document}

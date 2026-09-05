@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="amsthm"?>
+<?latexml package="aliascnt"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <theorem class="ltx_theorem_theorem" inlist="thm theorem:theorem" labels="LABEL:thm:first" xml:id="Thmtheorem1">
+    <tags>
+      <tag>Theorem 1</tag>
+      <tag role="refnum">1</tag>
+      <tag role="typerefnum">Theorem 1</tag>
+    </tags>
+    <title class="ltx_runin"><tag><text font="bold">Theorem 1</text></tag><text font="bold">.</text></title>
+    <para xml:id="Thmtheorem1.p1">
+      <p><text font="italic">Every compact metric space is complete.</text></p>
+    </para>
+  </theorem>
+  <theorem class="ltx_theorem_lemma" inlist="thm theorem:lemma" labels="LABEL:lem:cauchy" xml:id="Thmtheorem2">
+    <tags>
+      <tag>Lemma 2</tag>
+      <tag role="refnum">2</tag>
+      <tag role="typerefnum">Lemma 2</tag>
+    </tags>
+    <title class="ltx_runin"><tag><text font="bold">Lemma 2</text></tag><text font="bold">.</text></title>
+    <para xml:id="Thmtheorem2.p1">
+      <p><text font="italic">A Cauchy sequence in a compact metric space has a convergent subsequence.</text></p>
+    </para>
+  </theorem>
+  <theorem class="ltx_theorem_theorem" inlist="thm theorem:theorem" labels="LABEL:thm:second" xml:id="Thmtheorem3">
+    <tags>
+      <tag>Theorem 3</tag>
+      <tag role="refnum">3</tag>
+      <tag role="typerefnum">Theorem 3</tag>
+    </tags>
+    <title class="ltx_runin"><tag><text font="bold">Theorem 3</text></tag><text font="bold">.</text></title>
+    <para xml:id="Thmtheorem3.p1">
+      <p><text font="italic">The continuous image of a compact space is compact.</text></p>
+    </para>
+  </theorem>
+  <para xml:id="p1">
+    <p>References:
+Theorem <ref labelref="LABEL:thm:first"/>,
+Lemma <ref labelref="LABEL:lem:cauchy"/>,
+Theorem <ref labelref="LABEL:thm:second"/>.</p>
+  </para>
+</document>

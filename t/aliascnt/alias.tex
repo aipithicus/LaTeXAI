@@ -1,0 +1,30 @@
+\documentclass{article}
+\usepackage{aliascnt}
+\begin{document}
+
+\newcounter{alpha}
+\newaliascnt{beta}{alpha}
+
+Initial: alpha=\thealpha, beta=\thebeta
+
+\stepcounter{beta}
+After step beta: alpha=\thealpha, beta=\thebeta
+
+\addtocounter{alpha}{2}
+After addto alpha: alpha=\thealpha, beta=\thebeta
+
+\renewcommand\thebeta{[\roman{beta}]}
+Custom thebeta: beta=\thebeta, alpha=\thealpha
+
+\aliascntresetthe{beta}
+After reset: beta=\thebeta, alpha=\thealpha
+
+\newcounteralias{gamma}{beta}
+\stepcounter{gamma}
+After step gamma: alpha=\thealpha, beta=\thebeta, gamma=\thegamma
+
+\makeatletter
+Root of gamma is \AC@findrootcnt{gamma}.
+\makeatother
+
+\end{document}

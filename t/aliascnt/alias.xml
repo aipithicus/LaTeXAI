@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="aliascnt"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <p>Initial: alpha=0, beta=0</p>
+  </para>
+  <para xml:id="p2">
+    <p>After step beta: alpha=1, beta=1</p>
+  </para>
+  <para xml:id="p3">
+    <p>After addto alpha: alpha=3, beta=3</p>
+  </para>
+  <para xml:id="p4">
+    <p>Custom thebeta: beta=[iii], alpha=3</p>
+  </para>
+  <para xml:id="p5">
+    <p>After reset: beta=3, alpha=3</p>
+  </para>
+  <para xml:id="p6">
+    <p>After step gamma: alpha=4, beta=4, gamma=4</p>
+  </para>
+  <para xml:id="p7">
+    <p>Root of gamma is alpha.</p>
+  </para>
+</document>
