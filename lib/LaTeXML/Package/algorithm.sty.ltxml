@@ -1,24 +1,76 @@
-# -*- mode: Perl -*-
+# -*- CPERL -*-
 # /=====================================================================\ #
-# |  algorithm                                                          | #
+# |  algorithm.sty                                                      | #
 # | Implementation for LaTeXML                                          | #
 # |=====================================================================| #
-# | Part of LaTeXML:                                                    | #
+# | Part of LaTeXAI / LaTeXML:                                           | #
 # |  Public domain software, produced as part of work done by the       | #
 # |  United States Government & not subject to copyright in the US.     | #
-# |---------------------------------------------------------------------| #
-# | Bruce Miller <bruce.miller@nist.gov>                        #_#     | #
-# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
 # \=========================================================ooo==U==ooo=/ #
+# Native implementation of the algorithm floating environment, replacing
+# upstream's InputDefinitions passthrough.
+# Audited against CTAN v0.1 (2009-08-24), TeX Live revision 78101,
+# lib-ctan/algorithms/tex/latex/algorithms/algorithm.sty.
+# Model: float.sty.ltxml.
+# Provides the algorithm and algorithm* float environments, appearance
+# options (ruled [default], boxed, plain), numbering conventions (within
+# section, chapter, part, etc.), custom float naming, and \listofalgorithms.
 package LaTeXML::Package::Pool;
 use strict;
 use warnings;
 use LaTeXML::Package;
-use LaTeXML::Util::Pathname;
 
-# For now, just load algorithm; it leverages floats, and it works
-InputDefinitions('algorithm', type => 'sty', noltxml => 1);
+RequirePackage('float');
 
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+our $ALG_floatstyle = 'ruled';
+our $ALG_within     = undef;
+our $ALG_name       = 'Algorithm';
+
+# Appearance options:
+DeclareOption('plain', sub { $ALG_floatstyle = 'plain'; return; });
+DeclareOption('ruled', sub { $ALG_floatstyle = 'ruled'; return; });
+DeclareOption('boxed', sub { $ALG_floatstyle = 'boxed'; return; });
+
+# Numbering conventions:
+DeclareOption('part',          sub { $ALG_within = 'part';          return; });
+DeclareOption('chapter',       sub { $ALG_within = 'chapter';       return; });
+DeclareOption('section',       sub { $ALG_within = 'section';       return; });
+DeclareOption('subsection',    sub { $ALG_within = 'subsection';    return; });
+DeclareOption('subsubsection', sub { $ALG_within = 'subsubsection'; return; });
+DeclareOption('nothing',       sub { $ALG_within = undef;           return; });
+
+# Wildcard option allows setting a custom algorithm name (e.g. \usepackage[Algorithme]{algorithm}):
+DeclareOption(undef, sub {
+  my $opt = ToString(Expand(T_CS('\CurrentOption')));
+  $ALG_name = $opt if $opt;
+  return;
+});
+
+ProcessOptions();
+
+DefMacroI('\ALG@name', undef, $ALG_name);
+DefMacroI('\listalgorithmname', undef, 'List of \ALG@name s');
+
+# Initialize the float through float.sty:
+my @newfloat_tokens = (
+  T_CS('\floatstyle'), T_BEGIN, Explode($ALG_floatstyle), T_END,
+  T_CS('\newfloat'),
+  T_BEGIN, Explode('algorithm'), T_END,
+  T_BEGIN, Explode('htbp'), T_END,
+  T_BEGIN, Explode('loa'), T_END,
+);
+if ($ALG_within) {
+  push(@newfloat_tokens, T_OTHER('['), Explode($ALG_within), T_OTHER(']'));
+}
+push(@newfloat_tokens,
+  T_CS('\floatname'), T_BEGIN, Explode('algorithm'), T_END,
+                      T_BEGIN, T_CS('\ALG@name'), T_END);
+
+Digest(Tokens(@newfloat_tokens));
+
+# List of Algorithms:
+DefConstructorI('\listofalgorithms', undef,
+  "<ltx:TOC lists='loa' scope='global'><ltx:title>#name</ltx:title></ltx:TOC>",
+  properties => sub { (name => DigestText(T_CS('\listalgorithmname'))); });
+
 1;
-

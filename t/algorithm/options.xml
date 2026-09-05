@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="algorithm" options="section,boxed"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <TOC lists="loa" scope="global">
+    <title>List of Algorithms</title>
+  </TOC>
+  <section inlist="toc" xml:id="S1">
+    <tags>
+      <tag>1</tag>
+      <tag role="refnum">1</tag>
+      <tag role="typerefnum">§1</tag>
+    </tags>
+    <title><tag close=" ">1</tag>Introduction</title>
+    <float class="ltx_float_algorithm" inlist="loa" labels="LABEL:alg:sec" placement="h" xml:id="S1.algorithm1">
+      <tags>
+        <tag><text font="bold">Algorithm 1.1</text></tag>
+        <tag role="refnum">1.1</tag>
+        <tag role="typerefnum">Algorithm 1.1</tag>
+      </tags>
+      <toccaption><tag close=" ">1.1</tag>Sectional algorithm</toccaption>
+      <caption><tag close=" "><text font="bold">Algorithm 1.1</text></tag> Sectional algorithm</caption>
+      <p>Boxed algorithm within section.</p>
+    </float>
+  </section>
+</document>
