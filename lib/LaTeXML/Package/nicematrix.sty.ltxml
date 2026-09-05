@@ -7,64 +7,100 @@
 # |  Public domain software, produced as part of work done by the       | #
 # |  United States Government & not subject to copyright in the US.     | #
 # \=========================================================ooo==U==ooo=/ #
+# Native subset audited against the vendored nicematrix.sty, TeX Live
+# revision 80094: the runfile is 7.11b (2026-08-25), while the simultaneously
+# fetched CTAN catalogue/docs report 7.11c (2026-09-05). The runfile is the
+# authority for this audit. Sources: lib-ctan/nicematrix/provenance.json,
+# tex/latex/nicematrix/nicematrix.sty and the package documentation.
+# Model: the AMS matrix family and native tabular alignment (array binding).
+# Covers the six NiceMatrix delimiter variants, ordinary NiceTabular,
+# option-free single-cell Block, empty NiceMatrixOptions/CodeAfter, and
+# NotEmpty as a nonprinting dot-routing marker (dot routing is unsupported).
+# Nonempty options, spanning/styled blocks and post-matrix code are errors,
+# not silent no-ops. Dotted lines, overlays, other array/tabular forms and
+# the remaining package-specific extensions are unimplemented. No PGF drawing is emulated;
+# the source's pgfcore dependency and its raw prerequisites are severed.
 package LaTeXML::Package::Pool;
 use strict;
 use warnings;
 use LaTeXML::Package;
 
+DeclareOption(undef, sub {
+    Error('unsupported', 'nicematrix-package-option', undef,
+      'nicematrix package options are not implemented: ' . ToString(Expand(T_CS('\CurrentOption'))));
+    return; });
+ProcessOptions();
+
 RequirePackage('amsmath');
+RequirePackage('array');
 
-# Keyval sets for nicematrix
-DefKeyVal('nicematrix', 'nullify-dots', '', '');
-DefKeyVal('nicematrix', 'renew-dots',   '', '');
-DefKeyVal('nicematrix', 'renew-matrix', '', '');
-DefKeyVal('nicematrix', 'transparent',  '', '');
-DefKeyVal('nicematrix', 'light-syntax', '', '');
+# The old keyvals/global-options gobbler accepted syntax-changing requests
+# without implementing them. Only empty option lists are supported.
+DefMacro('\lx@nicematrix@options{}', sub {
+    my ($gullet, $options) = @_;
+    Error('unsupported', 'nicematrix-options', undef,
+      'Nonempty nicematrix options are not implemented: ' . ToString($options))
+      if ToString($options) =~ /\S/;
+    return; });
 
-# Matrix variants with optional keyvals
-DefMacro('\NiceMatrix OptionalKeyVals:nicematrix',
-  '\lx@ams@matrix{name=NiceMatrix,datameaning=matrix}');
+# Matrix variants with empty optional lists; nonempty keyvals are rejected.
+DefMacro('\NiceMatrix OptionalUndigested',
+  '\lx@nicematrix@options{#1}\lx@ams@matrix{name=NiceMatrix,datameaning=matrix}');
 DefMacro('\endNiceMatrix', '\lx@end@ams@matrix');
 
-DefMacro('\pNiceMatrix OptionalKeyVals:nicematrix',
-  '\lx@ams@matrix{name=pNiceMatrix,datameaning=matrix,left=\lx@left(,right=\lx@right)}');
+DefMacro('\pNiceMatrix OptionalUndigested',
+  '\lx@nicematrix@options{#1}\lx@ams@matrix{name=pNiceMatrix,datameaning=matrix,left=\lx@left(,right=\lx@right)}');
 DefMacro('\endpNiceMatrix', '\lx@end@ams@matrix');
 
-DefMacro('\bNiceMatrix OptionalKeyVals:nicematrix',
-  '\lx@ams@matrix{name=bNiceMatrix,datameaning=matrix,left=\lx@left[,right=\lx@right]}');
+DefMacro('\bNiceMatrix OptionalUndigested',
+  '\lx@nicematrix@options{#1}\lx@ams@matrix{name=bNiceMatrix,datameaning=matrix,left=\lx@left[,right=\lx@right]}');
 DefMacro('\endbNiceMatrix', '\lx@end@ams@matrix');
 
-DefMacro('\BNiceMatrix OptionalKeyVals:nicematrix',
-  '\lx@ams@matrix{name=BNiceMatrix,datameaning=matrix,left=\lx@left\{,right=\lx@right\}}');
+DefMacro('\BNiceMatrix OptionalUndigested',
+  '\lx@nicematrix@options{#1}\lx@ams@matrix{name=BNiceMatrix,datameaning=matrix,left=\lx@left\{,right=\lx@right\}}');
 DefMacro('\endBNiceMatrix', '\lx@end@ams@matrix');
 
-DefMacro('\vNiceMatrix OptionalKeyVals:nicematrix',
-  '\lx@ams@matrix{name=vNiceMatrix,delimitermeaning=determinant,datameaning=matrix,left=\lx@left|,right=\lx@right|}');
+DefMacro('\vNiceMatrix OptionalUndigested',
+  '\lx@nicematrix@options{#1}\lx@ams@matrix{name=vNiceMatrix,delimitermeaning=determinant,datameaning=matrix,left=\lx@left|,right=\lx@right|}');
 DefMacro('\endvNiceMatrix', '\lx@end@ams@matrix');
 
-DefMacro('\VNiceMatrix OptionalKeyVals:nicematrix',
-  '\lx@ams@matrix{name=VNiceMatrix,delimitermeaning=norm,datameaning=matrix,left=\lx@left\|,right=\lx@right\|}');
+DefMacro('\VNiceMatrix OptionalUndigested',
+  '\lx@nicematrix@options{#1}\lx@ams@matrix{name=VNiceMatrix,delimitermeaning=norm,datameaning=matrix,left=\lx@left\|,right=\lx@right\|}');
 DefMacro('\endVNiceMatrix', '\lx@end@ams@matrix');
 
 # Tabular environment
-DefEnvironment('{NiceTabular} OptionalKeyVals:nicematrix {}',
-  "<ltx:tabular><ltx:tbody>#body</ltx:tbody></ltx:tabular>");
+DefMacro('\NiceTabular OptionalUndigested {} OptionalUndigested',
+  '\lx@nicematrix@options{#1}\lx@nicematrix@options{#3}\tabular{#2}');
+DefMacro('\endNiceTabular', '\endtabular');
 
 # Helpers inside nicematrix
 DefMacro('\CodeAfter', sub {
     my ($gullet) = @_;
-    # Gobble tokens until \end
+    # An empty CodeAfter is harmless. Any real post-matrix code may contain
+    # notation (SubMatrix, UnderBrace, labels...), so leave it in the stream
+    # and report unsupported behavior rather than swallowing it through end.
     while (defined(my $tok = $gullet->readToken)) {
-      if ($tok->equals(T_CS('\end'))) {
-        $gullet->unread($tok);
-        last;
-      }
+      next if $tok->getCatcode == CC_SPACE;
+      $gullet->unread($tok);
+      Error('unsupported', 'nicematrix-codeafter', undef,
+        'Nonempty CodeAfter is not implemented') unless $tok->equals(T_CS('\end'));
+      last;
     }
     return;
 });
 
-DefMacro('\NiceMatrixOptions{}', '');
+DefMacro('\NiceMatrixOptions{}', '\lx@nicematrix@options{#1}');
+# NotEmpty only affects the unimplemented PGF dot-routing layer; it prints
+# nothing in TeX and contributes no visible content in this bounded subset.
 DefMacro('\NotEmpty', '');
-DefMacro('\Block[]{}{}', '#3');
+DefMacro('\Block OptionalUndigested {} {}', sub {
+    my ($gullet, $options, $size, $body) = @_;
+    my $span = ToString($size);
+    $span =~ s/\s+//g;
+    Error('unsupported', 'nicematrix-block', undef,
+      'Only option-free single-cell Block is implemented')
+      if ToString($options) =~ /\S/ || ($span ne '' && $span ne '1-1')
+      || ToString($body) eq '<';
+    return $body; });
 
 1;

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="nicematrix"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <tabular class="ltx_guessed_headers" vattach="middle">
+      <tbody>
+        <tr>
+          <td align="left" thead="row">Alpha</td>
+          <td align="center"><Math mode="inline" tex="x" text="x" xml:id="p1.m1">
+              <XMath>
+                <XMTok font="italic" role="UNKNOWN">x</XMTok>
+              </XMath>
+            </Math></td>
+        </tr>
+        <tr>
+          <td align="left" thead="row">Beta</td>
+          <td align="center"><Math mode="inline" tex="y" text="y" xml:id="p1.m2">
+              <XMath>
+                <XMTok font="italic" role="UNKNOWN">y</XMTok>
+              </XMath>
+            </Math></td>
+        </tr>
+      </tbody>
+    </tabular>
+  </para>
+</document>
