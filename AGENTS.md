@@ -8,10 +8,10 @@ Behavioral expectations, development loop, and repository conventions for AI age
 
 | Need / Topic | Primary Reference |
 | :--- | :--- |
-| **Local planning, charter, journal** | `DocOps.md` (gitignored, if present). Track planning lives outside this repo; never link private paths from tracked files. |
+| **Documentation routing** | `DocOps.md` — index of in-repo `docs/` (testing, binding specification, minting recipe) and the issues workspace at `../aipithicus-issues/LaTeXAI/` (planning, briefs, chips, discussions, notes). Never link `private/` or `temp/` from tracked files. |
 | **Upstream engine documentation** | `README.pod`, `INSTALL`, `doc/manual/` (the 0.8.8 manual; `manual.pdf` at top level) |
 | **Engine layers** | `lib/LaTeXML/Core/` (Mouth → Gullet → Stomach → Document), `lib/LaTeXML/Common/` (Locator, Model, Config), `lib/LaTeXML/Engine/` (`*.pool.ltxml`), `lib/LaTeXML/Package/` (461 bindings, `*.sty.ltxml` / `*.cls.ltxml`) |
-| **Math parsing** | `lib/LaTeXML/MathGrammar` (Parse::RecDescent source), `lib/LaTeXML/MathParser.pm`; compiled grammar lands in `blib/lib/LaTeXML/MathGrammar.pm` |
+| **Math parsing** | `lib/LaTeXML/MathGrammar` (Parse::RecDescent source), `lib/LaTeXML/MathParser.pm`; `tools/dev/generate.pl` compiles it to the gitignored `lib/LaTeXML/MathGrammar.pm` |
 | **Post-processing (oracles only)** | `lib/LaTeXML/Post/` — MathML, UnicodeMath, LexMath. Read as instruments; not the product surface. |
 | **Schema** | `lib/LaTeXML/resources/RelaxNG/` |
 | **Tests** | `t/*.t` drivers over `t/<suite>/*.tex` + `*.xml` reference pairs (`LaTeXML::Util::Test`) |
@@ -21,24 +21,27 @@ Behavioral expectations, development loop, and repository conventions for AI age
 
 ## 2. Development Loop
 
-**Run through the `pwsh_exec` MCP.** Its PowerShell profile sources `latexAI-aliases.ps1` from `science-facility/mcp/pwsh_exec/scripts/pwsh/`, which resolves Strawberry Perl from the dedicated `$env:PERL_ROOT` (User scope; `PERL_HOME` is its `perl\` subdirectory) and points every CLI at this checkout with `-I lib -I blib/lib`. Ambient `PATH` is bypassed on purpose: the Bash tool and MSYS resolve a different `perl` first, and stock LaTeXML is not installed anywhere. The repository's gitignored `.mcp.json` declares `PERL_ROOT`, `PERL_HOME` and `LATEXAI_ROOT` in the `pwsh_exec` server's `env`, so sessions opened in this repository get them regardless of how the host was launched. If the aliases still warn that `PERL_ROOT` is unset, the session is not using this repository's `.mcp.json`; fix that, do not hardcode a path.
+**Run through the `pwsh_exec` MCP.** The repository owns its loop: `tools/dev/profile.ps1` is the PowerShell profile the server loads (both gitignored MCP configs, `.mcp.json` and `.codex/config.toml`, name it in `MCP_POWERSHELL_PROFILE`; `.mcp.example.json` is the tracked template), and it dot-sources `tools/dev/latexai-aliases.ps1`. The aliases derive the repo root from their own location and resolve Strawberry Perl from `$env:PERL_ROOT` (`PERL_HOME` is its `perl\` subdirectory), the one machine-specific value, which the MCP config's `env` block supplies. Ambient `PATH` is bypassed on purpose: the Bash tool and MSYS resolve a different `perl` first, and stock LaTeXML is not installed anywhere. If the aliases warn that `PERL_ROOT` is unset, the session is not using this repository's MCP config; fix that, do not hardcode a path.
 
 | Alias | Expands to | Use |
 | :--- | :--- | :--- |
-| `lxml` | `perl -I lib -I blib/lib bin/latexml` | digest a file or `literal:` string to `ltx` XML |
+| `lgen [--force]` | `perl tools/dev/generate.pl` | compile the grammar and stamp the version into `lib/`; idempotent, about 1 s |
+| `lctan [opts] <pkg>…` | `perl tools/dev/fetch-ctan.pl` | vendor a package's runfiles and metadata into `lib-ctan/<pkg>/`; see `docs/recipes/fetch-ctan.md` |
+| `lgold [--force] t/<suite>/<case>.tex` | `perl tools/dev/golden.pl` | write a fixture's golden with the driver's own configuration; refuses on engine errors. Never write goldens with `lxml` |
+| `lxml` | `perl -I lib bin/latexml --log=temp/logs/<job>.latexml.log` | digest a file or `literal:` string to `ltx` XML |
 | `lxmlp` | `… bin/latexmlpost` | post-processing, only when an oracle comparison needs it |
 | `lxmlc` | `… bin/latexmlc` | combined driver |
-| `ltst` | `prove -I lib -I blib/lib` | run test drivers, e.g. `ltst t/40_math.t` |
-| `lmath '<tex>' [-Preload x] [-Capture]` | `lxml [--preload=x] [--capture] literal:<tex>` | quick math probe |
+| `ltst` | `prove -I lib` | run test drivers, e.g. `ltst t/40_math.t` |
+| `lmath '<tex>' [-Preload x] [-Capture] [flags]` | `lxml [--preload=x] [--capture] [flags] literal:<tex>` | quick math probe; extra flags pass through |
 
 Facts that save a round trip:
 
-- Set the working directory to the repo root first (`Set-Location D:\aipithicus\LaTeXAI`); the aliases carry absolute paths, but `latexml` writes `<jobname>.latexml.log` into the current directory.
+- Run `lgen` after a fresh clone and after editing `lib/LaTeXML/MathGrammar`. It writes the gitignored `lib/LaTeXML/MathGrammar.pm` and `lib/LaTeXML/Version.pm`; with those in place `-I lib` is the whole include path. `Makefile.PL`, the Makefile, and `blib/` are untouched and remain the path to an installable distribution; nothing in the development loop runs them.
+- The CLI aliases default `--log` into `temp/logs/`, named after the job as `latexml` itself would. Pass `--log=` yourself to override. A `.latexml.log` at the repository root means something bypassed the aliases.
 - The version flag is `--VERSION` (uppercase). `--version` prints usage.
-- `blib/lib` holds only the compiled `MathGrammar.pm` and `Version.pm`; bindings and pools are read from `lib/`. After editing the grammar, regenerate with `perl Makefile.PL` then `gmake` (about 20 s).
 - **No TeX distribution is installed.** Passthrough and hybrid bindings (tikz, pgfplots, algorithmic, xcolor, listings, cleveref, …) try to load the raw `.sty` via `kpsewhich` and error out. Real-paper runs need `--includestyles` plus a preload binding that raises `MAX_ERRORS` and turns on `LEXEMATIZE_MATH`; toy probes with `lmath` do not.
 - `--capture` (fork feature) emits `capture:*` provenance attributes on every element and `capture:source` on `ltx:Math`. `--noparse`, `--tex` and `--preload` are unchanged upstream switches; `--tex` output is the expansion oracle for drift measurements.
-- Fallback without the aliases: `& "$env:PERL_ROOT\perl\bin\perl.exe" -I lib -I blib/lib bin/latexml …`.
+- Fallback without the aliases: `& "$env:PERL_ROOT\perl\bin\perl.exe" -I lib bin/latexml --log=temp/logs/<job>.latexml.log …`.
 
 ---
 
@@ -58,8 +61,8 @@ Facts that save a round trip:
 
 - **Branch:** work directly on `main`. Root commit `414081a` is the pristine upstream snapshot; keep it that way.
 - **Commits:** one concern per commit, conventional prefixes by layer — `feat(Core):`, `feat(Package):`, `fix(Post):`, `test:`, `chore:`, `docs:`.
-- **New bindings:** `lib/LaTeXML/Package/<pkg>.sty.ltxml`, header comment naming the package version emulated, then `1;` at the end. Add a `t/` pair when the binding changes structure.
-- **Ignored, never committed:** `blib/`, `*.log`, `*.aux`, `Makefile`, `MYMETA.*`, `pm_to_blib`. Disposable working files (probe `.tex` inputs, output dumps, test transcripts, helper scripts) go under `scratch/<actor-or-task>/`, which is gitignored; see `scratch/README.md`. Nothing at the repo root, nothing under `.codex/` or other tool dotdirs. Test fixtures go in `t/<suite>/`; runtime test output goes through `File::Temp`.
+- **New bindings:** `lib/LaTeXML/Package/<pkg>.sty.ltxml`, header comment naming the package version emulated and what it was written from, then `1;` at the end. Every binding ships with its own suite `t/<pkg>/` and driver `t/8N_<pkg>.t`, as upstream does for `t/ams`, `t/babel`, `t/moderncv`; the contract and definition of done are in `docs/specification/bindings.md`, the procedure in `docs/recipes/package-bindings.md`.
+- **Ignored, never committed:** `blib/`, `*.log`, `*.aux`, `Makefile`, `MYMETA.*`, `pm_to_blib`. Disposable working files go under the gitignored `temp/` tree: logs in `temp/logs/`, test-driver output in `temp/t/<test>/`, binding intermediates in `temp/bindings/<pkg>/`. Nothing at the repo root, nothing under `.codex/` or other tool dotdirs, nothing in `private/`. Test fixtures go in `t/<suite>/` (see `docs/testing.md`); a bespoke driver's runtime output goes through `File::Temp` or `temp/t/<test>/`.
 - **No compat shims.** Superseded fork surfaces are deleted, not aliased.
 
 ---

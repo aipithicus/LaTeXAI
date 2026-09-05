@@ -1,0 +1,41 @@
+{
+    "_comment": "Copy to .mcp.json (gitignored) and replace the <...> placeholders. PERL_ROOT is the portable Strawberry Perl root; PERL_HOME is its perl\\ subdirectory. MCP_POWERSHELL_PROFILE must point at this checkout's tools/dev/profile.ps1. Keep .codex/config.toml in agreement by hand.",
+    "mcpServers": {
+        "nushell": {
+            "command": "<SCIENCE_FACILITY>/mcp/nushell-mcp/deps/nushell/nu.exe",
+            "args": [
+                "--mcp",
+                "--config",
+                "<SCIENCE_FACILITY>/mcp/nushell-mcp/config.nu"
+            ],
+            "env": {
+                "NU_MCP_OUTPUT_LIMIT": "20kb",
+                "NO_COLOR": "1",
+                "NU_LOG_LEVEL": "warn"
+            }
+        },
+        "pwsh_exec": {
+            "command": "<SCIENCE_FACILITY>/mcp/pwsh_exec/deps/bin/uv/uv.exe",
+            "args": [
+                "run",
+                "--project",
+                "<SCIENCE_FACILITY>/mcp/pwsh_exec",
+                "--locked",
+                "<SCIENCE_FACILITY>/mcp/pwsh_exec/server.py"
+            ],
+            "env": {
+                "MCP_POWERSHELL_EXECUTABLE": "<SCIENCE_FACILITY>/mcp/pwsh_exec/deps/bin/pwsh/pwsh.exe",
+                "MCP_POWERSHELL_PROFILE": "<LATEXAI_ROOT>/tools/dev/profile.ps1",
+                "PERL_ROOT": "<PERL_ROOT>",
+                "PERL_HOME": "<PERL_ROOT>/perl",
+                "LATEXAI_ROOT": "<LATEXAI_ROOT>"
+            }
+        },
+        "mdnav": {
+            "command": "node",
+            "args": [
+                "<SCIENCE_FACILITY>/mcp/mdnav/src/index.ts"
+            ]
+        }
+    }
+}
