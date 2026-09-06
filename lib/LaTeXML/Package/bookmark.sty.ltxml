@@ -21,7 +21,7 @@ use LaTeXML::Package;
 RequirePackage('hyperref');
 
 # Ignore package options (driver options, draft, etc.)
-DeclareOption('*', sub { });
+DeclareOption(undef, sub { });
 ProcessOptions();
 
 # Core bookmark creation commands:
@@ -39,8 +39,11 @@ DefMacro('\subbookmark[]{}{}', sub {
 DefMacro('\bookmarksetup{}',                     '');
 DefMacro('\bookmarksetupnext{}',                 '');
 DefMacro('\bookmarkdefinestyle{Semiverbatim}{}', '');
-DefMacro('\bookmarkget{}',                       '');
-DefMacro('\BookmarkAtEnd{}',                     '');
+# \bookmarkget{key} reads back a \bookmarksetup key; numeric keys default to 0.
+DefMacro('\bookmarkget{}', sub {
+  my $key = ToString($_[1]); $key =~ s/^\s+|\s+$//g;
+  return Explode(($key =~ /^(level|openlevel|startatroot|depth)$/) ? '0' : ''); });
+DefMacro('\BookmarkAtEnd{}',                     '\AtEndDocument{#1}');
 DefMacro('\currentbookmarklevel',                '0');
 
 # Compatibility wrappers:
