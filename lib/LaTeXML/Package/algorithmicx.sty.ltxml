@@ -169,14 +169,163 @@ DefMacro('\algrenewcomment{}',    '\renewcommand{\algorithmiccomment}[1]{#1}');
 DefMacro('\Comment{}',            '\algorithmiccomment{#1}');
 DefMacro('\algref{}{}',           '\ref{#1}.\ref{#2}');
 
-# Extensibility hooks (no-ops for macro compatibility):
-DefMacro('\algdef{}',        '');
-DefMacro('\algnewcommand{}', '');
-DefMacro('\algrenewcommand{}','');
-DefMacro('\algnewlanguage{}','');
-DefMacro('\alglanguage{}',   '');
-DefMacro('\algsetlanguage{}','');
-DefMacro('\algdeflanguage{}','');
+# Extensibility. \algnewcommand / \algrenewcommand are \newcommand / \renewcommand;
+# the real package's language-prefixed indirection is omitted while language
+# switching stays a no-op. \algdef implements the SE/S/C/Ce forms used by
+# algpseudocode.sty and by papers that add blocks; other switch letters are
+# ignored rather than gobbled.
+Let('\algnewcommand',  '\newcommand');
+Let('\algrenewcommand', '\renewcommand');
+
+sub _alg_cs_name {
+  my ($tokens) = @_;
+  my $name = ToString($tokens // '');
+  $name =~ s/^\\//;
+  $name =~ s/^\s+|\s+$//g;
+  return $name;
+}
+
+sub _parse_algdef_switches {
+  my ($sw) = @_;
+  my %f    = ();
+  my $pre  = '';
+  for my $c (split //, $sw) {
+    if ($c eq 'x' || $c eq 'n') { $pre .= $c; next; }
+    if ($c eq 'S' || $c eq 's') {
+      $f{start}     = 1;
+      $f{starttext} = 1 if $c eq 'S' && $pre !~ /n/;
+    } elsif ($c eq 'C' || $c eq 'c') {
+      $f{oldblock}  = 1;
+      $f{start}     = 1;
+      $f{continue}  = 1;
+      $f{starttext} = 1 if $c eq 'C' && $pre !~ /n/;
+    } elsif ($c eq 'E' || $c eq 'e') {
+      $f{end}     = 1;
+      $f{endtext} = 1 if $c eq 'E' && $pre !~ /n/;
+    } elsif ($c eq 'L') {
+      $f{credits_arg} = 1;
+    } elsif ($c eq 'i') {
+      $f{indent_arg} = 1;
+    }
+    $pre = '';
+  }
+  return \%f;
+}
+
+sub _read_algdef_text {
+  my ($gullet) = @_;
+  $gullet->skipSpaces;
+  my $n       = 0;
+  my $default = undef;
+  if ($gullet->ifNext(T_OTHER('['))) {
+    my $opt = $gullet->readOptional;
+    my $os  = ToString($opt // '');
+    $os =~ s/^\s+|\s+$//g;
+    if ($os =~ /^\d+$/) {
+      $n = int($os);
+      $gullet->skipSpaces;
+      if ($gullet->ifNext(T_OTHER('['))) {
+        $default = $gullet->readOptional;
+      }
+    }
+  }
+  my $text = $gullet->readArg;
+  return ($n, $default, $text);
+}
+
+sub _algdef_params {
+  my ($n, $default) = @_;
+  return undef unless $n && $n > 0;
+  return convertLaTeXArgs($n, $default);
+}
+
+sub _algdef_install {
+  my ($flags, $start, $end, $start_n, $start_def, $start_text, $end_n, $end_def, $end_text) = @_;
+  if ($start) {
+    my @before = $flags->{continue}
+      ? (T_CS('\ALG@endblock'), T_CS('\ALG@it'))
+      : (T_CS('\ALG@it'));
+    my @body = ($start_text && $start_text->unlist)
+      ? $start_text->unlist
+      : (T_CS('\textbf'), T_BEGIN, Explode($start), T_END);
+    DefMacroI(T_CS('\\' . $start), _algdef_params($start_n, $start_def),
+      Tokens(@before, @body, T_CS('\ALG@beginblock')));
+  }
+  if ($end) {
+    # Ce/ce restates an existing end name (EndIf after SE[IF]); keep its text.
+    if (!($end_text && $end_text->unlist) && IsDefined(T_CS('\\' . $end))) {
+      return;
+    }
+    my $n    = $end_n || 0;
+    my @body = ($end_text && $end_text->unlist)
+      ? $end_text->unlist
+      : (T_CS('\textbf'), T_BEGIN, Explode($end), T_END);
+    if ($n == 0) {
+      DefMacroI(T_CS('\\' . $end), undef, sub {
+          return Tokens(T_CS('\ALG@endblock')) if LookupValue('algorithmicx_noend');
+          return Tokens(T_CS('\ALG@endblock'), T_CS('\ALG@it'), @body);
+      });
+    } else {
+      DefMacroI(T_CS('\\' . $end), _algdef_params($n, $end_def),
+        Tokens(T_CS('\ALG@endblock'), T_CS('\ALG@it'), @body));
+    }
+  }
+  return;
+}
+
+DefMacro('\algdef{}', sub {
+  my ($gullet, $switches) = @_;
+  my $sw    = ToString($switches // '');
+  $sw =~ s/\s+//g;
+  my $flags = _parse_algdef_switches($sw);
+
+  $gullet->skipSpaces;
+  if ($gullet->ifNext(T_OTHER('['))) {
+    $gullet->readOptional;
+  }
+  if ($flags->{oldblock}) {
+    $gullet->readArg;
+  }
+  my $start = $flags->{start} ? _alg_cs_name($gullet->readArg) : '';
+  my $end   = $flags->{end}   ? _alg_cs_name($gullet->readArg) : '';
+  $gullet->readArg if $flags->{credits_arg};
+  $gullet->readArg if $flags->{indent_arg};
+
+  my ($start_n, $start_def, $start_text) = (0, undef, undef);
+  my ($end_n,   $end_def,   $end_text)   = (0, undef, undef);
+  ($start_n, $start_def, $start_text) = _read_algdef_text($gullet) if $flags->{starttext};
+  ($end_n,   $end_def,   $end_text)   = _read_algdef_text($gullet) if $flags->{endtext};
+
+  _algdef_install($flags, $start, $end, $start_n, $start_def, $start_text,
+    $end_n, $end_def, $end_text);
+  return ();
+});
+
+DefMacro('\algblock',         '\algdef{se}');
+DefMacro('\algcblock',        '\algdef{ce}');
+DefMacro('\algloop',          '\algdef{sl}');
+DefMacro('\algcloop',         '\algdef{cl}');
+DefMacro('\algsetblock',      '\algdef{seLi}');
+DefMacro('\algsetcblock',     '\algdef{ceLi}');
+DefMacro('\algblockx',        '\algdef{SxE}');
+DefMacro('\algblockdefx',     '\algdef{SE}');
+DefMacro('\algcblockx',       '\algdef{CxE}');
+DefMacro('\algcblockdefx',    '\algdef{CE}');
+DefMacro('\algsetblockx',     '\algdef{SxELi}');
+DefMacro('\algsetblockdefx',  '\algdef{SELi}');
+DefMacro('\algsetcblockx',    '\algdef{CxELi}');
+DefMacro('\algsetcblockdefx', '\algdef{CELi}');
+DefMacro('\algloopdefx',      '\algdef{Sl}');
+DefMacro('\algcloopx',        '\algdef{xCl}');
+DefMacro('\algcloopdefx',     '\algdef{Cl}');
+
+# Language switching has no IR effect; each takes a braced name, so a one-arg
+# no-op does not leak. \algtext* hides end text in the real package; left
+# undefined-as-gobble until a fixture needs it.
+DefMacro('\algnewlanguage{}', '');
+DefMacro('\alglanguage{}',    '');
+DefMacro('\algsetlanguage{}', '');
+DefMacro('\algdeflanguage{}', '');
 DefMacro('\algtext OptionalMatch:* {}', '');
 
 1;

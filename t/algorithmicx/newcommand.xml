@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="algorithmicx"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <p>BEFORE</p>
+    <listing>
+      <listingline xml:id="algx1.l1"><tags>
+          <tag role="refnum">1</tag>
+        </tags><text font="bold">note:</text> hello
+</listingline>
+      <listingline xml:id="algx1.l2"><tags>
+          <tag role="refnum">2</tag>
+        </tags>work <text font="bold">// side</text>
+</listingline>
+    </listing>
+    <p>AFTER</p>
+  </para>
+</document>

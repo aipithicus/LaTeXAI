@@ -1,0 +1,12 @@
+\documentclass{article}
+\usepackage{algorithmicx}
+\algnewcommand{\LineComment}[1]{\State \textbf{note:} #1}
+\algrenewcommand{\algorithmiccomment}[1]{\textbf{// #1}}
+\begin{document}
+BEFORE
+\begin{algorithmic}
+\LineComment{hello}
+\State work \Comment{side}
+\end{algorithmic}
+AFTER
+\end{document}

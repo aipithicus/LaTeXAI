@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="algorithmicx"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <p>BEFORE</p>
+    <listing>
+      <listingline xml:id="algx1.l1"><tags>
+          <tag role="refnum">1</tag>
+        </tags>foo</listingline>
+      <listingline xml:id="algx1.l2"><tags>
+          <tag role="refnum">2</tag>
+        </tags>  bar x
+</listingline>
+      <listingline xml:id="algx1.l3"><tags>
+          <tag role="refnum">3</tag>
+        </tags>   y
+</listingline>
+      <listingline xml:id="algx1.l4"><tags>
+          <tag role="refnum">4</tag>
+        </tags>  end bar</listingline>
+      <listingline xml:id="algx1.l5"><tags>
+          <tag role="refnum">5</tag>
+        </tags>  for all v
+</listingline>
+      <listingline xml:id="algx1.l6"><tags>
+          <tag role="refnum">6</tag>
+        </tags>   z
+</listingline>
+      <listingline xml:id="algx1.l7"><tags>
+          <tag role="refnum">7</tag>
+        </tags>  end for</listingline>
+      <listingline xml:id="algx1.l8"><tags>
+          <tag role="refnum">8</tag>
+        </tags>  if a
+</listingline>
+      <listingline xml:id="algx1.l9"><tags>
+          <tag role="refnum">9</tag>
+        </tags>   b
+</listingline>
+      <listingline xml:id="algx1.l10"><tags>
+          <tag role="refnum">10</tag>
+        </tags>  else if c
+</listingline>
+      <listingline xml:id="algx1.l11"><tags>
+          <tag role="refnum">11</tag>
+        </tags>   d
+</listingline>
+      <listingline xml:id="algx1.l12"><tags>
+          <tag role="refnum">12</tag>
+        </tags>  else</listingline>
+      <listingline xml:id="algx1.l13"><tags>
+          <tag role="refnum">13</tag>
+        </tags>   e
+</listingline>
+      <listingline xml:id="algx1.l14"><tags>
+          <tag role="refnum">14</tag>
+        </tags>  end if</listingline>
+      <listingline xml:id="algx1.l15"><tags>
+          <tag role="refnum">15</tag>
+        </tags>  <text font="bold">Baz</text></listingline>
+      <listingline xml:id="algx1.l16"><tags>
+          <tag role="refnum">16</tag>
+        </tags>   f
+</listingline>
+      <listingline xml:id="algx1.l17"><tags>
+          <tag role="refnum">17</tag>
+        </tags>  <text font="bold">EndBaz</text></listingline>
+      <listingline xml:id="algx1.l18"><tags>
+          <tag role="refnum">18</tag>
+        </tags>end foo</listingline>
+    </listing>
+    <p>AFTER</p>
+  </para>
+</document>
