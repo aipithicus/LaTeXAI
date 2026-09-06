@@ -3,55 +3,153 @@
 # |  tikz.sty                                                           | #
 # | Implementation for LaTeXML                                          | #
 # |=====================================================================| #
-# | Part of LaTeXML:                                                    | #
+# | Part of LaTeXAI / LaTeXML:                                           | #
 # |  Public domain software, produced as part of work done by the       | #
 # |  United States Government & not subject to copyright in the US.     | #
-# |---------------------------------------------------------------------| #
-# | Thanks to Silviu Vlad Oprea <s.oprea@jacobs-university.de>          | #
-# | of the arXMLiv group for initial implementation                     | #
-# |    http://arxmliv.kwarc.info/                                       | #
-# | Released under the Gnu Public License                               | #
-# | Released to the Public Domain                                       | #
-# |---------------------------------------------------------------------| #
-# | Bruce Miller <bruce.miller@nist.gov>                        #_#     | #
-# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
 # \=========================================================ooo==U==ooo=/ #
+# Native containment envelope replacing InputDefinitions('tikz') and the
+# hybrid \usetikzlibrary loader. Emulates the public surface of TikZ 3.1.10
+# enough to contain {tikzpicture} and \tikz without executing PGF.
+# \usetikzlibrary is a no-op except cd, which loads the native tikz-cd
+# binding. Node text, quoted labels, and $...$ are harvested into
+# <ltx:picture class="ltx_tikz">/<ltx:g>. The picture body is not digested,
+# so unknown drawing macros and missing libraries cannot hit MAX_ERRORS.
+# Does not expand user macros or \foreach inside the picture; loop
+# variables therefore stay as tokens. Path geometry is out of scope.
+# Harvested math is digested from the captured picture token list, so
+# capture:source is the picture body (the harvest callsite); \(...\)
+# inside a node can be unlocated. Suite is t/tikz-contain (t/tikz keeps
+# the skipped hybrid SVG oracle). Model: pgf.sty.ltxml harvest, listings
+# env capture. Fallback substrate for unhandled forest/quantikz canvas
+# features.
 package LaTeXML::Package::Pool;
 use strict;
 use warnings;
 use LaTeXML::Package;
+use LaTeXML::Core::Token;
+use LaTeXML::Core::Tokens;
 
-# TODO: What do we need to do to get the native emulation working?
-DefMacro('\pgfmathresult',   '0.0');
-DefMacro('\tikz@align@temp', '\pgfmathresult');
+RequirePackage('pgf');
 
-InputDefinitions('tikz', type => 'sty', noltxml => 1);
+DeclareOption(undef, sub { });
+ProcessOptions();
 
-# Not absolutely necessary to redefine this, but it makes sure
-# we load the file as definitions rather than content,
-# with some slight efficiencies
-##  \def\usetikzlibrary{\pgfutil@ifnextchar[{\use@tikzlibrary}{\use@@tikzlibrary}}%}
-##  \def\use@tikzlibrary[#1]{\use@@tikzlibrary{#1}}
-DefPrimitive('\use@@tikzlibrary{}', sub {
-    my ($gullet, $libs) = @_;
-    foreach my $lib (split(/,/, $libs = ToString(Expand($libs)))) {
-      $lib =~ s/^\s+//; $lib =~ s/\s+$//;
-      if ($lib && !LookupDefinition(T_CS('\tikz@library@' . $lib . '@loaded'))) {
-        NoteLog("TIKZ LIBRARY $lib");
-        Let(T_CS('\tikz@library@' . $lib . '@loaded'), T_CS('\pgfutil@empty'));
-        my $barcc = LookupCatcode('|');
-        AssignCatcode('|', CC_OTHER);
-        if (InputDefinitions('tikzlibrary' . $lib . '.code.tex', noerror => 1)
-          || InputDefinitions('pgflibrary' . $lib . '.code.tex', noerror => 1)) { }
-        else {
-          Warn('missing_file', $lib, $STATE->getStomach->getGullet,
-            "Can't find tikz library '$lib' (neither pgf nor tikz)",
-            "Anticipate undefined macros or environments or keys"); }
-        AssignCatcode('|', $barcc);
-    } }
+DefMacro('\tikzset{}',     '');
+DefMacro('\tikzaddtikzonlycommandshortcutlet{}{}', '');
+DefMacro('\tikzaddtikzonlycommandshortcutdef{}{}', '');
+DefMacro('\tikzappendtofigure{}', '');
+DefMacro('\tikzsetnextfilename{}', '');
+DefMacro('\tikzexternalize[]', '');
+DefMacro('\tikzsetexternalprefix{}', '');
+DefMacro('\tikzstyle@opt', '');
+
+DefMacro('\tikzstyle{}', sub {
+    my ($gullet, $name) = @_;
+    $gullet->skipSpaces;
+    my $tok = $gullet->readToken;
+    if ($tok && $tok->equals(T_OTHER('+'))) {
+      $gullet->skipSpaces;
+      $tok = $gullet->readToken; }
+    if ($tok && !$tok->equals(T_OTHER('='))) {
+      $gullet->unread($tok); }
+    tikz_contain_read_options($gullet);
     return; });
 
-# TODO: Why is this macro failing to get picked up?
-DefMacro('\tikzcdset', '\pgfqkeys{/tikz/commutative diagrams}');
+DefPrimitive('\usetikzlibrary', sub {
+    my ($stomach) = @_;
+    my $gullet = $stomach->getGullet;
+    tikz_contain_read_options($gullet);
+    $gullet->skipSpaces;
+    my $libs = $gullet->readArg;
+    $libs = Expand($libs) if $libs;
+    foreach my $lib (split(/,/, ToString($libs))) {
+      $lib =~ s/^\s+//; $lib =~ s/\s+$//;
+      next unless length($lib);
+      Let(T_CS('\tikz@library@' . $lib . '@loaded'), T_CS('\relax'));
+      if ($lib eq 'cd' && !IsDefined(T_CS('\tikzcd'))) {
+        RequirePackage('tikz-cd'); } }
+    return; });
+
+DefMacroI(T_CS('\begin{tikzpicture}'), undef, sub {
+    return tikz_contain_begin_env($_[0], 'tikzpicture', 'ltx_tikz'); });
+
+DefMacro('\tikzpicture', sub {
+    my ($gullet) = @_;
+    tikz_contain_read_options($gullet);
+    tikz_contain_skip_overlay($gullet);
+    my $body = tikz_contain_read_env_body($gullet, 'tikzpicture');
+    return tikz_contain_emit($body, 'ltx_tikz'); });
+
+DefMacro('\endtikzpicture', '');
+
+DefMacroI(T_CS('\begin{scope}'), undef, sub {
+    return tikz_contain_begin_env($_[0], 'scope', 'ltx_tikz'); });
+DefMacro('\scope',    '\begingroup');
+DefMacro('\endscope', '\endgroup');
+
+DefMacro('\tikz', sub {
+    my ($gullet) = @_;
+    tikz_contain_read_options($gullet);
+    tikz_contain_skip_overlay($gullet);
+    $gullet->skipSpaces;
+    my $body;
+    if ($gullet->ifNext(T_BEGIN)) {
+      $body = $gullet->readArg; }
+    else {
+      $body = $gullet->readUntil(T_OTHER(';')); }
+    return tikz_contain_emit($body, 'ltx_tikz'); });
+
+# Modest pgffor: used outside pictures. Inside a captured picture the
+# body is not expanded, so this definition does not run there.
+sub tikz_contain_foreach_var {
+  my ($spec) = @_;
+  return T_CS('\pgffor@x') unless $spec;
+  foreach my $t ($spec->unlist) {
+    return $t if $t->getCatcode == CC_CS; }
+  return T_CS('\pgffor@x'); }
+
+sub tikz_contain_foreach_items {
+  my ($s) = @_;
+  $s = '' unless defined $s;
+  $s =~ s/^\s+|\s+$//g;
+  return () unless length($s);
+  if ($s =~ /^(-?\d+)\s*,\s*\.\.\.\s*,\s*(-?\d+)$/) {
+    my ($a, $b) = ($1, $2);
+    return ($a <= $b ? ($a .. $b) : reverse($b .. $a)); }
+  if ($s =~ /^(-?\d+)\s*,\s*(-?\d+)\s*,\s*\.\.\.\s*,\s*(-?\d+)$/) {
+    my ($a, $stepto, $b) = ($1, $2, $3);
+    my $step = $stepto - $a;
+    return () unless $step;
+    my @v;
+    if ($step > 0) {
+      for (my $x = $a ; $x <= $b ; $x += $step) { push(@v, $x); } }
+    else {
+      for (my $x = $a ; $x >= $b ; $x += $step) { push(@v, $x); } }
+    return @v; }
+  return split(/\s*,\s*/, $s); }
+
+DefMacro('\foreach', sub {
+    my ($gullet) = @_;
+    my $spec = $gullet->readUntil(Tokens(T_LETTER('i'), T_LETTER('n')));
+    $gullet->skipSpaces;
+    my $list = $gullet->readArg;
+    $gullet->skipSpaces;
+    my $body;
+    if ($gullet->ifNext(T_BEGIN)) {
+      $body = $gullet->readArg; }
+    else {
+      $body = $gullet->readUntil(T_OTHER(';'));
+      $body = Tokens($body->unlist, T_OTHER(';')) if $body; }
+    return $body unless $spec && $list;
+    my $cs    = tikz_contain_foreach_var($spec);
+    my @items = tikz_contain_foreach_items(ToString($list));
+    return $body unless @items;
+    my @out;
+    foreach my $item (@items) {
+      push(@out, T_CS('\def'), $cs, T_BEGIN, TokenizeInternal($item)->unlist, T_END);
+      push(@out, $body->unlist) if $body; }
+    return Tokens(@out); });
+
+DefMacro('\tikz@align@temp', '\pgfmathresult');
 
 1;

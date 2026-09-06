@@ -31,9 +31,13 @@ use POSIX qw(floor ceil);
 # round from Geometry
 # Defined below: factorial
 
+# Containment: do not execute raw pgfmath. Stubs live in pgfmath.sty.ltxml.
+1;
+__END__
+
 #======================================================================
 # Load pgf's TeX code for math, first
-InputDefinitions('pgfmath.code', type => 'tex', noltxml => 1);
+# InputDefinitions('pgfmath.code', type => 'tex', noltxml => 1);
 
 #======================================================================
 # Then redefine math operations to be done directly in Perl.

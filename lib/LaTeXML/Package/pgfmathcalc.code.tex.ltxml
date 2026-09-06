@@ -15,9 +15,13 @@ use strict;
 use warnings;
 use LaTeXML::Package;
 
+# Containment: do not execute raw pgfmathcalc. Stubs live in pgfmath.sty.ltxml.
+1;
+__END__
+
 #======================================================================
 # Load pgf's TeX code for math, first
-InputDefinitions('pgfmathcalc.code', type => 'tex', noltxml => 1);
+# InputDefinitions('pgfmathcalc.code', type => 'tex', noltxml => 1);
 
 # \pgfmathsetmacro
 # \edef#1 as the result of evaluating #2.

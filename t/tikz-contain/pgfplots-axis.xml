@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="pgfplots"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <picture class="ltx_tikz" height="41.72" tex="\lx@pgf@picture{ltx_tikz}{\lx@pgf@g{ltx_tikz_math}{$t$}\lx@pgf@g{ltx_tikz_math%&#10;}{$x$}\lx@pgf@g{ltx_tikz_node}{$t^{2}$}}" width="11.2" xml:id="p1.pic1">
+      <g class="ltx_tikz_math">
+        <Math mode="inline" tex="t" text="t" xml:id="p1.pic1.m1">
+          <XMath>
+            <XMTok font="italic" role="UNKNOWN">t</XMTok>
+          </XMath>
+        </Math>
+      </g>
+      <g class="ltx_tikz_math">
+        <Math mode="inline" tex="x" text="x" xml:id="p1.pic1.m2">
+          <XMath>
+            <XMTok font="italic" role="UNKNOWN">x</XMTok>
+          </XMath>
+        </Math>
+      </g>
+      <g class="ltx_tikz_node">
+        <Math mode="inline" tex="t^{2}" text="t ^ 2" xml:id="p1.pic1.m3">
+          <XMath>
+            <XMApp>
+              <XMTok role="SUPERSCRIPTOP" scriptpos="post1"/>
+              <XMTok font="italic" role="UNKNOWN">t</XMTok>
+              <XMTok fontsize="70%" meaning="2" role="NUMBER">2</XMTok>
+            </XMApp>
+          </XMath>
+        </Math>
+      </g>
+    </picture>
+  </para>
+</document>

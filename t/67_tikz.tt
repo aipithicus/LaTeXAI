@@ -8,8 +8,11 @@ use LaTeXML::Util::Test;
 # for their large open gallery of Tikz diagrams,
 # from which we have also adapted some suitable test snippets.
 
+# Upstream PGF/SVG goldens. The native binding is the containment
+# envelope in t/878_tikz.t; these cases stay as the hybrid oracle and
+# run only when explicitly requested.
 latexml_tests("t/tikz",
 	requires=>{
 		'*' => {
-      env => 'CI',
+      env => 'LATEXAI_PGF_SVG_ORACLE',
 		  packages => 'tikz.sty'}});

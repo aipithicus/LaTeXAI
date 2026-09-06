@@ -2,19 +2,38 @@
 # /=====================================================================\ #
 # |  pgfkeys.sty                                                        | #
 # | Implementation for LaTeXML                                          | #
-# |---------------------------------------------------------------------| #
-# | Part of LaTeXML:                                                    | #
+# |=====================================================================| #
+# | Part of LaTeXAI / LaTeXML:                                           | #
 # |  Public domain software, produced as part of work done by the       | #
 # |  United States Government & not subject to copyright in the US.     | #
-# |---------------------------------------------------------------------| #
-# | Bruce Miller <bruce.miller@nist.gov>                        #_#     | #
-# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
 # \=========================================================ooo==U==ooo=/ #
+# Native stub replacing InputDefinitions('pgfkeys.code'). Absorbs the
+# public pgfkeys surface without executing raw PGF or installing the
+# key tree. Unknown keys are not errors. Written for the TikZ containment
+# envelope; not a pgfkeys interpreter.
 package LaTeXML::Package::Pool;
 use strict;
 use warnings;
 use LaTeXML::Package;
 
-InputDefinitions('pgfkeys.code', type => 'tex');
+DeclareOption(undef, sub { });
+ProcessOptions();
+
+DefMacro('\pgfkeys{}',          '');
+DefMacro('\pgfqkeys{}{}',       '');
+DefMacro('\pgfkeysalso{}',      '');
+DefMacro('\pgfqkeysalso{}{}',   '');
+DefMacro('\pgfkeyssetvalue{}{}', '');
+DefMacro('\pgfkeysaddvalue{}{}{}', '');
+DefMacro('\pgfkeyslet{}{}',     '');
+DefMacro('\pgfkeysgetvalue{}{}', '');
+DefMacro('\pgfkeysvalueof{}',   '');
+DefMacro('\pgfkeysifdefined{}{}{}', '#3');
+DefMacro('\pgfkeysifassignable{}{}{}', '#3');
+DefMacro('\pgfkeys@split{}{}{}', '');
+DefMacro('\pgfkeysdef{}{}',     '');
+DefMacro('\pgfkeysedef{}{}',    '');
+DefMacro('\pgfkeysdefnargs{}{}{}', '');
+DefMacro('\pgfkeysedefnargs{}{}{}', '');
 
 1;

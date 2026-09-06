@@ -17,9 +17,13 @@ package LaTeXML::Package::Pool;
 use strict;
 use warnings;
 
+# Containment: do not execute raw pgfutil-common.
+1;
+__END__
+
 #======================================================================
 # Load pgf's TeX code for util-common, first
-InputDefinitions('pgfutil-common', type => 'tex', noltxml => 1);
+# InputDefinitions('pgfutil-common', type => 'tex', noltxml => 1);
 
 # DG: This is no longer needed, as raw interpretation is sufficient,
 #     while the redefinitions can lead to breakage (see issue ar5iv#402).

@@ -2,21 +2,41 @@
 # /=====================================================================\ #
 # |  pgfrcs.sty                                                         | #
 # | Implementation for LaTeXML                                          | #
-# |---------------------------------------------------------------------| #
-# | Part of LaTeXML:                                                    | #
+# |=====================================================================| #
+# | Part of LaTeXAI / LaTeXML:                                           | #
 # |  Public domain software, produced as part of work done by the       | #
 # |  United States Government & not subject to copyright in the US.     | #
-# |---------------------------------------------------------------------| #
-# | Bruce Miller <bruce.miller@nist.gov>                        #_#     | #
-# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
 # \=========================================================ooo==U==ooo=/ #
+# Native stub replacing InputDefinitions of pgfutil-common, pgfutil-latex,
+# and pgfrcs.code. Emulates the public version surface of PGF 3.1.10
+# (the last release the hybrid path targeted). Does not execute raw PGF.
 package LaTeXML::Package::Pool;
 use strict;
 use warnings;
 use LaTeXML::Package;
 
-InputDefinitions('pgfutil-common', type => 'tex');
-InputDefinitions('pgfutil-latex',  type => 'def');
-InputDefinitions('pgfrcs.code',    type => 'tex');
+DeclareOption(undef, sub { });
+ProcessOptions();
+
+DefMacro('\pgfversion',          '3.1.10');
+DefMacro('\pgfversiondatetime',  '2023-01-15 00:00:00');
+DefMacro('\pgfrevision',         '3.1.10');
+DefMacro('\pgfrevisiondatetime', '2023-01-15 00:00:00');
+DefMacro('\pgfversiondate',      '2023-01-15');
+DefMacro('\pgfrevisiondate',     '2023-01-15');
+
+DefMacro('\pgf@sys@tonumber{}', '#1');
+DefMacro('\pgfutil@ifundefined{}{}{}', '\@ifundefined{#1}{#2}{#3}');
+DefMacro('\pgfutil@IfFileExists{}{}{}', '\IfFileExists{#1}{#2}{#3}');
+DefMacro('\pgfutil@ifnextchar', '\@ifnextchar');
+Let('\pgfutil@empty', '\@empty');
+Let('\pgfutil@firstofone', '\@firstofone');
+Let('\pgfutil@firstoftwo', '\@firstoftwo');
+Let('\pgfutil@secondoftwo', '\@secondoftwo');
+DefMacro('\pgfutil@namedef{}{}', '\expandafter\def\csname#1\endcsname{#2}');
+DefMacro('\pgfutil@namelet{}{}', '\expandafter\let\csname#1\expandafter\endcsname\csname#2\endcsname');
+
+DefMacro('\pgferror{}', '');
+DefMacro('\pgfwarning{}', '');
 
 1;

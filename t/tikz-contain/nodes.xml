@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="tikz"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <picture class="ltx_tikz" height="42.82" tex="\lx@pgf@picture{ltx_tikz}{\lx@pgf@g{ltx_tikz_node}{Hello}\lx@pgf@g{ltx_tikz_no%&#10;de}{World}\lx@pgf@g{ltx_tikz_node}{{Bold}}}" width="36.94" xml:id="p1.pic1">
+      <g class="ltx_tikz_node">
+        <text>Hello</text>
+      </g>
+      <g class="ltx_tikz_node">
+        <text>World</text>
+      </g>
+      <g class="ltx_tikz_node">
+        <text font="bold">Bold</text>
+      </g>
+    </picture>
+  </para>
+</document>

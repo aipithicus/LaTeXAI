@@ -13,8 +13,9 @@
 # plus the package documentation. Model: amscd's generic matrix bindings.
 # This replaces the upstream TikZ passthrough: raw tikz-cd requires tikz and
 # loads cd (matrix, quotes, arrows.meta); this binding requires no packages,
-# executes no raw TikZ, and defines tikzset/tikzcdset locally for the bounded
-# layout no-ops below. Loading it does not expose TikZ's unrelated surface.
+# executes no raw TikZ, and defines tikzcdset (and tikzset only when TikZ has
+# not already provided it) for the bounded layout no-ops below. Loading it
+# does not expose TikZ's unrelated surface.
 # Covers the tikzcd matrix, arrow/ar bracket syntax, the twelve DIR_MAP
 # directions, one quoted math label with prime/swap, numeric from/to, and
 # the style branches listed below. Case-insensitive direction shortcuts are
@@ -57,7 +58,11 @@ sub check_tikzcd_layout_options {
   return;
 }
 DefMacro('\tikzcdset{}', sub { check_tikzcd_layout_options($_[1]); return; });
-DefMacro('\tikzset{}',   sub { check_tikzcd_layout_options($_[1]); return; });
+# Native TikZ already absorbs \tikzset. Do not replace that with the
+# tikz-cd layout checker, or a document that loads both would error on
+# ordinary TikZ keys.
+if (!LookupDefinition(T_CS('\tikzset'))) {
+  DefMacro('\tikzset{}', sub { check_tikzcd_layout_options($_[1]); return; }); }
 
 # Reader for optional [options] on \tikzcd or \arrow
 DefParameterType('OptionalTikzCdOptions', sub {

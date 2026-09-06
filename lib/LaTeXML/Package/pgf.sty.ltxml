@@ -3,52 +3,361 @@
 # |  pgf.sty                                                            | #
 # | Implementation for LaTeXML                                          | #
 # |=====================================================================| #
-# | Part of LaTeXML:                                                    | #
+# | Part of LaTeXAI / LaTeXML:                                           | #
 # |  Public domain software, produced as part of work done by the       | #
 # |  United States Government & not subject to copyright in the US.     | #
-# |---------------------------------------------------------------------| #
-# | Thanks to Silviu Vlad Oprea <s.oprea@jacobs-university.de>          | #
-# | of the arXMLiv group for initial implementation                     | #
-# |    http://arxmliv.kwarc.info/                                       | #
-# | Released under the Gnu Public License                               | #
-# | Released to the Public Domain                                       | #
-# |---------------------------------------------------------------------| #
-# | Bruce Miller <bruce.miller@nist.gov>                        #_#     | #
-# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
 # \=========================================================ooo==U==ooo=/ #
+# Native containment envelope replacing InputDefinitions('pgf'). Does not
+# execute raw PGF, pgfsys, or the SVG driver. {pgfpicture} is captured as
+# tokens and harvested into <ltx:picture>/<ltx:g>: node text, quoted
+# labels, and $...$ / \(...\) / \[...\]. Drawing macros are not expanded,
+# so unknown library commands cannot hit the 100-error cap. Model:
+# listings/comment env capture plus the latex picture constructors.
+# Coordinate geometry, layers, and shadings are out of scope.
 package LaTeXML::Package::Pool;
 use strict;
 use warnings;
 use LaTeXML::Package;
+use LaTeXML::Core::Token;
+use LaTeXML::Core::Tokens;
 
-DefMacro('\pgfsysdriver', 'pgfsys-latexml.def');    # and we'll load the .ltxml!
+RequirePackage('pgfrcs');
+RequirePackage('pgfkeys');
+RequirePackage('pgfmath');
+RequirePackage('xcolor');
 
-# We're going to load the raw tex of pgf ...
-#   AND all the files it includes!
-#   (we should turn off @)#@# comments while we're at it!)
-InputDefinitions('pgf', type => 'sty', noltxml => 1);
+DeclareOption(undef, sub { });
+ProcessOptions();
 
-Let('\pgfutil@IfFileExists', '\IfFileExists');    # Since used for binaries...
+DefMacro('\pgfsysdriver', 'pgfsys-latexml.def');
+DefMacro('\usepgfmodule{}',  '');
+DefMacro('\usepgflibrary{}', '');
+DefMacro('\pgfsetlayers{}',  '');
+DefMacro('\pgfdeclarelayer{}', '');
+DefMacro('\pgfsetlinewidth{}', '');
+DefMacro('\pgfsetcolor{}', '');
+DefMacro('\pgfsetfillcolor{}', '');
+DefMacro('\pgfsetstrokecolor{}', '');
+DefMacro('\pgfdeclareimage[]{}{}', '');
+DefMacro('\pgfimage[]{}', '');
+DefMacro('\pgfuseimage{}', '');
+DefMacro('\pgfpoint{}{}', '');
+DefMacro('\pgfpointorigin', '');
+DefRegister('\pgflinewidth' => Dimension('0.4pt'));
 
-# This is very probably the wrong way to do this,
-# but it seems that pgfstrokecolor is the color used for default drawing, text, etc.
-Let('\pgfsetcolor@orig', '\pgfsetcolor');
-DefMacro('\pgfsetcolor{}', '\pgfsetcolor@orig{#1}\lxSVG@set@color');
-DefPrimitive('\lxSVG@set@color', sub {
-    MergeFont(color => LookupValue('color_pgfstrokecolor')); });
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Containment readers and harvest
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-# This seems to be needed to actually set colors (code similar to xxcolor.sty)
-if (XEquals(T_CS('\XC@mcolor'), T_CS('\relax'))) {
-  Let('\XC@mcolor', '\@empty'); }
-AddToMacro('\XC@mcolor', '\pgfsetcolor{.}');
+sub tikz_contain_read_options {
+  my ($gullet) = @_;
+  $gullet->skipSpaces;
+  return unless $gullet->ifNext(T_OTHER('['));
+  $gullet->readToken;    # consume '['
+  my @toks   = ();
+  my $depth  = 0;
+  my $braces = 0;
+  my $closed = 0;
+  while (defined(my $tok = $gullet->readToken)) {
+    if ($tok->getCatcode == CC_BEGIN) {
+      $braces++;
+      push(@toks, $tok); }
+    elsif ($tok->getCatcode == CC_END) {
+      $braces-- if $braces;
+      push(@toks, $tok); }
+    elsif (!$braces && $tok->equals(T_OTHER('['))) {
+      $depth++;
+      push(@toks, $tok); }
+    elsif (!$braces && $tok->equals(T_OTHER(']'))) {
+      if ($depth > 0) {
+        $depth--;
+        push(@toks, $tok); }
+      else {
+        $closed = 1;
+        last; } }
+    else {
+      push(@toks, $tok); } }
+  Error('expected', 'tikz-options-end', undef, 'Unterminated TikZ/PGF options') unless $closed;
+  return Tokens(@toks); }
 
-# These wrap pgfpicture with lxSVG@picture (but wait till everything loaded!)
-AtBeginDocument(
-  '\expandafter\def\expandafter\pgfpicture\expandafter{\expandafter\lxSVG@picture\pgfpicture}'
-    . '\expandafter\def\expandafter\endpgfpicture\expandafter{\endpgfpicture\endlxSVG@picture}');
+sub tikz_contain_skip_overlay {
+  my ($gullet) = @_;
+  $gullet->skipSpaces;
+  if ($gullet->ifNext(T_OTHER('<'))) {
+    $gullet->readToken;
+    $gullet->readUntil(T_OTHER('>')); }
+  return; }
 
-# Wrap tikzpicture?
-#RawTeX('\expandafter\def\expandafter\tikzpicture\expandafter{\expandafter\lxSVG@picture\tikzpicture}');
-#RawTeX('\expandafter\def\expandafter\endtikzpicture\expandafter{\endtikzpicture\endlxSVG@picture}');
+sub tikz_contain_env_name {
+  my ($name) = @_;
+  $name = ToString($name);
+  $name =~ s/^\s+|\s+$//g;
+  return $name; }
+
+sub tikz_contain_read_env_body {
+  my ($gullet, $env) = @_;
+  my @body  = ();
+  my $depth = 1;
+  while (defined(my $tok = $gullet->readToken)) {
+    if ($tok->equals(T_CS('\begin'))) {
+      my $name = $gullet->readArg;
+      my $n    = tikz_contain_env_name($name);
+      $depth++ if $n eq $env;
+      push(@body, $tok, T_BEGIN, (defined $name ? $name->unlist : ()), T_END); }
+    elsif ($tok->equals(T_CS('\end'))) {
+      my $name = $gullet->readArg;
+      my $n    = tikz_contain_env_name($name);
+      if ($n eq $env) {
+        $depth--;
+        last if $depth == 0;
+      }
+      push(@body, $tok, T_BEGIN, (defined $name ? $name->unlist : ()), T_END); }
+    elsif ($tok->equals(T_CS('\\' . $env))) {
+      $depth++;
+      push(@body, $tok); }
+    elsif ($tok->equals(T_CS('\end' . $env))) {
+      $depth--;
+      last if $depth == 0;
+      push(@body, $tok); }
+    else {
+      push(@body, $tok); } }
+  return Tokens(@body); }
+
+sub tikz_contain_skip_balanced {
+  my ($arr, $i, $open, $close) = @_;
+  my $n     = scalar(@$arr);
+  my $depth = 1;
+  $i++;
+  while ($i < $n && $depth) {
+    my $t = $arr->[$i];
+    $depth++ if $t->equals($open);
+    $depth-- if $t->equals($close);
+    $i++; }
+  return $i; }
+
+sub tikz_contain_skip_brace {
+  my ($arr, $i) = @_;
+  return $i unless $i < scalar(@$arr) && $arr->[$i]->getCatcode == CC_BEGIN;
+  my $n     = scalar(@$arr);
+  my $depth = 1;
+  $i++;
+  while ($i < $n && $depth) {
+    my $cc = $arr->[$i]->getCatcode;
+    $depth++ if $cc == CC_BEGIN;
+    $depth-- if $cc == CC_END;
+    $i++; }
+  return $i; }
+
+sub tikz_contain_brace_inner {
+  my ($arr, $i) = @_;
+  return (undef, $i) unless $i < scalar(@$arr) && $arr->[$i]->getCatcode == CC_BEGIN;
+  my $start = $i + 1;
+  my $end   = tikz_contain_skip_brace($arr, $i);
+  my $inner_end = $end - 1;
+  $inner_end = $start if $inner_end < $start;
+  my @inner = @$arr[$start .. $inner_end - 1];
+  return (Tokens(@inner), $end); }
+
+sub tikz_contain_match_word {
+  my ($arr, $i, $word) = @_;
+  my @chars = split //, $word;
+  return if $i + @chars > @$arr;
+  for my $k (0 .. $#chars) {
+    my $t  = $arr->[$i + $k];
+    my $cc = $t->getCatcode;
+    return if $cc != CC_LETTER && $cc != CC_OTHER;
+    return if $t->getString ne $chars[$k]; }
+  my $next = $arr->[$i + @chars];
+  return if $next && $next->getCatcode == CC_LETTER;
+  return 1; }
+
+sub tikz_contain_skip_spaces {
+  my ($arr, $i) = @_;
+  my $n = scalar(@$arr);
+  while ($i < $n) {
+    my $cc = $arr->[$i]->getCatcode;
+    last unless $cc == CC_SPACE || $cc == CC_EOL;
+    $i++; }
+  return $i; }
+
+sub tikz_contain_skip_node_prefix {
+  my ($arr, $i) = @_;
+  my $n = scalar(@$arr);
+  while ($i < $n) {
+    $i = tikz_contain_skip_spaces($arr, $i);
+    last if $i >= $n;
+    my $t = $arr->[$i];
+    last if $t->getCatcode == CC_BEGIN;
+    if ($t->equals(T_OTHER('['))) {
+      $i = tikz_contain_skip_balanced($arr, $i, T_OTHER('['), T_OTHER(']'));
+      next; }
+    if ($t->equals(T_OTHER('('))) {
+      $i = tikz_contain_skip_balanced($arr, $i, T_OTHER('('), T_OTHER(')'));
+      next; }
+    if (tikz_contain_match_word($arr, $i, 'at')) {
+      $i += 2;
+      next; }
+    last; }
+  return $i; }
+
+sub tikz_contain_nonempty {
+  my ($tokens) = @_;
+  return unless $tokens;
+  my $s = ToString($tokens);
+  $s =~ s/\s+//g;
+  return length($s) ? $tokens : undef; }
+
+sub tikz_contain_harvest {
+  my ($tokens) = @_;
+  return () unless $tokens;
+  my @arr = $tokens->unlist;
+  return () unless @arr;
+  my $n = scalar(@arr);
+  my @cands;
+  my $i = 0;
+  my $paren = 0;
+  while ($i < $n) {
+    my $tok = $arr[$i];
+    my $cc  = $tok->getCatcode;
+    if ($tok->equals(T_OTHER('('))) {
+      $paren++;
+      $i++;
+      next; }
+    if ($tok->equals(T_OTHER(')'))) {
+      $paren-- if $paren;
+      $i++;
+      next; }
+    if ($cc == CC_MATH || $tok->equals(T_MATH)) {
+      my $j = $i + 1;
+      $j++ while $j < $n && !($arr[$j]->getCatcode == CC_MATH || $arr[$j]->equals(T_MATH));
+      if ($j < $n) {
+        if (tikz_contain_nonempty(Tokens(@arr[$i + 1 .. $j - 1]))) {
+          push(@cands, { start => $i, end => $j + 1, class => 'ltx_tikz_math',
+              tokens => Tokens(@arr[$i .. $j]) }); } }
+      $i = ($j < $n ? $j + 1 : $n);
+      next; }
+    if ($tok->equals(T_CS('\('))) {
+      my $j = $i + 1;
+      $j++ while $j < $n && !$arr[$j]->equals(T_CS('\)'));
+      if ($j < $n) {
+        if (tikz_contain_nonempty(Tokens(@arr[$i + 1 .. $j - 1]))) {
+          push(@cands, { start => $i, end => $j + 1, class => 'ltx_tikz_math',
+              tokens => Tokens(@arr[$i .. $j]) }); } }
+      $i = ($j < $n ? $j + 1 : $n);
+      next; }
+    if ($tok->equals(T_CS('\['))) {
+      my $j = $i + 1;
+      $j++ while $j < $n && !$arr[$j]->equals(T_CS('\]'));
+      if ($j < $n) {
+        if (tikz_contain_nonempty(Tokens(@arr[$i + 1 .. $j - 1]))) {
+          push(@cands, { start => $i, end => $j + 1, class => 'ltx_tikz_math',
+              tokens => Tokens(@arr[$i .. $j]) }); } }
+      $i = ($j < $n ? $j + 1 : $n);
+      next; }
+    if ($cc == CC_CS) {
+      my $name = $tok->getString;
+      if ($name eq '\\node' || $name eq '\\legend' || $name eq '\\nodepart') {
+        my $start = $i;
+        $i++;
+        if ($name eq '\\nodepart') {
+          $i = tikz_contain_skip_spaces(\@arr, $i);
+          $i = tikz_contain_skip_brace(\@arr, $i) if $i < $n && $arr[$i]->getCatcode == CC_BEGIN; }
+        $i = tikz_contain_skip_node_prefix(\@arr, $i);
+        my ($inner, $ni) = tikz_contain_brace_inner(\@arr, $i);
+        if ($inner && tikz_contain_nonempty($inner)) {
+          push(@cands, { start => $start, end => $ni, class => 'ltx_tikz_node', tokens => $inner });
+          $i = $ni;
+          next; } }
+    }
+    if (!$paren && tikz_contain_match_word(\@arr, $i, 'node')) {
+      my $start = $i;
+      $i += 4;
+      $i = tikz_contain_skip_node_prefix(\@arr, $i);
+      my ($inner, $ni) = tikz_contain_brace_inner(\@arr, $i);
+      if ($inner && tikz_contain_nonempty($inner)) {
+        push(@cands, { start => $start, end => $ni, class => 'ltx_tikz_node', tokens => $inner });
+        $i = $ni;
+        next; }
+      next; }
+    if ($tok->equals(T_OTHER('"'))) {
+      my $start = $i;
+      my $j     = $i + 1;
+      $j++ while $j < $n && !$arr[$j]->equals(T_OTHER('"'));
+      if ($j < $n) {
+        if (my $inner = tikz_contain_nonempty(Tokens(@arr[$i + 1 .. $j - 1]))) {
+          push(@cands, { start => $start, end => $j + 1, class => 'ltx_tikz_label', tokens => $inner }); }
+        $i = $j + 1;
+        next; } }
+    $i++; }
+  return () unless @cands;
+  my @sorted = sort { ($b->{end} - $b->{start}) <=> ($a->{end} - $a->{start}) } @cands;
+  my @kept;
+CAND: foreach my $c (@sorted) {
+    foreach my $k (@kept) {
+      next CAND if $k->{start} <= $c->{start} && $c->{end} <= $k->{end}; }
+    push(@kept, $c); }
+  @kept = sort { $a->{start} <=> $b->{start} } @kept;
+  return @kept; }
+
+sub tikz_contain_string_tokens {
+  my ($s) = @_;
+  return Tokens(map { T_OTHER($_) } split(//, $s)); }
+
+sub tikz_contain_emit {
+  my ($body, $class) = @_;
+  $class ||= 'ltx_tikz';
+  my @chunks = tikz_contain_harvest($body);
+  my @toks   = (T_CS('\lx@pgf@picture'), T_BEGIN, tikz_contain_string_tokens($class)->unlist, T_END, T_BEGIN);
+  foreach my $c (@chunks) {
+    push(@toks, T_CS('\lx@pgf@g'), T_BEGIN, tikz_contain_string_tokens($c->{class})->unlist, T_END,
+      T_BEGIN, $c->{tokens}->unlist, T_END); }
+  push(@toks, T_END);
+  return Tokens(@toks); }
+
+DefConstructor('\lx@pgf@picture Undigested {}',
+  "<ltx:picture class='#class'>#2</ltx:picture>",
+  mode            => 'inline_internal_vertical',
+  bounded         => 1,
+  enterHorizontal => 1,
+  beforeConstruct => sub { $_[0]->maybeCloseElement('ltx:p'); },
+  afterDigest     => sub {
+    my ($stomach, $whatsit) = @_;
+    $whatsit->setProperty(class => ToString($whatsit->getArg(1)));
+    return; });
+
+DefConstructor('\lx@pgf@g Undigested {}',
+  "<ltx:g class='#class'>#2</ltx:g>",
+  mode        => 'restricted_horizontal',
+  bounded     => 1,
+  afterDigest => sub {
+    my ($stomach, $whatsit) = @_;
+    $whatsit->setProperty(class => ToString($whatsit->getArg(1)));
+    return; });
+
+sub tikz_contain_begin_env {
+  my ($gullet, $env, $class) = @_;
+  tikz_contain_read_options($gullet);
+  tikz_contain_skip_overlay($gullet);
+  my $body = tikz_contain_read_env_body($gullet, $env);
+  return tikz_contain_emit($body, $class); }
+
+DefMacroI(T_CS('\begin{pgfpicture}'), undef, sub {
+    return tikz_contain_begin_env($_[0], 'pgfpicture', 'ltx_pgf'); });
+
+DefMacro('\pgfpicture', sub {
+    my ($gullet) = @_;
+    tikz_contain_read_options($gullet);
+    my $body = tikz_contain_read_env_body($gullet, 'pgfpicture');
+    return tikz_contain_emit($body, 'ltx_pgf'); });
+
+DefMacro('\endpgfpicture', '');
+
+DefMacroI(T_CS('\begin{pgfscope}'), undef, sub {
+    return tikz_contain_begin_env($_[0], 'pgfscope', 'ltx_pgf'); });
+DefMacro('\pgfscope',    '\begingroup');
+DefMacro('\endpgfscope', '\endgroup');
+
+DefMacroI(T_CS('\begin{pgfinterruptpicture}'), undef, sub {
+    return tikz_contain_begin_env($_[0], 'pgfinterruptpicture', 'ltx_pgf'); });
 
 1;

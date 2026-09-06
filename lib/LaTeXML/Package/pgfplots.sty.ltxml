@@ -3,32 +3,40 @@
 # |  pgfplots.sty                                                       | #
 # | Implementation for LaTeXML                                          | #
 # |=====================================================================| #
-# | Part of LaTeXML:                                                    | #
+# | Part of LaTeXAI / LaTeXML:                                           | #
 # |  Public domain software, produced as part of work done by the       | #
 # |  United States Government & not subject to copyright in the US.     | #
-# |---------------------------------------------------------------------| #
-# | Thanks to Silviu Vlad Oprea <s.oprea@jacobs-university.de>          | #
-# | of the arXMLiv group for initial implementation                     | #
-# |    http://arxmliv.kwarc.info/                                       | #
-# | Released under the Gnu Public License                               | #
-# | Released to the Public Domain                                       | #
-# |---------------------------------------------------------------------| #
-# | Bruce Miller <bruce.miller@nist.gov>                        #_#     | #
-# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
 # \=========================================================ooo==U==ooo=/ #
+# Native stub replacing InputDefinitions('pgfplots'). Axis environments
+# inside {tikzpicture} are token-captured with the picture and harvested
+# for node text and math; they are not executed. Written from the
+# pgfplots 1.18 manual surface used in papers, not a plot renderer.
 package LaTeXML::Package::Pool;
 use strict;
 use warnings;
 use LaTeXML::Package;
 
-DefMacroI('\pgfplots@iffileexists', undef, '\IfFileExists', locked => 1);
-InputDefinitions('pgfplots', type => 'sty', noltxml => 1);
-# Avoid generic warnings:
-my $compat_cs  = T_CS('\pgfk@/pgfplots/compat/current');
-my $compat_val = IsDefined($compat_cs) && ToString(Expand($compat_cs));
-if (!$compat_val || $compat_val eq 'default') {
-  my $recent_cs  = T_CS('\pgfk@/pgfplots/compat/mostrecent');
-  my $recent_val = IsDefined($recent_cs) && ToString(Expand($recent_cs));
-  if ($recent_val && $recent_val ne 'default') {
-    RawTeX('\pgfplotsset{compat=' . $recent_val . '}'); } }
+RequirePackage('tikz');
+
+DeclareOption(undef, sub { });
+ProcessOptions();
+
+DefMacro('\pgfplotsset{}', '');
+DefMacro('\usepgfplotslibrary{}', '');
+DefMacro('\pgfplotscreateplotcyclelist{}{}', '');
+DefMacro('\pgfplotsinvokeforeach{}{}', '#2');
+DefMacro('\pgfplotstableread[]{}{}', '');
+DefMacro('\pgfplotstabletypeset[]{}', '');
+
+foreach my $env (qw(axis semilogxaxis semilogyaxis loglogaxis
+    polaraxis smithchart groupplot ternaryaxis)) {
+  DefMacroI(T_CS("\\begin{$env}"), undef, sub {
+      return tikz_contain_begin_env($_[0], $env, 'ltx_tikz'); });
+  DefMacroI('\\' . $env, undef, sub {
+      my ($gullet) = @_;
+      tikz_contain_read_options($gullet);
+      my $body = tikz_contain_read_env_body($gullet, $env);
+      return tikz_contain_emit($body, 'ltx_tikz'); });
+  DefMacroI('\\end' . $env, undef, ''); }
+
 1;

@@ -2,19 +2,29 @@
 # /=====================================================================\ #
 # |  pgfplotstable.sty                                                  | #
 # | Implementation for LaTeXML                                          | #
-# |---------------------------------------------------------------------| #
-# | Part of LaTeXML:                                                    | #
+# |=====================================================================| #
+# | Part of LaTeXAI / LaTeXML:                                           | #
 # |  Public domain software, produced as part of work done by the       | #
 # |  United States Government & not subject to copyright in the US.     | #
-# |---------------------------------------------------------------------| #
-# | Bruce Miller <bruce.miller@nist.gov>                        #_#     | #
-# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
 # \=========================================================ooo==U==ooo=/ #
+# Native stub replacing InputDefinitions('pgfplotstable'). Table I/O is
+# furniture for the IR; \pgfplotstabletypeset does not emit a tabular.
 package LaTeXML::Package::Pool;
 use strict;
 use warnings;
 use LaTeXML::Package;
 
-#======================================================================
-InputDefinitions('pgfplotstable', type => 'sty', noltxml => 1);
+RequirePackage('pgfplots');
+
+DeclareOption(undef, sub { });
+ProcessOptions();
+
+DefMacro('\pgfplotstableset{}', '');
+DefMacro('\pgfplotstableread[]{}{}', '');
+DefMacro('\pgfplotstabletypeset[]{}', '');
+DefMacro('\pgfplotstableeach{}{}{}{}', '');
+DefMacro('\pgfplotstablegetelem{}{}{}', '\def\pgfplotsretval{}');
+DefMacro('\pgfplotstablevertcat{}{}', '');
+DefMacro('\pgfplotstableclear{}', '');
+
 1;

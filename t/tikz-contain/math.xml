@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="tikz"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <picture class="ltx_tikz" height="47.16" tex="\lx@pgf@picture{ltx_tikz}{\lx@pgf@g{ltx_tikz_node}{$x^{2}+y^{2}$}\lx@pgf@g{ltx%&#10;_tikz_node}{$f$}\lx@pgf@g{ltx_tikz_node}{plain and $a+b$}}" width="91.66" xml:id="p1.pic1">
+      <g class="ltx_tikz_node">
+        <Math mode="inline" tex="x^{2}+y^{2}" text="x ^ 2 + y ^ 2" xml:id="p1.pic1.m1">
+          <XMath>
+            <XMApp>
+              <XMTok meaning="plus" role="ADDOP">+</XMTok>
+              <XMApp>
+                <XMTok role="SUPERSCRIPTOP" scriptpos="post1"/>
+                <XMTok font="italic" role="UNKNOWN">x</XMTok>
+                <XMTok fontsize="70%" meaning="2" role="NUMBER">2</XMTok>
+              </XMApp>
+              <XMApp>
+                <XMTok role="SUPERSCRIPTOP" scriptpos="post1"/>
+                <XMTok font="italic" role="UNKNOWN">y</XMTok>
+                <XMTok fontsize="70%" meaning="2" role="NUMBER">2</XMTok>
+              </XMApp>
+            </XMApp>
+          </XMath>
+        </Math>
+      </g>
+      <g class="ltx_tikz_node">
+        <Math mode="inline" tex="f" text="f" xml:id="p1.pic1.m2">
+          <XMath>
+            <XMTok font="italic" role="UNKNOWN">f</XMTok>
+          </XMath>
+        </Math>
+      </g>
+      <g class="ltx_tikz_node">
+        <text>plain and <Math mode="inline" tex="a+b" text="a + b" xml:id="p1.pic1.m3">
+            <XMath>
+              <XMApp>
+                <XMTok meaning="plus" role="ADDOP">+</XMTok>
+                <XMTok font="italic" role="UNKNOWN">a</XMTok>
+                <XMTok font="italic" role="UNKNOWN">b</XMTok>
+              </XMApp>
+            </XMath>
+          </Math></text>
+      </g>
+    </picture>
+  </para>
+</document>

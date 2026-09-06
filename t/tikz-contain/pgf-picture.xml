@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="pgf"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <picture class="ltx_pgf" height="0" tex="\lx@pgf@picture{ltx_pgf}{}" width="0" xml:id="p1.pic1"/>
+  </para>
+</document>

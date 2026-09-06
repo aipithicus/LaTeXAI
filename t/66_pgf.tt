@@ -4,9 +4,10 @@
 #**********************************************************************
 use LaTeXML::Util::Test;
 
+# Upstream PGF/SVG goldens. Native containment is t/878_tikz.t.
 latexml_tests("t/pgf",
 	requires=>{
 		stress_pgfmath=>{
-			env => 'CI', packages=>'tikz.sty'},
+			env => 'LATEXAI_PGF_SVG_ORACLE', packages=>'tikz.sty'},
 		stress_pgfplots=>{
-			env => 'CI', packages=>'pgfplots.sty'} });
+			env => 'LATEXAI_PGF_SVG_ORACLE', packages=>'pgfplots.sty'} });

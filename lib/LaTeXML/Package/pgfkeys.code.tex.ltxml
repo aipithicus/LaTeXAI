@@ -28,8 +28,8 @@ no warnings 'redefine';
 # much of the complex logic of pgf keywords.
 # I _think_ this implementation fairly completely captures pgfkeys logic.
 #======================================================================
-# To disable the LaTeXML binding, uncomment the following bit of code
-InputDefinitions('pgfkeys.code', type => 'tex', noltxml => 1);
+# Containment: do not execute raw pgfkeys. Public stubs live in pgfkeys.sty.ltxml.
+# The native experiment after __END__ is retained as the old hybrid attempt.
 1;
 
  __END__
