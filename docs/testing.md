@@ -38,14 +38,18 @@ latexml_tests("t/<pkg>", strict => 1);
 
 A strict suite fails a case whose conversion reported errors (engine status 2) or a fatal (3), before the golden is compared, with the engine's status message as the diagnostic. Cases whose name contains `fatal` are exempt, as upstream's are. Package suites are always strict. Inherited upstream suites stay lenient because some of their goldens deliberately exercise error paths.
 
-**Goldens are written by `lgold`, not `lxml`.** The CLI always emits a `<?latexml searchpaths=…?>` processing instruction that the driver suppresses, so a golden written with `lxml` fails at line 1. `tools/dev/golden.pl` digests with the driver's own configuration, refuses to write if the engine counted errors, and refuses to overwrite without `--force`:
+**Goldens are written by `lgold`, not `lxml`.** The CLI always emits a `<?latexml searchpaths=…?>` processing instruction that the driver suppresses, so a golden written with `lxml` fails at line 1. `tools/dev/golden.pl` digests with the driver's own configuration, refuses to write if the engine counted errors, refuses to write if the golden lint fails, and refuses to overwrite without `--force`:
 
 ```powershell
-lgold t\<pkg>\<case>.tex           # writes t\<pkg>\<case>.xml
-lgold --force t\<pkg>\<case>.tex   # replace after an intended change
+lgold t\<pkg>\<case>.tex             # writes t\<pkg>\<case>.xml
+lgold --force t\<pkg>\<case>.tex     # replace after an intended change
+lgold --check t\<pkg>\*.tex          # digest and lint, write nothing
+lgold --lenient t\<pkg>\<case>.tex   # skip the lint for a case that exercises the failure on purpose
 ```
 
-Read the golden before committing it. The tool guarantees the golden is what the driver will see and that the conversion was clean; it does not know whether the structure is right.
+The lint is mechanical and small: every `labelref` in the document has a matching `labels` target, no `ltx:ERROR` element is present, and no engine-internal `\lx@…` control sequence leaked into text or a `tex` attribute. Each check corresponds to a golden that was committed with the defect in it.
+
+Read the golden before committing it, and read it against something the binding did not produce. The tool guarantees the golden is what the driver will see and that the conversion was clean; it does not know whether the structure is right. A binding that drops a label produces a golden with no label, and that golden diffs clean against itself forever. The reading is done against the expectations written from the package source before the golden existed, with the checklist in the recipe (`docs/recipes/package-bindings.md`, section 5).
 
 Suites are grouped by what they exercise, following upstream's numbering by engine layer:
 
@@ -62,7 +66,7 @@ Suites are grouped by what they exercise, following upstream's numbering by engi
 
 ## 3. Binding fixtures
 
-Every binding has its own suite, `t/<pkg>/`, with a driver `t/8N_<pkg>.t`, following upstream's per-package layout (`t/ams`, `t/babel`, `t/moderncv`). Cases inside are named for the construct they exercise, as `t/ams/` has `cd`, `dots`, and `amsdisplay`; a small binding may have a single case. Together the cases are complete documents that load the package and exercise each construct the binding claims in its header. A construct the binding stubs to nothing still appears in a fixture, so the golden records that it is dropped.
+Every binding has its own suite, `t/<pkg>/`, with a driver `t/8N_<pkg>.t`, following upstream's per-package layout (`t/ams`, `t/babel`, `t/moderncv`). Cases inside are named for the construct they exercise, as `t/ams/` has `cd`, `dots`, and `amsdisplay`; a small binding may have a single case. Together the cases are complete documents that load the package and exercise each construct the binding claims in its header. A construct the binding stubs to nothing still appears in a fixture, so the golden records that it is dropped. The cases also contain, verbatim, the forms found in the gauntlet corpus for the package (recipe section 1): a suite whose cases were written from the binding's feature list has covered the binding, not the package, and the constructs documents actually use are exactly the ones such a suite misses.
 
 Package suites are strict (see section 2), so a fixture that fails to load something its constructs depend on fails the suite rather than freezing the error into a golden. Binding goldens are produced with capture **off**. The binding is judged on the structure it emits, the golden stays free of provenance attributes, and the fixture remains portable to a contribution fork. Capture provenance over a binding's output is asserted separately by `t/45_capture.t`, which may reference a fixture from a package suite but does not own it.
 

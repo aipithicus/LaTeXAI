@@ -80,5 +80,5 @@ Before concluding a change:
    ```
 
 2. For capture changes, digest a small source with `--capture` and confirm that every `capture:source` equals the bytes of the file at the recorded range, including a nested environment (`equation` around `aligned`) and a `\[ … \]` display.
-3. For a new binding, show the emitted XML for a minimal document in the commit or report; a parse that succeeds by falling back to `parse_kludge` is not success.
+3. For a new binding, show the emitted XML for a minimal document in the commit or report, with the claims table, census residue, and idiom coverage the recipe asks for. A parse that succeeds by falling back to `parse_kludge` is not success, and a golden read only against the binding's own claims is not verification: it is read against expectations written from the package source (`docs/recipes/package-bindings.md`, sections 1 and 5).
 4. Report failures with the harness output, not a summary.
