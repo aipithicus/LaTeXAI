@@ -1,0 +1,24 @@
+\documentclass{article}
+\usepackage[linesnumbered,ruled,vlined]{algorithm2e}
+
+\SetKwInOut{KwInput}{Input}
+\SetKwFunction{Sort}{QuickSort}
+
+\begin{document}
+\begin{algorithm}[H]
+\caption{Quicksort partition algorithm}\label{alg:quicksort}
+\KwInput{Array $A$, low index $p$, high index $r$}
+\KwResult{Partition index $q$}
+$x \leftarrow A[r]$\;
+$i \leftarrow p - 1$\;
+\For{$j \leftarrow p$ \KwTo $r - 1$}{
+  \tcp{Compare element with pivot}
+  \If{$A[j] \le x$}{
+    $i \leftarrow i + 1$\;
+    exchange $A[i]$ with $A[j]$\;
+  }
+}
+exchange $A[i + 1]$ with $A[r]$\;
+\Return{$i + 1$}\;
+\end{algorithm}
+\end{document}
