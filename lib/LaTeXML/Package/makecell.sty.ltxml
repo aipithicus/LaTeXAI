@@ -15,26 +15,238 @@ use strict;
 use warnings;
 use LaTeXML::Package;
 
-InputDefinitions('makecell', type => 'sty', noltxml => 1);
+# Audit source: CTAN makecell v0.1e (2009-08-03), TeX Live revision 78101.
+# Native binding replacing the hybrid InputDefinitions('makecell') call.
 
-#  * The diagonally divided heading uses the {picture} environment,
-#    but currently the sizing is messed up (delayed too late) so that doesn't lay out correctly.
+RequirePackage('array');
+
+# Parameters & defaults
+DefMacroI('\cellalign',    undef, 'cc');
+DefMacroI('\cellrotangle', undef, '90');
+DefMacroI('\cellgape',     undef, '');
+DefMacroI('\cellset',      undef, '\def\arraystretch{1}\extrarowheight\z@\nomakegapedcells');
+DefMacroI('\theadfont',    undef, '\footnotesize');
+DefMacroI('\theadset',     undef, '');
+DefMacroI('\theadgape',    undef, '\gape');
+DefMacroI('\rotheadgape',  undef, '');
+DefMacroI('\theadalign',   undef, 'cc');
+DefRegister('\rotheadsize' => Dimension(0));
 
 # Mark \thead et.al as headers (row, column?)
 DefMacroI('\lx@makecell@head', undef, sub {
     if (my $alignment = LookupValue('Alignment')) {
       my $col = $alignment->currentColumn;
-      $$col{thead}{column} = 1;     # Which???
+      $$col{thead}{column} = 1;
       $$col{thead}{row}    = 1; }
     return; });
 
-# Hopefully, \theadfont is used in the right places to effect this?
-# And hopefully, redefining \theadfont at begin document keeps from being redefined by user?
 AtBeginDocument('\let\lx@orig@theadfont\theadfont'
     . '\def\theadfont{\lx@orig@theadfont\lx@makecell@head}');
 
-# And since folks SHOULD use \thead, we'll not bother guessing.
 AssignValue(GUESS_TABULAR_HEADERS => 0);
+
+# Helper to parse [vpos|hpos] alignment options
+sub _parse_mcell_align {
+  my ($opt, $default) = @_;
+  my $str = $opt ? ToString($opt) : ($default || 'cc');
+  $str =~ s/^\s+|\s+$//g;
+  while ($str =~ s/^\{(.*)\}$/$1/) { $str =~ s/^\s+|\s+$//g; }
+  my ($vpos, $hpos) = ('c', 'c');
+  if ($str =~ /^([tb])\s*c?$/) {
+    $vpos = $1; $hpos = 'c';
+  } elsif ($str =~ /^([tb])\s*([lr])$/) {
+    $vpos = $1; $hpos = $2;
+  } elsif ($str =~ /^([lr])\s*([tb])$/) {
+    $hpos = $1; $vpos = $2;
+  } elsif ($str =~ /^([tb])\s*(\{.*\}|[p>].*)$/) {
+    $vpos = $1; $hpos = $2;
+  } elsif ($str =~ /^c\s*(\{.*\}|[p>].*)$/) {
+    $vpos = 'c'; $hpos = $1;
+  } elsif ($str =~ /^([lrc])$/) {
+    $hpos = $1;
+  } elsif ($str =~ /^c([lrc])$/) {
+    $hpos = $1;
+  } elsif ($str ne '') {
+    $hpos = $str;
+  }
+  while ($hpos =~ s/^\{(.*)\}$/$1/) { $hpos =~ s/^\s+|\s+$//g; }
+  $hpos = 'c' if $hpos eq '';
+  return ($vpos, $hpos);
+}
+
+sub _build_mcell_tokens {
+  my ($vpos, $hpos, $content, $is_head) = @_;
+  my $left  = ($hpos eq 'l' || $hpos =~ /^[p>]/) ? '' : '\null\hfill ';
+  my $right = ($hpos eq 'r' || $hpos =~ /^[p>]/) ? '' : ' \hfill\null';
+  if ($hpos eq 'r') {
+    $left = '\null\hfill ';
+    $right = '\null';
+  } elsif ($hpos eq 'l' || $hpos =~ /^[p>]/) {
+    $left = '';
+    $right = '';
+  }
+
+  my $varg = ($vpos eq 't') ? '[t]' : (($vpos eq 'b') ? '[b]' : '');
+  my $colspec = '@{}' . $hpos . '@{}';
+  my $tset = $is_head ? '\cellset\theadfont\theadset ' : '\cellset ';
+
+  my $prefix = $left . '{\hbox{\def\arraystretch{1}' . $tset
+    . '\begin{tabular}' . $varg . '{' . $colspec . '}';
+  my $suffix = '\end{tabular}}}' . $right;
+
+  my @toks = ();
+  push(@toks, TokenizeInternal($prefix)->unlist);
+  push(@toks, $content->unlist);
+  push(@toks, TokenizeInternal($suffix)->unlist);
+  return Tokens(@toks);
+}
+
+DefMacro('\makecell OptionalMatch:* [] {}', sub {
+    my ($gullet, $star, $opt, $text) = @_;
+    my ($vpos, $hpos) = _parse_mcell_align($opt, 'cc');
+    return _build_mcell_tokens($vpos, $hpos, $text, 0);
+});
+
+DefMacro('\thead OptionalMatch:* [] {}', sub {
+    my ($gullet, $star, $opt, $text) = @_;
+    my ($vpos, $hpos) = _parse_mcell_align($opt, 'cc');
+    return _build_mcell_tokens($vpos, $hpos, $text, 1);
+});
+
+DefMacro('\multirowcell{} [] [] {}', sub {
+    my ($gullet, $nrows, $fixup, $opt, $text) = @_;
+    my ($vpos, $hpos) = _parse_mcell_align($opt, 'cc');
+    my $fix = $fixup ? '[' . ToString($fixup) . ']' : '[0pt]';
+    my $left  = ($hpos eq 'l' || $hpos =~ /^[p>]/) ? '' : '\null\hfill ';
+    my $right = ($hpos eq 'r' || $hpos =~ /^[p>]/) ? '' : ' \hfill\null';
+    if ($hpos eq 'r') { $left = '\null\hfill '; $right = '\null'; }
+    elsif ($hpos eq 'l' || $hpos =~ /^[p>]/) { $left = ''; $right = ''; }
+
+    my $varg = ($vpos eq 't') ? '[t]' : (($vpos eq 'b') ? '[b]' : '');
+    my $colspec = '@{}' . $hpos . '@{}';
+    my $prefix = $left . '\multirow{' . ToString($nrows) . '}*' . $fix . '{\def\arraystretch{1}\cellset '
+      . '\begin{tabular}' . $varg . '{' . $colspec . '}';
+    my $suffix = '\end{tabular}}' . $right;
+
+    my @toks = ();
+    push(@toks, TokenizeInternal($prefix)->unlist);
+    push(@toks, $text->unlist);
+    push(@toks, TokenizeInternal($suffix)->unlist);
+    return Tokens(@toks);
+});
+
+DefMacro('\multirowthead{} [] [] {}', sub {
+    my ($gullet, $nrows, $fixup, $opt, $text) = @_;
+    my ($vpos, $hpos) = _parse_mcell_align($opt, 'cc');
+    my $fix = $fixup ? '[' . ToString($fixup) . ']' : '[0pt]';
+    my $left  = ($hpos eq 'l' || $hpos =~ /^[p>]/) ? '' : '\null\hfill ';
+    my $right = ($hpos eq 'r' || $hpos =~ /^[p>]/) ? '' : ' \hfill\null';
+    if ($hpos eq 'r') { $left = '\null\hfill '; $right = '\null'; }
+    elsif ($hpos eq 'l' || $hpos =~ /^[p>]/) { $left = ''; $right = ''; }
+
+    my $varg = ($vpos eq 't') ? '[t]' : (($vpos eq 'b') ? '[b]' : '');
+    my $colspec = '@{}' . $hpos . '@{}';
+    my $prefix = $left . '\multirow{' . ToString($nrows) . '}*' . $fix . '{\def\arraystretch{1}\cellset\theadfont\theadset '
+      . '\begin{tabular}' . $varg . '{' . $colspec . '}';
+    my $suffix = '\end{tabular}}' . $right;
+
+    my @toks = ();
+    push(@toks, TokenizeInternal($prefix)->unlist);
+    push(@toks, $text->unlist);
+    push(@toks, TokenizeInternal($suffix)->unlist);
+    return Tokens(@toks);
+});
+
+# Rotated cells
+DefMacro('\rotcell OptionalMatch:* [] {}', sub {
+    my ($gullet, $star, $opt, $text) = @_;
+    my $angle = ToString(Expand(TokenizeInternal('\cellrotangle')));
+    $angle = '90' if !$angle || $angle !~ /^-?\d+/;
+    my $spec = $opt ? ToString($opt) : 'c{p{\rotheadsize}}';
+    my @toks = ();
+    push(@toks, TokenizeInternal('\makecell*{\begin{turn}{' . $angle . '}\makecell[' . $spec . ']{')->unlist);
+    push(@toks, $text->unlist);
+    push(@toks, TokenizeInternal('}\end{turn}}')->unlist);
+    return Tokens(@toks);
+});
+
+DefMacro('\rothead OptionalMatch:* [] {}', sub {
+    my ($gullet, $star, $opt, $text) = @_;
+    my $angle = ToString(Expand(TokenizeInternal('\cellrotangle')));
+    $angle = '90' if !$angle || $angle !~ /^-?\d+/;
+    my $spec = $opt ? ToString($opt) : 'c{p{\rotheadsize}}';
+    my @toks = ();
+    push(@toks, TokenizeInternal('\thead{\begin{turn}{' . $angle . '}\thead[' . $spec . ']{')->unlist);
+    push(@toks, $text->unlist);
+    push(@toks, TokenizeInternal('}\end{turn}}')->unlist);
+    return Tokens(@toks);
+});
+
+# Struts and gapes
+DefMacro('\gape []{}', '#2');
+DefMacro('\Gape [][]{}', '#3');
+DefMacro('\bottopstrut', '\strut');
+DefMacro('\topstrut',    '\strut');
+DefMacro('\botstrut',    '\strut');
+DefMacro('\setcellgapes []{}', '');
+DefMacro('\makegapedcells',    '');
+DefMacro('\nomakegapedcells',  '');
+
+# Lines and rows
+DefMacro('\eline{}', sub {
+    my ($gullet, $n) = @_;
+    my $count = ToString($n) || 1;
+    my @tokens = ();
+    for (my $i = 1; $i < $count; $i++) {
+      push(@tokens, T_ALIGN);
+    }
+    return Tokens(@tokens);
+});
+
+DefMacro('\erows [] {}{}', sub {
+    my ($gullet, $sep, $cols, $rows) = @_;
+    my $r = ToString($rows) || 1;
+    my @tokens = ();
+    for (my $i = 0; $i < $r; $i++) {
+      push(@tokens, Invocation(T_CS('\eline'), $cols));
+      push(@tokens, T_CS('\\'), T_CS('\hline'));
+    }
+    return Tokens(@tokens);
+});
+
+DefMacro('\Xrows{}{}', sub {
+    my ($gullet, $content, $rows) = @_;
+    my $r = ToString($rows) || 1;
+    my @tokens = ();
+    for (my $i = 0; $i < $r; $i++) {
+      push(@tokens, $content->unlist);
+    }
+    return Tokens(@tokens);
+});
+
+DefMacro('\nline [][] {}', sub {
+    my ($gullet, $format, $start, $count) = @_;
+    my $fmt = $format ? ToString($format) : '1';
+    my $st  = $start ? (ToString($start) || 1) : 1;
+    my $cnt = ToString($count) || 1;
+    my @tokens = ();
+    for (my $i = 0; $i < $cnt; $i++) {
+      push(@tokens, T_ALIGN) if $i > 0;
+      my $num = $st + $i;
+      my $text = $fmt;
+      if ($text =~ s/[1aAiI]/$num/) {
+        # substituted
+      } else {
+        $text = $num;
+      }
+      push(@tokens, Explode($text));
+    }
+    return Tokens(@tokens);
+});
+DefMacro('\rnline [][] {}', '\nline[#1][#2]{#3}');
+
+DefMacro('\Xhline{}', '\hline');
+DefMacro('\Xcline{}{}', '\cline{#1}');
 
 # \diaghead (slopex,slopey) {width}{item A}{item B}
 # Note that A is generally the lower item
@@ -49,9 +261,8 @@ DefMacro('\diaghead OptionalPair {}{}{}', sub {
       $diagH, $diagV, $space,
       Invocation(T_CS('\lx@diag@head'), T_LETTER($Ap), $A),
       Invocation(T_CS('\lx@diag@head'), T_LETTER($Bp), $B)); });
-# Ideally, we'd arrange a constructor whose reversion is simply #2
+
 DefMacro('\lx@diag@head{}{}',
-  #  '{\theadfont\begin{tabular}{#1}#2\end{tabular}}');
   '{\theadfont\shortstack[#1]{#2}}');
 
 DefConstructor('\lx@diagheads {}{} {}{}{}',
@@ -74,7 +285,7 @@ DefConstructor('\lx@diagheads {}{} {}{}{}',
     my $flip = ($diagH < 0) ^ ($diagV < 0);
     my ($Aw, $Ah, $Ad) = map { $_->pxValue } $A->getSize; $Ah += $Ad;
     my ($Bw, $Bh, $Bd) = map { $_->pxValue } $B->getSize; $Bh += $Bd;
-    my $w     = $space->getWidth->pxValue;    # + tabcolsep
+    my $w     = $space->getWidth->pxValue;
     my $h     = $w * abs($diagV / $diagH);
     my $line  = ($flip ? "0,$h $w,0" : "0,0, $w,$h");
     my $Ax    = ($flip ? 0           : $w - $Aw);
@@ -88,5 +299,6 @@ DefConstructor('\lx@diagheads {}{} {}{}{}',
       B     => $B,    Bx    => $Bx, By => $By, Bw => $Bw, Bh => $Bh,
       line  => $line, color => Black); }
 );
+
 #======================================================================
 1;

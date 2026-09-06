@@ -25,7 +25,7 @@ ProcessOptions();
 #  DeclareOption($option,undef); }
 
 RequirePackage('graphicx');
-RequirePackage('ifthen');
+# rotating does not require ifthen for LaTeXML AST construction
 
 DefRegister('\rotFPtop' => Dimension('0pt'));
 DefRegister('\rotFPbot' => Dimension('0pt'));
