@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="tensor"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <section inlist="toc" xml:id="S1">
+    <tags>
+      <tag>1</tag>
+      <tag role="refnum">1</tag>
+      <tag role="typerefnum">§1</tag>
+    </tags>
+    <title><tag close=" ">1</tag>Staggered Indices</title>
+    <para xml:id="S1.p1">
+      <p><Math mode="inline" tex="M^{a\hphantom{b}cd\hphantom{e}}_{\hphantom{a}b\hphantom{cd}e}" text="(M ^ (a * c * d)) _ (b * e)" xml:id="S1.p1.m1">
+          <XMath>
+            <XMApp>
+              <XMTok role="SUBSCRIPTOP" scriptpos="post1"/>
+              <XMApp>
+                <XMTok role="SUPERSCRIPTOP" scriptpos="post1"/>
+                <XMTok font="italic" role="UNKNOWN">M</XMTok>
+                <XMApp>
+                  <XMTok meaning="times" role="MULOP">⁢</XMTok>
+                  <XMTok font="italic" fontsize="70%" role="UNKNOWN" rpadding="3.5pt">a</XMTok>
+                  <XMTok font="italic" fontsize="70%" role="UNKNOWN">c</XMTok>
+                  <XMTok font="italic" fontsize="70%" role="UNKNOWN" rpadding="3.8pt">d</XMTok>
+                </XMApp>
+              </XMApp>
+              <XMApp>
+                <XMTok meaning="times" role="MULOP">⁢</XMTok>
+                <XMTok font="italic" fontsize="70%" lpadding="4.3pt" role="UNKNOWN" rpadding="7.7pt">b</XMTok>
+                <XMTok font="italic" fontsize="70%" role="UNKNOWN">e</XMTok>
+              </XMApp>
+            </XMApp>
+          </XMath>
+        </Math></p>
+    </para>
+  </section>
+  <section inlist="toc" xml:id="S2">
+    <tags>
+      <tag>2</tag>
+      <tag role="refnum">2</tag>
+      <tag role="typerefnum">§2</tag>
+    </tags>
+    <title><tag close=" ">2</tag>Tensor with Base</title>
+    <para xml:id="S2.p1">
+      <p><Math mode="inline" tex="R^{\mu\hphantom{\nu\rho\sigma}}_{\hphantom{\mu}\nu\rho\sigma}" text="(R ^ mu) _ (nu * rho * sigma)" xml:id="S2.p1.m1">
+          <XMath>
+            <XMApp>
+              <XMTok role="SUBSCRIPTOP" scriptpos="post1"/>
+              <XMApp>
+                <XMTok role="SUPERSCRIPTOP" scriptpos="post1"/>
+                <XMTok font="italic" role="UNKNOWN">R</XMTok>
+                <XMTok font="italic" fontsize="70%" name="mu" role="UNKNOWN" rpadding="12.8pt">μ</XMTok>
+              </XMApp>
+              <XMApp>
+                <XMTok meaning="times" role="MULOP">⁢</XMTok>
+                <XMTok font="italic" fontsize="70%" lpadding="4.9pt" name="nu" role="UNKNOWN">ν</XMTok>
+                <XMTok font="italic" fontsize="70%" name="rho" role="UNKNOWN">ρ</XMTok>
+                <XMTok font="italic" fontsize="70%" name="sigma" role="UNKNOWN">σ</XMTok>
+              </XMApp>
+            </XMApp>
+          </XMath>
+        </Math></p>
+    </para>
+  </section>
+  <section inlist="toc" xml:id="S3">
+    <tags>
+      <tag>3</tag>
+      <tag role="refnum">3</tag>
+      <tag role="typerefnum">§3</tag>
+    </tags>
+    <title><tag close=" ">3</tag>Pre-indices and Post-indices</title>
+    <para xml:id="S3.p1">
+      <p><Math mode="inline" tex="{}^{\alpha\hphantom{\beta}}_{\hphantom{\alpha}\beta}T^{\gamma\hphantom{\delta}%&#10;}_{\hphantom{\gamma}\delta}" text="^ alpha _ beta (T ^ gamma) _ delta" xml:id="S3.p1.m1">
+          <XMath>
+            <XMApp>
+              <XMTok role="SUPERSCRIPTOP" scriptpos="pre1"/>
+              <XMApp>
+                <XMTok role="SUBSCRIPTOP" scriptpos="pre1"/>
+                <XMApp>
+                  <XMTok role="SUBSCRIPTOP" scriptpos="post1"/>
+                  <XMApp>
+                    <XMTok role="SUPERSCRIPTOP" scriptpos="post1"/>
+                    <XMTok font="italic" role="UNKNOWN">T</XMTok>
+                    <XMTok font="italic" fontsize="70%" name="gamma" role="UNKNOWN" rpadding="3.6pt">γ</XMTok>
+                  </XMApp>
+                  <XMTok font="italic" fontsize="70%" lpadding="4.2pt" name="delta" role="UNKNOWN">δ</XMTok>
+                </XMApp>
+                <XMTok font="italic" fontsize="70%" lpadding="5.2pt" name="beta" role="UNKNOWN">β</XMTok>
+              </XMApp>
+              <XMTok font="italic" fontsize="70%" name="alpha" role="UNKNOWN" rpadding="4.5pt">α</XMTok>
+            </XMApp>
+          </XMath>
+        </Math></p>
+    </para>
+  </section>
+  <section inlist="toc" xml:id="S4">
+    <tags>
+      <tag>4</tag>
+      <tag role="refnum">4</tag>
+      <tag role="typerefnum">§4</tag>
+    </tags>
+    <title><tag close=" ">4</tag>Starred Variant</title>
+    <para xml:id="S4.p1">
+      <p><Math mode="inline" tex="M^{*\hphantom{a}b}_{\hphantom{*}a\hphantom{b}}" text="(M ^ (absent * b)) _ a" xml:id="S4.p1.m1">
+          <XMath>
+            <XMApp>
+              <XMTok role="SUBSCRIPTOP" scriptpos="post1"/>
+              <XMApp>
+                <XMTok role="SUPERSCRIPTOP" scriptpos="post1"/>
+                <XMTok font="italic" role="UNKNOWN">M</XMTok>
+                <XMApp>
+                  <XMTok fontsize="70%" meaning="times" role="MULOP" rpadding="4.3pt">∗</XMTok>
+                  <XMTok meaning="absent"/>
+                  <XMTok font="italic" fontsize="70%" role="UNKNOWN">b</XMTok>
+                </XMApp>
+              </XMApp>
+              <XMTok font="italic" fontsize="70%" lpadding="4.1pt" role="UNKNOWN" rpadding="3.5pt">a</XMTok>
+            </XMApp>
+          </XMath>
+        </Math></p>
+    </para>
+  </section>
+  <section inlist="toc" xml:id="S5">
+    <tags>
+      <tag>5</tag>
+      <tag role="refnum">5</tag>
+      <tag role="typerefnum">§5</tag>
+    </tags>
+    <title><tag close=" ">5</tag>Nuclides</title>
+    <para xml:id="S5.p1">
+      <p><Math mode="inline" tex="{}^{\mathrm{16}}_{\mathrm{8}}\mathrm{O}" text="^ 16 _ 8 O" xml:id="S5.p1.m1">
+          <XMath>
+            <XMApp>
+              <XMTok role="SUPERSCRIPTOP" scriptpos="pre1"/>
+              <XMApp>
+                <XMTok role="SUBSCRIPTOP" scriptpos="pre1"/>
+                <XMTok role="UNKNOWN">O</XMTok>
+                <XMTok fontsize="70%" meaning="8" role="NUMBER">8</XMTok>
+              </XMApp>
+              <XMTok fontsize="70%" meaning="16" role="NUMBER">16</XMTok>
+            </XMApp>
+          </XMath>
+        </Math>
+<Math mode="inline" tex="{}^{\mathrm{235}}_{\mathrm{92}}\mathrm{U}" text="^ 235 _ 92 U" xml:id="S5.p1.m2">
+          <XMath>
+            <XMApp>
+              <XMTok role="SUPERSCRIPTOP" scriptpos="pre1"/>
+              <XMApp>
+                <XMTok role="SUBSCRIPTOP" scriptpos="pre1"/>
+                <XMTok role="UNKNOWN">U</XMTok>
+                <XMTok fontsize="70%" meaning="92" role="NUMBER">92</XMTok>
+              </XMApp>
+              <XMTok fontsize="70%" meaning="235" role="NUMBER">235</XMTok>
+            </XMApp>
+          </XMath>
+        </Math>
+<Math mode="inline" tex="{}^{\mathrm{4}}\mathrm{He}" text="^ 4 He" xml:id="S5.p1.m3">
+          <XMath>
+            <XMApp>
+              <XMTok role="SUPERSCRIPTOP" scriptpos="pre1"/>
+              <XMTok role="UNKNOWN">He</XMTok>
+              <XMTok fontsize="70%" meaning="4" role="NUMBER">4</XMTok>
+            </XMApp>
+          </XMath>
+        </Math></p>
+    </para>
+  </section>
+</document>

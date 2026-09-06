@@ -1,0 +1,146 @@
+# -*- mode: Perl -*-
+# /=====================================================================\ #
+# |  tensor                                                             | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+# | Part of LaTeXML:                                                    | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# |---------------------------------------------------------------------| #
+# | Thanks to the LaTeXAI project                                       | #
+# \=========================================================ooo==U==ooo=/ #
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+# Audit source: CTAN tensor v2.2 (2023-07-18), TeX Live revision 79618.
+# Native binding for tensor index staggering and pre-indices.
+
+# Package options
+DeclareOption('align',    undef);
+DeclareOption('text',     undef);
+DeclareOption('nosmash',  undef);
+DeclareOption('nostrut',  undef);
+ProcessOptions();
+
+DefMacroI('\nuclideFont', undef, '\mathrm');
+DefMacroI('\massnumFont', undef, '\nuclideFont');
+
+sub _parse_tensor_indices {
+  my ($tokens, $is_star) = @_;
+  return (Tokens(), Tokens()) unless $tokens;
+  my @raw = $tokens->unlist;
+  my @sps = ();
+  my @sbs = ();
+
+  my $i = 0;
+  my $n = scalar(@raw);
+
+  while ($i < $n) {
+    my $tok = $raw[$i++];
+    next if $tok->getCatcode == CC_SPACE;
+
+    my $cc  = $tok->getCatcode;
+    my $str = $tok->getString;
+
+    if ($str eq '*' && $is_star) {
+      next;
+    }
+
+    if ($cc == CC_SUPER) {
+      my @arg = ();
+      if ($i < $n && $raw[$i]->getCatcode == CC_BEGIN) {
+        $i++;
+        my $depth = 1;
+        while ($i < $n && $depth > 0) {
+          my $t = $raw[$i++];
+          if ($t->getCatcode == CC_BEGIN) { $depth++; }
+          elsif ($t->getCatcode == CC_END) { $depth--; }
+          push(@arg, $t) if $depth > 0;
+        }
+      } elsif ($i < $n) {
+        push(@arg, $raw[$i++]);
+      }
+
+      push(@sps, @arg);
+      push(@sbs, T_CS('\hphantom'), T_BEGIN, @arg, T_END);
+
+    } elsif ($cc == CC_SUB) {
+      my @arg = ();
+      if ($i < $n && $raw[$i]->getCatcode == CC_BEGIN) {
+        $i++;
+        my $depth = 1;
+        while ($i < $n && $depth > 0) {
+          my $t = $raw[$i++];
+          if ($t->getCatcode == CC_BEGIN) { $depth++; }
+          elsif ($t->getCatcode == CC_END) { $depth--; }
+          push(@arg, $t) if $depth > 0;
+        }
+      } elsif ($i < $n) {
+        push(@arg, $raw[$i++]);
+      }
+
+      push(@sps, T_CS('\hphantom'), T_BEGIN, @arg, T_END);
+      push(@sbs, @arg);
+
+    } else {
+      push(@sps, $tok);
+      push(@sbs, $tok);
+    }
+  }
+
+  return (Tokens(@sps), Tokens(@sbs));
+}
+
+sub _build_script_tokens {
+  my ($sps, $sbs) = @_;
+  my @toks = ();
+  if ($sps && scalar($sps->unlist)) {
+    push(@toks, T_SUPER, T_BEGIN, $sps->unlist, T_END);
+  }
+  if ($sbs && scalar($sbs->unlist)) {
+    push(@toks, T_SUB, T_BEGIN, $sbs->unlist, T_END);
+  }
+  return Tokens(@toks);
+}
+
+DefMacro('\indices OptionalMatch:* {}', sub {
+    my ($gullet, $star, $indices) = @_;
+    my ($sps, $sbs) = _parse_tensor_indices($indices, $star ? 1 : 0);
+    return _build_script_tokens($sps, $sbs);
+});
+
+DefMacro('\tensor OptionalMatch:* [] {} {}', sub {
+    my ($gullet, $star, $pre, $base, $post) = @_;
+    my @toks = ();
+    if (defined $pre && scalar($pre->unlist)) {
+      my ($pre_sps, $pre_sbs) = _parse_tensor_indices($pre, $star ? 1 : 0);
+      push(@toks, T_BEGIN, T_END);
+      push(@toks, _build_script_tokens($pre_sps, $pre_sbs)->unlist);
+    }
+
+    push(@toks, $base->unlist);
+
+    if (defined $post && scalar($post->unlist)) {
+      my ($post_sps, $post_sbs) = _parse_tensor_indices($post, $star ? 1 : 0);
+      push(@toks, _build_script_tokens($post_sps, $post_sbs)->unlist);
+    }
+
+    return Tokens(@toks);
+});
+
+DefMacro('\nuclide [] {}{}', sub {
+    my ($gullet, $z, $a, $el) = @_;
+    my @toks = ();
+    push(@toks, T_BEGIN, T_END);
+    push(@toks, T_SUPER, T_BEGIN, T_CS('\massnumFont'), T_BEGIN, $a->unlist, T_END, T_END);
+    if (defined $z && ToString($z) ne '') {
+      push(@toks, T_SUB, T_BEGIN, T_CS('\massnumFont'), T_BEGIN, $z->unlist, T_END, T_END);
+    }
+    push(@toks, T_CS('\nuclideFont'), T_BEGIN, $el->unlist, T_END);
+    return Tokens(@toks);
+});
+
+#======================================================================
+1;
