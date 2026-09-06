@@ -75,10 +75,11 @@ DefMacroI(T_CS('\begin{tikzpicture}'), undef, sub {
 
 DefMacro('\tikzpicture', sub {
     my ($gullet) = @_;
-    tikz_contain_read_options($gullet);
-    tikz_contain_skip_overlay($gullet);
-    my $body = tikz_contain_read_env_body($gullet, 'tikzpicture');
-    return tikz_contain_emit($body, 'ltx_tikz'); });
+    my $opts    = tikz_contain_read_options($gullet);
+    my $overlay = tikz_contain_skip_overlay($gullet);
+    my $body    = tikz_contain_read_env_body($gullet, 'tikzpicture');
+    return tikz_contain_emit($body, 'ltx_tikz',
+      tikz_contain_raw_cmd('tikzpicture', $opts, $overlay, $body, T_CS('\endtikzpicture'))); });
 
 DefMacro('\endtikzpicture', '');
 
@@ -89,15 +90,19 @@ DefMacro('\endscope', '\endgroup');
 
 DefMacro('\tikz', sub {
     my ($gullet) = @_;
-    tikz_contain_read_options($gullet);
-    tikz_contain_skip_overlay($gullet);
+    my $opts    = tikz_contain_read_options($gullet);
+    my $overlay = tikz_contain_skip_overlay($gullet);
     $gullet->skipSpaces;
-    my $body;
+    my ($body, $raw);
     if ($gullet->ifNext(T_BEGIN)) {
-      $body = $gullet->readArg; }
+      $body = $gullet->readArg;
+      $raw  = tikz_contain_raw_cmd('tikz', $opts, $overlay,
+        Tokens(T_BEGIN, ($body ? $body->unlist : ()), T_END)); }
     else {
-      $body = $gullet->readUntil(T_OTHER(';')); }
-    return tikz_contain_emit($body, 'ltx_tikz'); });
+      $body = $gullet->readUntil(T_OTHER(';'));
+      $raw  = tikz_contain_raw_cmd('tikz', $opts, $overlay,
+        Tokens(T_SPACE, ($body ? $body->unlist : ())), T_OTHER(';')); }
+    return tikz_contain_emit($body, 'ltx_tikz', $raw); });
 
 # Modest pgffor: used outside pictures. Inside a captured picture the
 # body is not expanded, so this definition does not run there.

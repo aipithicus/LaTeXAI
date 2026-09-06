@@ -8,7 +8,7 @@
   <resource src="ltx-article.css" type="text/css"/>
   <para xml:id="p1">
     <equation xml:id="S0.Ex1">
-      <Math mode="display" tex="\begin{tikzcd}A\lx@tikzcd@arrow r,&quot;f&quot;&amp;B\end{tikzcd}" text="commutative-diagram@(Array[[A  absent, B]])" xml:id="S0.Ex1.m1">
+      <Math mode="display" tex="\begin{tikzcd}A\arrow[r,&quot;f&quot;]&amp;B\end{tikzcd}" text="commutative-diagram@(Array[[A  absent, B]])" xml:id="S0.Ex1.m1">
         <XMath>
           <XMDual>
             <XMApp>
@@ -40,7 +40,7 @@
       </Math>
     </equation>
     <equation xml:id="S0.Ex2">
-      <Math mode="display" tex="\begin{tikzcd}A\lx@tikzcd@arrow r,&quot;g&quot;'&amp;B\end{tikzcd}" text="commutative-diagram@(Array[[A  absent, B]])" xml:id="S0.Ex2.m1">
+      <Math mode="display" tex="\begin{tikzcd}A\arrow[r,&quot;g&quot;']&amp;B\end{tikzcd}" text="commutative-diagram@(Array[[A  absent, B]])" xml:id="S0.Ex2.m1">
         <XMath>
           <XMDual>
             <XMApp>
@@ -72,7 +72,7 @@
       </Math>
     </equation>
     <equation xml:id="S0.Ex3">
-      <Math mode="display" tex="\begin{tikzcd}A\lx@tikzcd@arrow r,swap,&quot;h&quot;&amp;B\end{tikzcd}" text="commutative-diagram@(Array[[A  absent, B]])" xml:id="S0.Ex3.m1">
+      <Math mode="display" tex="\begin{tikzcd}A\arrow[r,swap,&quot;h&quot;]&amp;B\end{tikzcd}" text="commutative-diagram@(Array[[A  absent, B]])" xml:id="S0.Ex3.m1">
         <XMath>
           <XMDual>
             <XMApp>
@@ -104,7 +104,7 @@
       </Math>
     </equation>
     <equation xml:id="S0.Ex4">
-      <Math mode="display" tex="\begin{tikzcd}A\lx@tikzcd@arrow r,&quot;&quot;&amp;B\end{tikzcd}" text="commutative-diagram@(Array[[A  absent, B]])" xml:id="S0.Ex4.m1">
+      <Math mode="display" tex="\begin{tikzcd}A\arrow[r,&quot;&quot;]&amp;B\end{tikzcd}" text="commutative-diagram@(Array[[A  absent, B]])" xml:id="S0.Ex4.m1">
         <XMath>
           <XMDual>
             <XMApp>
@@ -132,7 +132,7 @@
       </Math>
     </equation>
     <equation xml:id="S0.Ex5">
-      <Math mode="display" tex="\begin{tikzcd}A\lx@tikzcd@arrow r,&quot;{\lab}&quot;&amp;B\end{tikzcd}" text="commutative-diagram@(Array[[A  absent, B]])" xml:id="S0.Ex5.m1">
+      <Math mode="display" tex="\begin{tikzcd}A\arrow[r,&quot;{\lab}&quot;]&amp;B\end{tikzcd}" text="commutative-diagram@(Array[[A  absent, B]])" xml:id="S0.Ex5.m1">
         <XMath>
           <XMDual>
             <XMApp>
@@ -168,7 +168,7 @@
       </Math>
     </equation>
     <equation xml:id="S0.Ex6">
-      <Math mode="display" tex="\begin{tikzcd}A\lx@tikzcd@arrow r,&quot;{[a,b]}&quot;&amp;B\end{tikzcd}" text="commutative-diagram@(Array[[A  absent, B]])" xml:id="S0.Ex6.m1">
+      <Math mode="display" tex="\begin{tikzcd}A\arrow[r,&quot;{[a,b]}&quot;]&amp;B\end{tikzcd}" text="commutative-diagram@(Array[[A  absent, B]])" xml:id="S0.Ex6.m1">
         <XMath>
           <XMDual>
             <XMApp>
@@ -213,7 +213,7 @@
       </Math>
     </equation>
     <equation xml:id="S0.Ex7">
-      <Math mode="display" tex="\begin{tikzcd}A\lx@tikzcd@arrow r,&quot;{\text{]}}&quot;&amp;B\end{tikzcd}" text="commutative-diagram@(Array[[A  absent, B]])" xml:id="S0.Ex7.m1">
+      <Math mode="display" tex="\begin{tikzcd}A\arrow[r,&quot;{\text{]}}&quot;]&amp;B\end{tikzcd}" text="commutative-diagram@(Array[[A  absent, B]])" xml:id="S0.Ex7.m1">
         <XMath>
           <XMDual>
             <XMApp>

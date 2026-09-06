@@ -6,7 +6,7 @@
   <resource src="LaTeXML.css" type="text/css"/>
   <resource src="ltx-article.css" type="text/css"/>
   <para xml:id="p1">
-    <picture class="ltx_tikz" height="41.72" tex="\lx@pgf@picture{ltx_tikz}{\lx@pgf@g{ltx_tikz_math}{$t$}\lx@pgf@g{ltx_tikz_math%&#10;}{$x$}\lx@pgf@g{ltx_tikz_node}{$t^{2}$}}" width="11.2" xml:id="p1.pic1">
+    <picture class="ltx_tikz" height="0" tex="\begin{tikzpicture}\begin{axis}[xlabel={Time $t$}, ylabel={$x$}]&#10;\addplot{x^2};&#10;\legend{$t^2$}&#10;\end{axis}&#10;\end{tikzpicture}" width="0" xml:id="p1.pic1">
       <g class="ltx_tikz_math">
         <Math mode="inline" tex="t" text="t" xml:id="p1.pic1.m1">
           <XMath>

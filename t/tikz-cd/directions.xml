@@ -7,7 +7,7 @@
   <resource src="ltx-article.css" type="text/css"/>
   <para xml:id="p1">
     <equation xml:id="S0.Ex1">
-      <Math class="ltx_math_unparsed" mode="display" tex="\begin{tikzcd}a&amp;b&amp;c&amp;d&amp;e\\&#10;f&amp;g&amp;h&amp;i&amp;j\\&#10;k&amp;l&amp;m\lx@tikzcd@arrow r\lx@tikzcd@arrow l\lx@tikzcd@arrow u\lx@tikzcd@arrow d%&#10;\lx@tikzcd@arrow ur\lx@tikzcd@arrow ul\lx@tikzcd@arrow dr\lx@tikzcd@arrow dl%&#10;\lx@tikzcd@arrow rr\lx@tikzcd@arrow ll\lx@tikzcd@arrow dd\lx@tikzcd@arrow uu&amp;n%&#10;&amp;o\\&#10;p&amp;q&amp;s&amp;t&amp;u\\&#10;v&amp;w&amp;x&amp;y&amp;z\end{tikzcd}" text="commutative-diagram@(Array[[a, b, c, d, e], [f, g, h, i, j], [k, l, [m→←↑↓↗↖↘↙⟶⟵↓↑], n, o], [p, q, s, t, u], [v, w, x, y, z]])" xml:id="S0.Ex1.m1">
+      <Math class="ltx_math_unparsed" mode="display" tex="\begin{tikzcd}a&amp;b&amp;c&amp;d&amp;e\\&#10;f&amp;g&amp;h&amp;i&amp;j\\&#10;k&amp;l&amp;m\arrow[r]\arrow[l]\arrow[u]\arrow[d]\arrow[ur]\arrow[ul]\arrow[dr]\arrow[%&#10;dl]\arrow[rr]\arrow[ll]\arrow[dd]\arrow[uu]&amp;n&amp;o\\&#10;p&amp;q&amp;s&amp;t&amp;u\\&#10;v&amp;w&amp;x&amp;y&amp;z\end{tikzcd}" text="commutative-diagram@(Array[[a, b, c, d, e], [f, g, h, i, j], [k, l, [m→←↑↓↗↖↘↙⟶⟵↓↑], n, o], [p, q, s, t, u], [v, w, x, y, z]])" xml:id="S0.Ex1.m1">
         <XMath>
           <XMDual>
             <XMApp>

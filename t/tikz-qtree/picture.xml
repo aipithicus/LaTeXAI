@@ -6,7 +6,7 @@
   <resource src="LaTeXML.css" type="text/css"/>
   <resource src="ltx-article.css" type="text/css"/>
   <para xml:id="p1">
-    <picture class="ltx_tikz" height="147.36" tex="\lx@pgf@picture{ltx_tikz}{\lx@tree@wrap{\lx@tree@node{S}{\lx@tree@node{NP}{%&#10;\lx@tree@node{Det}{}\lx@tree@node{N}{}}\lx@tree@node{VP}{\lx@tree@node{V}{}}}}}" width="10.57" xml:id="p1.pic1">
+    <picture class="ltx_tikz" height="0" tex="\begin{tikzpicture}\Tree[.S [.NP Det N ] [.VP V ]]&#10;\end{tikzpicture}" width="0" xml:id="p1.pic1">
       <inline-block class="ltx_tree">
         <inline-block class="ltx_tree_node">
           <p class="ltx_tree_label">S</p>

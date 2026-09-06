@@ -133,7 +133,7 @@ sub latexai_qtree_from_array {
   $i = latexai_tree_skip_spaces($arr, $i);
   my ($root, $ni) = latexai_qtree_parse_subtree($arr, $i);
   return (undef, $start + 1) unless $root;
-  return (latexai_tree_emit($root), $ni); }
+  return (latexai_tree_emit($root, Tokens(@$arr[$start .. $ni - 1])), $ni); }
 
 sub latexai_qtree_read_from_gullet {
   my ($gullet) = @_;
@@ -150,13 +150,13 @@ sub latexai_qtree_read_from_gullet {
     $depth-- if $tok->equals(T_OTHER(']'));
     last if $depth == 0; }
   my ($root, undef) = latexai_qtree_parse_subtree(\@toks, 0);
-  return $root; }
+  return ($root, Tokens(T_CS('\Tree'), T_SPACE, @toks)); }
 
 DefMacro('\Tree', sub {
     my ($gullet) = @_;
-    my $root = latexai_qtree_read_from_gullet($gullet);
+    my ($root, $raw) = latexai_qtree_read_from_gullet($gullet);
     Error('expected', 'qtree-tree', undef, '\\Tree has no root [node]') unless $root;
-    return latexai_tree_emit($root); });
+    return latexai_tree_emit($root, $raw); });
 
 DefMacro('\qroof', sub {
     my ($gullet) = @_;

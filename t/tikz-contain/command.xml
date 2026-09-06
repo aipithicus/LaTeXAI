@@ -7,7 +7,7 @@
   <resource src="ltx-article.css" type="text/css"/>
   <para xml:id="p1">
     <p>Inline</p>
-    <picture class="ltx_tikz" height="5.96" tex="\lx@pgf@picture{ltx_tikz}{\lx@pgf@g{ltx_tikz_node}{$a$}}" width="7.31" xml:id="p1.pic1">
+    <picture class="ltx_tikz" height="0" tex="\tikz{\node{$a$};}" width="0" xml:id="p1.pic1">
       <g class="ltx_tikz_node">
         <Math mode="inline" tex="a" text="a" xml:id="p1.pic1.m1">
           <XMath>
@@ -17,7 +17,7 @@
       </g>
     </picture>
     <p>and</p>
-    <picture class="ltx_tikz" height="9.61" tex="\lx@pgf@picture{ltx_tikz}{\lx@pgf@g{ltx_tikz_node}{b}}" width="7.69" xml:id="p1.pic2">
+    <picture class="ltx_tikz" height="0" tex="\tikz \node{b};" width="0" xml:id="p1.pic2">
       <g class="ltx_tikz_node">
         <text>b</text>
       </g>

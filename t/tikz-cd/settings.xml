@@ -7,7 +7,7 @@
   <resource src="ltx-article.css" type="text/css"/>
   <para xml:id="p1">
     <equation xml:id="S0.Ex1">
-      <Math mode="display" tex="\begin{tikzcd}A\lx@tikzcd@arrow r,&quot;f&quot;\&amp;B\end{tikzcd}" text="commutative-diagram@(Array[[A  absent, B]])" xml:id="S0.Ex1.m1">
+      <Math mode="display" tex="\begin{tikzcd}A\arrow[r,&quot;f&quot;]\&amp;B\end{tikzcd}" text="commutative-diagram@(Array[[A  absent, B]])" xml:id="S0.Ex1.m1">
         <XMath>
           <XMDual>
             <XMApp>

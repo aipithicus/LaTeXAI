@@ -186,6 +186,9 @@ DefConstructor('\lx@tikzcd@arrow OptionalTikzCdOptions', sub {
 
     $document->closeElement('ltx:XMApp');
   },
+  # Revert as the user-level command, so tex= shows tikz-cd syntax and not
+  # the internal constructor name. \ar and \arrow both revert as \arrow.
+  reversion   => '\arrow[#1]',
   afterDigest => sub {
     my ($stomach, $whatsit) = @_;
     my $opt_toks = $whatsit->getArg(1);

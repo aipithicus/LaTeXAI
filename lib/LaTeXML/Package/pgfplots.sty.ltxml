@@ -34,9 +34,10 @@ foreach my $env (qw(axis semilogxaxis semilogyaxis loglogaxis
       return tikz_contain_begin_env($_[0], $env, 'ltx_tikz'); });
   DefMacroI('\\' . $env, undef, sub {
       my ($gullet) = @_;
-      tikz_contain_read_options($gullet);
+      my $opts = tikz_contain_read_options($gullet);
       my $body = tikz_contain_read_env_body($gullet, $env);
-      return tikz_contain_emit($body, 'ltx_tikz'); });
+      return tikz_contain_emit($body, 'ltx_tikz',
+        tikz_contain_raw_cmd($env, $opts, undef, $body, T_CS('\end' . $env))); });
   DefMacroI('\\end' . $env, undef, ''); }
 
 1;

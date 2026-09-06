@@ -6,6 +6,6 @@
   <resource src="LaTeXML.css" type="text/css"/>
   <resource src="ltx-article.css" type="text/css"/>
   <para xml:id="p1">
-    <picture class="ltx_pgf" height="0" tex="\lx@pgf@picture{ltx_pgf}{}" width="0" xml:id="p1.pic1"/>
+    <picture class="ltx_pgf" height="0" tex="\begin{pgfpicture}\pgfpathrectangle{\pgfpointorigin}{\pgfpoint{1cm}{1cm}}&#10;\pgfusepath{stroke}&#10;\end{pgfpicture}" width="0" xml:id="p1.pic1"/>
   </para>
 </document>

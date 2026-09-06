@@ -6,7 +6,7 @@
   <resource src="LaTeXML.css" type="text/css"/>
   <resource src="ltx-article.css" type="text/css"/>
   <para xml:id="p1">
-    <picture class="ltx_tikz" height="47.16" tex="\lx@pgf@picture{ltx_tikz}{\lx@pgf@g{ltx_tikz_node}{$x^{2}+y^{2}$}\lx@pgf@g{ltx%&#10;_tikz_node}{$f$}\lx@pgf@g{ltx_tikz_node}{plain and $a+b$}}" width="91.66" xml:id="p1.pic1">
+    <picture class="ltx_tikz" height="0" tex="\begin{tikzpicture}\node at (0,0) {$x^2+y^2$};&#10;\draw(0,0) -- (1,1) node[midway,above] {$f$};&#10;\node{plain and \(a+b\)};&#10;\end{tikzpicture}" width="0" xml:id="p1.pic1">
       <g class="ltx_tikz_node">
         <Math mode="inline" tex="x^{2}+y^{2}" text="x ^ 2 + y ^ 2" xml:id="p1.pic1.m1">
           <XMath>

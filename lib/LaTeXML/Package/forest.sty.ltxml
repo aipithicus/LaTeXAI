@@ -20,7 +20,9 @@
 # $...$, are digested. Comma keys after the label are layout and dropped.
 # for tree={...} before the root is dropped. Libraries, delay/TeX/tikz
 # nodewalks, and path geometry are out of scope. Math capture:source is
-# the forest body (the parse callsite).
+# the forest body (the parse callsite). A tree reverts to its own source
+# form ({forest}, \Forest, or \Tree with its bracket list), so tex= never
+# shows the \lx@tree@ constructors.
 package LaTeXML::Package::Pool;
 use strict;
 use warnings;
@@ -39,8 +41,9 @@ DefMacro('\useforestlibrary{}',   '');
 DefMacro('\ProvidesForestLibrary{}[]', '');
 DefMacro('\forestapplylibrarydefaults{}', '');
 
-DefConstructor('\lx@tree@wrap{}',
+DefConstructor('\lx@tree@wrap{} Undigested',
   "<ltx:inline-block class='ltx_tree'>#1</ltx:inline-block>",
+  reversion       => '#2',
   mode            => 'internal_vertical',
   bounded         => 1,
   beforeConstruct => sub { $_[0]->maybeCloseElement('ltx:p'); });
@@ -100,10 +103,21 @@ sub latexai_tree_emit_node {
     T_BEGIN, ($label ? $label->unlist : ()), T_END,
     T_BEGIN, @kid, T_END); }
 
+# $raw is the source form the tree reverts to.
 sub latexai_tree_emit {
-  my ($root) = @_;
+  my ($root, $raw) = @_;
   return Tokens() unless $root;
-  return Tokens(T_CS('\lx@tree@wrap'), T_BEGIN, latexai_tree_emit_node($root)->unlist, T_END); }
+  return Tokens(T_CS('\lx@tree@wrap'), T_BEGIN, latexai_tree_emit_node($root)->unlist, T_END,
+    T_BEGIN, ($raw ? $raw->unlist : ()), T_END); }
+
+# Optional (options) group before a forest body, kept for reversion.
+sub latexai_forest_options {
+  my ($gullet) = @_;
+  $gullet->skipSpaces;
+  return unless $gullet->ifNext(T_OTHER('('));
+  $gullet->readToken;
+  my $spec = $gullet->readUntil(T_OTHER(')'));
+  return Tokens(T_OTHER('('), ($spec ? $spec->unlist : ()), T_OTHER(')')); }
 
 sub latexai_forest_skip_options {
   my ($arr, $i) = @_;
@@ -183,41 +197,37 @@ sub latexai_forest_parse_body {
 
 sub latexai_forest_begin {
   my ($gullet) = @_;
-  $gullet->skipSpaces;
-  if ($gullet->ifNext(T_OTHER('('))) {
-    $gullet->readToken;
-    $gullet->readUntil(T_OTHER(')')); }
+  my $opts = latexai_forest_options($gullet);
   my $body = tikz_contain_read_env_body($gullet, 'forest');
   my $root = latexai_forest_parse_body($body);
   Error('expected', 'forest-tree', undef, 'forest environment has no root [node]') unless $root;
-  return latexai_tree_emit($root); }
+  return latexai_tree_emit($root, tikz_contain_raw_env('forest', undef, $opts, $body)); }
 
 DefMacroI(T_CS('\begin{forest}'), undef, sub { latexai_forest_begin($_[0]); });
 
 DefMacro('\forest', sub {
     my ($gullet) = @_;
-    $gullet->skipSpaces;
-    if ($gullet->ifNext(T_OTHER('('))) {
-      $gullet->readToken;
-      $gullet->readUntil(T_OTHER(')')); }
+    my $opts = latexai_forest_options($gullet);
     my $body = tikz_contain_read_env_body($gullet, 'forest');
-    return latexai_tree_emit(latexai_forest_parse_body($body)); });
+    return latexai_tree_emit(latexai_forest_parse_body($body),
+      tikz_contain_raw_cmd('forest', undef, $opts, $body, T_CS('\endforest'))); });
 
 DefMacro('\endforest', '');
 
 DefMacro('\Forest', sub {
     my ($gullet) = @_;
     $gullet->skipSpaces;
+    my @star = ();
     if ($gullet->ifNext(T_OTHER('*'))) {
-      $gullet->readToken;
+      push(@star, $gullet->readToken);
       $gullet->skipSpaces; }
-    if ($gullet->ifNext(T_OTHER('('))) {
-      $gullet->readToken;
-      $gullet->readUntil(T_OTHER(')'));
-      $gullet->skipSpaces; }
+    my $opts = latexai_forest_options($gullet);
+    $gullet->skipSpaces;
     my $body = $gullet->readArg;
     my $root = latexai_forest_parse_body($body);
     Error('expected', 'forest-tree', undef, '\\Forest has no root [node]') unless $root;
-    return latexai_tree_emit($root); });
+    return latexai_tree_emit($root,
+      Tokens(T_CS('\Forest'), @star, ($opts ? $opts->unlist : ()),
+        T_BEGIN, ($body ? $body->unlist : ()), T_END)); });
 
 1;

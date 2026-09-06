@@ -7,7 +7,7 @@
   <resource src="ltx-article.css" type="text/css"/>
   <para xml:id="p1">
     <equation xml:id="S0.Ex1">
-      <Math mode="display" tex="\begin{tikzcd}A\lx@tikzcd@arrow r,bend left=15,shift left=1ex,dashed,&quot;f&quot;&amp;B\end%&#10;{tikzcd}" text="commutative-diagram@(Array[[A  absent, B]])" xml:id="S0.Ex1.m1">
+      <Math mode="display" tex="\begin{tikzcd}A\arrow[r,bend left=15,shift left=1ex,dashed,&quot;f&quot;]&amp;B\end{tikzcd}" text="commutative-diagram@(Array[[A  absent, B]])" xml:id="S0.Ex1.m1">
         <XMath>
           <XMDual>
             <XMApp>
@@ -39,7 +39,7 @@
       </Math>
     </equation>
     <equation xml:id="S0.Ex2">
-      <Math mode="display" tex="\begin{tikzcd}A\lx@tikzcd@arrow r,bend right=25,shift right=2pt,tail,&quot;g&quot;&amp;B\end%&#10;{tikzcd}" text="commutative-diagram@(Array[[A  absent, B]])" xml:id="S0.Ex2.m1">
+      <Math mode="display" tex="\begin{tikzcd}A\arrow[r,bend right=25,shift right=2pt,tail,&quot;g&quot;]&amp;B\end{tikzcd}" text="commutative-diagram@(Array[[A  absent, B]])" xml:id="S0.Ex2.m1">
         <XMath>
           <XMDual>
             <XMApp>

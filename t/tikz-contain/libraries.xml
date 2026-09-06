@@ -6,7 +6,7 @@
   <resource src="LaTeXML.css" type="text/css"/>
   <resource src="ltx-article.css" type="text/css"/>
   <para xml:id="p1">
-    <picture class="ltx_tikz" height="9.46" tex="\lx@pgf@picture{ltx_tikz}{\lx@pgf@g{ltx_tikz_node}{A}}" width="10.38" xml:id="p1.pic1">
+    <picture class="ltx_tikz" height="0" tex="\begin{tikzpicture}\node[circle] {A};&#10;\end{tikzpicture}" width="0" xml:id="p1.pic1">
       <g class="ltx_tikz_node">
         <text>A</text>
       </g>
