@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="xurl"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <p>Test URL: <ref class="ltx_nolink ltx_url" font="typewriter" href="https://example.org/path/with/many/slashes/and-hyphens_and_numbers123">https://example.org/path/with/many/slashes/and-hyphens_and_numbers123</ref></p>
+  </para>
+</document>

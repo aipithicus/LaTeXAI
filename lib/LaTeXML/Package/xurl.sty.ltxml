@@ -1,4 +1,4 @@
-# -*- CPERL -*-
+# -*- mode: Perl -*-
 # /=====================================================================\ #
 # |  xurl.sty                                                           | #
 # | Implementation for LaTeXML                                          | #
@@ -15,10 +15,20 @@ use strict;
 use warnings;
 use LaTeXML::Package;
 
-#**********************************************************************
+# CTAN: xurl v0.10 (rev 77682)
+# Pure native binding eliminating InputDefinitions('xurl').
 
-InputDefinitions('xurl', type => 'sty', noltxml => 1);
+DeclareOption('nobiblatex', sub { });
+DeclareOption('*', sub {
+  PassOptions('url', 'sty', ToString(LookupValue('CurrentOption')));
+});
+ProcessOptions();
 
-#**********************************************************************
+RequirePackage('url');
+
+# xurl extends URL break points for print layouts. In XML/HTML semantic IR,
+# URLs are hyperlinks (<ltx:ref>) and linebreaking penalties are no-ops.
+DefMacro('\useOriginalUrlSetting', '');
+DefMacro('\UrlBreaks',             '');
 
 1;
