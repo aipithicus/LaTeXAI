@@ -1,4 +1,4 @@
-# -*- CPERL -*-
+# -*- mode: Perl -*-
 # /=====================================================================\ #
 # |  doi.sty                                                            | #
 # | Implementation for LaTeXML                                          | #
@@ -15,10 +15,24 @@ use strict;
 use warnings;
 use LaTeXML::Package;
 
+# CTAN: doi (2018/09/09, rev 79461)
+# Pure native binding eliminating InputDefinitions('doi').
+
+RequirePackage('hyperref');
+
+DefMacro('\doitext', 'doi:');
+DefMacro('\doiurl',  'https://doi.org/');
+
+DefMacro('\doi Semiverbatim', sub {
+  my ($gullet, $id) = @_;
+  my $url    = ToString(Expand(T_CS('\doiurl')));
+  my $id_str = ToString($id);
+  # Strip surrounding whitespace if any
+  $id_str =~ s/^\s+//;
+  $id_str =~ s/\s+$//;
+  my $full = $url . $id_str;
+  return (T_CS('\doitext'), Invocation(T_CS('\href'), T_OTHER($full), $id));
+});
+
 #**********************************************************************
-
-InputDefinitions('doi', type => 'sty', noltxml => 1);
-
-#**********************************************************************
-
 1;

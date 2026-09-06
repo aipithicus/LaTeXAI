@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="doi"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para class="ltx_noindent" xml:id="p1">
+    <p>Standard: doi:<ref class="ltx_href" href="https://doi.org/10.1000/182">10.1000/182</ref></p>
+  </para>
+  <para class="ltx_noindent" xml:id="p2">
+    <p>With underscore: doi:<ref class="ltx_href" href="https://doi.org/10.1007/s00205_021_01650_x">10.1007/s00205˙021˙01650˙x</ref></p>
+  </para>
+  <para class="ltx_noindent" xml:id="p3">
+    <p>Custom: DOI: <ref class="ltx_href" href="https://dx.doi.org/10.1145/3359591.3359737">10.1145/3359591.3359737</ref></p>
+  </para>
+</document>
