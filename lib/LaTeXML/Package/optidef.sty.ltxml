@@ -1,0 +1,248 @@
+# -*- mode: Perl -*-
+# /=====================================================================\ #
+# |  optidef                                                            | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+# | Part of LaTeXML:                                                    | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# |---------------------------------------------------------------------| #
+# | Thanks to the LaTeXAI project                                       | #
+# \=========================================================ooo==U==ooo=/ #
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+# Audit source: CTAN optidef v3.1 (2019-04-23), TeX Live revision 79618.
+# Native binding for mathematical optimization problem syntax.
+
+RequirePackage('amsmath');
+
+# Package defaults & options
+DefMacroI('\defaultProblemFormat',    undef, 'l');
+DefMacroI('\defaultConstraintFormat', undef, '0');
+DefMacroI('\defaultOCPConstraint',    undef, ',');
+
+DeclareOption('short',   sub { DefMacroI('\defaultProblemFormat', undef, 's'); });
+DeclareOption('long',    sub { DefMacroI('\defaultProblemFormat', undef, 'l'); });
+DeclareOption('nocomma', sub { DefMacroI('\defaultOCPConstraint', undef, ''); });
+DeclareOption('c1',      sub { DefMacroI('\defaultConstraintFormat', undef, '1'); });
+DeclareOption('c2',      sub { DefMacroI('\defaultConstraintFormat', undef, '2'); });
+DeclareOption('c3',      sub { DefMacroI('\defaultConstraintFormat', undef, '3'); });
+ProcessOptions();
+
+# Semantic class and meaning marker
+DefConstructor('\lx@optidef@mark', sub {
+    my ($document) = @_;
+    my $node = $document->getElement;
+    while ($node && $node->localname !~ /^(?:equation|equationgroup)$/) {
+      $node = $node->parentNode;
+    }
+    if ($node) {
+      $document->addClass($node, 'ltx_optidef');
+      $document->setAttribute($node, meaning => 'optimization-problem');
+    }
+});
+
+# Helper to parse |format|, [conFormat], <break>, and the 4 required arguments
+sub _parse_optidef_args {
+  my ($gullet) = @_;
+  $gullet->skipSpaces;
+  my $format     = ToString(Expand(TokenizeInternal('\defaultProblemFormat'))) || 'l';
+  my $con_format = ToString(Expand(TokenizeInternal('\defaultConstraintFormat'))) || '0';
+  my $breakable  = 0;
+
+  while (1) {
+    $gullet->skipSpaces;
+    if ($gullet->ifNext(T_OTHER('|'))) {
+      $gullet->readToken;
+      my $fmt = $gullet->readUntil(T_OTHER('|'));
+      $format = ToString($fmt) if $fmt;
+    } elsif ($gullet->ifNext(T_OTHER('['))) {
+      my $cf = $gullet->readOptional;
+      $con_format = ToString($cf) if $cf;
+    } elsif ($gullet->ifNext(T_OTHER('<'))) {
+      $gullet->readToken;
+      my $br = $gullet->readUntil(T_OTHER('>'));
+      $breakable = 1 if $br && ToString($br) =~ /b/;
+    } else {
+      last;
+    }
+  }
+
+  my $optVar    = $gullet->readArg;
+  my $objective = $gullet->readArg;
+  my $label     = $gullet->readArg;
+  my $result    = $gullet->readArg;
+
+  return ($format, $con_format, $breakable, $optVar, $objective, $label, $result);
+}
+
+sub _optidef_op_macro {
+  my ($name, $format) = @_;
+  if ($name eq 'mini') {
+    return ($format eq 's') ? '\min' : '\mathrm{minimize}';
+  } elsif ($name eq 'maxi') {
+    return ($format eq 's') ? '\max' : '\mathrm{maximize}';
+  } elsif ($name eq 'argmini') {
+    return ($format eq 's') ? '\arg\min' : '\operatorname{arg\,min}';
+  } elsif ($name eq 'argmaxi') {
+    return ($format eq 's') ? '\arg\max' : '\operatorname{arg\,max}';
+  }
+  return '\min';
+}
+
+DefMacro('\addConstraint {}', sub {
+    my ($gullet, $arg1) = @_;
+    my $arg2 = undef;
+    my $arg3 = undef;
+    $gullet->skipSpaces;
+    if ($gullet->ifNext(T_BEGIN)) {
+      $arg2 = $gullet->readArg;
+      $gullet->skipSpaces;
+      if ($gullet->ifNext(T_BEGIN)) {
+        $arg3 = $gullet->readArg;
+      }
+    }
+
+    my $first      = LookupValue('optidef_first_con') // 1;
+    AssignValue('optidef_first_con' => 0);
+    my $format     = LookupValue('optidef_format') // 'l';
+    my $con_format = LookupValue('optidef_con_format') // '0';
+
+    my $st_text = ($format eq 's') ? '\mathrm{s.t.}' : '\mathrm{subject~to}';
+    my @toks = ();
+
+    if ($con_format eq '1') {
+      # Below subject to
+      if ($first) {
+        push(@toks, TokenizeInternal('\\\\ &' . $st_text . '\\span\\span\\span\\span \\\\ &&&')->unlist);
+      } else {
+        push(@toks, TokenizeInternal('\\\\ &&&')->unlist);
+      }
+      push(@toks, $arg1->unlist);
+      if (defined $arg2 && ToString($arg2) ne '') {
+        push(@toks, TokenizeInternal(' &')->unlist);
+        push(@toks, $arg2->unlist);
+      }
+      if (defined $arg3 && ToString($arg3) ne '') {
+        push(@toks, TokenizeInternal(' &&')->unlist);
+        push(@toks, $arg3->unlist);
+      }
+    } elsif ($con_format eq '2' || $con_format eq '3') {
+      # Single alignment point
+      if ($first) {
+        push(@toks, TokenizeInternal('\\\\ &' . $st_text . '\quad &&')->unlist);
+      } else {
+        push(@toks, TokenizeInternal('\\\\ &\quad &&')->unlist);
+      }
+      push(@toks, $arg1->unlist);
+      if (defined $arg2 && ToString($arg2) ne '') {
+        push(@toks, TokenizeInternal(' ')->unlist);
+        push(@toks, $arg2->unlist);
+      }
+      if (defined $arg3 && ToString($arg3) ne '') {
+        push(@toks, TokenizeInternal(' &&')->unlist);
+        push(@toks, $arg3->unlist);
+      }
+    } else {
+      # Standard format (0)
+      if ($first) {
+        push(@toks, TokenizeInternal('\\\\ &' . $st_text . '\quad &')->unlist);
+      } else {
+        push(@toks, TokenizeInternal('\\\\ &\quad &')->unlist);
+      }
+      push(@toks, $arg1->unlist);
+      if (defined $arg2 && ToString($arg2) ne '') {
+        push(@toks, TokenizeInternal(' &')->unlist);
+        push(@toks, $arg2->unlist);
+      }
+      if (defined $arg3 && ToString($arg3) ne '') {
+        push(@toks, TokenizeInternal(' &&')->unlist);
+        push(@toks, $arg3->unlist);
+      }
+    }
+
+    return Tokens(@toks);
+});
+
+DefMacro('\breakObjective{}', sub {
+    my ($gullet, $cont) = @_;
+    my @toks = ();
+    push(@toks, TokenizeInternal('\\\\ &\quad ')->unlist);
+    push(@toks, $cont->unlist);
+    return Tokens(@toks);
+});
+
+sub _def_optidef_family {
+  my ($base_name) = @_;
+
+  for my $mode ('', '*', '!', 'e') {
+    my $env_name = $base_name . $mode;
+
+    DefMacroI('\\' . $env_name, undef, sub {
+        my ($gullet) = @_;
+        my ($format, $con_format, $breakable, $optVar, $objective, $label, $result) = _parse_optidef_args($gullet);
+
+        AssignValue('optidef_first_con'   => 1);
+        AssignValue('optidef_format'      => $format);
+        AssignValue('optidef_con_format'  => $con_format);
+
+        my $op = _optidef_op_macro($base_name, $format);
+        my @toks = ();
+
+        if ($mode eq '*') {
+          push(@toks, TokenizeInternal('\begin{equation*}\lx@optidef@mark\begin{alignedat}{5}')->unlist);
+        } elsif ($mode eq '!' || $mode eq 'e') {
+          push(@toks, TokenizeInternal('\begin{subequations}')->unlist);
+          if (defined $label && ToString($label) ne '') {
+            push(@toks, $label->unlist);
+          }
+          push(@toks, TokenizeInternal('\lx@optidef@mark\begin{alignat}{5}')->unlist);
+        } else {
+          push(@toks, TokenizeInternal('\begin{equation}')->unlist);
+          if (defined $label && ToString($label) ne '') {
+            push(@toks, $label->unlist);
+          }
+          push(@toks, TokenizeInternal('\lx@optidef@mark\begin{alignedat}{5}')->unlist);
+        }
+
+        # Objective row
+        if (defined $result && ToString($result) ne '') {
+          push(@toks, $result->unlist);
+          push(@toks, TokenizeInternal('~')->unlist);
+        }
+        push(@toks, TokenizeInternal('&\underset{\displaystyle ')->unlist);
+        push(@toks, $optVar->unlist);
+        push(@toks, TokenizeInternal('}{' . $op . '}\quad ')->unlist);
+        push(@toks, $objective->unlist);
+
+        return Tokens(@toks);
+    });
+
+    DefMacroI('\\end' . $env_name, undef, sub {
+        my @toks = ();
+        if ($mode eq '*') {
+          push(@toks, TokenizeInternal('\end{alignedat}\end{equation*}')->unlist);
+        } elsif ($mode eq '!' || $mode eq 'e') {
+          push(@toks, TokenizeInternal('\end{alignat}\end{subequations}')->unlist);
+        } else {
+          push(@toks, TokenizeInternal('\end{alignedat}\end{equation}')->unlist);
+        }
+        return Tokens(@toks);
+    });
+  }
+}
+
+_def_optidef_family('mini');
+_def_optidef_family('maxi');
+_def_optidef_family('argmini');
+_def_optidef_family('argmaxi');
+
+# Short aliases: min, max, argmin, argmax
+DefMacroI('\minproblem',    undef, '\mini');
+DefMacroI('\endminproblem', undef, '\endmini');
+
+#======================================================================
+1;

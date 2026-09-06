@@ -1,0 +1,35 @@
+\documentclass{article}
+\usepackage{optidef}
+\begin{document}
+
+\section{Standard Long Minimization}
+\begin{mini}{w,b}{\frac{1}{2}\|w\|^2 + C \sum_{i=1}^n \xi_i}{\label{eq:svm}}{p^* =}
+  \addConstraint{y_i(w^\top x_i + b)}{\ge 1 - \xi_i,}{i=1,\ldots,n}
+  \addConstraint{\xi_i}{\ge 0,}{i=1,\ldots,n}
+\end{mini}
+
+\section{Short Format Maximization}
+\begin{maxi}|s|{x \in \mathcal{X}}{c^\top x}{}{}
+  \addConstraint{Ax}{\le b}
+  \addConstraint{x}{\ge 0}
+\end{maxi}
+
+\section{Unnumbered Argmini with Break Objective}
+\begin{argmini*}[0]{\theta}{\mathcal{L}(\theta) + \lambda R(\theta)}{}{}
+  \breakObjective{+ \gamma \Omega(\theta)}
+  \addConstraint{g(\theta)}{\le 0}
+\end{argmini*}
+
+\section{Constraints Below Subject To}
+\begin{mini}[1]{x}{f(x)}{}{}
+  \addConstraint{h_j(x)}{= 0,}{j=1,\ldots,m}
+  \addConstraint{g_k(x)}{\le 0,}{k=1,\ldots,p}
+\end{mini}
+
+\section{Subequations Formulation}
+\begin{mini!}|s|{u}{J(u)}{\label{eq:subopt}}{}
+  \addConstraint{x_{t+1}}{= A x_t + B u_t}{\label{eq:dyn}}
+  \addConstraint{u_t \in \mathcal{U}}{}{\label{eq:ucon}}
+\end{mini!}
+
+\end{document}
