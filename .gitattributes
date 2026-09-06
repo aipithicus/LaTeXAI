@@ -1,2 +1,7 @@
+# Line endings are a repository property, not a tool or platform property.
+# Text files are stored and checked out with LF everywhere; tools that write
+# CRLF on Windows (perl text-mode layers) are normalized on add. The one
+# fixture that exists to exercise CRLF handling keeps its bytes.
+* text=auto eol=lf
 t/capture/crlf.tex text eol=crlf
 t/capture/positions.tex whitespace=-trailing-space
