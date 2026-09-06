@@ -64,7 +64,7 @@ sub _parse_tensor_indices {
       }
 
       push(@sps, @arg);
-      push(@sbs, T_CS('\hphantom'), T_BEGIN, @arg, T_END);
+      push(@sbs, T_CS('\hphantom'), T_BEGIN, @arg, T_END) unless $is_star;
 
     } elsif ($cc == CC_SUB) {
       my @arg = ();
@@ -81,7 +81,7 @@ sub _parse_tensor_indices {
         push(@arg, $raw[$i++]);
       }
 
-      push(@sps, T_CS('\hphantom'), T_BEGIN, @arg, T_END);
+      push(@sps, T_CS('\hphantom'), T_BEGIN, @arg, T_END) unless $is_star;
       push(@sbs, @arg);
 
     } else {
@@ -139,7 +139,7 @@ DefMacro('\nuclide [] {}{}', sub {
       push(@toks, T_SUB, T_BEGIN, T_CS('\massnumFont'), T_BEGIN, $z->unlist, T_END, T_END);
     }
     push(@toks, T_CS('\nuclideFont'), T_BEGIN, $el->unlist, T_END);
-    return Tokens(@toks);
+    return Tokens(T_CS('\ensuremath'), T_BEGIN, @toks, T_END);
 });
 
 #======================================================================
