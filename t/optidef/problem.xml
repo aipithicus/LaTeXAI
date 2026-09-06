@@ -410,47 +410,12 @@
         </equation>
         <equation xml:id="S1.E1Xb">
           <MathFork>
-            <Math tex="\displaystyle\mathrm{subject~to}\quad" text="subject * to" xml:id="S1.E1Xb.m1">
+            <Math tex="\displaystyle\xi_{i}\geq 0," text="xi _ i &gt;= 0" xml:id="S1.E1Xb.m2">
               <XMath>
                 <XMDual>
-                  <XMRef idref="S1.E1Xb.m1.1"/>
+                  <XMRef idref="S1.E1Xb.m2.1"/>
                   <XMWrap>
-                    <XMApp xml:id="S1.E1Xb.m1.1">
-                      <XMTok meaning="times" role="MULOP">⁢</XMTok>
-                      <XMTok role="UNKNOWN" rpadding="3.3pt">subject</XMTok>
-                      <XMTok role="UNKNOWN">to</XMTok>
-                    </XMApp>
-                    <XMHint name="quad" role="PUNCT" width="10pt"/>
-                  </XMWrap>
-                </XMDual>
-              </XMath>
-            </Math>
-            <MathBranch>
-              <td/>
-              <td align="left"><Math tex="\displaystyle\mathrm{subject~to}\quad" text="subject * to" xml:id="S1.E1Xb.m2">
-                  <XMath>
-                    <XMDual>
-                      <XMRef idref="S1.E1Xb.m2.1"/>
-                      <XMWrap>
-                        <XMApp xml:id="S1.E1Xb.m2.1">
-                          <XMTok meaning="times" role="MULOP">⁢</XMTok>
-                          <XMTok role="UNKNOWN" rpadding="3.3pt">subject</XMTok>
-                          <XMTok role="UNKNOWN">to</XMTok>
-                        </XMApp>
-                        <XMHint name="quad" role="PUNCT" width="10pt"/>
-                      </XMWrap>
-                    </XMDual>
-                  </XMath>
-                </Math></td>
-            </MathBranch>
-          </MathFork>
-          <MathFork>
-            <Math tex="\displaystyle\xi_{i}\geq 0," text="xi _ i &gt;= 0" xml:id="S1.E1Xb.m3">
-              <XMath>
-                <XMDual>
-                  <XMRef idref="S1.E1Xb.m3.1"/>
-                  <XMWrap>
-                    <XMApp xml:id="S1.E1Xb.m3.1">
+                    <XMApp xml:id="S1.E1Xb.m2.1">
                       <XMTok meaning="greater-than-or-equals" name="geq" role="RELOP">≥</XMTok>
                       <XMApp>
                         <XMTok role="SUBSCRIPTOP" scriptpos="post6"/>
@@ -465,7 +430,7 @@
               </XMath>
             </Math>
             <MathBranch>
-              <td align="right"><Math tex="\displaystyle\xi_{i}" text="xi _ i" xml:id="S1.E1Xb.m4">
+              <td align="right"><Math tex="\displaystyle\xi_{i}" text="xi _ i" xml:id="S1.E1Xb.m3">
                   <XMath>
                     <XMApp>
                       <XMTok role="SUBSCRIPTOP" scriptpos="post6"/>
@@ -474,12 +439,12 @@
                     </XMApp>
                   </XMath>
                 </Math></td>
-              <td align="left"><Math tex="\displaystyle\geq 0," text="absent &gt;= 0" xml:id="S1.E1Xb.m5">
+              <td align="left"><Math tex="\displaystyle\geq 0," text="absent &gt;= 0" xml:id="S1.E1Xb.m4">
                   <XMath>
                     <XMDual>
-                      <XMRef idref="S1.E1Xb.m5.1"/>
+                      <XMRef idref="S1.E1Xb.m4.1"/>
                       <XMWrap>
-                        <XMApp xml:id="S1.E1Xb.m5.1">
+                        <XMApp xml:id="S1.E1Xb.m4.1">
                           <XMTok meaning="greater-than-or-equals" name="geq" role="RELOP">≥</XMTok>
                           <XMTok meaning="absent"/>
                           <XMTok meaning="0" role="NUMBER">0</XMTok>
@@ -492,7 +457,7 @@
             </MathBranch>
           </MathFork>
           <MathFork>
-            <Math tex="\displaystyle i=1,\ldots,n" text="i = list@(1, ldots, n)" xml:id="S1.E1Xb.m6">
+            <Math tex="\displaystyle i=1,\ldots,n" text="i = list@(1, ldots, n)" xml:id="S1.E1Xb.m5">
               <XMath>
                 <XMApp>
                   <XMTok meaning="equals" role="RELOP">=</XMTok>
@@ -500,16 +465,16 @@
                   <XMDual>
                     <XMApp>
                       <XMTok meaning="list"/>
-                      <XMRef idref="S1.E1Xb.m6.1"/>
-                      <XMRef idref="S1.E1Xb.m6.2"/>
-                      <XMRef idref="S1.E1Xb.m6.3"/>
+                      <XMRef idref="S1.E1Xb.m5.1"/>
+                      <XMRef idref="S1.E1Xb.m5.2"/>
+                      <XMRef idref="S1.E1Xb.m5.3"/>
                     </XMApp>
                     <XMWrap>
-                      <XMTok meaning="1" role="NUMBER" xml:id="S1.E1Xb.m6.1">1</XMTok>
+                      <XMTok meaning="1" role="NUMBER" xml:id="S1.E1Xb.m5.1">1</XMTok>
                       <XMTok role="PUNCT">,</XMTok>
-                      <XMTok name="ldots" role="ID" xml:id="S1.E1Xb.m6.2">…</XMTok>
+                      <XMTok name="ldots" role="ID" xml:id="S1.E1Xb.m5.2">…</XMTok>
                       <XMTok role="PUNCT">,</XMTok>
-                      <XMTok font="italic" role="UNKNOWN" xml:id="S1.E1Xb.m6.3">n</XMTok>
+                      <XMTok font="italic" role="UNKNOWN" xml:id="S1.E1Xb.m5.3">n</XMTok>
                     </XMWrap>
                   </XMDual>
                 </XMApp>
@@ -517,7 +482,7 @@
             </Math>
             <MathBranch>
               <td/>
-              <td align="left"><Math tex="\displaystyle i=1,\ldots,n" text="i = list@(1, ldots, n)" xml:id="S1.E1Xb.m7">
+              <td align="left"><Math tex="\displaystyle i=1,\ldots,n" text="i = list@(1, ldots, n)" xml:id="S1.E1Xb.m6">
                   <XMath>
                     <XMApp>
                       <XMTok meaning="equals" role="RELOP">=</XMTok>
@@ -525,16 +490,16 @@
                       <XMDual>
                         <XMApp>
                           <XMTok meaning="list"/>
-                          <XMRef idref="S1.E1Xb.m7.1"/>
-                          <XMRef idref="S1.E1Xb.m7.2"/>
-                          <XMRef idref="S1.E1Xb.m7.3"/>
+                          <XMRef idref="S1.E1Xb.m6.1"/>
+                          <XMRef idref="S1.E1Xb.m6.2"/>
+                          <XMRef idref="S1.E1Xb.m6.3"/>
                         </XMApp>
                         <XMWrap>
-                          <XMTok meaning="1" role="NUMBER" xml:id="S1.E1Xb.m7.1">1</XMTok>
+                          <XMTok meaning="1" role="NUMBER" xml:id="S1.E1Xb.m6.1">1</XMTok>
                           <XMTok role="PUNCT">,</XMTok>
-                          <XMTok name="ldots" role="ID" xml:id="S1.E1Xb.m7.2">…</XMTok>
+                          <XMTok name="ldots" role="ID" xml:id="S1.E1Xb.m6.2">…</XMTok>
                           <XMTok role="PUNCT">,</XMTok>
-                          <XMTok font="italic" role="UNKNOWN" xml:id="S1.E1Xb.m7.3">n</XMTok>
+                          <XMTok font="italic" role="UNKNOWN" xml:id="S1.E1Xb.m6.3">n</XMTok>
                         </XMWrap>
                       </XMDual>
                     </XMApp>
@@ -718,58 +683,7 @@
         </equation>
         <equation xml:id="S2.E2Xb">
           <MathFork>
-            <Math tex="\displaystyle\mathrm{s.t.}\quad" text="formulae@(s, t)" xml:id="S2.E2Xb.m1">
-              <XMath>
-                <XMDual>
-                  <XMRef idref="S2.E2Xb.m1.3"/>
-                  <XMWrap>
-                    <XMDual xml:id="S2.E2Xb.m1.3">
-                      <XMApp>
-                        <XMTok meaning="formulae"/>
-                        <XMRef idref="S2.E2Xb.m1.1"/>
-                        <XMRef idref="S2.E2Xb.m1.2"/>
-                      </XMApp>
-                      <XMWrap>
-                        <XMTok role="UNKNOWN" xml:id="S2.E2Xb.m1.1">s</XMTok>
-                        <XMTok role="PERIOD">.</XMTok>
-                        <XMTok role="UNKNOWN" xml:id="S2.E2Xb.m1.2">t</XMTok>
-                      </XMWrap>
-                    </XMDual>
-                    <XMTok role="PERIOD">.</XMTok>
-                    <XMHint name="quad" role="PUNCT" width="10pt"/>
-                  </XMWrap>
-                </XMDual>
-              </XMath>
-            </Math>
-            <MathBranch>
-              <td/>
-              <td align="left"><Math tex="\displaystyle\mathrm{s.t.}\quad" text="formulae@(s, t)" xml:id="S2.E2Xb.m2">
-                  <XMath>
-                    <XMDual>
-                      <XMRef idref="S2.E2Xb.m2.3"/>
-                      <XMWrap>
-                        <XMDual xml:id="S2.E2Xb.m2.3">
-                          <XMApp>
-                            <XMTok meaning="formulae"/>
-                            <XMRef idref="S2.E2Xb.m2.1"/>
-                            <XMRef idref="S2.E2Xb.m2.2"/>
-                          </XMApp>
-                          <XMWrap>
-                            <XMTok role="UNKNOWN" xml:id="S2.E2Xb.m2.1">s</XMTok>
-                            <XMTok role="PERIOD">.</XMTok>
-                            <XMTok role="UNKNOWN" xml:id="S2.E2Xb.m2.2">t</XMTok>
-                          </XMWrap>
-                        </XMDual>
-                        <XMTok role="PERIOD">.</XMTok>
-                        <XMHint name="quad" role="PUNCT" width="10pt"/>
-                      </XMWrap>
-                    </XMDual>
-                  </XMath>
-                </Math></td>
-            </MathBranch>
-          </MathFork>
-          <MathFork>
-            <Math tex="\displaystyle x\geq 0" text="x &gt;= 0" xml:id="S2.E2Xb.m3">
+            <Math tex="\displaystyle x\geq 0" text="x &gt;= 0" xml:id="S2.E2Xb.m2">
               <XMath>
                 <XMApp>
                   <XMTok meaning="greater-than-or-equals" name="geq" role="RELOP">≥</XMTok>
@@ -779,12 +693,12 @@
               </XMath>
             </Math>
             <MathBranch>
-              <td align="right"><Math tex="\displaystyle x" text="x" xml:id="S2.E2Xb.m4">
+              <td align="right"><Math tex="\displaystyle x" text="x" xml:id="S2.E2Xb.m3">
                   <XMath>
                     <XMTok font="italic" role="UNKNOWN">x</XMTok>
                   </XMath>
                 </Math></td>
-              <td align="left"><Math tex="\displaystyle\geq 0" text="absent &gt;= 0" xml:id="S2.E2Xb.m5">
+              <td align="left"><Math tex="\displaystyle\geq 0" text="absent &gt;= 0" xml:id="S2.E2Xb.m4">
                   <XMath>
                     <XMApp>
                       <XMTok meaning="greater-than-or-equals" name="geq" role="RELOP">≥</XMTok>
@@ -1290,32 +1204,7 @@
         </equation>
         <equation xml:id="S4.E3Xc">
           <MathFork>
-            <Math tex="\displaystyle\mathrm{subject~to}\hfil\hfil\hfil\hfil" text="subject * to" xml:id="S4.E3Xc.m1">
-              <XMath>
-                <XMApp>
-                  <XMTok meaning="times" role="MULOP">⁢</XMTok>
-                  <XMTok role="UNKNOWN" rpadding="3.3pt">subject</XMTok>
-                  <XMTok role="UNKNOWN">to</XMTok>
-                </XMApp>
-              </XMath>
-            </Math>
-            <MathBranch>
-              <td/>
-              <td align="left"><Math tex="\displaystyle\mathrm{subject~to}\hfil\hfil\hfil\hfil" text="subject * to" xml:id="S4.E3Xc.m2">
-                  <XMath>
-                    <XMApp>
-                      <XMTok meaning="times" role="MULOP">⁢</XMTok>
-                      <XMTok role="UNKNOWN" rpadding="3.3pt">subject</XMTok>
-                      <XMTok role="UNKNOWN">to</XMTok>
-                    </XMApp>
-                  </XMath>
-                </Math></td>
-            </MathBranch>
-          </MathFork>
-        </equation>
-        <equation xml:id="S4.E3Xd">
-          <MathFork>
-            <Math tex="\displaystyle g_{k}(x)" text="g _ k * x" xml:id="S4.E3Xd.m2">
+            <Math tex="\displaystyle g_{k}(x)" text="g _ k * x" xml:id="S4.E3Xc.m2">
               <XMath>
                 <XMApp>
                   <XMTok meaning="times" role="MULOP">⁢</XMTok>
@@ -1325,10 +1214,10 @@
                     <XMTok font="italic" fontsize="70%" role="UNKNOWN">k</XMTok>
                   </XMApp>
                   <XMDual>
-                    <XMRef idref="S4.E3Xd.m2.1"/>
+                    <XMRef idref="S4.E3Xc.m2.1"/>
                     <XMWrap>
                       <XMTok role="OPEN" stretchy="false">(</XMTok>
-                      <XMTok font="italic" role="UNKNOWN" xml:id="S4.E3Xd.m2.1">x</XMTok>
+                      <XMTok font="italic" role="UNKNOWN" xml:id="S4.E3Xc.m2.1">x</XMTok>
                       <XMTok role="CLOSE" stretchy="false">)</XMTok>
                     </XMWrap>
                   </XMDual>
@@ -1337,7 +1226,7 @@
             </Math>
             <MathBranch>
               <td/>
-              <td align="left"><Math tex="\displaystyle g_{k}(x)" text="g _ k * x" xml:id="S4.E3Xd.m3">
+              <td align="left"><Math tex="\displaystyle g_{k}(x)" text="g _ k * x" xml:id="S4.E3Xc.m3">
                   <XMath>
                     <XMApp>
                       <XMTok meaning="times" role="MULOP">⁢</XMTok>
@@ -1347,10 +1236,10 @@
                         <XMTok font="italic" fontsize="70%" role="UNKNOWN">k</XMTok>
                       </XMApp>
                       <XMDual>
-                        <XMRef idref="S4.E3Xd.m3.1"/>
+                        <XMRef idref="S4.E3Xc.m3.1"/>
                         <XMWrap>
                           <XMTok role="OPEN" stretchy="false">(</XMTok>
-                          <XMTok font="italic" role="UNKNOWN" xml:id="S4.E3Xd.m3.1">x</XMTok>
+                          <XMTok font="italic" role="UNKNOWN" xml:id="S4.E3Xc.m3.1">x</XMTok>
                           <XMTok role="CLOSE" stretchy="false">)</XMTok>
                         </XMWrap>
                       </XMDual>
@@ -1360,12 +1249,12 @@
             </MathBranch>
           </MathFork>
           <MathFork>
-            <Math tex="\displaystyle\leq 0," text="absent &lt;= 0" xml:id="S4.E3Xd.m4">
+            <Math tex="\displaystyle\leq 0," text="absent &lt;= 0" xml:id="S4.E3Xc.m4">
               <XMath>
                 <XMDual>
-                  <XMRef idref="S4.E3Xd.m4.1"/>
+                  <XMRef idref="S4.E3Xc.m4.1"/>
                   <XMWrap>
-                    <XMApp xml:id="S4.E3Xd.m4.1">
+                    <XMApp xml:id="S4.E3Xc.m4.1">
                       <XMTok meaning="less-than-or-equals" name="leq" role="RELOP">≤</XMTok>
                       <XMTok meaning="absent"/>
                       <XMTok meaning="0" role="NUMBER">0</XMTok>
@@ -1376,12 +1265,12 @@
               </XMath>
             </Math>
             <MathBranch>
-              <td align="right"><Math tex="\displaystyle\leq 0," text="absent &lt;= 0" xml:id="S4.E3Xd.m5">
+              <td align="right"><Math tex="\displaystyle\leq 0," text="absent &lt;= 0" xml:id="S4.E3Xc.m5">
                   <XMath>
                     <XMDual>
-                      <XMRef idref="S4.E3Xd.m5.1"/>
+                      <XMRef idref="S4.E3Xc.m5.1"/>
                       <XMWrap>
-                        <XMApp xml:id="S4.E3Xd.m5.1">
+                        <XMApp xml:id="S4.E3Xc.m5.1">
                           <XMTok meaning="less-than-or-equals" name="leq" role="RELOP">≤</XMTok>
                           <XMTok meaning="absent"/>
                           <XMTok meaning="0" role="NUMBER">0</XMTok>
@@ -1395,7 +1284,7 @@
             </MathBranch>
           </MathFork>
           <MathFork>
-            <Math tex="\displaystyle k=1,\ldots,p" text="k = list@(1, ldots, p)" xml:id="S4.E3Xd.m6">
+            <Math tex="\displaystyle k=1,\ldots,p" text="k = list@(1, ldots, p)" xml:id="S4.E3Xc.m6">
               <XMath>
                 <XMApp>
                   <XMTok meaning="equals" role="RELOP">=</XMTok>
@@ -1403,23 +1292,23 @@
                   <XMDual>
                     <XMApp>
                       <XMTok meaning="list"/>
-                      <XMRef idref="S4.E3Xd.m6.1"/>
-                      <XMRef idref="S4.E3Xd.m6.2"/>
-                      <XMRef idref="S4.E3Xd.m6.3"/>
+                      <XMRef idref="S4.E3Xc.m6.1"/>
+                      <XMRef idref="S4.E3Xc.m6.2"/>
+                      <XMRef idref="S4.E3Xc.m6.3"/>
                     </XMApp>
                     <XMWrap>
-                      <XMTok meaning="1" role="NUMBER" xml:id="S4.E3Xd.m6.1">1</XMTok>
+                      <XMTok meaning="1" role="NUMBER" xml:id="S4.E3Xc.m6.1">1</XMTok>
                       <XMTok role="PUNCT">,</XMTok>
-                      <XMTok name="ldots" role="ID" xml:id="S4.E3Xd.m6.2">…</XMTok>
+                      <XMTok name="ldots" role="ID" xml:id="S4.E3Xc.m6.2">…</XMTok>
                       <XMTok role="PUNCT">,</XMTok>
-                      <XMTok font="italic" role="UNKNOWN" xml:id="S4.E3Xd.m6.3">p</XMTok>
+                      <XMTok font="italic" role="UNKNOWN" xml:id="S4.E3Xc.m6.3">p</XMTok>
                     </XMWrap>
                   </XMDual>
                 </XMApp>
               </XMath>
             </Math>
             <MathBranch>
-              <td align="right"><Math tex="\displaystyle k=1,\ldots,p" text="k = list@(1, ldots, p)" xml:id="S4.E3Xd.m7">
+              <td align="right"><Math tex="\displaystyle k=1,\ldots,p" text="k = list@(1, ldots, p)" xml:id="S4.E3Xc.m7">
                   <XMath>
                     <XMApp>
                       <XMTok meaning="equals" role="RELOP">=</XMTok>
@@ -1427,16 +1316,16 @@
                       <XMDual>
                         <XMApp>
                           <XMTok meaning="list"/>
-                          <XMRef idref="S4.E3Xd.m7.1"/>
-                          <XMRef idref="S4.E3Xd.m7.2"/>
-                          <XMRef idref="S4.E3Xd.m7.3"/>
+                          <XMRef idref="S4.E3Xc.m7.1"/>
+                          <XMRef idref="S4.E3Xc.m7.2"/>
+                          <XMRef idref="S4.E3Xc.m7.3"/>
                         </XMApp>
                         <XMWrap>
-                          <XMTok meaning="1" role="NUMBER" xml:id="S4.E3Xd.m7.1">1</XMTok>
+                          <XMTok meaning="1" role="NUMBER" xml:id="S4.E3Xc.m7.1">1</XMTok>
                           <XMTok role="PUNCT">,</XMTok>
-                          <XMTok name="ldots" role="ID" xml:id="S4.E3Xd.m7.2">…</XMTok>
+                          <XMTok name="ldots" role="ID" xml:id="S4.E3Xc.m7.2">…</XMTok>
                           <XMTok role="PUNCT">,</XMTok>
-                          <XMTok font="italic" role="UNKNOWN" xml:id="S4.E3Xd.m7.3">p</XMTok>
+                          <XMTok font="italic" role="UNKNOWN" xml:id="S4.E3Xc.m7.3">p</XMTok>
                         </XMWrap>
                       </XMDual>
                     </XMApp>
@@ -1665,46 +1554,21 @@
               <tag role="refnum">4c</tag>
             </tags>
             <MathFork>
-              <Math class="ltx_math_unparsed" tex="\displaystyle\mathrm{s.t.}\quad u_{t}\in\mathcal{U}" xml:id="S5.E4.3.m4">
+              <Math tex="\displaystyle u_{t}\in\mathcal{U}" text="u _ t element-of U" xml:id="S5.E4.3.m4">
                 <XMath>
-                  <XMTok role="UNKNOWN" xml:id="S5.E4.3.m4.1">s</XMTok>
-                  <XMTok role="PERIOD">.</XMTok>
-                  <XMTok role="UNKNOWN" xml:id="S5.E4.3.m4.2">t</XMTok>
-                  <XMTok role="PERIOD">.</XMTok>
-                  <XMHint name="quad" role="PUNCT" width="10pt"/>
                   <XMApp>
-                    <XMTok role="SUBSCRIPTOP" scriptpos="post1"/>
-                    <XMTok font="italic" role="UNKNOWN">u</XMTok>
-                    <XMTok font="italic" fontsize="70%" role="UNKNOWN">t</XMTok>
+                    <XMTok meaning="element-of" name="in" role="RELOP">∈</XMTok>
+                    <XMApp>
+                      <XMTok role="SUBSCRIPTOP" scriptpos="post1"/>
+                      <XMTok font="italic" role="UNKNOWN">u</XMTok>
+                      <XMTok font="italic" fontsize="70%" role="UNKNOWN">t</XMTok>
+                    </XMApp>
+                    <XMTok font="caligraphic" role="UNKNOWN">U</XMTok>
                   </XMApp>
-                  <XMTok meaning="element-of" name="in" role="RELOP">∈</XMTok>
-                  <XMTok font="caligraphic" role="UNKNOWN">U</XMTok>
                 </XMath>
               </Math>
               <MathBranch>
-                <td align="left"><Math mode="inline" tex="\displaystyle\mathrm{s.t.}\quad" text="formulae@(s, t)" xml:id="S5.E4.3.m1">
-                    <XMath>
-                      <XMDual>
-                        <XMRef idref="S5.E4.3.m1.3"/>
-                        <XMWrap>
-                          <XMDual xml:id="S5.E4.3.m1.3">
-                            <XMApp>
-                              <XMTok meaning="formulae"/>
-                              <XMRef idref="S5.E4.3.m1.1"/>
-                              <XMRef idref="S5.E4.3.m1.2"/>
-                            </XMApp>
-                            <XMWrap>
-                              <XMTok role="UNKNOWN" xml:id="S5.E4.3.m1.1">s</XMTok>
-                              <XMTok role="PERIOD">.</XMTok>
-                              <XMTok role="UNKNOWN" xml:id="S5.E4.3.m1.2">t</XMTok>
-                            </XMWrap>
-                          </XMDual>
-                          <XMTok role="PERIOD">.</XMTok>
-                          <XMHint name="quad" role="PUNCT" width="10pt"/>
-                        </XMWrap>
-                      </XMDual>
-                    </XMath>
-                  </Math></td>
+                <td align="left"/>
                 <td align="right"><Math mode="inline" tex="\displaystyle u_{t}\in\mathcal{U}" text="u _ t element-of U" xml:id="S5.E4.3.m2">
                     <XMath>
                       <XMApp>

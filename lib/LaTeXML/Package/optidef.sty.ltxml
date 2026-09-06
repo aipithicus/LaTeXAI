@@ -107,7 +107,7 @@ DefMacro('\addConstraint {}', sub {
     }
 
     my $first      = LookupValue('optidef_first_con') // 1;
-    AssignValue('optidef_first_con' => 0);
+    AssignValue('optidef_first_con' => 0, 'global');
     my $format     = LookupValue('optidef_format') // 'l';
     my $con_format = LookupValue('optidef_con_format') // '0';
 
@@ -185,9 +185,9 @@ sub _def_optidef_family {
         my ($gullet) = @_;
         my ($format, $con_format, $breakable, $optVar, $objective, $label, $result) = _parse_optidef_args($gullet);
 
-        AssignValue('optidef_first_con'   => 1);
-        AssignValue('optidef_format'      => $format);
-        AssignValue('optidef_con_format'  => $con_format);
+        AssignValue('optidef_first_con'   => 1, 'global');
+        AssignValue('optidef_format'      => $format, 'global');
+        AssignValue('optidef_con_format'  => $con_format, 'global');
 
         my $op = _optidef_op_macro($base_name, $format);
         my @toks = ();
