@@ -1,0 +1,181 @@
+# -*- mode: Perl -*-
+# /=====================================================================\ #
+# |  tikz-qtree.sty                                                     | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+# | Part of LaTeXAI / LaTeXML:                                           | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# \=========================================================ooo==U==ooo=/ #
+# Native structural subset of tikz-qtree 1.2 (2012-04-20), TeX Live
+# revision 26108, written from lib-ctan/tikz-qtree/tex/latex/tikz-qtree/
+# tikz-qtree.sty, tikz-qtree.tex, tikz-qtree-compat.sty and
+# provenance.json. Model: forest's nested ltx:inline-block tree IR.
+# Raw tikz-qtree requires tikz and pgftree and draws via pgfsubpicture;
+# this binding severs that, requires the native tikz containment
+# envelope, and executes no raw PGF. Covers \Tree [.Label children ],
+# space-separated leaves, \qroof{text}.Label, and \edge ...; as a skip.
+# Level/grow/roof path geometry is out of scope.
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+use LaTeXML::Core::Token;
+use LaTeXML::Core::Tokens;
+
+RequirePackage('tikz');
+# Tree IR constructors live in the forest binding (same nested inline-block shape).
+RequirePackage('forest');
+
+DeclareOption(undef, sub { });
+ProcessOptions();
+
+sub latexai_qtree_skip_edge {
+  my ($arr, $i) = @_;
+  my $n = scalar(@$arr);
+  $i++ while $i < $n && !$arr->[$i]->equals(T_OTHER(';'));
+  $i++ if $i < $n;
+  return $i; }
+
+sub latexai_qtree_read_word {
+  my ($arr, $i) = @_;
+  my $n = scalar(@$arr);
+  $i = latexai_tree_skip_spaces($arr, $i);
+  return (undef, $i) if $i >= $n;
+  my $t = $arr->[$i];
+  if ($t->getCatcode == CC_BEGIN) {
+    my $start = $i;
+    $i = tikz_contain_skip_brace($arr, $i);
+    my $inner = latexai_tree_trim(Tokens(@$arr[$start + 1 .. $i - 2]));
+    return ($inner, $i); }
+  if ($t->equals(T_OTHER('[')) || $t->equals(T_OTHER(']'))) {
+    return (undef, $i); }
+  if ($t->getCatcode == CC_CS) {
+    return (undef, $i) if $t->equals(T_CS('\qroof')) || $t->equals(T_CS('\edge'));
+    $i++;
+    return (Tokens($t), $i); }
+  my @toks;
+  while ($i < $n) {
+    $t = $arr->[$i];
+    my $cc = $t->getCatcode;
+    last if $cc == CC_SPACE || $cc == CC_EOL;
+    last if $t->equals(T_OTHER('[')) || $t->equals(T_OTHER(']'));
+    last if $cc == CC_BEGIN;
+    last if $t->getCatcode == CC_CS;
+    push(@toks, $t);
+    $i++; }
+  return (latexai_tree_trim(@toks ? Tokens(@toks) : undef), $i); }
+
+sub latexai_qtree_parse_qroof {
+  my ($arr, $i) = @_;
+  my $n = scalar(@$arr);
+  return (undef, $i) unless $i < $n && $arr->[$i]->equals(T_CS('\qroof'));
+  $i++;
+  $i = latexai_tree_skip_spaces($arr, $i);
+  my ($text, $ni) = latexai_qtree_read_word($arr, $i);
+  $i = latexai_tree_skip_spaces($arr, $ni);
+  if ($i < $n && $arr->[$i]->equals(T_OTHER('.'))) {
+    $i++; }
+  $i = latexai_tree_skip_spaces($arr, $i);
+  my ($label, $nj) = latexai_qtree_read_word($arr, $i);
+  my $roof = { content => $text, children => [], roof => 1 };
+  if ($label) {
+    return ({ content => $label, children => [$roof] }, $nj); }
+  return ($roof, $nj); }
+
+sub latexai_qtree_parse_subtree {
+  my ($arr, $i) = @_;
+  my $n = scalar(@$arr);
+  return (undef, $i) unless $i < $n && $arr->[$i]->equals(T_OTHER('['));
+  $i++;
+  $i = latexai_tree_skip_spaces($arr, $i);
+  my $label;
+  if ($i < $n && $arr->[$i]->equals(T_OTHER('.'))) {
+    $i++;
+    $i = latexai_tree_skip_spaces($arr, $i);
+    my ($word, $ni) = latexai_qtree_read_word($arr, $i);
+    $label = $word;
+    $i     = $ni; }
+  $i = latexai_tree_skip_spaces($arr, $i);
+  my @children;
+  while ($i < $n && !$arr->[$i]->equals(T_OTHER(']'))) {
+    $i = latexai_tree_skip_spaces($arr, $i);
+    last if $i >= $n || $arr->[$i]->equals(T_OTHER(']'));
+    if ($arr->[$i]->equals(T_CS('\edge'))) {
+      $i = latexai_qtree_skip_edge($arr, $i);
+      next; }
+    if ($arr->[$i]->equals(T_CS('\qroof'))) {
+      my ($child, $ni) = latexai_qtree_parse_qroof($arr, $i);
+      push(@children, $child) if $child;
+      $i = $ni;
+      next; }
+    if ($arr->[$i]->equals(T_OTHER('['))) {
+      my ($child, $ni) = latexai_qtree_parse_subtree($arr, $i);
+      push(@children, $child) if $child;
+      $i = $ni;
+      next; }
+    my ($leaf, $ni) = latexai_qtree_read_word($arr, $i);
+    last unless $leaf;
+    push(@children, { content => $leaf, children => [] });
+    $i = $ni; }
+  if ($i < $n && $arr->[$i]->equals(T_OTHER(']'))) {
+    $i++; }
+  else {
+    Error('expected', 'qtree-bracket', undef, 'Unterminated tikz-qtree node'); }
+  return ({ content => $label, children => \@children }, $i); }
+
+sub latexai_qtree_from_array {
+  my ($arr, $i) = @_;
+  my $n = scalar(@$arr);
+  return (undef, $i) unless $i < $n && $arr->[$i]->equals(T_CS('\Tree'));
+  my $start = $i;
+  $i++;
+  $i = latexai_tree_skip_spaces($arr, $i);
+  my ($root, $ni) = latexai_qtree_parse_subtree($arr, $i);
+  return (undef, $start + 1) unless $root;
+  return (latexai_tree_emit($root), $ni); }
+
+sub latexai_qtree_read_from_gullet {
+  my ($gullet) = @_;
+  $gullet->skipSpaces;
+  return unless $gullet->ifNext(T_OTHER('['));
+  my @toks;
+  my $depth = 0;
+  while (defined(my $tok = $gullet->readToken)) {
+    if ($tok->getCatcode == CC_BEGIN) {
+      push(@toks, $tok, $gullet->readBalanced->unlist, T_END);
+      next; }
+    push(@toks, $tok);
+    $depth++ if $tok->equals(T_OTHER('['));
+    $depth-- if $tok->equals(T_OTHER(']'));
+    last if $depth == 0; }
+  my ($root, undef) = latexai_qtree_parse_subtree(\@toks, 0);
+  return $root; }
+
+DefMacro('\Tree', sub {
+    my ($gullet) = @_;
+    my $root = latexai_qtree_read_from_gullet($gullet);
+    Error('expected', 'qtree-tree', undef, '\\Tree has no root [node]') unless $root;
+    return latexai_tree_emit($root); });
+
+DefMacro('\qroof', sub {
+    my ($gullet) = @_;
+    $gullet->skipSpaces;
+    my $text = $gullet->readArg;
+    $gullet->skipSpaces;
+    $gullet->readToken if $gullet->ifNext(T_OTHER('.'));
+    $gullet->skipSpaces;
+    my $label;
+    if ($gullet->ifNext(T_BEGIN)) {
+      $label = $gullet->readArg; }
+    else {
+      my @toks;
+      while (defined(my $tok = $gullet->readToken)) {
+        last if $tok->getCatcode == CC_SPACE || $tok->getCatcode == CC_EOL;
+        last if $tok->equals(T_OTHER('[')) || $tok->equals(T_OTHER(']'));
+        push(@toks, $tok); }
+      $label = Tokens(@toks) if @toks; }
+    my $node = { content => $label, children => [{ content => $text, children => [], roof => 1 }] };
+    return latexai_tree_emit_node($node); });
+
+1;

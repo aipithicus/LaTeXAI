@@ -256,6 +256,12 @@ sub tikz_contain_harvest {
       next; }
     if ($cc == CC_CS) {
       my $name = $tok->getString;
+      if ($name eq '\\Tree' && defined &latexai_qtree_from_array) {
+        my ($emit, $ni) = latexai_qtree_from_array(\@arr, $i);
+        if ($emit) {
+          push(@cands, { start => $i, end => $ni, emit => $emit });
+          $i = $ni;
+          next; } }
       if ($name eq '\\node' || $name eq '\\legend' || $name eq '\\nodepart') {
         my $start = $i;
         $i++;
@@ -309,6 +315,9 @@ sub tikz_contain_emit {
   my @chunks = tikz_contain_harvest($body);
   my @toks   = (T_CS('\lx@pgf@picture'), T_BEGIN, tikz_contain_string_tokens($class)->unlist, T_END, T_BEGIN);
   foreach my $c (@chunks) {
+    if ($c->{emit}) {
+      push(@toks, $c->{emit}->unlist);
+      next; }
     push(@toks, T_CS('\lx@pgf@g'), T_BEGIN, tikz_contain_string_tokens($c->{class})->unlist, T_END,
       T_BEGIN, $c->{tokens}->unlist, T_END); }
   push(@toks, T_END);

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="tikz-qtree"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <picture class="ltx_tikz" height="147.36" tex="\lx@pgf@picture{ltx_tikz}{\lx@tree@wrap{\lx@tree@node{S}{\lx@tree@node{NP}{%&#10;\lx@tree@node{Det}{}\lx@tree@node{N}{}}\lx@tree@node{VP}{\lx@tree@node{V}{}}}}}" width="10.57" xml:id="p1.pic1">
+      <inline-block class="ltx_tree">
+        <inline-block class="ltx_tree_node">
+          <p class="ltx_tree_label">S</p>
+          <inline-block class="ltx_tree_node">
+            <p class="ltx_tree_label">NP</p>
+            <inline-block class="ltx_tree_node">
+              <p class="ltx_tree_label">Det</p>
+            </inline-block>
+            <inline-block class="ltx_tree_node">
+              <p class="ltx_tree_label">N</p>
+            </inline-block>
+          </inline-block>
+          <inline-block class="ltx_tree_node">
+            <p class="ltx_tree_label">VP</p>
+            <inline-block class="ltx_tree_node">
+              <p class="ltx_tree_label">V</p>
+            </inline-block>
+          </inline-block>
+        </inline-block>
+      </inline-block>
+    </picture>
+  </para>
+</document>
