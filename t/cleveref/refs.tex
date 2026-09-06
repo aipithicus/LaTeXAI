@@ -1,0 +1,40 @@
+\documentclass{article}
+\usepackage{cleveref}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+
+\begin{document}
+\section{Introduction}\label{sec:intro}
+
+\begin{theorem}\label{thm:main}
+A major result.
+\end{theorem}
+
+\begin{lemma}\label{lem:helper}
+A helper lemma.
+\end{lemma}
+
+\begin{equation}\label{eq:euler}
+e^{i\pi} + 1 = 0
+\end{equation}
+
+\noindent
+Single ref: \cref{thm:main} and \Cref{thm:main}.
+
+\noindent
+Multiple refs: \cref{thm:main,lem:helper,eq:euler}.
+
+\noindent
+Range refs: \crefrange{thm:main}{lem:helper}.
+
+\noindent
+Name of ref: \namecref{thm:main} and \nameCref{thm:main}.
+
+\noindent
+Section ref: \cref{sec:intro}.
+
+\crefname{theorem}{Thm.}{Thms.}
+\Crefname{theorem}{Thm.}{Thms.}
+\noindent
+Custom names: \cref{thm:main} and \Cref{thm:main}.
+\end{document}
