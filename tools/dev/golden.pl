@@ -102,7 +102,8 @@ foreach my $tex (@cases) {
     print STDERR "golden.pl: $tex: lint " . (@problems ? 'reported' : 'clean')
       . " (" . $core->getStatusMessage . "); nothing written\n";
     next; }
-  open(my $out, '>:encoding(UTF-8)', $xml) or do { warn "golden.pl: cannot write $xml: $!\n"; $failures++; next; };
+  # :raw so the golden is LF on every platform; Windows perl's text layer would add CR.
+  open(my $out, '>:raw:encoding(UTF-8)', $xml) or do { warn "golden.pl: cannot write $xml: $!\n"; $failures++; next; };
   print {$out} $string;
   close($out);
   print STDERR "golden.pl: wrote $xml (" . $core->getStatusMessage . ")\n"; }

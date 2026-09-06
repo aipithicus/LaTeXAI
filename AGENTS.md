@@ -65,6 +65,7 @@ Facts that save a round trip:
 - **New bindings:** `lib/LaTeXML/Package/<pkg>.sty.ltxml`, header comment naming the package version emulated and what it was written from, then `1;` at the end. Every binding ships with its own suite `t/<pkg>/` and driver `t/8N_<pkg>.t`, as upstream does for `t/ams`, `t/babel`, `t/moderncv`; the contract and definition of done are in `docs/specification/bindings.md`, the procedure in `docs/recipes/package-bindings.md`.
 - **Ignored, never committed:** `blib/`, `*.log`, `*.aux`, `Makefile`, `MYMETA.*`, `pm_to_blib`. Disposable working files go under the gitignored `temp/` tree: logs in `temp/logs/`, test-driver output in `temp/t/<test>/`, binding intermediates in `temp/bindings/<pkg>/`. Nothing at the repo root, nothing under `.codex/` or other tool dotdirs, nothing in `private/`. Test fixtures go in `t/<suite>/` (see `docs/testing.md`); a bespoke driver's runtime output goes through `File::Temp` or `temp/t/<test>/`.
 - **No compat shims.** Superseded fork surfaces are deleted, not aliased.
+- **Line endings are LF.** `.gitattributes` applies `text=auto eol=lf` to the whole tree and git normalizes on add, so a CRLF file cannot reach the index; `t/capture/crlf.tex` is the one pinned exception. Tools that write text open with `:raw` (`golden.pl` does) so the working tree matches the index without a re-checkout. A `w/crlf` row in `git ls-files --eol` means a tool wrote through a text-mode layer; fix the tool.
 
 ---
 
