@@ -94,8 +94,25 @@ DeclareOption('noabbrev', sub {
 DeclareOption('nameinlink', sub {
   AssignValue('cleveref_nameinlink' => 1);
 });
+# Furniture: sorting/compression and language files have no IR effect.
+foreach my $opt (qw(sort compress nosort nocompress
+  english american british german ngerman french spanish italian
+  dutch russian ukrainian norwegian nynorsk danish swedish finnish)) {
+  DeclareOption($opt, sub { });
+}
+DeclareOption(undef, sub { });
 
 ProcessOptions();
+
+sub _cref_capitalize {
+  my ($tokens) = @_;
+  return $tokens unless $tokens;
+  my $s = ToString($tokens);
+  $s =~ s/^\s+|\s+$//g;
+  return $tokens unless length $s;
+  substr($s, 0, 1) = uc(substr($s, 0, 1));
+  return TokenizeInternal($s);
+}
 
 # User-facing customizers
 DefMacro('\crefname{}{}{}', sub {
@@ -103,6 +120,9 @@ DefMacro('\crefname{}{}{}', sub {
   my $t = ToString($type);
   DefMacro('\cref@' . $t . '@name',        $sing);
   DefMacro('\cref@' . $t . '@name@plural', $plur);
+  # Real cleveref derives \Crefname from \crefname when the user omits it.
+  DefMacro('\Cref@' . $t . '@name',        _cref_capitalize($sing));
+  DefMacro('\Cref@' . $t . '@name@plural', _cref_capitalize($plur));
   return ();
 });
 

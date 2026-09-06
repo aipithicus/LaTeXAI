@@ -1,0 +1,10 @@
+\documentclass{article}
+\usepackage[capitalize,sort,compress]{cleveref}
+\newtheorem{claim}{Claim}
+\crefname{claim}{claim}{claims}
+\begin{document}
+\begin{claim}\label{cl:1}
+Hi.
+\end{claim}
+See \cref{cl:1} and \Cref{cl:1}.
+\end{document}
