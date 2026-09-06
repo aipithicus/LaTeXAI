@@ -1,6 +1,6 @@
-# -*- CPERL -*-
+# -*- mode: Perl -*-
 # /=====================================================================\ #
-# |  bookmark.sty                                                           | #
+# |  bookmark.sty                                                       | #
 # | Implementation for LaTeXML                                          | #
 # |=====================================================================| #
 # | Part of LaTeXML:                                                    | #
@@ -15,10 +15,38 @@ use strict;
 use warnings;
 use LaTeXML::Package;
 
-#**********************************************************************
+# CTAN: bookmark v1.32 (rev 79461)
+# Pure native binding eliminating InputDefinitions('bookmark').
 
-InputDefinitions('bookmark', type => 'sty', noltxml => 1);
+RequirePackage('hyperref');
 
-#**********************************************************************
+# Ignore package options (driver options, draft, etc.)
+DeclareOption('*', sub { });
+ProcessOptions();
+
+# Core bookmark creation commands:
+DefMacro('\bookmark[]{}', sub {
+  my ($gullet, $options, $title) = @_;
+  return ();
+});
+
+DefMacro('\subbookmark[]{}{}', sub {
+  my ($gullet, $options, $level, $title) = @_;
+  return ();
+});
+
+# Setup and configuration macros:
+DefMacro('\bookmarksetup{}',                     '');
+DefMacro('\bookmarksetupnext{}',                 '');
+DefMacro('\bookmarkdefinestyle{Semiverbatim}{}', '');
+DefMacro('\bookmarkget{}',                       '');
+DefMacro('\BookmarkAtEnd{}',                     '');
+DefMacro('\currentbookmarklevel',                '0');
+
+# Compatibility wrappers:
+DefMacro('\pdfbookmark[]{}{}',      '');
+DefMacro('\currentpdfbookmark{}{}', '');
+DefMacro('\subpdfbookmark{}{}',     '');
+DefMacro('\belowpdfbookmark{}{}',   '');
 
 1;

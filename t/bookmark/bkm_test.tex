@@ -1,0 +1,17 @@
+\documentclass{article}
+\usepackage{bookmark}
+
+\bookmarksetup{depth=3,open=true}
+
+\begin{document}
+\section{First Section}\label{sec:first}
+Some text here.
+
+\bookmark[level=1,dest=sec:first]{Custom Bookmark to First}
+\bookmarksetupnext{bold}
+\bookmark[level=2]{Sub-entry}
+
+\section{Second Section}
+More text.
+\subbookmark[level=2]{1}{Direct Subbookmark}
+\end{document}
