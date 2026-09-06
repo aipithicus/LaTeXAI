@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="tabularray"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <tabular class="ltx_guessed_headers">
+      <thead>
+        <tr>
+          <td align="left" border="tt" thead="column row">Item</td>
+          <td align="center" border="tt" thead="column">Score A</td>
+          <td align="center" border="tt" thead="column">Score B</td>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td align="left" border="t" thead="row">Model 1</td>
+          <td align="center" border="t">94.5</td>
+          <td align="center" border="t">88.2</td>
+        </tr>
+        <tr>
+          <td align="left" border="bb" thead="row">Model 2</td>
+          <td align="center" border="bb">91.0</td>
+          <td align="center" border="bb">85.6</td>
+        </tr>
+      </tbody>
+    </tabular>
+  </para>
+</document>

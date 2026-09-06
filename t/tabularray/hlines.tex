@@ -1,0 +1,16 @@
+\documentclass{article}
+\usepackage{tabularray}
+\begin{document}
+\begin{tblr}{hlines,vlines}
+A & B \\
+C & D \\
+\end{tblr}
+
+\begin{tblr}{
+  colspec = {rX},
+  hlines,
+}
+  Left & Descriptive text in an auto-wrapping X column \\
+  Key  & Value 42 \\
+\end{tblr}
+\end{document}

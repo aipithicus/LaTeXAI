@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="tabularray"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <p>BEFORE</p>
+  </para>
+  <para xml:id="p2">
+    <tabular>
+      <tbody>
+        <tr>
+          <td align="left">A</td>
+          <td align="left">B</td>
+        </tr>
+        <tr>
+          <td align="left">C</td>
+          <td align="left">D</td>
+        </tr>
+      </tbody>
+    </tabular>
+  </para>
+  <para xml:id="p3">
+    <p>AFTER</p>
+  </para>
+</document>

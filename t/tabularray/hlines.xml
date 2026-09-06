@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="tabularray"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <tabular>
+      <tbody>
+        <tr>
+          <td align="left" border="l r t">A</td>
+          <td align="left" border="r t">B</td>
+        </tr>
+        <tr>
+          <td align="left" border="b l r t">C</td>
+          <td align="left" border="b r t">D</td>
+        </tr>
+      </tbody>
+    </tabular>
+  </para>
+  <para xml:id="p2">
+    <tabular class="ltx_guessed_headers">
+      <tbody>
+        <tr>
+          <td align="right" border="t" thead="row">Left</td>
+          <td align="justify" border="t"><inline-block vattach="top">
+              <p>Descriptive text in an auto-wrapping X column</p>
+            </inline-block></td>
+        </tr>
+        <tr>
+          <td align="right" border="b t" thead="row">Key</td>
+          <td align="justify" border="b t"><inline-block vattach="top">
+              <p>Value 42</p>
+            </inline-block></td>
+        </tr>
+      </tbody>
+    </tabular>
+  </para>
+</document>

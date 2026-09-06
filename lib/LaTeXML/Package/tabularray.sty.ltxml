@@ -18,18 +18,17 @@ use LaTeXML::Package;
 RequirePackage('array');
 RequirePackage('booktabs');
 
-# Package options:
 DeclareOption(undef, sub { });
 ProcessOptions();
 
-# Column types:
-# X column (like tabularx, paragraph style)
+# Q[] / X[] only: a following bare DefColumnType('Q') would clobber the optional form.
+# Bare Q defaults to justify, matching tabularray (not center).
 DefColumnType('X[]', sub {
   my ($stomach, $opt) = @_;
   my $align = 'justify';
   if ($opt) {
     my $str = ToString($opt);
-    if ($str =~ /\bl\b/)    { $align = 'left'; }
+    if    ($str =~ /\bl\b/) { $align = 'left'; }
     elsif ($str =~ /\br\b/) { $align = 'right'; }
     elsif ($str =~ /\bc\b/) { $align = 'center'; }
   }
@@ -39,21 +38,13 @@ DefColumnType('X[]', sub {
     align  => $align);
   return;
 });
-DefColumnType('X', sub {
-  $LaTeXML::BUILD_TEMPLATE->addColumn(
-    before => Tokens(T_CS('\vtop'), T_BEGIN),
-    after  => Tokens(T_END),
-    align  => 'justify');
-  return;
-});
 
-# Q column type with optional specifiers: Q[l], Q[c], Q[r], Q[m,c], etc.
 DefColumnType('Q[]', sub {
   my ($stomach, $opt) = @_;
-  my $align = 'center';
+  my $align = 'justify';
   if ($opt) {
     my $str = ToString($opt);
-    if ($str =~ /\bl\b/)    { $align = 'left'; }
+    if    ($str =~ /\bl\b/) { $align = 'left'; }
     elsif ($str =~ /\br\b/) { $align = 'right'; }
     elsif ($str =~ /\bc\b/) { $align = 'center'; }
     elsif ($str =~ /\bj\b/) { $align = 'justify'; }
@@ -61,102 +52,298 @@ DefColumnType('Q[]', sub {
   $LaTeXML::BUILD_TEMPLATE->addColumn(align => $align);
   return;
 });
-DefColumnType('Q', sub {
-  $LaTeXML::BUILD_TEMPLATE->addColumn(align => 'center');
-  return;
-});
 
-# Helper to parse tabularray inner-spec:
-sub _parse_tblr_colspec {
-  my ($inner) = @_;
-  return '*{50}{l}' unless defined $inner;
-  my $str = ToString($inner);
-  $str =~ s/^\s+//; $str =~ s/\s+$//;
-  return '*{50}{l}' if $str eq '';
+# Inner-spec keys. columns= is NOT a colspec (it styles every column).
+my %TBLR_FLAG = map { $_ => 1 } qw(hlines vlines hline vline);
+my %TBLR_KEY  = map { $_ => 1 } qw(
+  colspec rowspec width hlines vlines hline vline
+  cells cell rows row columns column stretch
+  rulesep rowsep colsep abovesep belowsep leftsep rightsep
+  baselineskip baseline);
 
-  my $colspec = '';
-  if ($str =~ /colspec\s*=\s*\{([^}]+)\}/) {
-    $colspec = $1;
-  } elsif ($str =~ /columns\s*=\s*\{([^}]+)\}/) {
-    my $c = $1;
-    $colspec = ($c =~ /^\d+$/) ? "c" x $c : $c;
-  } elsif ($str !~ /=/) {
-    # Shorthand colspec: \begin{tblr}{|l|c|r|} or {rrr}
-    $colspec = $str;
-  }
-
-  if (!$colspec) {
-    $colspec = '*{50}{l}';
-  } else {
-    # Clean up whitespace between column tokens
-    $colspec =~ s/\s+/ /g;
-    $colspec =~ s/^\s+//; $colspec =~ s/\s+$//;
-  }
-
-  # If vlines is globally enabled in inner spec and no explicit | in colspec:
-  if ($str =~ /\bvlines\b/ && $colspec !~ /\|/ && $colspec !~ /\*\{/) {
-    my @chars = split(//, $colspec);
-    $colspec = '|' . join('|', @chars) . '|';
-  }
-
-  return $colspec;
+sub _tblr_skip_spaces {
+  my ($toks, $i) = @_;
+  while ($i < scalar(@$toks) && $$toks[$i]->getCatcode == CC_SPACE) { $i++; }
+  return $i;
 }
 
-sub _parse_tblr_width {
-  my ($outer, $inner) = @_;
-  for my $spec ($inner, $outer) {
-    next unless defined $spec;
-    my $str = ToString($spec);
-    if ($str =~ /width\s*=\s*(\{([^}]+)\}|(\\[a-zA-Z]+|[0-9.]+[a-zA-Z]+))/) {
-      return $2 || $3;
+sub _tblr_split_items {
+  my ($tokens) = @_;
+  return () unless $tokens;
+  my @toks  = $tokens->unlist;
+  my @items = ();
+  my @cur   = ();
+  my $depth = 0;
+  for my $tok (@toks) {
+    my $cc = $tok->getCatcode;
+    if ($cc == CC_BEGIN) { $depth++; push(@cur, $tok); }
+    elsif ($cc == CC_END) { $depth--; push(@cur, $tok); }
+    elsif ($depth == 0 && $tok->equals(T_OTHER(','))) {
+      push(@items, Tokens(@cur)) if @cur;
+      @cur = ();
+    }
+    else { push(@cur, $tok); }
+  }
+  push(@items, Tokens(@cur)) if @cur;
+  return @items;
+}
+
+sub _tblr_item_kv {
+  my ($item) = @_;
+  my @toks = $item->unlist;
+  my $i    = _tblr_skip_spaces(\@toks, 0);
+  my @key  = ();
+  while ($i < scalar(@toks)) {
+    my $t = $toks[$i];
+    last if $t->equals(T_OTHER('='));
+    last if $t->getCatcode == CC_SPACE;
+    push(@key, $t);
+    $i++;
+  }
+  my $key = ToString(Tokens(@key));
+  $key =~ s/^\s+|\s+$//g;
+  $i = _tblr_skip_spaces(\@toks, $i);
+  if ($i < scalar(@toks) && $toks[$i]->equals(T_OTHER('='))) {
+    $i++;
+    $i = _tblr_skip_spaces(\@toks, $i);
+    my @val = @toks[$i .. $#toks];
+    while (@val && $val[0]->getCatcode == CC_SPACE) { shift(@val); }
+    while (@val && $val[-1]->getCatcode == CC_SPACE) { pop(@val); }
+    if (@val && $val[0]->getCatcode == CC_BEGIN && $val[-1]->getCatcode == CC_END) {
+      shift(@val); pop(@val);
+    }
+    return ($key, Tokens(@val));
+  }
+  return ($key, undef);
+}
+
+sub _tblr_read_group {
+  my ($s, $i, $open, $close) = @_;
+  return ('', $i) unless $i < length($s) && substr($s, $i, 1) eq $open;
+  my $depth = 0;
+  my $j     = $i;
+  my $n     = length($s);
+  while ($j < $n) {
+    my $c = substr($s, $j, 1);
+    $depth++ if $c eq $open;
+    $depth-- if $c eq $close;
+    $j++;
+    last if $depth == 0;
+  }
+  return (substr($s, $i + 1, $j - $i - 2), $j);
+}
+
+sub _tblr_split_colspec {
+  my ($s) = @_;
+  $s = '' unless defined $s;
+  my @units = ();
+  my $i     = 0;
+  my $n     = length($s);
+  my $prefix = '';
+  while ($i < $n) {
+    my $c = substr($s, $i, 1);
+    if ($c =~ /\s/) { $i++; next; }
+    if ($c eq '|') { $i++; next; }
+    if ($c eq '*' ) {
+      $i++;
+      my ($rep, $ni) = _tblr_read_group($s, $i, '{', '}');
+      $i = $ni;
+      my ($spec, $si) = _tblr_read_group($s, $i, '{', '}');
+      $i = $si;
+      push(@units, $prefix . "*{$rep}{$spec}");
+      $prefix = '';
+      next;
+    }
+    if ($c eq '>' || $c eq '<' || $c eq '@' || $c eq '!') {
+      $i++;
+      my ($arg, $ni) = _tblr_read_group($s, $i, '{', '}');
+      $i = $ni;
+      $prefix .= $c . '{' . $arg . '}';
+      next;
+    }
+    if ($c =~ /[A-Za-z]/) {
+      my $unit = $prefix . $c;
+      $prefix = '';
+      $i++;
+      if ($i < $n && substr($s, $i, 1) eq '[') {
+        my ($opt, $ni) = _tblr_read_group($s, $i, '[', ']');
+        $unit .= '[' . $opt . ']';
+        $i = $ni;
+      }
+      if ($i < $n && substr($s, $i, 1) eq '{') {
+        my ($arg, $ni) = _tblr_read_group($s, $i, '{', '}');
+        $unit .= '{' . $arg . '}';
+        $i = $ni;
+      }
+      push(@units, $unit);
+      next;
+    }
+    $i++;
+  }
+  push(@units, $prefix) if $prefix ne '';
+  return @units;
+}
+
+sub _tblr_parse_inner {
+  my ($inner) = @_;
+  my $hlines  = 0;
+  my $vlines  = 0;
+  my $colspec;
+  my $width;
+  return ('*{50}{l}', 0, 0, undef) unless $inner;
+  my @items = _tblr_split_items($inner);
+  my $has_eq = 0;
+  my @flags  = ();
+  for my $item (@items) {
+    my ($key, $val) = _tblr_item_kv($item);
+    next unless defined $key && $key ne '';
+    if (defined $val) {
+      $has_eq = 1;
+      if ($key eq 'colspec') {
+        $colspec = $val;
+      } elsif ($key eq 'width') {
+        $width = $val;
+      }
+      # columns= styles every column; it is not a colspec.
+    } else {
+      push(@flags, $key);
+      $hlines = 1 if $key eq 'hlines' || $key eq 'hline';
+      $vlines = 1 if $key eq 'vlines' || $key eq 'vline';
     }
   }
-  return undef;
+  if (!defined $colspec) {
+    if (!$has_eq && scalar(@items) == 1 && !$TBLR_FLAG{ $flags[0] // '' } && !$TBLR_KEY{ $flags[0] // '' }) {
+      $colspec = $items[0];
+    } else {
+      $colspec = TokenizeInternal('*{50}{l}');
+    }
+  }
+  my $cs = ToString($colspec);
+  $cs =~ s/^\s+|\s+$//g;
+  if ($vlines && $cs !~ /\|/) {
+    if ($cs =~ /^\*\{(\d+)\}\{(.+)\}$/) {
+      $cs = '|*{' . $1 . '}{' . $2 . '|}';
+    } else {
+      my @units = _tblr_split_colspec($cs);
+      @units = ('l') unless @units;
+      $cs = '|' . join('|', @units) . '|';
+    }
+    $colspec = TokenizeInternal($cs);
+  }
+  return ($colspec, $hlines, $vlines, $width);
 }
 
-sub _parse_tblr_vattach {
+sub _tblr_parse_outer {
   my ($outer) = @_;
-  return undef unless defined $outer;
-  my $str = ToString($outer);
-  if ($str =~ /baseline\s*=\s*([tmb])/i) {
-    return translateAttachment($1);
-  } elsif ($str =~ /^\[?\s*([tmb])\s*\]?$/i) {
-    return translateAttachment($1);
+  return (undef, undef, undef, undef) unless $outer;
+  my $width;
+  my $vattach;
+  my $caption;
+  my $label;
+  for my $item (_tblr_split_items($outer)) {
+    my ($key, $val) = _tblr_item_kv($item);
+    next unless defined $key;
+    if ($key eq 'width' && $val) {
+      $width = $val;
+    } elsif ($key eq 'baseline' && $val) {
+      my $p = ToString($val);
+      $p =~ s/^\s+|\s+$//g;
+      $vattach = translateAttachment($p) if $p =~ /^[tmb]$/i;
+    } elsif ($key eq 'caption' && $val) {
+      $caption = $val;
+    } elsif ($key eq 'label' && $val) {
+      $label = $val;
+    } elsif ($key =~ /^[tmb]$/i && !defined $val) {
+      $vattach = translateAttachment($key);
+    }
   }
-  return undef;
+  return ($width, $vattach, $caption, $label);
 }
 
-sub _parse_key_val {
-  my ($spec, $key) = @_;
-  return undef unless defined $spec;
-  my $str = ToString($spec);
-  if ($str =~ /\b\Q$key\E\s*=\s*\{([^}]+)\}/) {
-    return $1;
-  } elsif ($str =~ /\b\Q$key\E\s*=\s*([^\s,\]]+)/) {
-    return $1;
+sub _tblr_read_until_cell_end {
+  my ($gullet) = @_;
+  my @tokens   = ();
+  while (defined(my $tok = $gullet->readToken)) {
+    my $cc = $tok->getCatcode;
+    if ($cc == CC_BEGIN) {
+      push(@tokens, $tok, $gullet->readBalanced->unlist, T_END);
+      next;
+    }
+    if ($tok->equals(T_ALIGN)) {
+      return (Tokens(@tokens), 'align');
+    }
+    my $s = $tok->getString;
+    if ($tok->getCatcode == CC_CS && ($s eq '\\' || $s eq '\cr' || $s eq '\crcr'
+        || $s eq '\tabularnewline' || $s eq '\lx@hidden@crcr')) {
+      $gullet->unread($tok);
+      return (Tokens(@tokens), 'cr');
+    }
+    push(@tokens, $tok);
   }
-  return undef;
+  return (Tokens(@tokens), 'eof');
 }
 
-# Main tblr environment:
+DefPrimitive('\lx@tblr@rowspan{}', sub {
+  my ($stomach, $n) = @_;
+  if (my $alignment = LookupValue('Alignment')) {
+    my $col = $alignment->currentColumn;
+    my $r   = int(ToString($n));
+    $$col{rowspan} = $r if $col && $r > 1;
+  }
+  return ();
+});
+
+DefPrimitive('\lx@tblr@cellstyle{}', sub {
+  my ($stomach, $styles) = @_;
+  if (my $alignment = LookupValue('Alignment')) {
+    my $col = $alignment->currentColumn;
+    if ($col && $styles) {
+      my $st = ToString($styles);
+      if ($st =~ /\b([lcrj])\b/) {
+        my %m = (l => 'left', r => 'right', c => 'center', j => 'justify');
+        $$col{align} = $m{$1};
+      }
+      if ($st =~ /\b([tmb])\b/) {
+        $$col{vattach} = translateAttachment($1);
+      }
+    }
+  }
+  return ();
+});
+
+DefPrimitive('\lx@tblr@setuphlines', sub {
+  return () unless LookupValue('tblr_hlines');
+  Let('\lx@tblr@savedcr', '\\\\');
+  DefMacroI('\\\\', undef, '\lx@tblr@savedcr\hline');
+  return ();
+});
+
 DefMacro('\tblr OptionalUndigested Undigested', sub {
   my ($gullet, $outer, $inner) = @_;
-  my $colspec = _parse_tblr_colspec($inner);
-  my $width   = _parse_tblr_width($outer, $inner);
-  my $vattach = _parse_tblr_vattach($outer);
+  my ($colspec, $hlines, $vlines, $iwidth) = _tblr_parse_inner($inner);
+  my ($owidth, $vattach, $caption, $label) = _tblr_parse_outer($outer);
+  my $width = $owidth || $iwidth;
+  AssignValue('tblr_hlines' => $hlines ? 1 : 0);
 
-  my @attrs = ();
-  push(@attrs, "width=$width")     if $width;
-  push(@attrs, "vattach=$vattach") if $vattach;
-  my $attr_str = @attrs ? '[' . join(',', @attrs) . ']' : '';
+  my @bind = (T_CS('\@tabular@bindings'), T_BEGIN, $colspec->unlist, T_END);
+  my @kv   = ();
+  push(@kv, T_OTHER('width'), T_OTHER('='), $width->unlist) if $width;
+  if ($vattach) {
+    push(@kv, T_OTHER(',')) if @kv;
+    push(@kv, Explode("vattach=$vattach"));
+  }
+  if (@kv) {
+    push(@bind, T_OTHER('['), @kv, T_OTHER(']'));
+  }
 
   return Tokens(
-    T_CS('\@tabular@bindings'), T_BEGIN, Explode($colspec), T_END,
-    ($attr_str ? (T_OTHER('['), Explode(join(',', @attrs)), T_OTHER(']')) : ()),
+    @bind,
+    T_CS('\lx@tblr@setuphlines'),
     T_CS('\@@tblr'),
     ($outer ? (T_OTHER('['), $outer->unlist, T_OTHER(']')) : ()),
     T_BEGIN, $inner->unlist, T_END,
-    T_CS('\lx@begin@alignment')
+    T_CS('\lx@begin@alignment'),
+    ($hlines ? T_CS('\hline') : ())
   );
 });
 
@@ -169,16 +356,14 @@ DefConstructor('\@@tblr OptionalUndigested Undigested DigestedBody',
   mode            => 'restricted_horizontal',
   enterHorizontal => 1);
 
-# Variant environments:
 DefMacro('\longtblr OptionalUndigested Undigested', sub {
   my ($gullet, $outer, $inner) = @_;
-  my $caption = _parse_key_val($outer, 'caption');
-  my $label   = _parse_key_val($outer, 'label');
-  my @tokens  = ();
+  my ($owidth, $vattach, $caption, $label) = _tblr_parse_outer($outer);
+  my @tokens = ();
   if ($caption) {
     push(@tokens, T_CS('\table'));
-    push(@tokens, T_CS('\caption'), T_BEGIN, Explode($caption), T_END);
-    push(@tokens, T_CS('\label'), T_BEGIN, Explode($label), T_END) if $label;
+    push(@tokens, T_CS('\caption'), T_BEGIN, $caption->unlist, T_END);
+    push(@tokens, T_CS('\label'), T_BEGIN, $label->unlist, T_END) if $label;
     AssignValue('longtblr_has_table', 1);
   } else {
     AssignValue('longtblr_has_table', 0);
@@ -201,43 +386,54 @@ DefMacro('\endlongtblr', sub {
 DefMacro('\talltblr OptionalUndigested Undigested', '\longtblr[#1]{#2}');
 DefMacro('\endtalltblr',                           '\endlongtblr');
 
-# In-cell commands:
-# \SetCell[keyvals]{styles}
-DefPrimitive('\SetCell OptionalUndigested Undigested', sub {
-  my ($stomach, $keyvals, $styles) = @_;
-  if (my $alignment = LookupValue('Alignment')) {
-    my $colspec = $alignment->currentColumn;
-    if ($keyvals) {
-      my $kv_str = ToString($keyvals);
-      if ($kv_str =~ /\br\s*=\s*(\d+)/) {
-        my $r = int($1);
-        $$colspec{rowspan} = $r if $r > 1;
-      }
-      if ($kv_str =~ /\bc\s*=\s*(\d+)/) {
-        my $c = int($1);
-        $$colspec{colspan} = $c if $c > 1;
-      }
-    }
-    if ($styles) {
-      my $st_str = ToString($styles);
-      if ($st_str =~ /\b([lcrj])\b/) {
-        my %m = (l => 'left', r => 'right', c => 'center', j => 'justify');
-        $$colspec{align} = $m{$1};
-      }
-      if ($st_str =~ /\b([tmb])\b/) {
-        $$colspec{vattach} = translateAttachment($1);
-      }
-    }
+# \SetCell[c=N] lowers to \multicolumn, swallowing the N-1 covered & cells.
+# Rowspan stays on the cell hash; the engine does not recompute it.
+DefMacro('\SetCell OptionalUndigested Undigested', sub {
+  my ($gullet, $keyvals, $styles) = @_;
+  my $c = 1;
+  my $r = 1;
+  if ($keyvals) {
+    my $kv = ToString($keyvals);
+    $r = int($1) if $kv =~ /\br\s*=\s*(\d+)/;
+    $c = int($1) if $kv =~ /\bc\s*=\s*(\d+)/;
   }
-  return ();
+  my $align = 'c';
+  if ($styles) {
+    my $st = ToString($styles);
+    $align = $1 if $st =~ /\b([lcr])\b/;
+  }
+  my @pre = ();
+  push(@pre, T_CS('\lx@tblr@rowspan'), T_BEGIN, Explode($r), T_END) if $r > 1;
+  if ($c <= 1) {
+    push(@pre, T_CS('\lx@tblr@cellstyle'), T_BEGIN,
+      ($styles ? $styles->unlist : ()), T_END);
+    return Tokens(@pre);
+  }
+  my ($body, $why) = _tblr_read_until_cell_end($gullet);
+  my $emit_and = 0;
+  if ($why eq 'align') {
+    my $last = 'align';
+    for (1 .. $c - 1) {
+      my ($junk, $w) = _tblr_read_until_cell_end($gullet);
+      $last = $w;
+      last if $w ne 'align';
+    }
+    $emit_and = ($last eq 'align') ? 1 : 0;
+  }
+  return Tokens(
+    @pre,
+    T_CS('\multicolumn'),
+    T_BEGIN, Explode($c), T_END,
+    T_BEGIN, Explode($align), T_END,
+    T_BEGIN, $body->unlist, T_END,
+    ($emit_and ? T_ALIGN : ())
+  );
 });
 
-# Row / column helpers:
 DefMacro('\SetRow{}',   '');
 DefMacro('\SetHline{}', '');
 DefMacro('\SetVline{}', '');
 
-# Configuration and library macros:
 DefMacro('\UseTblrLibrary{}', sub {
   my ($gullet, $libs) = @_;
   for my $lib (split(/,/, ToString($libs))) {

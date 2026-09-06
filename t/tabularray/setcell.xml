@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="tabularray"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <tabular class="ltx_guessed_headers">
+      <thead>
+        <tr>
+          <td align="center" border="t" colspan="2" thead="column">Spanning Two Columns</td>
+          <td align="right" border="r t" thead="column">Right</td>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td align="left" border="b l r t">Alpha</td>
+          <td align="center" border="b r t">Beta</td>
+          <td align="right" border="b r t">Gamma</td>
+        </tr>
+      </tbody>
+    </tabular>
+  </para>
+  <para xml:id="p2">
+    <tabular class="ltx_guessed_headers">
+      <tbody>
+        <tr>
+          <td align="center" border="l r t" rowspan="2" thead="column row">2 Rows</td>
+          <td align="center" border="t" colspan="2" thead="column">2 Columns</td>
+          <td align="center" border="r t" thead="column">Fourth</td>
+        </tr>
+        <tr>
+          <td align="center" border="r t">2-2</td>
+          <td align="center" border="r t">2-3</td>
+          <td align="center" border="r t">2-4</td>
+        </tr>
+        <tr>
+          <td align="center" border="b l r t" thead="row">3-1</td>
+          <td align="center" border="b r t">3-2</td>
+          <td align="center" border="b r t">3-3</td>
+          <td align="center" border="b r t">3-4</td>
+        </tr>
+      </tbody>
+    </tabular>
+  </para>
+</document>

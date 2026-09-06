@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="tabularray"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <table inlist="lot" labels="LABEL:tbl:rate" xml:id="S0.T1">
+    <tags>
+      <tag>Table 1</tag>
+      <tag role="refnum">1</tag>
+      <tag role="typerefnum">Table 1</tag>
+    </tags>
+    <toccaption><tag close=" ">1</tag>Rate <Math mode="inline" tex="\alpha" text="alpha" xml:id="S0.T1.m1">
+        <XMath>
+          <XMTok font="italic" name="alpha" role="UNKNOWN">α</XMTok>
+        </XMath>
+      </Math></toccaption>
+    <caption><tag close=": ">Table 1</tag>Rate <Math mode="inline" tex="\alpha" text="alpha" xml:id="S0.T1.m2">
+        <XMath>
+          <XMTok font="italic" name="alpha" role="UNKNOWN">α</XMTok>
+        </XMath>
+      </Math></caption>
+    <tabular>
+      <tbody>
+        <tr>
+          <td align="left">A</td>
+          <td align="left">B</td>
+        </tr>
+      </tbody>
+    </tabular>
+  </table>
+</document>
