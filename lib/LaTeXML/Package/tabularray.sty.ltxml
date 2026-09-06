@@ -1,0 +1,273 @@
+# -*- mode: Perl -*-
+# /=====================================================================\ #
+# |  tabularray                                                         | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+# | Part of LaTeXAI / LaTeXML:                                          | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# \=========================================================ooo==U==ooo=/ #
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+# CTAN: tabularray v2025C (rev 78251)
+# Pure native binding mapping LaTeX3 tabularray environments to LaTeXML tabular IR.
+
+RequirePackage('array');
+RequirePackage('booktabs');
+
+# Package options:
+DeclareOption('*', sub { });
+ProcessOptions();
+
+# Column types:
+# X column (like tabularx, paragraph style)
+DefColumnType('X[]', sub {
+  my ($stomach, $opt) = @_;
+  my $align = 'justify';
+  if ($opt) {
+    my $str = ToString($opt);
+    if ($str =~ /\bl\b/)    { $align = 'left'; }
+    elsif ($str =~ /\br\b/) { $align = 'right'; }
+    elsif ($str =~ /\bc\b/) { $align = 'center'; }
+  }
+  $LaTeXML::BUILD_TEMPLATE->addColumn(
+    before => Tokens(T_CS('\vtop'), T_BEGIN),
+    after  => Tokens(T_END),
+    align  => $align);
+  return;
+});
+DefColumnType('X', sub {
+  $LaTeXML::BUILD_TEMPLATE->addColumn(
+    before => Tokens(T_CS('\vtop'), T_BEGIN),
+    after  => Tokens(T_END),
+    align  => 'justify');
+  return;
+});
+
+# Q column type with optional specifiers: Q[l], Q[c], Q[r], Q[m,c], etc.
+DefColumnType('Q[]', sub {
+  my ($stomach, $opt) = @_;
+  my $align = 'center';
+  if ($opt) {
+    my $str = ToString($opt);
+    if ($str =~ /\bl\b/)    { $align = 'left'; }
+    elsif ($str =~ /\br\b/) { $align = 'right'; }
+    elsif ($str =~ /\bc\b/) { $align = 'center'; }
+    elsif ($str =~ /\bj\b/) { $align = 'justify'; }
+  }
+  $LaTeXML::BUILD_TEMPLATE->addColumn(align => $align);
+  return;
+});
+DefColumnType('Q', sub {
+  $LaTeXML::BUILD_TEMPLATE->addColumn(align => 'center');
+  return;
+});
+
+# Helper to parse tabularray inner-spec:
+sub _parse_tblr_colspec {
+  my ($inner) = @_;
+  return '*{50}{l}' unless defined $inner;
+  my $str = ToString($inner);
+  $str =~ s/^\s+//; $str =~ s/\s+$//;
+  return '*{50}{l}' if $str eq '';
+
+  my $colspec = '';
+  if ($str =~ /colspec\s*=\s*\{([^}]+)\}/) {
+    $colspec = $1;
+  } elsif ($str =~ /columns\s*=\s*\{([^}]+)\}/) {
+    my $c = $1;
+    $colspec = ($c =~ /^\d+$/) ? "c" x $c : $c;
+  } elsif ($str !~ /=/) {
+    # Shorthand colspec: \begin{tblr}{|l|c|r|} or {rrr}
+    $colspec = $str;
+  }
+
+  if (!$colspec) {
+    $colspec = '*{50}{l}';
+  } else {
+    # Clean up whitespace between column tokens
+    $colspec =~ s/\s+/ /g;
+    $colspec =~ s/^\s+//; $colspec =~ s/\s+$//;
+  }
+
+  # If vlines is globally enabled in inner spec and no explicit | in colspec:
+  if ($str =~ /\bvlines\b/ && $colspec !~ /\|/ && $colspec !~ /\*\{/) {
+    my @chars = split(//, $colspec);
+    $colspec = '|' . join('|', @chars) . '|';
+  }
+
+  return $colspec;
+}
+
+sub _parse_tblr_width {
+  my ($outer, $inner) = @_;
+  for my $spec ($inner, $outer) {
+    next unless defined $spec;
+    my $str = ToString($spec);
+    if ($str =~ /width\s*=\s*(\{([^}]+)\}|(\\[a-zA-Z]+|[0-9.]+[a-zA-Z]+))/) {
+      return $2 || $3;
+    }
+  }
+  return undef;
+}
+
+sub _parse_tblr_vattach {
+  my ($outer) = @_;
+  return undef unless defined $outer;
+  my $str = ToString($outer);
+  if ($str =~ /baseline\s*=\s*([tmb])/i) {
+    return translateAttachment($1);
+  } elsif ($str =~ /^\[?\s*([tmb])\s*\]?$/i) {
+    return translateAttachment($1);
+  }
+  return undef;
+}
+
+sub _parse_key_val {
+  my ($spec, $key) = @_;
+  return undef unless defined $spec;
+  my $str = ToString($spec);
+  if ($str =~ /\b\Q$key\E\s*=\s*\{([^}]+)\}/) {
+    return $1;
+  } elsif ($str =~ /\b\Q$key\E\s*=\s*([^\s,\]]+)/) {
+    return $1;
+  }
+  return undef;
+}
+
+# Main tblr environment:
+DefMacro('\tblr OptionalUndigested Undigested', sub {
+  my ($gullet, $outer, $inner) = @_;
+  my $colspec = _parse_tblr_colspec($inner);
+  my $width   = _parse_tblr_width($outer, $inner);
+  my $vattach = _parse_tblr_vattach($outer);
+
+  my @attrs = ();
+  push(@attrs, "width=$width")     if $width;
+  push(@attrs, "vattach=$vattach") if $vattach;
+  my $attr_str = @attrs ? '[' . join(',', @attrs) . ']' : '';
+
+  return Tokens(
+    T_CS('\@tabular@bindings'), T_BEGIN, Explode($colspec), T_END,
+    ($attr_str ? (T_OTHER('['), Explode(join(',', @attrs)), T_OTHER(']')) : ()),
+    T_CS('\@@tblr'),
+    ($outer ? (T_OTHER('['), $outer->unlist, T_OTHER(']')) : ()),
+    T_BEGIN, $inner->unlist, T_END,
+    T_CS('\lx@begin@alignment')
+  );
+});
+
+DefMacro('\endtblr', '\lx@end@alignment\@end@tblr');
+DefPrimitive('\@end@tblr', sub { $_[0]->egroup; });
+
+DefConstructor('\@@tblr OptionalUndigested Undigested DigestedBody',
+  '#3',
+  beforeDigest    => sub { $_[0]->bgroup; },
+  mode            => 'restricted_horizontal',
+  enterHorizontal => 1);
+
+# Variant environments:
+DefMacro('\longtblr OptionalUndigested Undigested', sub {
+  my ($gullet, $outer, $inner) = @_;
+  my $caption = _parse_key_val($outer, 'caption');
+  my $label   = _parse_key_val($outer, 'label');
+  my @tokens  = ();
+  if ($caption) {
+    push(@tokens, T_CS('\table'));
+    push(@tokens, T_CS('\caption'), T_BEGIN, Explode($caption), T_END);
+    push(@tokens, T_CS('\label'), T_BEGIN, Explode($label), T_END) if $label;
+    AssignValue('longtblr_has_table', 1);
+  } else {
+    AssignValue('longtblr_has_table', 0);
+  }
+  push(@tokens, T_CS('\tblr'),
+    ($outer ? (T_OTHER('['), $outer->unlist, T_OTHER(']')) : ()),
+    T_BEGIN, $inner->unlist, T_END);
+  return Tokens(@tokens);
+});
+
+DefMacro('\endlongtblr', sub {
+  my @tokens = (T_CS('\endtblr'));
+  if (LookupValue('longtblr_has_table')) {
+    push(@tokens, T_CS('\endtable'));
+    AssignValue('longtblr_has_table', 0);
+  }
+  return Tokens(@tokens);
+});
+
+DefMacro('\talltblr OptionalUndigested Undigested', '\longtblr[#1]{#2}');
+DefMacro('\endtalltblr',                           '\endlongtblr');
+
+# In-cell commands:
+# \SetCell[keyvals]{styles}
+DefPrimitive('\SetCell OptionalUndigested Undigested', sub {
+  my ($stomach, $keyvals, $styles) = @_;
+  if (my $alignment = LookupValue('Alignment')) {
+    my $colspec = $alignment->currentColumn;
+    if ($keyvals) {
+      my $kv_str = ToString($keyvals);
+      if ($kv_str =~ /\br\s*=\s*(\d+)/) {
+        my $r = int($1);
+        $$colspec{rowspan} = $r if $r > 1;
+      }
+      if ($kv_str =~ /\bc\s*=\s*(\d+)/) {
+        my $c = int($1);
+        $$colspec{colspan} = $c if $c > 1;
+      }
+    }
+    if ($styles) {
+      my $st_str = ToString($styles);
+      if ($st_str =~ /\b([lcrj])\b/) {
+        my %m = (l => 'left', r => 'right', c => 'center', j => 'justify');
+        $$colspec{align} = $m{$1};
+      }
+      if ($st_str =~ /\b([tmb])\b/) {
+        $$colspec{vattach} = translateAttachment($1);
+      }
+    }
+  }
+  return ();
+});
+
+# Row / column helpers:
+DefMacro('\SetRow{}',   '');
+DefMacro('\SetHline{}', '');
+DefMacro('\SetVline{}', '');
+
+# Configuration and library macros:
+DefMacro('\UseTblrLibrary{}', sub {
+  my ($gullet, $libs) = @_;
+  for my $lib (split(/,/, ToString($libs))) {
+    $lib =~ s/^\s+//; $lib =~ s/\s+$//;
+    if ($lib eq 'booktabs') {
+      RequirePackage('booktabs');
+    } elsif ($lib eq 'amsmath') {
+      RequirePackage('amsmath');
+    } elsif ($lib eq 'siunitx') {
+      RequirePackage('siunitx');
+    } elsif ($lib eq 'diagbox') {
+      RequirePackage('diagbox');
+    }
+  }
+  return ();
+});
+
+DefMacro('\SetTblrInner OptionalUndigested {}', '');
+DefMacro('\SetTblrOuter OptionalUndigested {}', '');
+DefMacro('\NewTblrEnviron{}', sub {
+  my ($gullet, $name) = @_;
+  my $n = ToString($name);
+  $n =~ s/^\s+//; $n =~ s/\s+$//;
+  DefMacro('\\' . $n . ' OptionalUndigested Undigested', '\tblr[#1]{#2}');
+  DefMacro('\\end' . $n,                                '\endtblr');
+  return ();
+});
+DefMacro('\DefTblrTemplate{}{}{}',           '');
+DefMacro('\SetTblrTemplate{}{}',             '');
+DefMacro('\SetTblrStyle{}{}',                '');
+DefMacro('\NewTableCommand Semiverbatim {}', '');
+
+1;
