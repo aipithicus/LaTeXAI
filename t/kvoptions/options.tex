@@ -1,0 +1,21 @@
+\documentclass{article}
+\usepackage{kvoptions}
+\makeatletter
+\SetupKeyvalOptions{family=demo, prefix=demo@}
+\DeclareBoolOption{verbose}
+\DeclareBoolOption[true]{pretty}
+\DeclareComplementaryOption{plain}{pretty}
+\DeclareStringOption[none]{title}
+\DeclareVoidOption{go}{\gdef\went{yes}}
+\DeclareDefaultOption{}
+\DeclareLocalOptions{verbose}
+\DisableKeyvalOption{demo}{unused}
+\ProcessKeyvalOptions*
+\setkeys{demo}{verbose,title=Hello,go}
+\demo@plaintrue
+\begin{document}
+\ifdemo@verbose V\else nV\fi
+\ifdemo@pretty P\else nP\fi
+[\demo@title]
+[\went]
+\end{document}

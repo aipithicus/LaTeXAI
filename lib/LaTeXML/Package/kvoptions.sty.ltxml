@@ -1,6 +1,6 @@
-# -*- CPERL -*-
+# -*- mode: Perl -*-
 # /=====================================================================\ #
-# |  kvoptions.sty                                                           | #
+# |  kvoptions                                                          | #
 # | Implementation for LaTeXML                                          | #
 # |=====================================================================| #
 # | Part of LaTeXML:                                                    | #
@@ -15,10 +15,162 @@ use strict;
 use warnings;
 use LaTeXML::Package;
 
-#**********************************************************************
+# CTAN: kvoptions v3.15 (2022-06-15), TeX Live revision 79461.
+# Native stub replacing InputDefinitions('kvoptions'). Written from
+# lib-ctan/kvoptions/tex/latex/kvoptions/kvoptions.sty.
+# Maps SetupKeyvalOptions / Declare*Option / ProcessKeyvalOptions onto
+# DefKeyVal and ProcessOptions. Does not load kvsetkeys, ltxcmds, or
+# kvoptions-patch (the patch option is a no-op).
 
-InputDefinitions('kvoptions', type => 'sty', noltxml => 1);
+RequirePackage('keyval');
 
-#**********************************************************************
+DeclareOption('debugshow', sub { });
+DeclareOption('patch',     sub { });
+DeclareOption(undef,       sub { });
+ProcessOptions();
+
+DefKeyVal('KVO', 'family',  '');
+DefKeyVal('KVO', 'prefix',  '');
+DefKeyVal('KVO', 'setkeys', '');
+
+sub _kvo_family {
+  my $f = LookupValue('KVO_family');
+  return $f if defined $f && $f ne '';
+  my $n = ToString(Expand(T_CS('\@currname')));
+  return ($n ne '' ? $n : 'KV');
+}
+
+sub _kvo_prefix {
+  my $p = LookupValue('KVO_prefix');
+  return $p if defined $p;
+  my $n = ToString(Expand(T_CS('\@currname')));
+  return ($n ne '' ? $n . '@' : '');
+}
+
+DefPrimitive('\SetupKeyvalOptions RequiredKeyVals:KVO', sub {
+    my ($stomach, $kv) = @_;
+    return unless $kv;
+    if (my $f = $kv->getValue('family')) {
+      AssignValue('KVO_family' => ToString($f), 'global');
+    }
+    if (my $p = $kv->getValue('prefix')) {
+      AssignValue('KVO_prefix' => ToString($p), 'global');
+    }
+    return;
+});
+
+DefMacro('\DeclareBoolOption[]{}', sub {
+    my ($gullet, $default, $name) = @_;
+    $name    = ToString($name);
+    $default = ToString($default // '');
+    $default = 'false' unless $default eq 'true';
+    my $family = _kvo_family();
+    my $prefix = _kvo_prefix();
+    DefKeyVal($family, $name, '', 'true', kind => 'boolean', macroprefix => $prefix);
+    Digest(T_CS('\\' . $prefix . $name . $default));
+    DeclareOption($name, sub {
+        Digest(T_CS('\\' . $prefix . $name . 'true'));
+        return;
+    });
+    return ();
+});
+
+DefMacro('\DeclareComplementaryOption{}{}', sub {
+    my ($gullet, $new, $old) = @_;
+    $new = ToString($new);
+    $old = ToString($old);
+    my $family = _kvo_family();
+    my $prefix = _kvo_prefix();
+    Let(T_CS('\\' . $prefix . $new . 'true'),  T_CS('\\' . $prefix . $old . 'false'));
+    Let(T_CS('\\' . $prefix . $new . 'false'), T_CS('\\' . $prefix . $old . 'true'));
+    DefKeyVal($family, $new, '', 'true', code => sub {
+        my ($g, $val) = @_;
+        my $t = lc(ToString($val // 'true'));
+        $t = 'true' unless $t eq 'false';
+        return T_CS('\\' . $prefix . $new . $t);
+    });
+    DeclareOption($new, sub {
+        Digest(T_CS('\\' . $prefix . $new . 'true'));
+        return;
+    });
+    return ();
+});
+
+DefMacro('\DeclareStringOption[]{}', sub {
+    my ($gullet, $init, $name) = @_;
+    $name = ToString($name);
+    $init = ToString($init // '');
+    my $family = _kvo_family();
+    my $prefix = _kvo_prefix();
+    $gullet->skipSpaces;
+    my $keydef = $init;
+    if ($gullet->ifNext(T_OTHER('['))) {
+      $keydef = ToString($gullet->readOptional // '');
+    }
+    DefKeyVal($family, $name, '', $keydef, kind => 'command', macroprefix => $prefix);
+    DefMacroI('\\' . $prefix . $name, undef, $init);
+    return ();
+});
+
+DefMacro('\DeclareVoidOption{}{}', sub {
+    my ($gullet, $name, $code) = @_;
+    $name = ToString($name);
+    my $family = _kvo_family();
+    my $prefix = _kvo_prefix();
+    DefMacroI('\\' . $prefix . $name, undef, $code);
+    DefKeyVal($family, $name, '', '', code => Tokens(T_CS('\\' . $prefix . $name)));
+    DeclareOption($name, sub {
+        Digest(T_CS('\\' . $prefix . $name));
+        return;
+    });
+    return ();
+});
+
+# Unknown options: run this code (package-level default handler).
+DefMacro('\DeclareDefaultOption{}', sub {
+    my ($gullet, $code) = @_;
+    DeclareOption(undef, $code);
+    return ();
+});
+
+# Local options are class-option filtering; no IR effect.
+DefMacro('\DeclareLocalOptions{}', '');
+
+DefMacro('\ProcessKeyvalOptions OptionalMatch:*', sub {
+    my ($gullet, $star) = @_;
+    my $family;
+    if ($star) {
+      $family = _kvo_family();
+    } else {
+      $gullet->skipSpaces;
+      if ($gullet->ifNext(T_CS('\relax'))) {
+        $gullet->readToken;
+        $family = _kvo_family();
+      } else {
+        my $arg = $gullet->readArg;
+        $family = ToString($arg);
+      }
+    }
+    ProcessOptions(keysets => [$family], inorder => 1);
+    return ();
+});
+
+DefMacro('\ProcessLocalKeyvalOptions OptionalMatch:*', sub {
+    my ($gullet, $star) = @_;
+    unless ($star) {
+      $gullet->skipSpaces;
+      if ($gullet->ifNext(T_CS('\relax'))) {
+        $gullet->readToken;
+      } else {
+        $gullet->readArg;
+      }
+    }
+    ProcessOptions(inorder => 1);
+    return ();
+});
+
+# After-the-fact disable; furniture once options are consumed.
+DefMacro('\DisableKeyvalOption[]{}{}', '');
+DefMacro('\AddToKeyvalOption OptionalMatch:* {}{}{}', '');
 
 1;
