@@ -162,6 +162,10 @@ DefMacro('\lx@algo@newline', sub {
 });
 
 DefMacro('\lx@algo@semicolon', sub {
+  # Real algorithm2e: \def\;{\ifmmode\@mathsemicolon\else\@endalgoln\fi}
+  if (LookupValue('IN_MATH')) {
+    return T_CS('\@mathsemicolon');
+  }
   my @tokens = ();
   if (LookupValue('algorithm_print_semicolon')) {
     push(@tokens, T_OTHER(';'));
@@ -224,18 +228,57 @@ for my $env (qw(algorithm algorithm2e algorithm* procedure procedure* function f
 
 DefMacro('\TitleOfAlgo{}', '\caption{#1}');
 
-# Comments:
-DefMacro('\tcp OptionalMatch:* {}', '/* #2 */');
-DefMacro('\tcc OptionalMatch:* {}', '// #2');
+# Comments. Source: \SetKwComment{tcc}{/* }{ */} \SetKwComment{tcp}{// }{}
+# Unstarred form ends the line; starred form takes optional [l/r/h/f] and does not.
+sub _algo_read_comment {
+  my ($gullet) = @_;
+  $gullet->skipSpaces;
+  my $star = $gullet->ifNext(T_OTHER('*')) ? $gullet->readToken : undef;
+  $gullet->skipSpaces;
+  my $side;
+  if ($gullet->ifNext(T_OTHER('['))) {
+    $side = $gullet->readOptional;
+  }
+  my $text = $gullet->readArg;
+  return ($star, $side, $text);
+}
 
-# Constants:
-DefMacro('\KwTo',     '\textbf{to}');
-DefMacro('\KwRet',    '\textbf{return}');
+sub _algo_comment_tokens {
+  my ($star, $text, $start, $end) = @_;
+  my @toks = (Explode($start), ($text ? $text->unlist : ()), Explode($end));
+  push(@toks, T_CS('\;')) unless $star;
+  return Tokens(@toks);
+}
+
+DefMacro('\SetKwComment Semiverbatim Semiverbatim Semiverbatim', sub {
+  my ($gullet, $cmd, $start, $end) = @_;
+  my $cs = clean_cs_name($cmd);
+  my $s  = ToString($start);
+  my $e  = ToString($end);
+  DefMacro('\\' . $cs, sub {
+      my ($g) = @_;
+      my ($star, $side, $text) = _algo_read_comment($g);
+      return _algo_comment_tokens($star, $text, $s, $e);
+  });
+  return ();
+});
+DefMacro('\tcp', sub {
+    my ($star, $side, $text) = _algo_read_comment($_[0]);
+    return _algo_comment_tokens($star, $text, '// ', '');
+});
+DefMacro('\tcc', sub {
+    my ($star, $side, $text) = _algo_read_comment($_[0]);
+    return _algo_comment_tokens($star, $text, '/* ', ' */');
+});
+
+# Constants. Trailing \space so a following $ does not join the font run.
+DefMacro('\KwTo',     '\textbf{to}\space');
+DefMacro('\KwRet',    '\textbf{return}\space');
 DefMacro('\Return{}', '\textbf{return}\space #1');
 DefMacro('\lReturn{}','\textbf{return}\space #1\;');
-DefMacro('\True',     '\textbf{true}');
-DefMacro('\False',    '\textbf{false}');
-DefMacro('\Nil',      '\textbf{nil}');
+DefMacro('\True',     '\textbf{true}\space');
+DefMacro('\False',    '\textbf{false}\space');
+DefMacro('\Nil',      '\textbf{nil}\space');
 
 # Built-in Input/Output keywords:
 DefMacro('\KwIn{}',     '\textbf{Input:}\space #1\;');
@@ -396,6 +439,48 @@ DefMacro('\lForEach{}{}',
 
 DefMacro('\Repeat{}{}',
   '\textbf{repeat}\;\lx@algo@indent #2\lx@algo@endindent\textbf{until}\space #1\;');
+
+# \SetKwSwitch{Switch}{Case}{Other}{switch}{do}{case}{otherwise}{end case}{end switch}
+DefMacro('\SetKwSwitch Semiverbatim Semiverbatim Semiverbatim {}{}{}{}{}{}', sub {
+  my ($gullet, $switch, $case, $other, $sw_txt, $do_txt, $case_txt, $other_txt, $endcase, $endsw) = @_;
+  my $sw = clean_cs_name($switch);
+  my $cs = clean_cs_name($case);
+  my $ot = clean_cs_name($other);
+  my $swt = ToString($sw_txt);
+  my $dot = ToString($do_txt);
+  my $ct  = ToString($case_txt);
+  my $otx = ToString($other_txt);
+  my $ec  = ToString($endcase);
+  my $es  = ToString($endsw);
+  DefMacro('\\' . $sw . ' {}{}', sub {
+      my ($g, $cond, $body) = @_;
+      my $noend = LookupValue('algocf_noend');
+      Tokens(T_CS('\textbf'), T_BEGIN, Explode($swt), T_END, T_SPACE,
+        $cond->unlist, T_SPACE,
+        T_CS('\textbf'), T_BEGIN, Explode($dot), T_END, T_CS('\;'),
+        T_CS('\lx@algo@indent'), $body->unlist, T_CS('\lx@algo@endindent'),
+        $noend ? () : (T_CS('\textbf'), T_BEGIN, Explode($es), T_END, T_CS('\;')));
+  });
+  DefMacro('\\' . $cs . ' {}{}', sub {
+      my ($g, $val, $body) = @_;
+      my $noend = LookupValue('algocf_noend');
+      Tokens(T_CS('\textbf'), T_BEGIN, Explode($ct), T_END, T_SPACE,
+        $val->unlist, T_SPACE,
+        T_CS('\textbf'), T_BEGIN, Explode($dot), T_END, T_CS('\;'),
+        T_CS('\lx@algo@indent'), $body->unlist, T_CS('\lx@algo@endindent'),
+        $noend ? () : (T_CS('\textbf'), T_BEGIN, Explode($ec), T_END, T_CS('\;')));
+  });
+  DefMacro('\\' . $ot . ' {}', sub {
+      my ($g, $body) = @_;
+      my $noend = LookupValue('algocf_noend');
+      Tokens(T_CS('\textbf'), T_BEGIN, Explode($otx), T_END, T_SPACE,
+        T_CS('\textbf'), T_BEGIN, Explode($dot), T_END, T_CS('\;'),
+        T_CS('\lx@algo@indent'), $body->unlist, T_CS('\lx@algo@endindent'),
+        $noend ? () : (T_CS('\textbf'), T_BEGIN, Explode($ec), T_END, T_CS('\;')));
+  });
+  return ();
+});
+Digest(Tokenize('\SetKwSwitch{Switch}{Case}{Other}{switch}{do}{case}{otherwise}{end case}{end switch}'));
 
 #**********************************************************************
 1;

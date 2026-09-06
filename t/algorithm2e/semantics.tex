@@ -1,0 +1,16 @@
+\documentclass{article}
+\usepackage{algorithm2e}
+\begin{document}
+\begin{algorithm}
+$a \; b$\;
+\tcc{full line}
+$x \leftarrow 1$\tcp*[r]{side}\;
+\For{$j \leftarrow 0$ \KwTo $n$}{
+  \tcp{body comment}
+}
+\Switch{$s$}{
+  \Case{$1$}{one\;}
+  \Other{two\;}
+}
+\end{algorithm}
+\end{document}

@@ -92,21 +92,25 @@
               <XMTok font="italic" role="UNKNOWN">p</XMTok>
             </XMApp>
           </XMath>
-        </Math> <text font="bold">to<Math mode="inline" tex="r-1" text="r - 1" xml:id="l5.m2">
-            <XMath>
-              <XMApp>
-                <XMTok font="medium" meaning="minus" role="ADDOP">-</XMTok>
-                <XMTok font="medium italic" role="UNKNOWN">r</XMTok>
-                <XMTok font="medium" meaning="1" role="NUMBER">1</XMTok>
-              </XMApp>
-            </XMath>
-          </Math></text> <text font="bold">do</text>;</listingline>
+        </Math> <text font="bold">to</text> <Math mode="inline" tex="r-1" text="r - 1" xml:id="l5.m2">
+          <XMath>
+            <XMApp>
+              <XMTok meaning="minus" role="ADDOP">-</XMTok>
+              <XMTok font="italic" role="UNKNOWN">r</XMTok>
+              <XMTok meaning="1" role="NUMBER">1</XMTok>
+            </XMApp>
+          </XMath>
+        </Math> <text font="bold">do</text>;</listingline>
       <listingline xml:id="l6"><tags>
           <tag>6</tag>
           <tag role="refnum">6</tag>
         </tags>
-/* Compare element with pivot */
-<text font="bold">if</text> <Math mode="inline" tex="A[j]\leq x" text="A * delimited-[]@(j) &lt;= x" xml:id="l6.m1">
+// Compare element with pivot;</listingline>
+      <listingline xml:id="l7"><tags>
+          <tag>7</tag>
+          <tag role="refnum">7</tag>
+        </tags>  
+<text font="bold">if</text> <Math mode="inline" tex="A[j]\leq x" text="A * delimited-[]@(j) &lt;= x" xml:id="l7.m1">
           <XMath>
             <XMApp>
               <XMTok meaning="less-than-or-equals" name="leq" role="RELOP">≤</XMTok>
@@ -116,11 +120,11 @@
                 <XMDual>
                   <XMApp>
                     <XMTok meaning="delimited-[]"/>
-                    <XMRef idref="l6.m1.1"/>
+                    <XMRef idref="l7.m1.1"/>
                   </XMApp>
                   <XMWrap>
                     <XMTok role="OPEN" stretchy="false">[</XMTok>
-                    <XMTok font="italic" role="UNKNOWN" xml:id="l6.m1.1">j</XMTok>
+                    <XMTok font="italic" role="UNKNOWN" xml:id="l7.m1.1">j</XMTok>
                     <XMTok role="CLOSE" stretchy="false">]</XMTok>
                   </XMWrap>
                 </XMDual>
@@ -129,11 +133,11 @@
             </XMApp>
           </XMath>
         </Math> <text font="bold">then</text>;</listingline>
-      <listingline xml:id="l7"><tags>
-          <tag>7</tag>
-          <tag role="refnum">7</tag>
+      <listingline xml:id="l8"><tags>
+          <tag>8</tag>
+          <tag role="refnum">8</tag>
         </tags>  
-<Math mode="inline" tex="i\leftarrow i+1" text="i leftarrow i + 1" xml:id="l7.m1">
+<Math mode="inline" tex="i\leftarrow i+1" text="i leftarrow i + 1" xml:id="l8.m1">
           <XMath>
             <XMApp>
               <XMTok name="leftarrow" role="ARROW">←</XMTok>
@@ -146,11 +150,11 @@
             </XMApp>
           </XMath>
         </Math>;</listingline>
-      <listingline xml:id="l8"><tags>
-          <tag>8</tag>
-          <tag role="refnum">8</tag>
+      <listingline xml:id="l9"><tags>
+          <tag>9</tag>
+          <tag role="refnum">9</tag>
         </tags>   
-exchange <Math mode="inline" tex="A[i]" text="A * delimited-[]@(i)" xml:id="l8.m1">
+exchange <Math mode="inline" tex="A[i]" text="A * delimited-[]@(i)" xml:id="l9.m1">
           <XMath>
             <XMApp>
               <XMTok meaning="times" role="MULOP">⁢</XMTok>
@@ -158,17 +162,17 @@ exchange <Math mode="inline" tex="A[i]" text="A * delimited-[]@(i)" xml:id="l8.m
               <XMDual>
                 <XMApp>
                   <XMTok meaning="delimited-[]"/>
-                  <XMRef idref="l8.m1.1"/>
+                  <XMRef idref="l9.m1.1"/>
                 </XMApp>
                 <XMWrap>
                   <XMTok role="OPEN" stretchy="false">[</XMTok>
-                  <XMTok font="italic" role="UNKNOWN" xml:id="l8.m1.1">i</XMTok>
+                  <XMTok font="italic" role="UNKNOWN" xml:id="l9.m1.1">i</XMTok>
                   <XMTok role="CLOSE" stretchy="false">]</XMTok>
                 </XMWrap>
               </XMDual>
             </XMApp>
           </XMath>
-        </Math> with <Math mode="inline" tex="A[j]" text="A * delimited-[]@(j)" xml:id="l8.m2">
+        </Math> with <Math mode="inline" tex="A[j]" text="A * delimited-[]@(j)" xml:id="l9.m2">
           <XMath>
             <XMApp>
               <XMTok meaning="times" role="MULOP">⁢</XMTok>
@@ -176,32 +180,32 @@ exchange <Math mode="inline" tex="A[i]" text="A * delimited-[]@(i)" xml:id="l8.m
               <XMDual>
                 <XMApp>
                   <XMTok meaning="delimited-[]"/>
-                  <XMRef idref="l8.m2.1"/>
+                  <XMRef idref="l9.m2.1"/>
                 </XMApp>
                 <XMWrap>
                   <XMTok role="OPEN" stretchy="false">[</XMTok>
-                  <XMTok font="italic" role="UNKNOWN" xml:id="l8.m2.1">j</XMTok>
+                  <XMTok font="italic" role="UNKNOWN" xml:id="l9.m2.1">j</XMTok>
                   <XMTok role="CLOSE" stretchy="false">]</XMTok>
                 </XMWrap>
               </XMDual>
             </XMApp>
           </XMath>
         </Math>;</listingline>
-      <listingline xml:id="l9"><tags>
-          <tag>9</tag>
-          <tag role="refnum">9</tag>
-        </tags>   
-<text font="bold">end</text>;</listingline>
       <listingline xml:id="l10"><tags>
           <tag>10</tag>
           <tag role="refnum">10</tag>
-        </tags>
+        </tags>   
 <text font="bold">end</text>;</listingline>
       <listingline xml:id="l11"><tags>
           <tag>11</tag>
           <tag role="refnum">11</tag>
         </tags>
-exchange <Math mode="inline" tex="A[i+1]" text="A * delimited-[]@(i + 1)" xml:id="l11.m1">
+<text font="bold">end</text>;</listingline>
+      <listingline xml:id="l12"><tags>
+          <tag>12</tag>
+          <tag role="refnum">12</tag>
+        </tags>
+exchange <Math mode="inline" tex="A[i+1]" text="A * delimited-[]@(i + 1)" xml:id="l12.m1">
           <XMath>
             <XMApp>
               <XMTok meaning="times" role="MULOP">⁢</XMTok>
@@ -209,11 +213,11 @@ exchange <Math mode="inline" tex="A[i+1]" text="A * delimited-[]@(i + 1)" xml:id
               <XMDual>
                 <XMApp>
                   <XMTok meaning="delimited-[]"/>
-                  <XMRef idref="l11.m1.1"/>
+                  <XMRef idref="l12.m1.1"/>
                 </XMApp>
                 <XMWrap>
                   <XMTok role="OPEN" stretchy="false">[</XMTok>
-                  <XMApp xml:id="l11.m1.1">
+                  <XMApp xml:id="l12.m1.1">
                     <XMTok meaning="plus" role="ADDOP">+</XMTok>
                     <XMTok font="italic" role="UNKNOWN">i</XMTok>
                     <XMTok meaning="1" role="NUMBER">1</XMTok>
@@ -223,7 +227,7 @@ exchange <Math mode="inline" tex="A[i+1]" text="A * delimited-[]@(i + 1)" xml:id
               </XMDual>
             </XMApp>
           </XMath>
-        </Math> with <Math mode="inline" tex="A[r]" text="A * delimited-[]@(r)" xml:id="l11.m2">
+        </Math> with <Math mode="inline" tex="A[r]" text="A * delimited-[]@(r)" xml:id="l12.m2">
           <XMath>
             <XMApp>
               <XMTok meaning="times" role="MULOP">⁢</XMTok>
@@ -231,22 +235,22 @@ exchange <Math mode="inline" tex="A[i+1]" text="A * delimited-[]@(i + 1)" xml:id
               <XMDual>
                 <XMApp>
                   <XMTok meaning="delimited-[]"/>
-                  <XMRef idref="l11.m2.1"/>
+                  <XMRef idref="l12.m2.1"/>
                 </XMApp>
                 <XMWrap>
                   <XMTok role="OPEN" stretchy="false">[</XMTok>
-                  <XMTok font="italic" role="UNKNOWN" xml:id="l11.m2.1">r</XMTok>
+                  <XMTok font="italic" role="UNKNOWN" xml:id="l12.m2.1">r</XMTok>
                   <XMTok role="CLOSE" stretchy="false">]</XMTok>
                 </XMWrap>
               </XMDual>
             </XMApp>
           </XMath>
         </Math>;</listingline>
-      <listingline xml:id="l12"><tags>
-          <tag>12</tag>
-          <tag role="refnum">12</tag>
+      <listingline xml:id="l13"><tags>
+          <tag>13</tag>
+          <tag role="refnum">13</tag>
         </tags>
-<text font="bold">return</text> <Math mode="inline" tex="i+1" text="i + 1" xml:id="l12.m1">
+<text font="bold">return</text> <Math mode="inline" tex="i+1" text="i + 1" xml:id="l13.m1">
           <XMath>
             <XMApp>
               <XMTok meaning="plus" role="ADDOP">+</XMTok>
