@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="forest"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <inline-block class="ltx_tree">
+      <inline-block class="ltx_tree_node">
+        <p class="ltx_tree_label">A</p>
+        <inline-block class="ltx_tree_node">
+          <p class="ltx_tree_label">B</p>
+        </inline-block>
+        <inline-block class="ltx_tree_node">
+          <p class="ltx_tree_label">C</p>
+        </inline-block>
+      </inline-block>
+    </inline-block>
+  </para>
+</document>

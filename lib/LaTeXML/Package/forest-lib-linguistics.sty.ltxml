@@ -1,0 +1,22 @@
+# -*- mode: Perl -*-
+# /=====================================================================\ #
+# |  forest-lib-linguistics.sty                                         | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+# | Part of LaTeXAI / LaTeXML:                                           | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# \=========================================================ooo==U==ooo=/ #
+# Native stub of forest-lib-linguistics 0.1.2 (2017-07-14), from
+# lib-ctan/forest/tex/latex/forest/forest-lib-linguistics.sty.
+# sn edges, roof, nice empty nodes, and draw brackets are canvas/layout
+# and do not change the bracket tree; they are no-ops here. \useforestlibrary
+# does not load this file; this binding exists for a direct \usepackage.
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+RequirePackage('forest');
+
+1;

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="forest"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <inline-block class="ltx_tree">
+      <inline-block class="ltx_tree_node">
+        <p class="ltx_tree_label"><Math mode="inline" tex="S" text="S" xml:id="p1.m1">
+            <XMath>
+              <XMTok font="italic" role="UNKNOWN">S</XMTok>
+            </XMath>
+          </Math></p>
+        <inline-block class="ltx_tree_node">
+          <p class="ltx_tree_label"><Math mode="inline" tex="NP" text="N * P" xml:id="p1.m2">
+              <XMath>
+                <XMApp>
+                  <XMTok meaning="times" role="MULOP">⁢</XMTok>
+                  <XMTok font="italic" role="UNKNOWN">N</XMTok>
+                  <XMTok font="italic" role="UNKNOWN">P</XMTok>
+                </XMApp>
+              </XMath>
+            </Math></p>
+          <inline-block class="ltx_tree_node">
+            <p class="ltx_tree_label"><Math mode="inline" tex="N" text="N" xml:id="p1.m3">
+                <XMath>
+                  <XMTok font="italic" role="UNKNOWN">N</XMTok>
+                </XMath>
+              </Math></p>
+          </inline-block>
+        </inline-block>
+        <inline-block class="ltx_tree_node">
+          <p class="ltx_tree_label"><Math mode="inline" tex="VP" text="V * P" xml:id="p1.m4">
+              <XMath>
+                <XMApp>
+                  <XMTok meaning="times" role="MULOP">⁢</XMTok>
+                  <XMTok font="italic" role="UNKNOWN">V</XMTok>
+                  <XMTok font="italic" role="UNKNOWN">P</XMTok>
+                </XMApp>
+              </XMath>
+            </Math></p>
+        </inline-block>
+      </inline-block>
+    </inline-block>
+  </para>
+</document>

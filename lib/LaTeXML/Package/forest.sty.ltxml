@@ -1,0 +1,223 @@
+# -*- mode: Perl -*-
+# /=====================================================================\ #
+# |  forest.sty                                                         | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+# | Part of LaTeXAI / LaTeXML:                                           | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# \=========================================================ooo==U==ooo=/ #
+# Native structural subset of forest 2.1.5 (2017-07-14), TeX Live
+# revision 78931, written from lib-ctan/forest/tex/latex/forest/forest.sty
+# and provenance.json. Model: nested ltx:inline-block (no tree element in
+# the schema). Census used vendored forest plus its runfile deps
+# (pgfopts, etoolbox, environ, xparse, elocalloc, inlinedef, trimspaces).
+# Raw forest requires those plus tikz; this binding severs them and
+# requires only the native tikz containment envelope so leftover canvas
+# keys in a captured body are not executed. Covers {forest}, \Forest /
+# \Forest*, \forestset (layout no-op), \useforestlibrary (no-op), and
+# the bracket language [label, keys [child]...]. Node labels, including
+# $...$, are digested. Comma keys after the label are layout and dropped.
+# for tree={...} before the root is dropped. Libraries, delay/TeX/tikz
+# nodewalks, and path geometry are out of scope. Math capture:source is
+# the forest body (the parse callsite).
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+use LaTeXML::Core::Token;
+use LaTeXML::Core::Tokens;
+
+RequirePackage('tikz');
+
+DeclareOption(undef, sub { });
+ProcessOptions();
+
+DefMacro('\forestset{}', '');
+DefMacro('\useforestlibrary[]{}', '');
+DefMacro('\useforestlibrary{}',   '');
+DefMacro('\ProvidesForestLibrary{}[]', '');
+DefMacro('\forestapplylibrarydefaults{}', '');
+
+DefConstructor('\lx@tree@wrap{}',
+  "<ltx:inline-block class='ltx_tree'>#1</ltx:inline-block>",
+  mode            => 'internal_vertical',
+  bounded         => 1,
+  beforeConstruct => sub { $_[0]->maybeCloseElement('ltx:p'); });
+
+DefConstructor('\lx@tree@node{}{}',
+  "<ltx:inline-block class='ltx_tree_node'>?#1(<ltx:p class='ltx_tree_label'>#1</ltx:p>)#2</ltx:inline-block>",
+  mode    => 'internal_vertical',
+  bounded => 1);
+
+DefConstructor('\lx@tree@node@roof{}{}',
+  "<ltx:inline-block class='ltx_tree_node ltx_tree_roof'>?#1(<ltx:p class='ltx_tree_label'>#1</ltx:p>)#2</ltx:inline-block>",
+  mode    => 'internal_vertical',
+  bounded => 1);
+
+sub latexai_tree_skip_spaces {
+  my ($arr, $i) = @_;
+  my $n = scalar(@$arr);
+  while ($i < $n) {
+    my $cc = $arr->[$i]->getCatcode;
+    last unless $cc == CC_SPACE || $cc == CC_EOL;
+    $i++; }
+  return $i; }
+
+sub latexai_tree_trim {
+  my ($tokens) = @_;
+  return unless $tokens;
+  my @t = $tokens->unlist;
+  shift @t while @t && ($t[0]->getCatcode == CC_SPACE || $t[0]->getCatcode == CC_EOL);
+  pop @t   while @t && ($t[-1]->getCatcode == CC_SPACE || $t[-1]->getCatcode == CC_EOL);
+  return @t ? Tokens(@t) : undef; }
+
+sub latexai_tree_unwrap_group {
+  my ($tokens) = @_;
+  return unless $tokens;
+  my @t = $tokens->unlist;
+  if (@t >= 2 && $t[0]->getCatcode == CC_BEGIN && $t[-1]->getCatcode == CC_END) {
+    my $depth = 0;
+    my $ok    = 1;
+    for my $k (0 .. $#t) {
+      my $cc = $t[$k]->getCatcode;
+      $depth++ if $cc == CC_BEGIN;
+      $depth-- if $cc == CC_END;
+      if ($depth == 0 && $k != $#t) { $ok = 0; last; } }
+    if ($ok && $depth == 0) {
+      return latexai_tree_trim(Tokens(@t[1 .. $#t - 1])); } }
+  return $tokens; }
+
+sub latexai_tree_emit_node {
+  my ($node) = @_;
+  return Tokens() unless $node;
+  my $cs = ($node->{roof} ? T_CS('\lx@tree@node@roof') : T_CS('\lx@tree@node'));
+  my @kid;
+  foreach my $ch (@{ $node->{children} || [] }) {
+    push(@kid, latexai_tree_emit_node($ch)->unlist); }
+  my $label = $node->{content};
+  return Tokens($cs,
+    T_BEGIN, ($label ? $label->unlist : ()), T_END,
+    T_BEGIN, @kid, T_END); }
+
+sub latexai_tree_emit {
+  my ($root) = @_;
+  return Tokens() unless $root;
+  return Tokens(T_CS('\lx@tree@wrap'), T_BEGIN, latexai_tree_emit_node($root)->unlist, T_END); }
+
+sub latexai_forest_skip_options {
+  my ($arr, $i) = @_;
+  my $n = scalar(@$arr);
+  while ($i < $n) {
+    my $t  = $arr->[$i];
+    my $cc = $t->getCatcode;
+    last if $t->equals(T_OTHER('[')) || $t->equals(T_OTHER(']'));
+    if ($cc == CC_BEGIN) {
+      $i = tikz_contain_skip_brace($arr, $i);
+      next; }
+    $i++; }
+  return $i; }
+
+sub latexai_forest_parse_node {
+  my ($arr, $i) = @_;
+  my $n = scalar(@$arr);
+  return (undef, $i) unless $i < $n && $arr->[$i]->equals(T_OTHER('['));
+  $i++;
+  $i = latexai_tree_skip_spaces($arr, $i);
+  my @content;
+  my $math = 0;
+  while ($i < $n) {
+    my $t  = $arr->[$i];
+    my $cc = $t->getCatcode;
+    if ($cc == CC_MATH || $t->equals(T_MATH)) {
+      $math = !$math;
+      push(@content, $t);
+      $i++;
+      next; }
+    if ($t->equals(T_CS('\('))) {
+      push(@content, $t);
+      $i++;
+      while ($i < $n && !$arr->[$i]->equals(T_CS('\)'))) {
+        push(@content, $arr->[$i]); $i++; }
+      push(@content, $arr->[$i++]) if $i < $n;
+      next; }
+    if (!$math && $t->equals(T_OTHER(','))) {
+      $i++;
+      $i = latexai_forest_skip_options($arr, $i);
+      last; }
+    last if !$math && ($t->equals(T_OTHER('[')) || $t->equals(T_OTHER(']')));
+    if ($cc == CC_BEGIN) {
+      my $start = $i;
+      $i = tikz_contain_skip_brace($arr, $i);
+      push(@content, @$arr[$start .. $i - 1]);
+      next; }
+    push(@content, $t);
+    $i++; }
+  $i = latexai_tree_skip_spaces($arr, $i);
+  my @children;
+  while ($i < $n && $arr->[$i]->equals(T_OTHER('['))) {
+    my ($child, $ni) = latexai_forest_parse_node($arr, $i);
+    push(@children, $child) if $child;
+    $i = latexai_tree_skip_spaces($arr, $ni); }
+  if ($i < $n && $arr->[$i]->equals(T_OTHER(']'))) {
+    $i++; }
+  else {
+    Error('expected', 'forest-bracket', undef, 'Unterminated forest node'); }
+  my $label = latexai_tree_unwrap_group(latexai_tree_trim(@content ? Tokens(@content) : undef));
+  return ({ content => $label, children => \@children }, $i); }
+
+sub latexai_forest_parse_body {
+  my ($body) = @_;
+  return unless $body;
+  my @arr = $body->unlist;
+  my $i   = 0;
+  my $n   = scalar(@arr);
+  while ($i < $n && !$arr[$i]->equals(T_OTHER('['))) {
+    if ($arr[$i]->getCatcode == CC_BEGIN) {
+      $i = tikz_contain_skip_brace(\@arr, $i); }
+    else {
+      $i++; } }
+  return unless $i < $n;
+  my ($root, $ni) = latexai_forest_parse_node(\@arr, $i);
+  return $root; }
+
+sub latexai_forest_begin {
+  my ($gullet) = @_;
+  $gullet->skipSpaces;
+  if ($gullet->ifNext(T_OTHER('('))) {
+    $gullet->readToken;
+    $gullet->readUntil(T_OTHER(')')); }
+  my $body = tikz_contain_read_env_body($gullet, 'forest');
+  my $root = latexai_forest_parse_body($body);
+  Error('expected', 'forest-tree', undef, 'forest environment has no root [node]') unless $root;
+  return latexai_tree_emit($root); }
+
+DefMacroI(T_CS('\begin{forest}'), undef, sub { latexai_forest_begin($_[0]); });
+
+DefMacro('\forest', sub {
+    my ($gullet) = @_;
+    $gullet->skipSpaces;
+    if ($gullet->ifNext(T_OTHER('('))) {
+      $gullet->readToken;
+      $gullet->readUntil(T_OTHER(')')); }
+    my $body = tikz_contain_read_env_body($gullet, 'forest');
+    return latexai_tree_emit(latexai_forest_parse_body($body)); });
+
+DefMacro('\endforest', '');
+
+DefMacro('\Forest', sub {
+    my ($gullet) = @_;
+    $gullet->skipSpaces;
+    if ($gullet->ifNext(T_OTHER('*'))) {
+      $gullet->readToken;
+      $gullet->skipSpaces; }
+    if ($gullet->ifNext(T_OTHER('('))) {
+      $gullet->readToken;
+      $gullet->readUntil(T_OTHER(')'));
+      $gullet->skipSpaces; }
+    my $body = $gullet->readArg;
+    my $root = latexai_forest_parse_body($body);
+    Error('expected', 'forest-tree', undef, '\\Forest has no root [node]') unless $root;
+    return latexai_tree_emit($root); });
+
+1;

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="forest"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <inline-block class="ltx_tree">
+      <inline-block class="ltx_tree_node">
+        <p class="ltx_tree_label">S</p>
+        <inline-block class="ltx_tree_node">
+          <p class="ltx_tree_label">NP</p>
+          <inline-block class="ltx_tree_node">
+            <p class="ltx_tree_label">Det</p>
+            <inline-block class="ltx_tree_node">
+              <p class="ltx_tree_label">the</p>
+            </inline-block>
+          </inline-block>
+          <inline-block class="ltx_tree_node">
+            <p class="ltx_tree_label">N</p>
+            <inline-block class="ltx_tree_node">
+              <p class="ltx_tree_label">cat</p>
+            </inline-block>
+          </inline-block>
+        </inline-block>
+        <inline-block class="ltx_tree_node">
+          <p class="ltx_tree_label">VP</p>
+          <inline-block class="ltx_tree_node">
+            <p class="ltx_tree_label">V</p>
+            <inline-block class="ltx_tree_node">
+              <p class="ltx_tree_label">sat</p>
+            </inline-block>
+          </inline-block>
+          <inline-block class="ltx_tree_node">
+            <p class="ltx_tree_label">PP</p>
+            <inline-block class="ltx_tree_node">
+              <p class="ltx_tree_label">P</p>
+              <inline-block class="ltx_tree_node">
+                <p class="ltx_tree_label">on</p>
+              </inline-block>
+            </inline-block>
+            <inline-block class="ltx_tree_node">
+              <p class="ltx_tree_label">NP</p>
+              <inline-block class="ltx_tree_node">
+                <p class="ltx_tree_label">Det</p>
+                <inline-block class="ltx_tree_node">
+                  <p class="ltx_tree_label">the</p>
+                </inline-block>
+              </inline-block>
+              <inline-block class="ltx_tree_node">
+                <p class="ltx_tree_label">N</p>
+                <inline-block class="ltx_tree_node">
+                  <p class="ltx_tree_label">mat</p>
+                </inline-block>
+              </inline-block>
+            </inline-block>
+          </inline-block>
+        </inline-block>
+      </inline-block>
+    </inline-block>
+  </para>
+</document>
