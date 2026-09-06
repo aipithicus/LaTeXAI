@@ -5,9 +5,6 @@
 <document xmlns="http://dlmf.nist.gov/LaTeXML">
   <resource src="LaTeXML.css" type="text/css"/>
   <resource src="ltx-article.css" type="text/css"/>
-  <para xml:id="p1">
-    <p>colback=white, colframe=black</p>
-  </para>
   <section inlist="toc" xml:id="S1">
     <tags>
       <tag>1</tag>
@@ -15,12 +12,16 @@
       <tag role="typerefnum">§1</tag>
     </tags>
     <title><tag close=" ">1</tag>Styling and Geometries</title>
-    <para class="ltx_tcolorbox" framed="rectangle" width="0.8" xml:id="S1.p1">
-      <p>Box with sharp corners, specific width, and thick rule.</p>
-    </para>
-    <para class="ltx_tcolorbox" framed="rectangle" xml:id="S1.p2">
-      <p>Box with rounded corners and centered text.</p>
-    </para>
+    <theorem backgroundcolor="#FFFFFF" class="ltx_tcolorbox" framecolor="#000000" framed="rectangle">
+      <para xml:id="S1.p1">
+        <p>Box with sharp corners, specific width, and thick rule.</p>
+      </para>
+    </theorem>
+    <theorem backgroundcolor="#FFFFFF" class="ltx_tcolorbox" framecolor="#000000" framed="rectangle">
+      <para xml:id="S1.p2">
+        <p>Box with rounded corners and centered text.</p>
+      </para>
+    </theorem>
   </section>
   <section inlist="toc" xml:id="S2">
     <tags>
@@ -29,14 +30,14 @@
       <tag role="typerefnum">§2</tag>
     </tags>
     <title><tag close=" ">2</tag>Labels and References</title>
-    <logical-block class="ltx_tcolorbox" framed="rectangle">
+    <theorem backgroundcolor="#FFFFFF" class="ltx_tcolorbox" framecolor="#000000" framed="rectangle" labels="LABEL:card:prompt" xml:id="S2.1">
       <para xml:id="S2.p1">
         <block class="ltx_tcolorbox_title">
           <p class="ltx_tcolorbox_title_text">Prompt Card</p>
         </block>
         <p>Card content referenced by key.</p>
       </para>
-    </logical-block>
+    </theorem>
     <para xml:id="S2.p2">
       <p>Referencing the card: see <ref labelref="LABEL:card:prompt"/>.</p>
     </para>
@@ -47,21 +48,41 @@
       <tag role="refnum">3</tag>
       <tag role="typerefnum">§3</tag>
     </tags>
-    <title><tag close=" ">3</tag>Nested Boxes</title>
-    <logical-block class="ltx_tcolorbox" framed="rectangle">
+    <title><tag close=" ">3</tag>Auto Counter</title>
+    <theorem backgroundcolor="#FFFFFF" class="ltx_tcolorbox" framecolor="#000000" framed="rectangle">
       <para xml:id="S3.p1">
+        <block class="ltx_tcolorbox_title">
+          <p class="ltx_tcolorbox_title_text">Numbered Box</p>
+        </block>
+        <p>This is box 1.</p>
+      </para>
+    </theorem>
+  </section>
+  <section inlist="toc" xml:id="S4">
+    <tags>
+      <tag>4</tag>
+      <tag role="refnum">4</tag>
+      <tag role="typerefnum">§4</tag>
+    </tags>
+    <title><tag close=" ">4</tag>Nested Boxes</title>
+    <theorem backgroundcolor="#FFFFFF" class="ltx_tcolorbox" framecolor="#000000" framed="rectangle">
+      <para xml:id="S4.p1">
         <block class="ltx_tcolorbox_title">
           <p class="ltx_tcolorbox_title_text">Outer Box</p>
         </block>
         <p>Outer box content.</p>
-        <block backgroundcolor="gray" class="ltx_tcolorbox" framed="rectangle">
+      </para>
+      <theorem backgroundcolor="#808080" class="ltx_tcolorbox" framecolor="#000000" framed="rectangle">
+        <para xml:id="S4.p2">
           <block class="ltx_tcolorbox_title">
             <p class="ltx_tcolorbox_title_text">Inner Box</p>
           </block>
           <p>Nested inner box.</p>
-        </block>
+        </para>
+      </theorem>
+      <para xml:id="S4.p3">
         <p>Continuing outer box content.</p>
       </para>
-    </logical-block>
+    </theorem>
   </section>
 </document>

@@ -24,6 +24,9 @@ RequirePackage('xcolor');
 DeclareOption(undef, sub { });
 ProcessOptions();
 
+NewCounter('tcbcounter');
+DefMacro('\thetcbcounter', '\arabic{tcbcounter}');
+
 # Legacy / safety registers and macros
 DefRegister('\doublecol@number' => Number(0));
 DefMacro('\tcb@init@breakable',   '\relax');
@@ -64,43 +67,64 @@ foreach my $key (@tcb_keys) {
 
 AssignValue('tcb_defaults', {}, 'global');
 
-DefPrimitive('\tcbset OptionalKeyVals:tcb', sub {
+# \tcbset{key=val,...} takes a braced keyval list, not optional brackets.
+DefPrimitive('\tcbset RequiredKeyVals:tcb', sub {
   my ($stomach, $kv) = @_;
   return unless $kv;
   my $defaults = LookupValue('tcb_defaults') || {};
   my %new_defaults = %$defaults;
-  foreach my $key ($kv->getKeys) {
-    $new_defaults{$key} = $kv->getValue($key);
-  }
+  my $hash = $kv->getKeyVals || {};
+  %new_defaults = (%new_defaults, %$hash);
   AssignValue('tcb_defaults', \%new_defaults, 'global');
   return;
 });
-DefPrimitive('\tcbsetforevery OptionalKeyVals:tcb', sub {
+DefPrimitive('\tcbsetforevery RequiredKeyVals:tcb', sub {
   Digest(Invocation(T_CS('\tcbset'), $_[1]));
 });
+
+sub _tcb_color {
+  my ($spec) = @_;
+  return unless defined $spec;
+  my $s = ToString($spec);
+  $s =~ s/^\s+|\s+$//g;
+  return unless length $s;
+  my $color = DecodeColor($s);
+  return $color if $color;
+  return $s;
+}
 
 DefConstructor('\lx@tcb@title{}',
   "<ltx:block class='ltx_tcolorbox_title'>"
   . "<ltx:p class='ltx_tcolorbox_title_text'>#1</ltx:p>"
   . "</ltx:block>");
 
-DefEnvironment('{tcolorbox} OptionalKeyVals:tcb', sub {
-    my ($document, $kv, %props) = @_;
-    $document->maybeCloseElement('ltx:p');
-    insertBlock($document, $props{body}, %props);
-    return;
-  },
+# logical-block cannot carry labels (not a Labelled element); theorem can.
+# Titled/labelled callouts are theorems with class ltx_tcolorbox.
+DefEnvironment('{tcolorbox} OptionalKeyVals:tcb',
+  "<ltx:theorem class='ltx_tcolorbox'"
+    . " ?#id(xml:id='#id')"
+    . " ?#framed(framed='#framed')"
+    . " ?#backgroundcolor(backgroundcolor='#backgroundcolor')"
+    . " ?#framecolor(framecolor='#framecolor')"
+    . " ?#width(width='#width')"
+    . " ?#labels(labels='#labels')>"
+    . "#body"
+    . "</ltx:theorem>",
+  beforeConstruct => sub { $_[0]->maybeCloseElement('ltx:p'); },
   afterDigestBegin => sub {
     my ($stomach, $whatsit) = @_;
-    my $kv = $whatsit->getArg(1);
+    my $kv       = $whatsit->getArg(1);
+    my $defaults = LookupValue('tcb_defaults') || {};
+    my @boxes    = ();
+    if (($kv && $kv->getValue('auto counter')) || $defaults->{'auto counter'}) {
+      StepCounter('tcbcounter');
+    }
     if ($kv) {
-      if (my $lbl = $kv->getValue('label')) {
-        Digest(Invocation(T_CS('\label'), $lbl));
-      }
       if (my $title = $kv->getValue('title')) {
-        Digest(Invocation(T_CS('\lx@tcb@title'), $title));
+        push(@boxes, Digest(Invocation(T_CS('\lx@tcb@title'), $title)));
       }
     }
+    return @boxes;
   },
   properties => sub {
     my ($stomach, $kv) = @_;
@@ -108,13 +132,21 @@ DefEnvironment('{tcolorbox} OptionalKeyVals:tcb', sub {
     my %props = (class => 'ltx_tcolorbox', framed => 'rectangle');
 
     my $cb = ($kv && $kv->getValue('colback')) || $defaults->{colback};
-    $props{backgroundcolor} = ToString($cb) if $cb;
+    $props{backgroundcolor} = _tcb_color($cb) if $cb;
 
     my $cf = ($kv && $kv->getValue('colframe')) || $defaults->{colframe};
-    $props{framecolor} = ToString($cf) if $cf;
+    $props{framecolor} = _tcb_color($cf) if $cf;
 
     my $w = ($kv && $kv->getValue('width')) || $defaults->{width};
     $props{width} = $w if $w;
+
+    # Attach the label on the box itself. Digesting \label floats to the
+    # nearest labelled ancestor (the section), because logical-block has
+    # no xml:id yet.
+    if (my $lbl = ($kv && $kv->getValue('label')) || $defaults->{label}) {
+      $props{labels} = CleanLabel(ToString($lbl));
+      MaybeNoteLabel($lbl);
+    }
 
     return %props;
   },
@@ -129,10 +161,10 @@ DefConstructor('\tcbox OptionalKeyVals:tcb {}',
     my %props = (framed => 'rectangle');
 
     my $cb = ($kv && $kv->getValue('colback')) || $defaults->{colback};
-    $props{backgroundcolor} = ToString($cb) if $cb;
+    $props{backgroundcolor} = _tcb_color($cb) if $cb;
 
     my $cf = ($kv && $kv->getValue('colframe')) || $defaults->{colframe};
-    $props{framecolor} = ToString($cf) if $cf;
+    $props{framecolor} = _tcb_color($cf) if $cf;
 
     return %props;
   }
@@ -195,17 +227,22 @@ DefPrimitive('\newtcbtheorem [] {} {} {} {}', sub {
   my $ctr = 'tcb@cnt@' . $name;
   NewCounter($ctr, undef);
 
-  # Unstarred environment: {SubTitle}{Label}
-  DefMacroI(T_CS("\\$name"), "{}{}", sub {
-    my ($stomach_inner, $subtitle, $label) = @_;
+  # Unstarred environment: [keyvals]{SubTitle}{Label}
+  DefMacroI(T_CS("\\$name"), "OptionalKeyVals:tcb {}{}", sub {
+    my ($gullet, $extra, $subtitle, $label) = @_;
     StepCounter($ctr);
+    DefMacroI('\thetcbcounter', undef, Tokens(Explode(CounterValue($ctr)->valueOf)));
     my $num = CounterValue($ctr)->valueOf;
     my $t = Tokens(Tokenize($title . ' ' . $num . ': '), ($subtitle ? $subtitle->unlist : ()));
     my $lbl = Tokens(Tokenize($prefix . ':'), ($label ? $label->unlist : ()));
+    my @opt = ($options ? $options->unlist : ());
+    if ($extra) {
+      push(@opt, T_OTHER(','), $extra->revert);
+    }
     return Tokens(
       T_CS('\begin{tcolorbox}'),
       T_OTHER('['),
-      ($options ? $options->unlist : ()),
+      @opt,
       T_OTHER(','),
       Tokenize('title='), T_BEGIN, $t->unlist, T_END,
       T_OTHER(','),
@@ -215,14 +252,18 @@ DefPrimitive('\newtcbtheorem [] {} {} {} {}', sub {
   });
   DefMacroI(T_CS("\\end$name"), undef, Tokens(T_CS('\end{tcolorbox}')));
 
-  # Starred environment: {SubTitle}
-  DefMacroI(T_CS("\\$name*"), "{}", sub {
-    my ($stomach_inner, $subtitle) = @_;
+  # Starred environment: [keyvals]{SubTitle}
+  DefMacroI(T_CS("\\$name*"), "OptionalKeyVals:tcb {}", sub {
+    my ($gullet, $extra, $subtitle) = @_;
     my $t = Tokens(Tokenize($title . ': '), ($subtitle ? $subtitle->unlist : ()));
+    my @opt = ($options ? $options->unlist : ());
+    if ($extra) {
+      push(@opt, T_OTHER(','), $extra->revert);
+    }
     return Tokens(
       T_CS('\begin{tcolorbox}'),
       T_OTHER('['),
-      ($options ? $options->unlist : ()),
+      @opt,
       T_OTHER(','),
       Tokenize('title='), T_BEGIN, $t->unlist, T_END,
       T_OTHER(']')
