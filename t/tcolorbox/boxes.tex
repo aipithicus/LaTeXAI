@@ -1,0 +1,55 @@
+\documentclass{article}
+\usepackage{tcolorbox}
+
+\newtcolorbox{mybox}[1]{colback=white, colframe=black, title={#1}}
+\newtcolorbox{optbox}[2][Note]{colback=yellow, colframe=black, title={#1: #2}}
+\newtcbox{\mybadge}{colback=blue, colframe=black}
+\newtcbtheorem{theo}{Theorem}{colback=white, colframe=black}{th}
+
+\begin{document}
+
+\section{Basic Boxes}
+
+\begin{tcolorbox}[colback=white, colframe=black, title=Standard Callout]
+This is a standard callout box with an equation:
+\begin{equation}
+E = mc^2
+\end{equation}
+\tcblower
+This is the lower compartment separated by a divider.
+\end{tcolorbox}
+
+\section{Custom Boxes}
+
+\begin{mybox}{Mandatory Title}
+Body of custom box created via newtcolorbox.
+\end{mybox}
+
+\begin{optbox}{Important Announcement}
+Body of optbox using default optional parameter.
+\end{optbox}
+
+\begin{optbox}[Warning]{High Voltage}
+Body of optbox overriding optional parameter.
+\end{optbox}
+
+\section{Inline Boxes}
+
+Here is an inline badge: \mybadge{Version 1.0} in running text, and standard \tcbox[colback=green, colframe=black]{Success}.
+
+\section{Theorems}
+
+\begin{theo}{Pythagorean Theorem}{pythagoras}
+In a right triangle with legs $a, b$ and hypotenuse $c$:
+\begin{equation}
+a^2 + b^2 = c^2.
+\end{equation}
+\end{theo}
+
+\begin{theo*}{Remark on Geometry}
+Unnumbered theorem instance without label.
+\end{theo*}
+
+See Theorem \ref{th:pythagoras}.
+
+\end{document}

@@ -1,0 +1,37 @@
+\documentclass{article}
+\usepackage[skins,breakable]{tcolorbox}
+\tcbuselibrary{theorems}
+
+\tcbset{colback=white, colframe=black}
+
+\begin{document}
+
+\section{Styling and Geometries}
+
+\begin{tcolorbox}[sharp corners, boxrule=2pt, width=0.8\textwidth]
+Box with sharp corners, specific width, and thick rule.
+\end{tcolorbox}
+
+\begin{tcolorbox}[rounded corners, arc=3mm, halign=center]
+Box with rounded corners and centered text.
+\end{tcolorbox}
+
+\section{Labels and References}
+
+\begin{tcolorbox}[title=Prompt Card, label=card:prompt, breakable]
+Card content referenced by key.
+\end{tcolorbox}
+
+Referencing the card: see \ref{card:prompt}.
+
+\section{Nested Boxes}
+
+\begin{tcolorbox}[title=Outer Box]
+Outer box content.
+\begin{tcolorbox}[title=Inner Box, colback=gray]
+Nested inner box.
+\end{tcolorbox}
+Continuing outer box content.
+\end{tcolorbox}
+
+\end{document}

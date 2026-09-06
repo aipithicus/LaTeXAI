@@ -7,7 +7,7 @@
 # |  Public domain software, produced as part of work done by the       | #
 # |  United States Government & not subject to copyright in the US.     | #
 # |---------------------------------------------------------------------| #
-# | Deyan Ginev <deyan.ginev@nist.gov>                          #_#     | #
+# | Bruce Miller <bruce.miller@nist.gov>                        #_#     | #
 # | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
 # \=========================================================ooo==U==ooo=/ #
 package LaTeXML::Package::Pool;
@@ -15,15 +15,230 @@ use strict;
 use warnings;
 use LaTeXML::Package;
 
-# used in tcbbreakable.code.tex assuming it was defined? so:
+# Emulates tcolorbox 6.10.0 (2026-05-28), TeX Live revision 79191.
+# Replaces earlier passthrough that loaded raw tcolorbox.sty and pulled in TikZ/PGF.
+# Severed dependencies: tikz, pgf, pgfkeys, environ, etoolbox.
+
+RequirePackage('xcolor');
+
+DeclareOption(undef, sub { });
+ProcessOptions();
+
+# Legacy / safety registers and macros
 DefRegister('\doublecol@number' => Number(0));
-# Ensure only unbreakable mode is possible
-DefMacro('\tcb@init@breakable', '\tcb@init@unbreakable', locked => 1);
+DefMacro('\tcb@init@breakable',   '\relax');
+DefMacro('\tcb@init@unbreakable', '\relax');
+DefMacro('\tcb@use@autoparskip',  '\relax');
 
-# Pre-define \tcb@use@autoparskip before loading the raw tcolorbox.sty,
-# as a safety net in case the pgfkeys initialization doesn't fully complete.
-DefMacroI('\tcb@use@autoparskip', undef, '\relax');
+# Library loader (severed: native implementation provides built-in support)
+DefPrimitive('\tcbuselibrary{}', sub { return; });
 
-InputDefinitions('tcolorbox', type => 'sty', noltxml => 1);
+# Key-value options for tcolorbox
+my @tcb_keys = qw(
+  title adjusted_title subtitle
+  colback colframe coltext coltitle colbacktitle colupper collower
+  fonttitle fontupper fontlower
+  width arc boxrule boxsep left right top bottom middle
+  sharp_corners rounded_corners enhanced standard blank empty
+  breakable unbreakable
+  halign valign center flush_left flush_right
+  label nameref
+  before after before_upper after_upper before_lower after_lower
+  opacityback opacityframe opacitytitle
+  auto_counter no_counter use_counter number_within
+);
 
+my %flag_keys = map { $_ => 1 } qw(
+  sharp_corners rounded_corners enhanced standard blank empty
+  breakable unbreakable
+  center flush_left flush_right
+  auto_counter no_counter
+);
+
+foreach my $key (@tcb_keys) {
+  my $k = $key;
+  $k =~ s/_/ /g;
+  my $default = $flag_keys{$key} ? 'true' : undef;
+  DefKeyVal('tcb', $k, '', $default);
+}
+
+AssignValue('tcb_defaults', {}, 'global');
+
+DefPrimitive('\tcbset OptionalKeyVals:tcb', sub {
+  my ($stomach, $kv) = @_;
+  return unless $kv;
+  my $defaults = LookupValue('tcb_defaults') || {};
+  my %new_defaults = %$defaults;
+  foreach my $key ($kv->getKeys) {
+    $new_defaults{$key} = $kv->getValue($key);
+  }
+  AssignValue('tcb_defaults', \%new_defaults, 'global');
+  return;
+});
+DefPrimitive('\tcbsetforevery OptionalKeyVals:tcb', sub {
+  Digest(Invocation(T_CS('\tcbset'), $_[1]));
+});
+
+DefConstructor('\lx@tcb@title{}',
+  "<ltx:block class='ltx_tcolorbox_title'>"
+  . "<ltx:p class='ltx_tcolorbox_title_text'>#1</ltx:p>"
+  . "</ltx:block>");
+
+DefEnvironment('{tcolorbox} OptionalKeyVals:tcb', sub {
+    my ($document, $kv, %props) = @_;
+    $document->maybeCloseElement('ltx:p');
+    insertBlock($document, $props{body}, %props);
+    return;
+  },
+  afterDigestBegin => sub {
+    my ($stomach, $whatsit) = @_;
+    my $kv = $whatsit->getArg(1);
+    if ($kv) {
+      if (my $lbl = $kv->getValue('label')) {
+        Digest(Invocation(T_CS('\label'), $lbl));
+      }
+      if (my $title = $kv->getValue('title')) {
+        Digest(Invocation(T_CS('\lx@tcb@title'), $title));
+      }
+    }
+  },
+  properties => sub {
+    my ($stomach, $kv) = @_;
+    my $defaults = LookupValue('tcb_defaults') || {};
+    my %props = (class => 'ltx_tcolorbox', framed => 'rectangle');
+
+    my $cb = ($kv && $kv->getValue('colback')) || $defaults->{colback};
+    $props{backgroundcolor} = ToString($cb) if $cb;
+
+    my $cf = ($kv && $kv->getValue('colframe')) || $defaults->{colframe};
+    $props{framecolor} = ToString($cf) if $cf;
+
+    my $w = ($kv && $kv->getValue('width')) || $defaults->{width};
+    $props{width} = $w if $w;
+
+    return %props;
+  },
+  mode => 'internal_vertical'
+);
+
+DefConstructor('\tcbox OptionalKeyVals:tcb {}',
+  "<ltx:text class='ltx_tcbox' ?#framed(framed='#framed') ?#framecolor(framecolor='#framecolor') ?#backgroundcolor(backgroundcolor='#backgroundcolor')>#2</ltx:text>",
+  properties => sub {
+    my ($stomach, $kv, $content) = @_;
+    my $defaults = LookupValue('tcb_defaults') || {};
+    my %props = (framed => 'rectangle');
+
+    my $cb = ($kv && $kv->getValue('colback')) || $defaults->{colback};
+    $props{backgroundcolor} = ToString($cb) if $cb;
+
+    my $cf = ($kv && $kv->getValue('colframe')) || $defaults->{colframe};
+    $props{framecolor} = ToString($cf) if $cf;
+
+    return %props;
+  }
+);
+
+DefConstructor('\tcblower',
+  "<ltx:block class='ltx_tcolorbox_separator'/>");
+
+# Environment creation: \newtcolorbox and variants
+DefPrimitive('\newtcolorbox [] {} [Number] [] {}', sub {
+  my ($stomach, $init, $name, $nargs, $default, $options) = @_;
+  $name = ToString(Expand($name));
+  $name =~ s/^\\//;
+  my $begin = Tokens(T_CS('\begin{tcolorbox}'), T_OTHER('['), ($options ? $options->unlist : ()), T_OTHER(']'));
+  my $end   = Tokens(T_CS('\end{tcolorbox}'));
+  DefMacroI(T_CS("\\$name"), convertLaTeXArgs($nargs, $default), $begin);
+  DefMacroI(T_CS("\\end$name"), undef, $end);
+  return;
+});
+
+DefPrimitive('\renewtcolorbox [] {} [Number] [] {}', sub {
+  Digest(Invocation(T_CS('\newtcolorbox'), $_[1], $_[2], $_[3], $_[4], $_[5]));
+});
+Let('\NewTColorBox',     '\newtcolorbox');
+Let('\RenewTColorBox',   '\renewtcolorbox');
+Let('\ProvideTColorBox', '\newtcolorbox');
+Let('\DeclareTColorBox', '\newtcolorbox');
+
+# Inline box creation: \newtcbox and variants
+DefPrimitive('\newtcbox [] Undigested [Number] [] {}', sub {
+  my ($stomach, $init, $name, $nargs, $default, $options) = @_;
+  my $str = $name ? join('', map { $_->getString } $name->unlist) : '';
+  $str =~ s/^\\//;
+  my $cs = T_CS('\\' . $str);
+  my $n = $nargs ? $nargs->valueOf : 0;
+  if ($n == 0) {
+    DefMacroI($cs, undef, Tokens(T_CS('\tcbox'), T_OTHER('['), ($options ? $options->unlist : ()), T_OTHER(']')));
+  } else {
+    my $expansion = Tokens(T_CS('\tcbox'), T_OTHER('['), ($options ? $options->unlist : ()), T_OTHER(']'), T_BEGIN, Tokens(T_PARAM, T_OTHER(ToString($n))), T_END);
+    DefMacroI($cs, convertLaTeXArgs($nargs, $default), $expansion);
+  }
+  return;
+});
+
+DefPrimitive('\renewtcbox [] Undigested [Number] [] {}', sub {
+  Digest(Invocation(T_CS('\newtcbox'), $_[1], $_[2], $_[3], $_[4], $_[5]));
+});
+Let('\NewTCBox',     '\newtcbox');
+Let('\RenewTCBox',   '\renewtcbox');
+Let('\ProvideTCBox', '\newtcbox');
+Let('\DeclareTCBox', '\newtcbox');
+
+# Theorems: \newtcbtheorem and variants
+DefPrimitive('\newtcbtheorem [] {} {} {} {}', sub {
+  my ($stomach, $init, $name, $title, $options, $prefix) = @_;
+  $name   = ToString(Expand($name));
+  $name   =~ s/^\\//;
+  $title  = ToString(Expand($title));
+  $prefix = ToString(Expand($prefix));
+  my $ctr = 'tcb@cnt@' . $name;
+  NewCounter($ctr, undef);
+
+  # Unstarred environment: {SubTitle}{Label}
+  DefMacroI(T_CS("\\$name"), "{}{}", sub {
+    my ($stomach_inner, $subtitle, $label) = @_;
+    StepCounter($ctr);
+    my $num = CounterValue($ctr)->valueOf;
+    my $t = Tokens(Tokenize($title . ' ' . $num . ': '), ($subtitle ? $subtitle->unlist : ()));
+    my $lbl = Tokens(Tokenize($prefix . ':'), ($label ? $label->unlist : ()));
+    return Tokens(
+      T_CS('\begin{tcolorbox}'),
+      T_OTHER('['),
+      ($options ? $options->unlist : ()),
+      T_OTHER(','),
+      Tokenize('title='), T_BEGIN, $t->unlist, T_END,
+      T_OTHER(','),
+      Tokenize('label='), T_BEGIN, $lbl->unlist, T_END,
+      T_OTHER(']')
+    );
+  });
+  DefMacroI(T_CS("\\end$name"), undef, Tokens(T_CS('\end{tcolorbox}')));
+
+  # Starred environment: {SubTitle}
+  DefMacroI(T_CS("\\$name*"), "{}", sub {
+    my ($stomach_inner, $subtitle) = @_;
+    my $t = Tokens(Tokenize($title . ': '), ($subtitle ? $subtitle->unlist : ()));
+    return Tokens(
+      T_CS('\begin{tcolorbox}'),
+      T_OTHER('['),
+      ($options ? $options->unlist : ()),
+      T_OTHER(','),
+      Tokenize('title='), T_BEGIN, $t->unlist, T_END,
+      T_OTHER(']')
+    );
+  });
+  DefMacroI(T_CS("\\end$name*"), undef, Tokens(T_CS('\end{tcolorbox}')));
+  return;
+});
+
+DefPrimitive('\renewtcbtheorem [] {} {} {} {}', sub {
+  Digest(Invocation(T_CS('\newtcbtheorem'), $_[1], $_[2], $_[3], $_[4], $_[5]));
+});
+Let('\NewTcbTheorem',     '\newtcbtheorem');
+Let('\RenewTcbTheorem',   '\renewtcbtheorem');
+Let('\ProvideTcbTheorem', '\newtcbtheorem');
+Let('\DeclareTcbTheorem', '\newtcbtheorem');
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 1;

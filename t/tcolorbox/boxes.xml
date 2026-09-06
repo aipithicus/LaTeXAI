@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="tcolorbox"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <section inlist="toc" xml:id="S1">
+    <tags>
+      <tag>1</tag>
+      <tag role="refnum">1</tag>
+      <tag role="typerefnum">§1</tag>
+    </tags>
+    <title><tag close=" ">1</tag>Basic Boxes</title>
+    <logical-block backgroundcolor="white" class="ltx_tcolorbox" framecolor="black" framed="rectangle">
+      <para xml:id="S1.p1">
+        <block class="ltx_tcolorbox_title">
+          <p class="ltx_tcolorbox_title_text">Standard Callout</p>
+        </block>
+        <p>This is a standard callout box with an equation:</p>
+        <equation xml:id="S1.E1">
+          <tags>
+            <tag>(1)</tag>
+            <tag role="refnum">1</tag>
+          </tags>
+          <Math mode="display" tex="E=mc^{2}" text="E = m * c ^ 2" xml:id="S1.E1.m1">
+            <XMath>
+              <XMApp>
+                <XMTok meaning="equals" role="RELOP">=</XMTok>
+                <XMTok font="italic" role="UNKNOWN">E</XMTok>
+                <XMApp>
+                  <XMTok meaning="times" role="MULOP">⁢</XMTok>
+                  <XMTok font="italic" role="UNKNOWN">m</XMTok>
+                  <XMApp>
+                    <XMTok role="SUPERSCRIPTOP" scriptpos="post1"/>
+                    <XMTok font="italic" role="UNKNOWN">c</XMTok>
+                    <XMTok fontsize="70%" meaning="2" role="NUMBER">2</XMTok>
+                  </XMApp>
+                </XMApp>
+              </XMApp>
+            </XMath>
+          </Math>
+        </equation>
+        <block class="ltx_tcolorbox_separator"/>
+        <p>This is the lower compartment separated by a divider.</p>
+      </para>
+    </logical-block>
+  </section>
+  <section inlist="toc" xml:id="S2">
+    <tags>
+      <tag>2</tag>
+      <tag role="refnum">2</tag>
+      <tag role="typerefnum">§2</tag>
+    </tags>
+    <title><tag close=" ">2</tag>Custom Boxes</title>
+    <logical-block backgroundcolor="white" class="ltx_tcolorbox" framecolor="black" framed="rectangle">
+      <para xml:id="S2.p1">
+        <block class="ltx_tcolorbox_title">
+          <p class="ltx_tcolorbox_title_text">Mandatory Title</p>
+        </block>
+        <p>Body of custom box created via newtcolorbox.</p>
+      </para>
+    </logical-block>
+    <logical-block backgroundcolor="yellow" class="ltx_tcolorbox" framecolor="black" framed="rectangle">
+      <para xml:id="S2.p2">
+        <block class="ltx_tcolorbox_title">
+          <p class="ltx_tcolorbox_title_text">Note: Important Announcement</p>
+        </block>
+        <p>Body of optbox using default optional parameter.</p>
+      </para>
+    </logical-block>
+    <logical-block backgroundcolor="yellow" class="ltx_tcolorbox" framecolor="black" framed="rectangle">
+      <para xml:id="S2.p3">
+        <block class="ltx_tcolorbox_title">
+          <p class="ltx_tcolorbox_title_text">Warning: High Voltage</p>
+        </block>
+        <p>Body of optbox overriding optional parameter.</p>
+      </para>
+    </logical-block>
+  </section>
+  <section inlist="toc" xml:id="S3">
+    <tags>
+      <tag>3</tag>
+      <tag role="refnum">3</tag>
+      <tag role="typerefnum">§3</tag>
+    </tags>
+    <title><tag close=" ">3</tag>Inline Boxes</title>
+    <para xml:id="S3.p1">
+      <p>Here is an inline badge: <text backgroundcolor="blue" class="ltx_tcbox" framecolor="black" framed="rectangle">Version 1.0</text> in running text, and standard <text backgroundcolor="green" class="ltx_tcbox" framecolor="black" framed="rectangle">Success</text>.</p>
+    </para>
+  </section>
+  <section inlist="toc" xml:id="S4">
+    <tags>
+      <tag>4</tag>
+      <tag role="refnum">4</tag>
+      <tag role="typerefnum">§4</tag>
+    </tags>
+    <title><tag close=" ">4</tag>Theorems</title>
+    <logical-block backgroundcolor="white" class="ltx_tcolorbox" framecolor="black" framed="rectangle">
+      <para xml:id="S4.p1">
+        <block class="ltx_tcolorbox_title">
+          <p class="ltx_tcolorbox_title_text">Theorem 1:Pythagorean Theorem</p>
+        </block>
+        <p>In a right triangle with legs <Math mode="inline" tex="a,b" text="list@(a, b)" xml:id="S4.m1">
+            <XMath>
+              <XMDual>
+                <XMApp>
+                  <XMTok meaning="list"/>
+                  <XMRef idref="S4.m1.1"/>
+                  <XMRef idref="S4.m1.2"/>
+                </XMApp>
+                <XMWrap>
+                  <XMTok font="italic" role="UNKNOWN" xml:id="S4.m1.1">a</XMTok>
+                  <XMTok role="PUNCT">,</XMTok>
+                  <XMTok font="italic" role="UNKNOWN" xml:id="S4.m1.2">b</XMTok>
+                </XMWrap>
+              </XMDual>
+            </XMath>
+          </Math> and hypotenuse <Math mode="inline" tex="c" text="c" xml:id="S4.m2">
+            <XMath>
+              <XMTok font="italic" role="UNKNOWN">c</XMTok>
+            </XMath>
+          </Math>:</p>
+        <equation xml:id="S4.E2">
+          <tags>
+            <tag>(2)</tag>
+            <tag role="refnum">2</tag>
+          </tags>
+          <Math mode="display" tex="a^{2}+b^{2}=c^{2}." text="a ^ 2 + b ^ 2 = c ^ 2" xml:id="S4.E2.m1">
+            <XMath>
+              <XMDual>
+                <XMRef idref="S4.E2.m1.1"/>
+                <XMWrap>
+                  <XMApp xml:id="S4.E2.m1.1">
+                    <XMTok meaning="equals" role="RELOP">=</XMTok>
+                    <XMApp>
+                      <XMTok meaning="plus" role="ADDOP">+</XMTok>
+                      <XMApp>
+                        <XMTok role="SUPERSCRIPTOP" scriptpos="post1"/>
+                        <XMTok font="italic" role="UNKNOWN">a</XMTok>
+                        <XMTok fontsize="70%" meaning="2" role="NUMBER">2</XMTok>
+                      </XMApp>
+                      <XMApp>
+                        <XMTok role="SUPERSCRIPTOP" scriptpos="post1"/>
+                        <XMTok font="italic" role="UNKNOWN">b</XMTok>
+                        <XMTok fontsize="70%" meaning="2" role="NUMBER">2</XMTok>
+                      </XMApp>
+                    </XMApp>
+                    <XMApp>
+                      <XMTok role="SUPERSCRIPTOP" scriptpos="post1"/>
+                      <XMTok font="italic" role="UNKNOWN">c</XMTok>
+                      <XMTok fontsize="70%" meaning="2" role="NUMBER">2</XMTok>
+                    </XMApp>
+                  </XMApp>
+                  <XMTok role="PERIOD">.</XMTok>
+                </XMWrap>
+              </XMDual>
+            </XMath>
+          </Math>
+        </equation>
+      </para>
+    </logical-block>
+    <logical-block backgroundcolor="white" class="ltx_tcolorbox" framecolor="black" framed="rectangle">
+      <para xml:id="S4.p2">
+        <block class="ltx_tcolorbox_title">
+          <p class="ltx_tcolorbox_title_text">Theorem:Remark on Geometry</p>
+        </block>
+        <p>Unnumbered theorem instance without label.</p>
+      </para>
+    </logical-block>
+    <para xml:id="S4.p3">
+      <p>See Theorem <ref labelref="LABEL:th:pythagoras"/>.</p>
+    </para>
+  </section>
+</document>
