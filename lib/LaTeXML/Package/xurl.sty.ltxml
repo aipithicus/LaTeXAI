@@ -19,9 +19,8 @@ use LaTeXML::Package;
 # Pure native binding eliminating InputDefinitions('xurl').
 
 DeclareOption('nobiblatex', sub { });
-DeclareOption('*', sub {
-  PassOptions('url', 'sty', ToString(LookupValue('CurrentOption')));
-});
+DeclareOption(undef, sub {
+  PassOptions('url', 'sty', ToString(Expand(T_CS('\CurrentOption')))); });
 ProcessOptions();
 
 RequirePackage('url');

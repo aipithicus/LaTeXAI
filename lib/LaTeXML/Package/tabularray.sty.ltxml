@@ -19,7 +19,7 @@ RequirePackage('array');
 RequirePackage('booktabs');
 
 # Package options:
-DeclareOption('*', sub { });
+DeclareOption(undef, sub { });
 ProcessOptions();
 
 # Column types:
