@@ -1,0 +1,25 @@
+# -*- mode: Perl -*-
+# /=====================================================================\ #
+# |  needspace.sty                                                      | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+# | Part of LaTeXML:                                                    | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# |---------------------------------------------------------------------| #
+# | Thanks to the LaTeX community                                       | #
+# | http://dlmf.nist.gov/LaTeXML/                                       | #
+# \=========================================================ooo==U==ooo=/ #
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+# CTAN: needspace v1.3e (2025/03/13, rev 77682)
+# Page reserves and vertical break penalties are no-ops in XML/HTML.
+
+DefMacro('\needspace{Dimension}',                 '');
+DefMacro('\Needspace OptionalMatch:* {Dimension}', '');
+
+#**********************************************************************
+1;

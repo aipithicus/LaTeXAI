@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="needspace"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para class="ltx_noindent" xml:id="p1">
+    <p>First paragraph before needspace.</p>
+  </para>
+  <para class="ltx_noindent" xml:id="p2">
+    <p>Second paragraph after needspace.</p>
+  </para>
+  <para class="ltx_noindent" xml:id="p3">
+    <p>Third paragraph after Needspace.</p>
+  </para>
+  <para class="ltx_noindent" xml:id="p4">
+    <p>Fourth paragraph after starred Needspace.</p>
+  </para>
+</document>
