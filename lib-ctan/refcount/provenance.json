@@ -1,0 +1,28 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/refcount",
+      "date" : "2019-12-15",
+      "docs" : null,
+      "license" : "lppl1.3",
+      "path" : "/macros/latex/contrib/refcount",
+      "version" : "3.6"
+   },
+   "fetched_at" : "2026-09-07T06:26:15Z",
+   "package" : "refcount",
+   "runfiles" : [
+      "tex/latex/refcount/refcount.sty"
+   ],
+   "styles" : [
+      "tex/latex/refcount/refcount.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/refcount.tar.xz",
+      "bundle" : false,
+      "bytes" : 3068,
+      "filtered" : false,
+      "package" : "refcount",
+      "revision" : "79461",
+      "sha512" : "a3cf2f2dcea4641d19f96cee5631f3c218770f33eb4ffb9560f2c33e1e7911911039680c89aae98807f9509f2fdaa6c76ff8d2e240b1c7e99b99284b5628191c",
+      "snapshot" : null
+   }
+}

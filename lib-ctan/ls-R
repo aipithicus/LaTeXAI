@@ -96,6 +96,9 @@ nicematrix.sty
 ./optidef/tex/latex/optidef:
 optidef.sty
 
+./refcount/tex/latex/refcount:
+refcount.sty
+
 ./rotfloat/tex/latex/rotfloat:
 rotfloat.sty
 
