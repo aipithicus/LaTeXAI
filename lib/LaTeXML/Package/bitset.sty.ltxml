@@ -1,6 +1,6 @@
-# -*- CPERL -*-
+# -*- mode: Perl -*-
 # /=====================================================================\ #
-# |  bitset.sty                                                           | #
+# |  bitset.sty                                                         | #
 # | Implementation for LaTeXML                                          | #
 # |=====================================================================| #
 # | Part of LaTeXML:                                                    | #
@@ -15,10 +15,55 @@ use strict;
 use warnings;
 use LaTeXML::Package;
 
-#**********************************************************************
+# CTAN: bitset v1.3 (2019/12/09), TeX Live revision 79461.
+# Class: shim
+# Native replacement of InputDefinitions('bitset'). Written from
+# lib-ctan/bitset/tex/generic/bitset/bitset.sty.
+# hyperref RequirePackages this file; no Package/Engine consumer calls
+# \bitset*. Bit arithmetic has no IR effect, so the public surface is
+# stubbed at the real signatures (setters no-op, getters expand to 0,
+# emptiness tests take the empty branch). Does not load infwarerr,
+# intcalc, or bigintcalc.
 
-InputDefinitions('bitset', type => 'sty', noltxml => 1);
+DeclareOption(undef, sub { });
+ProcessOptions();
 
-#**********************************************************************
+DefMacro('\bitsetReset{}',            '');
+DefMacro('\bitsetLet{}{}',            '');
+DefMacro('\bitsetSetBin{}{}',         '');
+DefMacro('\bitsetSetOct{}{}',         '');
+DefMacro('\bitsetSetHex{}{}',         '');
+DefMacro('\bitsetSetDec{}{}',         '');
+DefMacro('\bitsetAnd{}{}',            '');
+DefMacro('\bitsetAndNot{}{}',         '');
+DefMacro('\bitsetOr{}{}',             '');
+DefMacro('\bitsetXor{}{}',            '');
+DefMacro('\bitsetShiftLeft{}{}',      '');
+DefMacro('\bitsetShiftRight{}{}',     '');
+DefMacro('\bitsetClear{}{}',          '');
+DefMacro('\bitsetSet{}{}',            '');
+DefMacro('\bitsetFlip{}{}',           '');
+DefMacro('\bitsetSetValue{}{}{}',     '');
+DefMacro('\bitsetClearRange{}{}{}',   '');
+DefMacro('\bitsetSetRange{}{}{}',     '');
+DefMacro('\bitsetFlipRange{}{}{}',    '');
+DefMacro('\bitsetSetValueRange{}{}{}{}', '');
+
+DefMacro('\bitsetGetBin{}{}',        '0');
+DefMacro('\bitsetGetOct{}{}',        '0');
+DefMacro('\bitsetGetHex{}{}',        '0');
+DefMacro('\bitsetGetDec{}',          '0');
+DefMacro('\bitsetGet{}{}',           '0');
+DefMacro('\bitsetNextClearBit{}{}',  '0');
+DefMacro('\bitsetNextSetBit{}{}',    '-1');
+DefMacro('\bitsetGetSetBitList{}',   '');
+DefMacro('\bitsetSize{}',            '0');
+DefMacro('\bitsetCardinality{}',     '0');
+
+DefMacro('\bitsetIsDefined{}{}{}',     '#3');
+DefMacro('\bitsetIsEmpty{}{}{}',       '#2');
+DefMacro('\bitsetQuery{}{}{}{}',       '#4');
+DefMacro('\bitsetEquals{}{}{}{}',      '#3');
+DefMacro('\bitsetIntersects{}{}{}{}',  '#4');
 
 1;
