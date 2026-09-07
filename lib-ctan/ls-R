@@ -1774,6 +1774,24 @@ lipsum-cs.ltd.tex
 lipsum.ltd.tex
 lipsum.sty
 
+./listings/tex/latex/listings:
+listings-acm.prf
+listings-bash.prf
+listings-fortran.prf
+listings-hansl.prf
+listings-lua.prf
+listings-python.prf
+listings-rexx.prf
+listings-riscv.prf
+listings.cfg
+listings.sty
+lstdoc.sty
+lstlang1.sty
+lstlang2.sty
+lstlang3.sty
+lstmisc.sty
+lstpatch.sty
+
 ./ltxcmds/tex/generic/ltxcmds:
 ltxcmds.sty
 

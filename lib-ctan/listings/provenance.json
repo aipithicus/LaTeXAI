@@ -1,0 +1,49 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/listings",
+      "date" : "2025-11-14",
+      "docs" : null,
+      "license" : "lppl1.3c",
+      "path" : "/macros/latex/contrib/listings",
+      "version" : "1.11b"
+   },
+   "fetched_at" : "2026-09-07T06:26:42Z",
+   "package" : "listings",
+   "runfiles" : [
+      "tex/latex/listings/listings-acm.prf",
+      "tex/latex/listings/listings-bash.prf",
+      "tex/latex/listings/listings-fortran.prf",
+      "tex/latex/listings/listings-hansl.prf",
+      "tex/latex/listings/listings-lua.prf",
+      "tex/latex/listings/listings-python.prf",
+      "tex/latex/listings/listings-rexx.prf",
+      "tex/latex/listings/listings-riscv.prf",
+      "tex/latex/listings/listings.cfg",
+      "tex/latex/listings/listings.sty",
+      "tex/latex/listings/lstdoc.sty",
+      "tex/latex/listings/lstlang1.sty",
+      "tex/latex/listings/lstlang2.sty",
+      "tex/latex/listings/lstlang3.sty",
+      "tex/latex/listings/lstmisc.sty",
+      "tex/latex/listings/lstpatch.sty"
+   ],
+   "styles" : [
+      "tex/latex/listings/listings.sty",
+      "tex/latex/listings/lstdoc.sty",
+      "tex/latex/listings/lstlang1.sty",
+      "tex/latex/listings/lstlang2.sty",
+      "tex/latex/listings/lstlang3.sty",
+      "tex/latex/listings/lstmisc.sty",
+      "tex/latex/listings/lstpatch.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/listings.tar.xz",
+      "bundle" : false,
+      "bytes" : 151988,
+      "filtered" : false,
+      "package" : "listings",
+      "revision" : "77682",
+      "sha512" : "8426c11e86671f3f7c9e7bea477b56ba36111b562606737785eb96abb8fc26b872da6e78a4ec0c77a79de57fa7686bf664f5e672415b121a7e8296ac702c962e",
+      "snapshot" : null
+   }
+}
