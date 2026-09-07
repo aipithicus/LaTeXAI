@@ -1816,6 +1816,13 @@ rotfloat.sty
 ./scalerel/tex/latex/scalerel:
 scalerel.sty
 
+./siunitx/tex/latex/siunitx:
+siunitx-abbreviations.cfg
+siunitx-binary.cfg
+siunitx-v2.sty
+siunitx-version-1.cfg
+siunitx.sty
+
 ./stackrel/tex/latex/oberdiek:
 stackrel.sty
 

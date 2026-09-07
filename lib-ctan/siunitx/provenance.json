@@ -1,0 +1,33 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/siunitx",
+      "date" : "2026-09-05",
+      "docs" : null,
+      "license" : "lppl1.3c",
+      "path" : "/macros/latex/contrib/siunitx",
+      "version" : "3.5.10"
+   },
+   "fetched_at" : "2026-09-07T06:26:44Z",
+   "package" : "siunitx",
+   "runfiles" : [
+      "tex/latex/siunitx/siunitx-abbreviations.cfg",
+      "tex/latex/siunitx/siunitx-binary.cfg",
+      "tex/latex/siunitx/siunitx-v2.sty",
+      "tex/latex/siunitx/siunitx-version-1.cfg",
+      "tex/latex/siunitx/siunitx.sty"
+   ],
+   "styles" : [
+      "tex/latex/siunitx/siunitx-v2.sty",
+      "tex/latex/siunitx/siunitx.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/siunitx.tar.xz",
+      "bundle" : false,
+      "bytes" : 70308,
+      "filtered" : false,
+      "package" : "siunitx",
+      "revision" : "80184",
+      "sha512" : "7a1f83d945cf13ab3a7bd503c4cec68db1e7e3e044b676ad1955d15145f8517e08124ef8597efbf57022dc2a6cc9da9a214e7afd196a605406c70afe64a51277",
+      "snapshot" : null
+   }
+}
