@@ -138,7 +138,14 @@ sub fetch_package {
   say_("$pkg: fetching $archive_url");
   my $dl = $http->mirror($archive_url, $archive);
   die "download failed: $dl->{status} $dl->{reason} for $archive_url" unless $dl->{success};
-  my $sha512 = sha512_hex(slurp_raw($archive));
+  my $blob = slurp_raw($archive);
+  # xz magic: FD 37 7A 58 5A 00. A 200 HTML challenge page (texlive.info Anubis)
+  # is otherwise a successful download and a mysterious tar error later.
+  die "archive is not xz (got "
+    . (substr($blob, 0, 15) =~ /^<!DOCTYPE|^<html/i ? 'HTML' : sprintf('%d bytes, magic %s', length($blob), unpack('H*', substr($blob, 0, 6))))
+    . ") from $archive_url"
+    unless length($blob) >= 6 && substr($blob, 0, 6) eq "\xFD7zXZ\x00";
+  my $sha512 = sha512_hex($blob);
 
   my $xz  = IO::Uncompress::UnXz->new($archive) or die "cannot open $archive as xz";
   my $tar = Archive::Tar->new($xz) or die "cannot read tar: " . (Archive::Tar->error || 'unknown');
