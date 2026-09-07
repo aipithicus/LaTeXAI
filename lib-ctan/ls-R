@@ -20,6 +20,9 @@ algorithmic.sty
 ./aliascnt/tex/latex/aliascnt:
 aliascnt.sty
 
+./bitset/tex/generic/bitset:
+bitset.sty
+
 ./bookmark/tex/latex/bookmark:
 bkm-dvipdfmx.def
 bkm-dvips.def
