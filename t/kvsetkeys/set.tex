@@ -1,0 +1,10 @@
+\documentclass{article}
+\usepackage{keyval}
+\usepackage{kvsetkeys}
+\makeatletter
+\define@key{demo}{title}{\def\thetitle{#1}}
+\kvsetkeys{demo}{title=Hello}
+\makeatother
+\begin{document}
+[\thetitle]
+\end{document}

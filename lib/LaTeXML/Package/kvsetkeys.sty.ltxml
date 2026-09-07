@@ -1,6 +1,6 @@
-# -*- CPERL -*-
+# -*- mode: Perl -*-
 # /=====================================================================\ #
-# |  kvsetkeys.sty                                                           | #
+# |  kvsetkeys.sty                                                      | #
 # | Implementation for LaTeXML                                          | #
 # |=====================================================================| #
 # | Part of LaTeXML:                                                    | #
@@ -15,10 +15,29 @@ use strict;
 use warnings;
 use LaTeXML::Package;
 
-#**********************************************************************
+# CTAN: kvsetkeys v1.19 (2022-10-05), TeX Live revision 79461.
+# Class: shim
+# Native replacement of InputDefinitions('kvsetkeys'). Written from
+# lib-ctan/kvsetkeys/tex/latex/kvsetkeys/kvsetkeys.sty.
+# \kvsetkeys maps onto keyval's \setkeys. Family handlers, comma@parse,
+# and the known-keys collector are residue (on purpose: no native consumer;
+# hyperref only RequirePackages this file).
 
-InputDefinitions('kvsetkeys', type => 'sty', noltxml => 1);
+RequirePackage('keyval');
 
-#**********************************************************************
+DeclareOption(undef, sub { });
+ProcessOptions();
+
+DefMacro('\kvsetkeys{}{}', '\setkeys{#1}{#2}');
+Let('\kvsetkeys@expandafter', '\kvsetkeys');
+DefMacro('\kvsetknownkeys{}{}{}', '\setkeys{#1}{#3}\def#2{}');
+Let('\kvsetknownkeys@expandafter', '\kvsetknownkeys');
+
+DefMacro('\kv@set@family@handler{}{}',   '');
+DefMacro('\kv@unset@family@handler{}',   '');
+DefMacro('\kv@handled@true',             '');
+DefMacro('\kv@handled@false',            '');
+DefMacro('\kv@break',                    '');
+DefMacro('\comma@break',                 '');
 
 1;
