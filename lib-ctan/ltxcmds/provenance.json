@@ -1,0 +1,28 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/ltxcmds",
+      "date" : "2023-12-04",
+      "docs" : null,
+      "license" : "lppl1.3c",
+      "path" : "/macros/generic/ltxcmds",
+      "version" : "1.26"
+   },
+   "fetched_at" : "2026-09-07T06:26:06Z",
+   "package" : "ltxcmds",
+   "runfiles" : [
+      "tex/generic/ltxcmds/ltxcmds.sty"
+   ],
+   "styles" : [
+      "tex/generic/ltxcmds/ltxcmds.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/ltxcmds.tar.xz",
+      "bundle" : false,
+      "bytes" : 4144,
+      "filtered" : false,
+      "package" : "ltxcmds",
+      "revision" : "79461",
+      "sha512" : "e123a338ecffc630d5f2447e4f2fd5df05b1ee06d0a2d7630625b4528b83ae6e4972aa9417d51efbc0a41621611c5020e50d50b62d985991d22dcd08c55441d1",
+      "snapshot" : null
+   }
+}
