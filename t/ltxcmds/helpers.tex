@@ -1,0 +1,11 @@
+\documentclass{article}
+\usepackage{ltxcmds}
+\begin{document}
+\makeatletter
+\ltx@IfUndefined{undefinedcs}{U}{D}
+\ltx@firstoftwo{A}{B}
+\ltx@secondoftwo{A}{B}
+\ltx@ifpackageloaded{ltxcmds}{L}{N}
+\ltx@gobble{X}Y
+\makeatother
+\end{document}

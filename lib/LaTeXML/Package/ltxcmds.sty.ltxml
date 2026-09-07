@@ -1,6 +1,6 @@
-# -*- CPERL -*-
+# -*- mode: Perl -*-
 # /=====================================================================\ #
-# |  ltxcmds.sty                                                           | #
+# |  ltxcmds.sty                                                        | #
 # | Implementation for LaTeXML                                          | #
 # |=====================================================================| #
 # | Part of LaTeXML:                                                    | #
@@ -15,10 +15,77 @@ use strict;
 use warnings;
 use LaTeXML::Package;
 
-#**********************************************************************
+# CTAN: ltxcmds v1.26 (2023-12-04), TeX Live revision 79461.
+# Class: shim
+# Native replacement of InputDefinitions('ltxcmds'). Written from
+# lib-ctan/ltxcmds/tex/generic/ltxcmds/ltxcmds.sty.
+# Maps the public helper surface onto the LaTeX kernel equivalents
+# already in the pool. Register aliases, box tests, and character
+# constants are residue (on purpose: no IR effect; no native consumer).
 
-InputDefinitions('ltxcmds', type => 'sty', noltxml => 1);
+DeclareOption(undef, sub { });
+ProcessOptions();
 
-#**********************************************************************
+Let('\ltx@gobble',      '\@gobble');
+Let('\ltx@gobbletwo',   '\@gobbletwo');
+Let('\ltx@gobblefour',  '\@gobblefour');
+DefMacro('\ltx@gobblethree{}{}{}', Tokens());
+Let('\ltx@firstofone',   '\@firstofone');
+Let('\ltx@firstoftwo',   '\@firstoftwo');
+Let('\ltx@secondoftwo',  '\@secondoftwo');
+Let('\ltx@thirdofthree', '\@thirdofthree');
+DefMacro('\ltx@firstofthree{}{}{}',    sub { $_[1]; });
+DefMacro('\ltx@secondofthree{}{}{}',   sub { $_[2]; });
+DefMacro('\ltx@firstoffour{}{}{}{}',   sub { $_[1]; });
+DefMacro('\ltx@secondoffour{}{}{}{}',  sub { $_[2]; });
+DefMacro('\ltx@thirdoffour{}{}{}{}',   sub { $_[3]; });
+DefMacro('\ltx@fourthoffour{}{}{}{}',  sub { $_[4]; });
+
+Let('\ltx@car',        '\@car');
+Let('\ltx@cdr',        '\@cdr');
+Let('\ltx@empty',      '\@empty');
+Let('\ltx@ifnextchar', '\@ifnextchar');
+Let('\ltx@newif',      '\newif');
+Let('\ltx@leavevmode', '\leavevmode');
+Let('\ltx@mbox',       '\mbox');
+
+Let('\ltx@ifundefined',     '\@ifundefined');
+Let('\ltx@IfUndefined',     '\@ifundefined');
+Let('\ltx@ifpackageloaded', '\@ifpackageloaded');
+Let('\ltx@ifclassloaded',   '\@ifclassloaded');
+
+DefMacro('\ltx@iffileloaded{}{}{}',
+  '\@ifundefined{ver@#1}{#3}{#2}');
+Let('\ltx@ifpackagelater', '\@ifpackagelater');
+Let('\ltx@ifclasslater',   '\@ifclasslater');
+
+DefMacro('\ltx@ifempty{}{}{}', sub {
+    my ($gullet, $toks, $yes, $no) = @_;
+    return ((ToString($toks) eq '') ? $yes : $no)->unlist; });
+DefMacro('\ltx@ifblank{}{}{}', sub {
+    my ($gullet, $toks, $yes, $no) = @_;
+    my $s = ToString($toks);
+    $s =~ s/^\s+|\s+$//g;
+    return (($s eq '') ? $yes : $no)->unlist; });
+DefMacro('\ltx@zapspace{}', sub {
+    my $s = ToString($_[1]);
+    $s =~ s/\s+//g;
+    return TokenizeInternal($s); });
+
+DefPrimitive('\ltx@GlobalAppendToMacro{}{}', sub {
+    AddToMacro($_[1], $_[2]);
+    return; });
+Let('\ltx@LocalAppendToMacro',  '\ltx@GlobalAppendToMacro');
+Let('\ltx@GlobalPrependToMacro', '\ltx@GlobalAppendToMacro');
+Let('\ltx@LocalPrependToMacro',  '\ltx@GlobalAppendToMacro');
+
+DefRegister('\ltx@zero' => Number(0));
+DefRegister('\ltx@one'  => Number(1));
+DefRegister('\ltx@two'  => Number(2));
+
+# Residue (on purpose): \ltx@LocToksA..E / GlobToks / LocDimen / LocSkip,
+# \ltx@GobbleNum / CarNum / CdrNum, \ltx@IfBoxEmpty, character constants
+# (\ltx@percentchar etc.), \ltx@onelevel@sanitize, \ltx@ReturnAfterFi,
+# \ltx@ReturnAfterElseFi. No native consumer.
 
 1;
