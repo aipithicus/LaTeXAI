@@ -56,6 +56,9 @@ forest.sty
 ./ifthen/tex/latex/base:
 ifthen.sty
 
+./keyval/tex/latex/graphics:
+keyval.sty
+
 ./kvoptions/tex/latex/kvoptions:
 kvoptions-patch.sty
 kvoptions.sty
