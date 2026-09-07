@@ -14,7 +14,9 @@
 use strict;
 use warnings;
 use FindBin;
+use lib "$FindBin::RealBin/../lib";
 use Pod::Usage;
+use LaTeXML::Util::Pathname;
 
 pod2usage(1) unless @ARGV;
 
@@ -23,8 +25,7 @@ our $TESTDEST = "$FindBin::RealBin/../t/encoding";
 for my $encoding (@ARGV) {
   #----------------------------------------
   # Find & Scan the TeX encoding file
-  my $defpath = `kpsewhich $encoding.def`;
-  chomp($defpath);
+  my $defpath = pathname_kpsewhich("$encoding.def");
   die "Could not find encoding file for '$encoding'" unless $defpath;
   my @defn = ();
   my $ENC;

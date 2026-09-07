@@ -17,6 +17,7 @@ use Getopt::Long qw(:config no_ignore_case);
 use Pod::Usage;
 use FindBin;
 # Assume we're in the tools directory of a development version of latexml (next to lib, blib..)
+use lib "$FindBin::RealBin/../lib";
 use lib "$FindBin::RealBin/../blib/lib";
 use LaTeXML::Util::Pathname;
 
@@ -303,7 +304,7 @@ sub scan {
   my ($self) = @_;
 
   my $name = $$self{name};
-  my $file = `kpsewhich $name`; chomp($file);
+  my $file = pathname_kpsewhich($name);
   if (!$file) {
     $file = pathname_find($name, paths => $$self{searchpaths}); }
   if (!$file) {

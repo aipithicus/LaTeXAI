@@ -13,7 +13,10 @@
 
 use strict;
 use warnings;
+use FindBin;
+use lib "$FindBin::RealBin/../lib";
 use Pod::Usage;
+use LaTeXML::Util::Pathname;
 
 pod2usage(1) unless @ARGV;
 
@@ -91,9 +94,7 @@ for my $fontencoding (@ARGV) {
 
 sub finddefn {
   my ($defn) = @_;
-  my $defpath = `kpsewhich $defn`;
-  chomp($defpath);
-  return $defpath; }
+  return pathname_kpsewhich($defn); }
 
 #======================================================================
 # Get the "handlers" as a unicode codepoint for those expressions covered by a particular encoding

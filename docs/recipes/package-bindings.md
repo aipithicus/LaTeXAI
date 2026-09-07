@@ -27,7 +27,7 @@ lxml --nocomments --log=temp\logs\<pkg>-before.latexml.log --destination=temp\bi
 
 The census answers one question: which control sequences and environments does the package expose, and which of them appear in real documents.
 
-**With a vendored source** (the normal case). Vendor the package first; `lctan <pkg>` puts its runfiles under `lib-ctan/<pkg>/tex/latex/<pkg>/` with provenance (see `docs/recipes/fetch-ctan.md`). `texscan` then scans the raw `.sty` and reports what it defines that no binding implements. It resolves sources through `kpsewhich` first, which does not exist on this machine, so the directory must be given explicitly. It also reads existing bindings from `blib/lib/LaTeXML/Package/`, not `lib/`, so pass the `Package/` and `Engine/` directories under `lib/` as search paths or the diff will report everything as missing and warn about `TeX.pool`.
+**With a vendored source** (the normal case). Vendor the package first; `lctan <pkg>` puts its runfiles under `lib-ctan/<pkg>/tex/latex/<pkg>/` with provenance (see `docs/recipes/fetch-ctan.md`). `texscan` then scans the raw `.sty` and reports what it defines that no binding implements. It resolves sources through `pathname_kpsewhich` (the lib-ctan shim, when `LATEXML_KPSEWHICH` is set) and then `--path`. Pass the `.sty`'s directory and `lib/LaTeXML/Package` plus `Engine/` (it still looks in `blib/` for bindings unless those paths are given).
 
 ```powershell
 lctan <pkg>
