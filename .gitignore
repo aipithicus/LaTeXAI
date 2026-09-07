@@ -12,9 +12,15 @@ temp/*
 .codex/
 .ignore
 *.ignore
-.archive 
+.archive
 lib-ctan/*
 !lib-ctan/README.md
+lib-park/*
+!lib-park/README.md
+lib-symb/*
+!lib-symb/README.md
+lib-katex/*
+!lib-katex/README.md
 
 .mcp.json
 DocOps.md
