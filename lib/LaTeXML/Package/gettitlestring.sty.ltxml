@@ -1,6 +1,6 @@
-# -*- CPERL -*-
+# -*- mode: Perl -*-
 # /=====================================================================\ #
-# |  gettitlestring.sty                                                           | #
+# |  gettitlestring.sty                                                 | #
 # | Implementation for LaTeXML                                          | #
 # |=====================================================================| #
 # | Part of LaTeXML:                                                    | #
@@ -15,10 +15,27 @@ use strict;
 use warnings;
 use LaTeXML::Package;
 
-#**********************************************************************
+# CTAN: gettitlestring v1.6 (2019/12/15), TeX Live revision 79461.
+# Class: shim
+# Native replacement of InputDefinitions('gettitlestring'). Written from
+# lib-ctan/gettitlestring/tex/generic/gettitlestring/gettitlestring.sty.
+# Stores the title in \GetTitleStringResult. Does not run the expand/strip
+# machinery (no IR effect beyond the stored tokens). nameref is already
+# native and does not call these CS.
 
-InputDefinitions('gettitlestring', type => 'sty', noltxml => 1);
+RequirePackage('kvoptions');
 
-#**********************************************************************
+DeclareOption(undef, sub { });
+ProcessOptions();
+
+DefMacro('\GetTitleStringSetup{}', '');
+DefMacro('\GetTitleStringResult',  '');
+DefMacro('\GetTitleString{}', sub {
+    my ($gullet, $title) = @_;
+    DefMacroI('\GetTitleStringResult', undef, $title);
+    return (); });
+DefMacro('\GetTitleStringExpand{}',    '\GetTitleString{#1}');
+DefMacro('\GetTitleStringNonExpand{}', '\GetTitleString{#1}');
+DefMacro('\GetTitleStringDisableCommands{}', '');
 
 1;
