@@ -37,6 +37,12 @@ $script:StrawberryPerl = Join-Path $script:PerlRoot 'perl\bin\perl.exe'
 # through PATH (perl -S), which fails whenever Strawberry is not on PATH; the
 # whole point of these wrappers is to never depend on PATH.
 $script:ProveScript    = Join-Path $script:PerlRoot 'perl\bin\prove'
+# Not machine-specific: the checkout's kpsewhich shim. Pathname.pm reads
+# LATEXML_KPSEWHICH when it loads, so this must be set before any perl starts.
+$script:Kpsewhich = Join-Path $script:LaTeXAIRoot 'tools\dev\kpsewhich.cmd'
+if (Test-Path -LiteralPath $script:Kpsewhich) {
+    $env:LATEXML_KPSEWHICH = $script:Kpsewhich
+}
 
 function Get-LaTeXAIRoot { $script:LaTeXAIRoot }
 function Get-LaTeXAIRunStamp { $script:LaTeXAIRunStamp }
