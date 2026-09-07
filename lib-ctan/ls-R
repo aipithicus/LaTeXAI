@@ -63,6 +63,9 @@ keyval.sty
 kvoptions-patch.sty
 kvoptions.sty
 
+./kvsetkeys/tex/latex/kvsetkeys:
+kvsetkeys.sty
+
 ./lipsum/tex/latex/lipsum:
 cicero.ltd.tex
 lipsum-cs.ltd.tex

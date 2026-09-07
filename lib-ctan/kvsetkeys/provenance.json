@@ -1,0 +1,28 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/kvsetkeys",
+      "date" : "2022-10-05",
+      "docs" : null,
+      "license" : "lppl1.3",
+      "path" : "/macros/latex/contrib/kvsetkeys",
+      "version" : "1.19"
+   },
+   "fetched_at" : "2026-09-07T06:26:08Z",
+   "package" : "kvsetkeys",
+   "runfiles" : [
+      "tex/latex/kvsetkeys/kvsetkeys.sty"
+   ],
+   "styles" : [
+      "tex/latex/kvsetkeys/kvsetkeys.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/kvsetkeys.tar.xz",
+      "bundle" : false,
+      "bytes" : 3592,
+      "filtered" : false,
+      "package" : "kvsetkeys",
+      "revision" : "79461",
+      "sha512" : "2ed2a56d262ef1d14ad7de4ce580aa3dc12fa0d9358fabe56e1346617e7c8bd86aaa6e04d6101b3bf7515fbd7b4b48f0b8767f14f70db67c1c058c3af90ecfb1",
+      "snapshot" : null
+   }
+}
