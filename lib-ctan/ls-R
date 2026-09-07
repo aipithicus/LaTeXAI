@@ -20,6 +20,16 @@ algorithmic.sty
 ./aliascnt/tex/latex/aliascnt:
 aliascnt.sty
 
+./babel-english/tex/generic/babel-english:
+UKenglish.ldf
+USenglish.ldf
+american.ldf
+australian.ldf
+british.ldf
+canadian.ldf
+english.ldf
+newzealand.ldf
+
 ./babel/tex/generic/babel:
 UKenglish.sty
 USenglish.sty

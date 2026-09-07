@@ -1,0 +1,33 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/babel-english",
+      "date" : "2017-06-06",
+      "docs" : null,
+      "license" : "lppl1.3",
+      "path" : "/macros/latex/contrib/babel-contrib/english",
+      "version" : "3.3r"
+   },
+   "fetched_at" : "2026-09-07T06:26:20Z",
+   "package" : "babel-english",
+   "runfiles" : [
+      "tex/generic/babel-english/UKenglish.ldf",
+      "tex/generic/babel-english/USenglish.ldf",
+      "tex/generic/babel-english/american.ldf",
+      "tex/generic/babel-english/australian.ldf",
+      "tex/generic/babel-english/british.ldf",
+      "tex/generic/babel-english/canadian.ldf",
+      "tex/generic/babel-english/english.ldf",
+      "tex/generic/babel-english/newzealand.ldf"
+   ],
+   "styles" : [],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/babel-english.tar.xz",
+      "bundle" : false,
+      "bytes" : 3032,
+      "filtered" : false,
+      "package" : "babel-english",
+      "revision" : "77682",
+      "sha512" : "7fd348777fef761e1a3b89b729ee0b89a20331d1cd7637a9a809043f2397b0cc3e889925967bf221824e245ea1f2ecdb4598e6568fa76b34fdaa6976b6e31f31",
+      "snapshot" : null
+   }
+}
