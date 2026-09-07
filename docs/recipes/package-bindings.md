@@ -70,7 +70,7 @@ Bindings whose whole job is to accept a package and do nothing (page layout, run
 
 ## 3. Tier 2: semantic surface
 
-Fill in the constructs that map onto things the engine already knows how to say. This is the median binding, about twenty lines.
+Fill in the constructs that map onto things the engine already knows how to say. This is the **semantic** class in [`bindings.md`](../specification/bindings.md) section 2.1. This is the median binding, about twenty lines.
 
 | Construct kind | Definition | Model to copy |
 | :--- | :--- | :--- |
