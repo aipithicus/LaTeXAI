@@ -1,0 +1,28 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/pgfopts",
+      "date" : "",
+      "docs" : null,
+      "license" : "lppl1.3",
+      "path" : "/macros/latex/contrib/pgfopts",
+      "version" : "2.1a"
+   },
+   "fetched_at" : "2026-09-06T07:08:04Z",
+   "package" : "pgfopts",
+   "runfiles" : [
+      "tex/latex/pgfopts/pgfopts.sty"
+   ],
+   "styles" : [
+      "tex/latex/pgfopts/pgfopts.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/pgfopts.tar.xz",
+      "bundle" : false,
+      "bytes" : 1936,
+      "filtered" : false,
+      "package" : "pgfopts",
+      "revision" : "77682",
+      "sha512" : "72001c958cdc1287232905ad49db68592fc607bffba126f90176a7253935d9b067b78ddcdb8f7a902d9fb9e4eeb5e05c263e36a790d7ca3bf228af9c6790a33f",
+      "snapshot" : null
+   }
+}

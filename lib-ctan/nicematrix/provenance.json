@@ -1,0 +1,31 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/nicematrix",
+      "date" : "2026-09-05",
+      "docs" : {
+         "kind" : "directory-zip",
+         "url" : "https://mirrors.ctan.org/macros/latex/contrib/nicematrix.zip"
+      },
+      "license" : "lppl1.3",
+      "path" : "/macros/latex/contrib/nicematrix",
+      "version" : "7.11c"
+   },
+   "fetched_at" : "2026-09-05T09:13:19Z",
+   "package" : "nicematrix",
+   "runfiles" : [
+      "tex/latex/nicematrix/nicematrix.sty"
+   ],
+   "styles" : [
+      "tex/latex/nicematrix/nicematrix.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/nicematrix.tar.xz",
+      "bundle" : false,
+      "bytes" : 50180,
+      "filtered" : false,
+      "package" : "nicematrix",
+      "revision" : "80094",
+      "sha512" : "edb1007de89b85a2b93135c38c976101cf2bae7f0f82b6f76c3daa6c15797b5a8806e08b2c79f9acff82bd80ce36073dfb85856b81301f4ba0833a895776b66b",
+      "snapshot" : null
+   }
+}

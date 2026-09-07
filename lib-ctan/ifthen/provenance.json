@@ -1,0 +1,28 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/ifthen",
+      "date" : "2024-03-16",
+      "docs" : null,
+      "license" : "lppl1.3c",
+      "path" : "/macros/latex/base",
+      "version" : "1.1e"
+   },
+   "fetched_at" : "2026-09-06T00:42:11Z",
+   "package" : "ifthen",
+   "runfiles" : [
+      "tex/latex/base/ifthen.sty"
+   ],
+   "styles" : [
+      "tex/latex/base/ifthen.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/latex.tar.xz",
+      "bundle" : true,
+      "bytes" : 264336,
+      "filtered" : true,
+      "package" : "latex",
+      "revision" : "79618",
+      "sha512" : "04d6380ef7c023f63192749080c15e6e47b873aa151e838a946439f5de4455cce1a872e688cf8a366363d09ddcf03cf6b588f3db0573160486afe9cbe0f514e1",
+      "snapshot" : null
+   }
+}

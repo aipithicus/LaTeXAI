@@ -1,0 +1,28 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/elocalloc",
+      "date" : "2016-12-15",
+      "docs" : null,
+      "license" : "lppl",
+      "path" : "/macros/latex/contrib/elocalloc",
+      "version" : "0.03"
+   },
+   "fetched_at" : "2026-09-06T07:08:07Z",
+   "package" : "elocalloc",
+   "runfiles" : [
+      "tex/latex/elocalloc/elocalloc.sty"
+   ],
+   "styles" : [
+      "tex/latex/elocalloc/elocalloc.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/elocalloc.tar.xz",
+      "bundle" : false,
+      "bytes" : 1072,
+      "filtered" : false,
+      "package" : "elocalloc",
+      "revision" : "78931",
+      "sha512" : "cd0d96dcc253de81211ba1cd8b36c357cb66467db920e4b50a5b7c38dad807488174a303f57ec6721d7208bf27e137ebad92bf4503e1042a26f8874ce66d95bc",
+      "snapshot" : null
+   }
+}

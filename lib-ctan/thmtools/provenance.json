@@ -1,0 +1,58 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/thmtools",
+      "date" : "2023-05-04",
+      "docs" : null,
+      "license" : "lppl1.3c",
+      "path" : "/macros/latex/contrib/thmtools",
+      "version" : "76"
+   },
+   "fetched_at" : "2026-09-05T23:52:09Z",
+   "package" : "thmtools",
+   "runfiles" : [
+      "tex/latex/thmtools/aliasctr.sty",
+      "tex/latex/thmtools/parseargs.sty",
+      "tex/latex/thmtools/thm-amsthm.sty",
+      "tex/latex/thmtools/thm-autoref.sty",
+      "tex/latex/thmtools/thm-beamer.sty",
+      "tex/latex/thmtools/thm-kv.sty",
+      "tex/latex/thmtools/thm-listof.sty",
+      "tex/latex/thmtools/thm-llncs.sty",
+      "tex/latex/thmtools/thm-ntheorem.sty",
+      "tex/latex/thmtools/thm-patch.sty",
+      "tex/latex/thmtools/thm-restate.sty",
+      "tex/latex/thmtools/thmdef-mdframed.sty",
+      "tex/latex/thmtools/thmdef-shaded.sty",
+      "tex/latex/thmtools/thmdef-thmbox.sty",
+      "tex/latex/thmtools/thmtools.sty",
+      "tex/latex/thmtools/unique.sty"
+   ],
+   "styles" : [
+      "tex/latex/thmtools/aliasctr.sty",
+      "tex/latex/thmtools/parseargs.sty",
+      "tex/latex/thmtools/thm-amsthm.sty",
+      "tex/latex/thmtools/thm-autoref.sty",
+      "tex/latex/thmtools/thm-beamer.sty",
+      "tex/latex/thmtools/thm-kv.sty",
+      "tex/latex/thmtools/thm-listof.sty",
+      "tex/latex/thmtools/thm-llncs.sty",
+      "tex/latex/thmtools/thm-ntheorem.sty",
+      "tex/latex/thmtools/thm-patch.sty",
+      "tex/latex/thmtools/thm-restate.sty",
+      "tex/latex/thmtools/thmdef-mdframed.sty",
+      "tex/latex/thmtools/thmdef-shaded.sty",
+      "tex/latex/thmtools/thmdef-thmbox.sty",
+      "tex/latex/thmtools/thmtools.sty",
+      "tex/latex/thmtools/unique.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/thmtools.tar.xz",
+      "bundle" : false,
+      "bytes" : 13432,
+      "filtered" : false,
+      "package" : "thmtools",
+      "revision" : "77682",
+      "sha512" : "50b2094f992bda561ffb83b2186a28da3fb20d7db687457855e887954de34f4100ae6becfdb16c10d4a7fe9361227d8d98e8c3457a43fb5c26011508df72f0d5",
+      "snapshot" : null
+   }
+}

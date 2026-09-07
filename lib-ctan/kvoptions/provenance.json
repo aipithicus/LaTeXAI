@@ -1,0 +1,33 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/kvoptions",
+      "date" : "2022-06-15",
+      "docs" : {
+         "kind" : "directory-zip",
+         "url" : "https://mirrors.ctan.org/macros/latex/contrib/kvoptions.zip"
+      },
+      "license" : "lppl1.3",
+      "path" : "/macros/latex/contrib/kvoptions",
+      "version" : "3.15"
+   },
+   "fetched_at" : "2026-09-06T05:22:00Z",
+   "package" : "kvoptions",
+   "runfiles" : [
+      "tex/latex/kvoptions/kvoptions-patch.sty",
+      "tex/latex/kvoptions/kvoptions.sty"
+   ],
+   "styles" : [
+      "tex/latex/kvoptions/kvoptions-patch.sty",
+      "tex/latex/kvoptions/kvoptions.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/kvoptions.tar.xz",
+      "bundle" : false,
+      "bytes" : 7208,
+      "filtered" : false,
+      "package" : "kvoptions",
+      "revision" : "79461",
+      "sha512" : "57b7e13f9750526835a381f58f745ab37c1fff32971deb4185a83df94942a54ad4f5bc949610e548a1e817456fe1339c0160455fd94b99e9c1f1a661fbbb353a",
+      "snapshot" : null
+   }
+}

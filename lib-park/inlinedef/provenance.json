@@ -1,0 +1,28 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/inlinedef",
+      "date" : "",
+      "docs" : null,
+      "license" : "lppl1.3",
+      "path" : "/macros/latex/contrib/inlinedef",
+      "version" : "1.0"
+   },
+   "fetched_at" : "2026-09-06T07:08:08Z",
+   "package" : "inlinedef",
+   "runfiles" : [
+      "tex/latex/inlinedef/inlinedef.sty"
+   ],
+   "styles" : [
+      "tex/latex/inlinedef/inlinedef.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/inlinedef.tar.xz",
+      "bundle" : false,
+      "bytes" : 3684,
+      "filtered" : false,
+      "package" : "inlinedef",
+      "revision" : "79618",
+      "sha512" : "1e4cfac3b1b1cd2266fdc4e902ab7454203e5cc407e1c468828fd201ebb987c4ac73ce56625fb2589866ff9c3ab66b42e64b77af7c0229a9ba7d1b4eb14ee2b5",
+      "snapshot" : null
+   }
+}

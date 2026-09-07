@@ -1,0 +1,33 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/algorithms",
+      "date" : "",
+      "docs" : {
+         "kind" : "directory-zip",
+         "url" : "https://mirrors.ctan.org/macros/latex/contrib/algorithms.zip"
+      },
+      "license" : "lgpl2.1",
+      "path" : "/macros/latex/contrib/algorithms",
+      "version" : "0.1"
+   },
+   "fetched_at" : "2026-09-05T21:09:24Z",
+   "package" : "algorithms",
+   "runfiles" : [
+      "tex/latex/algorithms/algorithm.sty",
+      "tex/latex/algorithms/algorithmic.sty"
+   ],
+   "styles" : [
+      "tex/latex/algorithms/algorithm.sty",
+      "tex/latex/algorithms/algorithmic.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/algorithms.tar.xz",
+      "bundle" : false,
+      "bytes" : 3464,
+      "filtered" : false,
+      "package" : "algorithms",
+      "revision" : "78101",
+      "sha512" : "6cd2773ffc1c5feaf2574653ec2c8a674eb1783c34b54a49469eecfaf0d10f3da000a555a382601ae32561233ca7f5011c0d42bd028d33fd437d547c3cf10501",
+      "snapshot" : null
+   }
+}

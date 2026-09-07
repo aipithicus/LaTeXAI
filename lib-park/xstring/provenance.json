@@ -1,0 +1,29 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/xstring",
+      "date" : "",
+      "docs" : null,
+      "license" : "lppl1.3c",
+      "path" : "/macros/generic/xstring",
+      "version" : "1.86"
+   },
+   "fetched_at" : "2026-09-06T07:50:40Z",
+   "package" : "xstring",
+   "runfiles" : [
+      "tex/generic/xstring/xstring.sty",
+      "tex/generic/xstring/xstring.tex"
+   ],
+   "styles" : [
+      "tex/generic/xstring/xstring.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/xstring.tar.xz",
+      "bundle" : false,
+      "bytes" : 11544,
+      "filtered" : false,
+      "package" : "xstring",
+      "revision" : "77682",
+      "sha512" : "213f663184838c2113939b8c3bfbeb344ed37db5dd040e0f21834675136310ed7256cc50f827f29695feb758031b9c6f859e1696c15ac57a6d3e157b7c894dc5",
+      "snapshot" : null
+   }
+}

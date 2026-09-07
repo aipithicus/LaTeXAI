@@ -1,0 +1,3 @@
+# Allow-list for lib-ctan entries the static scan cannot classify.
+# One CTAN-id per line. lctan --check treats a name here as satisfying
+# the entry rule (data, requested, or native census source). Empty is fine.

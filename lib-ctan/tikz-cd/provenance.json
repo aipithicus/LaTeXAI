@@ -1,0 +1,33 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/tikz-cd",
+      "date" : "2021-05-04",
+      "docs" : {
+         "kind" : "directory-zip",
+         "url" : "https://mirrors.ctan.org/graphics/pgf/contrib/tikz-cd.zip"
+      },
+      "license" : "lppl1.3",
+      "path" : "/graphics/pgf/contrib/tikz-cd",
+      "version" : "1.0"
+   },
+   "fetched_at" : "2026-09-05T09:27:17Z",
+   "package" : "tikz-cd",
+   "runfiles" : [
+      "tex/generic/tikz-cd/tikzlibrarycd.code.tex",
+      "tex/latex/tikz-cd/tikz-cd.sty"
+   ],
+   "styles" : [
+      "tex/generic/tikz-cd/tikzlibrarycd.code.tex",
+      "tex/latex/tikz-cd/tikz-cd.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/tikz-cd.tar.xz",
+      "bundle" : false,
+      "bytes" : 6380,
+      "filtered" : false,
+      "package" : "tikz-cd",
+      "revision" : "77682",
+      "sha512" : "92d8569169725c6b1b51b8f051398e116c525bddea4679bf5df5270d31bd1bdf84287ca64f71c4501b2843b83ef48e535a4109e4061498270ae6f273279c60c1",
+      "snapshot" : null
+   }
+}

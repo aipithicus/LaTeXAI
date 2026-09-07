@@ -1,0 +1,31 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/extarrows",
+      "date" : "2020-03-12",
+      "docs" : {
+         "kind" : "directory-zip",
+         "url" : "https://mirrors.ctan.org/macros/latex/contrib/extarrows.zip"
+      },
+      "license" : "lgpl",
+      "path" : "/macros/latex/contrib/extarrows",
+      "version" : "1.2.0"
+   },
+   "fetched_at" : "2026-09-05T07:21:01Z",
+   "package" : "extarrows",
+   "runfiles" : [
+      "tex/latex/extarrows/extarrows.sty"
+   ],
+   "styles" : [
+      "tex/latex/extarrows/extarrows.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/extarrows.tar.xz",
+      "bundle" : false,
+      "bytes" : 912,
+      "filtered" : false,
+      "package" : "extarrows",
+      "revision" : "78315",
+      "sha512" : "1d5a0af0a54730d1d8438d51c940bdcb12faa33cf99f427297283c3050cefb7bd5d8f1637d610ef7af524f203ac48df0f1a7a587b15f230afbbb47109e232ed9",
+      "snapshot" : null
+   }
+}

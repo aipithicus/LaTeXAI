@@ -1,0 +1,28 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/aliascnt",
+      "date" : "2026-03-08",
+      "docs" : null,
+      "license" : "lppl1.3c",
+      "path" : "/macros/latex/contrib/aliascnt",
+      "version" : "1.7"
+   },
+   "fetched_at" : "2026-09-05T23:51:09Z",
+   "package" : "aliascnt",
+   "runfiles" : [
+      "tex/latex/aliascnt/aliascnt.sty"
+   ],
+   "styles" : [
+      "tex/latex/aliascnt/aliascnt.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/aliascnt.tar.xz",
+      "bundle" : false,
+      "bytes" : 1636,
+      "filtered" : false,
+      "package" : "aliascnt",
+      "revision" : "79461",
+      "sha512" : "48a5c67aa6c86de0fbda91b33e6c9c0c2990f58bfc6f32e7c7eef21fc81b3a8f6b63686f53c78a71854b7937d54b67ff3256dfa3de4976fd85fa7e37e6cb2331",
+      "snapshot" : null
+   }
+}

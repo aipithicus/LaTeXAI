@@ -15,8 +15,16 @@ temp/*
 .archive
 lib-ctan/*
 !lib-ctan/README.md
+!lib-ctan/ls-R
+!lib-ctan/entries.txt
+!lib-ctan/*/
+lib-ctan/*/*
+!lib-ctan/*/provenance.json
 lib-park/*
 !lib-park/README.md
+!lib-park/*/
+lib-park/*/*
+!lib-park/*/provenance.json
 lib-symb/*
 !lib-symb/README.md
 lib-katex/*

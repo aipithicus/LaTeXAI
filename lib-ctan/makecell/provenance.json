@@ -1,0 +1,28 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/makecell",
+      "date" : "",
+      "docs" : null,
+      "license" : "lppl",
+      "path" : "/macros/latex/contrib/makecell",
+      "version" : "0.1e"
+   },
+   "fetched_at" : "2026-09-05T23:51:20Z",
+   "package" : "makecell",
+   "runfiles" : [
+      "tex/latex/makecell/makecell.sty"
+   ],
+   "styles" : [
+      "tex/latex/makecell/makecell.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/makecell.tar.xz",
+      "bundle" : false,
+      "bytes" : 4452,
+      "filtered" : false,
+      "package" : "makecell",
+      "revision" : "78101",
+      "sha512" : "4b4a86d0d71d34838f76f35cae3ebdbbd7d1a9604193bd050878bb44b56389ab01a9a3d405592e8aa0b6ffeb39df476c4b50640733d6696cb5ab9d6ce59bedd0",
+      "snapshot" : null
+   }
+}

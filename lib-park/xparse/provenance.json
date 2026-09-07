@@ -1,0 +1,34 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/xparse",
+      "date" : "2025-10-09",
+      "docs" : null,
+      "license" : "lppl1.3c",
+      "path" : "/macros/latex/contrib/l3packages",
+      "version" : ""
+   },
+   "fetched_at" : "2026-09-06T07:08:10Z",
+   "package" : "xparse",
+   "runfiles" : [
+      "tex/latex/l3packages/xparse/xparse-2018-04-12.sty",
+      "tex/latex/l3packages/xparse/xparse-2020-10-01.sty",
+      "tex/latex/l3packages/xparse/xparse-generic.tex",
+      "tex/latex/l3packages/xparse/xparse.ltx",
+      "tex/latex/l3packages/xparse/xparse.sty"
+   ],
+   "styles" : [
+      "tex/latex/l3packages/xparse/xparse-2018-04-12.sty",
+      "tex/latex/l3packages/xparse/xparse-2020-10-01.sty",
+      "tex/latex/l3packages/xparse/xparse.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/l3packages.tar.xz",
+      "bundle" : true,
+      "bytes" : 20448,
+      "filtered" : true,
+      "package" : "l3packages",
+      "revision" : "76637",
+      "sha512" : "47a7365cb7d3c00ccc6a88917d7500d45cc5c1eb5faa6a6ea9b263dfe43426284fa6f2091a7f20b6a8cc82313ec8248f6137f97853c0a36049ca0f20a13cdc8c",
+      "snapshot" : null
+   }
+}

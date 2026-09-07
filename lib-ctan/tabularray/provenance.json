@@ -1,0 +1,35 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/tabularray",
+      "date" : "2025-11-27",
+      "docs" : {
+         "kind" : "directory-zip",
+         "url" : "https://mirrors.ctan.org/macros/latex/contrib/tabularray.zip"
+      },
+      "license" : "lppl1.3c",
+      "path" : "/macros/latex/contrib/tabularray",
+      "version" : "2025C"
+   },
+   "fetched_at" : "2026-09-06T02:16:52Z",
+   "package" : "tabularray",
+   "runfiles" : [
+      "tex/latex/tabularray/tabularray-2021.sty",
+      "tex/latex/tabularray/tabularray-2024.sty",
+      "tex/latex/tabularray/tabularray.sty"
+   ],
+   "styles" : [
+      "tex/latex/tabularray/tabularray-2021.sty",
+      "tex/latex/tabularray/tabularray-2024.sty",
+      "tex/latex/tabularray/tabularray.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/tabularray.tar.xz",
+      "bundle" : false,
+      "bytes" : 49772,
+      "filtered" : false,
+      "package" : "tabularray",
+      "revision" : "78251",
+      "sha512" : "e5a43ee0bc74212539547282534f9a5a442c0bd68ab01082a350d9c82e6ff7bd5a20cb120d48f5267e03aa075b20b650a3df29dadec3825f2ed19cf1cf7f7883",
+      "snapshot" : null
+   }
+}

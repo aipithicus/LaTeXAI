@@ -1,0 +1,31 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/algorithm2e",
+      "date" : "",
+      "docs" : {
+         "kind" : "directory-zip",
+         "url" : "https://mirrors.ctan.org/macros/latex/contrib/algorithm2e.zip"
+      },
+      "license" : "lppl",
+      "path" : "/macros/latex/contrib/algorithm2e",
+      "version" : "5.2"
+   },
+   "fetched_at" : "2026-09-06T01:51:57Z",
+   "package" : "algorithm2e",
+   "runfiles" : [
+      "tex/latex/algorithm2e/algorithm2e.sty"
+   ],
+   "styles" : [
+      "tex/latex/algorithm2e/algorithm2e.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/algorithm2e.tar.xz",
+      "bundle" : false,
+      "bytes" : 32872,
+      "filtered" : false,
+      "package" : "algorithm2e",
+      "revision" : "77682",
+      "sha512" : "f627d29db1607f59eac3885af7071de6365a7e5c90dd85d685cd97b2a9d5824fabeaafefde3cd6570a7f35afc560bf8a4238267b20a45414f2c75afc199f4d28",
+      "snapshot" : null
+   }
+}

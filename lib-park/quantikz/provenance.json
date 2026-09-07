@@ -1,0 +1,32 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/quantikz",
+      "date" : "2023-05-24",
+      "docs" : null,
+      "license" : "cc-by-4",
+      "path" : "/graphics/pgf/contrib/quantikz",
+      "version" : "1.0.1"
+   },
+   "fetched_at" : "2026-09-06T07:49:25Z",
+   "package" : "quantikz",
+   "runfiles" : [
+      "tex/latex/quantikz/quantikz.sty",
+      "tex/latex/quantikz/tikzlibraryquantikz.code.tex",
+      "tex/latex/quantikz/tikzlibraryquantikz2.code.tex"
+   ],
+   "styles" : [
+      "tex/latex/quantikz/quantikz.sty",
+      "tex/latex/quantikz/tikzlibraryquantikz.code.tex",
+      "tex/latex/quantikz/tikzlibraryquantikz2.code.tex"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/quantikz.tar.xz",
+      "bundle" : false,
+      "bytes" : 20232,
+      "filtered" : false,
+      "package" : "quantikz",
+      "revision" : "67206",
+      "sha512" : "af7a59b5fa4111199351b3ee6a14ecbcd6f6e86041a7f516c97f0cd4349a2d96935f138969e0029e4f5f8b8650b7efcef9554bd631c1231d371ec323d7b41024",
+      "snapshot" : null
+   }
+}

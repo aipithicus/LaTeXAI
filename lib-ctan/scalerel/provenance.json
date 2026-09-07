@@ -1,0 +1,31 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/scalerel",
+      "date" : "2016-12-29",
+      "docs" : {
+         "kind" : "directory-zip",
+         "url" : "https://mirrors.ctan.org/macros/latex/contrib/scalerel.zip"
+      },
+      "license" : "lppl1.3",
+      "path" : "/macros/latex/contrib/scalerel",
+      "version" : "1.8"
+   },
+   "fetched_at" : "2026-09-05T08:04:15Z",
+   "package" : "scalerel",
+   "runfiles" : [
+      "tex/latex/scalerel/scalerel.sty"
+   ],
+   "styles" : [
+      "tex/latex/scalerel/scalerel.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/scalerel.tar.xz",
+      "bundle" : false,
+      "bytes" : 3044,
+      "filtered" : false,
+      "package" : "scalerel",
+      "revision" : "79618",
+      "sha512" : "be3d07c8e0320eb3c18762319abb54086bba374d54e0f855efd205d23adc2035577e8885f3fd23189cffb12756cd06d381211a801a34c1678433a3bc570f13b2",
+      "snapshot" : null
+   }
+}

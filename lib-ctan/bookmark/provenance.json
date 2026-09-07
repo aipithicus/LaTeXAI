@@ -1,0 +1,43 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/bookmark",
+      "date" : "2026-05-21",
+      "docs" : {
+         "kind" : "directory-zip",
+         "url" : "https://mirrors.ctan.org/macros/latex/contrib/bookmark.zip"
+      },
+      "license" : "lppl1.3c",
+      "path" : "/macros/latex/contrib/bookmark",
+      "version" : "1.32"
+   },
+   "fetched_at" : "2026-09-06T02:16:50Z",
+   "package" : "bookmark",
+   "runfiles" : [
+      "tex/latex/bookmark/bkm-dvipdfmx.def",
+      "tex/latex/bookmark/bkm-dvips.def",
+      "tex/latex/bookmark/bkm-luatex.def",
+      "tex/latex/bookmark/bkm-pdftex.def",
+      "tex/latex/bookmark/bkm-vtex.def",
+      "tex/latex/bookmark/bkm-xetex.def",
+      "tex/latex/bookmark/bookmark.sty"
+   ],
+   "styles" : [
+      "tex/latex/bookmark/bkm-dvipdfmx.def",
+      "tex/latex/bookmark/bkm-dvips.def",
+      "tex/latex/bookmark/bkm-luatex.def",
+      "tex/latex/bookmark/bkm-pdftex.def",
+      "tex/latex/bookmark/bkm-vtex.def",
+      "tex/latex/bookmark/bkm-xetex.def",
+      "tex/latex/bookmark/bookmark.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/bookmark.tar.xz",
+      "bundle" : false,
+      "bytes" : 8400,
+      "filtered" : false,
+      "package" : "bookmark",
+      "revision" : "79461",
+      "sha512" : "08a45966511441c0118e87163f8ac3b7cb34728e01ad79ee8c57063e06baaa075d3f39f7cb14efc5cb2843b6f8a57d381b077b541f3f855dac281fbfd8dfa12e",
+      "snapshot" : null
+   }
+}

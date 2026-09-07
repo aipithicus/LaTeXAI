@@ -1,0 +1,39 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/forest",
+      "date" : "2017-07-14",
+      "docs" : null,
+      "license" : "lppl1.3",
+      "path" : "/graphics/pgf/contrib/forest",
+      "version" : "2.1.5"
+   },
+   "fetched_at" : "2026-09-06T07:01:34Z",
+   "package" : "forest",
+   "runfiles" : [
+      "makeindex/forest/forest-doc.ist",
+      "tex/latex/forest/forest-compat.sty",
+      "tex/latex/forest/forest-doc.sty",
+      "tex/latex/forest/forest-index.sty",
+      "tex/latex/forest/forest-lib-edges.sty",
+      "tex/latex/forest/forest-lib-linguistics.sty",
+      "tex/latex/forest/forest.sty"
+   ],
+   "styles" : [
+      "tex/latex/forest/forest-compat.sty",
+      "tex/latex/forest/forest-doc.sty",
+      "tex/latex/forest/forest-index.sty",
+      "tex/latex/forest/forest-lib-edges.sty",
+      "tex/latex/forest/forest-lib-linguistics.sty",
+      "tex/latex/forest/forest.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/forest.tar.xz",
+      "bundle" : false,
+      "bytes" : 56192,
+      "filtered" : false,
+      "package" : "forest",
+      "revision" : "78931",
+      "sha512" : "3e8656bc71b7be8f83a7be33f65d03ab82f8b7014c1b5594ded909cdb257f2078ecfa5bd51ec102655f4477f7ddde72d0d16ecf38b1472b4994e028fea787e34",
+      "snapshot" : null
+   }
+}

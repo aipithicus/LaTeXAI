@@ -1,0 +1,37 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/tikz-qtree",
+      "date" : "",
+      "docs" : null,
+      "license" : "gpl",
+      "path" : "/graphics/pgf/contrib/tikz-qtree",
+      "version" : "1.2"
+   },
+   "fetched_at" : "2026-09-06T07:01:36Z",
+   "package" : "tikz-qtree",
+   "runfiles" : [
+      "tex/latex/tikz-qtree/pgfsubpic.sty",
+      "tex/latex/tikz-qtree/pgfsubpic.tex",
+      "tex/latex/tikz-qtree/pgftree.sty",
+      "tex/latex/tikz-qtree/pgftree.tex",
+      "tex/latex/tikz-qtree/tikz-qtree-compat.sty",
+      "tex/latex/tikz-qtree/tikz-qtree.sty",
+      "tex/latex/tikz-qtree/tikz-qtree.tex"
+   ],
+   "styles" : [
+      "tex/latex/tikz-qtree/pgfsubpic.sty",
+      "tex/latex/tikz-qtree/pgftree.sty",
+      "tex/latex/tikz-qtree/tikz-qtree-compat.sty",
+      "tex/latex/tikz-qtree/tikz-qtree.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/tikz-qtree.tar.xz",
+      "bundle" : false,
+      "bytes" : 7216,
+      "filtered" : false,
+      "package" : "tikz-qtree",
+      "revision" : "26108",
+      "sha512" : "5b00d147eef48e874d2d5c9b171e93703c728cb56f3882af4e63a41b36ebdadbd5bcae332bcfc8e091b16ee14a3a3e16c594b0f0879bdedeaacde1c1700c542d",
+      "snapshot" : null
+   }
+}

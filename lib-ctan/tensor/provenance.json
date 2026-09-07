@@ -1,0 +1,28 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/tensor",
+      "date" : "",
+      "docs" : null,
+      "license" : "lppl1.3c",
+      "path" : "/macros/latex/contrib/tensor",
+      "version" : "2.2"
+   },
+   "fetched_at" : "2026-09-06T00:37:55Z",
+   "package" : "tensor",
+   "runfiles" : [
+      "tex/latex/tensor/tensor.sty"
+   ],
+   "styles" : [
+      "tex/latex/tensor/tensor.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/tensor.tar.xz",
+      "bundle" : false,
+      "bytes" : 2292,
+      "filtered" : false,
+      "package" : "tensor",
+      "revision" : "79618",
+      "sha512" : "fcf425e0e21198d9b4f9acddf6cda8d8f5989101f398f97688d01ba3104c1e06f96e430da0de8882c3c2ee33153180cd6ef7c9a5f2d6a2233d397d1040c3c6d6",
+      "snapshot" : null
+   }
+}

@@ -1,0 +1,31 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/doi",
+      "date" : "2018-09-09",
+      "docs" : {
+         "kind" : "directory-zip",
+         "url" : "https://mirrors.ctan.org/macros/latex/contrib/doi.zip"
+      },
+      "license" : "lppl",
+      "path" : "/macros/latex/contrib/doi",
+      "version" : ""
+   },
+   "fetched_at" : "2026-09-06T01:52:00Z",
+   "package" : "doi",
+   "runfiles" : [
+      "tex/latex/doi/doi.sty"
+   ],
+   "styles" : [
+      "tex/latex/doi/doi.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/doi.tar.xz",
+      "bundle" : false,
+      "bytes" : 2156,
+      "filtered" : false,
+      "package" : "doi",
+      "revision" : "79461",
+      "sha512" : "8754e443df15883b339278fdbcb9c310fc216b9efb5001ad74293b2ca0e2226d39f53705aa9d90c505ca48ec608d3a35630161706d0a2132290b5b7195067021",
+      "snapshot" : null
+   }
+}

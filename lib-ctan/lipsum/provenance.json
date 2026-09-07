@@ -1,0 +1,34 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/lipsum",
+      "date" : "",
+      "docs" : {
+         "kind" : "directory-zip",
+         "url" : "https://mirrors.ctan.org/macros/latex/contrib/lipsum.zip"
+      },
+      "license" : "lppl1.3",
+      "path" : "/macros/latex/contrib/lipsum",
+      "version" : "2.7"
+   },
+   "fetched_at" : "2026-09-06T02:16:45Z",
+   "package" : "lipsum",
+   "runfiles" : [
+      "tex/latex/lipsum/cicero.ltd.tex",
+      "tex/latex/lipsum/lipsum-cs.ltd.tex",
+      "tex/latex/lipsum/lipsum.ltd.tex",
+      "tex/latex/lipsum/lipsum.sty"
+   ],
+   "styles" : [
+      "tex/latex/lipsum/lipsum.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/lipsum.tar.xz",
+      "bundle" : false,
+      "bytes" : 125328,
+      "filtered" : false,
+      "package" : "lipsum",
+      "revision" : "77682",
+      "sha512" : "a9849a0f6c291f87308827a096f1e20129776c5f5487ed49b07bb76cb96204b99c19e0dbd02f3c7405fcdc8fd34ee6da402ae7b600505e967c6d64c44434d359",
+      "snapshot" : null
+   }
+}

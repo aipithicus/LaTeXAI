@@ -1,0 +1,31 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/stackrel",
+      "date" : "2016-05-16",
+      "docs" : {
+         "kind" : "single-file",
+         "url" : "https://mirrors.ctan.org/macros/latex/contrib/oberdiek/stackrel.dtx"
+      },
+      "license" : "lppl1.3",
+      "path" : "/macros/latex/contrib/oberdiek/stackrel.dtx",
+      "version" : "1.3"
+   },
+   "fetched_at" : "2026-09-05T07:56:32Z",
+   "package" : "stackrel",
+   "runfiles" : [
+      "tex/latex/oberdiek/stackrel.sty"
+   ],
+   "styles" : [
+      "tex/latex/oberdiek/stackrel.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/oberdiek.tar.xz",
+      "bundle" : true,
+      "bytes" : 31916,
+      "filtered" : true,
+      "package" : "oberdiek",
+      "revision" : "79461",
+      "sha512" : "8984f4dcdf7623fda25c80d0da9b687e8c29ba9ae746085c302adb6c6a165f5d1859896ca6dfd5e590665d7245fc72d402ae22830d3f91e0bdf5c09b9779d405",
+      "snapshot" : null
+   }
+}

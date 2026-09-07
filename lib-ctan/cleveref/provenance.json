@@ -1,0 +1,31 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/cleveref",
+      "date" : "",
+      "docs" : {
+         "kind" : "directory-zip",
+         "url" : "https://mirrors.ctan.org/macros/latex/contrib/cleveref.zip"
+      },
+      "license" : "lppl1.2",
+      "path" : "/macros/latex/contrib/cleveref",
+      "version" : "0.21.4"
+   },
+   "fetched_at" : "2026-09-06T01:51:46Z",
+   "package" : "cleveref",
+   "runfiles" : [
+      "tex/latex/cleveref/cleveref.sty"
+   ],
+   "styles" : [
+      "tex/latex/cleveref/cleveref.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/cleveref.tar.xz",
+      "bundle" : false,
+      "bytes" : 28488,
+      "filtered" : false,
+      "package" : "cleveref",
+      "revision" : "79618",
+      "sha512" : "bd41ee9c370a3b2b7211397067970b0826571ef8c662526173f60b5f40c78ab10e771304e50d4e0d4c32413bbb229ba34cad49a04f601faf59af9d44edd8e17e",
+      "snapshot" : null
+   }
+}

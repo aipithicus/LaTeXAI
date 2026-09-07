@@ -1,0 +1,28 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/trimspaces",
+      "date" : "",
+      "docs" : null,
+      "license" : "lppl",
+      "path" : "/macros/latex/contrib/trimspaces",
+      "version" : "1.1"
+   },
+   "fetched_at" : "2026-09-06T07:09:35Z",
+   "package" : "trimspaces",
+   "runfiles" : [
+      "tex/latex/trimspaces/trimspaces.sty"
+   ],
+   "styles" : [
+      "tex/latex/trimspaces/trimspaces.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/trimspaces.tar.xz",
+      "bundle" : false,
+      "bytes" : 920,
+      "filtered" : false,
+      "package" : "trimspaces",
+      "revision" : "77682",
+      "sha512" : "999b334584d7a6114a9fba35fc8151b8874582bbb4cfb806c9027128ad7d7236187fc6da30cf9576e07f5bb33bacac12aebead1dc39482f1a9142fa71d4a7aa8",
+      "snapshot" : null
+   }
+}

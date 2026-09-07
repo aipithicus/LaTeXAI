@@ -1,0 +1,28 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/xargs",
+      "date" : "",
+      "docs" : null,
+      "license" : "lppl1.3c",
+      "path" : "/macros/latex/contrib/xargs",
+      "version" : "1.1"
+   },
+   "fetched_at" : "2026-09-06T07:50:39Z",
+   "package" : "xargs",
+   "runfiles" : [
+      "tex/latex/xargs/xargs.sty"
+   ],
+   "styles" : [
+      "tex/latex/xargs/xargs.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/xargs.tar.xz",
+      "bundle" : false,
+      "bytes" : 3364,
+      "filtered" : false,
+      "package" : "xargs",
+      "revision" : "79618",
+      "sha512" : "e0626020e51f452ac8f1b94304d8c354407aee404e0113e857bb9e6cd1ee8fa151dd99f774f1f668703fd8f85d66d9f22a39f4c247f42c2c22c698b3cde6f20d",
+      "snapshot" : null
+   }
+}

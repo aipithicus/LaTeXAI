@@ -1,0 +1,31 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/needspace",
+      "date" : "2025-03-13",
+      "docs" : {
+         "kind" : "directory-zip",
+         "url" : "https://mirrors.ctan.org/macros/latex/contrib/needspace.zip"
+      },
+      "license" : "lppl1.3c",
+      "path" : "/macros/latex/contrib/needspace",
+      "version" : "1.3e"
+   },
+   "fetched_at" : "2026-09-06T01:52:03Z",
+   "package" : "needspace",
+   "runfiles" : [
+      "tex/latex/needspace/needspace.sty"
+   ],
+   "styles" : [
+      "tex/latex/needspace/needspace.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/needspace.tar.xz",
+      "bundle" : false,
+      "bytes" : 956,
+      "filtered" : false,
+      "package" : "needspace",
+      "revision" : "77682",
+      "sha512" : "e77a8261444cde90394b4de0e53702f09420ea869c68b30c12f27db2f5ed2aaa1a9b5e8e0bd94bb1592b567d3176f5a37a5e60516c837433277f224e5510f0f6",
+      "snapshot" : null
+   }
+}

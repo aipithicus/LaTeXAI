@@ -1,0 +1,41 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/algorithmicx",
+      "date" : null,
+      "docs" : {
+         "kind" : "directory-zip",
+         "url" : "https://mirrors.ctan.org/macros/latex/contrib/algorithmicx.zip"
+      },
+      "license" : "lppl",
+      "path" : "/macros/latex/contrib/algorithmicx",
+      "version" : null
+   },
+   "fetched_at" : "2026-09-05T21:34:07Z",
+   "package" : "algorithmicx",
+   "runfiles" : [
+      "tex/latex/algorithmicx/algc.sty",
+      "tex/latex/algorithmicx/algcompatible.sty",
+      "tex/latex/algorithmicx/algmatlab.sty",
+      "tex/latex/algorithmicx/algorithmicx.sty",
+      "tex/latex/algorithmicx/algpascal.sty",
+      "tex/latex/algorithmicx/algpseudocode.sty"
+   ],
+   "styles" : [
+      "tex/latex/algorithmicx/algc.sty",
+      "tex/latex/algorithmicx/algcompatible.sty",
+      "tex/latex/algorithmicx/algmatlab.sty",
+      "tex/latex/algorithmicx/algorithmicx.sty",
+      "tex/latex/algorithmicx/algpascal.sty",
+      "tex/latex/algorithmicx/algpseudocode.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/algorithmicx.tar.xz",
+      "bundle" : false,
+      "bytes" : 7708,
+      "filtered" : false,
+      "package" : "algorithmicx",
+      "revision" : "78101",
+      "sha512" : "f3f66dcbc7d8e361cb1c1fc6dff51c1174e6dc369323915b62bdff75f73264737aed5374f90abb149973d67b8c6fb21c07ce39ec9e5c9e60e0001035098d3d8e",
+      "snapshot" : null
+   }
+}

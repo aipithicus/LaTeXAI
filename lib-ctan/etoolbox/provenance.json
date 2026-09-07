@@ -1,0 +1,30 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/etoolbox",
+      "date" : "2025-10-02",
+      "docs" : null,
+      "license" : "lppl1.3c",
+      "path" : "/macros/latex/contrib/etoolbox",
+      "version" : "2.5m"
+   },
+   "fetched_at" : "2026-09-06T07:08:05Z",
+   "package" : "etoolbox",
+   "runfiles" : [
+      "tex/latex/etoolbox/etoolbox.def",
+      "tex/latex/etoolbox/etoolbox.sty"
+   ],
+   "styles" : [
+      "tex/latex/etoolbox/etoolbox.def",
+      "tex/latex/etoolbox/etoolbox.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/etoolbox.tar.xz",
+      "bundle" : false,
+      "bytes" : 8780,
+      "filtered" : false,
+      "package" : "etoolbox",
+      "revision" : "77682",
+      "sha512" : "0de30a7f0329add368a764d28d5be57b23a5c552e80472d48b5e0c78be6c13c6e032bd09620ad2690198f88dbfcaa723dd22bdbf3054da1b63a8e115f7a45ecb",
+      "snapshot" : null
+   }
+}

@@ -1,0 +1,31 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/rotfloat",
+      "date" : "",
+      "docs" : {
+         "kind" : "directory-zip",
+         "url" : "https://mirrors.ctan.org/macros/latex/contrib/rotfloat.zip"
+      },
+      "license" : "lppl1.2",
+      "path" : "/macros/latex/contrib/rotfloat",
+      "version" : "1.2"
+   },
+   "fetched_at" : "2026-09-05T09:05:26Z",
+   "package" : "rotfloat",
+   "runfiles" : [
+      "tex/latex/rotfloat/rotfloat.sty"
+   ],
+   "styles" : [
+      "tex/latex/rotfloat/rotfloat.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/rotfloat.tar.xz",
+      "bundle" : false,
+      "bytes" : 1524,
+      "filtered" : false,
+      "package" : "rotfloat",
+      "revision" : "79618",
+      "sha512" : "147e150c7d62273d8633a64074ed38194a2aa238595379bf648df4bc40fc58b2a31bf90ecdbae944193e284427eb6d637614b457a6fd43247230c0d114db73e3",
+      "snapshot" : null
+   }
+}

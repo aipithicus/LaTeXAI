@@ -1,0 +1,28 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/optidef",
+      "date" : "2019-04-23",
+      "docs" : null,
+      "license" : "lppl1.3",
+      "path" : "/macros/latex/contrib/optidef",
+      "version" : "3.1"
+   },
+   "fetched_at" : "2026-09-06T00:37:53Z",
+   "package" : "optidef",
+   "runfiles" : [
+      "tex/latex/optidef/optidef.sty"
+   ],
+   "styles" : [
+      "tex/latex/optidef/optidef.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/optidef.tar.xz",
+      "bundle" : false,
+      "bytes" : 4936,
+      "filtered" : false,
+      "package" : "optidef",
+      "revision" : "79618",
+      "sha512" : "0f9e6b01db3e15fce46fd6205baa3f12d170865a85dbbc185d0f19a56513844493b9f37d19e0b73d527122f34df74d6384d7833b05559a46bbd412d69c4c6bcc",
+      "snapshot" : null
+   }
+}

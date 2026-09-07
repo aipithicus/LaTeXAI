@@ -1,0 +1,31 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/extpfeil",
+      "date" : "",
+      "docs" : {
+         "kind" : "directory-zip",
+         "url" : "https://mirrors.ctan.org/macros/latex/contrib/extpfeil.zip"
+      },
+      "license" : "lppl1.3",
+      "path" : "/macros/latex/contrib/extpfeil",
+      "version" : "0.4"
+   },
+   "fetched_at" : "2026-09-05T07:32:52Z",
+   "package" : "extpfeil",
+   "runfiles" : [
+      "tex/latex/extpfeil/extpfeil.sty"
+   ],
+   "styles" : [
+      "tex/latex/extpfeil/extpfeil.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/extpfeil.tar.xz",
+      "bundle" : false,
+      "bytes" : 1664,
+      "filtered" : false,
+      "package" : "extpfeil",
+      "revision" : "77682",
+      "sha512" : "8b154ee156044299e6607612601f6d168dc8ad479130fd7aa03a2456eb6b96325cf1d9c068eb688bb57ac4ef73b517fdd6d2ebe43d2fa7176d744949653fb48f",
+      "snapshot" : null
+   }
+}

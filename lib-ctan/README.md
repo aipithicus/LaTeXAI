@@ -1,0 +1,3 @@
+# lib-ctan
+
+The resident library: TeX sources the engine may read at runtime, through the texmf index (`ls-R` and the kpsewhich shim), never through `--path`. Each entry is a CTAN-id directory with `provenance.json` (the lockfile pin: archive, revision, snapshot, hashes) and TDS runfiles under `tex/`. An entry is data the pool consumes, a raw package a binding delegates to, or the source of a native binding; anything else is parked in `lib-park/`. `lctan --index` writes `ls-R`; `lctan --check` is local. See `docs/architecture.md` sections 5 and 8.

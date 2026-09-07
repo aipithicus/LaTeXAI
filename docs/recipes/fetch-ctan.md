@@ -31,6 +31,8 @@ lctan --snapshot=2026-06-01 nicematrix
                                       # runfiles from the dated tlnet snapshot on texlive.info,
                                       # for a reproducible pin instead of the live mirror
 lctan tikz-cd extarrows stackrel      # several at once; failures are reported per package
+lctan --index                         # write lib-ctan/ls-R (also runs after every fetch into lib-ctan)
+lctan --check                         # index vs tree, provenance vs files, entry rule; local
 ```
 
 Result:

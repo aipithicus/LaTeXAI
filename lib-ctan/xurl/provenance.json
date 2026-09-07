@@ -1,0 +1,31 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/xurl",
+      "date" : "",
+      "docs" : {
+         "kind" : "directory-zip",
+         "url" : "https://mirrors.ctan.org/macros/latex/contrib/xurl.zip"
+      },
+      "license" : "lppl1.3",
+      "path" : "/macros/latex/contrib/xurl",
+      "version" : "0.10"
+   },
+   "fetched_at" : "2026-09-06T02:16:48Z",
+   "package" : "xurl",
+   "runfiles" : [
+      "tex/latex/xurl/xurl.sty"
+   ],
+   "styles" : [
+      "tex/latex/xurl/xurl.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/xurl.tar.xz",
+      "bundle" : false,
+      "bytes" : 1612,
+      "filtered" : false,
+      "package" : "xurl",
+      "revision" : "77682",
+      "sha512" : "b2e3dc0671924515fe44fc3f5e370e7c6df0485e00578dfe997ed12d916a4541578b015e9dfb5b60d4f2ba17c4216d5a956ba0c9c7edb8bba71969a353c630e0",
+      "snapshot" : null
+   }
+}
