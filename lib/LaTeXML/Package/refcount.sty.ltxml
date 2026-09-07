@@ -1,6 +1,6 @@
-# -*- CPERL -*-
+# -*- mode: Perl -*-
 # /=====================================================================\ #
-# |  refcount.sty                                                           | #
+# |  refcount.sty                                                       | #
 # | Implementation for LaTeXML                                          | #
 # |=====================================================================| #
 # | Part of LaTeXML:                                                    | #
@@ -15,10 +15,31 @@ use strict;
 use warnings;
 use LaTeXML::Package;
 
-#**********************************************************************
+# CTAN: refcount v3.6 (2019/12/15), TeX Live revision 79461.
+# Class: shim
+# Native replacement of InputDefinitions('refcount'). Written from
+# lib-ctan/refcount/tex/latex/refcount/refcount.sty.
+# Expandable number extraction has no page analogue in the IR; both
+# \getrefnumber and \getpagerefnumber lower to \ref. nameref is already
+# native and does not call these CS; acmart only RequirePackages this file.
 
-InputDefinitions('refcount', type => 'sty', noltxml => 1);
+RequirePackage('ltxcmds');
 
-#**********************************************************************
+DeclareOption(undef, sub { });
+ProcessOptions();
+
+DefMacro('\setrefcountdefault{}', '');
+DefMacro('\refused{}',            '');
+Let('\getrefnumber',     '\ref');
+Let('\getpagerefnumber', '\ref');
+DefMacro('\getrefbykeydefault{}{}{}', '\ref{#1}');
+DefMacro('\setcounterref{}{}',        '');
+DefMacro('\addtocounterref{}{}',      '');
+DefMacro('\setcounterpageref{}{}',    '');
+DefMacro('\addtocounterpageref{}{}',  '');
+DefMacro('\IfRefUndefinedExpandable{}{}{}',
+  '\@ifundefined{r@#1}{#2}{#3}');
+DefMacro('\IfRefUndefinedBabel{}{}{}',
+  '\@ifundefined{r@#1}{#2}{#3}');
 
 1;
