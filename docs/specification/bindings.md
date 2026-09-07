@@ -23,7 +23,7 @@ Every package the engine can be asked for falls into exactly one category. The c
 
 Upstream's tree as inherited holds 414 `.sty`/`.cls` bindings, of which about 104 execute raw TeX and about 148 are near-empty. Those are the starting rows of the manifest. Until the manifest exists, the category is what the file does, and `tools/texscan --all` is the walk that reads it.
 
-The resident library, when it exists, is a directory of individually vendored package sources with per-package provenance, added to the default search path. It replaces `kpsewhich` as the fallback. There is no bundle: each source is a row, so coverage stays itemized.
+The resident library is `lib-ctan/`: individually vendored package sources with per-package provenance. It answers the engine's `kpsewhich` fallback through the texmf index rather than sitting on the search path, so bindings keep precedence over raw sources at every step ([`architecture.md`](../architecture.md) sections 5 and 8). There is no bundle: each source is a row, so coverage stays itemized. Notation vocabularies, the KaTeX reference, and parked packages live in reference roots the engine never reads.
 
 ### 2.1 Binding classes
 

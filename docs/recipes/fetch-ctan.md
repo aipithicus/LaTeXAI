@@ -48,6 +48,8 @@ lib-ctan/<pkg>/
 
 ## Use
 
+**Which root.** `--outdir` defaults to `lib-ctan/`, the resident library: use it for a package the engine will read raw (a passthrough or hybrid delegates to it, a raw file requires it, or it is a data file) and for the source of a native binding kept for the census. Use `--outdir=lib-symb` for a notation vocabulary whose binding is generated from a table, and `--outdir=lib-park` for a package vendored ahead of demand with no binding. The roots and the rule for what may sit in `lib-ctan/` are [`architecture.md`](../architecture.md) section 5.
+
 **Census with `texscan`.** Point it at the directory holding the `.sty`, and at `lib/` so it can see existing bindings and the pools (it defaults to `blib/`):
 
 ```powershell

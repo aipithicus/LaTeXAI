@@ -8,9 +8,11 @@ Behavioral expectations, development loop, and repository conventions for AI age
 
 | Need / Topic | Primary Reference |
 | :--- | :--- |
-| **Documentation routing** | `DocOps.md` — index of in-repo `docs/` (testing, binding specification, minting recipe) and the issues workspace at `../aipithicus-issues/LaTeXAI/` (planning, briefs, chips, discussions, notes). Never link `private/` or `temp/` from tracked files. |
+| **Documentation routing** | `DocOps.md` — index of in-repo `docs/` (architecture, testing, binding specification, minting recipe) and the issues workspace at `../aipithicus-issues/LaTeXAI/` (planning, briefs, chips, discussions, notes). Never link `private/` or `temp/` from tracked files. |
 | **Upstream engine documentation** | `README.pod`, `INSTALL`, `doc/manual/` (the 0.8.8 manual; `manual.pdf` at top level) |
 | **Engine layers** | `lib/LaTeXML/Core/` (Mouth → Gullet → Stomach → Document), `lib/LaTeXML/Common/` (Locator, Model, Config), `lib/LaTeXML/Engine/` (`*.pool.ltxml`), `lib/LaTeXML/Package/` (461 bindings, `*.sty.ltxml` / `*.cls.ltxml`) |
+| **System map, terms, roots** | `docs/architecture.md` — what the fork is for, the correspondence between `lib-ctan/`, the resident library, and the texmf index, the reference roots (`lib-symb/`, `lib-katex/`, `lib-park/`), which layers get bindings, the search order, and the rules that follow |
+| **Corpus evaluation** | `docs/architecture.md` sections 4 and 10 — the gauntlet deposits and receipts in codex-scientiae are the authority on demand; runs land under its `artifacts/latexai/<stamp>/` |
 | **Math parsing** | `lib/LaTeXML/MathGrammar` (Parse::RecDescent source), `lib/LaTeXML/MathParser.pm`; `tools/dev/generate.pl` compiles it to the gitignored `lib/LaTeXML/MathGrammar.pm` |
 | **Post-processing (oracles only)** | `lib/LaTeXML/Post/` — MathML, UnicodeMath, LexMath. Read as instruments; not the product surface. |
 | **Schema** | `lib/LaTeXML/resources/RelaxNG/` |
