@@ -19,7 +19,7 @@ One thing can carry several names when they name different facets. The rule is t
 | **texmf index** | the lookup structure over the resident library: `lib-ctan/ls-R` and the kpsewhich shim that answers from it | in prose about how a file is found |
 | **reference root** | a vendoring root the engine never reads: `lib-symb/`, `lib-katex/`, `lib-park/` | in prose about what is off the runtime path |
 | **entry** | one package's directory under a root, `lib-ctan/<pkg>/`, with its provenance | when counting or naming vendored packages |
-| **vendoring unit** | the TeX Live archive an entry is cut from, with its revision; named by CTAN id, or `latex` for the kernel | when a file's origin or pin is the point |
+| **vendoring unit** | the TeX Live archive an entry is cut from, with its revision; named by CTAN id, or by the archive (`latex`, `graphics`) when the file has no catalogue record | when a file's origin or pin is the point |
 | **binding** | `lib/LaTeXML/Package/<name>.ltxml`, loaded in place of a package, class, or definition file | always; never "binding" for a data file or a table |
 | **coverage category** | native, hybrid, passthrough, ignored, raw-only, missing: what a request for a package resolves to ([`bindings.md`](specification/bindings.md) section 2) | when describing what the engine does with a package |
 | **class** | structural, containment, shim, ignored, semantic: what a binding is for ([`bindings.md`](specification/bindings.md) section 2.1) | when judging a binding against its criteria |
@@ -68,11 +68,13 @@ Vendoring roots encode one axis: what the engine may do with the files. Nothing 
 | `lib-katex/` | never | the KaTeX symbol and macro sources at a tag, with derived row tables | never | git tag, commit, file hashes |
 | `lib-park/` | never | vendored macro packages with no binding and no current demand | never | TeX Live archive, revision |
 
-Every entry under `lib-ctan/` satisfies the **entry rule**: it is data the pool reads, or a raw package some binding asks for, or the source of a native binding. Anything else is parked. The index writer enforces this locally, from a static scan of what bindings and raw files require plus a committed allow-list, so nothing becomes raw-only interpretation by accident.
+Every entry under `lib-ctan/` satisfies the **entry rule**: it is data the pool reads, or a raw package some binding asks for, or the source of a native binding. Anything else is parked. `lctan --check` enforces this locally, from a static scan of what bindings and raw files require plus a committed allow-list (`lib-ctan/entries.txt`), so nothing becomes raw-only interpretation by accident. The writer emits `ls-R`; the check is what refuses a tree that violates the rule.
 
 An entry is named by its CTAN id and cut from one vendoring unit; the archive and revision are recorded in its provenance, and two entries cut from the same archive pin the same revision. Kernel files that CTAN does not catalogue are members of an entry named for their archive (`latex`, `graphics`) and are never entries of their own. A dependency a raw package requires is its own entry, marked in provenance as requested by the requirer; the census reads one entry, so a binding is never written from a dependency's source.
 
-Status (2026-09-06): `lib-ctan/` exists with 38 entries and no index; the shim, `lib-symb/`, `lib-katex/`, and `lib-park/` are specified and not yet built. Until the index exists, every passthrough request ends as a missing file.
+**Lockfile.** Provenance is the pin, not the trees. Each root gitignores its runfiles and tracks its README and `*/provenance.json`; `lib-ctan/` also tracks `ls-R` and `entries.txt` once they exist. A clone restores trees with `lctan --restore` from those pins.
+
+Status (2026-09-06): `lib-ctan/` exists with 38 entries and no index; provenance is on disk and not yet committed; the shim, `lib-symb/`, `lib-katex/`, and `lib-park/` are specified and not yet built. Until the index exists, every passthrough request ends as a missing file.
 
 ## 6. Layers, and what gets a binding
 
@@ -150,5 +152,5 @@ Each of these has been the wrong shortcut at least once.
 - A binding never names a renderer. The mapping to KaTeX lives in the table and is read by post.
 - Counts from a static census are seeds. A receipt is the measurement.
 - A vendored file is either data, requested by a binding, or the source of a native binding. Otherwise it is parked, not indexed.
-- A kernel file CTAN does not catalogue is a member of the `latex` entry, never an entry of its own. A kernel file CTAN does catalogue keeps its CTAN-id entry.
+- A kernel file CTAN does not catalogue is a member of an entry named for its archive (`latex`, `graphics`), never an entry of its own. A kernel file CTAN does catalogue keeps its CTAN-id entry.
 - `--log` is always passed. A `.latexml.log` at the repository root means something bypassed the aliases.
