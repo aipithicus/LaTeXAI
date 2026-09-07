@@ -1752,6 +1752,9 @@ forest.sty
 ./gettitlestring/tex/generic/gettitlestring:
 gettitlestring.sty
 
+./graphics/tex/latex/graphics:
+dvipsnam.def
+
 ./ifthen/tex/latex/base:
 ifthen.sty
 
@@ -1767,6 +1770,11 @@ kvoptions.sty
 
 ./kvsetkeys/tex/latex/kvsetkeys:
 kvsetkeys.sty
+
+./latex/tex/latex/base:
+ot1enc.def
+shortvrb.sty
+t1enc.def
 
 ./lipsum/tex/latex/lipsum:
 cicero.ltd.tex
@@ -1891,6 +1899,9 @@ pgftree.tex
 tikz-qtree-compat.sty
 tikz-qtree.sty
 tikz-qtree.tex
+
+./vntex/tex/latex/vntex:
+t5enc.def
 
 ./xargs/tex/latex/xargs:
 xargs.sty

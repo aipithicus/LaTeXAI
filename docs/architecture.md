@@ -74,7 +74,7 @@ An entry is named by its CTAN id and cut from one vendoring unit; the archive an
 
 **Lockfile.** Provenance is the pin, not the trees. Each root gitignores its runfiles and tracks its README and `*/provenance.json`; `lib-ctan/` also tracks `ls-R` and `entries.txt` once they exist. A clone restores trees with `lctan --restore` from those pins.
 
-Status (2026-09-06): `lib-ctan/` exists with 38 entries and no index; provenance is on disk and not yet committed; the shim, `lib-symb/`, `lib-katex/`, and `lib-park/` are specified and not yet built. Until the index exists, every passthrough request ends as a missing file.
+Status (2026-09-07): `lib-ctan/` is indexed (`ls-R` committed with provenance); the kpsewhich shim answers from it. `lib-park/` holds packages with no current demand. `lib-symb/` and `lib-katex/` remain specified.
 
 ## 6. Layers, and what gets a binding
 
@@ -139,7 +139,7 @@ Goldens and receipts answer different questions. A golden says a binding does wh
 | write a fixture and read its golden | [`testing.md`](testing.md) |
 | run the corpus | the launcher outside tracked files, per codex-scientiae's worker contract; runs land under codex-scientiae's `artifacts/latexai/<stamp>/` |
 | build a notation table and its binding | not yet documented; the recipe gains a section when the table tooling lands |
-| build or rebuild the texmf index | not yet documented; `lctan --index` when it exists |
+| build or rebuild the texmf index, restore pins, fetch archive members | [`recipes/fetch-ctan.md`](recipes/fetch-ctan.md) (`lctan --index`, `--check`, `--from`, `--restore`) |
 
 ## 12. Rules that follow
 

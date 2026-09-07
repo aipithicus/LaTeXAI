@@ -1,0 +1,41 @@
+{
+   "ctan" : null,
+   "fetched_at" : "2026-09-07T08:55:26Z",
+   "from" : {
+      "members" : [
+         "shortvrb.sty",
+         "t1enc.def",
+         "ot1enc.def"
+      ]
+   },
+   "package" : "latex",
+   "runfiles" : [
+      {
+         "path" : "tex/latex/base/ot1enc.def",
+         "role" : "own"
+      },
+      {
+         "path" : "tex/latex/base/shortvrb.sty",
+         "role" : "own"
+      },
+      {
+         "path" : "tex/latex/base/t1enc.def",
+         "role" : "own"
+      }
+   ],
+   "styles" : [
+      "tex/latex/base/ot1enc.def",
+      "tex/latex/base/shortvrb.sty",
+      "tex/latex/base/t1enc.def"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/latex.tar.xz",
+      "bundle" : false,
+      "bytes" : 264336,
+      "filtered" : true,
+      "package" : "latex",
+      "revision" : "79618",
+      "sha512" : "04d6380ef7c023f63192749080c15e6e47b873aa151e838a946439f5de4455cce1a872e688cf8a366363d09ddcf03cf6b588f3db0573160486afe9cbe0f514e1",
+      "snapshot" : null
+   }
+}

@@ -28,7 +28,7 @@ Behavioral expectations, development loop, and repository conventions for AI age
 | Alias | Expands to | Use |
 | :--- | :--- | :--- |
 | `lgen [--force]` | `perl tools/dev/generate.pl` | compile the grammar and stamp the version into `lib/`; idempotent, about 1 s |
-| `lctan [opts] <pkg>…` | `perl tools/dev/fetch-ctan.pl` | vendor a package's runfiles and metadata into `lib-ctan/<pkg>/`; see `docs/recipes/fetch-ctan.md` |
+| `lctan [opts] <pkg>…` | `perl tools/dev/fetch-ctan.pl` | vendor into `lib-ctan/<pkg>/`; `--from`, `--restore`, `--index`, `--check` as well; see `docs/recipes/fetch-ctan.md` |
 | `lgold [--force] t/<suite>/<case>.tex` | `perl tools/dev/golden.pl` | write a fixture's golden with the driver's own configuration; refuses on engine errors. Never write goldens with `lxml` |
 | `lrun [stamp]` | sets `LATEXAI_RUNSTAMP` | start a named run so every log in this command lands under one `temp/logs/<stamp>/` |
 | `lxml` | `perl -I lib bin/latexml --log=temp/logs/<job>.latexml.log` | digest a file or `literal:` string to `ltx` XML |

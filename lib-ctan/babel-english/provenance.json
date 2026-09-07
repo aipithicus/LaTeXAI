@@ -9,6 +9,9 @@
    },
    "fetched_at" : "2026-09-07T06:26:20Z",
    "package" : "babel-english",
+   "requested_by" : [
+      "babel"
+   ],
    "runfiles" : [
       "tex/generic/babel-english/UKenglish.ldf",
       "tex/generic/babel-english/USenglish.ldf",

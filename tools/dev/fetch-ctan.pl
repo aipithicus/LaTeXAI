@@ -34,10 +34,16 @@
 #   perl tools/dev/fetch-ctan.pl --index
 #                         write lib-ctan/ls-R from lib-ctan/*/tex/** (also runs after every
 #                         fetch into lib-ctan, like mktexlsr after tlmgr)
-#   perl tools/dev/fetch-ctan.pl --check
+#   perl tools/dev/fetch-ctan.pl --check [--receipts=DIR]
 #                         regenerate the index in memory; diff against the committed ls-R
 #                         and the tree; enforce the entry rule, one revision per archive,
-#                         and provenance vs files. Local: no receipts.
+#                         and provenance vs files. Local: no receipts required.
+#                         --receipts proposes allow-list rows from missingFiles.
+#   perl tools/dev/fetch-ctan.pl --from=<texlive-package> <member>...
+#                         fetch named members of a TeX Live archive with no CTAN
+#                         catalogue lookup (kernel files: t1enc.def, shortvrb.sty, …)
+#   perl tools/dev/fetch-ctan.pl --restore
+#                         re-fetch every entry under --outdir from its provenance pin
 
 use strict;
 use warnings;
@@ -67,29 +73,24 @@ my %opt = (
   quiet          => 0,
   index          => 0,
   check          => 0,
+  from           => undef,
+  restore        => 0,
+  receipts       => undef,
 );
 GetOptions(\%opt, 'outdir=s', 'force', 'docs', 'whole-bundle', 'snapshot=s', 'mirror=s', 'quiet',
-  'index', 'check')
+  'index', 'check', 'from=s', 'restore', 'receipts=s')
   or die usage();
 
 sub usage {
   return "Usage: $0 [--outdir=DIR] [--force] [--docs] [--whole-bundle] [--snapshot=YYYY-MM-DD] [--mirror=URL] <package>...\n"
+    . "       $0 --from=<texlive-package> <member>...\n"
+    . "       $0 --restore [--outdir=DIR]\n"
     . "       $0 --index\n"
-    . "       $0 --check\n"; }
+    . "       $0 --check [--receipts=DIR]\n"; }
 sub say_ { print STDERR "fetch-ctan: @_\n" unless $opt{quiet}; }
 
 my $ctan_root = File::Spec->catdir($root, 'lib-ctan');
 my $package_dir = File::Spec->catdir($root, 'lib', 'LaTeXML', 'Package');
-
-if ($opt{check} && (@ARGV || $opt{index})) {
-  die "fetch-ctan: --check does not take packages or --index\n"; }
-if ($opt{check}) {
-  exit(check_lib_ctan($ctan_root) ? 0 : 1); }
-if ($opt{index} && !@ARGV) {
-  write_index($ctan_root) or exit 1;
-  exit 0; }
-
-my @packages = @ARGV or die usage();
 
 my $http = HTTP::Tiny->new(agent => 'LaTeXAI-fetch-ctan/2.0', timeout => 120);
 my $json = JSON::PP->new->utf8->canonical->pretty;
@@ -99,6 +100,35 @@ if ($opt{snapshot}) {
   my ($y, $m, $d) = $opt{snapshot} =~ /^(\d{4})-(\d{2})-(\d{2})$/
     or die "fetch-ctan: --snapshot must be YYYY-MM-DD\n";
   $tlnet = "https://texlive.info/tlnet-archive/$y/$m/$d/tlnet"; }
+
+if ($opt{restore} && ($opt{check} || $opt{index} || $opt{from} || @ARGV || $opt{snapshot} || $opt{docs} || $opt{'whole-bundle'})) {
+  die "fetch-ctan: --restore does not mix with --check, --index, --from, --snapshot, --docs, --whole-bundle, or package names (it uses each pin's archive URL)\n"; }
+if ($opt{from} && ($opt{check} || $opt{restore} || $opt{docs} || $opt{'whole-bundle'})) {
+  die "fetch-ctan: --from does not mix with --check, --restore, --docs, or --whole-bundle\n"; }
+if ($opt{check} && ($opt{index} || @ARGV || $opt{from})) {
+  die "fetch-ctan: --check does not take packages, --index, or --from\n"; }
+if ($opt{check}) {
+  exit(check_lib_ctan($ctan_root) ? 0 : 1); }
+if ($opt{restore}) {
+  my $ok = restore_tree($opt{outdir});
+  if ($ok && lc(File::Spec->rel2abs($opt{outdir})) eq lc(File::Spec->rel2abs($ctan_root))) {
+    write_index($ctan_root) or $ok = 0; }
+  exit($ok ? 0 : 1); }
+if ($opt{index} && !@ARGV && !$opt{from}) {
+  write_index($ctan_root) or exit 1;
+  exit 0; }
+
+if ($opt{from}) {
+  eval { fetch_from($opt{from}, @ARGV); 1 } or do {
+    my $err = $@; chomp($err);
+    print STDERR "fetch-ctan: --from=$opt{from} FAILED: $err\n";
+    exit 1; };
+  my $outdir_abs = File::Spec->rel2abs($opt{outdir});
+  if (lc($outdir_abs) eq lc(File::Spec->rel2abs($ctan_root))) {
+    write_index($ctan_root) or exit 1; }
+  exit 0; }
+
+my @packages = @ARGV or die usage();
 
 my $failures = 0;
 foreach my $pkg (@packages) {
@@ -132,24 +162,12 @@ sub fetch_package {
   say_("$pkg: CTAN $meta->{version}{number} ($meta->{version}{date}), license $meta->{license}, texlive package '$tl_name'");
 
   #--- 2. TeX Live runfiles archive ---------------------------------
-  my $archive_url = "$tlnet/archive/$tl_name.tar.xz";
-  my $scratch     = tempdir('latexai-ctan-XXXXXX', TMPDIR => 1, CLEANUP => 1);
-  my $archive     = File::Spec->catfile($scratch, "$tl_name.tar.xz");
-  say_("$pkg: fetching $archive_url");
-  my $dl = $http->mirror($archive_url, $archive);
-  die "download failed: $dl->{status} $dl->{reason} for $archive_url" unless $dl->{success};
-  my $blob = slurp_raw($archive);
-  # xz magic: FD 37 7A 58 5A 00. A 200 HTML challenge page (texlive.info Anubis)
-  # is otherwise a successful download and a mysterious tar error later.
-  die "archive is not xz (got "
-    . (substr($blob, 0, 15) =~ /^<!DOCTYPE|^<html/i ? 'HTML' : sprintf('%d bytes, magic %s', length($blob), unpack('H*', substr($blob, 0, 6))))
-    . ") from $archive_url"
-    unless length($blob) >= 6 && substr($blob, 0, 6) eq "\xFD7zXZ\x00";
-  my $sha512 = sha512_hex($blob);
-
-  my $xz  = IO::Uncompress::UnXz->new($archive) or die "cannot open $archive as xz";
-  my $tar = Archive::Tar->new($xz) or die "cannot read tar: " . (Archive::Tar->error || 'unknown');
-  my @members = grep { $_->is_file } $tar->get_files;
+  my $scratch = tempdir('latexai-ctan-XXXXXX', TMPDIR => 1, CLEANUP => 1);
+  my $arc     = download_tl_archive($tl_name, undef, $scratch);
+  my $archive_url = $arc->{url};
+  my $sha512      = $arc->{sha512};
+  my $revision    = $arc->{revision};
+  my @members     = @{ $arc->{members} };
 
   my $is_bundle = lc($tl_name) ne lc($pkg);
   my @keep = @members;
@@ -157,23 +175,11 @@ sub fetch_package {
     @keep = grep { member_belongs_to($_->full_path, $pkg) } @members;
     die "bundle '$tl_name' has no member for '$pkg'; rerun with --whole-bundle to inspect" unless @keep; }
 
-  my ($revision, @runfiles);
+  my @runfiles;
   foreach my $m (@keep) {
     my $path = $m->full_path;
-    die "refusing unsafe archive path '$path'" if $path =~ m{(^|/)\.\.(/|$)} || $path =~ m{^/} || $path =~ /^[A-Za-z]:/;
-    if ($path =~ m{^tlpkg/tlpobj/.*\.tlpobj$}) {
-      ($revision) = $m->get_content =~ /^revision\s+(\d+)/m unless $revision;
-      next; }
-    my $dest = File::Spec->catfile($target, split(m{/}, $path));
-    make_path(dirname($dest));
-    write_raw($dest, $m->get_content);
-    push(@runfiles, $path); }
-  # A bundle's .tlpobj is filtered out above; read revision from the full member list.
-  if (!$revision) {
-    foreach my $m (@members) {
-      next unless $m->full_path =~ m{^tlpkg/tlpobj/.*\.tlpobj$};
-      ($revision) = $m->get_content =~ /^revision\s+(\d+)/m;
-      last if $revision; } }
+    next if $path =~ m{^tlpkg/tlpobj/.*\.tlpobj$};
+    push(@runfiles, extract_runfile($target, $m)); }
   my @sty = grep { /\.(?:sty|cls|def|code\.tex)$/ } @runfiles;
   die "archive for '$tl_name' yielded no runfiles for '$pkg'" unless @runfiles;
   say_("$pkg: " . scalar(@runfiles) . " runfile(s), revision " . ($revision // '?') . ", style files: " . (join(', ', @sty) || '(none)'));
@@ -229,13 +235,14 @@ sub fetch_package {
       archive  => $archive_url,
       snapshot => $opt{snapshot},
       sha512   => $sha512,
-      bytes    => -s $archive,
+      bytes    => $arc->{bytes},
     },
     runfiles => [ sort @runfiles ],
     styles   => [ sort @sty ],
   };
   write_raw(File::Spec->catfile($target, 'provenance.json'), $json->encode($record));
   say_("$pkg: vendored into $target");
+  refresh_archive_siblings($tl_name, $arc, $pkg);
   return; }
 
 # A bundle member belongs to $pkg if its basename stem is $pkg (stackrel.sty)
@@ -258,6 +265,218 @@ sub write_raw {
   my ($path, $content) = @_;
   open(my $fh, '>:raw', $path) or die "cannot write $path: $!";
   print {$fh} $content; close($fh); return; }
+
+# runfiles may be path strings (existing pins) or {path, role} objects.
+sub runfile_path {
+  my ($rf) = @_;
+  return $rf unless ref $rf;
+  die "runfile object has no path" unless ref $rf eq 'HASH' && defined $rf->{path};
+  return $rf->{path}; }
+
+sub runfile_role {
+  my ($rf) = @_;
+  return 'own' unless ref $rf;
+  return $rf->{role} || 'own'; }
+
+sub runfile_record {
+  my ($path, $role) = @_;
+  return { path => $path, role => ($role || 'own') }; }
+
+sub assert_safe_member_path {
+  my ($path) = @_;
+  die "refusing unsafe archive path '$path'"
+    if $path =~ m{(^|/)\.\.(/|$)} || $path =~ m{^/} || $path =~ /^[A-Za-z]:/;
+  return; }
+
+sub extract_runfile {
+  my ($target, $m) = @_;
+  my $path = $m->full_path;
+  assert_safe_member_path($path);
+  my $dest = File::Spec->catfile($target, split(m{/}, $path));
+  make_path(dirname($dest));
+  write_raw($dest, $m->get_content);
+  return $path; }
+
+sub xz_or_die {
+  my ($blob, $url) = @_;
+  return if length($blob) >= 6 && substr($blob, 0, 6) eq "\xFD7zXZ\x00";
+  # xz magic: FD 37 7A 58 5A 00. A 200 HTML challenge page (texlive.info Anubis)
+  # is otherwise a successful download and a mysterious tar error later.
+  die "archive is not xz (got "
+    . (substr($blob, 0, 15) =~ /^<!DOCTYPE|^<html/i ? 'HTML' : sprintf('%d bytes, magic %s', length($blob), unpack('H*', substr($blob, 0, 6))))
+    . ") from $url"; }
+
+sub download_tl_archive {
+  my ($tl_name, $url, $scratch) = @_;
+  $tl_name =~ /^[A-Za-z0-9][A-Za-z0-9._+-]*$/ or die "'$tl_name' is not a plausible TeX Live package id";
+  $url ||= "$tlnet/archive/$tl_name.tar.xz";
+  $scratch ||= tempdir('latexai-ctan-XXXXXX', TMPDIR => 1, CLEANUP => 1);
+  my $archive = File::Spec->catfile($scratch, "$tl_name.tar.xz");
+  say_("fetching $url");
+  my $dl = $http->mirror($url, $archive);
+  die "download failed: $dl->{status} $dl->{reason} for $url" unless $dl->{success};
+  my $blob = slurp_raw($archive);
+  xz_or_die($blob, $url);
+  my $sha512 = sha512_hex($blob);
+  my $xz  = IO::Uncompress::UnXz->new($archive) or die "cannot open $archive as xz";
+  my $tar = Archive::Tar->new($xz) or die "cannot read tar: " . (Archive::Tar->error || 'unknown');
+  my @members = grep { $_->is_file } $tar->get_files;
+  my $revision;
+  foreach my $m (@members) {
+    next unless $m->full_path =~ m{^tlpkg/tlpobj/.*\.tlpobj$};
+    ($revision) = $m->get_content =~ /^revision\s+(\d+)/m;
+    last if $revision; }
+  return {
+    name     => $tl_name,
+    url      => $url,
+    path     => $archive,
+    blob     => $blob,
+    sha512   => $sha512,
+    bytes    => length($blob),
+    tar      => $tar,
+    members  => \@members,
+    revision => $revision,
+  }; }
+
+sub member_by_path {
+  my ($members) = @_;
+  my %by;
+  foreach my $m (@$members) {
+    $by{ $m->full_path } = $m; }
+  return \%by; }
+
+# $want is a basename (t1enc.def) or a full TDS path. tlpobj is never a hit.
+sub find_named_member {
+  my ($want, $members) = @_;
+  my @hits;
+  foreach my $m (@$members) {
+    my $p = $m->full_path;
+    next if $p =~ m{^tlpkg/};
+    if ($p eq $want || $p =~ m{(?:^|/)\Q$want\E$}) {
+      push @hits, $m; } }
+  die "archive has no member '$want'" unless @hits;
+  if (@hits > 1) {
+    die "member '$want' is ambiguous:\n  " . join("\n  ", map { $_->full_path } @hits); }
+  return $hits[0]; }
+
+# Re-pin every other entry cut from the same archive so --check's one-revision
+# rule holds after a dated or live fetch.
+sub refresh_archive_siblings {
+  my ($tl_name, $arc, $except) = @_;
+  my $by = member_by_path($arc->{members});
+  foreach my $entry (ctan_entries($opt{outdir})) {
+    next if defined $except && $entry eq $except;
+    my $prov_path = File::Spec->catfile($opt{outdir}, $entry, 'provenance.json');
+    my $prov = read_provenance($prov_path) or next;
+    my $pkg = $prov->{texlive}{package} || '';
+    next unless lc($pkg) eq lc($tl_name);
+    my $old_sha = $prov->{texlive}{sha512} || '';
+    my $old_rev = $prov->{texlive}{revision} // '';
+    if ($old_sha eq $arc->{sha512} && "$old_rev" eq "$arc->{revision}") {
+      say_("$entry: already pinned to $tl_name rev $old_rev");
+      next; }
+    say_("$entry: re-pinning to $tl_name rev $arc->{revision} (was $old_rev)");
+    my $target = File::Spec->catdir($opt{outdir}, $entry);
+    my @want = map { runfile_path($_) } @{ $prov->{runfiles} || [] };
+    die "$entry: provenance lists no runfiles; cannot re-pin" unless @want;
+    foreach my $rf (@want) {
+      my $m = $by->{$rf} or die "$entry: runfile '$rf' is not in $tl_name rev $arc->{revision}";
+      extract_runfile($target, $m); }
+    $prov->{fetched_at} = strftime('%Y-%m-%dT%H:%M:%SZ', gmtime);
+    $prov->{texlive}{revision} = $arc->{revision};
+    $prov->{texlive}{sha512}   = $arc->{sha512};
+    $prov->{texlive}{archive}  = $arc->{url};
+    $prov->{texlive}{snapshot} = $opt{snapshot};
+    $prov->{texlive}{bytes}    = $arc->{bytes};
+    write_raw($prov_path, $json->encode($prov)); }
+  return; }
+
+# Kernel files with no CTAN catalogue record: members of an entry named for
+# their TeX Live archive (latex, graphics). No CTAN API, no ctan.json.
+sub fetch_from {
+  my ($tl_name, @wants) = @_;
+  $tl_name =~ /^[A-Za-z0-9][A-Za-z0-9._+-]*$/ or die "'$tl_name' is not a plausible TeX Live package id";
+  die "--from=$tl_name needs at least one member (basename or TDS path)" unless @wants;
+  my $target = File::Spec->catdir($opt{outdir}, $tl_name);
+  if (-d $target && !$opt{force}) {
+    die "$target exists; use --force to replace it"; }
+  my $fetched_at = strftime('%Y-%m-%dT%H:%M:%SZ', gmtime);
+  my $arc = download_tl_archive($tl_name);
+  my @hits;
+  my %seen;
+  foreach my $want (@wants) {
+    my $m = find_named_member($want, $arc->{members});
+    my $path = $m->full_path;
+    die "--from=$tl_name: member '$want' extracted twice as $path" if $seen{$path}++;
+    push @hits, $m; }
+  if (-d $target) {
+    remove_tree($target); }
+  make_path($target);
+  my @runfiles;
+  foreach my $m (@hits) {
+    push(@runfiles, extract_runfile($target, $m)); }
+  my @sty = grep { /\.(?:sty|cls|def|code\.tex)$/ } @runfiles;
+  say_("$tl_name: " . scalar(@runfiles) . " member(s) from revision "
+    . ($arc->{revision} // '?') . ": " . join(', ', @runfiles));
+  my $record = {
+    package    => $tl_name,
+    fetched_at => $fetched_at,
+    ctan       => undef,
+    from       => { members => [ @wants ] },
+    texlive    => {
+      package  => $tl_name,
+      bundle   => JSON::PP::false,
+      filtered => JSON::PP::true,
+      revision => $arc->{revision},
+      archive  => $arc->{url},
+      snapshot => $opt{snapshot},
+      sha512   => $arc->{sha512},
+      bytes    => $arc->{bytes},
+    },
+    runfiles => [ map { runfile_record($_, 'own') } sort @runfiles ],
+    styles   => [ sort @sty ],
+  };
+  write_raw(File::Spec->catfile($target, 'provenance.json'), $json->encode($record));
+  say_("$tl_name: vendored into $target");
+  refresh_archive_siblings($tl_name, $arc, $tl_name);
+  return; }
+
+sub restore_entry {
+  my ($outdir, $entry) = @_;
+  my $dir = File::Spec->catdir($outdir, $entry);
+  my $prov_path = File::Spec->catfile($dir, 'provenance.json');
+  my $prov = read_provenance($prov_path)
+    or die "$entry: missing or invalid provenance.json";
+  my $tl = $prov->{texlive} || {};
+  my $url = $tl->{archive} or die "$entry: provenance has no texlive.archive";
+  my $want_sha = $tl->{sha512} or die "$entry: provenance has no texlive.sha512";
+  my $tl_name = $tl->{package} || $entry;
+  my @want = map { runfile_path($_) } @{ $prov->{runfiles} || [] };
+  die "$entry: provenance lists no runfiles" unless @want;
+  my $arc = download_tl_archive($tl_name, $url);
+  if ($arc->{sha512} ne $want_sha) {
+    die "$entry: archive sha512 is $arc->{sha512}, pin is $want_sha"
+      . " (live archive moved; restore needs the pinned blob)"; }
+  my $by = member_by_path($arc->{members});
+  foreach my $rf (@want) {
+    my $m = $by->{$rf} or die "$entry: pin lists '$rf' but the archive does not contain it";
+    extract_runfile($dir, $m); }
+  say_("$entry: restored " . scalar(@want) . " runfile(s) from $tl_name rev "
+    . ($arc->{revision} // $tl->{revision} // '?'));
+  return; }
+
+sub restore_tree {
+  my ($outdir) = @_;
+  die "cannot restore: $outdir is not a directory" unless -d $outdir;
+  my $ok = 1;
+  my @entries = ctan_entries($outdir);
+  die "cannot restore: $outdir has no entry directories" unless @entries;
+  foreach my $entry (@entries) {
+    eval { restore_entry($outdir, $entry); 1 } or do {
+      my $err = $@; chomp($err);
+      print STDERR "fetch-ctan: restore $entry FAILED: $err\n";
+      $ok = 0; }; }
+  return $ok; }
 
 #======================================================================
 # ls-R index and --check (lib-ctan only; reference roots are never walked)
@@ -402,7 +621,7 @@ sub read_provenance {
 # Data files the pool consumes raw: encodings, named colors, language defs, config, fd.
 sub entry_is_data {
   my ($ctan_root, $entry, $runfiles) = @_;
-  my @files = @$runfiles;
+  my @files = map { runfile_path($_) } @$runfiles;
   return 0 unless @files;
   my $data = 0;
   foreach my $f (@files) {
@@ -416,10 +635,12 @@ sub entry_is_data {
 # are the member stems (algorithm, algorithmic). Prefer those.
 sub entry_binding_state {
   my ($ctan_root, $entry, $prov) = @_;
-  my @stems = ($entry);
+  # --from entries are named for the TeX Live archive (latex, graphics, vntex),
+  # not a package to bind. Do not treat the archive name as a binding stem.
+  my @stems = ($prov && $prov->{from}) ? () : ($entry);
   if ($prov && ref $prov->{styles} eq 'ARRAY') {
     foreach my $s (@{ $prov->{styles} }) {
-      my $base = $s;
+      my $base = runfile_path($s);
       $base =~ s{.*/}{};
       $base =~ s/\.[^.]+$//;
       push @stems, $base if $base ne ''; } }
@@ -441,6 +662,11 @@ sub justify_entries {
   foreach my $e (@entries) {
     my $st = $state{$e};
     if ($allow->{$e}) { $why{$e} = 'allow-list'; next; }
+    my $prov_e = $prov{$e};
+    if ($prov_e && $prov_e->{from}) {
+      my $run = (ref $prov_e->{runfiles} eq 'ARRAY') ? $prov_e->{runfiles} : [];
+      if (entry_is_data($ctan_root, $e, $run)) {
+        $why{$e} = 'data files (--from)'; next; } }
     if ($st eq 'native') { $why{$e} = 'native census source'; next; }
     if ($st eq 'passthrough' || $st eq 'hybrid') {
       $why{$e} = "$st (binding delegates)"; next; }
@@ -513,12 +739,13 @@ sub check_lib_ctan {
       else {
         $rev_for{$tl} = { entry => $entry, rev => $rev }; } }
     my @runfiles = ref $prov->{runfiles} eq 'ARRAY' ? @{ $prov->{runfiles} } : ();
-    my %listed = map { $_ => 1 } @runfiles;
+    my %listed = map { runfile_path($_) => 1 } @runfiles;
     foreach my $rf (@runfiles) {
-      my $fp = File::Spec->catfile($dir, split m{/}, $rf);
+      my $rel = runfile_path($rf);
+      my $fp = File::Spec->catfile($dir, split m{/}, $rel);
       unless (-f $fp) {
         $ok = 0;
-        $report->("$entry: provenance lists '$rf' but the file is absent"); } }
+        $report->("$entry: provenance lists '$rel' but the file is absent"); } }
     my $tex = File::Spec->catdir($dir, 'tex');
     if (-d $tex) {
       find({
@@ -538,6 +765,84 @@ sub check_lib_ctan {
       $report->("$entry: fails the entry rule (not data, not requested, not a native source, not on the allow-list); park it"); }
     else {
       say_("$entry: $why->{$entry} (binding $state->{$entry})"); } }
+  if ($opt{receipts}) {
+    propose_from_receipts($ctan_root, $opt{receipts}, $why); }
   if ($ok) {
     $report->("ok"); }
   return $ok; }
+
+# Receipts never fail --check. They propose allow-list rows for entries the
+# static scan cannot classify, and name missing stems that are not vendored.
+sub propose_from_receipts {
+  my ($ctan_root, $dir, $why) = @_;
+  my $report = sub { print STDERR "fetch-ctan: check: @_\n"; };
+  unless (-d $dir) {
+    $report->("receipts: $dir is not a directory");
+    return; }
+  my @receipts;
+  find({
+    wanted => sub {
+      return unless -f $_;
+      push @receipts, $File::Find::name if basename($File::Find::name) eq 'receipt.json';
+    },
+    no_chdir => 1,
+  }, $dir);
+  $report->("receipts: " . scalar(@receipts) . " receipt.json under $dir");
+  unless (@receipts) {
+    $report->("receipts: nothing to propose");
+    return; }
+  my %entry_ok = map { $_ => 1 } ctan_entries($ctan_root);
+  my %file_to_entry;
+  foreach my $entry (keys %entry_ok) {
+    my $prov = read_provenance(File::Spec->catfile($ctan_root, $entry, 'provenance.json'));
+    next unless $prov && ref $prov->{runfiles} eq 'ARRAY';
+    foreach my $rf (@{ $prov->{runfiles} }) {
+      my $base = runfile_path($rf);
+      $base =~ s{.*/}{};
+      $file_to_entry{$base} = $entry; } }
+  my %missing;        # file basename -> count
+  my %pkg_missing;    # package name from route=missing -> count
+  foreach my $path (@receipts) {
+    my $raw = eval { slurp_raw($path) } or next;
+    my $rec = eval { decode_json($raw) } or next;
+    my $det = $rec->{details} || {};
+    if (ref $det->{missingFiles} eq 'ARRAY') {
+      foreach my $f (@{ $det->{missingFiles} }) {
+        next unless defined $f && $f ne '';
+        $f =~ s{\\}{/}g;
+        $f =~ s{.*/}{};
+        $missing{$f}++; } }
+    if (ref $det->{packages} eq 'ARRAY') {
+      foreach my $p (@{ $det->{packages} }) {
+        next unless ref $p eq 'HASH';
+        next unless ($p->{route} || '') eq 'missing';
+        my $n = $p->{name} || next;
+        $n =~ s{\\}{/}g;
+        $n =~ s{.*/}{};
+        $pkg_missing{$n}++; } } }
+  my %allow_propose;
+  my %not_vendored;
+  my %seen_file;
+  foreach my $file (keys %missing, keys %pkg_missing) {
+    next if $seen_file{$file}++;
+    my $n = ($missing{$file} || 0) + ($pkg_missing{$file} || 0);
+    my $entry = $file_to_entry{$file};
+    if (!$entry) {
+      (my $stem = $file) =~ s/\.[^.]+$//;
+      $entry = $stem if $entry_ok{$stem}; }
+    if ($entry && $entry_ok{$entry}) {
+      next if $why->{$entry};
+      $allow_propose{$entry} += $n; }
+    else {
+      $not_vendored{$file} += $n; } }
+  if (%allow_propose) {
+    $report->("allow-list proposals (entries present but the static scan cannot classify):");
+    foreach my $e (sort keys %allow_propose) {
+      $report->("  $e  ($allow_propose{$e} receipt mention(s))"); } }
+  else {
+    $report->("allow-list proposals: none"); }
+  if (%not_vendored) {
+    $report->("missing stems not vendored (not allow-list rows):");
+    foreach my $f (sort { $not_vendored{$b} <=> $not_vendored{$a} || $a cmp $b } keys %not_vendored) {
+      $report->("  $f  ($not_vendored{$f} receipt mention(s))"); } }
+  return; }

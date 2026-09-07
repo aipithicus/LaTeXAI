@@ -33,9 +33,16 @@ lctan --snapshot=2026-06-01 nicematrix
 lctan tikz-cd extarrows stackrel      # several at once; failures are reported per package
 lctan --index                         # write lib-ctan/ls-R (also runs after every fetch into lib-ctan)
 lctan --check                         # index vs tree, provenance vs files, entry rule; local
+lctan --check --receipts=DIR          # same, and propose allow-list rows from receipt missingFiles
+lctan --from=latex shortvrb.sty t1enc.def ot1enc.def
+                                      # named members of a TeX Live archive, no CTAN catalogue
+lctan --from=graphics dvipsnam.def
+lctan --from=vntex t5enc.def          # t5enc.def is not in latex.tar.xz; it is a vntex member
+lctan --restore                       # re-fetch every entry under --outdir from its provenance pin
+lctan --restore --outdir=lib-park
 ```
 
-Result:
+Result of a catalogue fetch:
 
 ```
 lib-ctan/<pkg>/
@@ -46,7 +53,9 @@ lib-ctan/<pkg>/
   ctan/                the CTAN directory or file, only with --docs
 ```
 
-`provenance.json` is the record a binding header cites as what it was written from, and the lockfile pin of that entry (archive, revision, snapshot, file hashes). Runfiles are gitignored. Provenance files are committed, as are `lib-ctan/ls-R` and `lib-ctan/entries.txt` once the texmf index exists. The same pattern applies under `lib-symb/`, `lib-park/`, and `lib-katex/`: README and provenance tracked, trees not. `lctan --restore` (texmf brief, task 8) rebuilds a clone's trees from the committed pins. The gitignore exceptions land with the first lockfile commit; until then the files sit on disk untracked.
+`--from=<texlive-package>` skips the CTAN API. The entry is named for the archive (`latex`, `graphics`, `vntex`), there is no `ctan.json`, and `provenance.json` records `ctan: null`, `from.members`, and each runfile as `{path, role}` (`own` for the named members). A file CTAN catalogues keeps its CTAN-id entry (`lctan ifthen`, `lctan keyval`); `--from` is for files the catalogue has no record for. Two entries cut from the same archive are re-pinned to that archive's revision when either is fetched.
+
+`provenance.json` is the record a binding header cites as what it was written from, and the lockfile pin of that entry (archive, revision, snapshot, file hashes). A dependency entry may carry `requested_by` (babel-english is requested by babel). Runfiles are gitignored. Provenance files are committed, as are `lib-ctan/ls-R` and `lib-ctan/entries.txt`. The same pattern applies under `lib-symb/`, `lib-park/`, and `lib-katex/`: README and provenance tracked, trees not. `lctan --restore` downloads each pin's `texlive.archive` URL, checks `texlive.sha512`, and writes the listed runfiles; it does not consult `--snapshot`. `--check --receipts=DIR` never fails the check: it prints allow-list proposals for entries the static scan cannot classify, and names missing stems that are not vendored.
 
 ## Use
 

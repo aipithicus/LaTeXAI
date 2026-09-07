@@ -1,0 +1,29 @@
+{
+   "ctan" : null,
+   "fetched_at" : "2026-09-07T08:55:39Z",
+   "from" : {
+      "members" : [
+         "t5enc.def"
+      ]
+   },
+   "package" : "vntex",
+   "runfiles" : [
+      {
+         "path" : "tex/latex/vntex/t5enc.def",
+         "role" : "own"
+      }
+   ],
+   "styles" : [
+      "tex/latex/vntex/t5enc.def"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/vntex.tar.xz",
+      "bundle" : false,
+      "bytes" : 5391748,
+      "filtered" : true,
+      "package" : "vntex",
+      "revision" : "79618",
+      "sha512" : "b0679c76c3d3a2b7c64ace32329164d70e2d7657673a6f81a0441247be19d669151cbbdc2ac589d442b69cf97441c51dbb1535450729f1f680fe58092a994adb",
+      "snapshot" : null
+   }
+}
