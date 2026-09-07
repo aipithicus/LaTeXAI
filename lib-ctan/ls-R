@@ -59,6 +59,9 @@ ifthen.sty
 ./keyval/tex/latex/graphics:
 keyval.sty
 
+./kvdefinekeys/tex/generic/kvdefinekeys:
+kvdefinekeys.sty
+
 ./kvoptions/tex/latex/kvoptions:
 kvoptions-patch.sty
 kvoptions.sty

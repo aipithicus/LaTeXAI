@@ -1,0 +1,28 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/kvdefinekeys",
+      "date" : "2019-12-19",
+      "docs" : null,
+      "license" : "lppl1.3c",
+      "path" : "/macros/latex/contrib/kvdefinekeys",
+      "version" : "1.6"
+   },
+   "fetched_at" : "2026-09-07T06:26:10Z",
+   "package" : "kvdefinekeys",
+   "runfiles" : [
+      "tex/generic/kvdefinekeys/kvdefinekeys.sty"
+   ],
+   "styles" : [
+      "tex/generic/kvdefinekeys/kvdefinekeys.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/kvdefinekeys.tar.xz",
+      "bundle" : false,
+      "bytes" : 2116,
+      "filtered" : false,
+      "package" : "kvdefinekeys",
+      "revision" : "79461",
+      "sha512" : "31c04dd6f185fdc807b4dc1901a04bdbba306ad4af95669ace38f9809bc15da5e60725993d16af60612797d5f74f1a09c40003a167293756abd4dffdb9afa1d7",
+      "snapshot" : null
+   }
+}
