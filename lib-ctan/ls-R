@@ -56,6 +56,9 @@ forest-lib-edges.sty
 forest-lib-linguistics.sty
 forest.sty
 
+./gettitlestring/tex/generic/gettitlestring:
+gettitlestring.sty
+
 ./ifthen/tex/latex/base:
 ifthen.sty
 

@@ -1,0 +1,28 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/gettitlestring",
+      "date" : "2019-12-15",
+      "docs" : null,
+      "license" : "lppl1.3",
+      "path" : "/macros/latex/contrib/gettitlestring",
+      "version" : "1.6"
+   },
+   "fetched_at" : "2026-09-07T06:26:13Z",
+   "package" : "gettitlestring",
+   "runfiles" : [
+      "tex/generic/gettitlestring/gettitlestring.sty"
+   ],
+   "styles" : [
+      "tex/generic/gettitlestring/gettitlestring.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/gettitlestring.tar.xz",
+      "bundle" : false,
+      "bytes" : 2808,
+      "filtered" : false,
+      "package" : "gettitlestring",
+      "revision" : "79461",
+      "sha512" : "b61409ca66ce462be691d0a263e2ea161a8faeab8e6f63dcd2a5bfb8a73ac331795e82af8b8a36b74ba6560edfee2899661b8057ede71dcbc76460c85b272efb",
+      "snapshot" : null
+   }
+}
