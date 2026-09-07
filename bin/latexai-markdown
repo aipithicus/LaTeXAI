@@ -1,0 +1,66 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use FindBin;
+use lib "$FindBin::RealBin/../lib";
+use LaTeXAI::Post;
+use LaTeXAI::Post::Markdown;
+use Getopt::Long qw(GetOptions);
+use File::Path qw(make_path);
+use File::Basename qw(dirname);
+use File::Spec;
+use Cwd qw(abs_path);
+use Encode qw(encode);
+use JSON::PP;
+use Digest::SHA qw(sha256_hex);
+use Time::HiRes qw(time);
+
+my ($output, $report, $asset_root, $prepare_only, $no_prepare, $help);
+my ($strategy, $toc) = ('deferred', 1);
+my @paths;
+GetOptions('output=s' => \$output, 'report=s' => \$report, 'strategy=s' => \$strategy,
+  'asset-root=s' => \$asset_root, 'path=s@' => \@paths, 'prepare-only' => \$prepare_only,
+  'no-prepare' => \$no_prepare, 'toc!' => \$toc, 'help' => \$help) or die "Use --help\n";
+if ($help) {
+  print "Usage: latexai-markdown [--output paper.md] [--report report.json] [--strategy deferred|indexed]\n",
+    "  [--asset-root source-directory] [--path bibliography-directory] [--no-toc] paper.xml\n",
+    "  --prepare-only writes XML with external bibliographies populated; --no-prepare uses input as-is.\n";
+  exit 0;
+}
+my $input = shift @ARGV;
+die "Expected one input XML file; use --help\n" unless $input && !@ARGV;
+die "--prepare-only and --no-prepare conflict\n" if $prepare_only && $no_prepare;
+my %destinations;
+for my $path (grep { defined && length } $input, $output, $report) {
+  my $canonical = abs_path($path) || File::Spec->canonpath(File::Spec->rel2abs($path));
+  $canonical = lc $canonical if $^O eq 'MSWin32';
+  die "Input, output and report paths must be distinct: $path\n" if $destinations{$canonical}++;
+}
+push @paths, $asset_root if $asset_root;
+my $start = time;
+my $dom = LaTeXAI::Post->load_file($input);
+my $parse_ms = 1000 * (time - $start);
+my $preparation = { elapsed_ms => 0, skipped => JSON::PP::true };
+($dom, $preparation) = LaTeXAI::Post->prepare($dom, searchpaths => \@paths,
+  source_directory => $asset_root || dirname($input)) unless $no_prepare;
+my ($bytes, $details);
+if ($prepare_only) { $bytes = $dom->toString; $details = {}; }
+else {
+  my $result = LaTeXAI::Post::Markdown->new(toc => $toc, asset_root => $asset_root)->project($dom, strategy => $strategy);
+  $bytes = encode('UTF-8', $result->{markdown}); $details = $result->{report};
+}
+open my $fh, '<:raw', $input or die "Read $input: $!\n";
+my $source = do { local $/; <$fh> }; close $fh;
+$details->{input} = { path => $input, sha256 => sha256_hex($source) };
+$details->{parse_ms} = $parse_ms;
+$details->{preparation} = $preparation;
+$details->{output_sha256} = sha256_hex($bytes);
+sub write_bytes {
+  my ($path, $data) = @_;
+  make_path(dirname($path));
+  open my $out, '>:raw', $path or die "Write $path: $!\n";
+  print {$out} $data; close $out or die "Close $path: $!\n";
+}
+if ($output) { write_bytes($output, $bytes); }
+else { binmode STDOUT, ':raw'; print $bytes; }
+write_bytes($report, JSON::PP->new->canonical->pretty->utf8->encode($details)) if $report;

@@ -6,7 +6,7 @@ What LaTeXAI is, what surrounds it, and how its parts are named. This document i
 
 LaTeXAI is a fork of LaTeXML (upstream 0.8.8) shaped to return an intermediate representation, the IR, that a manuscript compiler consumes. Upstream renders TeX to HTML and MathML, where a plausible reading is the deliverable. This fork keeps the reading and adds the evidence beside it: the bytes the author wrote, the choices the author stated, and the places the engine guessed. That contract is [`specification/ir-evidence.md`](specification/ir-evidence.md).
 
-The engine's own output, the `ltx` XML tree with the capture namespace beside it, is the product. Everything under `lib/LaTeXML/Post/` is an instrument for checking it, not a surface. The projection that consumes the IR (a transcoder to markdown with KaTeX math) is downstream and has no home in this repository; its interface is described in section 9.
+The engine's output is the `ltx` XML tree with the capture namespace beside it. A separate manuscript Markdown prototype consumes that IR under `lib/LaTeXAI/Post/`, exposed by `bin/latexai-markdown`; see [Markdown projection](markdown-projection.md). It reuses the XML loader and bibliography preparation from LaTeXML. The existing HTML and math processors under `lib/LaTeXML/Post/` remain unchanged as instruments. The prototype carries `Math/@tex` through to Markdown; the eventual math mapping described in section 9 is still future work.
 
 ## 2. Terms
 
@@ -38,7 +38,7 @@ One thing can carry several names when they name different facets. The rule is t
 
 | repository | owns | does not own |
 | :--- | :--- | :--- |
-| **LaTeXAI** (this one) | the engine, the bindings, the vendoring roots, the tools, the fixtures and goldens, these documents | the corpus, batch execution, the transcoder |
+| **LaTeXAI** (this one) | the engine, the bindings, the vendoring roots, the tools, the fixtures and goldens, the Markdown projector, these documents | the corpus, batch execution |
 | **codex-scientiae** | the deposits and their inventories (`supellex/`), the batch executor and its inventory adapter, the runs under `artifacts/latexai/<stamp>/`, the receipt contract | anything about TeX |
 | a local KaTeX clone | the KaTeX source at a tag, from which `lib-katex/` is vendored | nothing else; it is an input |
 
@@ -55,7 +55,7 @@ Each stage names its owner and what crosses the boundary.
 5. **Fold** (codex-scientiae). Receipts into `inventory-summary.jsonl` and `run.json` per run. The run directory is the unit of comparison.
 6. **Demand** (LaTeXAI tools). The demand join reads binding state from the Package tree and demand from receipts; it orders binding work. Counts from any static census are seeds; receipts are the authority.
 7. **Bind** (LaTeXAI). A package is vendored, censused, bound, fixtured, and its golden read, per [`recipes/package-bindings.md`](recipes/package-bindings.md). The corpus is rerun and the receipts move.
-8. **Project** (downstream). The IR is transcoded; symbol tables are its interface (section 9).
+8. **Project** (LaTeXAI, downstream of digestion). `bin/latexai-markdown` projects the IR into one manuscript with a TOC and bibliography. Math currently uses the IR's TeX carrier; symbol-table mapping remains planned (section 9).
 
 ## 5. Roots
 
@@ -114,6 +114,8 @@ Steps 1 to 4 look in flat, explicitly named directories. Step 5 is the only tree
 
 ## 9. Tables and the mapping to KaTeX
 
+The following describes the intended notation-table consumer. The current Markdown prototype does not implement this mapping or validate KaTeX output.
+
 A notation binding is generated from `lib-symb/<pkg>/symbols.tsv`: one row per command with mode, codepoint, name, role, logical font, the KaTeX macro, and provenance. Two consumers read the row. The generator writes the binding from every column except `katex`. Post reads the `katex` column.
 
 **Bindings never carry the mapping.** A generated binding emits LaTeXML tokens (name, meaning, role, font, codepoint) and nothing a renderer would recognise. The IR is renderer-neutral, and a binding that knew about KaTeX would be fork dialect.
@@ -137,6 +139,7 @@ Goldens and receipts answer different questions. A golden says a binding does wh
 | vendor a package into a root | [`recipes/fetch-ctan.md`](recipes/fetch-ctan.md) |
 | write or replace a binding | [`recipes/package-bindings.md`](recipes/package-bindings.md), with [`specification/bindings.md`](specification/bindings.md) as the contract |
 | write a fixture and read its golden | [`testing.md`](testing.md) |
+| project an IR manuscript and compare traversal strategies | [`markdown-projection.md`](markdown-projection.md) |
 | run the corpus | the launcher outside tracked files, per codex-scientiae's worker contract; runs land under codex-scientiae's `artifacts/latexai/<stamp>/` |
 | build a notation table and its binding | not yet documented; the recipe gains a section when the table tooling lands |
 | build or rebuild the texmf index, restore pins, fetch archive members | [`recipes/fetch-ctan.md`](recipes/fetch-ctan.md) (`lctan --index`, `--check`, `--from`, `--restore`) |

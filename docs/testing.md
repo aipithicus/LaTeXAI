@@ -62,7 +62,9 @@ Suites are grouped by what they exercise, following upstream's numbering by engi
 | `60`–`69` | graphics |
 | `70`–`79` | parsing |
 | `80`–`89` | complex documents and one suite per package or class: `t/<pkg>/` driven by `t/8N_<pkg>.t`, as upstream does for `babel`, `moderncv`, `expl3`; when the two-digit slots run out, three digits keep the order (`t/851_extarrows.t`), as upstream's `931_epub.t` does |
-| `90`–`99` | post-processing and driver behaviour; candidates for removal with the Post arm |
+| `90`–`99` | post-processing and driver behaviour; includes the independent Markdown projector in `t/98_markdown.t` |
+
+The Markdown projector's bespoke driver, `t/98_markdown.t`, supplies XML directly and asserts manuscript behavior: reading order, references, TOC anchors, mixed content, bibliography fields, tables, and explicit residue. It compares both traversal strategies and verifies that projection leaves the supplied IR unchanged. It does not mint engine goldens. Corpus traversal timing is a separate experiment described in [Markdown projection](markdown-projection.md).
 
 ## 3. Binding fixtures
 
