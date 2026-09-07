@@ -68,9 +68,9 @@ Vendoring roots encode one axis: what the engine may do with the files. Nothing 
 | `lib-katex/` | never | the KaTeX symbol and macro sources at a tag, with derived row tables | never | git tag, commit, file hashes |
 | `lib-park/` | never | vendored macro packages with no binding and no current demand | never | TeX Live archive, revision |
 
-Every entry under `lib-ctan/` satisfies the **entry rule**: it is data the pool reads, or a raw package some binding asks for, or the source of a native binding. Anything else is parked. The index writer enforces this, so nothing becomes raw-only interpretation by accident.
+Every entry under `lib-ctan/` satisfies the **entry rule**: it is data the pool reads, or a raw package some binding asks for, or the source of a native binding. Anything else is parked. The index writer enforces this locally, from a static scan of what bindings and raw files require plus a committed allow-list, so nothing becomes raw-only interpretation by accident.
 
-Every entry is cut from one vendoring unit. Kernel files are members of `latex` and are never isolated as entries. A dependency a raw package requires may live inside the requiring entry as a marked transitive member; the census reads only an entry's own members, so a binding is never written from a dependency's source.
+An entry is named by its CTAN id and cut from one vendoring unit; the archive and revision are recorded in its provenance, and two entries cut from the same archive pin the same revision. Kernel files that CTAN does not catalogue are members of an entry named for their archive (`latex`, `graphics`) and are never entries of their own. A dependency a raw package requires is its own entry, marked in provenance as requested by the requirer; the census reads one entry, so a binding is never written from a dependency's source.
 
 Status (2026-09-06): `lib-ctan/` exists with 38 entries and no index; the shim, `lib-symb/`, `lib-katex/`, and `lib-park/` are specified and not yet built. Until the index exists, every passthrough request ends as a missing file.
 
@@ -106,7 +106,7 @@ The search order in `FindFile_aux` (`lib/LaTeXML/Package.pm`), which no vendorin
 4. the raw file in a `--path` directory regardless;
 5. kpsewhich, with both the binding name and the raw name as candidates.
 
-Steps 1 to 4 look in flat, explicitly named directories. Step 5 is the only tree search. The texmf index answers step 5: `LATEXML_KPSEWHICH` names the shim, the engine asks it once at startup for the roots and reads `lib-ctan/ls-R` into a cache, and asks it per file only for names the cache lacks. A reference root is never on a `--path` and never in the index, so nothing under it can be found by any step; a lint refuses a golden whose recorded search paths name one.
+Steps 1 to 4 look in flat, explicitly named directories. Step 5 is the only tree search. The texmf index answers step 5: `LATEXML_KPSEWHICH` names the shim, the engine asks it once at startup for the roots and reads `lib-ctan/ls-R` into a cache, and asks it per file only for names the cache lacks. The variable is read when the engine's path module loads, so it is set by the process that starts perl (the aliases, the corpus worker), never from inside a running perl. A reference root is never on a `--path` and never in the index, so nothing under it can be found by any step; a lint refuses a golden whose recorded search paths name one.
 
 `--includestyles` governs step 2 only. A passthrough interprets its raw file regardless, which is what the resident library serves.
 
@@ -150,5 +150,5 @@ Each of these has been the wrong shortcut at least once.
 - A binding never names a renderer. The mapping to KaTeX lives in the table and is read by post.
 - Counts from a static census are seeds. A receipt is the measurement.
 - A vendored file is either data, requested by a binding, or the source of a native binding. Otherwise it is parked, not indexed.
-- The kernel is one vendoring unit, `latex`. Its files are never isolated as entries.
+- A kernel file CTAN does not catalogue is a member of the `latex` entry, never an entry of its own. A kernel file CTAN does catalogue keeps its CTAN-id entry.
 - `--log` is always passed. A `.latexml.log` at the repository root means something bypassed the aliases.
