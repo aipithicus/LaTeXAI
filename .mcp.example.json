@@ -29,7 +29,8 @@
                 "PERL_ROOT": "<PERL_ROOT>",
                 "PERL_HOME": "<PERL_ROOT>/perl",
                 "LATEXAI_ROOT": "<LATEXAI_ROOT>",
-                "LATEXML_KPSEWHICH": "<LATEXAI_ROOT>/tools/dev/kpsewhich.cmd"
+                "LATEXML_KPSEWHICH": "<LATEXAI_ROOT>/tools/dev/kpsewhich.cmd",
+                "LATEXML_KPSEWHICH_CACHE_ONLY": "1"
             }
         },
         "mdnav": {

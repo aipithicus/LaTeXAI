@@ -396,6 +396,10 @@ our $kpsewhich      = which($ENV{LATEXML_KPSEWHICH} || 'kpsewhich');
 our $kpse_cache     = undef;
 our $kpse_toolchain = "";
 
+sub _kpse_cache_only {
+  my $v = $ENV{LATEXML_KPSEWHICH_CACHE_ONLY} // '';
+  return $v ne '' && $v !~ /^(0|false|no|off)$/i; }
+
 sub pathname_kpsewhich {
   my (@candidates) = @_;
   # ($kpsewhich,@candidates) MUST NOT be empty to guarantee that Perl runs $kpsewhich directly
@@ -405,6 +409,11 @@ sub pathname_kpsewhich {
   foreach my $file (@candidates) {
     if (my $result = $$kpse_cache{$file}) {
       return $result; } }
+  # Upstream falls back to a per-file kpsewhich spawn because MiKTeX has no ls-R.
+  # In LaTeXAI the cache is the lib-ctan index; a miss is definitive. One startup
+  # process, none for FindFile misses (7 raw loads and 8 missing files per paper
+  # otherwise spawn cmd+perl each under the batch).
+  return if _kpse_cache_only();
   # If we've failed to read the cache, try directly calling kpsewhich
   # For multiple calls, this is slower in general. But MiKTeX, eg., doesn't use texmf ls-R files!
   if ($kpse_toolchain) {
@@ -616,7 +625,10 @@ but returns I<all> matching (absolute) paths that exist.
 Attempt to find a candidate name via the external C<kpsewhich>
 capability of the system's TeX toolchain. If C<kpsewhich> is
 not available, or the file is not found, returns a
-Perl undefined value.
+Perl undefined value. After the ls-R cache is built, a miss
+normally still spawns C<kpsewhich> (MiKTeX has no ls-R). If
+C<LATEXML_KPSEWHICH_CACHE_ONLY> is a true value (not C<0>/C<false>/C<no>/C<off>),
+a miss returns undef without spawning.
 
 =back
 

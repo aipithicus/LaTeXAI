@@ -108,7 +108,7 @@ The search order in `FindFile_aux` (`lib/LaTeXML/Package.pm`), which no vendorin
 4. the raw file in a `--path` directory regardless;
 5. kpsewhich, with both the binding name and the raw name as candidates.
 
-Steps 1 to 4 look in flat, explicitly named directories. Step 5 is the only tree search. The texmf index answers step 5: `LATEXML_KPSEWHICH` names the shim, the engine asks it once at startup for the roots and reads `lib-ctan/ls-R` into a cache, and asks it per file only for names the cache lacks. The variable is read when the engine's path module loads, so it is set by the process that starts perl (the aliases, the corpus worker), never from inside a running perl. A reference root is never on a `--path` and never in the index, so nothing under it can be found by any step; a lint refuses a golden whose recorded search paths name one.
+Steps 1 to 4 look in flat, explicitly named directories. Step 5 is the only tree search. The texmf index answers step 5: `LATEXML_KPSEWHICH` names the shim, the engine asks it once at startup for the roots and reads `lib-ctan/ls-R` into a cache. Upstream then spawns kpsewhich for every name the cache lacks (MiKTeX has no ls-R). `LATEXML_KPSEWHICH_CACHE_ONLY` makes the cache authoritative: a miss returns undef with no process. The aliases and the corpus worker set both. `LATEXML_KPSEWHICH` is read when the path module loads, so it is set by the process that starts perl, never from inside a running perl. A reference root is never on a `--path` and never in the index, so nothing under it can be found by any step; a lint refuses a golden whose recorded search paths name one.
 
 `--includestyles` governs step 2 only. A passthrough interprets its raw file regardless, which is what the resident library serves.
 

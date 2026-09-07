@@ -42,6 +42,9 @@ $script:ProveScript    = Join-Path $script:PerlRoot 'perl\bin\prove'
 $script:Kpsewhich = Join-Path $script:LaTeXAIRoot 'tools\dev\kpsewhich.cmd'
 if (Test-Path -LiteralPath $script:Kpsewhich) {
     $env:LATEXML_KPSEWHICH = $script:Kpsewhich
+    # lib-ctan/ls-R is the whole answer; a cache miss is definitive. Do not
+    # spawn cmd+perl per FindFile miss (the batch pays this on every missing file).
+    $env:LATEXML_KPSEWHICH_CACHE_ONLY = '1'
 }
 
 function Get-LaTeXAIRoot { $script:LaTeXAIRoot }
