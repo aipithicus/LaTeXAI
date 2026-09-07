@@ -1,0 +1,11 @@
+\documentclass{article}
+\usepackage{keyval}
+\usepackage{kvdefinekeys}
+\makeatletter
+\kv@define@key{demo}{title}{\def\thetitle{#1}}
+\kv@define@key{demo}{flag}[yes]{\def\theflag{#1}}
+\setkeys{demo}{title=Hello,flag}
+\makeatother
+\begin{document}
+[\thetitle][\theflag]
+\end{document}

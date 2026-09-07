@@ -1,6 +1,6 @@
-# -*- CPERL -*-
+# -*- mode: Perl -*-
 # /=====================================================================\ #
-# |  kvdefinekeys.sty                                                           | #
+# |  kvdefinekeys.sty                                                   | #
 # | Implementation for LaTeXML                                          | #
 # |=====================================================================| #
 # | Part of LaTeXML:                                                    | #
@@ -15,10 +15,18 @@ use strict;
 use warnings;
 use LaTeXML::Package;
 
-#**********************************************************************
+# CTAN: kvdefinekeys v1.6 (2019-12-19), TeX Live revision 79461.
+# Class: shim
+# Native replacement of InputDefinitions('kvdefinekeys'). Written from
+# lib-ctan/kvdefinekeys/tex/generic/kvdefinekeys/kvdefinekeys.sty.
+# \kv@define@key is \define@key (keyval). No other public CS. hyperref
+# only RequirePackages this file; no Package/Engine consumer.
 
-InputDefinitions('kvdefinekeys', type => 'sty', noltxml => 1);
+RequirePackage('keyval');
 
-#**********************************************************************
+DeclareOption(undef, sub { });
+ProcessOptions();
+
+Let('\kv@define@key', '\define@key');
 
 1;
