@@ -1,6 +1,6 @@
 # Architecture
 
-What LaTeXAI is, what surrounds it, and how its parts are named. This document is the map; the contracts live in [`specification/`](specification/) and the procedures in [`recipes/`](recipes/). Where a part described here does not exist yet, the section says so and names the brief that builds it. Status lines are dated; update them when the state changes.
+What LaTeXAI is, what surrounds it, and how its parts are named. This document is the map; the contracts live in [`specification/`](specification/) and the procedures in [`recipes/`](recipes/). Where a part described here does not exist yet, the section says so. Status lines are dated; update them when the state changes.
 
 ## 1. Purpose
 
@@ -40,7 +40,6 @@ One thing can carry several names when they name different facets. The rule is t
 | :--- | :--- | :--- |
 | **LaTeXAI** (this one) | the engine, the bindings, the vendoring roots, the tools, the fixtures and goldens, these documents | the corpus, batch execution, the transcoder |
 | **codex-scientiae** | the deposits and their inventories (`supellex/`), the batch executor and its inventory adapter, the runs under `artifacts/latexai/<stamp>/`, the receipt contract | anything about TeX |
-| **aipithicus-issues/LaTeXAI** | planning, briefs, chips, discussions, notes ([`DocOps.md`](../DocOps.md)) | engineering documentation, which is here |
 | a local KaTeX clone | the KaTeX source at a tag, from which `lib-katex/` is vendored | nothing else; it is an input |
 
 The gauntlet worker and its launcher, the LaTeXAI side of the batch contract, are engine glue and live outside tracked files by codex-scientiae's convention. Their contract is codex-scientiae's `src/batch-adapters/README.md`, "Worker contract". Nothing tracked here links to them.
@@ -73,7 +72,7 @@ Every entry under `lib-ctan/` satisfies the **entry rule**: it is data the pool 
 
 Every entry is cut from one vendoring unit. Kernel files are members of `latex` and are never isolated as entries. A dependency a raw package requires may live inside the requiring entry as a marked transitive member; the census reads only an entry's own members, so a binding is never written from a dependency's source.
 
-Status (2026-09-06): `lib-ctan/` exists with 38 entries and no index; the shim, `lib-symb/`, `lib-katex/`, and `lib-park/` are specified in the texmf and lib-symb briefs and not yet built. Until the index exists, every passthrough request ends as a missing file.
+Status (2026-09-06): `lib-ctan/` exists with 38 entries and no index; the shim, `lib-symb/`, `lib-katex/`, and `lib-park/` are specified and not yet built. Until the index exists, every passthrough request ends as a missing file.
 
 ## 6. Layers, and what gets a binding
 
@@ -92,7 +91,7 @@ Encoding definitions and named-color tables look like tables and are rows, but n
 Three independent dimensions, declared in three places:
 
 - **Category** (what a request resolves to) is what the file does, read by `tools/texscan --all` until the coverage manifest exists.
-- **Class** (what the binding is for) is declared in the binding's header, `# Class:`, and checked against the criteria in [`bindings.md`](specification/bindings.md) section 2.1 and the audit brief.
+- **Class** (what the binding is for) is declared in the binding's header, `# Class:`, and checked against the criteria in [`bindings.md`](specification/bindings.md) section 2.1.
 - **Status** (where the work stands) is read by the demand join from the file and from provenance. It is never a directory: a deferred package moves to `lib-park/` because the engine must not read it, not because it is deferred, and a partial binding is a hybrid for as long as it is partial.
 
 A native binding in upstream dialect is a contribution candidate ([`bindings.md`](specification/bindings.md) sections 1 and 6). That is why bindings carry nothing renderer-specific and nothing fork-specific: no KaTeX names, no capture namespace.
@@ -125,7 +124,7 @@ Every symbol binding maps to a real codepoint: no private-use characters, no fon
 
 Bindings are prioritised by measured demand, and their effect is measured the same way. The corpus is codex-scientiae's gauntlet inventory (90 deposits at the time of writing). A run writes one receipt per paper, and the run directory is compared as a whole: totals of missing files, undefined macros, and `ERROR` nodes, and the route of every package. A paired run, with and without a change, is the form of an experiment.
 
-Three sources of counts exist: static censuses of `\usepackage`, the demand join, and receipts. The first two are seeds. Receipts are the authority, and any table of paper counts in a brief or note is regenerated from a full run rather than defended.
+Three sources of counts exist: static censuses of `\usepackage`, the demand join, and receipts. The first two are seeds. Receipts are the authority, and any table of paper counts elsewhere is regenerated from a full run rather than defended.
 
 Goldens and receipts answer different questions. A golden says a binding does what its fixture claims. A receipt says what the corpus paid. A binding can have a passing golden and still be the package the corpus is failing on; that is what the demand join is for.
 
@@ -137,8 +136,8 @@ Goldens and receipts answer different questions. A golden says a binding does wh
 | write or replace a binding | [`recipes/package-bindings.md`](recipes/package-bindings.md), with [`specification/bindings.md`](specification/bindings.md) as the contract |
 | write a fixture and read its golden | [`testing.md`](testing.md) |
 | run the corpus | the launcher outside tracked files, per codex-scientiae's worker contract; runs land under codex-scientiae's `artifacts/latexai/<stamp>/` |
-| build a notation table and its binding | the lib-symb brief until the recipe gains a section for it |
-| build or rebuild the texmf index | the texmf brief until `lctan --index` exists |
+| build a notation table and its binding | not yet documented; the recipe gains a section when the table tooling lands |
+| build or rebuild the texmf index | not yet documented; `lctan --index` when it exists |
 
 ## 12. Rules that follow
 
