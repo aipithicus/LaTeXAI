@@ -1895,6 +1895,12 @@ tikz-qtree.tex
 ./xargs/tex/latex/xargs:
 xargs.sty
 
+./xcolor/tex/latex/xcolor:
+svgnam.def
+x11nam.def
+xcolor-2022-06-12.sty
+xcolor.sty
+
 ./xurl/tex/latex/xurl:
 xurl.sty
 

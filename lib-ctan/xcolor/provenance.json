@@ -1,0 +1,35 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/xcolor",
+      "date" : "2024-09-29",
+      "docs" : null,
+      "license" : "lppl1.3c",
+      "path" : "/macros/latex/contrib/xcolor",
+      "version" : "3.02"
+   },
+   "fetched_at" : "2026-09-07T06:26:46Z",
+   "package" : "xcolor",
+   "runfiles" : [
+      "dvips/xcolor/xcolor.pro",
+      "tex/latex/xcolor/svgnam.def",
+      "tex/latex/xcolor/x11nam.def",
+      "tex/latex/xcolor/xcolor-2022-06-12.sty",
+      "tex/latex/xcolor/xcolor.sty"
+   ],
+   "styles" : [
+      "tex/latex/xcolor/svgnam.def",
+      "tex/latex/xcolor/x11nam.def",
+      "tex/latex/xcolor/xcolor-2022-06-12.sty",
+      "tex/latex/xcolor/xcolor.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/xcolor.tar.xz",
+      "bundle" : false,
+      "bytes" : 18300,
+      "filtered" : false,
+      "package" : "xcolor",
+      "revision" : "77682",
+      "sha512" : "3ba03742b310e82e5d51df140ac1322afd46d0e18700e3b827f6d5771fd94ee2d82e3d284c548c8159f1360a8ec0c085c65e33c03dc71fb9f308ad66e4f930aa",
+      "snapshot" : null
+   }
+}
