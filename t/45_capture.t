@@ -469,6 +469,23 @@ is(normalized_capture_xml($frontmatter_xml), normalized_capture_xml($frontmatter
   'front-matter capture golden matches after base and revision normalization only');
 validate_capture_document($frontmatter_xml, 'capture-frontmatter');
 
+# The preamble switch takes no argument; in particular it must not swallow
+# the following documentclass or the first document token.
+my $raw_input_path = File::Spec->catfile($TEMP, 'raw-input.xml');
+my ($raw_input_status, $raw_input_messages) = run_command($^X, '-I', File::Spec->catdir($ROOT, 'lib'),
+  File::Spec->catfile($ROOT, 'tools', 'dev', 'capture-fixture.pl'),
+  File::Spec->catfile($FIXTURES, 'raw-input.tex'), $raw_input_path);
+is($raw_input_status, 0, 'UseRawInputEncoding converts without errors or warnings') or diag($raw_input_messages);
+my $raw_input_xml = XML::LibXML->load_xml(location => $raw_input_path);
+like(xpath($raw_input_xml)->findvalue('string(//ltx:p)'),
+  qr/^The first token after the command is retained\./, 'UseRawInputEncoding consumes no following input');
+my ($raw_input_off) = convert_document(File::Spec->catfile($FIXTURES, 'raw-input.tex'), capture => 0);
+like(xpath($raw_input_off->getDocument)->findvalue('string(//ltx:p)'),
+  qr/^The first token after the command is retained\./, 'UseRawInputEncoding also consumes no input with capture off');
+foreach my $math (xpath($raw_input_xml)->findnodes('//ltx:Math')) {
+  assert_source_bytes($raw_input_xml, $math, 'raw-input fixture math'); }
+assert_partition($raw_input_xml, 'raw-input fixture');
+
 done_testing();
 
 #**********************************************************************

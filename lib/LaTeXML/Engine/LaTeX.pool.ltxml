@@ -27,5 +27,9 @@ use List::Util qw(min max);
 #**********************************************************************
 LoadPool('TeX');
 LoadFormat('latex');
+
+# LaTeX's zero-argument switch disables inputenc's UTF-8 processing. Mouth
+# owns decoding here, so accepting the declaration must consume no input.
+DefPrimitive('\UseRawInputEncoding', undef);
 #**********************************************************************
 1;
