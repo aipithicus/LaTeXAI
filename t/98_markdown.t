@@ -105,6 +105,49 @@ for my $strategy (qw(deferred indexed)) {
     [qw(absent empty)], "$strategy: only absent and empty carriers are missing");
 }
 
+my $heading_source = <<'XML';
+<title>Results of Theorem <ref idref="thm"/></title>
+<section xml:id="proof"><title>Proof of Theorem <ref idref="thm"/></title>
+<p>See <ref idref="proof" show="title"/> and <ref idref="same"/>.</p>
+<theorem xml:id="thm"><tags><tag role="refnum">1</tag></tags><title>Theorem 1 (<ref idref="later" show="title"/>)</title><p>Statement.</p></theorem>
+<equation xml:id="eq"><tags><tag>(<ref idref="thm"/>)</tag></tags><Math tex="x=0"/></equation>
+</section>
+<section xml:id="same"><title>Proof of Theorem 1</title></section>
+<section xml:id="later"><title>Bound from <ref href="https://example.org">External</ref> [<bibref bibrefs="a"/>]</title></section>
+<section><title>By <bibref bibrefs="a" show="Authors Phrase1YearPhrase2"><bibrefphrase>(</bibrefphrase><bibrefphrase>)</bibrefphrase></bibref></title></section>
+<bibliography><title>References</title><bibitem key="a"><tags><tag role="authors">Author</tag><tag role="year">2000</tag></tags><bibblock>A.</bibblock></bibitem></bibliography>
+XML
+my $heading_dom = dom($heading_source);
+my $heading_xml = $heading_dom->toString;
+my $heading_deferred = LaTeXAI::Post::Markdown->new->project($heading_dom);
+my $heading_indexed = LaTeXAI::Post::Markdown->new->project($heading_dom, strategy => 'indexed');
+is($heading_deferred->{markdown}, $heading_indexed->{markdown}, 'both strategies resolve forward and chained label references identically');
+is($heading_dom->toString, $heading_xml, 'label resolution does not mutate the IR');
+like($heading_deferred->{markdown}, qr/^# Results of Theorem 1$/m, 'document title resolves a forward theorem reference');
+like($heading_deferred->{markdown}, qr/- \[Proof of Theorem 1\]\(#proof-of-theorem-1\)/, 'TOC links the resolved plain heading text');
+like($heading_deferred->{markdown}, qr/See \[Proof of Theorem 1\]\(#proof-of-theorem-1\) and \[Proof of Theorem 1\]\(#proof-of-theorem-1-1\)/,
+  'body references use anchors allocated after heading resolution, including collisions');
+like($heading_deferred->{markdown}, qr/\*\*Theorem 1 \(Bound from External \\\[1\\\]\)\*\*/, 'theorem label resolves a forward title containing citation and hyperlink text');
+like($heading_deferred->{markdown}, qr/\$\$\nx=0\n\$\$\n\n\(1\)/, 'equation display tag uses resolved reference text');
+like($heading_deferred->{markdown}, qr/^## By Author \(2000\)$/m, 'heading citation preserves author-year phrasing');
+is(scalar @{$heading_deferred->{report}{issues}}, 0, 'resolved label references have no residue diagnostics');
+is($heading_deferred->{report}{counters}{index_visits}, 0, 'forward label resolution requires no DOM metadata prepass');
+
+my $bad_labels = '<title>References</title><section xml:id="a"><title>A <ref idref="b" show="title"/></title></section>'
+  . '<section xml:id="b"><title>B <ref idref="a" show="title"/></title></section>'
+  . '<section><title>Missing <ref idref="absent"/> and [<bibref bibrefs="unknown"/>]</title></section>';
+my $bad_deferred = LaTeXAI::Post::Markdown->new->project(dom($bad_labels));
+my $bad_indexed = LaTeXAI::Post::Markdown->new->project(dom($bad_labels), strategy => 'indexed');
+is($bad_deferred->{markdown}, $bad_indexed->{markdown}, 'cyclic and missing labels degrade identically in both strategies');
+like($bad_deferred->{markdown}, qr/cyclic label/, 'cyclic title reference remains explicit instead of recursing indefinitely');
+is_deeply([sort map { $_->{kind} } @{$bad_deferred->{report}{issues}}],
+  [qw(cyclic-label-reference unresolved-citation unresolved-reference)], 'label failures reported once despite reuse in heading and contents');
+my $unlabeled = project('<title>Cases</title><section><title>Case <ref idref="item"/></title></section>'
+  . '<description><item xml:id="item"><tags><tag>Case D (condition)</tag></tags><p>Body.</p></item></description>');
+like($unlabeled->{markdown}, qr/## Case \\\[reference: item\\\]/, 'a target with only a display tag keeps an explicit unresolved label');
+is_deeply($unlabeled->{report}{issues}, [{kind => 'unlabeled-reference', key => 'item'}],
+  'missing reference text is distinguished from a missing target');
+
 # The repository parser returns undef for absent attributes in parsed files.
 my ($xmlfh, $xmlpath) = tempfile(SUFFIX => '.xml', UNLINK => 1);
 binmode $xmlfh, ':raw';

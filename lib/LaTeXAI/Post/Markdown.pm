@@ -58,20 +58,24 @@ sub project {
     && ($root->namespaceURI || '') eq $LTX;
   my $strategy = $options{strategy} || 'deferred';
   die "Unknown traversal '$strategy'\n" unless $strategy =~ /^(deferred|indexed)$/;
-  my $run = bless { %$self, strategy => $strategy, records => {}, targets => {},
+  my $run = bless { %$self, strategy => $strategy, records => {}, record_order => [], targets => {},
     headings => [], slugs => {}, notes => [], bibliography => [], bibkeys => {},
     issues => [], math => [], counters => { index_visits => 0, emit_visits => 0,
       label_visits => 0, references => 0, deferred_references => 0, metadata_records => 0 } }, ref $self;
   my $start = time;
   if ($strategy eq 'indexed') {
     $run->_walk($root, [], {}, 'index');
+    $run->_finalize_labels;
     $run->_heading_slugs;
   }
   my $indexed = time;
   my @parts;
   $run->_walk($root, \@parts, {}, 'emit');
   my $walked = time;
-  $run->_heading_slugs if $strategy eq 'deferred';
+  if ($strategy eq 'deferred') {
+    $run->_finalize_labels;
+    $run->_heading_slugs;
+  }
   my @final;
   if ($run->{front}) { push @final, @{$run->{front}}; }
   if ($run->{toc} && @{$run->{headings}}) {
@@ -107,7 +111,7 @@ sub _heading_slugs {
   push @headings, { name => 'notes', label => 'Notes', level => 2 } if $self->{notecount};
   push @headings, grep { $_->{end_matter} } @{$self->{headings}};
   $self->{headings} = \@headings;
-  my @reserved = ({ label => $self->{document_label} || 'Untitled' });
+  my @reserved = ({ label => $self->_label_text($self->{document_label}) || 'Untitled' });
   push @reserved, { label => 'Contents' } if $self->{toc} && @headings;
   for my $r (@reserved, @headings) {
     my $slug = lc $r->{label};
@@ -121,33 +125,76 @@ sub _heading_slugs {
   }
 }
 
-# Small titles are consumed once and cached. Their fragments are reused by the
-# heading, TOC and reference labels. Math descendants are never visited.
+# Small titles are consumed once. Reference fragments wait for metadata, then
+# resolve to plain label text before anchor allocation. This avoids nested links
+# in the TOC and keeps heading, TOC and reference labels identical.
 sub _label {
   my ($self, $node) = @_;
   $self->{counters}{label_visits}++;
   if ($node->nodeType == 3 || $node->nodeType == 4) {
-    my $s = $node->data; $s =~ s/\s+/ /g; return escape($s);
+    my $s = $node->data; $s =~ s/\s+/ /g; return [escape($s)];
   }
-  return '' unless $node->nodeType == 1;
+  return [] unless $node->nodeType == 1;
   my $name = $node->localname;
-  return '' if $SKIP{$name};
+  return [] if $SKIP{$name};
   if ($name eq 'Math') {
     my $tex = $node->getAttribute('tex') // '';
     push @{$self->{math}}, { id => _id($node), mode => 'inline', carrier => 'tex', context => 'label' };
     if (!length $tex) { $self->_issue('missing-math-tex', $node, 'No tex carrier'); $tex = '\text{[math unavailable]}'; }
-    return $self->{math_renderer} ? $self->{math_renderer}->($node, 0) : '$' . $tex . '$';
+    return [$self->{math_renderer} ? $self->{math_renderer}->($node, 0) : '$' . $tex . '$'];
   }
   if ($name eq 'MathFork') {
-    my $primary = _primary($node); return $primary ? $self->_label($primary) : '\[math unavailable\]';
+    my $primary = _primary($node); return $primary ? $self->_label($primary) : ['\[math unavailable\]'];
   }
   if ($name eq 'ref' || $name eq 'bibref') {
-    $self->_issue('reference-in-title', $node, 'Title references are explicit residue in this prototype');
-    return '\[' . escape($node->getAttribute('labelref') || $node->getAttribute('bibrefs') || _id($node)) . '\]';
+    $self->{counters}{deferred_references}++;
+    return [[reference => $self->_reference_spec($node)]];
   }
-  my $s = join '', map { $self->_label($_) } $node->childNodes;
-  return escape($node->getAttribute('open')) . $s . escape($node->getAttribute('close')) if $name eq 'tag';
-  return $s;
+  my @parts = map { @{$self->_label($_)} } $node->childNodes;
+  @parts = (escape($node->getAttribute('open')), @parts, escape($node->getAttribute('close'))) if $name eq 'tag';
+  return \@parts;
+}
+sub _cache_label {
+  my ($self, $node, $parts) = @_;
+  $parts ||= $self->_label($node);
+  return trim(join '', @$parts) unless grep { ref $_ } @$parts;
+  return { parts => $parts, node => $node };
+}
+sub _label_text {
+  my ($self, $label) = @_;
+  return $label // '' unless ref $label;
+  return $label->{text} if exists $label->{text};
+  if ($label->{resolving}) {
+    $self->_issue('cyclic-label-reference', $label->{node}, 'Label reference cycle retained as residue')
+      unless $label->{cycle_reported}++;
+    return '\[cyclic label\]';
+  }
+  local $label->{resolving} = 1;
+  return $label->{text} = trim(join '', map {
+    ref $_ ? $self->_reference($_->[1], 1) : $_
+  } @{$label->{parts}});
+}
+sub _record_label {
+  my ($self, $record) = @_;
+  return $self->_label_text($record->{label}) || $record->{label_default} || '';
+}
+sub _finalize_labels {
+  my ($self) = @_;
+  for my $record (@{$self->{record_order}}) {
+    $record->{label} = $self->_record_label($record);
+    for my $role (sort keys %{$record->{tags}}) {
+      $record->{tags}{$role} = $self->_label_text($record->{tags}{$role});
+    }
+  }
+}
+sub _reference_spec {
+  my ($self, $node) = @_;
+  my $name = $node->localname;
+  $self->{counters}{references}++;
+  return { kind => $name, id => _id($node), key => $node->getAttribute('labelref') || $node->getAttribute('idref'),
+    href => $node->getAttribute('href'), show => $node->getAttribute('show'), bibkeys => $node->getAttribute('bibrefs'),
+    text => $name eq 'ref' ? $self->_cache_label($node, [map { @{$self->_label($_)} } $node->childNodes]) : '',
+    phrases => [map { $_->textContent } grep { $_->localname eq 'bibrefphrase' } _children($node)] };
 }
 sub _register {
   my ($self, $node, $ctx) = @_;
@@ -159,6 +206,7 @@ sub _register {
     || $name =~ /^(document|abstract|bibliography|bibitem|note|theorem|proof|float|figure|table)$/;
   my $r = { id => $id, name => $name, tags => {} };
   $self->{records}{$key} = $r;
+  push @{$self->{record_order}}, $r;
   $self->{counters}{metadata_records}++;
   for my $alias (grep { length } $id, split /\s+/, ($node->getAttribute('labels') || '')) {
     if ($self->{targets}{$alias}) { $self->_issue('duplicate-target', $node, $alias); }
@@ -167,15 +215,15 @@ sub _register {
   if (my $tags = _child($node, 'tags')) {
     for my $tag (_children($tags)) {
       my $role = $tag->getAttribute('role') || 'display';
-      $r->{tags}{$role} = trim($self->_label($tag));
+      $r->{tags}{$role} = $self->_cache_label($tag);
       $r->{author_year_label} = 1 if ($tag->getAttribute('class') || '') eq 'ltx_bib_author-year';
     }
   }
-  if (my $title = _child($node, 'title')) { $r->{label} = trim($self->_label($title)); }
+  if (my $title = _child($node, 'title')) { $r->{label} = $self->_cache_label($title); }
   $self->{document_label} = $r->{label} if $name eq 'document';
-  if ($name eq 'abstract') { $r->{label} ||= escape($node->getAttribute('name') || 'Abstract'); }
+  if ($name eq 'abstract') { $r->{label_default} = escape($node->getAttribute('name') || 'Abstract'); }
   if ($SECTION{$name} || $name eq 'abstract' || $name eq 'bibliography') {
-    $r->{label} ||= ucfirst $name;
+    $r->{label_default} ||= ucfirst $name;
     $r->{level} = ($ctx->{section_depth} || 0) + 2;
     $r->{level} = 6 if $r->{level} > 6;
     $r->{end_matter} = $name eq 'bibliography' || $ctx->{in_bibliography};
@@ -246,20 +294,14 @@ sub _walk {
   }
   if ($name eq 'ref' || $name eq 'bibref') {
     if ($emit) {
-      my $spec = { kind => $name, id => _id($node), key => $node->getAttribute('labelref') || $node->getAttribute('idref'),
-        href => $node->getAttribute('href'), show => $node->getAttribute('show'), bibkeys => $node->getAttribute('bibrefs'),
-        text => '',
-        phrases => [map { $_->textContent } grep { $_->localname eq 'bibrefphrase' } _children($node)] };
-      # Explicit text is rendered from children, rather than _label's residue policy for a ref itself.
-      $spec->{text} = trim(join '', map { $self->_label($_) } $node->childNodes) if $name eq 'ref';
-      $self->{counters}{references}++;
+      my $spec = $self->_reference_spec($node);
       if ($self->{strategy} eq 'indexed') { push @$sink, $self->_reference($spec); }
       else { push @$sink, [reference => $spec]; $self->{counters}{deferred_references}++; }
     }
     return;
   }
   if ($name eq 'document') {
-    if ($emit) { $self->{front} = [[gap => 2], '# ' . ($r->{label} || 'Untitled'), [gap => 2]]; }
+    if ($emit) { $self->{front} = [[gap => 2], [heading => { record => $r, prefix => '# ', fallback => 'Untitled' }], [gap => 2]]; }
     $self->_descend($node, $sink, $ctx, $mode, 'title'); return;
   }
   if ($name eq 'creator') {
@@ -268,7 +310,7 @@ sub _walk {
   }
   if ($SECTION{$name} || $name eq 'abstract' || $name eq 'bibliography') {
     my $out = $name eq 'bibliography' ? $self->{bibliography} : $sink;
-    push @$out, [gap => 2], ('#' x $r->{level}) . ' ' . $r->{label}, [gap => 2] if $emit;
+    push @$out, [gap => 2], [heading => { record => $r, prefix => ('#' x $r->{level}) . ' ' }], [gap => 2] if $emit;
     $self->_descend($node, $out, { %$ctx, in_bibliography => $name eq 'bibliography' || $ctx->{in_bibliography},
       section_depth => ($ctx->{section_depth} || 0) + ($SECTION{$name} ? 1 : 0) }, $mode, 'title');
     if ($emit && $name eq 'bibliography' && !@{[grep { $_->localname eq 'biblist' || $_->localname eq 'bibitem' } _children($node)]}) {
@@ -279,7 +321,7 @@ sub _walk {
   }
   if ($name eq 'bibitem') {
     push @$sink, [gap => 2], '[' . $r->{number} . '] ' if $emit;
-    push @$sink, $r->{tags}{refnum} . '. ' if $emit && $r->{author_year_label};
+    push @$sink, [bib_label => $r] if $emit && $r->{author_year_label};
     $self->_descend($node, $sink, $ctx, $mode);
     push @$sink, [gap => 2] if $emit; return;
   }
@@ -293,13 +335,13 @@ sub _walk {
     return;
   }
   if ($name =~ /^(theorem|proof)$/) {
-    push @$sink, [gap => 2], '**' . ($r->{label} || ucfirst $name) . '**', [gap => 2] if $emit;
+    push @$sink, [gap => 2], [heading => { record => $r, prefix => '**', suffix => '**', fallback => ucfirst $name }], [gap => 2] if $emit;
     $self->_descend($node, $sink, $ctx, $mode, 'title'); push @$sink, [gap => 2] if $emit; return;
   }
   if ($name eq 'equation' || $name eq 'equationgroup') {
     push @$sink, [gap => 2] if $emit;
     $self->_descend($node, $sink, {%$ctx, display => 1}, $mode);
-    push @$sink, [gap => 2], ($r->{tags}{display} || '(' . $r->{tags}{refnum} . ')'), [gap => 2]
+    push @$sink, [gap => 2], [equation_tag => $r], [gap => 2]
       if $emit && $r && ($r->{tags}{display} || $r->{tags}{refnum});
     return;
   }
@@ -371,7 +413,7 @@ sub _walk {
 }
 
 sub _reference {
-  my ($self, $spec) = @_;
+  my ($self, $spec, $plain) = @_;
   if ($spec->{kind} eq 'bibref') {
     my @values;
     for my $key (split /,/, ($spec->{bibkeys} || '')) {
@@ -379,8 +421,8 @@ sub _reference {
       my $r = $self->{bibkeys}{$key};
       if (!$r) { push @{$self->{issues}}, { kind => 'unresolved-citation', key => $key }; push @values, '@' . escape($key); next; }
       if (($spec->{show} || '') =~ /Authors/) {
-        my $authors = $r->{tags}{authors} || $r->{tags}{fullauthors};
-        my $year = $r->{tags}{year};
+        my $authors = $self->_label_text($r->{tags}{authors}) || $self->_label_text($r->{tags}{fullauthors});
+        my $year = $self->_label_text($r->{tags}{year});
         if ($authors && $year) {
           my @p = map { escape($_) } @{$spec->{phrases}};
           my $label = $spec->{show};
@@ -392,16 +434,22 @@ sub _reference {
     }
     return join(($spec->{show} || '') =~ /Authors/ ? '; ' : ', ', @values);
   }
+  my $explicit = $self->_label_text($spec->{text});
   if ($spec->{href}) {
     my $url = $spec->{href}; $url =~ s/([<>\r\n])/sprintf('%%%02X',ord($1))/ge;
-    return '[' . ($spec->{text} || escape($spec->{href})) . '](<' . $url . '>)';
+    my $text = $explicit || escape($spec->{href});
+    return $plain ? $text : '[' . $text . '](<' . $url . '>)';
   }
   my $key = $spec->{key} || '';
   my $r = $self->{targets}{$key};
-  if (!$r) { push @{$self->{issues}}, { kind => 'unresolved-reference', key => $key }; return $spec->{text} || '\[reference: ' . escape($key) . '\]'; }
-  my $text = $spec->{text} || (($spec->{show} || '') =~ /title/ ? $r->{label} : '')
-    || $r->{tags}{refnum} || $r->{label} || escape($key);
-  return $r->{slug} ? "[$text](#$r->{slug})" : $text;
+  if (!$r) { push @{$self->{issues}}, { kind => 'unresolved-reference', key => $key }; return $explicit || '\[reference: ' . escape($key) . '\]'; }
+  my $text = $explicit || (($spec->{show} || '') =~ /title/ ? $self->_record_label($r) : '')
+    || $self->_label_text($r->{tags}{refnum}) || $self->_record_label($r);
+  if (!length $text) {
+    push @{$self->{issues}}, { kind => 'unlabeled-reference', key => $key };
+    $text = '\[reference: ' . escape($key) . '\]';
+  }
+  return !$plain && $r->{slug} ? "[$text](#$r->{slug})" : $text;
 }
 sub _serialize {
   my ($self, $parts, $indent, $edges) = @_;
@@ -413,6 +461,13 @@ sub _serialize {
       my ($kind, $value) = @$part;
       if ($kind eq 'gap') { $gap = $value if $value > $gap; next; }
       if ($kind eq 'reference') { $s = $self->_reference($value); }
+      elsif ($kind eq 'heading') {
+        $s = $value->{prefix} . ($value->{record}{label} || $value->{fallback} || '') . ($value->{suffix} || '');
+      }
+      elsif ($kind eq 'bib_label') { $s = $value->{tags}{refnum} . '. '; }
+      elsif ($kind eq 'equation_tag') {
+        $s = $value->{tags}{display} || '(' . ($value->{tags}{refnum} // '') . ')';
+      }
       elsif ($kind eq 'style') {
         $s = $self->_serialize($value->{parts}, 0, 1);
         $s =~ s/^(\s*)(.*?)(\s*)$/$1$value->{mark}$2$value->{mark}$3/s if length trim($s);

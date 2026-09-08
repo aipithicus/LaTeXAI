@@ -23,9 +23,11 @@ Both strategies use the same depth-first selection and serializer. They visit ma
 | Strategy | Metadata discovery | Reference resolution |
 | :--- | :--- | :--- |
 | `deferred` | During the manuscript walk | Typed reference fragments resolved during final serialization |
-| `indexed` | A selective metadata walk before emission | References resolved when emitted |
+| `indexed` | A selective metadata walk before emission | Label references after metadata collection; body references when emitted |
 
-The deferred strategy does one structural walk; the indexed strategy does two. Both also consume cached label content and serialize fragments. They keep ID/label and bibliography-key maps. Slugs are assigned in final manuscript order, reserving the title and generated headings; duplicate suffix searches retain their position. References never trigger a document-wide search.
+The deferred strategy does one structural walk; the indexed strategy does two. Both also consume cached label content and serialize fragments. They keep ID/label and bibliography-key maps. References inside labels retain typed fragments until metadata is complete, then resolve once to cached plain text. Slugs are assigned from that resolved text in final manuscript order, reserving the title and generated headings; duplicate suffix searches retain their position. Headings and TOC entries share label text without nested links. References never trigger a document-wide search. Cyclic label dependencies retain explicit residue with a diagnostic.
+
+The `references` counter includes references found in labels. Label references contribute to `deferred_references` in both strategies; ordinary body references contribute only in the deferred strategy.
 
 Ordinary projection avoids constructing `LaTeXML::Post::Document` and its eager ID scan. Generic Scan/CrossRef/HTML processing serves additional purposes and is outside the measured walk. The comparison is between the two new Markdown implementations.
 
@@ -58,7 +60,7 @@ An external `<bibliography files="...">` without entries requires preparation. `
 - Spanning cells are flattened with a diagnostic per span; the first row supplies Markdown's mandatory header. Layout attributes beyond the listed conventions are omitted.
 - PNG/JPEG/GIF/WebP/SVG paths become images. Other formats remain asset links with diagnostics. Embedded `picture` trees remain explicit markers.
 - Unknown wrappers keep their children and a visible marker. Foreign/opaque content and missing reference targets get markers. Duplicate targets are reported; first registration wins.
-- Citations/references inside cached titles remain explicit residue. The citation formatter covers patterns exercised by the study, not the entire CrossRef show-language.
+- Title references and citations use the same lookup and formatting as body references, with links reduced to plain label text. Missing targets, targets without reference text, and label cycles remain explicit with distinct diagnostics. A display-only tag is not interpreted as a reference number. The citation formatter covers patterns exercised by the study, not the entire CrossRef show-language; author-tag/separator punctuation normalization remains open.
 - Preparation failures and invalid/overlapping table spans fail the command. Successful projection does not clear upstream digestion errors.
 
 ## Verification and timing
