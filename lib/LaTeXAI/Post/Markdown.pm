@@ -133,7 +133,7 @@ sub _label {
   my $name = $node->localname;
   return '' if $SKIP{$name};
   if ($name eq 'Math') {
-    my $tex = $node->getAttribute('tex') || '';
+    my $tex = $node->getAttribute('tex') // '';
     push @{$self->{math}}, { id => _id($node), mode => 'inline', carrier => 'tex', context => 'label' };
     if (!length $tex) { $self->_issue('missing-math-tex', $node, 'No tex carrier'); $tex = '\text{[math unavailable]}'; }
     return $self->{math_renderer} ? $self->{math_renderer}->($node, 0) : '$' . $tex . '$';
@@ -221,7 +221,7 @@ sub _walk {
   if ($name eq 'Math') {
     if ($emit) {
       my $display = $ctx->{display} || ($node->getAttribute('mode') || '') eq 'display';
-      my $tex = $node->getAttribute('tex') || '';
+      my $tex = $node->getAttribute('tex') // '';
       push @{$self->{math}}, { id => _id($node), mode => $display ? 'display' : 'inline', carrier => 'tex' };
       if (!length $tex) { $self->_issue('missing-math-tex', $node, 'No tex carrier'); $tex = '\text{[math unavailable]}'; }
       my $math = $self->{math_renderer} ? $self->{math_renderer}->($node, $display)

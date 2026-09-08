@@ -39,7 +39,7 @@ Both buffer fragments and the output string. Lists, table cells, inline styles a
 | Abstract and section hierarchy | ATX headings capped at level six; nested Contents |
 | Paragraphs, emphasis, bold/italic text | Escaped prose with mixed-content boundaries preserved |
 | Theorems and proofs | Bold cached heading followed by body |
-| Inline/display `Math` | `$...$` or `$$` blocks from `@tex`; descendants opaque |
+| Inline/display `Math` | `$...$` or `$$` blocks from `@tex`; descendants opaque; `0` is a valid carrier |
 | Figures | Asset link/image plus full caption |
 | Enumerations and itemizations | Nested lists |
 | Listings/algorithms | Quote lines, including continuations |

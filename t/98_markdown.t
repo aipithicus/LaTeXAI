@@ -92,6 +92,19 @@ is(scalar @{$bib->{report}{issues}}, 0, 'known bibliography field wrappers need 
 my $algorithm = project('<title>Algorithm</title><listing><listingline><text font="bold">repeat</text> <Math tex="x&#10;+y"/></listingline><listingline>done</listingline></listing>');
 like($algorithm->{markdown}, qr/> \*\*repeat\*\* \$x\n> \+y\$\n> done/, 'algorithm continuation lines stay in their quote block');
 
+my $zero_source = '<title>At <Math xml:id="title-zero" tex="0"/></title>'
+  . '<section><title>Case <MathFork><Math xml:id="heading-zero" tex="0"/><MathBranch><Math tex="discard"/></MathBranch></MathFork></title>'
+  . '<p>Away from <Math xml:id="body-zero" tex="0"/> and <Math tex="\pi"/>.</p>'
+  . '<p><Math xml:id="absent"/><Math xml:id="empty" tex=""/></p></section>';
+for my $strategy (qw(deferred indexed)) {
+  my $zero = LaTeXAI::Post::Markdown->new->project(dom($zero_source), strategy => $strategy);
+  like($zero->{markdown}, qr/^# At \$0\$/m, "$strategy: document title preserves zero");
+  like($zero->{markdown}, qr/- \[Case \$0\$\]\(#case-0\).*## Case \$0\$/s, "$strategy: heading and contents preserve primary zero math");
+  like($zero->{markdown}, qr/Away from \$0\$ and \$\\pi\$\./, "$strategy: body preserves zero beside nonzero notation");
+  is_deeply([sort map { $_->{id} } grep { $_->{kind} eq 'missing-math-tex' } @{$zero->{report}{issues}}],
+    [qw(absent empty)], "$strategy: only absent and empty carriers are missing");
+}
+
 # The repository parser returns undef for absent attributes in parsed files.
 my ($xmlfh, $xmlpath) = tempfile(SUFFIX => '.xml', UNLINK => 1);
 binmode $xmlfh, ':raw';
