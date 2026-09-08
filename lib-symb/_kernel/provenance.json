@@ -1,0 +1,17 @@
+{
+   "extracted_at" : "2026-09-08T11:35:11Z",
+   "from" : [
+      "lib/LaTeXML/Engine/math_common.pool.ltxml",
+      "lib/LaTeXML/Engine/Base_XMath.pool.ltxml",
+      "lib/LaTeXML/Engine/latex_constructs.pool.ltxml",
+      "lib/LaTeXML/Engine/latex_base.pool.ltxml",
+      "lib/LaTeXML/Engine/plain_constructs.pool.ltxml",
+      "lib/LaTeXML/Engine/plain_base.pool.ltxml",
+      "lib/LaTeXML/Engine/TeX_Math.pool.ltxml"
+   ],
+   "kind" : "extract",
+   "package" : "_kernel",
+   "rows" : 376,
+   "skipped" : 152,
+   "tool" : "tools/dev/symbind.pl --extract"
+}

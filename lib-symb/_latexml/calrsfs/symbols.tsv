@@ -1,0 +1,3 @@
+command	kind	mode	codepoint	name	meaning	role	font	katex	source	note
+\mathcal	alphabet	math		mathcal			script		lib/LaTeXML/Package/calrsfs.sty.ltxml:21	Let alias of \mathscr
+\mathrsfs	alphabet	math		mathrsfs			script		lib/LaTeXML/Package/calrsfs.sty.ltxml:20	Let alias of \mathscr

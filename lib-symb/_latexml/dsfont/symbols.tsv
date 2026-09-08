@@ -1,0 +1,2 @@
+command	kind	mode	codepoint	name	meaning	role	font	katex	source	note
+\mathds{}	alphabet	math		mathds			double-struck		lib/LaTeXML/Package/dsfont.sty.ltxml:19	DefConstructor with font

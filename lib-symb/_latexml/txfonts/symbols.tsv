@@ -1,0 +1,203 @@
+command	kind	mode	codepoint	name	meaning	role	font	katex	source	note
+\Colonapprox	symbol	math	U+003A U+003A U+2248	Colonapprox		RELOP		\Colonapprox	lib/LaTeXML/Package/txfonts.sty.ltxml:176	
+\Coloneq	symbol	math	U+003A U+003A U+002D	Coloneq		RELOP		\Coloneq	lib/LaTeXML/Package/txfonts.sty.ltxml:178	
+\Coloneqq	symbol	math	U+2A74	Coloneqq		RELOP		\Coloneqq	lib/LaTeXML/Package/txfonts.sty.ltxml:180	
+\Colonsim	symbol	math	U+003A U+003A U+223C	Colonsim		RELOP		\Colonsim	lib/LaTeXML/Package/txfonts.sty.ltxml:182	
+\DiamondLeft	symbol	math	U+21D0 U+25C7	DiamondLeft		RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:189	
+\DiamondRight	symbol	math	U+25C7 U+21D2	DiamondRight		RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:191	
+\Diamondblack	symbol	math	U+25C6	Diamondblack					lib/LaTeXML/Package/txfonts.sty.ltxml:385	
+\Diamonddot	symbol	math	U+27D0	Diamonddot					lib/LaTeXML/Package/txfonts.sty.ltxml:386	
+\DiamonddotLeft	symbol	math	U+21D0 U+27D0	DiamonddotLeft		RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:185	
+\DiamonddotRight	symbol	math	U+27D0 U+21D2	DiamonddotRight		RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:187	
+\Diamonddotleft	symbol	math	U+2190 U+27D0	Diamonddotleft		RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:184	
+\Diamonddotright	symbol	math	U+27D0 U+2192	Diamonddotright		RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:186	
+\Diamondleft	symbol	math	U+2190 U+25C7	Diamondleft		RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:188	
+\Diamondright	symbol	math	U+25C7 U+2192	Diamondright		RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:190	
+\Eqcolon	symbol	math	U+002D U+003A U+003A	Eqcolon		RELOP		\Eqcolon	lib/LaTeXML/Package/txfonts.sty.ltxml:192	
+\Eqqcolon	symbol	math	U+003D U+003A U+003A	Eqqcolon		RELOP		\Eqqcolon	lib/LaTeXML/Package/txfonts.sty.ltxml:194	
+\Join	symbol	math	U+22C8	Join		RELOP		\Join	lib/LaTeXML/Package/txfonts.sty.ltxml:201	
+\Longmappedfrom	symbol	math	U+27FD	Longmappedfrom		ARROW			lib/LaTeXML/Package/txfonts.sty.ltxml:319	
+\Longmapsto	symbol	math	U+27FE	Longmapsto		ARROW			lib/LaTeXML/Package/txfonts.sty.ltxml:320	
+\Mappedfrom	symbol	math	U+2906	Mappedfrom		ARROW			lib/LaTeXML/Package/txfonts.sty.ltxml:323	
+\Mappedfromchar	symbol	math	U+2AE4	Mappedfromchar		RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:203	
+\Mapsto	symbol	math	U+2907	Mapsto		ARROW			lib/LaTeXML/Package/txfonts.sty.ltxml:324	
+\Mmapstochar	symbol	math	U+2AE5	Mmapstochar		RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:206	
+\Nearrow	symbol	math	U+21D7	Nearrow		ARROW			lib/LaTeXML/Package/txfonts.sty.ltxml:223	
+\Nwarrow	symbol	math	U+21D6	Nwarrow		ARROW			lib/LaTeXML/Package/txfonts.sty.ltxml:288	
+\Perp	symbol	math	U+2AEB	Perp		RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:291	
+\Rrightarrow	symbol	math	U+21DB	Rrightarrow		RELOP		\Rrightarrow	lib/LaTeXML/Package/txfonts.sty.ltxml:298	
+\Searrow	symbol	math	U+21D8	Searrow		ARROW			lib/LaTeXML/Package/txfonts.sty.ltxml:299	
+\Swarrow	symbol	math	U+21D9	Swarrow		ARROW			lib/LaTeXML/Package/txfonts.sty.ltxml:307	
+\alphaup	symbol	math	U+03B1	alphaup				\alpha	lib/LaTeXML/Package/txfonts.sty.ltxml:333	
+\betaup	symbol	math	U+03B2	betaup				\beta	lib/LaTeXML/Package/txfonts.sty.ltxml:334	
+\bigsqcap	symbol	math	U+2A05	bigsqcap		SUMOP			lib/LaTeXML/Package/txfonts.sty.ltxml:151	
+\boxLeft	symbol	math	U+21D0 U+25A1	boxLeft		RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:166	
+\boxRight	symbol	math	U+25A1 U+21D2	boxRight		RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:168	
+\boxast	symbol	math	U+29C6	boxast					lib/LaTeXML/Package/txfonts.sty.ltxml:34	
+\boxbar	symbol	math	U+25EB	boxbar					lib/LaTeXML/Package/txfonts.sty.ltxml:35	
+\boxbslash	symbol	math	U+29C4	boxbslash					lib/LaTeXML/Package/txfonts.sty.ltxml:36	
+\boxdotLeft	symbol	math	U+21D0 U+22A1	boxdotLeft		RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:162	
+\boxdotRight	symbol	math	U+22A1 U+21D2	boxdotRight		RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:164	
+\boxdotleft	symbol	math	U+2190 U+22A1	boxdotleft		RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:161	
+\boxdotright	symbol	math	U+22A1 U+2192	boxdotright		RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:163	
+\boxleft	symbol	math	U+2190 U+25A1	boxleft		RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:165	
+\boxright	symbol	math	U+25A1 U+2192	boxright		RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:167	
+\boxslash	symbol	math	U+29C5	boxslash					lib/LaTeXML/Package/txfonts.sty.ltxml:37	
+\chiup	symbol	math	U+03C7	chiup				\chi	lib/LaTeXML/Package/txfonts.sty.ltxml:359	
+\circledbar	symbol	math	U+29B6	circledbar					lib/LaTeXML/Package/txfonts.sty.ltxml:23	
+\circledbslash	symbol	math	U+29B8	circledbslash					lib/LaTeXML/Package/txfonts.sty.ltxml:24	
+\circleddot	symbol	math	U+2299	circleddot				\odot	lib/LaTeXML/Package/txfonts.sty.ltxml:38	
+\circleddotleft	symbol	math	U+2190 U+2299	circleddotleft		RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:169	
+\circleddotright	symbol	math	U+2299 U+2192	circleddotright		RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:170	
+\circledgtr	symbol	math	U+29C1	circledgtr		RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:171	
+\circledless	symbol	math	U+29C0	circledless		RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:172	
+\circledminus	symbol	math	U+2296	circledminus				\ominus	lib/LaTeXML/Package/txfonts.sty.ltxml:39	
+\circledplus	symbol	math	U+2295	circledplus				\oplus	lib/LaTeXML/Package/txfonts.sty.ltxml:40	
+\circledslash	symbol	math	U+2298	circledslash				\oslash	lib/LaTeXML/Package/txfonts.sty.ltxml:41	
+\circledtimes	symbol	math	U+2297	circledtimes				\otimes	lib/LaTeXML/Package/txfonts.sty.ltxml:42	
+\circledvee	symbol	math	U+2228 U+20DD	circledvee					lib/LaTeXML/Package/txfonts.sty.ltxml:25	
+\circledwedge	symbol	math	U+2227 U+20DD	circledwedge					lib/LaTeXML/Package/txfonts.sty.ltxml:26	
+\circleleft	symbol	math	U+2190 U+25CB	circleleft		RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:173	
+\circleright	symbol	math	U+25CB U+2192	circleright		RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:174	
+\colonapprox	symbol	math	U+003A U+2248	colonapprox		RELOP		\colonapprox	lib/LaTeXML/Package/txfonts.sty.ltxml:175	
+\coloneq	symbol	math	U+003A U+002D	coloneq		RELOP		\coloneq	lib/LaTeXML/Package/txfonts.sty.ltxml:177	
+\coloneqq	symbol	math	U+2254	coloneqq		RELOP		\coloneqq	lib/LaTeXML/Package/txfonts.sty.ltxml:179	
+\colonsim	symbol	math	U+003A U+223C	colonsim		RELOP		\colonsim	lib/LaTeXML/Package/txfonts.sty.ltxml:181	
+\deltaup	symbol	math	U+03B4	deltaup				\delta	lib/LaTeXML/Package/txfonts.sty.ltxml:336	
+\epsilonup	symbol	math	U+03F5	epsilonup				\epsilon	lib/LaTeXML/Package/txfonts.sty.ltxml:337	
+\eqcolon	symbol	math	U+002D U+003A	eqcolon		RELOP		\eqcolon	lib/LaTeXML/Package/txfonts.sty.ltxml:193	
+\eqqcolon	symbol	math	U+2255	eqqcolon		RELOP		\eqqcolon	lib/LaTeXML/Package/txfonts.sty.ltxml:195	
+\eqsim	symbol	math	U+2242	eqsim		RELOP		\eqsim	lib/LaTeXML/Package/txfonts.sty.ltxml:196	
+\etaup	symbol	math	U+03B7	etaup				\eta	lib/LaTeXML/Package/txfonts.sty.ltxml:340	
+\fint	symbol	math	U+2A0F	fint	integral	INTOP			lib/LaTeXML/Package/txfonts.sty.ltxml:46	
+\fintop	symbol	math	U+2A0F	fintop	integral	INTOP			lib/LaTeXML/Package/txfonts.sty.ltxml:48	
+\gammaup	symbol	math	U+03B3	gammaup				\gamma	lib/LaTeXML/Package/txfonts.sty.ltxml:335	
+\idotsint	symbol	math	U+222B U+22EF U+222B	idotsint	multiple-integral	INTOP			lib/LaTeXML/Package/txfonts.sty.ltxml:50	
+\idotsintop	symbol	math	U+222B U+22EF U+222B	idotsintop	multiple-integral	INTOP			lib/LaTeXML/Package/txfonts.sty.ltxml:52	
+\iiiint	symbol	math	U+2A0C	iiiint	quadruple-integral	INTOP			lib/LaTeXML/Package/txfonts.sty.ltxml:62	
+\iiiintop	symbol	math	U+2A0C	iiiintop	quadruple-integral	INTOP			lib/LaTeXML/Package/txfonts.sty.ltxml:64	
+\iiint	symbol	math	U+222D	iiint	triple-integral	INTOP		\iiint	lib/LaTeXML/Package/txfonts.sty.ltxml:58	
+\iiintop	symbol	math	U+222D	iiintop	triple-integral	INTOP		\iiint	lib/LaTeXML/Package/txfonts.sty.ltxml:60	
+\iint	symbol	math	U+222C	iint	double-integral	INTOP		\iint	lib/LaTeXML/Package/txfonts.sty.ltxml:54	
+\iintop	symbol	math	U+222C	iintop	double-integral	INTOP		\iint	lib/LaTeXML/Package/txfonts.sty.ltxml:56	
+\invamp	symbol	math	U+214B	invamp					lib/LaTeXML/Package/txfonts.sty.ltxml:27	
+\iotaup	symbol	math	U+03B9	iotaup				\iota	lib/LaTeXML/Package/txfonts.sty.ltxml:343	
+\kappaup	symbol	math	U+03BA	kappaup				\kappa	lib/LaTeXML/Package/txfonts.sty.ltxml:344	
+\lJoin	symbol	math	U+22C9	lJoin		RELOP		\ltimes	lib/LaTeXML/Package/txfonts.sty.ltxml:198	
+\lambdaup	symbol	math	U+03BB	lambdaup				\lambda	lib/LaTeXML/Package/txfonts.sty.ltxml:345	
+\leftsquigarrow	symbol	math	U+21DC	leftsquigarrow		RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:197	
+\llbracket	symbol	math	U+27E6	llbracket		OPEN		\llbracket	lib/LaTeXML/Package/txfonts.sty.ltxml:397	
+\lrJoin	symbol	math	U+22C8	lrJoin		RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:202	
+\lrtimes	symbol	math	U+22C8	lrtimes		RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:200	
+\mappedfromchar	symbol	math	U+2ADE	mappedfromchar		RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:204	
+\mathcent	symbol	math	U+00A2	mathcent					lib/LaTeXML/Package/txfonts.sty.ltxml:389	
+\mathsterling	symbol	math	U+00A3	mathsterling				\mathsterling	lib/LaTeXML/Package/txfonts.sty.ltxml:390	
+\mmapstochar	symbol	math	U+2AE3	mmapstochar		RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:205	
+\multimapboth	symbol	math	U+29DF	multimapboth		RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:207	
+\multimapdotbothA	symbol	math	U+22B6	multimapdotbothA		RELOP		\origof	lib/LaTeXML/Package/txfonts.sty.ltxml:211	
+\multimapdotbothB	symbol	math	U+22B7	multimapdotbothB		RELOP		\imageof	lib/LaTeXML/Package/txfonts.sty.ltxml:213	
+\multimapinv	symbol	math	U+27DC	multimapinv		RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:216	
+\muup	symbol	math	U+03BC	muup				\mu	lib/LaTeXML/Package/txfonts.sty.ltxml:346	
+\nBumpeq	symbol	math	U+224E U+0338	nBumpeq		RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:221	
+\nSubset	symbol	math	U+22D0 U+0338	nSubset	not-double-subset-of	RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:266	
+\nSupset	symbol	math	U+22D1 U+0338	nSupset	not-double-superset-of	RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:278	
+\nVdash	symbol	math	U+22AE	nVdash	not-forces	RELOP		\nVdash	lib/LaTeXML/Package/txfonts.sty.ltxml:286	
+\napprox	symbol	math	U+2249	napprox	not-approximately-equals	RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:313	
+\napproxeq	symbol	math	U+224A U+0338	napproxeq	not-approximately-equals	RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:217	
+\nasymp	symbol	math	U+226D	nasymp	not-equivalent-to	RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:218	
+\nbacksim	symbol	math	U+223D U+0337	nbacksim		RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:219	
+\nbacksimeq	symbol	math	U+22CD U+0338	nbacksimeq		RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:220	
+\nbumpeq	symbol	math	U+224F U+0338	nbumpeq		RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:222	
+\nequiv	symbol	math	U+2262	nequiv	not-equivalent-to	RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:224	
+\ngg	symbol	math	U+226B U+0338	ngg		RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:225	
+\ngtrapprox	symbol	math	U+2A86 U+0338	ngtrapprox	not-greater-than-nor-approximately-equals	RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:226	
+\ngtrless	symbol	math	U+2278	ngtrless	not-greater-than-nor-less-than	RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:228	
+\ngtrsim	symbol	math	U+2275	ngtrsim	not-greater-than-nor-equivalent-to	RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:230	
+\nlessapprox	symbol	math	U+2A85 U+0338	nlessapprox	not-less-than-nor-approximately-equals	RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:232	
+\nlessgtr	symbol	math	U+2279	nlessgtr	not-less-than-nor-greater-than	RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:234	
+\nlesssim	symbol	math	U+2274	nlesssim	not-less-than-nor-equivalent-to	RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:236	
+\nll	symbol	math	U+226A U+0338	nll	not-much-less-than	RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:238	
+\notin	symbol	math	U+2209	notin	not-element-of	RELOP		\notin	lib/LaTeXML/Package/txfonts.sty.ltxml:240	
+\notni	symbol	math	U+220C	notni	not-contains	RELOP		\notni	lib/LaTeXML/Package/txfonts.sty.ltxml:242	
+\notowns	symbol	math	U+220C	notowns	not-contains	RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:244	
+\nprecapprox	symbol	math	U+2AB7 U+0338	nprecapprox	not-precedes-nor-approximately-equals	RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:247	
+\npreccurlyeq	symbol	math	U+22E0	npreccurlyeq	not-precedes-nor-equals	RELOP		\npreceq	lib/LaTeXML/Package/txfonts.sty.ltxml:249	
+\npreceqq	symbol	math	U+2AB3 U+0338	npreceqq	not-precedes-nor-equals	RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:252	
+\nprecsim	symbol	math	U+227E U+0338	nprecsim	not-precedes-nor-equivalent-to	RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:254	
+\nsimeq	symbol	math	U+2243 U+0338	nsimeq	not-equivalent-to-nor-equals	RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:256	
+\nsqsubset	symbol	math	U+228F U+0338	nsqsubset	not-square-image-of	RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:258	
+\nsqsubseteq	symbol	math	U+22E2	nsqsubseteq	not-square-image-of-nor-equals	RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:260	
+\nsqsupset	symbol	math	U+2290 U+0338	nsqsupset	not-square-original-of	RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:262	
+\nsqsupseteq	symbol	math	U+22E3	nsqsupseteq	not-square-original-of-nor-equals	RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:264	
+\nsubset	symbol	math	U+2284	nsubset	not-subset-of	RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:314	
+\nsubseteqq	symbol	math	U+2AC5 U+0338	nsubseteqq	not-subset-nor-equals	RELOP		\nsubseteqq	lib/LaTeXML/Package/txfonts.sty.ltxml:268	
+\nsuccapprox	symbol	math	U+2AB8 U+0338	nsuccapprox	not-succeeds-nor-approximately-equals	RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:270	
+\nsucccurlyeq	symbol	math	U+22E1	nsucccurlyeq	not-succeeds-nor-equals	RELOP		\nsucceq	lib/LaTeXML/Package/txfonts.sty.ltxml:272	
+\nsucceqq	symbol	math	U+2AB4 U+0338	nsucceqq	not-succeeds-nor-equals	RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:274	
+\nsuccsim	symbol	math	U+227F U+0338	nsuccsim	not-succeeds-nor-equivalent-to	RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:276	
+\nsupset	symbol	math	U+2285	nsupset	not-superset-of	RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:315	
+\nthickapprox	symbol	math	U+2249	nthickapprox	not-approximately-equals	RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:280	
+\ntwoheadleftarrow	symbol	math	U+2B34	ntwoheadleftarrow		RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:282	
+\ntwoheadrightarrow	symbol	math	U+2900	ntwoheadrightarrow		RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:283	
+\nuup	symbol	math	U+03BD	nuup				\nu	lib/LaTeXML/Package/txfonts.sty.ltxml:347	
+\oiiint	symbol	math	U+2230	oiiint	triple-contour-integral	INTOP		\oiiint	lib/LaTeXML/Package/txfonts.sty.ltxml:93	
+\oiiintclockwise	symbol	math	U+222D U+20D9	oiiintclockwise	triple-clockwise-contour-integral	INTOP			lib/LaTeXML/Package/txfonts.sty.ltxml:68	
+\oiiintclockwiseop	symbol	math	U+222D U+20D9	oiiintclockwiseop	triple-clockwise-contour-integral	INTOP			lib/LaTeXML/Package/txfonts.sty.ltxml:71	
+\oiiintctrclockwise	symbol	math	U+222D U+20DA	oiiintctrclockwise	triple-counterclockwise-contour-integral	INTOP			lib/LaTeXML/Package/txfonts.sty.ltxml:80	
+\oiiintctrclockwiseop	symbol	math	U+222D U+20DA	oiiintctrclockwiseop	triple-counterclockwise-contour-integral	INTOP			lib/LaTeXML/Package/txfonts.sty.ltxml:83	
+\oiiintop	symbol	math	U+2230	oiiintop	triple-contour-integral	INTOP		\oiiint	lib/LaTeXML/Package/txfonts.sty.ltxml:96	
+\oiint	symbol	math	U+222F	oiint	double-contour-integral	INTOP		\oiint	lib/LaTeXML/Package/txfonts.sty.ltxml:124	
+\oiintclockwise	symbol	math	U+222C U+20D9	oiintclockwise	double-clockwise-contour-integral	INTOP			lib/LaTeXML/Package/txfonts.sty.ltxml:99	
+\oiintclockwiseop	symbol	math	U+222C U+20D9	oiintclockwiseop	double-clockwise-contour-integral	INTOP			lib/LaTeXML/Package/txfonts.sty.ltxml:102	
+\oiintctrclockwise	symbol	math	U+222C U+20DA	oiintctrclockwise	double-counterclockwise-contour-integral	INTOP			lib/LaTeXML/Package/txfonts.sty.ltxml:111	
+\oiintctrclockwiseop	symbol	math	U+222C U+20DA	oiintctrclockwiseop	double-counterclockwise-contour-integral	INTOP			lib/LaTeXML/Package/txfonts.sty.ltxml:114	
+\oiintop	symbol	math	U+222F	oiintop	double-contour-integral	INTOP		\oiint	lib/LaTeXML/Package/txfonts.sty.ltxml:126	
+\ointclockwise	symbol	math	U+2232	ointclockwise	clockwise-contour-integral	INTOP			lib/LaTeXML/Package/txfonts.sty.ltxml:128	
+\ointclockwiseop	symbol	math	U+2232	ointclockwiseop	clockwise-contour-integral	INTOP			lib/LaTeXML/Package/txfonts.sty.ltxml:130	
+\ointctrclockwise	symbol	math	U+2233	ointctrclockwise	counter-clockwise-contour-integral	INTOP			lib/LaTeXML/Package/txfonts.sty.ltxml:132	
+\ointctrclockwiseop	symbol	math	U+2233	ointctrclockwiseop	counter-clockwise-contour-integral	INTOP			lib/LaTeXML/Package/txfonts.sty.ltxml:134	
+\omegaup	symbol	math	U+03C9	omegaup				\omega	lib/LaTeXML/Package/txfonts.sty.ltxml:361	
+\phiup	symbol	math	U+03D5	phiup				\phi	lib/LaTeXML/Package/txfonts.sty.ltxml:357	
+\piup	symbol	math	U+03C0	piup				\pi	lib/LaTeXML/Package/txfonts.sty.ltxml:349	
+\preceqq	symbol	math	U+2AB3	preceqq	precedes-or-equals	RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:292	
+\precneqq	symbol	math	U+2AB5	precneqq	precedes-and-not-equals	RELOP		\precneqq	lib/LaTeXML/Package/txfonts.sty.ltxml:294	
+\psiup	symbol	math	U+03C8	psiup				\psi	lib/LaTeXML/Package/txfonts.sty.ltxml:360	
+\rJoin	symbol	math	U+22CA	rJoin	right-normal-factor-semidirect-product	RELOP		\rtimes	lib/LaTeXML/Package/txfonts.sty.ltxml:296	
+\rhoup	symbol	math	U+03C1	rhoup				\rho	lib/LaTeXML/Package/txfonts.sty.ltxml:351	
+\rrbracket	symbol	math	U+27E7	rrbracket		CLOSE		\rrbracket	lib/LaTeXML/Package/txfonts.sty.ltxml:398	
+\sigmaup	symbol	math	U+03C3	sigmaup				\sigma	lib/LaTeXML/Package/txfonts.sty.ltxml:353	
+\sqint	symbol	math	U+2A16	sqint	square-contour-integral	INTOP			lib/LaTeXML/Package/txfonts.sty.ltxml:147	
+\strictfi	symbol	math	U+297C	strictfi		RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:300	
+\strictif	symbol	math	U+297D	strictif		RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:301	
+\strictiff	symbol	math	U+297C U+297D	strictiff		RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:302	
+\succeqq	symbol	math	U+2AB4	succeqq	succeeds-or-equals	RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:303	
+\succneqq	symbol	math	U+2AB6	succneqq	succeeds-and-not-equals	RELOP		\succneqq	lib/LaTeXML/Package/txfonts.sty.ltxml:305	
+\tauup	symbol	math	U+03C4	tauup				\tau	lib/LaTeXML/Package/txfonts.sty.ltxml:355	
+\thetaup	symbol	math	U+03B8	thetaup				\theta	lib/LaTeXML/Package/txfonts.sty.ltxml:341	
+\upsilonup	symbol	math	U+03C5	upsilonup				\upsilon	lib/LaTeXML/Package/txfonts.sty.ltxml:356	
+\varclubsuit	symbol	math	U+2667	varclubsuit					lib/LaTeXML/Package/txfonts.sty.ltxml:391	
+\vardiamondsuit	symbol	math	U+2666	vardiamondsuit					lib/LaTeXML/Package/txfonts.sty.ltxml:392	
+\varepsilonup	symbol	math	U+03B5	varepsilonup				\varepsilon	lib/LaTeXML/Package/txfonts.sty.ltxml:338	
+\varg	symbol	math	U+210A	varg					lib/LaTeXML/Package/txfonts.sty.ltxml:378	
+\varheartsuit	symbol	math	U+2665	varheartsuit					lib/LaTeXML/Package/txfonts.sty.ltxml:393	
+\varoiiintclockwise	symbol	math	U+222D U+20D9	varoiiintclockwise	triple-clockwise-contour-integral	INTOP			lib/LaTeXML/Package/txfonts.sty.ltxml:74	
+\varoiiintclockwiseop	symbol	math	U+222D U+20D9	varoiiintclockwiseop	triple-clockwise-contour-integral	INTOP			lib/LaTeXML/Package/txfonts.sty.ltxml:77	
+\varoiiintctrclockwise	symbol	math	U+222D U+20DA	varoiiintctrclockwise	triple-counterclockwise-contour-integral	INTOP			lib/LaTeXML/Package/txfonts.sty.ltxml:86	
+\varoiiintctrclockwiseop	symbol	math	U+222D U+20DA	varoiiintctrclockwiseop	triple-counterclockwise-contour-integral	INTOP			lib/LaTeXML/Package/txfonts.sty.ltxml:89	
+\varoiintclockwise	symbol	math	U+222C U+20D9	varoiintclockwise	double-clockwise-contour-integral	INTOP			lib/LaTeXML/Package/txfonts.sty.ltxml:105	
+\varoiintclockwiseop	symbol	math	U+222C U+20D9	varoiintclockwiseop	double-clockwise-contour-integral	INTOP			lib/LaTeXML/Package/txfonts.sty.ltxml:108	
+\varoiintctrclockwise	symbol	math	U+222C U+20DA	varoiintctrclockwise	double-counterclockwise-contour-integral	INTOP			lib/LaTeXML/Package/txfonts.sty.ltxml:117	
+\varoiintctrclockwiseop	symbol	math	U+222C U+20DA	varoiintctrclockwiseop	double-counterclockwise-contour-integral	INTOP			lib/LaTeXML/Package/txfonts.sty.ltxml:120	
+\varointclockwise	symbol	math	U+2232	varointclockwise	clockwise-contour-integral	INTOP			lib/LaTeXML/Package/txfonts.sty.ltxml:136	
+\varointclockwiseop	symbol	math	U+2232	varointclockwiseop	clockwise-contour-integral	INTOP			lib/LaTeXML/Package/txfonts.sty.ltxml:138	
+\varointctrclockwise	symbol	math	U+2233	varointctrclockwise	counter-clockwise-contour-integral	INTOP			lib/LaTeXML/Package/txfonts.sty.ltxml:140	
+\varointctrclockwiseop	symbol	math	U+2233	varointctrclockwiseop	counter-clockwise-contour-integral	INTOP			lib/LaTeXML/Package/txfonts.sty.ltxml:142	
+\varparallel	symbol	math	U+2AFD	varparallel		RELOP			lib/LaTeXML/Package/txfonts.sty.ltxml:308	
+\varphiup	symbol	math	U+03C6	varphiup				\varphi	lib/LaTeXML/Package/txfonts.sty.ltxml:358	
+\varpiup	symbol	math	U+03D6	varpiup				\varpi	lib/LaTeXML/Package/txfonts.sty.ltxml:350	
+\varrhoup	symbol	math	U+03F1	varrhoup				\varrho	lib/LaTeXML/Package/txfonts.sty.ltxml:352	
+\varsigmaup	symbol	math	U+03C2	varsigmaup				\varsigma	lib/LaTeXML/Package/txfonts.sty.ltxml:354	
+\varspadesuit	symbol	math	U+2664	varspadesuit					lib/LaTeXML/Package/txfonts.sty.ltxml:394	
+\varthetaup	symbol	math	U+03D1	varthetaup				\vartheta	lib/LaTeXML/Package/txfonts.sty.ltxml:342	
+\xiup	symbol	math	U+03BE	xiup				\xi	lib/LaTeXML/Package/txfonts.sty.ltxml:348	
+\zetaup	symbol	math	U+03B6	zetaup				\zeta	lib/LaTeXML/Package/txfonts.sty.ltxml:339	

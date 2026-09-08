@@ -1,0 +1,11 @@
+{
+   "extracted_at" : "2026-09-08T11:34:23Z",
+   "from" : [
+      "lib/LaTeXML/Package/extarrows.sty.ltxml"
+   ],
+   "kind" : "extract",
+   "package" : "extarrows",
+   "rows" : 13,
+   "skipped" : 0,
+   "tool" : "tools/dev/symbind.pl --extract"
+}

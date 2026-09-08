@@ -1,0 +1,14 @@
+command	kind	mode	codepoint	name	meaning	role	font	katex	source	note
+\lx@stretchy@Longleftarrow	symbol	math	U+21D0	Leftarrow	Leftarrow	ARROW		\Leftarrow	lib/LaTeXML/Package/extarrows.sty.ltxml:28	alias \Leftarrow
+\lx@stretchy@Longleftrightarrow	symbol	math	U+21D4	Leftrightarrow	Leftrightarrow	ARROW		\Leftrightarrow	lib/LaTeXML/Package/extarrows.sty.ltxml:32	alias \Leftrightarrow
+\lx@stretchy@Longrightarrow	symbol	math	U+21D2	Rightarrow	Rightarrow	ARROW		\Rightarrow	lib/LaTeXML/Package/extarrows.sty.ltxml:30	alias \Rightarrow
+\lx@stretchy@hookleftarrow	symbol	math	U+21A9	hookleftarrow	hookleftarrow	ARROW		\hookleftarrow	lib/LaTeXML/Package/extarrows.sty.ltxml:38	alias \hookleftarrow
+\lx@stretchy@hookrightarrow	symbol	math	U+21AA	hookrightarrow	hookrightarrow	ARROW		\hookrightarrow	lib/LaTeXML/Package/extarrows.sty.ltxml:36	alias \hookrightarrow
+\lx@stretchy@leftharpoondown	symbol	math	U+21BD	leftharpoondown	leftharpoondown	ARROW		\leftharpoondown	lib/LaTeXML/Package/extarrows.sty.ltxml:44	alias \leftharpoondown
+\lx@stretchy@leftharpoonup	symbol	math	U+21BC	leftharpoonup	leftharpoonup	ARROW		\leftharpoonup	lib/LaTeXML/Package/extarrows.sty.ltxml:46	alias \leftharpoonup
+\lx@stretchy@leftrightarrow	symbol	math	U+2194	leftrightarrow	leftrightarrow	ARROW		\leftrightarrow	lib/LaTeXML/Package/extarrows.sty.ltxml:34	alias \leftrightarrow
+\lx@stretchy@leftrightharpoons	symbol	math	U+21CB	leftrightharpoons	leftrightharpoons	ARROW		\leftrightharpoons	lib/LaTeXML/Package/extarrows.sty.ltxml:50	alias \leftrightharpoons
+\lx@stretchy@longequal	symbol	math	U+003D	lx@stretchy@longequal	equals	ARROW		=	lib/LaTeXML/Package/extarrows.sty.ltxml:26	
+\lx@stretchy@rightharpoondown	symbol	math	U+21C1	rightharpoondown	rightharpoondown	ARROW		\rightharpoondown	lib/LaTeXML/Package/extarrows.sty.ltxml:40	alias \rightharpoondown
+\lx@stretchy@rightharpoonup	symbol	math	U+21C0	rightharpoonup	rightharpoonup	ARROW		\rightharpoonup	lib/LaTeXML/Package/extarrows.sty.ltxml:42	alias \rightharpoonup
+\lx@stretchy@rightleftharpoons	symbol	math	U+21CC	rightleftharpoons	rightleftharpoons	ARROW		\rightleftharpoons	lib/LaTeXML/Package/extarrows.sty.ltxml:48	alias \rightleftharpoons

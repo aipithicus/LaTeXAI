@@ -1,0 +1,98 @@
+command	kind	mode	codepoint	name	meaning	role	font	katex	source	note
+\textacutedbl	text	text	U+02DD	textacutedbl				\H	lib/LaTeXML/Package/textcomp.sty.ltxml:195	from %textcomp_various
+\textasciiacute	text	text	U+00B4	textasciiacute					lib/LaTeXML/Package/textcomp.sty.ltxml:195	from %textcomp_various
+\textasciibreve	text	text	U+02D8	textasciibreve					lib/LaTeXML/Package/textcomp.sty.ltxml:195	from %textcomp_various
+\textasciicaron	text	text	U+02C7	textasciicaron					lib/LaTeXML/Package/textcomp.sty.ltxml:195	from %textcomp_various
+\textasciidieresis	text	text	U+00A8	textasciidieresis					lib/LaTeXML/Package/textcomp.sty.ltxml:195	from %textcomp_various
+\textasciigrave	text	text	U+0060	textasciigrave					lib/LaTeXML/Package/textcomp.sty.ltxml:195	from %textcomp_various
+\textasciimacron	text	text	U+00AF	textasciimacron					lib/LaTeXML/Package/textcomp.sty.ltxml:195	from %textcomp_various
+\textasteriskcentered	text	text	U+002A	textasteriskcentered					lib/LaTeXML/Package/textcomp.sty.ltxml:139	from %textcomp_footnote
+\textbaht	text	text	U+0E3F	textbaht					lib/LaTeXML/Package/textcomp.sty.ltxml:121	from %textcomp_money
+\textbardbl	text	text	U+2016	textbardbl				\textbardbl	lib/LaTeXML/Package/textcomp.sty.ltxml:139	from %textcomp_footnote
+\textbigcircle	text	text	U+25CB	textbigcircle					lib/LaTeXML/Package/textcomp.sty.ltxml:195	from %textcomp_various
+\textblank	text	text	U+2422	textblank					lib/LaTeXML/Package/textcomp.sty.ltxml:195	from %textcomp_various
+\textborn	text	text	U+2605	textborn				\bigstar	lib/LaTeXML/Package/textcomp.sty.ltxml:195	from %textcomp_various
+\textbrokenbar	text	text	U+00A6	textbrokenbar					lib/LaTeXML/Package/textcomp.sty.ltxml:139	from %textcomp_footnote
+\textbullet	text	text	U+2022	textbullet					lib/LaTeXML/Package/textcomp.sty.ltxml:139	from %textcomp_footnote
+\textcelsius	text	text	U+2103	textcelsius					lib/LaTeXML/Package/textcomp.sty.ltxml:159	from %textcomp_scientific
+\textcent	text	text	U+00A2	textcent					lib/LaTeXML/Package/textcomp.sty.ltxml:121	from %textcomp_money
+\textcentoldstyle	text	text	U+00A2	textcentoldstyle					lib/LaTeXML/Package/textcomp.sty.ltxml:121	from %textcomp_money
+\textcircledP	text	text	U+2117	textcircledP					lib/LaTeXML/Package/textcomp.sty.ltxml:121	from %textcomp_money
+\textcolonmonetary	text	text	U+20A1	textcolonmonetary					lib/LaTeXML/Package/textcomp.sty.ltxml:121	from %textcomp_money
+\textcopyleft	text	text	U+2184 U+20DD	textcopyleft					lib/LaTeXML/Package/textcomp.sty.ltxml:121	from %textcomp_money
+\textcopyright	text	text	U+00A9	textcopyright				\textcopyright	lib/LaTeXML/Package/textcomp.sty.ltxml:121	from %textcomp_money
+\textcurrency	text	text	U+00A4	textcurrency					lib/LaTeXML/Package/textcomp.sty.ltxml:121	from %textcomp_money
+\textdagger	text	text	U+2020	textdagger				\textdagger	lib/LaTeXML/Package/textcomp.sty.ltxml:139	from %textcomp_footnote
+\textdaggerdbl	text	text	U+2021	textdaggerdbl				\textdaggerdbl	lib/LaTeXML/Package/textcomp.sty.ltxml:139	from %textcomp_footnote
+\textdblhyphen	text	text	U+003D	textdblhyphen				=	lib/LaTeXML/Package/textcomp.sty.ltxml:195	from %textcomp_various
+\textdblhyphenchar	text	text	U+003D	textdblhyphenchar				=	lib/LaTeXML/Package/textcomp.sty.ltxml:195	from %textcomp_various
+\textdegree	text	text	U+00B0	textdegree				\textdegree	lib/LaTeXML/Package/textcomp.sty.ltxml:159	from %textcomp_scientific
+\textdied	text	text	U+271D	textdied					lib/LaTeXML/Package/textcomp.sty.ltxml:195	from %textcomp_various
+\textdiscount	text	text	U+2052	textdiscount					lib/LaTeXML/Package/textcomp.sty.ltxml:121	from %textcomp_money
+\textdiv	text	text	U+00F7	textdiv				\div	lib/LaTeXML/Package/textcomp.sty.ltxml:159	from %textcomp_scientific
+\textdivorced	text	text	U+26AE	textdivorced					lib/LaTeXML/Package/textcomp.sty.ltxml:195	from %textcomp_various
+\textdollar	text	text	U+0024	textdollar				\textdollar	lib/LaTeXML/Package/textcomp.sty.ltxml:121	from %textcomp_money
+\textdollaroldstyle	text	text	U+0024	textdollaroldstyle					lib/LaTeXML/Package/textcomp.sty.ltxml:121	from %textcomp_money
+\textdong	text	text	U+20AB	textdong					lib/LaTeXML/Package/textcomp.sty.ltxml:121	from %textcomp_money
+\textdownarrow	text	text	U+2193	textdownarrow				\downarrow	lib/LaTeXML/Package/textcomp.sty.ltxml:86	from %textcomp_pairs
+\textestimated	text	text	U+212E	textestimated					lib/LaTeXML/Package/textcomp.sty.ltxml:121	from %textcomp_money
+\texteuro	text	text	U+20AC	texteuro					lib/LaTeXML/Package/textcomp.sty.ltxml:121	from %textcomp_money
+\textflorin	text	text	U+0066	textflorin					lib/LaTeXML/Package/textcomp.sty.ltxml:121	from %textcomp_money
+\textfractionsolidus	text	text	U+002F	textfractionsolidus					lib/LaTeXML/Package/textcomp.sty.ltxml:195	from %textcomp_various
+\textgravedbl	text	text	U+201F	textgravedbl					lib/LaTeXML/Package/textcomp.sty.ltxml:195	from %textcomp_various
+\textguarani	text	text	U+20B2	textguarani					lib/LaTeXML/Package/textcomp.sty.ltxml:121	from %textcomp_money
+\textinterrobang	text	text	U+203D	textinterrobang					lib/LaTeXML/Package/textcomp.sty.ltxml:195	from %textcomp_various
+\textinterrobangdown	text	text	U+2E18	textinterrobangdown					lib/LaTeXML/Package/textcomp.sty.ltxml:195	from %textcomp_various
+\textlangle	text	text	U+27E8	textlangle				\langle	lib/LaTeXML/Package/textcomp.sty.ltxml:86	from %textcomp_pairs
+\textlbrackdbl	text	text	U+27E6	textlbrackdbl					lib/LaTeXML/Package/textcomp.sty.ltxml:86	from %textcomp_pairs
+\textleaf	text	text	U+1F342	textleaf					lib/LaTeXML/Package/textcomp.sty.ltxml:195	from %textcomp_various
+\textleftarrow	text	text	U+2190	textleftarrow					lib/LaTeXML/Package/textcomp.sty.ltxml:86	from %textcomp_pairs
+\textlira	text	text	U+20A4	textlira					lib/LaTeXML/Package/textcomp.sty.ltxml:121	from %textcomp_money
+\textlnot	text	text	U+00AC	textlnot					lib/LaTeXML/Package/textcomp.sty.ltxml:159	from %textcomp_scientific
+\textlquill	text	text	U+2045	textlquill					lib/LaTeXML/Package/textcomp.sty.ltxml:86	from %textcomp_pairs
+\textmarried	text	text	U+26AD	textmarried					lib/LaTeXML/Package/textcomp.sty.ltxml:195	from %textcomp_various
+\textmho	text	text	U+2127	textmho				\mho	lib/LaTeXML/Package/textcomp.sty.ltxml:159	from %textcomp_scientific
+\textminus	text	text	U+2212	textminus				-	lib/LaTeXML/Package/textcomp.sty.ltxml:159	from %textcomp_scientific
+\textmu	text	text	U+00B5	textmu					lib/LaTeXML/Package/textcomp.sty.ltxml:159	from %textcomp_scientific
+\textmusicalnote	text	text	U+266A	textmusicalnote					lib/LaTeXML/Package/textcomp.sty.ltxml:195	from %textcomp_various
+\textnaira	text	text	U+20A6	textnaira					lib/LaTeXML/Package/textcomp.sty.ltxml:121	from %textcomp_money
+\textnumero	text	text	U+2116	textnumero					lib/LaTeXML/Package/textcomp.sty.ltxml:195	from %textcomp_various
+\textohm	text	text	U+2126	textohm					lib/LaTeXML/Package/textcomp.sty.ltxml:159	from %textcomp_scientific
+\textonehalf	text	text	U+00BD	textonehalf					lib/LaTeXML/Package/textcomp.sty.ltxml:50	from %textcomp_numerals
+\textonequarter	text	text	U+00BC	textonequarter					lib/LaTeXML/Package/textcomp.sty.ltxml:50	from %textcomp_numerals
+\textonesuperior	text	text	U+00B9	textonesuperior					lib/LaTeXML/Package/textcomp.sty.ltxml:50	from %textcomp_numerals
+\textopenbullet	text	text	U+25E6	textopenbullet					lib/LaTeXML/Package/textcomp.sty.ltxml:139	from %textcomp_footnote
+\textordfeminine	text	text	U+00AA	textordfeminine					lib/LaTeXML/Package/textcomp.sty.ltxml:159	from %textcomp_scientific
+\textordmasculine	text	text	U+00BA	textordmasculine					lib/LaTeXML/Package/textcomp.sty.ltxml:159	from %textcomp_scientific
+\textparagraph	text	text	U+00B6	textparagraph					lib/LaTeXML/Package/textcomp.sty.ltxml:139	from %textcomp_footnote
+\textperiodcentered	text	text	U+00B7	textperiodcentered					lib/LaTeXML/Package/textcomp.sty.ltxml:139	from %textcomp_footnote
+\textpertenthousand	text	text	U+2031	textpertenthousand					lib/LaTeXML/Package/textcomp.sty.ltxml:121	from %textcomp_money
+\textperthousand	text	text	U+2030	textperthousand					lib/LaTeXML/Package/textcomp.sty.ltxml:121	from %textcomp_money
+\textpeso	text	text	U+20B1	textpeso					lib/LaTeXML/Package/textcomp.sty.ltxml:121	from %textcomp_money
+\textpilcrow	text	text	U+00B6	textpilcrow					lib/LaTeXML/Package/textcomp.sty.ltxml:139	from %textcomp_footnote
+\textpm	text	text	U+00B1	textpm				\pm	lib/LaTeXML/Package/textcomp.sty.ltxml:159	from %textcomp_scientific
+\textquotesingle	text	text	U+0027	textquotesingle					lib/LaTeXML/Package/textcomp.sty.ltxml:195	from %textcomp_various
+\textquotestraightbase	text	text	U+201A	textquotestraightbase					lib/LaTeXML/Package/textcomp.sty.ltxml:195	from %textcomp_various
+\textquotestraightdblbase	text	text	U+201E	textquotestraightdblbase					lib/LaTeXML/Package/textcomp.sty.ltxml:195	from %textcomp_various
+\textrangle	text	text	U+27E9	textrangle				\rangle	lib/LaTeXML/Package/textcomp.sty.ltxml:86	from %textcomp_pairs
+\textrbrackdbl	text	text	U+27E7	textrbrackdbl					lib/LaTeXML/Package/textcomp.sty.ltxml:86	from %textcomp_pairs
+\textrecipe	text	text	U+211E	textrecipe					lib/LaTeXML/Package/textcomp.sty.ltxml:195	from %textcomp_various
+\textreferencemark	text	text	U+203B	textreferencemark					lib/LaTeXML/Package/textcomp.sty.ltxml:121	from %textcomp_money
+\textregistered	text	text	U+00AE	textregistered				\textregistered	lib/LaTeXML/Package/textcomp.sty.ltxml:121	from %textcomp_money
+\textrightarrow	text	text	U+2192	textrightarrow					lib/LaTeXML/Package/textcomp.sty.ltxml:86	from %textcomp_pairs
+\textrquill	text	text	U+2046	textrquill					lib/LaTeXML/Package/textcomp.sty.ltxml:86	from %textcomp_pairs
+\textsection	text	text	U+00A7	textsection					lib/LaTeXML/Package/textcomp.sty.ltxml:139	from %textcomp_footnote
+\textservicemark	text	text	U+2120	textservicemark					lib/LaTeXML/Package/textcomp.sty.ltxml:121	from %textcomp_money
+\textsterling	text	text	U+00A3	textsterling				\textsterling	lib/LaTeXML/Package/textcomp.sty.ltxml:121	from %textcomp_money
+\textsurd	text	text	U+221A	textsurd				\surd	lib/LaTeXML/Package/textcomp.sty.ltxml:159	from %textcomp_scientific
+\textthreequarters	text	text	U+00BE	textthreequarters					lib/LaTeXML/Package/textcomp.sty.ltxml:50	from %textcomp_numerals
+\textthreequartersemdash	text	text	U+2014	textthreequartersemdash					lib/LaTeXML/Package/textcomp.sty.ltxml:195	from %textcomp_various
+\textthreesuperior	text	text	U+00B3	textthreesuperior					lib/LaTeXML/Package/textcomp.sty.ltxml:50	from %textcomp_numerals
+\texttildelow	text	text	U+007E	texttildelow					lib/LaTeXML/Package/textcomp.sty.ltxml:195	from %textcomp_various
+\texttimes	text	text	U+00D7	texttimes				\times	lib/LaTeXML/Package/textcomp.sty.ltxml:159	from %textcomp_scientific
+\texttrademark	text	text	U+2122	texttrademark					lib/LaTeXML/Package/textcomp.sty.ltxml:121	from %textcomp_money
+\texttwelveudash	text	text	U+2014	texttwelveudash					lib/LaTeXML/Package/textcomp.sty.ltxml:195	from %textcomp_various
+\texttwosuperior	text	text	U+00B2	texttwosuperior					lib/LaTeXML/Package/textcomp.sty.ltxml:50	from %textcomp_numerals
+\textuparrow	text	text	U+2191	textuparrow				\uparrow	lib/LaTeXML/Package/textcomp.sty.ltxml:86	from %textcomp_pairs
+\textwon	text	text	U+20A9	textwon					lib/LaTeXML/Package/textcomp.sty.ltxml:121	from %textcomp_money
+\textyen	text	text	U+00A5	textyen					lib/LaTeXML/Package/textcomp.sty.ltxml:121	from %textcomp_money

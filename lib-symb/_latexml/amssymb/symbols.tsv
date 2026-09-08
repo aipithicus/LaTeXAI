@@ -1,0 +1,204 @@
+command	kind	mode	codepoint	name	meaning	role	font	katex	source	note
+\Bbbk	symbol	math	U+1D55C	Bbbk				\Bbbk	lib/LaTeXML/Package/amssymb.sty.ltxml:45	
+\Bumpeq	symbol	math	U+224E	Bumpeq	geometrically-equals	RELOP		\Bumpeq	lib/LaTeXML/Package/amssymb.sty.ltxml:143	
+\Cap	symbol	math	U+22D2	Cap	double-intersection	ADDOP		\Cap	lib/LaTeXML/Package/amssymb.sty.ltxml:63	
+\Cup	symbol	math	U+22D3	Cup	double-union	ADDOP		\Cup	lib/LaTeXML/Package/amssymb.sty.ltxml:65	
+\Doteq	symbol	math	U+2251	Doteq	geometrically-equals	RELOP		\Doteq	lib/LaTeXML/Package/amssymb.sty.ltxml:114	
+\Finv	symbol	math	U+2132	Finv				\Finv	lib/LaTeXML/Package/amssymb.sty.ltxml:43	
+\Game	symbol	math	U+2141	Game				\Game	lib/LaTeXML/Package/amssymb.sty.ltxml:44	
+\Lleftarrow	symbol	math	U+21DA	Lleftarrow		ARROW		\Lleftarrow	lib/LaTeXML/Package/amssymb.sty.ltxml:325	
+\Lsh	symbol	math	U+21B0	Lsh		ARROW		\Lsh	lib/LaTeXML/Package/amssymb.sty.ltxml:332	
+\Rrightarrow	symbol	math	U+21DB	Rrightarrow		ARROW		\Rrightarrow	lib/LaTeXML/Package/amssymb.sty.ltxml:337	
+\Rsh	symbol	math	U+21B1	Rsh		ARROW		\Rsh	lib/LaTeXML/Package/amssymb.sty.ltxml:344	
+\Subset	symbol	math	U+22D0	Subset	double-subset-of	RELOP		\Subset	lib/LaTeXML/Package/amssymb.sty.ltxml:125	
+\Supset	symbol	math	U+22D1	Supset	double-superset-of	RELOP		\Supset	lib/LaTeXML/Package/amssymb.sty.ltxml:175	
+\Vdash	symbol	math	U+22A9	Vdash	forces	RELOP		\Vdash	lib/LaTeXML/Package/amssymb.sty.ltxml:187	
+\Vvdash	symbol	math	U+22AA	Vvdash		RELOP		\Vvdash	lib/LaTeXML/Package/amssymb.sty.ltxml:138	
+\approxeq	symbol	math	U+224A	approxeq	approximately-equals-or-equals	RELOP		\approxeq	lib/LaTeXML/Package/amssymb.sty.ltxml:99	
+\backepsilon	symbol	math	U+03F6	backepsilon		RELOP		\backepsilon	lib/LaTeXML/Package/amssymb.sty.ltxml:202	
+\backprime	symbol	math	U+2035	backprime				\backprime	lib/LaTeXML/Package/amssymb.sty.ltxml:46	
+\backsim	symbol	math	U+223D	backsim		RELOP		\backsim	lib/LaTeXML/Package/amssymb.sty.ltxml:120	
+\backsimeq	symbol	math	U+22CD	backsimeq		RELOP		\backsimeq	lib/LaTeXML/Package/amssymb.sty.ltxml:122	
+\barwedge	symbol	math	U+22BC	barwedge	not-and	ADDOP		\barwedge	lib/LaTeXML/Package/amssymb.sty.ltxml:67	
+\because	symbol	math	U+2235	because	because	METARELOP		\because	lib/LaTeXML/Package/amssymb.sty.ltxml:204	
+\beth	symbol	math	U+2136	beth				\beth	lib/LaTeXML/Package/amssymb.sty.ltxml:27	
+\between	symbol	math	U+226C	between	between	RELOP		\between	lib/LaTeXML/Package/amssymb.sty.ltxml:193	
+\bigstar	symbol	math	U+2605	bigstar				\bigstar	lib/LaTeXML/Package/amssymb.sty.ltxml:52	
+\blacklozenge	symbol	math	U+29EB	blacklozenge				\blacklozenge	lib/LaTeXML/Package/amssymb.sty.ltxml:51	
+\blacksquare	symbol	math	U+25A0	blacksquare				\blacksquare	lib/LaTeXML/Package/amssymb.sty.ltxml:50	
+\blacktriangle	symbol	math	U+25B2	blacktriangle				\blacktriangle	lib/LaTeXML/Package/amssymb.sty.ltxml:48	
+\blacktriangledown	symbol	math	U+25BC	blacktriangledown				\blacktriangledown	lib/LaTeXML/Package/amssymb.sty.ltxml:49	
+\blacktriangleleft	symbol	math	U+25C0	blacktriangleleft		RELOP		\blacktriangleleft	lib/LaTeXML/Package/amssymb.sty.ltxml:199	
+\blacktriangleright	symbol	math	U+25B6	blacktriangleright		RELOP		\blacktriangleright	lib/LaTeXML/Package/amssymb.sty.ltxml:203	
+\boxdot	symbol	math	U+22A1	boxdot		MULOP		\boxdot	lib/LaTeXML/Package/amssymb.sty.ltxml:72	
+\boxminus	symbol	math	U+229F	boxminus		ADDOP		\boxminus	lib/LaTeXML/Package/amssymb.sty.ltxml:70	
+\boxplus	symbol	math	U+229E	boxplus		ADDOP		\boxplus	lib/LaTeXML/Package/amssymb.sty.ltxml:73	
+\boxtimes	symbol	math	U+22A0	boxtimes		MULOP		\boxtimes	lib/LaTeXML/Package/amssymb.sty.ltxml:71	
+\bumpeq	symbol	math	U+224F	bumpeq	difference-between	RELOP		\bumpeq	lib/LaTeXML/Package/amssymb.sty.ltxml:141	
+\centerdot	symbol	math	U+2219	centerdot		MULOP		\centerdot	lib/LaTeXML/Package/amssymb.sty.ltxml:84	
+\circeq	symbol	math	U+2257	circeq		RELOP		\circeq	lib/LaTeXML/Package/amssymb.sty.ltxml:168	
+\circlearrowleft	symbol	math	U+21BA	circlearrowleft		ARROW		\circlearrowleft	lib/LaTeXML/Package/amssymb.sty.ltxml:331	
+\circlearrowright	symbol	math	U+21BB	circlearrowright		ARROW		\circlearrowright	lib/LaTeXML/Package/amssymb.sty.ltxml:343	
+\circledS	symbol	math	U+24C8	circledS				\circledS	lib/LaTeXML/Package/amssymb.sty.ltxml:38	
+\circledast	symbol	math	U+229B	circledast		MULOP		\circledast	lib/LaTeXML/Package/amssymb.sty.ltxml:82	
+\circledcirc	symbol	math	U+229A	circledcirc		MULOP		\circledcirc	lib/LaTeXML/Package/amssymb.sty.ltxml:83	
+\circleddash	symbol	math	U+229D	circleddash		ADDOP		\circleddash	lib/LaTeXML/Package/amssymb.sty.ltxml:81	
+\complement	symbol	math	U+2201	complement	complement			\complement	lib/LaTeXML/Package/amssymb.sty.ltxml:54	
+\curlyeqprec	symbol	math	U+22DE	curlyeqprec	equals-or-preceeds	RELOP		\curlyeqprec	lib/LaTeXML/Package/amssymb.sty.ltxml:130	
+\curlyeqsucc	symbol	math	U+22DF	curlyeqsucc	equals-or-succeeds	RELOP		\curlyeqsucc	lib/LaTeXML/Package/amssymb.sty.ltxml:180	
+\curlyvee	symbol	math	U+22CE	curlyvee	or	ADDOP		\curlyvee	lib/LaTeXML/Package/amssymb.sty.ltxml:80	
+\curlywedge	symbol	math	U+22CF	curlywedge	and	ADDOP		\curlywedge	lib/LaTeXML/Package/amssymb.sty.ltxml:79	
+\curvearrowleft	symbol	math	U+21B6	curvearrowleft		ARROW		\curvearrowleft	lib/LaTeXML/Package/amssymb.sty.ltxml:330	
+\curvearrowright	symbol	math	U+21B7	curvearrowright		ARROW		\curvearrowright	lib/LaTeXML/Package/amssymb.sty.ltxml:342	
+\daleth	symbol	math	U+2138	daleth				\daleth	lib/LaTeXML/Package/amssymb.sty.ltxml:28	
+\diagdown	symbol	math	U+2572	diagdown				\diagdown	lib/LaTeXML/Package/amssymb.sty.ltxml:57	
+\diagup	symbol	math	U+2571	diagup				\diagup	lib/LaTeXML/Package/amssymb.sty.ltxml:56	
+\digamma	symbol	math	U+03DD	digamma				\digamma	lib/LaTeXML/Package/amssymb.sty.ltxml:22	
+\divideontimes	symbol	math	U+22C7	divideontimes		MULOP		\divideontimes	lib/LaTeXML/Package/amssymb.sty.ltxml:74	
+\doteqdot	symbol	math	U+2251	doteqdot	geometrically-equals	RELOP		\doteqdot	lib/LaTeXML/Package/amssymb.sty.ltxml:112	
+\dotplus	symbol	math	U+2214	dotplus		ADDOP		\dotplus	lib/LaTeXML/Package/amssymb.sty.ltxml:61	
+\doublebarwedge	symbol	math	U+2A5E	doublebarwedge		ADDOP		\doublebarwedge	lib/LaTeXML/Package/amssymb.sty.ltxml:69	
+\doublecap	symbol	math	U+22D2	doublecap	double-intersection	ADDOP		\doublecap	lib/LaTeXML/Package/amssymb.sty.ltxml:64	
+\doublecup	symbol	math	U+22D3	doublecup	double-union	ADDOP		\doublecup	lib/LaTeXML/Package/amssymb.sty.ltxml:66	
+\downdownarrows	symbol	math	U+21CA	downdownarrows		ARROW		\downdownarrows	lib/LaTeXML/Package/amssymb.sty.ltxml:345	
+\downharpoonleft	symbol	math	U+21C3	downharpoonleft		ARROW		\downharpoonleft	lib/LaTeXML/Package/amssymb.sty.ltxml:349	
+\downharpoonright	symbol	math	U+21C2	downharpoonright		ARROW		\downharpoonright	lib/LaTeXML/Package/amssymb.sty.ltxml:352	
+\eqcirc	symbol	math	U+2256	eqcirc		RELOP		\eqcirc	lib/LaTeXML/Package/amssymb.sty.ltxml:167	
+\eqsim	symbol	math	U+2242	eqsim		RELOP		\eqsim	lib/LaTeXML/Package/amssymb.sty.ltxml:155	
+\eqslantgtr	symbol	math	U+2A96	eqslantgtr	greater-than-or-equals	RELOP		\eqslantgtr	lib/LaTeXML/Package/amssymb.sty.ltxml:149	
+\eqslantless	symbol	math	U+2A95	eqslantless	less-than-or-equals	RELOP		\eqslantless	lib/LaTeXML/Package/amssymb.sty.ltxml:93	
+\eth	symbol	math	U+00F0	eth				\eth	lib/LaTeXML/Package/amssymb.sty.ltxml:55	
+\fallingdotseq	symbol	math	U+2252	fallingdotseq	approximately-equals-or-image-of	RELOP		\fallingdotseq	lib/LaTeXML/Package/amssymb.sty.ltxml:118	
+\geqq	symbol	math	U+2267	geqq	greater-than-or-equals	RELOP		\geqq	lib/LaTeXML/Package/amssymb.sty.ltxml:145	
+\geqslant	symbol	math	U+2A7E	geqslant	greater-than-or-equals	RELOP		\geqslant	lib/LaTeXML/Package/amssymb.sty.ltxml:147	
+\ggg	symbol	math	U+22D9	ggg	very-much-greater-than	RELOP		\ggg	lib/LaTeXML/Package/amssymb.sty.ltxml:157	
+\gggtr	symbol	math	U+22D9	gggtr	very-much-greater-than	RELOP		\gggtr	lib/LaTeXML/Package/amssymb.sty.ltxml:159	
+\gimel	symbol	math	U+2137	gimel				\gimel	lib/LaTeXML/Package/amssymb.sty.ltxml:29	
+\gnapprox	symbol	math	U+2A8A	gnapprox	greater-than-and-not-approximately-equals	RELOP		\gnapprox	lib/LaTeXML/Package/amssymb.sty.ltxml:292	
+\gneq	symbol	math	U+2A88	gneq	greater-than-and-not-equals	RELOP		\gneq	lib/LaTeXML/Package/amssymb.sty.ltxml:284	
+\gneqq	symbol	math	U+2269	gneqq	greater-than-and-not-equals	RELOP		\gneqq	lib/LaTeXML/Package/amssymb.sty.ltxml:286	
+\gnsim	symbol	math	U+22E7	gnsim	greater-than-and-not-equivalent-to	RELOP		\gnsim	lib/LaTeXML/Package/amssymb.sty.ltxml:290	
+\gtrapprox	symbol	math	U+2A86	gtrapprox	greater-than-or-approximately-equals	RELOP		\gtrapprox	lib/LaTeXML/Package/amssymb.sty.ltxml:153	
+\gtrdot	symbol	math	U+22D7	gtrdot		RELOP		\gtrdot	lib/LaTeXML/Package/amssymb.sty.ltxml:156	
+\gtreqless	symbol	math	U+22DB	gtreqless	greater-than-or-equals-or-less-than	RELOP		\gtreqless	lib/LaTeXML/Package/amssymb.sty.ltxml:163	
+\gtreqqless	symbol	math	U+2A8C	gtreqqless	greater-than-or-equals-or-less-than	RELOP		\gtreqqless	lib/LaTeXML/Package/amssymb.sty.ltxml:165	
+\gtrless	symbol	math	U+2277	gtrless	greater-than-or-less-than	RELOP		\gtrless	lib/LaTeXML/Package/amssymb.sty.ltxml:161	
+\gtrsim	symbol	math	U+2273	gtrsim	greater-than-or-equivalent-to	RELOP		\gtrsim	lib/LaTeXML/Package/amssymb.sty.ltxml:151	
+\gvertneqq	symbol	math	U+2269	gvertneqq	greater-than-and-not-equals	RELOP		\gvertneqq	lib/LaTeXML/Package/amssymb.sty.ltxml:288	
+\hslash	symbol	math	U+210F	hslash	Planck-constant-over-2-pi	ID		\hslash	lib/LaTeXML/Package/amssymb.sty.ltxml:34	
+\intercal	symbol	math	U+22BA	intercal		ADDOP		\intercal	lib/LaTeXML/Package/amssymb.sty.ltxml:85	
+\leftarrowtail	symbol	math	U+21A2	leftarrowtail		ARROW		\leftarrowtail	lib/LaTeXML/Package/amssymb.sty.ltxml:327	
+\leftleftarrows	symbol	math	U+21C7	leftleftarrows		ARROW		\leftleftarrows	lib/LaTeXML/Package/amssymb.sty.ltxml:323	
+\leftrightarrows	symbol	math	U+21C6	leftrightarrows		ARROW		\leftrightarrows	lib/LaTeXML/Package/amssymb.sty.ltxml:324	
+\leftrightharpoons	symbol	math	U+21CB	leftrightharpoons		ARROW		\leftrightharpoons	lib/LaTeXML/Package/amssymb.sty.ltxml:329	
+\leftrightsquigarrow	symbol	math	U+21AD	leftrightsquigarrow		ARROW		\leftrightsquigarrow	lib/LaTeXML/Package/amssymb.sty.ltxml:351	
+\leftthreetimes	symbol	math	U+22CB	leftthreetimes	left-semidirect-product	MULOP		\leftthreetimes	lib/LaTeXML/Package/amssymb.sty.ltxml:77	
+\leqq	symbol	math	U+2266	leqq	less-than-or-equals	RELOP		\leqq	lib/LaTeXML/Package/amssymb.sty.ltxml:89	
+\leqslant	symbol	math	U+2A7D	leqslant	less-than-or-equals	RELOP		\leqslant	lib/LaTeXML/Package/amssymb.sty.ltxml:91	
+\lessapprox	symbol	math	U+2A85	lessapprox	less-than-or-approximately-equals	RELOP		\lessapprox	lib/LaTeXML/Package/amssymb.sty.ltxml:97	
+\lessdot	symbol	math	U+22D6	lessdot		RELOP		\lessdot	lib/LaTeXML/Package/amssymb.sty.ltxml:101	
+\lesseqgtr	symbol	math	U+22DA	lesseqgtr	less-than-or-equals-or-greater-than	RELOP		\lesseqgtr	lib/LaTeXML/Package/amssymb.sty.ltxml:108	
+\lesseqqgtr	symbol	math	U+2A8B	lesseqqgtr	less-than-or-equals-or-greater-than	RELOP		\lesseqqgtr	lib/LaTeXML/Package/amssymb.sty.ltxml:110	
+\lessgtr	symbol	math	U+2276	lessgtr	less-than-or-greater-than	RELOP		\lessgtr	lib/LaTeXML/Package/amssymb.sty.ltxml:106	
+\lesssim	symbol	math	U+2272	lesssim	less-than-or-similar-to	RELOP		\lesssim	lib/LaTeXML/Package/amssymb.sty.ltxml:95	
+\lll	symbol	math	U+22D8	lll	very-much-less-than	RELOP		\lll	lib/LaTeXML/Package/amssymb.sty.ltxml:102	
+\llless	symbol	math	U+22D8	llless	very-much-less-than	RELOP		\llless	lib/LaTeXML/Package/amssymb.sty.ltxml:104	
+\lnapprox	symbol	math	U+2A89	lnapprox	less-than-and-not-approximately-equals	RELOP		\lnapprox	lib/LaTeXML/Package/amssymb.sty.ltxml:229	
+\lneq	symbol	math	U+2A87	lneq	less-than-and-not-equals	RELOP		\lneq	lib/LaTeXML/Package/amssymb.sty.ltxml:221	
+\lneqq	symbol	math	U+2268	lneqq	less-than-and-not-equals	RELOP		\lneqq	lib/LaTeXML/Package/amssymb.sty.ltxml:223	
+\lnsim	symbol	math	U+22E6	lnsim	less-than-and-not-equivalent-to	RELOP		\lnsim	lib/LaTeXML/Package/amssymb.sty.ltxml:227	
+\looparrowleft	symbol	math	U+21AB	looparrowleft		ARROW		\looparrowleft	lib/LaTeXML/Package/amssymb.sty.ltxml:328	
+\looparrowright	symbol	math	U+21AC	looparrowright		ARROW		\looparrowright	lib/LaTeXML/Package/amssymb.sty.ltxml:340	
+\ltimes	symbol	math	U+22C9	ltimes	left-normal-factor-semidirect-product	MULOP		\ltimes	lib/LaTeXML/Package/amssymb.sty.ltxml:75	
+\lvertneqq	symbol	math	U+2268	lvertneqq	less-than-and-not-equals	RELOP		\lvertneqq	lib/LaTeXML/Package/amssymb.sty.ltxml:225	
+\measuredangle	symbol	math	U+2221	measuredangle				\measuredangle	lib/LaTeXML/Package/amssymb.sty.ltxml:40	
+\multimap	symbol	math	U+22B8	multimap		ARROW		\multimap	lib/LaTeXML/Package/amssymb.sty.ltxml:350	
+\nLeftarrow	symbol	math	U+21CD	nLeftarrow		ARROW		\nLeftarrow	lib/LaTeXML/Package/amssymb.sty.ltxml:358	
+\nLeftrightarrow	symbol	math	U+21CE	nLeftrightarrow		ARROW		\nLeftrightarrow	lib/LaTeXML/Package/amssymb.sty.ltxml:362	
+\nRightarrow	symbol	math	U+21CF	nRightarrow		ARROW		\nRightarrow	lib/LaTeXML/Package/amssymb.sty.ltxml:361	
+\nVDash	symbol	math	U+22AF	nVDash		RELOP		\nVDash	lib/LaTeXML/Package/amssymb.sty.ltxml:311	
+\nVdash	symbol	math	U+22AE	nVdash	not-forces	RELOP		\nVdash	lib/LaTeXML/Package/amssymb.sty.ltxml:249	
+\ncong	symbol	math	U+2247	ncong	not-approximately-equals	RELOP		\ncong	lib/LaTeXML/Package/amssymb.sty.ltxml:304	
+\nexists	symbol	math	U+2204	nexists	not-exists	FUNCTION		\nexists	lib/LaTeXML/Package/amssymb.sty.ltxml:41	
+\ngeq	symbol	math	U+2271	ngeq	not-greater-than-nor-equals	RELOP		\ngeq	lib/LaTeXML/Package/amssymb.sty.ltxml:278	
+\ngeqq	symbol	math	U+2267 U+0338	ngeqq	not-greater-than-nor-equals	RELOP		\ngeqq	lib/LaTeXML/Package/amssymb.sty.ltxml:282	
+\ngeqslant	symbol	math	U+2A7E U+0338	ngeqslant	not-greater-than-nor-equals	RELOP		\ngeqslant	lib/LaTeXML/Package/amssymb.sty.ltxml:280	
+\ngtr	symbol	math	U+226F	ngtr	not-greater-than	RELOP		\ngtr	lib/LaTeXML/Package/amssymb.sty.ltxml:276	
+\nleftarrow	symbol	math	U+219A	nleftarrow		ARROW		\nleftarrow	lib/LaTeXML/Package/amssymb.sty.ltxml:357	
+\nleftrightarrow	symbol	math	U+21AE	nleftrightarrow		ARROW		\nleftrightarrow	lib/LaTeXML/Package/amssymb.sty.ltxml:359	
+\nleq	symbol	math	U+2270	nleq	not-less-than-nor-greater-than	RELOP		\nleq	lib/LaTeXML/Package/amssymb.sty.ltxml:215	
+\nleqq	symbol	math	U+2266 U+0338	nleqq	not-less-than-nor-equals	RELOP		\nleqq	lib/LaTeXML/Package/amssymb.sty.ltxml:219	
+\nleqslant	symbol	math	U+2A7D U+0338	nleqslant	not-less-than-nor-equals	RELOP		\nleqslant	lib/LaTeXML/Package/amssymb.sty.ltxml:217	
+\nless	symbol	math	U+226E	nless	not-less-than	RELOP		\nless	lib/LaTeXML/Package/amssymb.sty.ltxml:213	
+\nmid	symbol	math	U+2224	nmid	not-divides	RELOP		\nmid	lib/LaTeXML/Package/amssymb.sty.ltxml:245	
+\nparallel	symbol	math	U+2226	nparallel	not-parallel-to	RELOP		\nparallel	lib/LaTeXML/Package/amssymb.sty.ltxml:308	
+\nprec	symbol	math	U+2280	nprec	not-precedes	RELOP		\nprec	lib/LaTeXML/Package/amssymb.sty.ltxml:231	
+\npreceq	symbol	math	U+22E0	npreceq	not-precedes-nor-equals	RELOP		\npreceq	lib/LaTeXML/Package/amssymb.sty.ltxml:233	
+\nrightarrow	symbol	math	U+219B	nrightarrow		ARROW		\nrightarrow	lib/LaTeXML/Package/amssymb.sty.ltxml:360	
+\nshortmid	symbol	math	U+2224	nshortmid	not-divides	RELOP		\nshortmid	lib/LaTeXML/Package/amssymb.sty.ltxml:243	
+\nshortparallel	symbol	math	U+2226	nshortparallel	not-parallel-to	RELOP		\nshortparallel	lib/LaTeXML/Package/amssymb.sty.ltxml:306	
+\nsim	symbol	math	U+2241	nsim	not-similar-to	RELOP		\nsim	lib/LaTeXML/Package/amssymb.sty.ltxml:241	
+\nsubseteq	symbol	math	U+2288	nsubseteq	not-subset-of-nor-equals	RELOP		\nsubseteq	lib/LaTeXML/Package/amssymb.sty.ltxml:255	
+\nsubseteqq	symbol	math	U+2AC5 U+0338	nsubseteqq	not-subset-of-nor-equals	RELOP		\nsubseteqq	lib/LaTeXML/Package/amssymb.sty.ltxml:257	
+\nsucc	symbol	math	U+2281	nsucc	not-succeeds	RELOP		\nsucc	lib/LaTeXML/Package/amssymb.sty.ltxml:294	
+\nsucceq	symbol	math	U+22E1	nsucceq	not-succeeds-nor-equals	RELOP		\nsucceq	lib/LaTeXML/Package/amssymb.sty.ltxml:296	
+\nsupseteq	symbol	math	U+2289	nsupseteq	not-superset-of-nor-equals	RELOP		\nsupseteq	lib/LaTeXML/Package/amssymb.sty.ltxml:316	
+\nsupseteqq	symbol	math	U+2AC6 U+0338	nsupseteqq	not-superset-of-nor-equals	RELOP		\nsupseteqq	lib/LaTeXML/Package/amssymb.sty.ltxml:318	
+\ntriangleleft	symbol	math	U+22EA	ntriangleleft	not-subgroup-of	RELOP		\ntriangleleft	lib/LaTeXML/Package/amssymb.sty.ltxml:251	
+\ntrianglelefteq	symbol	math	U+22EC	ntrianglelefteq	not-subgroup-of-nor-equals	RELOP		\ntrianglelefteq	lib/LaTeXML/Package/amssymb.sty.ltxml:253	
+\ntriangleright	symbol	math	U+22EB	ntriangleright	not-contains	RELOP		\ntriangleright	lib/LaTeXML/Package/amssymb.sty.ltxml:312	
+\ntrianglerighteq	symbol	math	U+22ED	ntrianglerighteq	not-contains-nor-equals	RELOP		\ntrianglerighteq	lib/LaTeXML/Package/amssymb.sty.ltxml:314	
+\nvDash	symbol	math	U+22AD	nvDash		RELOP		\nvDash	lib/LaTeXML/Package/amssymb.sty.ltxml:310	
+\nvdash	symbol	math	U+22AC	nvdash	not-proves	RELOP		\nvdash	lib/LaTeXML/Package/amssymb.sty.ltxml:247	
+\pitchfork	symbol	math	U+22D4	pitchfork	proper-intersection	RELOP		\pitchfork	lib/LaTeXML/Package/amssymb.sty.ltxml:195	
+\precapprox	symbol	math	U+2AB7	precapprox	precedes-or-approximately-equals	RELOP		\precapprox	lib/LaTeXML/Package/amssymb.sty.ltxml:134	
+\preccurlyeq	symbol	math	U+227C	preccurlyeq	precedes-or-equals	RELOP		\preccurlyeq	lib/LaTeXML/Package/amssymb.sty.ltxml:128	
+\precnapprox	symbol	math	U+2AB9	precnapprox	precedes-and-not-approximately-equals	RELOP		\precnapprox	lib/LaTeXML/Package/amssymb.sty.ltxml:239	
+\precneqq	symbol	math	U+2AB5	precneqq	precedes-and-not-equals	RELOP		\precneqq	lib/LaTeXML/Package/amssymb.sty.ltxml:235	
+\precnsim	symbol	math	U+22E8	precnsim	precedes-and-not-equivalent-to	RELOP		\precnsim	lib/LaTeXML/Package/amssymb.sty.ltxml:237	
+\precsim	symbol	math	U+227E	precsim	precedes-or-equivalent-to	RELOP		\precsim	lib/LaTeXML/Package/amssymb.sty.ltxml:132	
+\restriction	symbol	math	U+21BE	restriction		ARROW		\restriction	lib/LaTeXML/Package/amssymb.sty.ltxml:347	
+\rightarrowtail	symbol	math	U+21A3	rightarrowtail		ARROW		\rightarrowtail	lib/LaTeXML/Package/amssymb.sty.ltxml:339	
+\rightleftarrows	symbol	math	U+21C4	rightleftarrows		ARROW		\rightleftarrows	lib/LaTeXML/Package/amssymb.sty.ltxml:336	
+\rightrightarrows	symbol	math	U+21C9	rightrightarrows		ARROW		\rightrightarrows	lib/LaTeXML/Package/amssymb.sty.ltxml:335	
+\rightthreetimes	symbol	math	U+22CC	rightthreetimes	right-semidirect-product	MULOP		\rightthreetimes	lib/LaTeXML/Package/amssymb.sty.ltxml:78	
+\risingdotseq	symbol	math	U+2253	risingdotseq	image-of-or-approximately-equals	RELOP		\risingdotseq	lib/LaTeXML/Package/amssymb.sty.ltxml:116	
+\rtimes	symbol	math	U+22CA	rtimes	right-normal-factor-semidirect-product	MULOP		\rtimes	lib/LaTeXML/Package/amssymb.sty.ltxml:76	
+\shortmid	symbol	math	U+2223	shortmid	divides	RELOP		\shortmid	lib/LaTeXML/Package/amssymb.sty.ltxml:189	
+\shortparallel	symbol	math	U+2225	shortparallel	parallel-to	RELOP		\shortparallel	lib/LaTeXML/Package/amssymb.sty.ltxml:191	
+\smallfrown	symbol	math	U+2322	smallfrown		RELOP		\smallfrown	lib/LaTeXML/Package/amssymb.sty.ltxml:140	
+\smallsetminus	symbol	math	U+2216	smallsetminus	set-minus	ADDOP		\smallsetminus	lib/LaTeXML/Package/amssymb.sty.ltxml:62	
+\smallsmile	symbol	math	U+2323	smallsmile		RELOP		\smallsmile	lib/LaTeXML/Package/amssymb.sty.ltxml:139	
+\sphericalangle	symbol	math	U+2222	sphericalangle				\sphericalangle	lib/LaTeXML/Package/amssymb.sty.ltxml:53	
+\subseteqq	symbol	math	U+2AC5	subseteqq	subset-of-or-equals	RELOP		\subseteqq	lib/LaTeXML/Package/amssymb.sty.ltxml:123	
+\subsetneq	symbol	math	U+228A	subsetneq	subset-of-and-not-equals	RELOP		\subsetneq	lib/LaTeXML/Package/amssymb.sty.ltxml:259	
+\subsetneqq	symbol	math	U+2ACB	subsetneqq	subset-of-and-not-equals	RELOP		\subsetneqq	lib/LaTeXML/Package/amssymb.sty.ltxml:263	
+\succapprox	symbol	math	U+2AB8	succapprox	succeeds-or-approximately-equals	RELOP		\succapprox	lib/LaTeXML/Package/amssymb.sty.ltxml:184	
+\succcurlyeq	symbol	math	U+227D	succcurlyeq	succeeds-or-equals	RELOP		\succcurlyeq	lib/LaTeXML/Package/amssymb.sty.ltxml:178	
+\succnapprox	symbol	math	U+2ABA	succnapprox	succeeds-and-not-approximately-equals	RELOP		\succnapprox	lib/LaTeXML/Package/amssymb.sty.ltxml:302	
+\succneqq	symbol	math	U+2AB6	succneqq	succeeds-and-not-equals	RELOP		\succneqq	lib/LaTeXML/Package/amssymb.sty.ltxml:298	
+\succnsim	symbol	math	U+22E9	succnsim	succeeds-and-not-equivalent-to	RELOP		\succnsim	lib/LaTeXML/Package/amssymb.sty.ltxml:300	
+\succsim	symbol	math	U+227F	succsim	succeeds-or-equivalent-to	RELOP		\succsim	lib/LaTeXML/Package/amssymb.sty.ltxml:182	
+\supseteqq	symbol	math	U+2AC6	supseteqq	superset-of-or-equals	RELOP		\supseteqq	lib/LaTeXML/Package/amssymb.sty.ltxml:173	
+\supsetneq	symbol	math	U+228B	supsetneq	superset-of-and-not-equals	RELOP		\supsetneq	lib/LaTeXML/Package/amssymb.sty.ltxml:267	
+\supsetneqq	symbol	math	U+2ACC	supsetneqq	superset-of-and-not-equals	RELOP		\supsetneqq	lib/LaTeXML/Package/amssymb.sty.ltxml:271	
+\therefore	symbol	math	U+2234	therefore	therefore	METARELOP		\therefore	lib/LaTeXML/Package/amssymb.sty.ltxml:200	
+\thickapprox	symbol	math	U+2248	thickapprox	approximately-equals	RELOP		\thickapprox	lib/LaTeXML/Package/amssymb.sty.ltxml:171	
+\thicksim	symbol	math	U+223C	thicksim		RELOP		\thicksim	lib/LaTeXML/Package/amssymb.sty.ltxml:170	
+\triangledown	symbol	math	U+25BD	triangledown				\triangledown	lib/LaTeXML/Package/amssymb.sty.ltxml:36	
+\triangleq	symbol	math	U+225C	triangleq		RELOP		\triangleq	lib/LaTeXML/Package/amssymb.sty.ltxml:169	
+\twoheadleftarrow	symbol	math	U+219E	twoheadleftarrow		ARROW		\twoheadleftarrow	lib/LaTeXML/Package/amssymb.sty.ltxml:326	
+\twoheadrightarrow	symbol	math	U+21A0	twoheadrightarrow		ARROW		\twoheadrightarrow	lib/LaTeXML/Package/amssymb.sty.ltxml:338	
+\upharpoonleft	symbol	math	U+21BF	upharpoonleft		ARROW		\upharpoonleft	lib/LaTeXML/Package/amssymb.sty.ltxml:334	
+\upharpoonright	symbol	math	U+21BE	upharpoonright		ARROW		\upharpoonright	lib/LaTeXML/Package/amssymb.sty.ltxml:346	
+\upuparrows	symbol	math	U+21C8	upuparrows		ARROW		\upuparrows	lib/LaTeXML/Package/amssymb.sty.ltxml:333	
+\vDash	symbol	math	U+22A8	vDash		RELOP		\vDash	lib/LaTeXML/Package/amssymb.sty.ltxml:137	
+\varkappa	symbol	math	U+03F0	varkappa				\varkappa	lib/LaTeXML/Package/amssymb.sty.ltxml:23	
+\varnothing	symbol	math	U+2205	varnothing	empty-set	ID		\varnothing	lib/LaTeXML/Package/amssymb.sty.ltxml:47	
+\varpropto	symbol	math	U+221D	varpropto	proportional-to	RELOP		\varpropto	lib/LaTeXML/Package/amssymb.sty.ltxml:197	
+\varsubsetneq	symbol	math	U+228A	varsubsetneq	subset-of-and-not-equals	RELOP		\varsubsetneq	lib/LaTeXML/Package/amssymb.sty.ltxml:261	
+\varsubsetneqq	symbol	math	U+2ACB	varsubsetneqq	subset-of-and-not-equals	RELOP		\varsubsetneqq	lib/LaTeXML/Package/amssymb.sty.ltxml:265	
+\varsupsetneq	symbol	math	U+228B	varsupsetneq	superset-of-and-not-equals	RELOP		\varsupsetneq	lib/LaTeXML/Package/amssymb.sty.ltxml:269	
+\varsupsetneqq	symbol	math	U+2ACC	varsupsetneqq	superset-of-and-not-equals	RELOP		\varsupsetneqq	lib/LaTeXML/Package/amssymb.sty.ltxml:273	
+\vartriangle	symbol	math	U+25B3	vartriangle				\vartriangle	lib/LaTeXML/Package/amssymb.sty.ltxml:35	
+\veebar	symbol	math	U+22BB	veebar	exclusive-or	ADDOP		\veebar	lib/LaTeXML/Package/amssymb.sty.ltxml:68	

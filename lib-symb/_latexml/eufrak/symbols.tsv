@@ -1,0 +1,3 @@
+command	kind	mode	codepoint	name	meaning	role	font	katex	source	note
+\EuFrak{}	alphabet	math		EuFrak			fraktur		lib/LaTeXML/Package/eufrak.sty.ltxml:19	DefConstructor with font
+\mathfrak{}	alphabet	math		mathfrak			fraktur		lib/LaTeXML/Package/eufrak.sty.ltxml:21	DefConstructor with font

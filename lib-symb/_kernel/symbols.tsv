@@ -1,0 +1,377 @@
+command	kind	mode	codepoint	name	meaning	role	font	katex	source	note
+!	symbol	math	U+0021	!	factorial	POSTFIX		!	lib/LaTeXML/Engine/Base_XMath.pool.ltxml:409	
+(	symbol	math	U+0028	(		OPEN		\lparen	lib/LaTeXML/Engine/Base_XMath.pool.ltxml:413	
+)	symbol	math	U+0029	)		CLOSE		\rparen	lib/LaTeXML/Engine/Base_XMath.pool.ltxml:414	
+*	symbol	math	U+2217	*	times	MULOP		*	lib/LaTeXML/Engine/Base_XMath.pool.ltxml:407	
++	symbol	math	U+002B	+	plus	ADDOP		+	lib/LaTeXML/Engine/Base_XMath.pool.ltxml:403	
+,	symbol	math	U+002C	,		PUNCT		,	lib/LaTeXML/Engine/Base_XMath.pool.ltxml:410	
+-	symbol	math	U+002D	-	minus	ADDOP		-	lib/LaTeXML/Engine/Base_XMath.pool.ltxml:404	
+.	symbol	math	U+002E	.		PERIOD		\ldotp	lib/LaTeXML/Engine/Base_XMath.pool.ltxml:411	
+/	symbol	math	U+002F	/	divide	MULOP			lib/LaTeXML/Engine/Base_XMath.pool.ltxml:408	
+:	symbol	math	U+003A	colon		METARELOP		:	lib/LaTeXML/Engine/Base_XMath.pool.ltxml:418	
+;	symbol	math	U+003B	;		PUNCT		;	lib/LaTeXML/Engine/Base_XMath.pool.ltxml:412	
+<	symbol	math	U+003C	<	less-than	RELOP			lib/LaTeXML/Engine/Base_XMath.pool.ltxml:419	
+=	symbol	math	U+003D	=	equals	RELOP		=	lib/LaTeXML/Engine/Base_XMath.pool.ltxml:402	
+>	symbol	math	U+003E	>	greater-than	RELOP			lib/LaTeXML/Engine/Base_XMath.pool.ltxml:420	
+[	symbol	math	U+005B	[		OPEN			lib/LaTeXML/Engine/Base_XMath.pool.ltxml:415	
+\*	symbol	math	U+2062	*	times	MULOP			lib/LaTeXML/Engine/math_common.pool.ltxml:304	
+\*	symbol	math	U+2062	*	times	MULOP			lib/LaTeXML/Engine/plain_base.pool.ltxml:80	
+\AA	text	text	U+00C5	AA				\AA	lib/LaTeXML/Engine/latex_constructs.pool.ltxml:2761	
+\AA	text	text	U+00C5	AA				\AA	lib/LaTeXML/Engine/plain_base.pool.ltxml:527	
+\AE	text	text	U+00C6	AE				\AE	lib/LaTeXML/Engine/latex_constructs.pool.ltxml:2759	
+\AE	text	text	U+00C6	AE				\AE	lib/LaTeXML/Engine/plain_base.pool.ltxml:525	
+\Arrowvert	symbol	math	U+2225	Arrowvert		VERTBAR			lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5428	
+\Box	symbol	math	U+25A1	Box				\Box	lib/LaTeXML/Engine/math_common.pool.ltxml:101	
+\DH	text	text	U+00D0	DH					lib/LaTeXML/Engine/latex_constructs.pool.ltxml:2769	
+\DJ	text	text	U+0110	DJ					lib/LaTeXML/Engine/latex_constructs.pool.ltxml:2771	
+\Delta	symbol	math	U+0394	Delta				\Delta	lib/LaTeXML/Engine/math_common.pool.ltxml:51	
+\Diamond	symbol	math	U+25C7	Diamond				\Diamond	lib/LaTeXML/Engine/math_common.pool.ltxml:102	
+\Downarrow	symbol	math	U+21D3	Downarrow		ARROW		\Downarrow	lib/LaTeXML/Engine/math_common.pool.ltxml:439	
+\Gamma	symbol	math	U+0393	Gamma				\Gamma	lib/LaTeXML/Engine/math_common.pool.ltxml:50	
+\Im	symbol	math	U+2111	Im	imaginary-part	OPFUNCTION		\Im	lib/LaTeXML/Engine/math_common.pool.ltxml:75	
+\Join	symbol	math	U+2A1D	Join	join	RELOP		\Join	lib/LaTeXML/Engine/math_common.pool.ltxml:293	
+\L	text	text	U+0141	L					lib/LaTeXML/Engine/latex_constructs.pool.ltxml:2765	
+\L	text	text	U+0141	L					lib/LaTeXML/Engine/plain_constructs.pool.ltxml:20	
+\Lambda	symbol	math	U+039B	Lambda				\Lambda	lib/LaTeXML/Engine/math_common.pool.ltxml:53	
+\Leftarrow	symbol	math	U+21D0	Leftarrow		ARROW		\Leftarrow	lib/LaTeXML/Engine/math_common.pool.ltxml:413	
+\Leftrightarrow	symbol	math	U+21D4	Leftrightarrow		METARELOP		\Leftrightarrow	lib/LaTeXML/Engine/math_common.pool.ltxml:417	
+\Longleftarrow	symbol	math	U+27F8	Longleftarrow		ARROW		\Longleftarrow	lib/LaTeXML/Engine/math_common.pool.ltxml:425	
+\Longleftrightarrow	symbol	math	U+27FA	Longleftrightarrow		METARELOP		\Longleftrightarrow	lib/LaTeXML/Engine/math_common.pool.ltxml:429	
+\Longrightarrow	symbol	math	U+27F9	Longrightarrow		ARROW		\Longrightarrow	lib/LaTeXML/Engine/math_common.pool.ltxml:427	
+\NG	text	text	U+014A	NG					lib/LaTeXML/Engine/latex_constructs.pool.ltxml:2773	
+\O	text	text	U+00D8	O				\O	lib/LaTeXML/Engine/latex_constructs.pool.ltxml:2763	
+\O	text	text	U+00D8	O				\O	lib/LaTeXML/Engine/plain_base.pool.ltxml:529	
+\OE	text	text	U+0152	OE				\OE	lib/LaTeXML/Engine/latex_constructs.pool.ltxml:2757	
+\OE	text	text	U+0152	OE				\OE	lib/LaTeXML/Engine/plain_base.pool.ltxml:523	
+\Omega	symbol	math	U+03A9	Omega				\Omega	lib/LaTeXML/Engine/math_common.pool.ltxml:60	
+\Phi	symbol	math	U+03A6	Phi				\Phi	lib/LaTeXML/Engine/math_common.pool.ltxml:58	
+\Pi	symbol	math	U+03A0	Pi				\Pi	lib/LaTeXML/Engine/math_common.pool.ltxml:55	
+\Pr	symbol	math	U+0050 U+0072	Pr		OPFUNCTION			lib/LaTeXML/Engine/math_common.pool.ltxml:764	
+\Psi	symbol	math	U+03A8	Psi				\Psi	lib/LaTeXML/Engine/math_common.pool.ltxml:59	
+\Re	symbol	math	U+211C	Re	real-part	OPFUNCTION		\Re	lib/LaTeXML/Engine/math_common.pool.ltxml:74	
+\Relbar	symbol	math	U+003D	Relbar		RELOP		=	lib/LaTeXML/Engine/math_common.pool.ltxml:364	
+\Rightarrow	symbol	math	U+21D2	Rightarrow		ARROW		\Rightarrow	lib/LaTeXML/Engine/math_common.pool.ltxml:415	
+\SS	text	text	U+0053 U+0053	SS					lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5411	
+\Sigma	symbol	math	U+03A3	Sigma				\Sigma	lib/LaTeXML/Engine/math_common.pool.ltxml:56	
+\TH	text	text	U+00DE	TH					lib/LaTeXML/Engine/latex_constructs.pool.ltxml:2775	
+\Theta	symbol	math	U+0398	Theta				\Theta	lib/LaTeXML/Engine/math_common.pool.ltxml:52	
+\Uparrow	symbol	math	U+21D1	Uparrow		ARROW		\Uparrow	lib/LaTeXML/Engine/math_common.pool.ltxml:437	
+\Updownarrow	symbol	math	U+21D5	Updownarrow		ARROW		\Updownarrow	lib/LaTeXML/Engine/math_common.pool.ltxml:441	
+\Upsilon	symbol	math	U+03A5	Upsilon				\Upsilon	lib/LaTeXML/Engine/math_common.pool.ltxml:57	
+\Xi	symbol	math	U+039E	Xi				\Xi	lib/LaTeXML/Engine/math_common.pool.ltxml:54	
+\aa	text	text	U+00E5	aa				\aa	lib/LaTeXML/Engine/latex_constructs.pool.ltxml:2762	
+\aa	text	text	U+00E5	aa				\aa	lib/LaTeXML/Engine/plain_base.pool.ltxml:528	
+\ae	text	text	U+00E6	ae				\ae	lib/LaTeXML/Engine/latex_constructs.pool.ltxml:2760	
+\ae	text	text	U+00E6	ae				\ae	lib/LaTeXML/Engine/plain_base.pool.ltxml:526	
+\aleph	symbol	math	U+2135	aleph				\aleph	lib/LaTeXML/Engine/math_common.pool.ltxml:68	
+\alpha	symbol	math	U+03B1	alpha				\alpha	lib/LaTeXML/Engine/math_common.pool.ltxml:21	
+\amalg	symbol	math	U+2210	amalg	coproduct	MULOP		\amalg	lib/LaTeXML/Engine/math_common.pool.ltxml:248	
+\angle	symbol	math	U+2220	angle				\angle	lib/LaTeXML/Engine/math_common.pool.ltxml:86	
+\approx	symbol	math	U+2248	approx	approximately-equals	RELOP		\approx	lib/LaTeXML/Engine/math_common.pool.ltxml:282	
+\arccos	symbol	math	U+0061 U+0072 U+0063 U+0063 U+006F U+0073	arccos	inverse-cosine	OPFUNCTION			lib/LaTeXML/Engine/math_common.pool.ltxml:725	
+\arcsin	symbol	math	U+0061 U+0072 U+0063 U+0073 U+0069 U+006E	arcsin	inverse-sine	OPFUNCTION			lib/LaTeXML/Engine/math_common.pool.ltxml:726	
+\arctan	symbol	math	U+0061 U+0072 U+0063 U+0074 U+0061 U+006E	arctan	inverse-tangent	OPFUNCTION			lib/LaTeXML/Engine/math_common.pool.ltxml:727	
+\arg	symbol	math	U+0061 U+0072 U+0067	arg	argument	OPFUNCTION			lib/LaTeXML/Engine/math_common.pool.ltxml:728	
+\arrowvert	symbol	math	U+007C	arrowvert		VERTBAR		\textbar	lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5427	
+\ast	symbol	math	U+2217	ast		MULOP		\ast	lib/LaTeXML/Engine/math_common.pool.ltxml:209	
+\asymp	symbol	math	U+224D	asymp	asymptotically-equals	RELOP		\asymp	lib/LaTeXML/Engine/math_common.pool.ltxml:281	
+\backslash	symbol	math	U+005C	backslash		MULOP		\backslash	lib/LaTeXML/Engine/math_common.pool.ltxml:97	
+\beta	symbol	math	U+03B2	beta				\beta	lib/LaTeXML/Engine/math_common.pool.ltxml:22	
+\bigcap	symbol	math	U+22C2	bigcap	intersection	SUMOP		\bigcap	lib/LaTeXML/Engine/math_common.pool.ltxml:157	
+\bigcirc	symbol	math	U+25CB	bigcirc		MULOP		\bigcirc	lib/LaTeXML/Engine/math_common.pool.ltxml:245	
+\bigcup	symbol	math	U+22C3	bigcup	union	SUMOP		\bigcup	lib/LaTeXML/Engine/math_common.pool.ltxml:162	
+\bigodot	symbol	math	U+2A00	bigodot		SUMOP		\bigodot	lib/LaTeXML/Engine/math_common.pool.ltxml:182	
+\bigoplus	symbol	math	U+2A01	bigoplus	direct-sum	SUMOP		\bigoplus	lib/LaTeXML/Engine/math_common.pool.ltxml:191	
+\bigotimes	symbol	math	U+2A02	bigotimes	tensor-product	SUMOP		\bigotimes	lib/LaTeXML/Engine/math_common.pool.ltxml:186	
+\bigsqcup	symbol	math	U+2A06	bigsqcup	square-union	SUMOP		\bigsqcup	lib/LaTeXML/Engine/math_common.pool.ltxml:167	
+\bigtriangledown	symbol	math	U+25BD	bigtriangledown		ADDOP		\bigtriangledown	lib/LaTeXML/Engine/math_common.pool.ltxml:232	
+\bigtriangleup	symbol	math	U+25B3	bigtriangleup		ADDOP		\bigtriangleup	lib/LaTeXML/Engine/math_common.pool.ltxml:231	
+\biguplus	symbol	math	U+2A04	biguplus	symmetric-difference	SUMOP		\biguplus	lib/LaTeXML/Engine/math_common.pool.ltxml:196	
+\bigvee	symbol	math	U+22C1	bigvee	or	SUMOP		\bigvee	lib/LaTeXML/Engine/math_common.pool.ltxml:172	
+\bigwedge	symbol	math	U+22C0	bigwedge	and	SUMOP		\bigwedge	lib/LaTeXML/Engine/math_common.pool.ltxml:177	
+\bmod	symbol	math	U+006D U+006F U+0064	bmod	modulo	MODIFIEROP		\bmod	lib/LaTeXML/Engine/math_common.pool.ltxml:778	
+\bot	symbol	math	U+22A5	bot	bottom	ADDOP		\bot	lib/LaTeXML/Engine/math_common.pool.ltxml:83	
+\bowtie	symbol	math	U+22C8	bowtie		RELOP		\bowtie	lib/LaTeXML/Engine/math_common.pool.ltxml:292	
+\braceld	text	text	U+239D	braceld					lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5431	
+\bracelu	text	text	U+239B	bracelu					lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5432	
+\bracerd	text	text	U+23A0	bracerd					lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5433	
+\braceru	text	text	U+239E	braceru					lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5434	
+\bracevert	symbol	math	U+007C	bracevert		VERTBAR	bold	\textbar	lib/LaTeXML/Engine/math_common.pool.ltxml:579	
+\bullet	symbol	math	U+2219	bullet		MULOP		\bullet	lib/LaTeXML/Engine/math_common.pool.ltxml:212	
+\cap	symbol	math	U+2229	cap	intersection	ADDOP		\cap	lib/LaTeXML/Engine/math_common.pool.ltxml:217	
+\cdot	symbol	math	U+22C5	cdot		MULOP		\cdot	lib/LaTeXML/Engine/math_common.pool.ltxml:213	
+\cdotp	symbol	math	U+22C5	cdotp		MULOP		\cdotp	lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5436	
+\cdots	symbol	math	U+22EF	cdots		ID		\cdots	lib/LaTeXML/Engine/math_common.pool.ltxml:479	
+\chi	symbol	math	U+03C7	chi				\chi	lib/LaTeXML/Engine/math_common.pool.ltxml:47	
+\circ	symbol	math	U+2218	circ	compose	MULOP		\circ	lib/LaTeXML/Engine/math_common.pool.ltxml:211	
+\clubsuit	symbol	math	U+2663	clubsuit				\clubsuit	lib/LaTeXML/Engine/math_common.pool.ltxml:104	
+\colon	symbol	math	U+003A	colon		METARELOP		\colon	lib/LaTeXML/Engine/math_common.pool.ltxml:482	
+\cong	symbol	math	U+2245	cong	approximately-equals	RELOP		\cong	lib/LaTeXML/Engine/math_common.pool.ltxml:283	
+\coprod	symbol	math	U+2210	coprod	coproduct	SUMOP		\coprod	lib/LaTeXML/Engine/math_common.pool.ltxml:144	
+\copyright	text	text	U+00A9	copyright				\copyright	lib/LaTeXML/Engine/plain_constructs.pool.ltxml:186	
+\cos	symbol	math	U+0063 U+006F U+0073	cos	cosine	TRIGFUNCTION			lib/LaTeXML/Engine/math_common.pool.ltxml:730	
+\cosh	symbol	math	U+0063 U+006F U+0073 U+0068	cosh	hyperbolic-cosine	TRIGFUNCTION			lib/LaTeXML/Engine/math_common.pool.ltxml:731	
+\cot	symbol	math	U+0063 U+006F U+0074	cot	cotangent	TRIGFUNCTION			lib/LaTeXML/Engine/math_common.pool.ltxml:732	
+\coth	symbol	math	U+0063 U+006F U+0074 U+0068	coth	hyperbolic-cotangent	TRIGFUNCTION			lib/LaTeXML/Engine/math_common.pool.ltxml:733	
+\csc	symbol	math	U+0063 U+0073 U+0063	csc	cosecant	TRIGFUNCTION			lib/LaTeXML/Engine/math_common.pool.ltxml:735	
+\cup	symbol	math	U+222A	cup	union	ADDOP		\cup	lib/LaTeXML/Engine/math_common.pool.ltxml:218	
+\dag	text	text	U+2020	dag				\dag	lib/LaTeXML/Engine/plain_constructs.pool.ltxml:184	
+\dagger	symbol	math	U+2020	dagger		MULOP		\dagger	lib/LaTeXML/Engine/math_common.pool.ltxml:246	
+\dashv	symbol	math	U+22A3	dashv	does-not-prove	METARELOP		\dashv	lib/LaTeXML/Engine/math_common.pool.ltxml:273	
+\ddag	text	text	U+2021	ddag				\ddag	lib/LaTeXML/Engine/plain_constructs.pool.ltxml:185	
+\ddagger	symbol	math	U+2021	ddagger		MULOP		\ddagger	lib/LaTeXML/Engine/math_common.pool.ltxml:247	
+\ddots	symbol	math	U+22F1	ddots		ID		\ddots	lib/LaTeXML/Engine/math_common.pool.ltxml:481	
+\deg	symbol	math	U+0064 U+0065 U+0067	deg	degree	OPFUNCTION			lib/LaTeXML/Engine/math_common.pool.ltxml:736	
+\delta	symbol	math	U+03B4	delta				\delta	lib/LaTeXML/Engine/math_common.pool.ltxml:24	
+\det	symbol	math	U+0064 U+0065 U+0074	det	determinant	LIMITOP			lib/LaTeXML/Engine/math_common.pool.ltxml:737	
+\dh	text	text	U+00F0	dh					lib/LaTeXML/Engine/latex_constructs.pool.ltxml:2768	
+\diamond	symbol	math	U+22C4	diamond		ADDOP		\diamond	lib/LaTeXML/Engine/math_common.pool.ltxml:230	
+\diamondsuit	symbol	math	U+2662	diamondsuit				\diamondsuit	lib/LaTeXML/Engine/math_common.pool.ltxml:105	
+\dim	symbol	math	U+0064 U+0069 U+006D	dim	dimension	LIMITOP			lib/LaTeXML/Engine/math_common.pool.ltxml:739	
+\div	symbol	math	U+00F7	div	divide	MULOP		\div	lib/LaTeXML/Engine/math_common.pool.ltxml:208	
+\dj	text	text	U+0111	dj					lib/LaTeXML/Engine/latex_constructs.pool.ltxml:2770	
+\doteq	symbol	math	U+2250	doteq	approaches-limit	RELOP		\doteq	lib/LaTeXML/Engine/math_common.pool.ltxml:285	
+\downarrow	symbol	math	U+2193	downarrow		ARROW		\downarrow	lib/LaTeXML/Engine/math_common.pool.ltxml:438	
+\downbracefill	symbol	math	U+23DE	downbracefill		ARROW			lib/LaTeXML/Engine/plain_constructs.pool.ltxml:91	
+\ell	symbol	math	U+2113	ell				\ell	lib/LaTeXML/Engine/math_common.pool.ltxml:72	
+\emptyset	symbol	math	U+2205	emptyset	empty-set	ID		\emptyset	lib/LaTeXML/Engine/math_common.pool.ltxml:79	
+\epsilon	symbol	math	U+03F5	epsilon				\epsilon	lib/LaTeXML/Engine/math_common.pool.ltxml:25	
+\equiv	symbol	math	U+2261	equiv	equivalent-to	RELOP		\equiv	lib/LaTeXML/Engine/math_common.pool.ltxml:278	
+\eta	symbol	math	U+03B7	eta				\eta	lib/LaTeXML/Engine/math_common.pool.ltxml:28	
+\exists	symbol	math	U+2203	exists	exists	BIGOP		\exists	lib/LaTeXML/Engine/math_common.pool.ltxml:91	
+\exp	symbol	math	U+0065 U+0078 U+0070	exp	exponential	OPFUNCTION			lib/LaTeXML/Engine/math_common.pool.ltxml:741	
+\flat	symbol	math	U+266D	flat				\flat	lib/LaTeXML/Engine/math_common.pool.ltxml:94	
+\forall	symbol	math	U+2200	forall	for-all	BIGOP		\forall	lib/LaTeXML/Engine/math_common.pool.ltxml:90	
+\frown	symbol	math	U+2322	frown		RELOP		\frown	lib/LaTeXML/Engine/math_common.pool.ltxml:295	
+\gamma	symbol	math	U+03B3	gamma				\gamma	lib/LaTeXML/Engine/math_common.pool.ltxml:23	
+\gcd	symbol	math	U+0067 U+0063 U+0064	gcd	gcd	OPFUNCTION			lib/LaTeXML/Engine/math_common.pool.ltxml:742	
+\geq	symbol	math	U+2265	geq	greater-than-or-equals	RELOP		\geq	lib/LaTeXML/Engine/math_common.pool.ltxml:264	
+\gg	symbol	math	U+226B	gg	much-greater-than	RELOP		\gg	lib/LaTeXML/Engine/math_common.pool.ltxml:267	
+\hbar	symbol	math	U+210F	hbar	Planck-constant-over-2-pi	ID		\hbar	lib/LaTeXML/Engine/math_common.pool.ltxml:69	
+\heartsuit	symbol	math	U+2661	heartsuit				\heartsuit	lib/LaTeXML/Engine/math_common.pool.ltxml:106	
+\hom	symbol	math	U+0068 U+006F U+006D	hom		OPFUNCTION			lib/LaTeXML/Engine/math_common.pool.ltxml:744	
+\hookleftarrow	symbol	math	U+21A9	hookleftarrow		ARROW		\hookleftarrow	lib/LaTeXML/Engine/math_common.pool.ltxml:420	
+\hookrightarrow	symbol	math	U+21AA	hookrightarrow		ARROW		\hookrightarrow	lib/LaTeXML/Engine/math_common.pool.ltxml:431	
+\i	text	text	U+0131	i				\i	lib/LaTeXML/Engine/plain_base.pool.ltxml:108	
+\iff	symbol	math	U+21D4	iff	iff	METARELOP		\iff	lib/LaTeXML/Engine/math_common.pool.ltxml:418	
+\imath	symbol	math	U+0131	imath				\imath	lib/LaTeXML/Engine/math_common.pool.ltxml:70	
+\in	symbol	math	U+2208	in	element-of	RELOP		\in	lib/LaTeXML/Engine/math_common.pool.ltxml:261	
+\inf	symbol	math	U+0069 U+006E U+0066	inf	infimum	LIMITOP			lib/LaTeXML/Engine/math_common.pool.ltxml:745	
+\infty	symbol	math	U+221E	infty	infinity	ID		\infty	lib/LaTeXML/Engine/math_common.pool.ltxml:100	
+\int	symbol	math	U+222B	int	integral	INTOP		\int	lib/LaTeXML/Engine/math_common.pool.ltxml:149	
+\intop	symbol	math	U+222B	intop	integral	INTOP		\intop	lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5438	
+\iota	symbol	math	U+03B9	iota				\iota	lib/LaTeXML/Engine/math_common.pool.ltxml:31	
+\j	text	text	U+0237	j				\j	lib/LaTeXML/Engine/plain_base.pool.ltxml:109	
+\jmath	symbol	math	U+0237	jmath				\jmath	lib/LaTeXML/Engine/math_common.pool.ltxml:71	
+\kappa	symbol	math	U+03BA	kappa				\kappa	lib/LaTeXML/Engine/math_common.pool.ltxml:32	
+\ker	symbol	math	U+006B U+0065 U+0072	ker	kernel	OPFUNCTION			lib/LaTeXML/Engine/math_common.pool.ltxml:748	
+\l	text	text	U+0142	l					lib/LaTeXML/Engine/latex_constructs.pool.ltxml:2766	
+\l	text	text	U+0142	l					lib/LaTeXML/Engine/plain_constructs.pool.ltxml:21	
+\lambda	symbol	math	U+03BB	lambda				\lambda	lib/LaTeXML/Engine/math_common.pool.ltxml:33	
+\land	symbol	math	U+2227	land	and	ADDOP		\land	lib/LaTeXML/Engine/math_common.pool.ltxml:225	
+\langle	symbol	math	U+27E8	langle		OPEN		\langle	lib/LaTeXML/Engine/math_common.pool.ltxml:573	
+\lceil	symbol	math	U+2308	lceil		OPEN		\lceil	lib/LaTeXML/Engine/math_common.pool.ltxml:568	
+\ldotp	symbol	math	U+002E	ldotp		MULOP		\ldotp	lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5437	
+\leadsto	symbol	math	U+219D	leadsto	leads-to	ARROW		\leadsto	lib/LaTeXML/Engine/math_common.pool.ltxml:434	
+\leftarrow	symbol	math	U+2190	leftarrow		ARROW		\leftarrow	lib/LaTeXML/Engine/math_common.pool.ltxml:412	
+\leftarrowfill	symbol	math	U+2190	leftarrowfill		ARROW			lib/LaTeXML/Engine/plain_constructs.pool.ltxml:88	
+\leftharpoondown	symbol	math	U+21BD	leftharpoondown		ARROW		\leftharpoondown	lib/LaTeXML/Engine/math_common.pool.ltxml:422	
+\leftharpoonup	symbol	math	U+21BC	leftharpoonup		ARROW		\leftharpoonup	lib/LaTeXML/Engine/math_common.pool.ltxml:421	
+\leftrightarrow	symbol	math	U+2194	leftrightarrow		METARELOP		\leftrightarrow	lib/LaTeXML/Engine/math_common.pool.ltxml:416	
+\leq	symbol	math	U+2264	leq	less-than-or-equals	RELOP		\leq	lib/LaTeXML/Engine/math_common.pool.ltxml:253	
+\lfloor	symbol	math	U+230A	lfloor		OPEN		\lfloor	lib/LaTeXML/Engine/math_common.pool.ltxml:570	
+\lg	symbol	math	U+006C U+0067	lg		OPFUNCTION			lib/LaTeXML/Engine/math_common.pool.ltxml:749	
+\lgroup	symbol	math	U+27EE	lgroup		OPEN		\lgroup	lib/LaTeXML/Engine/math_common.pool.ltxml:577	
+\lhd	symbol	math	U+22B2	lhd	subgroup-of	ADDOP		\lhd	lib/LaTeXML/Engine/math_common.pool.ltxml:235	
+\lhook	symbol	math	U+2E26	lhook					lib/LaTeXML/Engine/math_common.pool.ltxml:451	
+\lim	symbol	math	U+006C U+0069 U+006D	lim	limit	LIMITOP			lib/LaTeXML/Engine/math_common.pool.ltxml:750	
+\liminf	symbol	math	U+006C U+0069 U+006D U+0020 U+0069 U+006E U+0066	liminf	limit-infimum	LIMITOP		\liminf	lib/LaTeXML/Engine/math_common.pool.ltxml:752	
+\limsup	symbol	math	U+006C U+0069 U+006D U+0020 U+0073 U+0075 U+0070	limsup	limit-supremum	LIMITOP		\limsup	lib/LaTeXML/Engine/math_common.pool.ltxml:755	
+\ll	symbol	math	U+226A	ll	much-less-than	RELOP		\ll	lib/LaTeXML/Engine/math_common.pool.ltxml:256	
+\lmoustache	text	text	U+23B0	lmoustache				\lmoustache	lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5447	
+\ln	symbol	math	U+006C U+006E	ln	natural-logarithm	OPFUNCTION			lib/LaTeXML/Engine/math_common.pool.ltxml:757	
+\lnot	symbol	math	U+00AC	lnot	not	BIGOP		\lnot	lib/LaTeXML/Engine/math_common.pool.ltxml:93	
+\log	symbol	math	U+006C U+006F U+0067	log	logarithm	OPFUNCTION			lib/LaTeXML/Engine/math_common.pool.ltxml:758	
+\longleftarrow	symbol	math	U+27F5	longleftarrow		ARROW		\longleftarrow	lib/LaTeXML/Engine/math_common.pool.ltxml:424	
+\longleftrightarrow	symbol	math	U+27F7	longleftrightarrow		METARELOP		\longleftrightarrow	lib/LaTeXML/Engine/math_common.pool.ltxml:428	
+\longmapsto	symbol	math	U+27FC	longmapsto		ARROW		\longmapsto	lib/LaTeXML/Engine/math_common.pool.ltxml:430	
+\longrightarrow	symbol	math	U+27F6	longrightarrow		ARROW		\longrightarrow	lib/LaTeXML/Engine/math_common.pool.ltxml:426	
+\lor	symbol	math	U+2228	lor	or	ADDOP		\lor	lib/LaTeXML/Engine/math_common.pool.ltxml:223	
+\mapsto	symbol	math	U+21A6	mapsto	maps-to	ARROW		\mapsto	lib/LaTeXML/Engine/math_common.pool.ltxml:419	
+\mapstochar	symbol	math	U+2E20	mapstochar					lib/LaTeXML/Engine/math_common.pool.ltxml:450	
+\mapstochar	symbol	math	U+21A6	mapstochar	maps-to	ARROW		\mapsto	lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5449	
+\mathbf{}	alphabet	math		mathbf			bold		lib/LaTeXML/Engine/latex_constructs.pool.ltxml:2482	DefConstructor with font
+\mathcal{}	alphabet	math		mathcal			caligraphic		lib/LaTeXML/Engine/latex_constructs.pool.ltxml:2488	DefConstructor with font
+\mathdollar	text	text	U+0024	mathdollar					lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5421	
+\mathellipsis	text	text	U+2026	mathellipsis				\mathellipsis	lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5424	
+\mathit{}	alphabet	math		mathit			serif		lib/LaTeXML/Engine/latex_constructs.pool.ltxml:2480	DefConstructor with font
+\mathnormal{}	alphabet	math		mathnormal			math		lib/LaTeXML/Engine/latex_constructs.pool.ltxml:2492	DefConstructor with font
+\mathparagraph	text	text	U+00B6	mathparagraph					lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5419	
+\mathrm{}	alphabet	math		mathrm			serif		lib/LaTeXML/Engine/latex_constructs.pool.ltxml:2478	DefConstructor with font
+\mathscr{}	alphabet	math		mathscr			script		lib/LaTeXML/Engine/latex_constructs.pool.ltxml:2490	DefConstructor with font
+\mathsection	text	text	U+00A7	mathsection					lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5420	
+\mathsf{}	alphabet	math		mathsf			sans-serif		lib/LaTeXML/Engine/latex_constructs.pool.ltxml:2484	DefConstructor with font
+\mathsterling	text	text	U+00A3	mathsterling				\mathsterling	lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5422	
+\mathtt{}	alphabet	math		mathtt			monospace		lib/LaTeXML/Engine/latex_constructs.pool.ltxml:2486	DefConstructor with font
+\mathunderscore	text	text	U+005F	mathunderscore					lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5423	
+\max	symbol	math	U+006D U+0061 U+0078	max	maximum	OPFUNCTION			lib/LaTeXML/Engine/math_common.pool.ltxml:759	
+\mho	symbol	math	U+2127	mho				\mho	lib/LaTeXML/Engine/math_common.pool.ltxml:76	
+\mid	symbol	math	U+2223	mid		VERTBAR		\mid	lib/LaTeXML/Engine/math_common.pool.ltxml:290	
+\min	symbol	math	U+006D U+0069 U+006E	min	minimum	OPFUNCTION			lib/LaTeXML/Engine/math_common.pool.ltxml:762	
+\models	symbol	math	U+22A7	models	models	RELOP		\models	lib/LaTeXML/Engine/math_common.pool.ltxml:288	
+\mp	symbol	math	U+2213	mp	minus-or-plus	ADDOP		\mp	lib/LaTeXML/Engine/math_common.pool.ltxml:206	
+\mu	symbol	math	U+03BC	mu				\mu	lib/LaTeXML/Engine/math_common.pool.ltxml:34	
+\nabla	symbol	math	U+2207	nabla		OPERATOR		\nabla	lib/LaTeXML/Engine/math_common.pool.ltxml:80	
+\natural	symbol	math	U+266E	natural				\natural	lib/LaTeXML/Engine/math_common.pool.ltxml:95	
+\nearrow	symbol	math	U+2197	nearrow		ARROW		\nearrow	lib/LaTeXML/Engine/math_common.pool.ltxml:442	
+\neg	symbol	math	U+00AC	neg	not	BIGOP		\neg	lib/LaTeXML/Engine/math_common.pool.ltxml:92	
+\neq	symbol	math	U+2260	neq	not-equals	RELOP		\neq	lib/LaTeXML/Engine/math_common.pool.ltxml:284	
+\ng	text	text	U+014B	ng					lib/LaTeXML/Engine/latex_constructs.pool.ltxml:2772	
+\ni	symbol	math	U+220B	ni	contains	RELOP		\ni	lib/LaTeXML/Engine/math_common.pool.ltxml:272	
+\not	symbol	math	U+FF0F	not	not	OPFUNCTION		\not	lib/LaTeXML/Engine/math_common.pool.ltxml:307	
+\notin	symbol	math	U+2209	notin	not-element-of	RELOP		\notin	lib/LaTeXML/Engine/math_common.pool.ltxml:286	
+\nu	symbol	math	U+03BD	nu				\nu	lib/LaTeXML/Engine/math_common.pool.ltxml:35	
+\nwarrow	symbol	math	U+2196	nwarrow		ARROW		\nwarrow	lib/LaTeXML/Engine/math_common.pool.ltxml:445	
+\o	text	text	U+00F8	o				\o	lib/LaTeXML/Engine/latex_constructs.pool.ltxml:2764	
+\o	text	text	U+00F8	o				\o	lib/LaTeXML/Engine/plain_base.pool.ltxml:530	
+\odot	symbol	math	U+2299	odot	direct-product	MULOP		\odot	lib/LaTeXML/Engine/math_common.pool.ltxml:244	
+\oe	text	text	U+0153	oe				\oe	lib/LaTeXML/Engine/latex_constructs.pool.ltxml:2758	
+\oe	text	text	U+0153	oe				\oe	lib/LaTeXML/Engine/plain_base.pool.ltxml:524	
+\oint	symbol	math	U+222E	oint	contour-integral	INTOP		\oint	lib/LaTeXML/Engine/math_common.pool.ltxml:153	
+\ointop	symbol	math	U+222E	ointop	contour-integral	INTOP		\oint	lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5440	
+\omega	symbol	math	U+03C9	omega				\omega	lib/LaTeXML/Engine/math_common.pool.ltxml:49	
+\ominus	symbol	math	U+2296	ominus	symmetric-difference	ADDOP		\ominus	lib/LaTeXML/Engine/math_common.pool.ltxml:241	
+\oplus	symbol	math	U+2295	oplus	direct-sum	ADDOP		\oplus	lib/LaTeXML/Engine/math_common.pool.ltxml:240	
+\oslash	symbol	math	U+2298	oslash		MULOP		\oslash	lib/LaTeXML/Engine/math_common.pool.ltxml:243	
+\otimes	symbol	math	U+2297	otimes	tensor-product	MULOP		\otimes	lib/LaTeXML/Engine/math_common.pool.ltxml:242	
+\owns	symbol	math	U+220B	owns	contains	RELOP		\owns	lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5450	
+\parallel	symbol	math	U+2225	parallel	parallel-to	VERTBAR		\parallel	lib/LaTeXML/Engine/math_common.pool.ltxml:291	
+\partial	symbol	math	U+2202	partial	partial-differential	DIFFOP		\partial	lib/LaTeXML/Engine/math_common.pool.ltxml:98	
+\perp	symbol	math	U+27C2	perp	perpendicular-to	RELOP		\perp	lib/LaTeXML/Engine/math_common.pool.ltxml:289	
+\phi	symbol	math	U+03D5	phi				\phi	lib/LaTeXML/Engine/math_common.pool.ltxml:45	
+\pi	symbol	math	U+03C0	pi				\pi	lib/LaTeXML/Engine/math_common.pool.ltxml:37	
+\pm	symbol	math	U+00B1	pm	plus-or-minus	ADDOP		\pm	lib/LaTeXML/Engine/math_common.pool.ltxml:205	
+\pounds	text	text	U+00A3	pounds				\pounds	lib/LaTeXML/Engine/plain_constructs.pool.ltxml:187	
+\prec	symbol	math	U+227A	prec	precedes	RELOP		\prec	lib/LaTeXML/Engine/math_common.pool.ltxml:254	
+\preceq	symbol	math	U+2AAF	preceq	precedes-or-equals	RELOP		\preceq	lib/LaTeXML/Engine/math_common.pool.ltxml:255	
+\prime	symbol	math	U+2032	prime		SUPOP		\prime	lib/LaTeXML/Engine/math_common.pool.ltxml:78	
+\prod	symbol	math	U+220F	prod	product	SUMOP		\prod	lib/LaTeXML/Engine/math_common.pool.ltxml:139	
+\propto	symbol	math	U+221D	propto	proportional-to	RELOP		\propto	lib/LaTeXML/Engine/math_common.pool.ltxml:296	
+\psi	symbol	math	U+03C8	psi				\psi	lib/LaTeXML/Engine/math_common.pool.ltxml:48	
+\rangle	symbol	math	U+27E9	rangle		CLOSE		\rangle	lib/LaTeXML/Engine/math_common.pool.ltxml:574	
+\rceil	symbol	math	U+2309	rceil		CLOSE		\rceil	lib/LaTeXML/Engine/math_common.pool.ltxml:569	
+\relbar	symbol	math	U+002D	relbar		RELOP			lib/LaTeXML/Engine/math_common.pool.ltxml:363	
+\rfloor	symbol	math	U+230B	rfloor		CLOSE		\rfloor	lib/LaTeXML/Engine/math_common.pool.ltxml:571	
+\rgroup	symbol	math	U+27EF	rgroup		CLOSE		\rgroup	lib/LaTeXML/Engine/math_common.pool.ltxml:578	
+\rhd	symbol	math	U+22B3	rhd	contains-as-subgroup	ADDOP		\rhd	lib/LaTeXML/Engine/math_common.pool.ltxml:236	
+\rho	symbol	math	U+03C1	rho				\rho	lib/LaTeXML/Engine/math_common.pool.ltxml:39	
+\rhook	symbol	math	U+2E27	rhook					lib/LaTeXML/Engine/math_common.pool.ltxml:452	
+\rightarrow	symbol	math	U+2192	rightarrow		ARROW		\rightarrow	lib/LaTeXML/Engine/math_common.pool.ltxml:414	
+\rightarrowfill	symbol	math	U+2192	rightarrowfill		ARROW			lib/LaTeXML/Engine/plain_constructs.pool.ltxml:89	
+\rightharpoondown	symbol	math	U+21C1	rightharpoondown		ARROW		\rightharpoondown	lib/LaTeXML/Engine/math_common.pool.ltxml:433	
+\rightharpoonup	symbol	math	U+21C0	rightharpoonup		ARROW		\rightharpoonup	lib/LaTeXML/Engine/math_common.pool.ltxml:432	
+\rightleftharpoons	symbol	math	U+21CC	rightleftharpoons		METARELOP		\rightleftharpoons	lib/LaTeXML/Engine/math_common.pool.ltxml:423	
+\rmoustache	text	text	U+23B1	rmoustache				\rmoustache	lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5448	
+\searrow	symbol	math	U+2198	searrow		ARROW		\searrow	lib/LaTeXML/Engine/math_common.pool.ltxml:443	
+\sec	symbol	math	U+0073 U+0065 U+0063	sec	secant	TRIGFUNCTION			lib/LaTeXML/Engine/math_common.pool.ltxml:765	
+\setminus	symbol	math	U+2216	setminus	set-minus	ADDOP		\setminus	lib/LaTeXML/Engine/math_common.pool.ltxml:226	
+\sharp	symbol	math	U+266F	sharp				\sharp	lib/LaTeXML/Engine/math_common.pool.ltxml:96	
+\sigma	symbol	math	U+03C3	sigma				\sigma	lib/LaTeXML/Engine/math_common.pool.ltxml:41	
+\sim	symbol	math	U+223C	sim	similar-to	RELOP		\sim	lib/LaTeXML/Engine/math_common.pool.ltxml:279	
+\simeq	symbol	math	U+2243	simeq	similar-to-or-equals	RELOP		\simeq	lib/LaTeXML/Engine/math_common.pool.ltxml:280	
+\sin	symbol	math	U+0073 U+0069 U+006E	sin	sine	TRIGFUNCTION			lib/LaTeXML/Engine/math_common.pool.ltxml:766	
+\sinh	symbol	math	U+0073 U+0069 U+006E U+0068	sinh	hyperbolic-sine	TRIGFUNCTION			lib/LaTeXML/Engine/math_common.pool.ltxml:768	
+\smallint	symbol	math	U+222B	smallint	integral	INTOP		\smallint	lib/LaTeXML/Engine/math_common.pool.ltxml:128	
+\smile	symbol	math	U+2323	smile		RELOP		\smile	lib/LaTeXML/Engine/math_common.pool.ltxml:294	
+\spadesuit	symbol	math	U+2660	spadesuit				\spadesuit	lib/LaTeXML/Engine/math_common.pool.ltxml:107	
+\sqcap	symbol	math	U+2293	sqcap	square-intersection	ADDOP		\sqcap	lib/LaTeXML/Engine/math_common.pool.ltxml:220	
+\sqcup	symbol	math	U+2294	sqcup	square-union	ADDOP		\sqcup	lib/LaTeXML/Engine/math_common.pool.ltxml:221	
+\sqsubset	symbol	math	U+228F	sqsubset	square-image-of	RELOP		\sqsubset	lib/LaTeXML/Engine/math_common.pool.ltxml:259	
+\sqsubseteq	symbol	math	U+2291	sqsubseteq	square-image-of-or-equals	RELOP		\sqsubseteq	lib/LaTeXML/Engine/math_common.pool.ltxml:260	
+\sqsupset	symbol	math	U+2290	sqsupset	square-original-of	RELOP		\sqsupset	lib/LaTeXML/Engine/math_common.pool.ltxml:270	
+\sqsupseteq	symbol	math	U+2292	sqsupseteq	square-original-of-or-equals	RELOP		\sqsupseteq	lib/LaTeXML/Engine/math_common.pool.ltxml:271	
+\ss	text	text	U+00DF	ss				\ss	lib/LaTeXML/Engine/latex_constructs.pool.ltxml:2767	
+\ss	text	text	U+00DF	ss				\ss	lib/LaTeXML/Engine/plain_base.pool.ltxml:531	
+\star	symbol	math	U+22C6	star		MULOP		\star	lib/LaTeXML/Engine/math_common.pool.ltxml:210	
+\subset	symbol	math	U+2282	subset	subset-of	RELOP		\subset	lib/LaTeXML/Engine/math_common.pool.ltxml:257	
+\subseteq	symbol	math	U+2286	subseteq	subset-of-or-equals	RELOP		\subseteq	lib/LaTeXML/Engine/math_common.pool.ltxml:258	
+\succ	symbol	math	U+227B	succ	succeeds	RELOP		\succ	lib/LaTeXML/Engine/math_common.pool.ltxml:265	
+\succeq	symbol	math	U+2AB0	succeq	succeeds-or-equals	RELOP		\succeq	lib/LaTeXML/Engine/math_common.pool.ltxml:266	
+\sum	symbol	math	U+2211	sum	sum	SUMOP		\sum	lib/LaTeXML/Engine/math_common.pool.ltxml:134	
+\sup	symbol	math	U+0073 U+0075 U+0070	sup	supremum	LIMITOP			lib/LaTeXML/Engine/math_common.pool.ltxml:769	
+\supset	symbol	math	U+2283	supset	superset-of	RELOP		\supset	lib/LaTeXML/Engine/math_common.pool.ltxml:268	
+\supseteq	symbol	math	U+2287	supseteq	superset-of-or-equals	RELOP		\supseteq	lib/LaTeXML/Engine/math_common.pool.ltxml:269	
+\surd	symbol	math	U+221A	surd	square-root	OPERATOR		\surd	lib/LaTeXML/Engine/math_common.pool.ltxml:81	
+\swarrow	symbol	math	U+2199	swarrow		ARROW		\swarrow	lib/LaTeXML/Engine/math_common.pool.ltxml:444	
+\tan	symbol	math	U+0074 U+0061 U+006E	tan	tangent	TRIGFUNCTION			lib/LaTeXML/Engine/math_common.pool.ltxml:771	
+\tanh	symbol	math	U+0074 U+0061 U+006E U+0068	tanh	hyperbolic-tangent	TRIGFUNCTION			lib/LaTeXML/Engine/math_common.pool.ltxml:772	
+\tau	symbol	math	U+03C4	tau				\tau	lib/LaTeXML/Engine/math_common.pool.ltxml:43	
+\textasciicircum	text	text	U+005E	textasciicircum				\textasciicircum	lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5361	
+\textasciitilde	text	text	U+007E	textasciitilde				\textasciitilde	lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5362	
+\textasteriskcentered	text	text	U+002A	textasteriskcentered					lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5348	
+\textbackslash	text	text	U+005C	textbackslash				\textbackslash	lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5349	
+\textbar	text	text	U+007C	textbar				\textbar	lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5350	
+\textbraceleft	text	text	U+007B	textbraceleft				\textbraceleft	lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5351	
+\textbraceright	text	text	U+007D	textbraceright				\textbraceright	lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5352	
+\textbullet	text	text	U+2022	textbullet					lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5353	
+\textcopyright	text	text	U+00A9	textcopyright				\textcopyright	lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5360	
+\textdagger	text	text	U+2020	textdagger				\textdagger	lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5355	
+\textdaggerdbl	text	text	U+2021	textdaggerdbl				\textdaggerdbl	lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5354	
+\textdollar	text	text	U+005C U+0024	textdollar				\textdollar	lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5337	
+\textellipsis	text	text	U+2026	textellipsis				\textellipsis	lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5368	
+\textemdash	text	text	U+2014	textemdash				\textemdash	lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5338	
+\textendash	text	text	U+2013	textendash				\textendash	lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5339	
+\textexclamdown	text	text	U+00A1	textexclamdown					lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5340	
+\textgreater	text	text	U+003E	textgreater				\textgreater	lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5359	
+\textless	text	text	U+003C	textless				\textless	lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5358	
+\textnormal@math{}	alphabet	math		textnormal			serif		lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5264	DefConstructor with font
+\textordfeminine	text	text	U+00AA	textordfeminine					lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5379	
+\textordmasculine	text	text	U+00BA	textordmasculine					lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5380	
+\textparagraph	text	text	U+00B6	textparagraph					lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5356	
+\textprime	text	text	U+00B4	textprime					lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5719	
+\textquestiondown	text	text	U+00BF	textquestiondown					lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5341	
+\textquotedbl	text	text	U+0022	textquotedbl					lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5344	
+\textquotedblleft	text	text	U+201C	textquotedblleft				\textquotedblleft	lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5342	
+\textquotedblright	text	text	U+201D	textquotedblright				\textquotedblright	lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5343	
+\textquoteleft	text	text	U+2018	textquoteleft				\textquoteleft	lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5345	
+\textquoteright	text	text	U+2019	textquoteright				\textquoteright	lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5346	
+\textregistered	text	text	U+00AE	textregistered				\textregistered	lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5369	
+\textrm@math{}	alphabet	math		textrm			serif		lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5235	DefConstructor with font
+\textsection	text	text	U+00A7	textsection					lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5357	
+\textsf@math{}	alphabet	math		textsf			sans-serif		lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5239	DefConstructor with font
+\textsterling	text	text	U+00A3	textsterling				\textsterling	lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5347	
+\texttrademark	text	text	U+2122	texttrademark					lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5370	
+\texttt@math{}	alphabet	math		texttt			monospace		lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5243	DefConstructor with font
+\textunderscore	text	text	U+005F	textunderscore				\textunderscore	lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5366	
+\textvisiblespace	text	text	U+2423	textvisiblespace					lib/LaTeXML/Engine/latex_constructs.pool.ltxml:5367	
+\th	text	text	U+00FE	th					lib/LaTeXML/Engine/latex_constructs.pool.ltxml:2774	
+\theta	symbol	math	U+03B8	theta				\theta	lib/LaTeXML/Engine/math_common.pool.ltxml:29	
+\times	symbol	math	U+00D7	times	times	MULOP		\times	lib/LaTeXML/Engine/math_common.pool.ltxml:207	
+\to	symbol	math	U+2192	to		ARROW		\to	lib/LaTeXML/Engine/math_common.pool.ltxml:62	
+\top	symbol	math	U+22A4	top	top	ADDOP		\top	lib/LaTeXML/Engine/math_common.pool.ltxml:82	
+\triangle	symbol	math	U+25B3	triangle				\triangle	lib/LaTeXML/Engine/math_common.pool.ltxml:103	
+\triangleleft	symbol	math	U+22B2	triangleleft		ADDOP		\triangleleft	lib/LaTeXML/Engine/math_common.pool.ltxml:233	
+\triangleright	symbol	math	U+22B3	triangleright		ADDOP		\triangleright	lib/LaTeXML/Engine/math_common.pool.ltxml:234	
+\unlhd	symbol	math	U+22B4	unlhd	subgroup-of-or-equals	ADDOP		\unlhd	lib/LaTeXML/Engine/math_common.pool.ltxml:237	
+\unrhd	symbol	math	U+22B5	unrhd	contains-as-subgroup-or-equals	ADDOP		\unrhd	lib/LaTeXML/Engine/math_common.pool.ltxml:238	
+\uparrow	symbol	math	U+2191	uparrow		ARROW		\uparrow	lib/LaTeXML/Engine/math_common.pool.ltxml:436	
+\upbracefill	symbol	math	U+23DF	upbracefill		ARROW			lib/LaTeXML/Engine/plain_constructs.pool.ltxml:90	
+\updownarrow	symbol	math	U+2195	updownarrow		ARROW		\updownarrow	lib/LaTeXML/Engine/math_common.pool.ltxml:440	
+\uplus	symbol	math	U+228E	uplus		ADDOP		\uplus	lib/LaTeXML/Engine/math_common.pool.ltxml:219	
+\upsilon	symbol	math	U+03C5	upsilon				\upsilon	lib/LaTeXML/Engine/math_common.pool.ltxml:44	
+\varepsilon	symbol	math	U+03B5	varepsilon				\varepsilon	lib/LaTeXML/Engine/math_common.pool.ltxml:26	
+\varphi	symbol	math	U+03C6	varphi				\varphi	lib/LaTeXML/Engine/math_common.pool.ltxml:46	
+\varpi	symbol	math	U+03D6	varpi				\varpi	lib/LaTeXML/Engine/math_common.pool.ltxml:38	
+\varrho	symbol	math	U+03F1	varrho				\varrho	lib/LaTeXML/Engine/math_common.pool.ltxml:40	
+\varsigma	symbol	math	U+03C2	varsigma				\varsigma	lib/LaTeXML/Engine/math_common.pool.ltxml:42	
+\vartheta	symbol	math	U+03D1	vartheta				\vartheta	lib/LaTeXML/Engine/math_common.pool.ltxml:30	
+\vdash	symbol	math	U+22A2	vdash	proves	METARELOP		\vdash	lib/LaTeXML/Engine/math_common.pool.ltxml:262	
+\vee	symbol	math	U+2228	vee	or	ADDOP		\vee	lib/LaTeXML/Engine/math_common.pool.ltxml:222	
+\wedge	symbol	math	U+2227	wedge	and	ADDOP		\wedge	lib/LaTeXML/Engine/math_common.pool.ltxml:224	
+\wp	symbol	math	U+2118	wp	Weierstrass-p			\wp	lib/LaTeXML/Engine/math_common.pool.ltxml:73	
+\wr	symbol	math	U+2240	wr		MULOP		\wr	lib/LaTeXML/Engine/math_common.pool.ltxml:227	
+\xi	symbol	math	U+03BE	xi				\xi	lib/LaTeXML/Engine/math_common.pool.ltxml:36	
+\zeta	symbol	math	U+03B6	zeta				\zeta	lib/LaTeXML/Engine/math_common.pool.ltxml:27	
+\|	symbol	math	U+2225	||		VERTBAR		\|	lib/LaTeXML/Engine/math_common.pool.ltxml:84	
+]	symbol	math	U+005D	]		CLOSE			lib/LaTeXML/Engine/Base_XMath.pool.ltxml:416	
+|	symbol	math	U+007C	|		VERTBAR		|	lib/LaTeXML/Engine/Base_XMath.pool.ltxml:417	

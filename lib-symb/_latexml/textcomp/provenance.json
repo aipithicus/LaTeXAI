@@ -1,0 +1,11 @@
+{
+   "extracted_at" : "2026-09-08T11:34:23Z",
+   "from" : [
+      "lib/LaTeXML/Package/textcomp.sty.ltxml"
+   ],
+   "kind" : "extract",
+   "package" : "textcomp",
+   "rows" : 97,
+   "skipped" : 0,
+   "tool" : "tools/dev/symbind.pl --extract"
+}

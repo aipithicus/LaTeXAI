@@ -1,0 +1,11 @@
+{
+   "extracted_at" : "2026-09-08T11:34:23Z",
+   "from" : [
+      "lib/LaTeXML/Package/calrsfs.sty.ltxml"
+   ],
+   "kind" : "extract",
+   "package" : "calrsfs",
+   "rows" : 2,
+   "skipped" : 0,
+   "tool" : "tools/dev/symbind.pl --extract"
+}

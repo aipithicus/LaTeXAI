@@ -1,0 +1,375 @@
+command	kind	mode	codepoint	name	meaning	role	font	katex	source	note
+\Aquarius	text	text	U+2652	Aquarius					lib/LaTeXML/Package/mathabx.sty.ltxml:209	
+\Aries	text	text	U+2648	Aries					lib/LaTeXML/Package/mathabx.sty.ltxml:199	
+\Asterisk	symbol	math	U+273D	Asterisk		MULOP			lib/LaTeXML/Package/mathabx.sty.ltxml:55	
+\Bumpedeq	symbol	math	U+224E	Bumpedeq	geometrically-equals	RELOP		\Bumpeq	lib/LaTeXML/Package/mathabx.sty.ltxml:101	
+\Cancer	text	text	U+264B	Cancer					lib/LaTeXML/Package/mathabx.sty.ltxml:202	
+\Capricorn	text	text	U+2651	Capricorn					lib/LaTeXML/Package/mathabx.sty.ltxml:208	
+\DashV	symbol	math	U+2AE5	DashV		RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:144	
+\Dashv	symbol	math	U+2AE4	Dashv		RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:116	
+\Doteq	symbol	math		Doteq				\Doteq	lib/LaTeXML/Package/mathabx.sty.ltxml:94	Let alias of \doteqdot
+\Earth	text	text	U+2641	Earth					lib/LaTeXML/Package/mathabx.sty.ltxml:187	
+\Finv	symbol	math	U+2132	Finv				\Finv	lib/LaTeXML/Package/mathabx.sty.ltxml:220	
+\Game	symbol	math	U+2141	Game				\Game	lib/LaTeXML/Package/mathabx.sty.ltxml:221	
+\Gemini	text	text	U+264A	Gemini					lib/LaTeXML/Package/mathabx.sty.ltxml:201	
+\Jupiter	text	text	U+2643	Jupiter					lib/LaTeXML/Package/mathabx.sty.ltxml:189	
+\Leo	text	text	U+264C	Leo					lib/LaTeXML/Package/mathabx.sty.ltxml:203	
+\Libra	text	text	U+264E	Libra					lib/LaTeXML/Package/mathabx.sty.ltxml:205	
+\Lsh	symbol	math	U+21B0	Lsh		ARROW		\Lsh	lib/LaTeXML/Package/mathabx.sty.ltxml:474	
+\Mapsfromchar	symbol	math	U+007C	Mapsfromchar		RELOP		\textbar	lib/LaTeXML/Package/mathabx.sty.ltxml:449	
+\Mapstochar	symbol	math	U+007C	Mapstochar		RELOP		\textbar	lib/LaTeXML/Package/mathabx.sty.ltxml:448	
+\Mars	text	text	U+2642	Mars					lib/LaTeXML/Package/mathabx.sty.ltxml:188	
+\Mercury	text	text	U+263F	Mercury					lib/LaTeXML/Package/mathabx.sty.ltxml:185	
+\Neptune	text	text	U+2646	Neptune					lib/LaTeXML/Package/mathabx.sty.ltxml:192	
+\Pisces	text	text	U+2653	Pisces					lib/LaTeXML/Package/mathabx.sty.ltxml:210	
+\Pluto	text	text	U+2647	Pluto					lib/LaTeXML/Package/mathabx.sty.ltxml:193	
+\Rsh	symbol	math	U+21B1	Rsh		ARROW		\Rsh	lib/LaTeXML/Package/mathabx.sty.ltxml:475	
+\Sagittarius	text	text	U+2650	Sagittarius					lib/LaTeXML/Package/mathabx.sty.ltxml:207	
+\Saturn	text	text	U+2644	Saturn					lib/LaTeXML/Package/mathabx.sty.ltxml:190	
+\Scorpio	text	text	U+264F	Scorpio					lib/LaTeXML/Package/mathabx.sty.ltxml:206	
+\Subset	symbol	math	U+22D0	Subset	double-subset-of	RELOP		\Subset	lib/LaTeXML/Package/mathabx.sty.ltxml:276	
+\Sun	text	text	U+2609	Sun					lib/LaTeXML/Package/mathabx.sty.ltxml:184	
+\Supset	symbol	math	U+22D1	Supset	double-superset-of	RELOP		\Supset	lib/LaTeXML/Package/mathabx.sty.ltxml:277	
+\Taurus	text	text	U+2649	Taurus					lib/LaTeXML/Package/mathabx.sty.ltxml:200	
+\Uranus	text	text	U+2645	Uranus					lib/LaTeXML/Package/mathabx.sty.ltxml:191	
+\VDash	symbol	math	U+22AB	VDash		RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:143	
+\Vdash	symbol	math	U+22A9	Vdash	forces	RELOP		\Vdash	lib/LaTeXML/Package/mathabx.sty.ltxml:119	
+\Venus	text	text	U+2640	Venus					lib/LaTeXML/Package/mathabx.sty.ltxml:186	
+\Virgo	text	text	U+264D	Virgo					lib/LaTeXML/Package/mathabx.sty.ltxml:204	
+\Vvdash	symbol	math	U+22AA	Vvdash		RELOP		\Vvdash	lib/LaTeXML/Package/mathabx.sty.ltxml:147	
+\asterisk	symbol	math	U+2217	asterisk		MULOP			lib/LaTeXML/Package/mathabx.sty.ltxml:35	
+\barin	symbol	math	U+22F6	barin	element-of-with-overbar	ADDOP			lib/LaTeXML/Package/mathabx.sty.ltxml:238	
+\barleftharpoon	symbol	math	U+296B	barleftharpoon		ARROW			lib/LaTeXML/Package/mathabx.sty.ltxml:467	
+\barrightharpoon	symbol	math	U+296D	barrightharpoon		ARROW			lib/LaTeXML/Package/mathabx.sty.ltxml:468	
+\barwedge	symbol	math	U+22BC	barwedge	not-and	ADDOP		\barwedge	lib/LaTeXML/Package/mathabx.sty.ltxml:247	
+\because	symbol	math	U+2235	because	because	METARELOP		\because	lib/LaTeXML/Package/mathabx.sty.ltxml:155	
+\between	symbol	math	U+226C	between	between	RELOP		\between	lib/LaTeXML/Package/mathabx.sty.ltxml:135	
+\bigast	symbol	math	U+273D	bigast		MULOP			lib/LaTeXML/Package/mathabx.sty.ltxml:56	
+\bigboxasterisk	symbol	math	U+29C6	bigboxasterisk					lib/LaTeXML/Package/mathabx.sty.ltxml:642	
+\bigboxbackslash	symbol	math	U+29C4	bigboxbackslash					lib/LaTeXML/Package/mathabx.sty.ltxml:658	
+\bigboxbot	symbol	math	U+22A5 U+20DE	bigboxbot		ADDOP			lib/LaTeXML/Package/mathabx.sty.ltxml:651	
+\bigboxcirc	symbol	math	U+2218 U+20DE	bigboxcirc		ADDOP			lib/LaTeXML/Package/mathabx.sty.ltxml:640	
+\bigboxdot	symbol	math	U+22A1	bigboxdot		MULOP		\boxdot	lib/LaTeXML/Package/mathabx.sty.ltxml:638	
+\bigboxleft	symbol	math	U+22A3 U+20DE	bigboxleft		ADDOP			lib/LaTeXML/Package/mathabx.sty.ltxml:645	
+\bigboxminus	symbol	math	U+229F	bigboxminus		ADDOP		\boxminus	lib/LaTeXML/Package/mathabx.sty.ltxml:632	
+\bigboxplus	symbol	math	U+229E	bigboxplus		ADDOP		\boxplus	lib/LaTeXML/Package/mathabx.sty.ltxml:630	
+\bigboxright	symbol	math	U+22A2 U+20DE	bigboxright		ADDOP			lib/LaTeXML/Package/mathabx.sty.ltxml:647	
+\bigboxslash	symbol	math	U+29C5	bigboxslash					lib/LaTeXML/Package/mathabx.sty.ltxml:656	
+\bigboxtimes	symbol	math	U+22A0	bigboxtimes		MULOP		\boxtimes	lib/LaTeXML/Package/mathabx.sty.ltxml:634	
+\bigboxtop	symbol	math	U+22A4 U+20DE	bigboxtop		ADDOP			lib/LaTeXML/Package/mathabx.sty.ltxml:649	
+\bigboxtriangleup	symbol	math	U+25B3 U+20DE	bigboxtriangleup		ADDOP			lib/LaTeXML/Package/mathabx.sty.ltxml:660	
+\bigboxvoid	symbol	math	U+25A1	bigboxvoid					lib/LaTeXML/Package/mathabx.sty.ltxml:653	
+\bigcomplementop	symbol	math	U+2201	bigcomplementop	nary-complement	BIGOP		\complement	lib/LaTeXML/Package/mathabx.sty.ltxml:558	
+\bigcurlyvee	symbol	math	U+22CE	bigcurlyvee		SUMOP		\curlyvee	lib/LaTeXML/Package/mathabx.sty.ltxml:575	
+\bigcurlywedge	symbol	math	U+22CF	bigcurlywedge		SUMOP		\curlywedge	lib/LaTeXML/Package/mathabx.sty.ltxml:571	
+\bigoasterisk	symbol	math	U+229B	bigoasterisk		MULOP		\circledast	lib/LaTeXML/Package/mathabx.sty.ltxml:591	
+\bigobackslash	symbol	math	U+29B8	bigobackslash					lib/LaTeXML/Package/mathabx.sty.ltxml:606	
+\bigobot	symbol	math	U+29BA	bigobot					lib/LaTeXML/Package/mathabx.sty.ltxml:600	
+\bigocirc	symbol	math	U+229A	bigocirc				\circledcirc	lib/LaTeXML/Package/mathabx.sty.ltxml:589	
+\bigoleft	symbol	math	U+22A3 U+20DD	bigoleft		ADDOP			lib/LaTeXML/Package/mathabx.sty.ltxml:594	
+\bigominus	symbol	math	U+2296	bigominus		ADDOP		\ominus	lib/LaTeXML/Package/mathabx.sty.ltxml:584	
+\bigoright	symbol	math	U+22A2 U+20DD	bigoright		ADDOP			lib/LaTeXML/Package/mathabx.sty.ltxml:596	
+\bigoslash	symbol	math	U+2298	bigoslash		MULOP		\oslash	lib/LaTeXML/Package/mathabx.sty.ltxml:604	
+\bigotop	symbol	math	U+22A4 U+20DD	bigotop		ADDOP			lib/LaTeXML/Package/mathabx.sty.ltxml:598	
+\bigotriangleup	symbol	math	U+25B3 U+20DD	bigotriangleup		ADDOP			lib/LaTeXML/Package/mathabx.sty.ltxml:608	
+\bigovoid	symbol	math	U+25CB	bigovoid					lib/LaTeXML/Package/mathabx.sty.ltxml:602	
+\bigplus	symbol	math	U+002B	bigplus	nary-plus	BIGOP		+	lib/LaTeXML/Package/mathabx.sty.ltxml:552	
+\bigsqcap	symbol	math	U+2A05	bigsqcap		SUMOP			lib/LaTeXML/Package/mathabx.sty.ltxml:563	
+\bigstar	symbol	math	U+1F7CA	bigstar		MULOP		\bigstar	lib/LaTeXML/Package/mathabx.sty.ltxml:65	
+\bigtimes	symbol	math	U+2A09	bigtimes	nary-times	BIGOP			lib/LaTeXML/Package/mathabx.sty.ltxml:555	
+\bigvarstar	symbol	math	U+1F7CC	bigvarstar		MULOP			lib/LaTeXML/Package/mathabx.sty.ltxml:66	
+\blackdiamond	symbol	math	U+25C6	blackdiamond		MULOP			lib/LaTeXML/Package/mathabx.sty.ltxml:63	
+\blacktriangledown	symbol	math	U+25BE	blacktriangledown		RELOP		\blacktriangledown	lib/LaTeXML/Package/mathabx.sty.ltxml:329	
+\blacktriangleleft	symbol	math	U+25C2	blacktriangleleft		RELOP		\blacktriangleleft	lib/LaTeXML/Package/mathabx.sty.ltxml:330	
+\blacktriangleright	symbol	math	U+25B8	blacktriangleright		RELOP		\blacktriangleright	lib/LaTeXML/Package/mathabx.sty.ltxml:331	
+\blacktriangleup	symbol	math	U+25B4	blacktriangleup		RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:328	
+\botdoteq	symbol	math	U+2A66	botdoteq		RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:91	
+\boxasterisk	symbol	math	U+29C6	boxasterisk					lib/LaTeXML/Package/mathabx.sty.ltxml:526	
+\boxbackslash	symbol	math	U+29C4	boxbackslash					lib/LaTeXML/Package/mathabx.sty.ltxml:535	
+\boxbot	symbol	math	U+22A5 U+20DE	boxbot		ADDOP			lib/LaTeXML/Package/mathabx.sty.ltxml:531	
+\boxcirc	symbol	math	U+2218 U+20DE	boxcirc		ADDOP			lib/LaTeXML/Package/mathabx.sty.ltxml:525	
+\boxdot	symbol	math	U+22A1	boxdot		MULOP		\boxdot	lib/LaTeXML/Package/mathabx.sty.ltxml:524	
+\boxleft	symbol	math	U+22A3 U+20DE	boxleft		ADDOP			lib/LaTeXML/Package/mathabx.sty.ltxml:528	
+\boxminus	symbol	math	U+229F	boxminus		ADDOP		\boxminus	lib/LaTeXML/Package/mathabx.sty.ltxml:521	
+\boxplus	symbol	math	U+229E	boxplus		ADDOP		\boxplus	lib/LaTeXML/Package/mathabx.sty.ltxml:520	
+\boxright	symbol	math	U+22A2 U+20DE	boxright		ADDOP			lib/LaTeXML/Package/mathabx.sty.ltxml:529	
+\boxslash	symbol	math	U+29C5	boxslash					lib/LaTeXML/Package/mathabx.sty.ltxml:534	
+\boxtimes	symbol	math	U+22A0	boxtimes		MULOP		\boxtimes	lib/LaTeXML/Package/mathabx.sty.ltxml:522	
+\boxtop	symbol	math	U+22A4 U+20DE	boxtop		ADDOP			lib/LaTeXML/Package/mathabx.sty.ltxml:530	
+\boxtriangleup	symbol	math	U+25B3 U+20DE	boxtriangleup		ADDOP			lib/LaTeXML/Package/mathabx.sty.ltxml:536	
+\boxvoid	symbol	math	U+25A1	boxvoid					lib/LaTeXML/Package/mathabx.sty.ltxml:532	
+\bumpedeq	symbol	math	U+224F	bumpedeq	difference-between	RELOP		\bumpeq	lib/LaTeXML/Package/mathabx.sty.ltxml:99	
+\circeq	symbol	math	U+2257	circeq		RELOP		\circeq	lib/LaTeXML/Package/mathabx.sty.ltxml:102	
+\circlearrowleft	symbol	math	U+21BA	circlearrowleft		ARROW		\circlearrowleft	lib/LaTeXML/Package/mathabx.sty.ltxml:488	
+\circlearrowright	symbol	math	U+21BB	circlearrowright		ARROW		\circlearrowright	lib/LaTeXML/Package/mathabx.sty.ltxml:489	
+\circplus	symbol	math	U+2A22	circplus		MULOP			lib/LaTeXML/Package/mathabx.sty.ltxml:59	
+\coloneq	symbol	math	U+2254	coloneq		RELOP		\coloneq	lib/LaTeXML/Package/mathabx.sty.ltxml:97	
+\complement	symbol	math	U+2201	complement	complement			\complement	lib/LaTeXML/Package/mathabx.sty.ltxml:215	
+\convolution	symbol	math	U+2733	convolution		MULOP			lib/LaTeXML/Package/mathabx.sty.ltxml:61	
+\corresponds	symbol	math	U+2258	corresponds	corresponds-to	RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:105	
+\curlyeqprec	symbol	math	U+22DE	curlyeqprec	equals-or-preceeds	RELOP		\curlyeqprec	lib/LaTeXML/Package/mathabx.sty.ltxml:399	
+\curlyeqsucc	symbol	math	U+22DF	curlyeqsucc	equals-or-succeeds	RELOP		\curlyeqsucc	lib/LaTeXML/Package/mathabx.sty.ltxml:400	
+\curlyvee	symbol	math	U+22CE	curlyvee	or	ADDOP		\curlyvee	lib/LaTeXML/Package/mathabx.sty.ltxml:230	
+\curlywedge	symbol	math	U+22CF	curlywedge	and	ADDOP		\curlywedge	lib/LaTeXML/Package/mathabx.sty.ltxml:229	
+\curvearrowbotright	symbol	math	U+293B	curvearrowbotright		ARROW			lib/LaTeXML/Package/mathabx.sty.ltxml:486	
+\curvearrowleft	symbol	math	U+21B6	curvearrowleft		ARROW		\curvearrowleft	lib/LaTeXML/Package/mathabx.sty.ltxml:482	
+\curvearrowright	symbol	math	U+21B7	curvearrowright		ARROW		\curvearrowright	lib/LaTeXML/Package/mathabx.sty.ltxml:483	
+\dashV	symbol	math	U+2AE3	dashV		RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:120	
+\degree	symbol	math	U+00B0	degree		RELOP		\degree	lib/LaTeXML/Package/mathabx.sty.ltxml:123	
+\diagdown	symbol	math	U+2572	diagdown				\diagdown	lib/LaTeXML/Package/mathabx.sty.ltxml:473	
+\diagup	symbol	math	U+2571	diagup				\diagup	lib/LaTeXML/Package/mathabx.sty.ltxml:472	
+\diameter	symbol	math	U+2300	diameter					lib/LaTeXML/Package/mathabx.sty.ltxml:223	
+\divdot	symbol	math	U+2A2A	divdot		MULOP			lib/LaTeXML/Package/mathabx.sty.ltxml:52	
+\divideontimes	symbol	math	U+22C7	divideontimes		MULOP		\divideontimes	lib/LaTeXML/Package/mathabx.sty.ltxml:62	
+\divides	symbol	math	U+2223	divides		RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:74	
+\dlsh	symbol	math	U+21B2	dlsh		ARROW			lib/LaTeXML/Package/mathabx.sty.ltxml:476	
+\dotdiv	symbol	math	U+2238	dotdiv		MULOP			lib/LaTeXML/Package/mathabx.sty.ltxml:50	
+\doteqdot	symbol	math	U+2251	doteqdot	geometrically-equals	RELOP		\doteqdot	lib/LaTeXML/Package/mathabx.sty.ltxml:92	
+\dotplus	symbol	math	U+2214	dotplus		ADDOP		\dotplus	lib/LaTeXML/Package/mathabx.sty.ltxml:49	
+\dotseq	symbol	math		dotseq					lib/LaTeXML/Package/mathabx.sty.ltxml:93	Let alias of \doteqdot
+\dottimes	symbol	math	U+2A30	dottimes		MULOP			lib/LaTeXML/Package/mathabx.sty.ltxml:51	
+\doublebarwedge	symbol	math	U+2A5E	doublebarwedge		ADDOP		\doublebarwedge	lib/LaTeXML/Package/mathabx.sty.ltxml:249	
+\doublecap	symbol	math	U+22D2	doublecap	double-intersection	ADDOP		\doublecap	lib/LaTeXML/Package/mathabx.sty.ltxml:251	
+\doublecup	symbol	math	U+22D3	doublecup	double-union	ADDOP		\doublecup	lib/LaTeXML/Package/mathabx.sty.ltxml:252	
+\downdownarrows	symbol	math	U+21CA	downdownarrows		ARROW		\downdownarrows	lib/LaTeXML/Package/mathabx.sty.ltxml:456	
+\downdownharpoons	symbol	math	U+2965	downdownharpoons		ARROW			lib/LaTeXML/Package/mathabx.sty.ltxml:464	
+\downharpoonleft	symbol	math	U+21C3	downharpoonleft		ARROW		\downharpoonleft	lib/LaTeXML/Package/mathabx.sty.ltxml:434	
+\downharpoonright	symbol	math	U+21C2	downharpoonright		ARROW		\downharpoonright	lib/LaTeXML/Package/mathabx.sty.ltxml:437	
+\downtouparrow	symbol	math	U+2B8D	downtouparrow		ARROW			lib/LaTeXML/Package/mathabx.sty.ltxml:496	
+\downuparrows	symbol	math	U+21F5	downuparrows		ARROW			lib/LaTeXML/Package/mathabx.sty.ltxml:460	
+\downupharpoons	symbol	math	U+296F	downupharpoons		ARROW			lib/LaTeXML/Package/mathabx.sty.ltxml:441	
+\drsh	symbol	math	U+21B3	drsh		ARROW			lib/LaTeXML/Package/mathabx.sty.ltxml:477	
+\eqcirc	symbol	math	U+2256	eqcirc		RELOP		\eqcirc	lib/LaTeXML/Package/mathabx.sty.ltxml:103	
+\eqcolon	symbol	math	U+2255	eqcolon		RELOP		\eqcolon	lib/LaTeXML/Package/mathabx.sty.ltxml:98	
+\eqslantgtr	symbol	math	U+2A96	eqslantgtr	greater-than-or-equals	RELOP		\eqslantgtr	lib/LaTeXML/Package/mathabx.sty.ltxml:356	
+\eqslantless	symbol	math	U+2A95	eqslantless	less-than-or-equals	RELOP		\eqslantless	lib/LaTeXML/Package/mathabx.sty.ltxml:355	
+\fallingdotseq	symbol	math	U+2252	fallingdotseq	approximately-equals-or-image-of	RELOP		\fallingdotseq	lib/LaTeXML/Package/mathabx.sty.ltxml:96	
+\fourth	symbol	math	U+2057	fourth		RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:127	
+\fullmoon	text	text	U+25CB	fullmoon					lib/LaTeXML/Package/mathabx.sty.ltxml:197	
+\geqq	symbol	math	U+2267	geqq	greater-than-or-equals	RELOP		\geqq	lib/LaTeXML/Package/mathabx.sty.ltxml:348	
+\ggcurly	symbol	math	U+2ABC	ggcurly	double-succeeds	RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:416	
+\ggg	symbol	math	U+22D9	ggg	very-much-greater-than	RELOP		\ggg	lib/LaTeXML/Package/mathabx.sty.ltxml:380	
+\gnapprox	symbol	math	U+2A8A	gnapprox	greater-than-and-not-approximately-equals	RELOP		\gnapprox	lib/LaTeXML/Package/mathabx.sty.ltxml:376	
+\gneq	symbol	math	U+2A88	gneq	greater-than-and-not-equals	RELOP		\gneq	lib/LaTeXML/Package/mathabx.sty.ltxml:346	
+\gneqq	symbol	math	U+2269	gneqq	greater-than-and-not-equals	RELOP		\gneqq	lib/LaTeXML/Package/mathabx.sty.ltxml:352	
+\gnsim	symbol	math	U+22E7	gnsim	greater-than-and-not-equivalent-to	RELOP		\gnsim	lib/LaTeXML/Package/mathabx.sty.ltxml:370	
+\gtrapprox	symbol	math	U+2A86	gtrapprox	greater-than-or-approximately-equals	RELOP		\gtrapprox	lib/LaTeXML/Package/mathabx.sty.ltxml:372	
+\gtrdot	symbol	math	U+22D7	gtrdot		RELOP		\gtrdot	lib/LaTeXML/Package/mathabx.sty.ltxml:378	
+\gtreqless	symbol	math	U+22DB	gtreqless	greater-than-or-equals-or-less-than	RELOP		\gtreqless	lib/LaTeXML/Package/mathabx.sty.ltxml:362	
+\gtreqqless	symbol	math	U+2A8C	gtreqqless	greater-than-or-equals-or-less-than	RELOP		\gtreqqless	lib/LaTeXML/Package/mathabx.sty.ltxml:364	
+\gtrless	symbol	math	U+2277	gtrless	greater-than-or-less-than	RELOP		\gtrless	lib/LaTeXML/Package/mathabx.sty.ltxml:360	
+\gtrsim	symbol	math	U+2273	gtrsim	greater-than-or-equivalent-to	RELOP		\gtrsim	lib/LaTeXML/Package/mathabx.sty.ltxml:366	
+\gvertneqq	symbol	math	U+2269	gvertneqq	greater-than-and-not-equals	RELOP		\gvertneqq	lib/LaTeXML/Package/mathabx.sty.ltxml:354	
+\hash	symbol	math	U+0023	hash		RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:111	
+\iiintop	symbol	math	U+222D	iiintop	triple-integral	INTOP		\iiint	lib/LaTeXML/Package/mathabx.sty.ltxml:547	
+\iintop	symbol	math	U+222C	iintop	double-integral	INTOP		\iint	lib/LaTeXML/Package/mathabx.sty.ltxml:545	
+\ldbrack	symbol	math	U+27E6	ldbrack		OPEN			lib/LaTeXML/Package/mathabx.sty.ltxml:668	
+\leftbarharpoon	symbol	math	U+296A	leftbarharpoon		ARROW			lib/LaTeXML/Package/mathabx.sty.ltxml:465	
+\leftleftarrows	symbol	math	U+21C7	leftleftarrows		ARROW		\leftleftarrows	lib/LaTeXML/Package/mathabx.sty.ltxml:453	
+\leftleftharpoons	symbol	math	U+2962	leftleftharpoons		ARROW			lib/LaTeXML/Package/mathabx.sty.ltxml:461	
+\leftmoon	text	text	U+263E	leftmoon					lib/LaTeXML/Package/mathabx.sty.ltxml:195	
+\leftrightarrows	symbol	math	U+21C6	leftrightarrows		ARROW		\leftrightarrows	lib/LaTeXML/Package/mathabx.sty.ltxml:457	
+\leftrightharpoon	symbol	math	U+294A	leftrightharpoon		ARROW			lib/LaTeXML/Package/mathabx.sty.ltxml:469	
+\leftrightharpoons	symbol	math	U+21CB	leftrightharpoons		ARROW		\leftrightharpoons	lib/LaTeXML/Package/mathabx.sty.ltxml:438	
+\leftrightsquigarrow	symbol	math	U+21AD	leftrightsquigarrow		ARROW		\leftrightsquigarrow	lib/LaTeXML/Package/mathabx.sty.ltxml:492	
+\leftsquigarrow	symbol	math	U+21DC	leftsquigarrow		RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:490	
+\leftthreetimes	symbol	math	U+22CB	leftthreetimes	left-semidirect-product	MULOP		\leftthreetimes	lib/LaTeXML/Package/mathabx.sty.ltxml:139	
+\lefttorightarrow	symbol	math	U+2B8E	lefttorightarrow		ARROW			lib/LaTeXML/Package/mathabx.sty.ltxml:493	
+\leqq	symbol	math	U+2266	leqq	less-than-or-equals	RELOP		\leqq	lib/LaTeXML/Package/mathabx.sty.ltxml:347	
+\lessapprox	symbol	math	U+2A85	lessapprox	less-than-or-approximately-equals	RELOP		\lessapprox	lib/LaTeXML/Package/mathabx.sty.ltxml:371	
+\lessdot	symbol	math	U+22D6	lessdot		RELOP		\lessdot	lib/LaTeXML/Package/mathabx.sty.ltxml:377	
+\lesseqgtr	symbol	math	U+22DA	lesseqgtr	less-than-or-equals-or-greater-than	RELOP		\lesseqgtr	lib/LaTeXML/Package/mathabx.sty.ltxml:361	
+\lesseqqgtr	symbol	math	U+2A8B	lesseqqgtr	less-than-or-equals-or-greater-than	RELOP		\lesseqqgtr	lib/LaTeXML/Package/mathabx.sty.ltxml:363	
+\lessgtr	symbol	math	U+2276	lessgtr	less-than-or-greater-than	RELOP		\lessgtr	lib/LaTeXML/Package/mathabx.sty.ltxml:359	
+\lesssim	symbol	math	U+2272	lesssim	less-than-or-similar-to	RELOP		\lesssim	lib/LaTeXML/Package/mathabx.sty.ltxml:365	
+\llcorner	symbol	math	U+231E	llcorner				\llcorner	lib/LaTeXML/Package/mathabx.sty.ltxml:179	
+\llcurly	symbol	math	U+2ABB	llcurly	double-precedes	RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:415	
+\lll	symbol	math	U+22D8	lll	very-much-less-than	RELOP		\lll	lib/LaTeXML/Package/mathabx.sty.ltxml:379	
+\lnapprox	symbol	math	U+2A89	lnapprox	less-than-and-not-approximately-equals	RELOP		\lnapprox	lib/LaTeXML/Package/mathabx.sty.ltxml:375	
+\lneq	symbol	math	U+2A87	lneq	less-than-and-not-equals	RELOP		\lneq	lib/LaTeXML/Package/mathabx.sty.ltxml:345	
+\lneqq	symbol	math	U+2268	lneqq	less-than-and-not-equals	RELOP		\lneqq	lib/LaTeXML/Package/mathabx.sty.ltxml:351	
+\lnsim	symbol	math	U+22E6	lnsim	less-than-and-not-equivalent-to	RELOP		\lnsim	lib/LaTeXML/Package/mathabx.sty.ltxml:369	
+\looparrowleft	symbol	math	U+21AB	looparrowleft		ARROW		\looparrowleft	lib/LaTeXML/Package/mathabx.sty.ltxml:478	
+\looparrowright	symbol	math	U+21AC	looparrowright		ARROW		\looparrowright	lib/LaTeXML/Package/mathabx.sty.ltxml:479	
+\lrcorner	symbol	math	U+231F	lrcorner				\lrcorner	lib/LaTeXML/Package/mathabx.sty.ltxml:180	
+\ltimes	symbol	math	U+22C9	ltimes	left-normal-factor-semidirect-product	MULOP		\ltimes	lib/LaTeXML/Package/mathabx.sty.ltxml:37	
+\lvertneqq	symbol	math	U+2268	lvertneqq	less-than-and-not-equals	RELOP		\lvertneqq	lib/LaTeXML/Package/mathabx.sty.ltxml:353	
+\mapsfromchar	symbol	math	U+007C	mapsfromchar		RELOP		\textbar	lib/LaTeXML/Package/mathabx.sty.ltxml:429	
+\measuredangle	symbol	math	U+2221	measuredangle				\measuredangle	lib/LaTeXML/Package/mathabx.sty.ltxml:162	
+\nDashV	symbol	math	U+2AE5 U+0338	nDashV		RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:146	
+\nDashv	symbol	math	U+2AE4 U+0338	nDashv		RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:118	
+\nLeftarrow	symbol	math	U+21CD	nLeftarrow		ARROW		\nLeftarrow	lib/LaTeXML/Package/mathabx.sty.ltxml:444	
+\nLeftrightarrow	symbol	math	U+21CE	nLeftrightarrow		ARROW		\nLeftrightarrow	lib/LaTeXML/Package/mathabx.sty.ltxml:446	
+\nRightarrow	symbol	math	U+21CF	nRightarrow		ARROW		\nRightarrow	lib/LaTeXML/Package/mathabx.sty.ltxml:445	
+\nSubset	symbol	math	U+22D0 U+0338	nSubset	not-double-subset-of	RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:278	
+\nSupset	symbol	math	U+22D1 U+0338	nSupset	not-double-superset-of	RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:279	
+\nVDash	symbol	math	U+22AF	nVDash		RELOP		\nVDash	lib/LaTeXML/Package/mathabx.sty.ltxml:145	
+\nVdash	symbol	math	U+22AE	nVdash	not-forces	RELOP		\nVdash	lib/LaTeXML/Package/mathabx.sty.ltxml:121	
+\nVvash	symbol	math	U+22AA U+0338	nVvash		RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:152	
+\napprox	symbol	math	U+2249	napprox	not-approximately-equals	RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:80	
+\ncong	symbol	math	U+2247	ncong	not-approximately-equals	RELOP		\ncong	lib/LaTeXML/Package/mathabx.sty.ltxml:83	
+\ncurlyeqprec	symbol	math	U+22DE U+0338	ncurlyeqprec	not-equals-nor-preceeds	RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:401	
+\ncurlyeqsucc	symbol	math	U+22DF U+0338	ncurlyeqsucc	not-equals-nor-succeeds	RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:402	
+\ndashV	symbol	math	U+2AE3 U+0338	ndashV		RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:122	
+\ndashv	symbol	math	U+22A3 U+0338	ndashv		RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:114	
+\neqslantgtr	symbol	math	U+2A96 U+0338	neqslantgtr	not-greater-than-nor-equals	RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:358	
+\neqslantless	symbol	math	U+2A95 U+0338	neqslantless	not-less-than-nor-equals	RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:357	
+\nequiv	symbol	math	U+2262	nequiv	not-equivalent-to	RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:76	
+\newmoon	text	text	U+25CF	newmoon					lib/LaTeXML/Package/mathabx.sty.ltxml:198	
+\nexists	symbol	math	U+2204	nexists	not-exists	FUNCTION		\nexists	lib/LaTeXML/Package/mathabx.sty.ltxml:219	
+\ngeq	symbol	math	U+2271	ngeq	not-greater-than-nor-equals	RELOP		\ngeq	lib/LaTeXML/Package/mathabx.sty.ltxml:340	
+\ngeqq	symbol	math	U+2267 U+0338	ngeqq	not-greater-than-nor-equals	RELOP		\ngeqq	lib/LaTeXML/Package/mathabx.sty.ltxml:350	
+\ngtr	symbol	math	U+226F	ngtr	not-greater-than	RELOP		\ngtr	lib/LaTeXML/Package/mathabx.sty.ltxml:337	
+\ngtrapprox	symbol	math	U+2A86 U+0338	ngtrapprox	not-greater-than-nor-approximately-equals	RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:374	
+\ngtrsim	symbol	math	U+2273 U+0338	ngtrsim	not-greater-than-nor-equivalent-to	RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:368	
+\nleftarrow	symbol	math	U+219A	nleftarrow		ARROW		\nleftarrow	lib/LaTeXML/Package/mathabx.sty.ltxml:424	
+\nleftrightarrow	symbol	math	U+21AE	nleftrightarrow		ARROW		\nleftrightarrow	lib/LaTeXML/Package/mathabx.sty.ltxml:426	
+\nleq	symbol	math	U+2270	nleq	not-less-than-nor-greater-than	RELOP		\nleq	lib/LaTeXML/Package/mathabx.sty.ltxml:339	
+\nleqq	symbol	math	U+2266 U+0338	nleqq	not-less-than-nor-equals	RELOP		\nleqq	lib/LaTeXML/Package/mathabx.sty.ltxml:349	
+\nless	symbol	math	U+226E	nless	not-less-than	RELOP		\nless	lib/LaTeXML/Package/mathabx.sty.ltxml:336	
+\nlessapprox	symbol	math	U+2A85 U+0338	nlessapprox	not-less-than-nor-approximately-equals	RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:373	
+\nlesssim	symbol	math	U+2272 U+0338	nlesssim	not-less-than-nor-similar-to	RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:367	
+\notasymp	symbol	math	U+226D	notasymp	not-equivalent-to	RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:85	
+\notbot	symbol	math	U+22A5 U+0338	notbot	not-bottom	ADDOP			lib/LaTeXML/Package/mathabx.sty.ltxml:227	
+\notdivides	symbol	math	U+2224	notdivides	does-not-divide	RELOP		\nmid	lib/LaTeXML/Package/mathabx.sty.ltxml:86	
+\notequiv	symbol	math		notequiv					lib/LaTeXML/Package/mathabx.sty.ltxml:77	Let alias of \nequiv
+\notni	symbol	math		notni				\notni	lib/LaTeXML/Package/mathabx.sty.ltxml:234	Let alias of \notowner
+\notowner	symbol	math	U+220C	notowner	not-contains	RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:233	
+\notowns	symbol	math		notowns					lib/LaTeXML/Package/mathabx.sty.ltxml:235	Let alias of \notowner
+\notperp	symbol	math	U+27C2 U+0338	notperp	not-perpendicular-to	RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:228	
+\notsign	symbol	math	U+007C	notsign	not	OPERATOR		\textbar	lib/LaTeXML/Package/mathabx.sty.ltxml:22	
+\nottop	symbol	math	U+22A4 U+0338	nottop	not-top	ADDOP			lib/LaTeXML/Package/mathabx.sty.ltxml:226	
+\nprec	symbol	math	U+2280	nprec	not-precedes	RELOP		\nprec	lib/LaTeXML/Package/mathabx.sty.ltxml:388	
+\nprecapprox	symbol	math	U+2AB7 U+0338	nprecapprox	not-precedes-nor-approximately-equals	RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:411	
+\npreccurlyeq	symbol	math	U+227C U+0338	npreccurlyeq	not-precedes-nor-equals	RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:392	
+\npreceq	symbol	math	U+22E0	npreceq	not-precedes-nor-equals	RELOP		\npreceq	lib/LaTeXML/Package/mathabx.sty.ltxml:395	
+\nprecsim	symbol	math	U+227E U+0338	nprecsim	not-precedes-nor-equivalent-to	RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:405	
+\nrightarrow	symbol	math	U+219B	nrightarrow		ARROW		\nrightarrow	lib/LaTeXML/Package/mathabx.sty.ltxml:425	
+\nsim	symbol	math	U+2241	nsim	not-similar-to	RELOP		\nsim	lib/LaTeXML/Package/mathabx.sty.ltxml:78	
+\nsimeq	symbol	math	U+2243 U+0338	nsimeq	not-equivalent-to-nor-equals	RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:81	
+\nsqsubset	symbol	math	U+228F U+0338	nsqsubset	not-square-image-of	RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:284	
+\nsqsubseteq	symbol	math	U+22E2	nsqsubseteq	not-square-image-of-nor-equals	RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:287	
+\nsqsubseteqq	symbol	math	U+228F U+0333 U+0338	nsqsubseteqq	not-square-image-of-nor-equals	RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:296	
+\nsqsupset	symbol	math	U+2290 U+0338	nsqsupset	not-square-original-of	RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:285	
+\nsqsupseteq	symbol	math	U+22E3	nsqsupseteq	not-square-original-of-nor-equals	RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:288	
+\nsqsupseteqq	symbol	math	U+2290 U+0333 U+0338	nsqsupseteqq	not-square-original-of-nor-equals	RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:297	
+\nsubset	symbol	math	U+2284	nsubset	not-subset-of	RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:259	
+\nsubseteq	symbol	math	U+2288	nsubseteq	not-subset-of-nor-equals	RELOP		\nsubseteq	lib/LaTeXML/Package/mathabx.sty.ltxml:262	
+\nsubseteqq	symbol	math	U+2AC5 U+0338	nsubseteqq	not-subset-of-nor-equals	RELOP		\nsubseteqq	lib/LaTeXML/Package/mathabx.sty.ltxml:270	
+\nsucc	symbol	math	U+2281	nsucc	not-succeeds	RELOP		\nsucc	lib/LaTeXML/Package/mathabx.sty.ltxml:389	
+\nsuccapprox	symbol	math	U+2AB8 U+0338	nsuccapprox	not-succeeds-nor-approximately-equals	RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:412	
+\nsucccurlyeq	symbol	math	U+227D U+0338	nsucccurlyeq	not-succeeds-nor-equals	RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:393	
+\nsucceq	symbol	math	U+22E1	nsucceq	not-succeeds-nor-equals	RELOP		\nsucceq	lib/LaTeXML/Package/mathabx.sty.ltxml:396	
+\nsuccsim	symbol	math	U+227F U+0338	nsuccsim	not-succeeds-nor-equivalent-to	RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:406	
+\nsupset	symbol	math	U+2285	nsupset	not-superset-of	RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:260	
+\nsupseteq	symbol	math	U+2289	nsupseteq	not-superset-of-nor-equals	RELOP		\nsupseteq	lib/LaTeXML/Package/mathabx.sty.ltxml:263	
+\nsupseteqq	symbol	math	U+2AC6 U+0338	nsupseteqq	not-superset-of-nor-equals	RELOP		\nsupseteqq	lib/LaTeXML/Package/mathabx.sty.ltxml:271	
+\ntriangleleft	symbol	math	U+22EA	ntriangleleft	not-subgroup-of	RELOP		\ntriangleleft	lib/LaTeXML/Package/mathabx.sty.ltxml:315	
+\ntrianglelefteq	symbol	math	U+22EC	ntrianglelefteq	not-subgroup-of-nor-equals	RELOP		\ntrianglelefteq	lib/LaTeXML/Package/mathabx.sty.ltxml:319	
+\ntriangleright	symbol	math	U+22EB	ntriangleright	not-contains	RELOP		\ntriangleright	lib/LaTeXML/Package/mathabx.sty.ltxml:316	
+\ntrianglerighteq	symbol	math	U+22ED	ntrianglerighteq	not-contains-nor-equals	RELOP		\ntrianglerighteq	lib/LaTeXML/Package/mathabx.sty.ltxml:320	
+\nvDash	symbol	math	U+22AD	nvDash		RELOP		\nvDash	lib/LaTeXML/Package/mathabx.sty.ltxml:117	
+\nvargeq	symbol	math		nvargeq					lib/LaTeXML/Package/mathabx.sty.ltxml:344	Let alias of \ngeq
+\nvarleq	symbol	math		nvarleq					lib/LaTeXML/Package/mathabx.sty.ltxml:343	Let alias of \nleq
+\nvdash	symbol	math	U+22AC	nvdash		RELOP		\nvdash	lib/LaTeXML/Package/mathabx.sty.ltxml:113	
+\oasterisk	symbol	math	U+229B	oasterisk		MULOP		\circledast	lib/LaTeXML/Package/mathabx.sty.ltxml:506	
+\obackslash	symbol	math	U+29B8	obackslash					lib/LaTeXML/Package/mathabx.sty.ltxml:514	
+\obot	symbol	math	U+29BA	obot					lib/LaTeXML/Package/mathabx.sty.ltxml:511	
+\ocirc	symbol	math	U+229A	ocirc				\circledcirc	lib/LaTeXML/Package/mathabx.sty.ltxml:505	
+\oiintop	symbol	math	U+222F	oiintop	double-contour-integral	INTOP		\oiint	lib/LaTeXML/Package/mathabx.sty.ltxml:550	
+\oleft	symbol	math	U+22A3 U+20DD	oleft		ADDOP			lib/LaTeXML/Package/mathabx.sty.ltxml:508	
+\oright	symbol	math	U+22A2 U+20DD	oright		ADDOP			lib/LaTeXML/Package/mathabx.sty.ltxml:509	
+\otop	symbol	math	U+22A4 U+20DD	otop		ADDOP			lib/LaTeXML/Package/mathabx.sty.ltxml:510	
+\otriangleup	symbol	math	U+25B3 U+20DD	otriangleup		ADDOP			lib/LaTeXML/Package/mathabx.sty.ltxml:515	
+\ovoid	symbol	math	U+25CB	ovoid					lib/LaTeXML/Package/mathabx.sty.ltxml:512	
+\ownsbar	symbol	math	U+22F8	ownsbar	element-of-with-underbar	ADDOP			lib/LaTeXML/Package/mathabx.sty.ltxml:239	
+\partialslash	symbol	math	U+2202 U+0338	partialslash		OPERATOR			lib/LaTeXML/Package/mathabx.sty.ltxml:217	
+\pitchfork	symbol	math	U+22D4	pitchfork	proper-intersection	RELOP		\pitchfork	lib/LaTeXML/Package/mathabx.sty.ltxml:141	
+\pluscirc	symbol	math	U+2295	pluscirc		MULOP		\oplus	lib/LaTeXML/Package/mathabx.sty.ltxml:60	
+\precapprox	symbol	math	U+2AB7	precapprox	precedes-or-approximately-equals	RELOP		\precapprox	lib/LaTeXML/Package/mathabx.sty.ltxml:409	
+\preccurlyeq	symbol	math	U+227C	preccurlyeq	precedes-or-equals	RELOP		\preccurlyeq	lib/LaTeXML/Package/mathabx.sty.ltxml:390	
+\precdot	symbol	math	U+22D6	precdot		RELOP		\lessdot	lib/LaTeXML/Package/mathabx.sty.ltxml:381	
+\precnapprox	symbol	math	U+2AB9	precnapprox	precedes-and-not-approximately-equals	RELOP		\precnapprox	lib/LaTeXML/Package/mathabx.sty.ltxml:413	
+\precneq	symbol	math	U+22E8	precneq	precedes-not-equals	RELOP		\precnsim	lib/LaTeXML/Package/mathabx.sty.ltxml:397	
+\precnsim	symbol	math	U+22E8	precnsim	precedes-and-not-equivalent-to	RELOP		\precnsim	lib/LaTeXML/Package/mathabx.sty.ltxml:407	
+\precsim	symbol	math	U+227E	precsim	precedes-or-equivalent-to	RELOP		\precsim	lib/LaTeXML/Package/mathabx.sty.ltxml:403	
+\rdbrack	symbol	math	U+27E7	rdbrack		CLOSE			lib/LaTeXML/Package/mathabx.sty.ltxml:669	
+\restriction	symbol	math	U+21BE	restriction		ARROW		\restriction	lib/LaTeXML/Package/mathabx.sty.ltxml:436	
+\rightbarharpoon	symbol	math	U+296C	rightbarharpoon		ARROW			lib/LaTeXML/Package/mathabx.sty.ltxml:466	
+\rightleftarrows	symbol	math	U+21C4	rightleftarrows		ARROW		\rightleftarrows	lib/LaTeXML/Package/mathabx.sty.ltxml:458	
+\rightleftharpoon	symbol	math	U+294B	rightleftharpoon		ARROW			lib/LaTeXML/Package/mathabx.sty.ltxml:470	
+\rightmoon	text	text	U+263D	rightmoon					lib/LaTeXML/Package/mathabx.sty.ltxml:196	
+\rightrightarrows	symbol	math	U+21C9	rightrightarrows		ARROW		\rightrightarrows	lib/LaTeXML/Package/mathabx.sty.ltxml:454	
+\rightrightharpoons	symbol	math	U+2964	rightrightharpoons		ARROW			lib/LaTeXML/Package/mathabx.sty.ltxml:462	
+\rightsquigarrow	symbol	math	U+219D	rightsquigarrow		ARROW		\rightsquigarrow	lib/LaTeXML/Package/mathabx.sty.ltxml:491	
+\rightthreetimes	symbol	math	U+22CC	rightthreetimes	right-semidirect-product	MULOP		\rightthreetimes	lib/LaTeXML/Package/mathabx.sty.ltxml:140	
+\righttoleftarrow	symbol	math	U+2B8C	righttoleftarrow		ARROW			lib/LaTeXML/Package/mathabx.sty.ltxml:494	
+\rip	symbol	math	U+26FC	rip					lib/LaTeXML/Package/mathabx.sty.ltxml:164	
+\risingdotseq	symbol	math	U+2253	risingdotseq	image-of-or-approximately-equals	RELOP		\risingdotseq	lib/LaTeXML/Package/mathabx.sty.ltxml:95	
+\rtimes	symbol	math	U+22CA	rtimes	right-normal-factor-semidirect-product	MULOP		\rtimes	lib/LaTeXML/Package/mathabx.sty.ltxml:38	
+\second	symbol	math	U+02BA	second		RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:125	
+\smalltriangledown	symbol	math	U+25BF	smalltriangledown		RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:325	
+\smalltriangleleft	symbol	math	U+25C3	smalltriangleleft		RELOP		\triangleleft	lib/LaTeXML/Package/mathabx.sty.ltxml:326	
+\smalltriangleright	symbol	math	U+25B9	smalltriangleright		RELOP		\triangleright	lib/LaTeXML/Package/mathabx.sty.ltxml:327	
+\smalltriangleup	symbol	math	U+25B5	smalltriangleup		RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:324	
+\sphericalangle	symbol	math	U+2222	sphericalangle				\sphericalangle	lib/LaTeXML/Package/mathabx.sty.ltxml:163	
+\sprod	symbol	math	U+220F	sprod	product	SUMOP		\prod	lib/LaTeXML/Package/mathabx.sty.ltxml:44	
+\sqbullet	symbol	math	U+2BC0	sqbullet		MULOP			lib/LaTeXML/Package/mathabx.sty.ltxml:64	
+\sqdoublecap	symbol	math	U+2A4E	sqdoublecap	double-square-intersection	ADDOP			lib/LaTeXML/Package/mathabx.sty.ltxml:253	
+\sqdoublecup	symbol	math	U+2A4F	sqdoublecup	double-square-union	ADDOP			lib/LaTeXML/Package/mathabx.sty.ltxml:254	
+\sqsubseteqq	symbol	math	U+228F U+0333	sqsubseteqq	square-image-of-or-equals	RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:294	
+\sqsubsetneq	symbol	math	U+22E4	sqsubsetneq	square-image-of-or-not-equals	RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:289	
+\sqsupseteqq	symbol	math	U+2290 U+0333	sqsupseteqq	square-original-of-or-equals	RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:295	
+\sqsupsetneq	symbol	math	U+22E5	sqsupsetneq	square-original-of-or-not-equals	RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:290	
+\square	symbol	math	U+25A1	square		MULOP		\square	lib/LaTeXML/Package/mathabx.sty.ltxml:54	
+\ssum	symbol	math	U+2211	ssum	sum	SUMOP		\sum	lib/LaTeXML/Package/mathabx.sty.ltxml:43	
+\subseteqq	symbol	math	U+2AC5	subseteqq	subset-of-or-equals	RELOP		\subseteqq	lib/LaTeXML/Package/mathabx.sty.ltxml:268	
+\subsetneq	symbol	math	U+228A	subsetneq	subset-of-and-not-equals	RELOP		\subsetneq	lib/LaTeXML/Package/mathabx.sty.ltxml:264	
+\subsetneqq	symbol	math	U+2ACB	subsetneqq	subset-of-and-not-equals	RELOP		\subsetneqq	lib/LaTeXML/Package/mathabx.sty.ltxml:272	
+\succapprox	symbol	math	U+2AB8	succapprox	succeeds-or-approximately-equals	RELOP		\succapprox	lib/LaTeXML/Package/mathabx.sty.ltxml:410	
+\succcurlyeq	symbol	math	U+227D	succcurlyeq	succeeds-or-equals	RELOP		\succcurlyeq	lib/LaTeXML/Package/mathabx.sty.ltxml:391	
+\succdot	symbol	math	U+22D7	succdot		RELOP		\gtrdot	lib/LaTeXML/Package/mathabx.sty.ltxml:382	
+\succnapprox	symbol	math	U+2ABA	succnapprox	succeeds-and-not-approximately-equals	RELOP		\succnapprox	lib/LaTeXML/Package/mathabx.sty.ltxml:414	
+\succneq	symbol	math	U+22E9	succneq	succeeds-not-equals	RELOP		\succnsim	lib/LaTeXML/Package/mathabx.sty.ltxml:398	
+\succnsim	symbol	math	U+22E9	succnsim	succeeds-and-not-equivalent-to	RELOP		\succnsim	lib/LaTeXML/Package/mathabx.sty.ltxml:408	
+\succsim	symbol	math	U+227F	succsim	succeeds-or-equivalent-to	RELOP		\succsim	lib/LaTeXML/Package/mathabx.sty.ltxml:404	
+\supseteqq	symbol	math	U+2AC6	supseteqq	superset-of-or-equals	RELOP		\supseteqq	lib/LaTeXML/Package/mathabx.sty.ltxml:269	
+\supsetneq	symbol	math	U+228B	supsetneq	superset-of-and-not-equals	RELOP		\supsetneq	lib/LaTeXML/Package/mathabx.sty.ltxml:265	
+\supsetneqq	symbol	math	U+2ACC	supsetneqq	superset-of-and-not-equals	RELOP		\supsetneqq	lib/LaTeXML/Package/mathabx.sty.ltxml:273	
+\therefore	symbol	math	U+2234	therefore	therefore	METARELOP		\therefore	lib/LaTeXML/Package/mathabx.sty.ltxml:154	
+\thickvert	symbol	math	U+2759	thickvert		MID			lib/LaTeXML/Package/mathabx.sty.ltxml:684	
+\third	symbol	math	U+2034	third		RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:126	
+\topdoteq	symbol	math	U+003D U+0307	topdoteq		RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:90	
+\trianglelefteq	symbol	math	U+22B4	trianglelefteq				\trianglelefteq	lib/LaTeXML/Package/mathabx.sty.ltxml:317	
+\triangleq	symbol	math	U+225C	triangleq		RELOP		\triangleq	lib/LaTeXML/Package/mathabx.sty.ltxml:104	
+\trianglerighteq	symbol	math	U+22B5	trianglerighteq				\trianglerighteq	lib/LaTeXML/Package/mathabx.sty.ltxml:318	
+\udot	symbol	math	U+22C5	udot		MULOP			lib/LaTeXML/Package/mathabx.sty.ltxml:53	
+\ulcorner	symbol	math	U+231C	ulcorner				\ulcorner	lib/LaTeXML/Package/mathabx.sty.ltxml:177	
+\updownarrows	symbol	math	U+21C5	updownarrows		ARROW			lib/LaTeXML/Package/mathabx.sty.ltxml:459	
+\updownharpoons	symbol	math	U+296E	updownharpoons		ARROW			lib/LaTeXML/Package/mathabx.sty.ltxml:440	
+\upharpoonleft	symbol	math	U+21BF	upharpoonleft		ARROW		\upharpoonleft	lib/LaTeXML/Package/mathabx.sty.ltxml:433	
+\upharpoonright	symbol	math	U+21BE	upharpoonright		ARROW		\upharpoonright	lib/LaTeXML/Package/mathabx.sty.ltxml:435	
+\uptodownarrow	symbol	math	U+2B8F	uptodownarrow		ARROW			lib/LaTeXML/Package/mathabx.sty.ltxml:495	
+\upuparrows	symbol	math	U+21C8	upuparrows		ARROW		\upuparrows	lib/LaTeXML/Package/mathabx.sty.ltxml:455	
+\upupharpoons	symbol	math	U+2963	upupharpoons		ARROW			lib/LaTeXML/Package/mathabx.sty.ltxml:463	
+\urcorner	symbol	math	U+231D	urcorner				\urcorner	lib/LaTeXML/Package/mathabx.sty.ltxml:178	
+\vDash	symbol	math	U+22A8	vDash		RELOP		\vDash	lib/LaTeXML/Package/mathabx.sty.ltxml:115	
+\varEarth	text	text	U+2641	varEarth					lib/LaTeXML/Package/mathabx.sty.ltxml:194	
+\vargeq	symbol	math		vargeq					lib/LaTeXML/Package/mathabx.sty.ltxml:342	Let alias of \geq
+\varhash	symbol	math	U+0023	varhash		RELOP			lib/LaTeXML/Package/mathabx.sty.ltxml:138	
+\varleq	symbol	math		varleq					lib/LaTeXML/Package/mathabx.sty.ltxml:341	Let alias of \leq
+\varnotin	symbol	math		varnotin					lib/LaTeXML/Package/mathabx.sty.ltxml:236	Let alias of \notin
+\varnotowner	symbol	math		varnotowner					lib/LaTeXML/Package/mathabx.sty.ltxml:237	Let alias of \notowner
+\varnotsign	symbol	math	U+002F	varnotsign	not	OPERATOR			lib/LaTeXML/Package/mathabx.sty.ltxml:23	
+\varsqsubsetneq	symbol	math		varsqsubsetneq					lib/LaTeXML/Package/mathabx.sty.ltxml:291	Let alias of \sqsubsetneq
+\varsqsupsetneq	symbol	math		varsqsupsetneq					lib/LaTeXML/Package/mathabx.sty.ltxml:292	Let alias of \sqsupsetneq
+\varstar	symbol	math	U+2736	varstar		MULOP			lib/LaTeXML/Package/mathabx.sty.ltxml:41	
+\varsubsetneq	symbol	math	U+228A	varsubsetneq	subset-of-and-not-equals	RELOP		\varsubsetneq	lib/LaTeXML/Package/mathabx.sty.ltxml:266	
+\varsubsetneqq	symbol	math	U+2ACB	varsubsetneqq	subset-of-and-not-equals	RELOP		\varsubsetneqq	lib/LaTeXML/Package/mathabx.sty.ltxml:274	
+\varsupsetneq	symbol	math	U+228B	varsupsetneq	subset-of-and-not-equals	RELOP		\varsupsetneq	lib/LaTeXML/Package/mathabx.sty.ltxml:267	
+\varsupsetneqq	symbol	math	U+2ACC	varsupsetneqq	superset-of-and-not-equals	RELOP		\varsupsetneqq	lib/LaTeXML/Package/mathabx.sty.ltxml:275	
+\vartriangleleft	symbol	math	U+22B2	vartriangleleft				\vartriangleleft	lib/LaTeXML/Package/mathabx.sty.ltxml:312	
+\vartriangleright	symbol	math	U+22B3	vartriangleright				\vartriangleright	lib/LaTeXML/Package/mathabx.sty.ltxml:314	
+\veebar	symbol	math	U+22BB	veebar	exclusive-or	ADDOP		\veebar	lib/LaTeXML/Package/mathabx.sty.ltxml:248	
+\veedoublebar	symbol	math	U+2A63	veedoublebar		ADDOP			lib/LaTeXML/Package/mathabx.sty.ltxml:250	
+\vvvert	symbol	math	U+2980	vvvert		MID			lib/LaTeXML/Package/mathabx.sty.ltxml:674	

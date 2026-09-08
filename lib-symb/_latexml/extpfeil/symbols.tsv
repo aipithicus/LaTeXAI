@@ -1,0 +1,10 @@
+command	kind	mode	codepoint	name	meaning	role	font	katex	source	note
+\lx@stretchy@Leftarrow	symbol	math	U+21D0	Leftarrow	Leftarrow	ARROW		\Leftarrow	lib/LaTeXML/Package/extpfeil.sty.ltxml:47	alias \Leftarrow
+\lx@stretchy@Leftrightarrow	symbol	math	U+21D4	Leftrightarrow	Leftrightarrow	ARROW		\Leftrightarrow	lib/LaTeXML/Package/extpfeil.sty.ltxml:49	alias \Leftrightarrow
+\lx@stretchy@Rightarrow	symbol	math	U+21D2	Rightarrow	Rightarrow	ARROW		\Rightarrow	lib/LaTeXML/Package/extpfeil.sty.ltxml:45	alias \Rightarrow
+\lx@stretchy@leftrightarrow	symbol	math	U+2194	leftrightarrow	leftrightarrow	ARROW		\leftrightarrow	lib/LaTeXML/Package/extpfeil.sty.ltxml:43	alias \leftrightarrow
+\lx@stretchy@longequal	symbol	math	U+003D	lx@stretchy@longequal	equals	ARROW		=	lib/LaTeXML/Package/extpfeil.sty.ltxml:39	
+\lx@stretchy@mapsto	symbol	math	U+21A6	mapsto	mapsto	ARROW		\mapsto	lib/LaTeXML/Package/extpfeil.sty.ltxml:37	alias \mapsto
+\lx@stretchy@tofrom	symbol	math	U+21C4	rightleftarrows	rightleftarrows	ARROW		\rightleftarrows	lib/LaTeXML/Package/extpfeil.sty.ltxml:41	alias \rightleftarrows
+\lx@stretchy@twoheadleftarrow	symbol	math	U+219E	twoheadleftarrow	twoheadleftarrow	ARROW		\twoheadleftarrow	lib/LaTeXML/Package/extpfeil.sty.ltxml:35	alias \twoheadleftarrow
+\lx@stretchy@twoheadrightarrow	symbol	math	U+21A0	twoheadrightarrow	twoheadrightarrow	ARROW		\twoheadrightarrow	lib/LaTeXML/Package/extpfeil.sty.ltxml:33	alias \twoheadrightarrow

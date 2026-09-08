@@ -1,0 +1,2 @@
+command	kind	mode	codepoint	name	meaning	role	font	katex	source	note
+\CMcal	alphabet	math		CMcal			caligraphic		lib/LaTeXML/Package/eucal.sty.ltxml:20	Let alias of \mathcal

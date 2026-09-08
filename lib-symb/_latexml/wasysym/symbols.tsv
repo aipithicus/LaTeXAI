@@ -1,0 +1,135 @@
+command	kind	mode	codepoint	name	meaning	role	font	katex	source	note
+\AC	text	text	U+223C	AC					lib/LaTeXML/Package/wasysym.sty.ltxml:94	
+\APLbox	text	text	U+2395	APLbox					lib/LaTeXML/Package/wasysym.sty.ltxml:171	
+\APLcomment	text	text	U+235D	APLcomment					lib/LaTeXML/Package/wasysym.sty.ltxml:168	
+\APLdown	text	text	U+2352	APLdown					lib/LaTeXML/Package/wasysym.sty.ltxml:173	
+\APLdownarrowbox	text	text	U+2357	APLdownarrowbox					lib/LaTeXML/Package/wasysym.sty.ltxml:177	
+\APLinput	text	text	U+235E	APLinput					lib/LaTeXML/Package/wasysym.sty.ltxml:174	
+\APLinv	text	text	U+2339	APLinv					lib/LaTeXML/Package/wasysym.sty.ltxml:175	
+\APLleftarrowbox	text	text	U+2347	APLleftarrowbox					lib/LaTeXML/Package/wasysym.sty.ltxml:178	
+\APLlog	text	text	U+235F	APLlog					lib/LaTeXML/Package/wasysym.sty.ltxml:170	
+\APLrightarrowbox	text	text	U+2348	APLrightarrowbox					lib/LaTeXML/Package/wasysym.sty.ltxml:179	
+\APLstar	text	text	U+22C6	APLstar				\star	lib/LaTeXML/Package/wasysym.sty.ltxml:169	
+\APLup	text	text	U+234B	APLup					lib/LaTeXML/Package/wasysym.sty.ltxml:172	
+\APLuparrowbox	text	text	U+2350	APLuparrowbox					lib/LaTeXML/Package/wasysym.sty.ltxml:176	
+\Bowtie	text	text	U+22C8	Bowtie					lib/LaTeXML/Package/wasysym.sty.ltxml:91	
+\Box	symbol	math	U+25A1	Box				\Box	lib/LaTeXML/Package/wasysym.sty.ltxml:28	
+\CIRCLE	text	text	U+25CF	CIRCLE					lib/LaTeXML/Package/wasysym.sty.ltxml:120	
+\CheckedBox	text	text	U+2611	CheckedBox					lib/LaTeXML/Package/wasysym.sty.ltxml:100	
+\Circle	text	text	U+25CB	Circle					lib/LaTeXML/Package/wasysym.sty.ltxml:119	
+\DOWNarrow	text	text	U+25BC	DOWNarrow				\blacktriangledown	lib/LaTeXML/Package/wasysym.sty.ltxml:75	
+\Diamond	symbol	math	U+25C7	Diamond				\Diamond	lib/LaTeXML/Package/wasysym.sty.ltxml:29	
+\HF	text	text	U+2248	HF					lib/LaTeXML/Package/wasysym.sty.ltxml:95	
+\Join	symbol	math	U+2A1D	Join				\Join	lib/LaTeXML/Package/wasysym.sty.ltxml:27	
+\LEFTCIRCLE	text	text	U+25D6	LEFTCIRCLE					lib/LaTeXML/Package/wasysym.sty.ltxml:123	
+\LEFTarrow	text	text	U+25C0	LEFTarrow				\blacktriangleleft	lib/LaTeXML/Package/wasysym.sty.ltxml:73	
+\LEFTcircle	text	text	U+25D0	LEFTcircle					lib/LaTeXML/Package/wasysym.sty.ltxml:125	
+\LHD	symbol	math	U+25C0	LHD				\blacktriangleleft	lib/LaTeXML/Package/wasysym.sty.ltxml:35	
+\RHD	symbol	math	U+25B6	RHD				\blacktriangleright	lib/LaTeXML/Package/wasysym.sty.ltxml:38	
+\RIGHTCIRCLE	text	text	U+25D7	RIGHTCIRCLE					lib/LaTeXML/Package/wasysym.sty.ltxml:124	
+\RIGHTarrow	text	text	U+25B6	RIGHTarrow				\blacktriangleright	lib/LaTeXML/Package/wasysym.sty.ltxml:72	
+\RIGHTcircle	text	text	U+25D1	RIGHTcircle					lib/LaTeXML/Package/wasysym.sty.ltxml:126	
+\Square	text	text	U+25A1	Square					lib/LaTeXML/Package/wasysym.sty.ltxml:98	
+\Thorn	text	text	U+00DE	Thorn					lib/LaTeXML/Package/wasysym.sty.ltxml:131	
+\UParrow	text	text	U+25B2	UParrow				\blacktriangle	lib/LaTeXML/Package/wasysym.sty.ltxml:74	
+\VHF	text	text	U+224B	VHF					lib/LaTeXML/Package/wasysym.sty.ltxml:96	
+\XBox	text	text	U+2327	XBox					lib/LaTeXML/Package/wasysym.sty.ltxml:99	
+\agemO	text	text	U+2127	agemO				\mho	lib/LaTeXML/Package/wasysym.sty.ltxml:92	
+\apprge	symbol	math	U+2273	apprge				\gtrsim	lib/LaTeXML/Package/wasysym.sty.ltxml:40	
+\apprle	symbol	math	U+2272	apprle				\lesssim	lib/LaTeXML/Package/wasysym.sty.ltxml:39	
+\aquarius	text	text	U+2652	aquarius					lib/LaTeXML/Package/wasysym.sty.ltxml:163	
+\aries	text	text	U+2648	aries					lib/LaTeXML/Package/wasysym.sty.ltxml:153	
+\ascnode	text	text	U+260A	ascnode					lib/LaTeXML/Package/wasysym.sty.ltxml:136	
+\astrosun	text	text	U+2609	astrosun					lib/LaTeXML/Package/wasysym.sty.ltxml:142	
+\ataribox	text	text	U+26CB	ataribox					lib/LaTeXML/Package/wasysym.sty.ltxml:26	
+\bell	text	text	U+237E	bell					lib/LaTeXML/Package/wasysym.sty.ltxml:86	
+\blacksmiley	text	text	U+263B	blacksmiley					lib/LaTeXML/Package/wasysym.sty.ltxml:83	
+\brokenvert	text	text	U+00A6	brokenvert					lib/LaTeXML/Package/wasysym.sty.ltxml:89	
+\cancer	text	text	U+264B	cancer					lib/LaTeXML/Package/wasysym.sty.ltxml:156	
+\capricornus	text	text	U+2651	capricornus					lib/LaTeXML/Package/wasysym.sty.ltxml:162	
+\cent	text	text	U+00A2	cent					lib/LaTeXML/Package/wasysym.sty.ltxml:87	
+\checked	text	text	U+2713	checked					lib/LaTeXML/Package/wasysym.sty.ltxml:85	
+\clock	text	text	U+1F552	clock					lib/LaTeXML/Package/wasysym.sty.ltxml:69	
+\conjunction	text	text	U+260C	conjunction					lib/LaTeXML/Package/wasysym.sty.ltxml:165	
+\currency	text	text	U+00A4	currency					lib/LaTeXML/Package/wasysym.sty.ltxml:66	
+\davidsstar	text	text	U+2721	davidsstar					lib/LaTeXML/Package/wasysym.sty.ltxml:111	
+\descnode	text	text	U+260B	descnode					lib/LaTeXML/Package/wasysym.sty.ltxml:137	
+\diameter	text	text	U+2300	diameter					lib/LaTeXML/Package/wasysym.sty.ltxml:76	
+\earth	text	text	U+2641	earth					lib/LaTeXML/Package/wasysym.sty.ltxml:145	
+\eighthnote	text	text	U+1D160	eighthnote					lib/LaTeXML/Package/wasysym.sty.ltxml:113	
+\female	text	text	U+2640	female					lib/LaTeXML/Package/wasysym.sty.ltxml:65	
+\frownie	text	text	U+2639	frownie					lib/LaTeXML/Package/wasysym.sty.ltxml:82	
+\fullmoon	text	text	U+1F315	fullmoon					lib/LaTeXML/Package/wasysym.sty.ltxml:138	
+\fullnote	text	text	U+1D15D	fullnote					lib/LaTeXML/Package/wasysym.sty.ltxml:116	
+\gemini	text	text	U+264A	gemini					lib/LaTeXML/Package/wasysym.sty.ltxml:155	
+\gluon	text	text	U+27BF U+27BF U+27BF	gluon					lib/LaTeXML/Package/wasysym.sty.ltxml:48	
+\halfnote	text	text	U+1D15E	halfnote					lib/LaTeXML/Package/wasysym.sty.ltxml:115	
+\hexagon	text	text	U+2394	hexagon					lib/LaTeXML/Package/wasysym.sty.ltxml:101	
+\hexstar	text	text	U+26B9	hexstar					lib/LaTeXML/Package/wasysym.sty.ltxml:105	
+\iiint	symbol	math	U+222D	iiint	triple-integral	INTOP		\iiint	lib/LaTeXML/Package/wasysym.sty.ltxml:59	
+\iiintop	symbol	math	U+222D	iiintop	triple-integral	INTOP		\iiint	lib/LaTeXML/Package/wasysym.sty.ltxml:53	
+\iint	symbol	math	U+222C	iint	double-integral	INTOP		\iint	lib/LaTeXML/Package/wasysym.sty.ltxml:57	
+\iintop	symbol	math	U+222C	iintop	double-integral	INTOP		\iint	lib/LaTeXML/Package/wasysym.sty.ltxml:51	
+\invdiameter	text	text	U+29B0	invdiameter					lib/LaTeXML/Package/wasysym.sty.ltxml:77	
+\inve	text	text	U+01DD	inve					lib/LaTeXML/Package/wasysym.sty.ltxml:133	
+\invneg	symbol	math	U+2310	invneg					lib/LaTeXML/Package/wasysym.sty.ltxml:42	
+\jupiter	text	text	U+2643	jupiter					lib/LaTeXML/Package/wasysym.sty.ltxml:147	
+\kreuz	text	text	U+2720	kreuz					lib/LaTeXML/Package/wasysym.sty.ltxml:80	
+\leadsto	symbol	math	U+2933	leadsto				\leadsto	lib/LaTeXML/Package/wasysym.sty.ltxml:30	
+\leftmoon	text	text	U+263E	leftmoon					lib/LaTeXML/Package/wasysym.sty.ltxml:140	
+\leftturn	text	text	U+21BA	leftturn				\circlearrowleft	lib/LaTeXML/Package/wasysym.sty.ltxml:127	
+\leo	text	text	U+264C	leo					lib/LaTeXML/Package/wasysym.sty.ltxml:157	
+\lhd	symbol	math	U+22B2	lhd				\lhd	lib/LaTeXML/Package/wasysym.sty.ltxml:33	
+\libra	text	text	U+264E	libra					lib/LaTeXML/Package/wasysym.sty.ltxml:159	
+\lightning	text	text	U+21AF	lightning					lib/LaTeXML/Package/wasysym.sty.ltxml:70	
+\logof	symbol	math	U+229B	logof				\circledast	lib/LaTeXML/Package/wasysym.sty.ltxml:44	
+\male	text	text	U+2642	male					lib/LaTeXML/Package/wasysym.sty.ltxml:64	
+\mars	text	text	U+2642	mars					lib/LaTeXML/Package/wasysym.sty.ltxml:146	
+\mercury	text	text	U+263F	mercury					lib/LaTeXML/Package/wasysym.sty.ltxml:143	
+\neptune	text	text	U+2646	neptune					lib/LaTeXML/Package/wasysym.sty.ltxml:150	
+\newmoon	text	text	U+1F311	newmoon					lib/LaTeXML/Package/wasysym.sty.ltxml:139	
+\notbackslash	text	text	U+2340	notbackslash					lib/LaTeXML/Package/wasysym.sty.ltxml:180	
+\notslash	text	text	U+233F	notslash					lib/LaTeXML/Package/wasysym.sty.ltxml:181	
+\ocircle	symbol	math	U+25CB	ocircle					lib/LaTeXML/Package/wasysym.sty.ltxml:43	
+\oiint	symbol	math	U+222F	oiint	surface-integral	INTOP		\oiint	lib/LaTeXML/Package/wasysym.sty.ltxml:61	
+\oiintop	symbol	math	U+222F	oiintop	surface-integral	INTOP		\oiint	lib/LaTeXML/Package/wasysym.sty.ltxml:55	
+\openo	text	text	U+0254	openo					lib/LaTeXML/Package/wasysym.sty.ltxml:132	
+\opposition	text	text	U+260D	opposition					lib/LaTeXML/Package/wasysym.sty.ltxml:166	
+\pentagon	text	text	U+2B20	pentagon					lib/LaTeXML/Package/wasysym.sty.ltxml:104	
+\permil	text	text	U+2030	permil					lib/LaTeXML/Package/wasysym.sty.ltxml:88	
+\phone	text	text	U+260E	phone					lib/LaTeXML/Package/wasysym.sty.ltxml:67	
+\photon	text	text	U+3030 U+3030	photon					lib/LaTeXML/Package/wasysym.sty.ltxml:47	
+\pisces	text	text	U+2653	pisces					lib/LaTeXML/Package/wasysym.sty.ltxml:164	
+\pluto	text	text	U+2647	pluto					lib/LaTeXML/Package/wasysym.sty.ltxml:151	
+\pointer	text	text	U+21E8	pointer					lib/LaTeXML/Package/wasysym.sty.ltxml:71	
+\quarternote	text	text	U+1D15F	quarternote					lib/LaTeXML/Package/wasysym.sty.ltxml:114	
+\recorder	text	text	U+2315	recorder					lib/LaTeXML/Package/wasysym.sty.ltxml:68	
+\rhd	symbol	math	U+22B3	rhd				\rhd	lib/LaTeXML/Package/wasysym.sty.ltxml:36	
+\rightmoon	text	text	U+263D	rightmoon					lib/LaTeXML/Package/wasysym.sty.ltxml:141	
+\rightturn	text	text	U+21BB	rightturn				\circlearrowright	lib/LaTeXML/Package/wasysym.sty.ltxml:128	
+\sagittarius	text	text	U+2650	sagittarius					lib/LaTeXML/Package/wasysym.sty.ltxml:161	
+\saturn	text	text	U+2644	saturn					lib/LaTeXML/Package/wasysym.sty.ltxml:148	
+\scorpio	text	text	U+264F	scorpio					lib/LaTeXML/Package/wasysym.sty.ltxml:160	
+\smiley	text	text	U+263A	smiley					lib/LaTeXML/Package/wasysym.sty.ltxml:81	
+\sqsubset	symbol	math	U+228F	sqsubset				\sqsubset	lib/LaTeXML/Package/wasysym.sty.ltxml:31	
+\sqsupset	symbol	math	U+2290	sqsupset				\sqsupset	lib/LaTeXML/Package/wasysym.sty.ltxml:32	
+\sun	text	text	U+263C	sun					lib/LaTeXML/Package/wasysym.sty.ltxml:84	
+\taurus	text	text	U+2649	taurus					lib/LaTeXML/Package/wasysym.sty.ltxml:154	
+\text@circ	text	text	U+2218	text@circ				\circ	lib/LaTeXML/Package/wasysym.sty.ltxml:185	
+\text@tilde	text	text	U+007E	text@tilde					lib/LaTeXML/Package/wasysym.sty.ltxml:184	
+\thorn	text	text	U+00FE	thorn					lib/LaTeXML/Package/wasysym.sty.ltxml:130	
+\twonotes	text	text	U+266B	twonotes					lib/LaTeXML/Package/wasysym.sty.ltxml:117	
+\unlhd	symbol	math	U+22B4	unlhd				\unlhd	lib/LaTeXML/Package/wasysym.sty.ltxml:34	
+\unrhd	symbol	math	U+22B5	unrhd				\unrhd	lib/LaTeXML/Package/wasysym.sty.ltxml:37	
+\uranus	text	text	U+26E2	uranus					lib/LaTeXML/Package/wasysym.sty.ltxml:149	
+\varangle	text	text	U+2222	varangle				\sphericalangle	lib/LaTeXML/Package/wasysym.sty.ltxml:78	
+\varhexagon	text	text	U+2B21	varhexagon					lib/LaTeXML/Package/wasysym.sty.ltxml:102	
+\varhexstar	text	text	U+26B9	varhexstar					lib/LaTeXML/Package/wasysym.sty.ltxml:109	
+\varint	symbol	math		varint					lib/LaTeXML/Package/wasysym.sty.ltxml:49	Let alias of \int
+\varoint	symbol	math		varoint					lib/LaTeXML/Package/wasysym.sty.ltxml:50	Let alias of \oint
+\venus	text	text	U+2640	venus					lib/LaTeXML/Package/wasysym.sty.ltxml:144	
+\vernal	text	text	U+2648	vernal					lib/LaTeXML/Package/wasysym.sty.ltxml:135	
+\virgo	text	text	U+264D	virgo					lib/LaTeXML/Package/wasysym.sty.ltxml:158	
+\wasylozenge	text	text	U+2311	wasylozenge					lib/LaTeXML/Package/wasysym.sty.ltxml:79	
+\wasypropto	symbol	math	U+221D	wasypropto					lib/LaTeXML/Package/wasysym.sty.ltxml:41	
+\wasytherefore	text	text	U+2234	wasytherefore				\therefore	lib/LaTeXML/Package/wasysym.sty.ltxml:90	

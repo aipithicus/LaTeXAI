@@ -1,0 +1,4 @@
+command	kind	mode	codepoint	name	meaning	role	font	katex	source	note
+\bbfamily	alphabet	math		bbfamily			double-struck		lib/LaTeXML/Package/bbold.sty.ltxml:26	DefConstructor with font
+\mathbb{}	alphabet	math		mathbb			double-struck		lib/LaTeXML/Package/bbold.sty.ltxml:19	DefConstructor with font
+\textbb{}	alphabet	text		textbb			double-struck		lib/LaTeXML/Package/bbold.sty.ltxml:22	DefConstructor with font

@@ -1,0 +1,2 @@
+command	kind	mode	codepoint	name	meaning	role	font	katex	source	note
+\mathscr	alphabet	math		mathscr			script		lib/LaTeXML/Engine/latex_constructs.pool.ltxml:2490	kernel-provided; mathrsfs.sty.ltxml is empty

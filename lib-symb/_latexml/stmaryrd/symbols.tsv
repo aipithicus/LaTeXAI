@@ -1,0 +1,102 @@
+command	kind	mode	codepoint	name	meaning	role	font	katex	source	note
+\Arrownot	symbol	math	U+005C U+006C U+0078 U+0040 U+0074 U+0077 U+0065 U+0061 U+006B U+0065 U+0064 U+007B U+0077 U+0069 U+0064 U+0074 U+0068 U+003D U+0030 U+0070 U+0074 U+007D U+007B U+002F U+007D	Arrownot		RELOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:164	
+\Lbag	symbol	math	U+27C5	Lbag		OPEN			lib/LaTeXML/Package/stmaryrd.sty.ltxml:190	
+\Longarrownot	symbol	math	U+005C U+006C U+0078 U+0040 U+0074 U+0077 U+0065 U+0061 U+006B U+0065 U+0064 U+007B U+0077 U+0069 U+0064 U+0074 U+0068 U+003D U+0030 U+0070 U+0074 U+007D U+007B U+002F U+007D	Longarrownot		RELOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:165	
+\Longmapsfrom	symbol	math	U+27FD	Longmapsfrom		ARROW			lib/LaTeXML/Package/stmaryrd.sty.ltxml:169	
+\Longmapsto	symbol	math	U+27FE	Longmapsto		ARROW			lib/LaTeXML/Package/stmaryrd.sty.ltxml:170	
+\Mapsfrom	symbol	math	U+2906	Mapsfrom		ARROW			lib/LaTeXML/Package/stmaryrd.sty.ltxml:171	
+\Mapsfromchar	symbol	math	U+007C	Mapsfromchar		RELOP		\textbar	lib/LaTeXML/Package/stmaryrd.sty.ltxml:167	
+\Mapsto	symbol	math	U+2907	Mapsto		ARROW			lib/LaTeXML/Package/stmaryrd.sty.ltxml:172	
+\Mapstochar	symbol	math	U+007C	Mapstochar		RELOP		\textbar	lib/LaTeXML/Package/stmaryrd.sty.ltxml:168	
+\Rbag	symbol	math	U+27C6	Rbag		CLOSE			lib/LaTeXML/Package/stmaryrd.sty.ltxml:193	
+\Yup	symbol	math	U+2144	Yup		RELOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:26	
+\arrownot	symbol	math	U+005C U+006C U+0078 U+0040 U+0074 U+0077 U+0065 U+0061 U+006B U+0065 U+0064 U+007B U+0077 U+0069 U+0064 U+0074 U+0068 U+003D U+0030 U+0070 U+0074 U+007D U+007B U+002F U+007D	arrownot		RELOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:162	
+\baro	symbol	math	U+233D	baro	apl-reversal	RELOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:31	
+\bbslash	symbol	math	U+244A	bbslash		RELOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:33	
+\bigbox	symbol	math	U+25A1	bigbox		SUMOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:88	
+\bigcurlyvee	symbol	math	U+22CE	bigcurlyvee		SUMOP		\curlyvee	lib/LaTeXML/Package/stmaryrd.sty.ltxml:96	
+\bigcurlywedge	symbol	math	U+22CF	bigcurlywedge		SUMOP		\curlywedge	lib/LaTeXML/Package/stmaryrd.sty.ltxml:92	
+\biginterleave	symbol	math	U+2AFC	biginterleave		SUMOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:100	
+\bignplus	symbol	math	U+005C U+006C U+0078 U+0040 U+006B U+006C U+0075 U+0064 U+0067 U+0065 U+0064 U+007B U+005C U+0062 U+0069 U+0067 U+0063 U+0061 U+0070 U+005C U+006D U+0061 U+0074 U+0068 U+0063 U+0068 U+006F U+0069 U+0063 U+0065 U+0027 U+000A U+0020 U+0020 U+0020 U+0020 U+002E U+0020 U+0027 U+007B U+005C U+006C U+0078 U+0040 U+0074 U+0077 U+0065 U+0061 U+006B U+0065 U+0064 U+007B U+0077 U+0069 U+0064 U+0074 U+0068 U+003D U+0030 U+0070 U+0074 U+002C U+0078 U+006F U+0066 U+0066 U+0073 U+0065 U+0074 U+003D U+002D U+0031 U+002E U+0036 U+0065 U+006D U+002C U+0079 U+006F U+0066 U+0066 U+0073 U+0065 U+0074 U+003D U+0030 U+002E U+0032 U+0065 U+0078 U+007D U+007B U+002B U+007D U+007D U+0027 U+000A U+0020 U+0020 U+0020 U+0020 U+002E U+0020 U+0027 U+007B U+005C U+006C U+0078 U+0040 U+0074 U+0077 U+0065 U+0061 U+006B U+0065 U+0064 U+007B U+0077 U+0069 U+0064 U+0074 U+0068 U+003D U+0030 U+0070 U+0074 U+002C U+0078 U+006F U+0066 U+0066 U+0073 U+0065 U+0074 U+003D U+002D U+0031 U+002E U+0033 U+0065 U+006D U+002C U+0079 U+006F U+0066 U+0066 U+0073 U+0065 U+0074 U+003D U+0030 U+002E U+0032 U+0065 U+0078 U+007D U+007B U+002B U+007D U+007D U+0027 U+000A U+0020 U+0020 U+0020 U+0020 U+002E U+0020 U+0027 U+007B U+005C U+006C U+0078 U+0040 U+0074 U+0077 U+0065 U+0061 U+006B U+0065 U+0064 U+007B U+0077 U+0069 U+0064 U+0074 U+0068 U+003D U+0030 U+0070 U+0074 U+002C U+0078 U+006F U+0066 U+0066 U+0073 U+0065 U+0074 U+003D U+002D U+0031 U+002E U+0033 U+0065 U+006D U+002C U+0079 U+006F U+0066 U+0066 U+0073 U+0065 U+0074 U+003D U+0030 U+002E U+0032 U+0065 U+0078 U+007D U+007B U+002B U+007D U+007D U+0027 U+000A U+0020 U+0020 U+0020 U+0020 U+002E U+0020 U+0027 U+007B U+005C U+006C U+0078 U+0040 U+0074 U+0077 U+0065 U+0061 U+006B U+0065 U+0064 U+007B U+0077 U+0069 U+0064 U+0074 U+0068 U+003D U+0030 U+0070 U+0074 U+002C U+0078 U+006F U+0066 U+0066 U+0073 U+0065 U+0074 U+003D U+002D U+0031 U+002E U+0033 U+0065 U+006D U+002C U+0079 U+006F U+0066 U+0066 U+0073 U+0065 U+0074 U+003D U+0030 U+002E U+0032 U+0065 U+0078 U+007D U+007B U+002B U+007D U+007D U+007D	bignplus	intersection-plus	ADDOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:149	
+\bigparallel	symbol	math	U+2016	bigparallel		SUMOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:104	
+\bigsqcap	symbol	math	U+2A05	bigsqcap		SUMOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:108	
+\bigtriangledown	symbol	math	U+25BD	bigtriangledown		SUMOP		\bigtriangledown	lib/LaTeXML/Package/stmaryrd.sty.ltxml:112	
+\bigtriangleup	symbol	math	U+25B3	bigtriangleup		SUMOP		\bigtriangleup	lib/LaTeXML/Package/stmaryrd.sty.ltxml:116	
+\binampersand	symbol	math	U+0026	binampersand	additive-conjunction	RELOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:34	
+\bindnasrepma	symbol	math	U+214B	bindnasrepma	multiplicative-disjunction	RELOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:36	
+\boxast	symbol	math	U+29C6	boxast		BINOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:38	
+\boxbar	symbol	math	U+25EB	boxbar		RELOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:39	
+\boxbox	symbol	math	U+29C8	boxbox		BINOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:40	
+\boxbslash	symbol	math	U+29C5	boxbslash		BINOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:41	
+\boxcircle	symbol	math	U+29C7	boxcircle		BINOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:42	
+\boxdot	symbol	math	U+22A1	boxdot		MULOP		\boxdot	lib/LaTeXML/Package/stmaryrd.sty.ltxml:43	
+\boxempty	symbol	math	U+25A1	boxempty		RELOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:44	
+\boxslash	symbol	math	U+29C4	boxslash		BINOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:45	
+\fatsemi	symbol	math	U+2A1F	fatsemi		RELOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:51	
+\inplus	symbol	math	U+2A2D	inplus		RELOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:121	
+\interleave	symbol	math	U+2AF4	interleave		RELOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:53	
+\lbag	symbol	math	U+27C5	lbag		OPEN			lib/LaTeXML/Package/stmaryrd.sty.ltxml:196	
+\leftarrowtriangle	symbol	math	U+21FD	leftarrowtriangle		ARROW			lib/LaTeXML/Package/stmaryrd.sty.ltxml:173	
+\leftrightarroweq	symbol	math	U+005C U+0073 U+0074 U+0061 U+0063 U+006B U+0072 U+0065 U+006C U+007B U+005C U+006C U+0065 U+0066 U+0074 U+0072 U+0069 U+0067 U+0068 U+0074 U+0061 U+0072 U+0072 U+006F U+0077 U+007D U+007B U+002D U+007D	leftrightarroweq		ARROW			lib/LaTeXML/Package/stmaryrd.sty.ltxml:175	
+\leftrightarrowtriangle	symbol	math	U+21FF	leftrightarrowtriangle		ARROW			lib/LaTeXML/Package/stmaryrd.sty.ltxml:176	
+\leftslice	symbol	math	U+2AA6	leftslice		RELOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:54	
+\lightning	symbol	math	U+21AF	lightning		ARROW			lib/LaTeXML/Package/stmaryrd.sty.ltxml:177	
+\llbracket	symbol	math	U+27E6	llbracket		OPEN		\llbracket	lib/LaTeXML/Package/stmaryrd.sty.ltxml:197	
+\llceil	symbol	math	U+005C U+006C U+0078 U+0040 U+006B U+006C U+0075 U+0064 U+0067 U+0065 U+0064 U+007B U+005C U+006C U+0078 U+0040 U+0074 U+0077 U+0065 U+0061 U+006B U+0065 U+0064 U+007B U+0077 U+0069 U+0064 U+0074 U+0068 U+003D U+0030 U+0070 U+0074 U+002C U+0078 U+006F U+0066 U+0066 U+0073 U+0065 U+0074 U+003D U+0030 U+002E U+0033 U+0065 U+006D U+007D U+007B U+005C U+006C U+0063 U+0065 U+0069 U+006C U+007D U+005C U+006C U+0063 U+0065 U+0069 U+006C U+007D	llceil		OPEN			lib/LaTeXML/Package/stmaryrd.sty.ltxml:198	
+\llfloor	symbol	math	U+005C U+006C U+0078 U+0040 U+006B U+006C U+0075 U+0064 U+0067 U+0065 U+0064 U+007B U+005C U+006C U+0078 U+0040 U+0074 U+0077 U+0065 U+0061 U+006B U+0065 U+0064 U+007B U+0077 U+0069 U+0064 U+0074 U+0068 U+003D U+0030 U+0070 U+0074 U+002C U+0078 U+006F U+0066 U+0066 U+0073 U+0065 U+0074 U+003D U+0030 U+002E U+0033 U+0065 U+006D U+007D U+007B U+005C U+006C U+0066 U+006C U+006F U+006F U+0072 U+007D U+005C U+006C U+0066 U+006C U+006F U+006F U+0072 U+007D	llfloor		OPEN			lib/LaTeXML/Package/stmaryrd.sty.ltxml:204	
+\llparenthesis	symbol	math	U+2987	llparenthesis		OPEN			lib/LaTeXML/Package/stmaryrd.sty.ltxml:210	
+\longarrownot	symbol	math	U+005C U+006C U+0078 U+0040 U+0074 U+0077 U+0065 U+0061 U+006B U+0065 U+0064 U+007B U+0077 U+0069 U+0064 U+0074 U+0068 U+003D U+0030 U+0070 U+0074 U+007D U+007B U+002F U+007D	longarrownot		RELOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:163	
+\longmapsfrom	symbol	math	U+27FB	longmapsfrom		ARROW			lib/LaTeXML/Package/stmaryrd.sty.ltxml:178	
+\mapsfrom	symbol	math	U+21A4	mapsfrom		ARROW		\mapsfrom	lib/LaTeXML/Package/stmaryrd.sty.ltxml:179	
+\mapsfromchar	symbol	math	U+007C	mapsfromchar		RELOP		\textbar	lib/LaTeXML/Package/stmaryrd.sty.ltxml:166	
+\merge	symbol	math	U+2A07	merge		RELOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:55	
+\minuso	symbol	math	U+29B5	minuso		RELOP		\minuso	lib/LaTeXML/Package/stmaryrd.sty.ltxml:56	
+\niplus	symbol	math	U+2A2E	niplus		RELOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:122	
+\nplus	symbol	math	U+005C U+006C U+0078 U+0040 U+006B U+006C U+0075 U+0064 U+0067 U+0065 U+0064 U+007B U+005C U+0063 U+0061 U+0070 U+007B U+005C U+0073 U+0063 U+0072 U+0069 U+0070 U+0074 U+0073 U+0063 U+0072 U+0069 U+0070 U+0074 U+0073 U+0074 U+0079 U+006C U+0065 U+005C U+006C U+0078 U+0040 U+0074 U+0077 U+0065 U+0061 U+006B U+0065 U+0064 U+007B U+0077 U+0069 U+0064 U+0074 U+0068 U+003D U+0030 U+0070 U+0074 U+002C U+0078 U+006F U+0066 U+0066 U+0073 U+0065 U+0074 U+003D U+002D U+0030 U+002E U+0037 U+0035 U+0065 U+006D U+002C U+0079 U+006F U+0066 U+0066 U+0073 U+0065 U+0074 U+003D U+0030 U+002E U+0032 U+0065 U+0078 U+007D U+007B U+002B U+007D U+007D U+007D	nplus	intersection-plus	ADDOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:145	
+\ntrianglelefteqslant	symbol	math	U+22EC	ntrianglelefteqslant		RELOP		\ntrianglelefteq	lib/LaTeXML/Package/stmaryrd.sty.ltxml:123	
+\ntrianglerighteqslant	symbol	math	U+22ED	ntrianglerighteqslant		RELOP		\ntrianglerighteq	lib/LaTeXML/Package/stmaryrd.sty.ltxml:124	
+\obar	symbol	math	U+29B6	obar		RELOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:58	
+\oblong	symbol	math	U+2395	oblong		RELOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:59	
+\obslash	symbol	math	U+29B8	obslash		RELOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:60	
+\ogreaterthan	symbol	math	U+29C1	ogreaterthan		RELOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:61	
+\olessthan	symbol	math	U+29C0	olessthan		RELOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:62	
+\ovee	symbol	math	U+2228 U+20DD	ovee		RELOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:63	
+\owedge	symbol	math	U+2227 U+20DD	owedge		RELOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:64	
+\rbag	symbol	math	U+27C6	rbag		CLOSE			lib/LaTeXML/Package/stmaryrd.sty.ltxml:212	
+\rightarrowtriangle	symbol	math	U+21FE	rightarrowtriangle		ARROW			lib/LaTeXML/Package/stmaryrd.sty.ltxml:182	
+\rightslice	symbol	math	U+2AA7	rightslice		RELOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:65	
+\rrbracket	symbol	math	U+27E7	rrbracket		CLOSE		\rrbracket	lib/LaTeXML/Package/stmaryrd.sty.ltxml:213	
+\rrceil	symbol	math	U+005C U+006C U+0078 U+0040 U+006B U+006C U+0075 U+0064 U+0067 U+0065 U+0064 U+007B U+005C U+0072 U+0063 U+0065 U+0069 U+006C U+005C U+006C U+0078 U+0040 U+0074 U+0077 U+0065 U+0061 U+006B U+0065 U+0064 U+007B U+0077 U+0069 U+0064 U+0074 U+0068 U+003D U+0030 U+0070 U+0074 U+002C U+0078 U+006F U+0066 U+0066 U+0073 U+0065 U+0074 U+003D U+002D U+0030 U+002E U+0033 U+0065 U+006D U+007D U+007B U+005C U+0072 U+0063 U+0065 U+0069 U+006C U+007D U+007D	rrceil		CLOSE			lib/LaTeXML/Package/stmaryrd.sty.ltxml:201	
+\rrfloor	symbol	math	U+005C U+006C U+0078 U+0040 U+006B U+006C U+0075 U+0064 U+0067 U+0065 U+0064 U+007B U+005C U+0072 U+0066 U+006C U+006F U+006F U+0072 U+005C U+006C U+0078 U+0040 U+0074 U+0077 U+0065 U+0061 U+006B U+0065 U+0064 U+007B U+0077 U+0069 U+0064 U+0074 U+0068 U+003D U+0030 U+0070 U+0074 U+002C U+0078 U+006F U+0066 U+0066 U+0073 U+0065 U+0074 U+003D U+002D U+0030 U+002E U+0033 U+0031 U+0065 U+006D U+007D U+007B U+005C U+0072 U+0066 U+006C U+006F U+006F U+0072 U+007D U+007D	rrfloor		CLOSE			lib/LaTeXML/Package/stmaryrd.sty.ltxml:207	
+\rrparenthesis	symbol	math	U+2988	rrparenthesis		ARROW			lib/LaTeXML/Package/stmaryrd.sty.ltxml:183	
+\rrparenthesis	symbol	math	U+2988	rrparenthesis		CLOSE			lib/LaTeXML/Package/stmaryrd.sty.ltxml:211	
+\shortdownarrow	symbol	math	U+2193	shortdownarrow		ARROW		\downarrow	lib/LaTeXML/Package/stmaryrd.sty.ltxml:184	
+\shortleftarrow	symbol	math	U+2190	shortleftarrow		ARROW			lib/LaTeXML/Package/stmaryrd.sty.ltxml:185	
+\shortrightarrow	symbol	math	U+2192	shortrightarrow		ARROW			lib/LaTeXML/Package/stmaryrd.sty.ltxml:186	
+\shortuparrow	symbol	math	U+2191	shortuparrow		ARROW		\uparrow	lib/LaTeXML/Package/stmaryrd.sty.ltxml:187	
+\sslash	symbol	math	U+2AFD	sslash		RELOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:66	
+\subsetplus	symbol	math	U+005C U+006C U+0078 U+0040 U+006B U+006C U+0075 U+0064 U+0067 U+0065 U+0064 U+007B U+005C U+0073 U+0075 U+0062 U+0073 U+0065 U+0074 U+007B U+005C U+0073 U+0063 U+0072 U+0069 U+0070 U+0074 U+0073 U+0063 U+0072 U+0069 U+0070 U+0074 U+0073 U+0074 U+0079 U+006C U+0065 U+005C U+006C U+0078 U+0040 U+0074 U+0077 U+0065 U+0061 U+006B U+0065 U+0064 U+007B U+0077 U+0069 U+0064 U+0074 U+0068 U+003D U+0030 U+0070 U+0074 U+002C U+0078 U+006F U+0066 U+0066 U+0073 U+0065 U+0074 U+003D U+002D U+0030 U+002E U+0038 U+0065 U+006D U+002C U+0079 U+006F U+0066 U+0066 U+0073 U+0065 U+0074 U+003D U+0030 U+002E U+0033 U+0065 U+0078 U+007D U+007B U+002B U+007D U+007D U+007D	subsetplus	subset-plus	RELOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:128	
+\subsetpluseq	symbol	math	U+005C U+006C U+0078 U+0040 U+006B U+006C U+0075 U+0064 U+0067 U+0065 U+0064 U+007B U+005C U+0073 U+0075 U+0062 U+0073 U+0065 U+0074 U+0065 U+0071 U+007B U+005C U+0073 U+0063 U+0072 U+0069 U+0070 U+0074 U+0073 U+0063 U+0072 U+0069 U+0070 U+0074 U+0073 U+0074 U+0079 U+006C U+0065 U+005C U+006C U+0078 U+0040 U+0074 U+0077 U+0065 U+0061 U+006B U+0065 U+0064 U+007B U+0077 U+0069 U+0064 U+0074 U+0068 U+003D U+0030 U+0070 U+0074 U+002C U+0078 U+006F U+0066 U+0066 U+0073 U+0065 U+0074 U+003D U+002D U+0030 U+002E U+0038 U+0065 U+006D U+002C U+0079 U+006F U+0066 U+0066 U+0073 U+0065 U+0074 U+003D U+0030 U+002E U+0035 U+0065 U+0078 U+007D U+007B U+002B U+007D U+007D U+007D	subsetpluseq	subset-equals-plus	RELOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:132	
+\supsetplus	symbol	math	U+005C U+006C U+0078 U+0040 U+006B U+006C U+0075 U+0064 U+0067 U+0065 U+0064 U+007B U+005C U+0073 U+0075 U+0070 U+0073 U+0065 U+0074 U+007B U+005C U+0073 U+0063 U+0072 U+0069 U+0070 U+0074 U+0073 U+0063 U+0072 U+0069 U+0070 U+0074 U+0073 U+0074 U+0079 U+006C U+0065 U+005C U+006C U+0078 U+0040 U+0074 U+0077 U+0065 U+0061 U+006B U+0065 U+0064 U+007B U+0077 U+0069 U+0064 U+0074 U+0068 U+003D U+0030 U+0070 U+0074 U+002C U+0078 U+006F U+0066 U+0066 U+0073 U+0065 U+0074 U+003D U+002D U+0031 U+0065 U+006D U+002C U+0079 U+006F U+0066 U+0066 U+0073 U+0065 U+0074 U+003D U+0030 U+002E U+0033 U+0065 U+0078 U+007D U+007B U+002B U+007D U+007D U+007D	supsetplus	superset-plus	RELOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:136	
+\supsetpluseq	symbol	math	U+005C U+006C U+0078 U+0040 U+006B U+006C U+0075 U+0064 U+0067 U+0065 U+0064 U+007B U+005C U+0073 U+0075 U+0070 U+0073 U+0065 U+0074 U+0065 U+0071 U+007B U+005C U+0073 U+0063 U+0072 U+0069 U+0070 U+0074 U+0073 U+0063 U+0072 U+0069 U+0070 U+0074 U+0073 U+0074 U+0079 U+006C U+0065 U+005C U+006C U+0078 U+0040 U+0074 U+0077 U+0065 U+0061 U+006B U+0065 U+0064 U+007B U+0077 U+0069 U+0064 U+0074 U+0068 U+003D U+0030 U+0070 U+0074 U+002C U+0078 U+006F U+0066 U+0066 U+0073 U+0065 U+0074 U+003D U+002D U+0031 U+0065 U+006D U+002C U+0079 U+006F U+0066 U+0066 U+0073 U+0065 U+0074 U+003D U+0030 U+002E U+0035 U+0065 U+0078 U+007D U+007B U+002B U+007D U+007D U+007D	supsetpluseq	superset-equals-plus	RELOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:140	
+\talloblong	symbol	math	U+2AFF	talloblong		RELOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:67	
+\trianglelefteqslant	symbol	math	U+22B4	trianglelefteqslant		RELOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:160	
+\trianglerighteqslant	symbol	math	U+22B5	trianglerighteqslant		RELOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:161	
+\varbigcirc	symbol	math	U+25EF	varbigcirc		MULOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:68	
+\varcopyright	text	text	U+00A9	varcopyright					lib/LaTeXML/Package/stmaryrd.sty.ltxml:215	
+\varcurlyvee	symbol	math	U+22CE	varcurlyvee		RELOP		\curlyvee	lib/LaTeXML/Package/stmaryrd.sty.ltxml:69	
+\varcurlywedge	symbol	math	U+22CF	varcurlywedge		RELOP		\curlywedge	lib/LaTeXML/Package/stmaryrd.sty.ltxml:70	
+\varoast	symbol	math	U+229B	varoast		MULOP		\circledast	lib/LaTeXML/Package/stmaryrd.sty.ltxml:71	
+\varobar	symbol	math	U+29B6	varobar		RELOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:72	
+\varobslash	symbol	math	U+29B8	varobslash		MULOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:73	
+\varocircle	symbol	math	U+229A	varocircle		MULOP		\circledcirc	lib/LaTeXML/Package/stmaryrd.sty.ltxml:74	
+\varodot	symbol	math	U+2299	varodot		MULOP		\odot	lib/LaTeXML/Package/stmaryrd.sty.ltxml:75	
+\varogreaterthan	symbol	math	U+29C1	varogreaterthan		RELOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:76	
+\varolessthan	symbol	math	U+29C0	varolessthan		RELOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:77	
+\varominus	symbol	math	U+2296	varominus		ADDOP		\ominus	lib/LaTeXML/Package/stmaryrd.sty.ltxml:78	
+\varoplus	symbol	math	U+2295	varoplus	additive-disjunction	ADDOP		\oplus	lib/LaTeXML/Package/stmaryrd.sty.ltxml:79	
+\varoslash	symbol	math	U+2298	varoslash		RELOP		\oslash	lib/LaTeXML/Package/stmaryrd.sty.ltxml:81	
+\varotimes	symbol	math	U+2297	varotimes	multiplicative-conjunction	MULOP		\otimes	lib/LaTeXML/Package/stmaryrd.sty.ltxml:82	
+\varovee	symbol	math	U+2228 U+20DD	varovee		RELOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:84	
+\varowedge	symbol	math	U+2227 U+20DD	varowedge		RELOP			lib/LaTeXML/Package/stmaryrd.sty.ltxml:85	
+\vartimes	symbol	math	U+00D7	vartimes		MULOP		\times	lib/LaTeXML/Package/stmaryrd.sty.ltxml:86	

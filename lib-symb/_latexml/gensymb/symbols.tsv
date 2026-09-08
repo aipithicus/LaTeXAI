@@ -1,0 +1,11 @@
+command	kind	mode	codepoint	name	meaning	role	font	katex	source	note
+\lx@math@celcius	symbol	math	U+2103	celcius					lib/LaTeXML/Package/gensymb.sty.ltxml:33	alias \celcius
+\lx@math@degree	symbol	math	U+00B0	degree					lib/LaTeXML/Package/gensymb.sty.ltxml:31	alias \degree
+\lx@math@micro	symbol	math	U+00B5	micro					lib/LaTeXML/Package/gensymb.sty.ltxml:39	alias \micro
+\lx@math@ohm	symbol	math	U+2126	ohm					lib/LaTeXML/Package/gensymb.sty.ltxml:37	alias \ohm
+\lx@math@perthou	symbol	math	U+2030	perthousand					lib/LaTeXML/Package/gensymb.sty.ltxml:35	alias \perthousand
+\lx@text@celcius	text	text	U+2103	lx@text@celcius					lib/LaTeXML/Package/gensymb.sty.ltxml:26	
+\lx@text@degree	text	text	U+00B0	lx@text@degree					lib/LaTeXML/Package/gensymb.sty.ltxml:25	
+\lx@text@micro	text	text	U+00B5	lx@text@micro					lib/LaTeXML/Package/gensymb.sty.ltxml:29	
+\lx@text@ohm	text	text	U+2126	lx@text@ohm					lib/LaTeXML/Package/gensymb.sty.ltxml:28	
+\lx@text@perthou	text	text	U+2030	lx@text@perthou					lib/LaTeXML/Package/gensymb.sty.ltxml:27	

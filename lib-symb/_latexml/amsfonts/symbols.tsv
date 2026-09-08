@@ -1,0 +1,21 @@
+command	kind	mode	codepoint	name	meaning	role	font	katex	source	note
+\checkmark	text	text	U+2713	checkmark				\checkmark	lib/LaTeXML/Package/amsfonts.sty.ltxml:30	
+\circledR	text	text	U+00AE	circledR				\circledR	lib/LaTeXML/Package/amsfonts.sty.ltxml:31	
+\dasharrow	symbol	math	U+21E2	dasharrow		ARROW		\dashrightarrow	lib/LaTeXML/Package/amsfonts.sty.ltxml:45	
+\dashleftarrow	symbol	math	U+21E0	dashleftarrow		ARROW		\dashleftarrow	lib/LaTeXML/Package/amsfonts.sty.ltxml:44	
+\dashrightarrow	symbol	math	U+21E2	dashrightarrow		ARROW		\dashrightarrow	lib/LaTeXML/Package/amsfonts.sty.ltxml:43	
+\llcorner	symbol	math	U+231E	llcorner				\llcorner	lib/LaTeXML/Package/amsfonts.sty.ltxml:40	
+\lozenge	symbol	math	U+25CA	lozenge				\lozenge	lib/LaTeXML/Package/amsfonts.sty.ltxml:48	
+\lrcorner	symbol	math	U+231F	lrcorner				\lrcorner	lib/LaTeXML/Package/amsfonts.sty.ltxml:41	
+\maltese	text	text	U+2720	maltese				\maltese	lib/LaTeXML/Package/amsfonts.sty.ltxml:32	
+\mathbb{}	alphabet	math		mathbb			double-struck		lib/LaTeXML/Package/amsfonts.sty.ltxml:20	DefConstructor with font
+\mathfrak{}	alphabet	math		mathfrak			fraktur		lib/LaTeXML/Package/amsfonts.sty.ltxml:25	DefConstructor with font
+\rightsquigarrow	symbol	math	U+219D	rightsquigarrow		ARROW		\rightsquigarrow	lib/LaTeXML/Package/amsfonts.sty.ltxml:55	
+\square	symbol	math	U+25A1	square				\square	lib/LaTeXML/Package/amsfonts.sty.ltxml:47	
+\trianglelefteq	symbol	math	U+22B4	trianglelefteq				\trianglelefteq	lib/LaTeXML/Package/amsfonts.sty.ltxml:54	
+\trianglerighteq	symbol	math	U+22B5	trianglerighteq				\trianglerighteq	lib/LaTeXML/Package/amsfonts.sty.ltxml:53	
+\ulcorner	symbol	math	U+231C	ulcorner				\ulcorner	lib/LaTeXML/Package/amsfonts.sty.ltxml:38	
+\urcorner	symbol	math	U+231D	urcorner				\urcorner	lib/LaTeXML/Package/amsfonts.sty.ltxml:39	
+\vartriangleleft	symbol	math	U+22B2	vartriangleleft				\vartriangleleft	lib/LaTeXML/Package/amsfonts.sty.ltxml:51	
+\vartriangleright	symbol	math	U+22B3	vartriangleright				\vartriangleright	lib/LaTeXML/Package/amsfonts.sty.ltxml:50	
+\yen	text	text	U+00A5	yen				\yen	lib/LaTeXML/Package/amsfonts.sty.ltxml:33	

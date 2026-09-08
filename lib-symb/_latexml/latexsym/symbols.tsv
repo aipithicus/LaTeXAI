@@ -1,0 +1,2 @@
+command	kind	mode	codepoint	name	meaning	role	font	katex	source	note
+\Box	symbol	math		Box				\Box	lib/LaTeXML/Engine/math_common.pool.ltxml:101	kernel-provided; latexsym.sty.ltxml is empty (\Box, \Diamond, \leadsto, \lhd, \unlhd, \rhd, \unrhd)
