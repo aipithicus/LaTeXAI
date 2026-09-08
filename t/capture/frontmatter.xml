@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="llncs"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML" xmlns:capture="http://dlmf.nist.gov/LaTeXML/capture" capture:base="CAPTURE_BASE" capture:byteEnd="111" capture:byteStart="95" capture:file="frontmatter.tex" capture:fromCol="1" capture:fromLine="5" capture:locator="frontmatter.tex#textrange(from=5;1,to=5;16)" capture:toCol="16" capture:toLine="5" class="ltx_authors_1line">
+  <resource capture:byteEnd="111" capture:byteStart="95" capture:file="frontmatter.tex" capture:fromCol="1" capture:fromLine="5" capture:locator="frontmatter.tex#textrange(from=5;1,to=5;16)" capture:toCol="16" capture:toLine="5" src="LaTeXML.css" type="text/css"/>
+  <resource capture:byteEnd="111" capture:byteStart="95" capture:file="frontmatter.tex" capture:fromCol="1" capture:fromLine="5" capture:locator="frontmatter.tex#textrange(from=5;1,to=5;16)" capture:toCol="16" capture:toLine="5" src="ltx-article.css" type="text/css"/>
+  <title>Title</title>
+  <creator role="author">
+    <personname capture:byteEnd="122" capture:byteStart="112" capture:file="frontmatter.tex" capture:fromCol="1" capture:fromLine="6" capture:locator="frontmatter.tex#textrange(from=6;1,to=6;10)" capture:toCol="10" capture:toLine="6">First Author</personname>
+    <contact name="Affiliation: " role="affiliation">First university</contact>
+  </creator>
+  <para capture:byteEnd="124" capture:byteStart="123" capture:file="frontmatter.tex" capture:fromCol="2" capture:fromLine="7" capture:locator="frontmatter.tex#textrange(from=7;2,to=7;2)" capture:toCol="2" capture:toLine="7" xml:id="p1">
+    <p capture:byteEnd="124" capture:byteStart="123" capture:file="frontmatter.tex" capture:fromCol="2" capture:fromLine="7" capture:locator="frontmatter.tex#textrange(from=7;2,to=7;2)" capture:toCol="2" capture:toLine="7">Body with</p>
+    <equation capture:byteEnd="140" capture:byteStart="133" capture:file="frontmatter.tex" capture:fromCol="11" capture:fromLine="7" capture:locator="frontmatter.tex#textrange(from=7;11,to=7;17)" capture:toCol="17" capture:toLine="7" xml:id="S0.Ex1">
+      <Math capture:byteEnd="140" capture:byteStart="133" capture:file="frontmatter.tex" capture:fromCol="11" capture:fromLine="7" capture:locator="frontmatter.tex#textrange(from=7;11,to=7;17)" capture:provenance="source" capture:source="\[a=b\]" capture:toCol="17" capture:toLine="7" mode="display" tex="a=b" text="a = b" xml:id="S0.Ex1.m1">
+        <XMath capture:byteEnd="140" capture:byteStart="133" capture:file="frontmatter.tex" capture:fromCol="11" capture:fromLine="7" capture:locator="frontmatter.tex#textrange(from=7;11,to=7;17)" capture:toCol="17" capture:toLine="7">
+          <XMApp capture:byteEnd="140" capture:byteStart="133" capture:file="frontmatter.tex" capture:fromCol="11" capture:fromLine="7" capture:locator="frontmatter.tex#textrange(from=7;11,to=7;17)" capture:toCol="17" capture:toLine="7">
+            <XMTok capture:byteEnd="137" capture:byteStart="136" capture:file="frontmatter.tex" capture:fromCol="15" capture:fromLine="7" capture:locator="frontmatter.tex#textrange(from=7;15,to=7;15)" capture:toCol="15" capture:toLine="7" meaning="equals" role="RELOP">=</XMTok>
+            <XMTok capture:byteEnd="136" capture:byteStart="135" capture:file="frontmatter.tex" capture:fromCol="14" capture:fromLine="7" capture:locator="frontmatter.tex#textrange(from=7;14,to=7;14)" capture:toCol="14" capture:toLine="7" font="italic" role="UNKNOWN">a</XMTok>
+            <XMTok capture:byteEnd="138" capture:byteStart="137" capture:file="frontmatter.tex" capture:fromCol="16" capture:fromLine="7" capture:locator="frontmatter.tex#textrange(from=7;16,to=7;16)" capture:toCol="16" capture:toLine="7" font="italic" role="UNKNOWN">b</XMTok>
+          </XMApp>
+        </XMath>
+      </Math>
+    </equation>
+    <p capture:byteEnd="141" capture:byteStart="140" capture:file="frontmatter.tex" capture:fromCol="1" capture:fromLine="7" capture:locator="frontmatter.tex#textrange(from=7;1,to=7;19)" capture:toCol="19" capture:toLine="7">.</p>
+  </para>
+  <capture:ledger>
+    <capture:engine capture="true" includestyles="false" lexematize="false" noparse="false" revision="CAPTURE_REVISION" version="0.8.8">
+      <capture:preload name="LaTeX.pool"/>
+    </capture:engine>
+    <capture:packages>
+      <capture:package kind="package" name="textcomp" options="" requestOrigin="transitive" resolved="../../lib/LaTeXML/Package/textcomp.sty.ltxml" route="binding"/>
+      <capture:package kind="class" name="article" options="" requestOrigin="transitive" resolved="../../lib/LaTeXML/Package/article.cls.ltxml" route="binding"/>
+      <capture:package kind="package" name="multicol" options="" requestOrigin="transitive" resolved="../../lib/LaTeXML/Package/multicol.sty.ltxml" route="binding"/>
+      <capture:package kind="class" name="llncs" options="" requestByteEnd="14" requestByteStart="0" requestFile="frontmatter.tex" requestOrigin="source" resolved="../../lib/LaTeXML/Package/llncs.cls.ltxml" route="binding"/>
+    </capture:packages>
+    <capture:math callsiteOnly="0" crossSource="0" display="1" failedCells="0" inline="0" parser="run" source="1" total="1" unlocated="0" unparsed="0"/>
+    <capture:encoding substitutions="0"/>
+    <capture:messages errors="0" warnings="0"/>
+  </capture:ledger>
+</document>

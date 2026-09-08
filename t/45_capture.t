@@ -20,6 +20,8 @@ use XML::LibXML;
 use XML::LibXML::XPathContext;
 
 use LaTeXML::Core;
+use LaTeXML::Core::Token;
+use LaTeXML::Core::Tokens;
 
 my $LTX_NS     = 'http://dlmf.nist.gov/LaTeXML';
 my $CAPTURE_NS = 'http://dlmf.nist.gov/LaTeXML/capture';
@@ -168,7 +170,8 @@ sub validate_capture_document {
   my ($document, $name) = @_;
   my $input = File::Spec->catfile($TEMP, "$name.xml");
   my $output = File::Spec->catfile($TEMP, "$name-post.xml");
-  write_raw($input, encode('UTF-8', $document->toString(1)));
+  write_raw($input, $document->isa('XML::LibXML::Document')
+      ? $document->toString(1) : encode('UTF-8', $document->toString(1)));
   # Development-loop conventions (docs/testing.md): lib/ is the whole include
   # path (tools/dev/generate.pl puts the generated modules there), and every
   # CLI log goes under temp/logs/<runstamp>/ rather than the working directory.
@@ -190,7 +193,7 @@ my ($crlf) = convert_document(File::Spec->catfile($FIXTURES, 'crlf.tex'));
 my $crlf_xml = $crlf->getDocument;
 
 # Cases 1-6 and 8-10: delimiter ownership, author expansion, and byte columns.
-my ($positions) = convert_document(File::Spec->catfile($FIXTURES, 'positions.tex'));
+my ($positions, $positions_core) = convert_document(File::Spec->catfile($FIXTURES, 'positions.tex'));
 my $positions_xml = $positions->getDocument;
 my $positions_xc = xpath($positions_xml);
 my @positions_math = $positions_xc->findnodes('//ltx:Math');
@@ -425,6 +428,46 @@ unlike($capture_off_raw, qr{capture:ledger}, 'capture-off has no ledger');
 validate_capture_document($crlf, 'capture-crlf');
 validate_capture_document($routes, 'capture-routes');
 validate_capture_document($tikzcd, 'capture-tikzcd');
+
+# Missing provenance occupies a slot.  Engine-generated token streams must
+# obey the same delimiter/keyword matching rules as source-backed streams.
+$positions_core->withState(sub {
+    my ($state) = @_;
+    my $gullet = $state->getStomach->getGullet;
+    $gullet->readingFromMouth(Tokens(), sub {
+        $gullet->unreadWithOccurrences([undef, { sourceId => 'sentinel', byteStart => 7 }, undef],
+          T_OTHER('['), T_LETTER('x'), T_OTHER(']'));
+        is(scalar(@{ $gullet->{pushback_occurrences} }), 3,
+          'unlocated tokens retain occurrence slots beside located tokens');
+        ok($gullet->readMatch(T_OTHER('('), T_OTHER('[')),
+          'capture readMatch can backtrack and match an unlocated delimiter');
+        is($gullet->readToken->toString, 'x', 'failed match preserves the next token');
+        is($gullet->getCurrentOccurrence->{byteStart}, 7, 'failed match preserves occurrence alignment');
+        ok($gullet->readMatch(T_OTHER(']')), 'unlocated closing delimiter matches');
+        $gullet->unreadWithOccurrence(undef, Tokens(T_LETTER('p'), T_LETTER('t')));
+        is($gullet->readKeyword('px', 'pt'), 'pt', 'capture keyword matching survives absent occurrences');
+        return; });
+    return; });
+
+# Reduced from the interval paper's llncs front matter. Before the fix its
+# affiliation text was consumed as part of an internal attribute name.
+my $frontmatter_path = File::Spec->catfile($TEMP, 'frontmatter.xml');
+my ($frontmatter_status, $frontmatter_messages) = run_command($^X, '-I', File::Spec->catdir($ROOT, 'lib'),
+  File::Spec->catfile($ROOT, 'tools', 'dev', 'capture-fixture.pl'),
+  File::Spec->catfile($FIXTURES, 'frontmatter.tex'), $frontmatter_path);
+is($frontmatter_status, 0, 'capture front matter converts without errors or warnings') or diag($frontmatter_messages);
+my $frontmatter_xml = XML::LibXML->load_xml(location => $frontmatter_path);
+my $frontmatter_xc = xpath($frontmatter_xml);
+is($frontmatter_xc->findvalue('string(//ltx:personname)'), 'First Author', 'front matter preserves the author');
+like($frontmatter_xc->findvalue('string(//ltx:contact)'), qr/First university/,
+  'front matter preserves the affiliation');
+foreach my $math ($frontmatter_xc->findnodes('//ltx:Math')) {
+  assert_source_bytes($frontmatter_xml, $math, 'front-matter fixture math'); }
+assert_partition($frontmatter_xml, 'front-matter fixture');
+my $frontmatter_golden = XML::LibXML->load_xml(location => File::Spec->catfile($FIXTURES, 'frontmatter.xml'));
+is(normalized_capture_xml($frontmatter_xml), normalized_capture_xml($frontmatter_golden),
+  'front-matter capture golden matches after base and revision normalization only');
+validate_capture_document($frontmatter_xml, 'capture-frontmatter');
 
 done_testing();
 

@@ -78,6 +78,8 @@ A binding that replaces an existing passthrough or hybrid keeps the same case na
 
 `t/45_capture.t` is a bespoke driver, not a `latexml_tests` suite. Its fixtures under `t/capture/` exist to exercise provenance, byte custody, the ledger, and the schema, and its goldens are normalized only for the portable base path and build revision. Cases that need a binding load one from `lib/`; they do not duplicate the binding's structural assertions.
 
+`tools/dev/capture-fixture.pl --golden <source.tex> <golden.xml>` writes a capture golden with this driver's configuration and normalization. Run it with the repository Perl and `-I lib`, in a fresh process: package definitions can produce redefinition warnings across repeated engine states. The helper refuses any engine warning or error. Without `--golden` it writes the unnormalized capture document for assertions and schema validation.
+
 ## 5. Where output goes
 
 - **Logs.** Every `latexml` and `latexmlpost` run writes `<jobname>.latexml.log` to the current directory unless told otherwise. Tests and aliases pass `--log` so the file lands under `temp/logs/<runstamp>/`, one directory per run. The stamp is `LATEXAI_RUNSTAMP` when set, otherwise minted when the aliases load (once per `pwsh_exec` command) or when a bespoke driver starts. `lrun` sets the variable for the current process, so `lrun; ltst t/851_extarrows.t; lxml …` in one command groups everything under one stamp, and `ltst` exports it to the drivers it runs. A log at the repository root is a bug in whatever wrote it.
@@ -96,3 +98,17 @@ ltst t                        # everything; required for changes under Core/ or 
 ```
 
 Report failures with the harness output, not a summary.
+
+## 7. Capture-off byte comparisons
+
+`lgold --check` digests and lints; it does not compare the result with the existing golden. For a capture change that promises unchanged capture-off output, `tools/dev/CaptureOffAudit.pm` records or compares the raw XML returned by each standard fixture conversion, before test normalization, using that driver's actual options. Keep the same source paths and options between runs:
+
+```powershell
+$env:LATEXAI_CAPTURE_OFF_BASELINE = Join-Path (Get-LaTeXAIRoot) 'temp/t/capture-off-baseline'
+$auditExec = '"' + "$env:PERL_ROOT/perl/bin/perl.exe" + '" -I lib -I tools/dev -MCaptureOffAudit'
+ltst --exec $auditExec t                    # record before editing
+$env:LATEXAI_CAPTURE_OFF_COMPARE = '1'
+ltst --exec $auditExec t                    # compare after editing
+```
+
+Use a new baseline directory for each investigation and leave `LATEXAI_CAPTURE_OFF_COMPARE` unset while recording. The audit fails on a byte difference or an omitted baseline conversion and reports new fixtures outside the baseline. Capture-on conversions and bespoke drivers that do not call `convert_texfile_as_test` need their own assertions, including the capture-off hash check in `t/45_capture.t`. Do not load this helper through `PERL5OPT`: that would also instrument child utilities instead of just the test drivers.

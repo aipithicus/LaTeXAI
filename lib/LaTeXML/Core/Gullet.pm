@@ -222,7 +222,10 @@ sub _underlyingOccurrence {
 
 sub _cloneOccurrence {
   my ($occurrence, $token) = @_;
-  return unless $occurrence;
+  # Tokens and occurrences are parallel arrays. In list context a bare
+  # return drops the slot; in readMatch/readKeyword it also makes push return
+  # zero, rejecting a delimiter even when the token itself matches.
+  return undef unless $occurrence;
   return { %$occurrence, (defined $token ? (token => $token) : ()) }; }
 
 sub _rangeOccurrence {
