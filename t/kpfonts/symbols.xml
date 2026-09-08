@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="kpfonts" options="light"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <p><Math mode="inline" tex="\Deltaup\partialup\mathscr{A}\otheralpha\kppounds\varemptyset" text="Deltaup * partial-differential * A * otheralpha * kppounds * varemptyset" xml:id="p1.m1">
+        <XMath>
+          <XMApp>
+            <XMTok meaning="times" role="MULOP">⁢</XMTok>
+            <XMTok name="Deltaup" role="UNKNOWN">Δ</XMTok>
+            <XMTok meaning="partial-differential" name="partialup" role="ID">∂</XMTok>
+            <XMTok font="script" role="UNKNOWN">A</XMTok>
+            <XMTok font="italic" name="otheralpha" role="ID">α</XMTok>
+            <XMTok name="kppounds" role="ID">£</XMTok>
+            <XMTok name="varemptyset" role="ID">∅</XMTok>
+          </XMApp>
+        </XMath>
+      </Math></p>
+  </para>
+</document>

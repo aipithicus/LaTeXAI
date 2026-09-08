@@ -1,0 +1,563 @@
+command	kind	mode	codepoint	name	meaning	role	font	katex	source	note
+\Bbbk	symbol	math	U+1D55C	Bbbk		ID		\Bbbk	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \Bbbk
+\Bot	symbol	math	U+22A5	Bot		ID			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord
+\Bumpeq	symbol	math	U+224E	Bumpeq	geometrically-equals	RELOP		\Bumpeq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \Bumpeq
+\Cap	symbol	math	U+22D2	Cap	double-intersection	BINOP		\Cap	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathbin; codepoint from extract \Cap
+\Colonapprox	symbol	math	U+003A U+003A U+2248	Colonapprox		RELOP		\Colonapprox	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \Colonapprox
+\Coloneq	symbol	math	U+003A U+003A U+002D	Coloneq		RELOP		\Coloneq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \Coloneq
+\Coloneqq	symbol	math	U+2A74	Coloneqq		RELOP		\Coloneqq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \Coloneqq
+\Colonsim	symbol	math	U+003A U+003A U+223C	Colonsim		RELOP		\Colonsim	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \Colonsim
+\Cup	symbol	math	U+22D3	Cup	double-union	BINOP		\Cup	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathbin; codepoint from extract \Cup
+\Delta	symbol	math	U+0394	Delta		ID		\Delta	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \Delta
+\Deltasl	symbol	math	U+0394	Deltasl		ID		\Delta	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \Deltasl
+\Deltaup	symbol	math	U+0394	Deltaup				\Delta	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathalpha; codepoint from extract \Deltaup
+\Diamond	symbol	math	U+25C7	Diamond		ID		\Diamond	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \Diamond
+\DiamondLeft	symbol	math	U+21D0 U+25C7	DiamondLeft		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \DiamondLeft
+\DiamondRight	symbol	math	U+25C7 U+21D2	DiamondRight		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \DiamondRight
+\Diamondblack	symbol	math	U+25C6	Diamondblack		ID			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \Diamondblack
+\Diamonddot	symbol	math	U+27D0	Diamonddot		ID			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \Diamonddot
+\DiamonddotLeft	symbol	math	U+21D0 U+27D0	DiamonddotLeft		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \DiamonddotLeft
+\DiamonddotRight	symbol	math	U+27D0 U+21D2	DiamonddotRight		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \DiamonddotRight
+\Diamonddotleft	symbol	math	U+2190 U+27D0	Diamonddotleft		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \Diamonddotleft
+\Diamonddotright	symbol	math	U+27D0 U+2192	Diamonddotright		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \Diamonddotright
+\Diamondleft	symbol	math	U+2190 U+25C7	Diamondleft		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \Diamondleft
+\Diamondright	symbol	math	U+25C7 U+2192	Diamondright		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \Diamondright
+\Eqcolon	symbol	math	U+002D U+003A U+003A	Eqcolon		RELOP		\Eqcolon	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \Eqcolon
+\Eqqcolon	symbol	math	U+003D U+003A U+003A	Eqqcolon		RELOP		\Eqqcolon	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \Eqqcolon
+\Finv	symbol	math	U+2132	Finv		ID		\Finv	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \Finv
+\Game	symbol	math	U+2141	Game		ID		\Game	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \Game
+\Gamma	symbol	math	U+0393	Gamma		ID		\Gamma	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \Gamma
+\Gammasl	symbol	math	U+0393	Gammasl		ID		\Gamma	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \Gammasl
+\Gammaup	symbol	math	U+0393	Gammaup				\Gamma	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathalpha; codepoint from extract \Gammaup
+\Im	symbol	math	U+2111	Im	imaginary-part	ID		\Im	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \Im
+\Join	symbol	math	U+2A1D	Join	join	RELOP		\Join	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \Join
+\Lambda	symbol	math	U+039B	Lambda		ID		\Lambda	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \Lambda
+\Lambdasl	symbol	math	U+039B	Lambdasl		ID		\Lambda	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \Lambdasl
+\Lambdaup	symbol	math	U+039B	Lambdaup				\Lambda	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathalpha; codepoint from extract \Lambdaup
+\Lbag	symbol	math	U+27C5	Lbag		OPEN			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathopen; codepoint from extract \Lbag
+\Lleftarrow	symbol	math	U+21DA	Lleftarrow		RELOP		\Lleftarrow	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \Lleftarrow
+\Lsh	symbol	math	U+21B0	Lsh		RELOP		\Lsh	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \Lsh
+\Mappedfromchar	symbol	math	U+2AE4	Mappedfromchar		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \Mappedfromchar
+\Mapstochar	symbol	math	U+007C	Mapstochar		RELOP		\textbar	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \Mapstochar
+\Mmapstochar	symbol	math	U+2AE5	Mmapstochar		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \Mmapstochar
+\Nearrow	symbol	math	U+21D7	Nearrow		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \Nearrow
+\Nwarrow	symbol	math	U+21D6	Nwarrow		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \Nwarrow
+\Omega	symbol	math	U+03A9	Omega		ID		\Omega	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \Omega
+\Omegasl	symbol	math	U+03A9	Omegasl		ID		\Omega	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \Omegasl
+\Omegaup	symbol	math	U+03A9	Omegaup				\Omega	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathalpha; codepoint from extract \Omegaup
+\Perp	symbol	math	U+2AEB	Perp		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \Perp
+\Phi	symbol	math	U+03A6	Phi		ID		\Phi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \Phi
+\Phisl	symbol	math	U+03A6	Phisl		ID		\Phi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \Phisl
+\Phiup	symbol	math	U+03A6	Phiup				\Phi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathalpha; codepoint from extract \Phiup
+\Pi	symbol	math	U+03A0	Pi		ID		\Pi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \Pi
+\Pisl	symbol	math	U+03A0	Pisl		ID		\Pi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \Pisl
+\Piup	symbol	math	U+03A0	Piup				\Pi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathalpha; codepoint from extract \Piup
+\Psi	symbol	math	U+03A8	Psi		ID		\Psi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \Psi
+\Psisl	symbol	math	U+03A8	Psisl		ID		\Psi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \Psisl
+\Psiup	symbol	math	U+03A8	Psiup				\Psi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathalpha; codepoint from extract \Psiup
+\Rbag	symbol	math	U+27C6	Rbag		CLOSE			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathclose; codepoint from extract \Rbag
+\Re	symbol	math	U+211C	Re	real-part	ID		\Re	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \Re
+\Rrightarrow	symbol	math	U+21DB	Rrightarrow		RELOP		\Rrightarrow	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \Rrightarrow
+\Rsh	symbol	math	U+21B1	Rsh		RELOP		\Rsh	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \Rsh
+\Searrow	symbol	math	U+21D8	Searrow		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \Searrow
+\Sigma	symbol	math	U+03A3	Sigma		ID		\Sigma	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \Sigma
+\Sigmasl	symbol	math	U+03A3	Sigmasl		ID		\Sigma	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \Sigmasl
+\Sigmaup	symbol	math	U+03A3	Sigmaup				\Sigma	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathalpha; codepoint from extract \Sigmaup
+\Subset	symbol	math	U+22D0	Subset	double-subset-of	RELOP		\Subset	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \Subset
+\Supset	symbol	math	U+22D1	Supset	double-superset-of	RELOP		\Supset	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \Supset
+\Swarrow	symbol	math	U+21D9	Swarrow		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \Swarrow
+\Theta	symbol	math	U+0398	Theta		ID		\Theta	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \Theta
+\Thetasl	symbol	math	U+0398	Thetasl		ID		\Theta	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \Thetasl
+\Thetaup	symbol	math	U+0398	Thetaup				\Theta	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathalpha; codepoint from extract \Thetaup
+\Top	symbol	math	U+22A4	Top		ID		\top	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord
+\Upsilon	symbol	math	U+03A5	Upsilon		ID		\Upsilon	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \Upsilon
+\Upsilonsl	symbol	math	U+03A5	Upsilonsl		ID		\Upsilon	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \Upsilonsl
+\Upsilonup	symbol	math	U+03A5	Upsilonup				\Upsilon	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathalpha; codepoint from extract \Upsilonup
+\VDash	symbol	math	U+22AB	VDash		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \VDash
+\Vdash	symbol	math	U+22A9	Vdash	forces	RELOP		\Vdash	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \Vdash
+\Vvdash	symbol	math	U+22AA	Vvdash		RELOP		\Vvdash	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \Vvdash
+\Wr	symbol	math	U+2240	Wr		BINOP		\wr	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathbin
+\Xi	symbol	math	U+039E	Xi		ID		\Xi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \Xi
+\Xisl	symbol	math	U+039E	Xisl		ID		\Xi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \Xisl
+\Xiup	symbol	math	U+039E	Xiup				\Xi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathalpha; codepoint from extract \Xiup
+\alpha	symbol	math	U+03B1	alpha		ID		\alpha	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \alpha
+\alphasl	symbol	math	U+03B1	alphasl		ID		\alpha	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \alphasl
+\alphaup	symbol	math	U+03B1	alphaup		ID		\alpha	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \alphaup
+\angle	symbol	math	U+2220	angle		ID		\angle	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \angle
+\approxeq	symbol	math	U+224A	approxeq	approximately-equals-or-equals	RELOP		\approxeq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \approxeq
+\backepsilon	symbol	math	U+03F6	backepsilon		RELOP		\backepsilon	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \backepsilon
+\backprime	symbol	math	U+2035	backprime		ID		\backprime	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \backprime
+\backsim	symbol	math	U+223D	backsim		RELOP		\backsim	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \backsim
+\backsimeq	symbol	math	U+22CD	backsimeq		RELOP		\backsimeq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \backsimeq
+\barwedge	symbol	math	U+22BC	barwedge	not-and	BINOP		\barwedge	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathbin; codepoint from extract \barwedge
+\because	symbol	math	U+2235	because	because	RELOP		\because	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \because
+\beta	symbol	math	U+03B2	beta		ID		\beta	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \beta
+\betasl	symbol	math	U+03B2	betasl		ID		\beta	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \betasl
+\betaup	symbol	math	U+03B2	betaup		ID		\beta	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \betaup
+\beth	symbol	math	U+2136	beth		ID		\beth	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \beth
+\between	symbol	math	U+226C	between	between	RELOP		\between	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \between
+\bigcapop	symbol	math	U+22C2	bigcapop	intersection	OPFUNCTION		\bigcap	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathop; codepoint from extract \bigcapop
+\bigcupop	symbol	math	U+22C3	bigcupop	union	OPFUNCTION		\bigcup	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathop; codepoint from extract \bigcupop
+\bignplusop	symbol	math	U+005C U+006C U+0078 U+0040 U+006B U+006C U+0075 U+0064 U+0067 U+0065 U+0064 U+007B U+005C U+0062 U+0069 U+0067 U+0063 U+0061 U+0070 U+005C U+006D U+0061 U+0074 U+0068 U+0063 U+0068 U+006F U+0069 U+0063 U+0065 U+0027 U+000A U+0020 U+0020 U+0020 U+0020 U+002E U+0020 U+0027 U+007B U+005C U+006C U+0078 U+0040 U+0074 U+0077 U+0065 U+0061 U+006B U+0065 U+0064 U+007B U+0077 U+0069 U+0064 U+0074 U+0068 U+003D U+0030 U+0070 U+0074 U+002C U+0078 U+006F U+0066 U+0066 U+0073 U+0065 U+0074 U+003D U+002D U+0031 U+002E U+0036 U+0065 U+006D U+002C U+0079 U+006F U+0066 U+0066 U+0073 U+0065 U+0074 U+003D U+0030 U+002E U+0032 U+0065 U+0078 U+007D U+007B U+002B U+007D U+007D U+0027 U+000A U+0020 U+0020 U+0020 U+0020 U+002E U+0020 U+0027 U+007B U+005C U+006C U+0078 U+0040 U+0074 U+0077 U+0065 U+0061 U+006B U+0065 U+0064 U+007B U+0077 U+0069 U+0064 U+0074 U+0068 U+003D U+0030 U+0070 U+0074 U+002C U+0078 U+006F U+0066 U+0066 U+0073 U+0065 U+0074 U+003D U+002D U+0031 U+002E U+0033 U+0065 U+006D U+002C U+0079 U+006F U+0066 U+0066 U+0073 U+0065 U+0074 U+003D U+0030 U+002E U+0032 U+0065 U+0078 U+007D U+007B U+002B U+007D U+007D U+0027 U+000A U+0020 U+0020 U+0020 U+0020 U+002E U+0020 U+0027 U+007B U+005C U+006C U+0078 U+0040 U+0074 U+0077 U+0065 U+0061 U+006B U+0065 U+0064 U+007B U+0077 U+0069 U+0064 U+0074 U+0068 U+003D U+0030 U+0070 U+0074 U+002C U+0078 U+006F U+0066 U+0066 U+0073 U+0065 U+0074 U+003D U+002D U+0031 U+002E U+0033 U+0065 U+006D U+002C U+0079 U+006F U+0066 U+0066 U+0073 U+0065 U+0074 U+003D U+0030 U+002E U+0032 U+0065 U+0078 U+007D U+007B U+002B U+007D U+007D U+0027 U+000A U+0020 U+0020 U+0020 U+0020 U+002E U+0020 U+0027 U+007B U+005C U+006C U+0078 U+0040 U+0074 U+0077 U+0065 U+0061 U+006B U+0065 U+0064 U+007B U+0077 U+0069 U+0064 U+0074 U+0068 U+003D U+0030 U+0070 U+0074 U+002C U+0078 U+006F U+0066 U+0066 U+0073 U+0065 U+0074 U+003D U+002D U+0031 U+002E U+0033 U+0065 U+006D U+002C U+0079 U+006F U+0066 U+0066 U+0073 U+0065 U+0074 U+003D U+0030 U+002E U+0032 U+0065 U+0078 U+007D U+007B U+002B U+007D U+007D U+007D	bignplusop	intersection-plus	OPFUNCTION			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathop; codepoint from extract \bignplusop
+\bigodotop	symbol	math	U+2A00	bigodotop		OPFUNCTION		\bigodot	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathop; codepoint from extract \bigodotop
+\bigoplusop	symbol	math	U+2A01	bigoplusop	direct-sum	OPFUNCTION		\bigoplus	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathop; codepoint from extract \bigoplusop
+\bigotimesop	symbol	math	U+2A02	bigotimesop	tensor-product	OPFUNCTION		\bigotimes	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathop; codepoint from extract \bigotimesop
+\bigsqcapop	symbol	math	U+2A05	bigsqcapop		OPFUNCTION			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathop; codepoint from extract \bigsqcapop
+\bigsqcupop	symbol	math	U+2A06	bigsqcupop	square-union	OPFUNCTION		\bigsqcup	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathop; codepoint from extract \bigsqcupop
+\bigstar	symbol	math	U+2605	bigstar		ID		\bigstar	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \bigstar
+\biguplusop	symbol	math	U+2A04	biguplusop	symmetric-difference	OPFUNCTION		\biguplus	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathop; codepoint from extract \biguplusop
+\bigveeop	symbol	math	U+22C1	bigveeop	or	OPFUNCTION		\bigvee	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathop; codepoint from extract \bigveeop
+\bigwedgeop	symbol	math	U+22C0	bigwedgeop	and	OPFUNCTION		\bigwedge	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathop; codepoint from extract \bigwedgeop
+\blacklozenge	symbol	math	U+29EB	blacklozenge		ID		\blacklozenge	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \blacklozenge
+\blacksquare	symbol	math	U+25A0	blacksquare		ID		\blacksquare	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \blacksquare
+\blacktriangle	symbol	math	U+25B2	blacktriangle		ID		\blacktriangle	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \blacktriangle
+\blacktriangledown	symbol	math	U+25BC	blacktriangledown		ID		\blacktriangledown	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \blacktriangledown
+\blacktriangleleft	symbol	math	U+25C0	blacktriangleleft		RELOP		\blacktriangleleft	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \blacktriangleleft
+\blacktriangleright	symbol	math	U+25B6	blacktriangleright		RELOP		\blacktriangleright	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \blacktriangleright
+\boxLeft	symbol	math	U+21D0 U+25A1	boxLeft		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \boxLeft
+\boxRight	symbol	math	U+25A1 U+21D2	boxRight		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \boxRight
+\boxast	symbol	math	U+29C6	boxast		BINOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathbin; codepoint from extract \boxast
+\boxbar	symbol	math	U+25EB	boxbar		BINOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathbin; codepoint from extract \boxbar
+\boxbslash	symbol	math	U+29C4	boxbslash		BINOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathbin; codepoint from extract \boxbslash
+\boxdot	symbol	math	U+22A1	boxdot		BINOP		\boxdot	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathbin; codepoint from extract \boxdot
+\boxdotLeft	symbol	math	U+21D0 U+22A1	boxdotLeft		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \boxdotLeft
+\boxdotRight	symbol	math	U+22A1 U+21D2	boxdotRight		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \boxdotRight
+\boxdotleft	symbol	math	U+2190 U+22A1	boxdotleft		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \boxdotleft
+\boxdotright	symbol	math	U+22A1 U+2192	boxdotright		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \boxdotright
+\boxleft	symbol	math	U+22A3 U+20DE	boxleft		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \boxleft
+\boxminus	symbol	math	U+229F	boxminus		BINOP		\boxminus	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathbin; codepoint from extract \boxminus
+\boxplus	symbol	math	U+229E	boxplus		BINOP		\boxplus	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathbin; codepoint from extract \boxplus
+\boxright	symbol	math	U+22A2 U+20DE	boxright		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \boxright
+\boxslash	symbol	math	U+29C5	boxslash		BINOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathbin; codepoint from extract \boxslash
+\boxtimes	symbol	math	U+22A0	boxtimes		BINOP		\boxtimes	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathbin; codepoint from extract \boxtimes
+\bumpeq	symbol	math	U+224F	bumpeq	difference-between	RELOP		\bumpeq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \bumpeq
+\centerdot	symbol	math	U+2219	centerdot		BINOP		\centerdot	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathbin; codepoint from extract \centerdot
+\chi	symbol	math	U+03C7	chi		ID		\chi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \chi
+\chisl	symbol	math	U+03C7	chisl		ID		\chi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \chisl
+\chiup	symbol	math	U+03C7	chiup		ID		\chi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \chiup
+\circeq	symbol	math	U+2257	circeq		RELOP		\circeq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \circeq
+\circlearrowleft	symbol	math	U+21BA	circlearrowleft		RELOP		\circlearrowleft	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \circlearrowleft
+\circlearrowright	symbol	math	U+21BB	circlearrowright		RELOP		\circlearrowright	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \circlearrowright
+\circledS	symbol	math	U+24C8	circledS		ID		\circledS	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \circledS
+\circledast	symbol	math	U+229B	circledast		BINOP		\circledast	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathbin; codepoint from extract \circledast
+\circledbar	symbol	math	U+29B6	circledbar		BINOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathbin; codepoint from extract \circledbar
+\circledbslash	symbol	math	U+29B8	circledbslash		BINOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathbin; codepoint from extract \circledbslash
+\circledcirc	symbol	math	U+229A	circledcirc		BINOP		\circledcirc	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathbin; codepoint from extract \circledcirc
+\circleddash	symbol	math	U+229D	circleddash		BINOP		\circleddash	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathbin; codepoint from extract \circleddash
+\circleddotleft	symbol	math	U+2190 U+2299	circleddotleft		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \circleddotleft
+\circleddotright	symbol	math	U+2299 U+2192	circleddotright		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \circleddotright
+\circledgtr	symbol	math	U+29C1	circledgtr		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \circledgtr
+\circledless	symbol	math	U+29C0	circledless		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \circledless
+\circledvee	symbol	math	U+2228 U+20DD	circledvee		BINOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathbin; codepoint from extract \circledvee
+\circledwedge	symbol	math	U+2227 U+20DD	circledwedge		BINOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathbin; codepoint from extract \circledwedge
+\circleleft	symbol	math	U+2190 U+25CB	circleleft		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \circleleft
+\circleright	symbol	math	U+25CB U+2192	circleright		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \circleright
+\colonapprox	symbol	math	U+003A U+2248	colonapprox		RELOP		\colonapprox	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \colonapprox
+\coloneq	symbol	math	U+2254	coloneq		RELOP		\coloneq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \coloneq
+\coloneqq	symbol	math	U+2254	coloneqq		RELOP		\coloneqq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \coloneqq
+\colonsim	symbol	math	U+003A U+223C	colonsim		RELOP		\colonsim	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \colonsim
+\complement	symbol	math	U+2201	complement	complement	ID		\complement	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \complement
+\cong	symbol	math	U+2245	cong	approximately-equals	RELOP		\cong	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \cong
+\coprodop	symbol	math	U+2210	coprodop	coproduct	OPFUNCTION		\coprod	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathop; codepoint from extract \coprodop
+\curlyeqprec	symbol	math	U+22DE	curlyeqprec	equals-or-preceeds	RELOP		\curlyeqprec	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \curlyeqprec
+\curlyeqsucc	symbol	math	U+22DF	curlyeqsucc	equals-or-succeeds	RELOP		\curlyeqsucc	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \curlyeqsucc
+\curlyvee	symbol	math	U+22CE	curlyvee	or	BINOP		\curlyvee	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathbin; codepoint from extract \curlyvee
+\curlywedge	symbol	math	U+22CF	curlywedge	and	BINOP		\curlywedge	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathbin; codepoint from extract \curlywedge
+\curvearrowleft	symbol	math	U+21B6	curvearrowleft		RELOP		\curvearrowleft	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \curvearrowleft
+\curvearrowright	symbol	math	U+21B7	curvearrowright		RELOP		\curvearrowright	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \curvearrowright
+\daleth	symbol	math	U+2138	daleth		ID		\daleth	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \daleth
+\dashleftarrow	symbol	math	U+21E0	dashleftarrow		RELOP		\dashleftarrow	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \dashleftarrow
+\dashrightarrow	symbol	math	U+21E2	dashrightarrow		RELOP		\dashrightarrow	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \dashrightarrow
+\delta	symbol	math	U+03B4	delta		ID		\delta	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \delta
+\deltasl	symbol	math	U+03B4	deltasl		ID		\delta	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \deltasl
+\deltaup	symbol	math	U+03B4	deltaup		ID		\delta	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \deltaup
+\diagdown	symbol	math	U+2572	diagdown		ID		\diagdown	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \diagdown
+\diagup	symbol	math	U+2571	diagup		ID		\diagup	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \diagup
+\digamma	symbol	math	U+03DD	digamma		ID		\digamma	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \digamma
+\divideontimes	symbol	math	U+22C7	divideontimes		BINOP		\divideontimes	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathbin; codepoint from extract \divideontimes
+\doteq	symbol	math	U+2250	doteq	approaches-limit	RELOP		\doteq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \doteq
+\doteqdot	symbol	math	U+2251	doteqdot	geometrically-equals	RELOP		\doteqdot	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \doteqdot
+\dotplus	symbol	math	U+2214	dotplus		BINOP		\dotplus	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathbin; codepoint from extract \dotplus
+\doublebarwedge	symbol	math	U+2A5E	doublebarwedge		BINOP		\doublebarwedge	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathbin; codepoint from extract \doublebarwedge
+\downdownarrows	symbol	math	U+21CA	downdownarrows		RELOP		\downdownarrows	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \downdownarrows
+\downharpoonleft	symbol	math	U+21C3	downharpoonleft		RELOP		\downharpoonleft	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \downharpoonleft
+\downharpoonright	symbol	math	U+21C2	downharpoonright		RELOP		\downharpoonright	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \downharpoonright
+\epsilon	symbol	math	U+03F5	epsilon		ID		\epsilon	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \epsilon
+\epsilonsl	symbol	math	U+03F5	epsilonsl		ID		\epsilon	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \epsilonsl
+\epsilonup	symbol	math	U+03F5	epsilonup		ID		\epsilon	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \epsilonup
+\eqcirc	symbol	math	U+2256	eqcirc		RELOP		\eqcirc	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \eqcirc
+\eqcolon	symbol	math	U+2255	eqcolon		RELOP		\eqcolon	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \eqcolon
+\eqqcolon	symbol	math	U+2255	eqqcolon		RELOP		\eqqcolon	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \eqqcolon
+\eqsim	symbol	math	U+2242	eqsim		RELOP		\eqsim	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \eqsim
+\eqslantgtr	symbol	math	U+2A96	eqslantgtr	greater-than-or-equals	RELOP		\eqslantgtr	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \eqslantgtr
+\eqslantless	symbol	math	U+2A95	eqslantless	less-than-or-equals	RELOP		\eqslantless	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \eqslantless
+\eta	symbol	math	U+03B7	eta		ID		\eta	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \eta
+\etasl	symbol	math	U+03B7	etasl		ID		\eta	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \etasl
+\etaup	symbol	math	U+03B7	etaup		ID		\eta	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \etaup
+\eth	symbol	math	U+00F0	eth		ID		\eth	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \eth
+\fallingdotseq	symbol	math	U+2252	fallingdotseq	approximately-equals-or-image-of	RELOP		\fallingdotseq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \fallingdotseq
+\fintop	symbol	math	U+2A0F	fintop	integral	OPFUNCTION			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathop; codepoint from extract \fintop
+\gamma	symbol	math	U+03B3	gamma		ID		\gamma	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \gamma
+\gammasl	symbol	math	U+03B3	gammasl		ID		\gamma	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \gammasl
+\gammaup	symbol	math	U+03B3	gammaup		ID		\gamma	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \gammaup
+\geqq	symbol	math	U+2267	geqq	greater-than-or-equals	RELOP		\geqq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \geqq
+\geqslant	symbol	math	U+2A7E	geqslant	greater-than-or-equals	RELOP		\geqslant	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \geqslant
+\ggg	symbol	math	U+22D9	ggg	very-much-greater-than	RELOP		\ggg	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \ggg
+\gimel	symbol	math	U+2137	gimel		ID		\gimel	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \gimel
+\gnapprox	symbol	math	U+2A8A	gnapprox	greater-than-and-not-approximately-equals	RELOP		\gnapprox	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \gnapprox
+\gneq	symbol	math	U+2A88	gneq	greater-than-and-not-equals	RELOP		\gneq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \gneq
+\gneqq	symbol	math	U+2269	gneqq	greater-than-and-not-equals	RELOP		\gneqq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \gneqq
+\gnsim	symbol	math	U+22E7	gnsim	greater-than-and-not-equivalent-to	RELOP		\gnsim	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \gnsim
+\gtrapprox	symbol	math	U+2A86	gtrapprox	greater-than-or-approximately-equals	RELOP		\gtrapprox	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \gtrapprox
+\gtrdot	symbol	math	U+22D7	gtrdot		BINOP		\gtrdot	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathbin; codepoint from extract \gtrdot
+\gtreqless	symbol	math	U+22DB	gtreqless	greater-than-or-equals-or-less-than	RELOP		\gtreqless	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \gtreqless
+\gtreqqless	symbol	math	U+2A8C	gtreqqless	greater-than-or-equals-or-less-than	RELOP		\gtreqqless	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \gtreqqless
+\gtrless	symbol	math	U+2277	gtrless	greater-than-or-less-than	RELOP		\gtrless	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \gtrless
+\gtrsim	symbol	math	U+2273	gtrsim	greater-than-or-equivalent-to	RELOP		\gtrsim	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \gtrsim
+\gvertneqq	symbol	math	U+2269	gvertneqq	greater-than-and-not-equals	RELOP		\gvertneqq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \gvertneqq
+\hbar	symbol	math	U+210F	hbar	Planck-constant-over-2-pi	ID		\hbar	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \hbar
+\hslash	symbol	math	U+210F	hslash	Planck-constant-over-2-pi	ID		\hslash	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \hslash
+\idotsintop	symbol	math	U+222B U+22EF U+222B	idotsintop	multiple-integral	OPFUNCTION			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathop; codepoint from extract \idotsintop
+\iiiintop	symbol	math	U+2A0C	iiiintop	quadruple-integral	OPFUNCTION			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathop; codepoint from extract \iiiintop
+\iiintop	symbol	math	U+222D	iiintop	triple-integral	OPFUNCTION		\iiint	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathop; codepoint from extract \iiintop
+\iintop	symbol	math	U+222C	iintop	double-integral	OPFUNCTION		\iint	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathop; codepoint from extract \iintop
+\intercal	symbol	math	U+22BA	intercal		BINOP		\intercal	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathbin; codepoint from extract \intercal
+\invamp	symbol	math	U+214B	invamp		BINOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathbin; codepoint from extract \invamp
+\iota	symbol	math	U+03B9	iota		ID		\iota	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \iota
+\iotasl	symbol	math	U+03B9	iotasl		ID		\iota	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \iotasl
+\iotaup	symbol	math	U+03B9	iotaup		ID		\iota	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \iotaup
+\kappa	symbol	math	U+03BA	kappa		ID		\kappa	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \kappa
+\kappasl	symbol	math	U+03BA	kappasl		ID		\kappa	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \kappasl
+\kappaup	symbol	math	U+03BA	kappaup		ID		\kappa	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \kappaup
+\kppounds	symbol	math	U+00A3	kppounds		ID			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord
+\lJoin	symbol	math	U+22C9	lJoin		RELOP		\ltimes	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \lJoin
+\lambda	symbol	math	U+03BB	lambda		ID		\lambda	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \lambda
+\lambdabar	symbol	math	U+019B	lambdabar		ID			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord
+\lambdasl	symbol	math	U+03BB	lambdasl		ID		\lambda	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \lambdasl
+\lambdaslash	symbol	math	U+019B	lambdaslash		ID			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord
+\lambdaup	symbol	math	U+03BB	lambdaup		ID		\lambda	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \lambdaup
+\leftarrowtail	symbol	math	U+21A2	leftarrowtail		RELOP		\leftarrowtail	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \leftarrowtail
+\leftleftarrows	symbol	math	U+21C7	leftleftarrows		RELOP		\leftleftarrows	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \leftleftarrows
+\leftrightarrows	symbol	math	U+21C6	leftrightarrows		RELOP		\leftrightarrows	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \leftrightarrows
+\leftrightharpoons	symbol	math	U+21CB	leftrightharpoons		RELOP		\leftrightharpoons	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \leftrightharpoons
+\leftrightsquigarrow	symbol	math	U+21AD	leftrightsquigarrow		RELOP		\leftrightsquigarrow	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \leftrightsquigarrow
+\leftsquigarrow	symbol	math	U+21DC	leftsquigarrow		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \leftsquigarrow
+\leftthreetimes	symbol	math	U+22CB	leftthreetimes	left-semidirect-product	BINOP		\leftthreetimes	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathbin; codepoint from extract \leftthreetimes
+\leqq	symbol	math	U+2266	leqq	less-than-or-equals	RELOP		\leqq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \leqq
+\leqslant	symbol	math	U+2A7D	leqslant	less-than-or-equals	RELOP		\leqslant	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \leqslant
+\lessapprox	symbol	math	U+2A85	lessapprox	less-than-or-approximately-equals	RELOP		\lessapprox	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \lessapprox
+\lessdot	symbol	math	U+22D6	lessdot		BINOP		\lessdot	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathbin; codepoint from extract \lessdot
+\lesseqgtr	symbol	math	U+22DA	lesseqgtr	less-than-or-equals-or-greater-than	RELOP		\lesseqgtr	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \lesseqgtr
+\lesseqqgtr	symbol	math	U+2A8B	lesseqqgtr	less-than-or-equals-or-greater-than	RELOP		\lesseqqgtr	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \lesseqqgtr
+\lessgtr	symbol	math	U+2276	lessgtr	less-than-or-greater-than	RELOP		\lessgtr	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \lessgtr
+\lesssim	symbol	math	U+2272	lesssim	less-than-or-similar-to	RELOP		\lesssim	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \lesssim
+\lhd	symbol	math	U+22B2	lhd	subgroup-of	BINOP		\lhd	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathbin; codepoint from extract \lhd
+\lll	symbol	math	U+22D8	lll	very-much-less-than	RELOP		\lll	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \lll
+\lnapprox	symbol	math	U+2A89	lnapprox	less-than-and-not-approximately-equals	RELOP		\lnapprox	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \lnapprox
+\lneq	symbol	math	U+2A87	lneq	less-than-and-not-equals	RELOP		\lneq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \lneq
+\lneqq	symbol	math	U+2268	lneqq	less-than-and-not-equals	RELOP		\lneqq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \lneqq
+\lnsim	symbol	math	U+22E6	lnsim	less-than-and-not-equivalent-to	RELOP		\lnsim	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \lnsim
+\looparrowleft	symbol	math	U+21AB	looparrowleft		RELOP		\looparrowleft	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \looparrowleft
+\looparrowright	symbol	math	U+21AC	looparrowright		RELOP		\looparrowright	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \looparrowright
+\lozenge	symbol	math	U+25CA	lozenge		ID		\lozenge	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \lozenge
+\lrtimes	symbol	math	U+22C8	lrtimes		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \lrtimes
+\ltimes	symbol	math	U+22C9	ltimes	left-normal-factor-semidirect-product	BINOP		\ltimes	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathbin; codepoint from extract \ltimes
+\lvertneqq	symbol	math	U+2268	lvertneqq	less-than-and-not-equals	RELOP		\lvertneqq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \lvertneqq
+\mappedfromchar	symbol	math	U+2ADE	mappedfromchar		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \mappedfromchar
+\mathbf{}	alphabet	math		mathbf			bold		lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	DeclareMathAlphabet
+\mathcal{}	alphabet	math		mathcal			caligraphic		lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	DeclareMathAlphabet
+\mathit{}	alphabet	math		mathit			serif		lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	DeclareMathAlphabet
+\mathrm{}	alphabet	math		mathrm			serif		lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	DeclareMathAlphabet
+\mathscr{}	alphabet	math		mathscr			script		lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	DeclareMathAlphabet
+\mathsf{}	alphabet	math		mathsf			sans-serif		lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	DeclareMathAlphabet
+\mathtt{}	alphabet	math		mathtt			monospace		lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	DeclareMathAlphabet
+\measuredangle	symbol	math	U+2221	measuredangle		ID		\measuredangle	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \measuredangle
+\medbullet	symbol	math	U+2022	medbullet		BINOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathbin
+\medcirc	symbol	math	U+25CB	medcirc		BINOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathbin
+\mho	symbol	math	U+2127	mho		ID		\mho	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \mho
+\mmapstochar	symbol	math	U+2AE3	mmapstochar		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \mmapstochar
+\mu	symbol	math	U+03BC	mu		ID		\mu	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \mu
+\multimap	symbol	math	U+22B8	multimap		RELOP		\multimap	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \multimap
+\multimapboth	symbol	math	U+29DF	multimapboth		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \multimapboth
+\multimapdotbothA	symbol	math	U+22B6	multimapdotbothA		RELOP		\origof	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \multimapdotbothA
+\multimapdotbothB	symbol	math	U+22B7	multimapdotbothB		RELOP		\imageof	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \multimapdotbothB
+\multimapinv	symbol	math	U+27DC	multimapinv		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \multimapinv
+\musl	symbol	math	U+03BC	musl		ID		\mu	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \musl
+\muup	symbol	math	U+03BC	muup		ID		\mu	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \muup
+\nBumpeq	symbol	math	U+224E U+0338	nBumpeq		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nBumpeq
+\nLeftarrow	symbol	math	U+21CD	nLeftarrow		RELOP		\nLeftarrow	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nLeftarrow
+\nLeftrightarrow	symbol	math	U+21CE	nLeftrightarrow		RELOP		\nLeftrightarrow	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nLeftrightarrow
+\nRightarrow	symbol	math	U+21CF	nRightarrow		RELOP		\nRightarrow	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nRightarrow
+\nSubset	symbol	math	U+22D0 U+0338	nSubset	not-double-subset-of	RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nSubset
+\nSupset	symbol	math	U+22D1 U+0338	nSupset	not-double-superset-of	RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nSupset
+\nVDash	symbol	math	U+22AF	nVDash		RELOP		\nVDash	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nVDash
+\nVdash	symbol	math	U+22AE	nVdash	not-forces	RELOP		\nVdash	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nVdash
+\napprox	symbol	math	U+2249	napprox	not-approximately-equals	RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \napprox
+\napproxeq	symbol	math	U+224A U+0338	napproxeq	not-approximately-equals	RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \napproxeq
+\nasymp	symbol	math	U+226D	nasymp	not-equivalent-to	RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nasymp
+\nbacksim	symbol	math	U+223D U+0337	nbacksim		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nbacksim
+\nbacksimeq	symbol	math	U+22CD U+0338	nbacksimeq		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nbacksimeq
+\nbumpeq	symbol	math	U+224F U+0338	nbumpeq		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nbumpeq
+\ncong	symbol	math	U+2247	ncong	not-approximately-equals	RELOP		\ncong	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \ncong
+\neq	symbol	math	U+2260	neq	not-equals	RELOP		\neq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \neq
+\nequiv	symbol	math	U+2262	nequiv	not-equivalent-to	RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nequiv
+\nexists	symbol	math	U+2204	nexists	not-exists	ID		\nexists	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \nexists
+\ngeq	symbol	math	U+2271	ngeq	not-greater-than-nor-equals	RELOP		\ngeq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \ngeq
+\ngeqq	symbol	math	U+2267 U+0338	ngeqq	not-greater-than-nor-equals	RELOP		\ngeqq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \ngeqq
+\ngeqslant	symbol	math	U+2A7E U+0338	ngeqslant	not-greater-than-nor-equals	RELOP		\ngeqslant	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \ngeqslant
+\ngg	symbol	math	U+226B U+0338	ngg		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \ngg
+\ngtr	symbol	math	U+226F	ngtr	not-greater-than	RELOP		\ngtr	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \ngtr
+\ngtrapprox	symbol	math	U+2A86 U+0338	ngtrapprox	not-greater-than-nor-approximately-equals	RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \ngtrapprox
+\ngtrless	symbol	math	U+2278	ngtrless	not-greater-than-nor-less-than	RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \ngtrless
+\ngtrsim	symbol	math	U+2273 U+0338	ngtrsim	not-greater-than-nor-equivalent-to	RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \ngtrsim
+\nleftarrow	symbol	math	U+219A	nleftarrow		RELOP		\nleftarrow	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nleftarrow
+\nleftrightarrow	symbol	math	U+21AE	nleftrightarrow		RELOP		\nleftrightarrow	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nleftrightarrow
+\nleq	symbol	math	U+2270	nleq	not-less-than-nor-greater-than	RELOP		\nleq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nleq
+\nleqq	symbol	math	U+2266 U+0338	nleqq	not-less-than-nor-equals	RELOP		\nleqq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nleqq
+\nleqslant	symbol	math	U+2A7D U+0338	nleqslant	not-less-than-nor-equals	RELOP		\nleqslant	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nleqslant
+\nless	symbol	math	U+226E	nless	not-less-than	RELOP		\nless	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nless
+\nlessapprox	symbol	math	U+2A85 U+0338	nlessapprox	not-less-than-nor-approximately-equals	RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nlessapprox
+\nlessgtr	symbol	math	U+2279	nlessgtr	not-less-than-nor-greater-than	RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nlessgtr
+\nlesssim	symbol	math	U+2272 U+0338	nlesssim	not-less-than-nor-similar-to	RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nlesssim
+\nll	symbol	math	U+226A U+0338	nll	not-much-less-than	RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nll
+\nmid	symbol	math	U+2224	nmid	not-divides	RELOP		\nmid	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nmid
+\notin	symbol	math	U+2209	notin	not-element-of	RELOP		\notin	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \notin
+\notni	symbol	math	U+220C	notni	not-contains	RELOP		\notni	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \notni
+\nparallel	symbol	math	U+2226	nparallel	not-parallel-to	RELOP		\nparallel	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nparallel
+\nplus	symbol	math	U+005C U+006C U+0078 U+0040 U+006B U+006C U+0075 U+0064 U+0067 U+0065 U+0064 U+007B U+005C U+0063 U+0061 U+0070 U+007B U+005C U+0073 U+0063 U+0072 U+0069 U+0070 U+0074 U+0073 U+0063 U+0072 U+0069 U+0070 U+0074 U+0073 U+0074 U+0079 U+006C U+0065 U+005C U+006C U+0078 U+0040 U+0074 U+0077 U+0065 U+0061 U+006B U+0065 U+0064 U+007B U+0077 U+0069 U+0064 U+0074 U+0068 U+003D U+0030 U+0070 U+0074 U+002C U+0078 U+006F U+0066 U+0066 U+0073 U+0065 U+0074 U+003D U+002D U+0030 U+002E U+0037 U+0035 U+0065 U+006D U+002C U+0079 U+006F U+0066 U+0066 U+0073 U+0065 U+0074 U+003D U+0030 U+002E U+0032 U+0065 U+0078 U+007D U+007B U+002B U+007D U+007D U+007D	nplus	intersection-plus	BINOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathbin; codepoint from extract \nplus
+\nprec	symbol	math	U+2280	nprec	not-precedes	RELOP		\nprec	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nprec
+\nprecapprox	symbol	math	U+2AB7 U+0338	nprecapprox	not-precedes-nor-approximately-equals	RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nprecapprox
+\npreccurlyeq	symbol	math	U+227C U+0338	npreccurlyeq	not-precedes-nor-equals	RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \npreccurlyeq
+\npreceq	symbol	math	U+22E0	npreceq	not-precedes-nor-equals	RELOP		\npreceq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \npreceq
+\npreceqq	symbol	math	U+2AB3 U+0338	npreceqq	not-precedes-nor-equals	RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \npreceqq
+\nprecsim	symbol	math	U+227E U+0338	nprecsim	not-precedes-nor-equivalent-to	RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nprecsim
+\nrightarrow	symbol	math	U+219B	nrightarrow		RELOP		\nrightarrow	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nrightarrow
+\nshortmid	symbol	math	U+2224	nshortmid	not-divides	RELOP		\nshortmid	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nshortmid
+\nshortparallel	symbol	math	U+2226	nshortparallel	not-parallel-to	RELOP		\nshortparallel	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nshortparallel
+\nsim	symbol	math	U+2241	nsim	not-similar-to	RELOP		\nsim	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nsim
+\nsimeq	symbol	math	U+2243 U+0338	nsimeq	not-equivalent-to-nor-equals	RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nsimeq
+\nsqsubset	symbol	math	U+228F U+0338	nsqsubset	not-square-image-of	RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nsqsubset
+\nsqsubseteq	symbol	math	U+22E2	nsqsubseteq	not-square-image-of-nor-equals	RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nsqsubseteq
+\nsqsupset	symbol	math	U+2290 U+0338	nsqsupset	not-square-original-of	RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nsqsupset
+\nsqsupseteq	symbol	math	U+22E3	nsqsupseteq	not-square-original-of-nor-equals	RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nsqsupseteq
+\nsubset	symbol	math	U+2284	nsubset	not-subset-of	RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nsubset
+\nsubseteq	symbol	math	U+2288	nsubseteq	not-subset-of-nor-equals	RELOP		\nsubseteq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nsubseteq
+\nsubseteqq	symbol	math	U+2AC5 U+0338	nsubseteqq	not-subset-of-nor-equals	RELOP		\nsubseteqq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nsubseteqq
+\nsucc	symbol	math	U+2281	nsucc	not-succeeds	RELOP		\nsucc	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nsucc
+\nsuccapprox	symbol	math	U+2AB8 U+0338	nsuccapprox	not-succeeds-nor-approximately-equals	RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nsuccapprox
+\nsucccurlyeq	symbol	math	U+227D U+0338	nsucccurlyeq	not-succeeds-nor-equals	RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nsucccurlyeq
+\nsucceq	symbol	math	U+22E1	nsucceq	not-succeeds-nor-equals	RELOP		\nsucceq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nsucceq
+\nsucceqq	symbol	math	U+2AB4 U+0338	nsucceqq	not-succeeds-nor-equals	RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nsucceqq
+\nsuccsim	symbol	math	U+227F U+0338	nsuccsim	not-succeeds-nor-equivalent-to	RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nsuccsim
+\nsupset	symbol	math	U+2285	nsupset	not-superset-of	RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nsupset
+\nsupseteq	symbol	math	U+2289	nsupseteq	not-superset-of-nor-equals	RELOP		\nsupseteq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nsupseteq
+\nsupseteqq	symbol	math	U+2AC6 U+0338	nsupseteqq	not-superset-of-nor-equals	RELOP		\nsupseteqq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nsupseteqq
+\nthickapprox	symbol	math	U+2249	nthickapprox	not-approximately-equals	RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nthickapprox
+\ntriangleleft	symbol	math	U+22EA	ntriangleleft	not-subgroup-of	RELOP		\ntriangleleft	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \ntriangleleft
+\ntrianglelefteq	symbol	math	U+22EC	ntrianglelefteq	not-subgroup-of-nor-equals	RELOP		\ntrianglelefteq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \ntrianglelefteq
+\ntriangleright	symbol	math	U+22EB	ntriangleright	not-contains	RELOP		\ntriangleright	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \ntriangleright
+\ntrianglerighteq	symbol	math	U+22ED	ntrianglerighteq	not-contains-nor-equals	RELOP		\ntrianglerighteq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \ntrianglerighteq
+\ntwoheadleftarrow	symbol	math	U+2B34	ntwoheadleftarrow		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \ntwoheadleftarrow
+\ntwoheadrightarrow	symbol	math	U+2900	ntwoheadrightarrow		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \ntwoheadrightarrow
+\nu	symbol	math	U+03BD	nu		ID		\nu	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \nu
+\nusl	symbol	math	U+03BD	nusl		ID		\nu	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \nusl
+\nuup	symbol	math	U+03BD	nuup		ID		\nu	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \nuup
+\nvDash	symbol	math	U+22AD	nvDash		RELOP		\nvDash	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nvDash
+\nvdash	symbol	math	U+22AC	nvdash	not-proves	RELOP		\nvdash	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \nvdash
+\oiiintclockwiseop	symbol	math	U+222D U+20D9	oiiintclockwiseop	triple-clockwise-contour-integral	OPFUNCTION			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathop; codepoint from extract \oiiintclockwiseop
+\oiiintctrclockwiseop	symbol	math	U+222D U+20DA	oiiintctrclockwiseop	triple-counterclockwise-contour-integral	OPFUNCTION			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathop; codepoint from extract \oiiintctrclockwiseop
+\oiiintop	symbol	math	U+2230	oiiintop	triple-contour-integral	OPFUNCTION		\oiiint	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathop; codepoint from extract \oiiintop
+\oiintclockwiseop	symbol	math	U+222C U+20D9	oiintclockwiseop	double-clockwise-contour-integral	OPFUNCTION			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathop; codepoint from extract \oiintclockwiseop
+\oiintctrclockwiseop	symbol	math	U+222C U+20DA	oiintctrclockwiseop	double-counterclockwise-contour-integral	OPFUNCTION			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathop; codepoint from extract \oiintctrclockwiseop
+\oiintop	symbol	math	U+222F	oiintop	double-contour-integral	OPFUNCTION		\oiint	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathop; codepoint from extract \oiintop
+\ointclockwiseop	symbol	math	U+2232	ointclockwiseop	clockwise-contour-integral	OPFUNCTION			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathop; codepoint from extract \ointclockwiseop
+\ointctrclockwiseop	symbol	math	U+2233	ointctrclockwiseop	counter-clockwise-contour-integral	OPFUNCTION			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathop; codepoint from extract \ointctrclockwiseop
+\omega	symbol	math	U+03C9	omega		ID		\omega	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \omega
+\omegasl	symbol	math	U+03C9	omegasl		ID		\omega	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \omegasl
+\omegaup	symbol	math	U+03C9	omegaup		ID		\omega	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \omegaup
+\otherDelta	symbol	math	U+0394	otherDelta		ID		\Delta	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \otherDelta
+\otherGamma	symbol	math	U+0393	otherGamma		ID		\Gamma	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \otherGamma
+\otherLambda	symbol	math	U+039B	otherLambda		ID		\Lambda	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \otherLambda
+\otherOmega	symbol	math	U+03A9	otherOmega		ID		\Omega	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \otherOmega
+\otherPhi	symbol	math	U+03A6	otherPhi		ID		\Phi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \otherPhi
+\otherPi	symbol	math	U+03A0	otherPi		ID		\Pi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \otherPi
+\otherPsi	symbol	math	U+03A8	otherPsi		ID		\Psi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \otherPsi
+\otherSigma	symbol	math	U+03A3	otherSigma		ID		\Sigma	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \otherSigma
+\otherTheta	symbol	math	U+0398	otherTheta		ID		\Theta	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \otherTheta
+\otherUpsilon	symbol	math	U+03A5	otherUpsilon		ID		\Upsilon	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \otherUpsilon
+\otherXi	symbol	math	U+039E	otherXi		ID		\Xi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \otherXi
+\otheralpha	symbol	math	U+03B1	otheralpha		ID		\alpha	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \otheralpha
+\otherbeta	symbol	math	U+03B2	otherbeta		ID		\beta	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \otherbeta
+\otherchi	symbol	math	U+03C7	otherchi		ID		\chi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \otherchi
+\otherdelta	symbol	math	U+03B4	otherdelta		ID		\delta	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \otherdelta
+\otherepsilon	symbol	math	U+03F5	otherepsilon		ID		\epsilon	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \otherepsilon
+\othereta	symbol	math	U+03B7	othereta		ID		\eta	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \othereta
+\othergamma	symbol	math	U+03B3	othergamma		ID		\gamma	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \othergamma
+\otheriota	symbol	math	U+03B9	otheriota		ID		\iota	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \otheriota
+\otherkappa	symbol	math	U+03BA	otherkappa		ID		\kappa	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \otherkappa
+\otherlambda	symbol	math	U+03BB	otherlambda		ID		\lambda	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \otherlambda
+\othermu	symbol	math	U+03BC	othermu		ID		\mu	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \othermu
+\othernu	symbol	math	U+03BD	othernu		ID		\nu	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \othernu
+\otheromega	symbol	math	U+03C9	otheromega		ID		\omega	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \otheromega
+\otherphi	symbol	math	U+03D5	otherphi		ID		\phi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \otherphi
+\otherpi	symbol	math	U+03C0	otherpi		ID		\pi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \otherpi
+\otherpsi	symbol	math	U+03C8	otherpsi		ID		\psi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \otherpsi
+\otherrho	symbol	math	U+03C1	otherrho		ID		\rho	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \otherrho
+\othersigma	symbol	math	U+03C3	othersigma		ID		\sigma	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \othersigma
+\othertau	symbol	math	U+03C4	othertau		ID		\tau	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \othertau
+\othertheta	symbol	math	U+03B8	othertheta		ID		\theta	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \othertheta
+\otherupsilon	symbol	math	U+03C5	otherupsilon		ID		\upsilon	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \otherupsilon
+\othervarepsilon	symbol	math	U+03B5	othervarepsilon		ID		\varepsilon	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \othervarepsilon
+\othervarphi	symbol	math	U+03C6	othervarphi		ID		\varphi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \othervarphi
+\othervarpi	symbol	math	U+03D6	othervarpi		ID		\varpi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \othervarpi
+\othervarrho	symbol	math	U+03F1	othervarrho		ID		\varrho	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \othervarrho
+\othervarsigma	symbol	math	U+03C2	othervarsigma		ID		\varsigma	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \othervarsigma
+\othervartheta	symbol	math	U+03D1	othervartheta		ID		\vartheta	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \othervartheta
+\otherxi	symbol	math	U+03BE	otherxi		ID		\xi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \otherxi
+\otherzeta	symbol	math	U+03B6	otherzeta		ID		\zeta	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \otherzeta
+\partial	symbol	math	U+2202	partial	partial-differential	ID		\partial	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \partial
+\partialsl	symbol	math	U+2202	partialsl	partial-differential	ID		\partial	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \partialsl
+\partialup	symbol	math	U+2202	partialup	partial-differential	ID		\partial	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \partialup
+\phi	symbol	math	U+03D5	phi		ID		\phi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \phi
+\phisl	symbol	math	U+03D5	phisl		ID		\phi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \phisl
+\phiup	symbol	math	U+03D5	phiup		ID		\phi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \phiup
+\pi	symbol	math	U+03C0	pi		ID		\pi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \pi
+\pisl	symbol	math	U+03C0	pisl		ID		\pi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \pisl
+\pitchfork	symbol	math	U+22D4	pitchfork	proper-intersection	RELOP		\pitchfork	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \pitchfork
+\piup	symbol	math	U+03C0	piup		ID		\pi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \piup
+\precapprox	symbol	math	U+2AB7	precapprox	precedes-or-approximately-equals	RELOP		\precapprox	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \precapprox
+\preccurlyeq	symbol	math	U+227C	preccurlyeq	precedes-or-equals	RELOP		\preccurlyeq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \preccurlyeq
+\preceqq	symbol	math	U+2AB3	preceqq	precedes-or-equals	RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \preceqq
+\precnapprox	symbol	math	U+2AB9	precnapprox	precedes-and-not-approximately-equals	RELOP		\precnapprox	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \precnapprox
+\precneqq	symbol	math	U+2AB5	precneqq	precedes-and-not-equals	RELOP		\precneqq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \precneqq
+\precnsim	symbol	math	U+22E8	precnsim	precedes-and-not-equivalent-to	RELOP		\precnsim	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \precnsim
+\precsim	symbol	math	U+227E	precsim	precedes-or-equivalent-to	RELOP		\precsim	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \precsim
+\prodop	symbol	math	U+220F	prodop	product	OPFUNCTION		\prod	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathop; codepoint from extract \prodop
+\psi	symbol	math	U+03C8	psi		ID		\psi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \psi
+\psisl	symbol	math	U+03C8	psisl		ID		\psi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \psisl
+\psiup	symbol	math	U+03C8	psiup		ID		\psi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \psiup
+\rJoin	symbol	math	U+22CA	rJoin	right-normal-factor-semidirect-product	RELOP		\rtimes	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \rJoin
+\rhd	symbol	math	U+22B3	rhd	contains-as-subgroup	BINOP		\rhd	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathbin; codepoint from extract \rhd
+\rho	symbol	math	U+03C1	rho		ID		\rho	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \rho
+\rhosl	symbol	math	U+03C1	rhosl		ID		\rho	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \rhosl
+\rhoup	symbol	math	U+03C1	rhoup		ID		\rho	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \rhoup
+\rightarrowtail	symbol	math	U+21A3	rightarrowtail		RELOP		\rightarrowtail	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \rightarrowtail
+\rightleftarrows	symbol	math	U+21C4	rightleftarrows		RELOP		\rightleftarrows	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \rightleftarrows
+\rightleftharpoons	symbol	math	U+21CC	rightleftharpoons		RELOP		\rightleftharpoons	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \rightleftharpoons
+\rightrightarrows	symbol	math	U+21C9	rightrightarrows		RELOP		\rightrightarrows	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \rightrightarrows
+\rightsquigarrow	symbol	math	U+219D	rightsquigarrow		RELOP		\rightsquigarrow	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \rightsquigarrow
+\rightthreetimes	symbol	math	U+22CC	rightthreetimes	right-semidirect-product	BINOP		\rightthreetimes	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathbin; codepoint from extract \rightthreetimes
+\risingdotseq	symbol	math	U+2253	risingdotseq	image-of-or-approximately-equals	RELOP		\risingdotseq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \risingdotseq
+\rtimes	symbol	math	U+22CA	rtimes	right-normal-factor-semidirect-product	BINOP		\rtimes	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathbin; codepoint from extract \rtimes
+\shortmid	symbol	math	U+2223	shortmid	divides	RELOP		\shortmid	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \shortmid
+\shortparallel	symbol	math	U+2225	shortparallel	parallel-to	RELOP		\shortparallel	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \shortparallel
+\sigma	symbol	math	U+03C3	sigma		ID		\sigma	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \sigma
+\sigmasl	symbol	math	U+03C3	sigmasl		ID		\sigma	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \sigmasl
+\sigmaup	symbol	math	U+03C3	sigmaup		ID		\sigma	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \sigmaup
+\smallfrown	symbol	math	U+2322	smallfrown		RELOP		\smallfrown	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \smallfrown
+\smallsetminus	symbol	math	U+2216	smallsetminus	set-minus	BINOP		\smallsetminus	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathbin; codepoint from extract \smallsetminus
+\smallsmile	symbol	math	U+2323	smallsmile		RELOP		\smallsmile	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \smallsmile
+\sphericalangle	symbol	math	U+2222	sphericalangle		ID		\sphericalangle	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \sphericalangle
+\sqintop	symbol	math	U+2A16	sqintop	square-contour-integral	OPFUNCTION			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathop; codepoint from extract \sqintop
+\sqsubset	symbol	math	U+228F	sqsubset	square-image-of	RELOP		\sqsubset	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \sqsubset
+\sqsupset	symbol	math	U+2290	sqsupset	square-original-of	RELOP		\sqsupset	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \sqsupset
+\square	symbol	math	U+25A1	square		ID		\square	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \square
+\strictfi	symbol	math	U+297C	strictfi		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \strictfi
+\strictif	symbol	math	U+297D	strictif		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \strictif
+\strictiff	symbol	math	U+297C U+297D	strictiff		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \strictiff
+\subseteqq	symbol	math	U+2AC5	subseteqq	subset-of-or-equals	RELOP		\subseteqq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \subseteqq
+\subsetneq	symbol	math	U+228A	subsetneq	subset-of-and-not-equals	RELOP		\subsetneq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \subsetneq
+\subsetneqq	symbol	math	U+2ACB	subsetneqq	subset-of-and-not-equals	RELOP		\subsetneqq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \subsetneqq
+\succapprox	symbol	math	U+2AB8	succapprox	succeeds-or-approximately-equals	RELOP		\succapprox	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \succapprox
+\succcurlyeq	symbol	math	U+227D	succcurlyeq	succeeds-or-equals	RELOP		\succcurlyeq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \succcurlyeq
+\succeqq	symbol	math	U+2AB4	succeqq	succeeds-or-equals	RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \succeqq
+\succnapprox	symbol	math	U+2ABA	succnapprox	succeeds-and-not-approximately-equals	RELOP		\succnapprox	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \succnapprox
+\succneqq	symbol	math	U+2AB6	succneqq	succeeds-and-not-equals	RELOP		\succneqq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \succneqq
+\succnsim	symbol	math	U+22E9	succnsim	succeeds-and-not-equivalent-to	RELOP		\succnsim	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \succnsim
+\succsim	symbol	math	U+227F	succsim	succeeds-or-equivalent-to	RELOP		\succsim	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \succsim
+\sumop	symbol	math	U+2211	sumop	sum	OPFUNCTION		\sum	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathop; codepoint from extract \sumop
+\supseteqq	symbol	math	U+2AC6	supseteqq	superset-of-or-equals	RELOP		\supseteqq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \supseteqq
+\supsetneq	symbol	math	U+228B	supsetneq	superset-of-and-not-equals	RELOP		\supsetneq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \supsetneq
+\supsetneqq	symbol	math	U+2ACC	supsetneqq	superset-of-and-not-equals	RELOP		\supsetneqq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \supsetneqq
+\tau	symbol	math	U+03C4	tau		ID		\tau	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \tau
+\tausl	symbol	math	U+03C4	tausl		ID		\tau	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \tausl
+\tauup	symbol	math	U+03C4	tauup		ID		\tau	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \tauup
+\therefore	symbol	math	U+2234	therefore	therefore	RELOP		\therefore	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \therefore
+\theta	symbol	math	U+03B8	theta		ID		\theta	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \theta
+\thetasl	symbol	math	U+03B8	thetasl		ID		\theta	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \thetasl
+\thetaup	symbol	math	U+03B8	thetaup		ID		\theta	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \thetaup
+\thickapprox	symbol	math	U+2248	thickapprox	approximately-equals	RELOP		\thickapprox	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \thickapprox
+\thicksim	symbol	math	U+223C	thicksim		RELOP		\thicksim	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \thicksim
+\triangledown	symbol	math	U+25BD	triangledown		ID		\triangledown	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \triangledown
+\trianglelefteq	symbol	math	U+22B4	trianglelefteq		RELOP		\trianglelefteq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \trianglelefteq
+\triangleq	symbol	math	U+225C	triangleq		RELOP		\triangleq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \triangleq
+\trianglerighteq	symbol	math	U+22B5	trianglerighteq		RELOP		\trianglerighteq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \trianglerighteq
+\twoheadleftarrow	symbol	math	U+219E	twoheadleftarrow		RELOP		\twoheadleftarrow	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \twoheadleftarrow
+\twoheadrightarrow	symbol	math	U+21A0	twoheadrightarrow		RELOP		\twoheadrightarrow	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \twoheadrightarrow
+\unlhd	symbol	math	U+22B4	unlhd	subgroup-of-or-equals	BINOP		\unlhd	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathbin; codepoint from extract \unlhd
+\unrhd	symbol	math	U+22B5	unrhd	contains-as-subgroup-or-equals	BINOP		\unrhd	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathbin; codepoint from extract \unrhd
+\upharpoonleft	symbol	math	U+21BF	upharpoonleft		RELOP		\upharpoonleft	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \upharpoonleft
+\upharpoonright	symbol	math	U+21BE	upharpoonright		RELOP		\upharpoonright	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \upharpoonright
+\upsilon	symbol	math	U+03C5	upsilon		ID		\upsilon	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \upsilon
+\upsilonsl	symbol	math	U+03C5	upsilonsl		ID		\upsilon	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \upsilonsl
+\upsilonup	symbol	math	U+03C5	upsilonup		ID		\upsilon	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \upsilonup
+\upuparrows	symbol	math	U+21C8	upuparrows		RELOP		\upuparrows	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \upuparrows
+\vDash	symbol	math	U+22A8	vDash		RELOP		\vDash	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \vDash
+\varDelta	symbol	math	U+0394	varDelta		ID		\varDelta	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \varDelta
+\varGamma	symbol	math	U+0393	varGamma		ID		\varGamma	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \varGamma
+\varLambda	symbol	math	U+039B	varLambda		ID		\varLambda	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \varLambda
+\varOmega	symbol	math	U+03A9	varOmega		ID		\varOmega	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \varOmega
+\varPhi	symbol	math	U+03A6	varPhi		ID		\varPhi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \varPhi
+\varPi	symbol	math	U+03A0	varPi		ID		\varPi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \varPi
+\varPsi	symbol	math	U+03A8	varPsi		ID		\varPsi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \varPsi
+\varSigma	symbol	math	U+03A3	varSigma		ID		\varSigma	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \varSigma
+\varTheta	symbol	math	U+0398	varTheta		ID		\varTheta	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \varTheta
+\varUpsilon	symbol	math	U+03A5	varUpsilon		ID		\varUpsilon	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \varUpsilon
+\varXi	symbol	math	U+039E	varXi		ID		\varXi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \varXi
+\varclubsuit	symbol	math	U+2667	varclubsuit		ID			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \varclubsuit
+\vardiamondsuit	symbol	math	U+2666	vardiamondsuit		ID			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \vardiamondsuit
+\varemptyset	symbol	math	U+2205	varemptyset		ID			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord
+\varepsilon	symbol	math	U+03B5	varepsilon		ID		\varepsilon	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \varepsilon
+\varepsilonsl	symbol	math	U+03B5	varepsilonsl		ID		\varepsilon	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \varepsilonsl
+\varepsilonup	symbol	math	U+03B5	varepsilonup		ID		\varepsilon	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \varepsilonup
+\varheartsuit	symbol	math	U+2665	varheartsuit		ID			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \varheartsuit
+\varkappa	symbol	math	U+03F0	varkappa		ID		\varkappa	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \varkappa
+\varnothing	symbol	math	U+2205	varnothing	empty-set	ID		\varnothing	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \varnothing
+\varoiiintclockwiseop	symbol	math	U+222D U+20D9	varoiiintclockwiseop	triple-clockwise-contour-integral	OPFUNCTION			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathop; codepoint from extract \varoiiintclockwiseop
+\varoiiintctrclockwiseop	symbol	math	U+222D U+20DA	varoiiintctrclockwiseop	triple-counterclockwise-contour-integral	OPFUNCTION			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathop; codepoint from extract \varoiiintctrclockwiseop
+\varoiintclockwiseop	symbol	math	U+222C U+20D9	varoiintclockwiseop	double-clockwise-contour-integral	OPFUNCTION			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathop; codepoint from extract \varoiintclockwiseop
+\varoiintctrclockwiseop	symbol	math	U+222C U+20DA	varoiintctrclockwiseop	double-counterclockwise-contour-integral	OPFUNCTION			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathop; codepoint from extract \varoiintctrclockwiseop
+\varointclockwiseop	symbol	math	U+2232	varointclockwiseop	clockwise-contour-integral	OPFUNCTION			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathop; codepoint from extract \varointclockwiseop
+\varointctrclockwiseop	symbol	math	U+2233	varointctrclockwiseop	counter-clockwise-contour-integral	OPFUNCTION			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathop; codepoint from extract \varointctrclockwiseop
+\varparallel	symbol	math	U+2AFD	varparallel		RELOP			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \varparallel
+\varphi	symbol	math	U+03C6	varphi		ID		\varphi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \varphi
+\varphisl	symbol	math	U+03C6	varphisl		ID		\varphi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \varphisl
+\varphiup	symbol	math	U+03C6	varphiup		ID		\varphi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \varphiup
+\varpi	symbol	math	U+03D6	varpi		ID		\varpi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \varpi
+\varpisl	symbol	math	U+03D6	varpisl		ID		\varpi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \varpisl
+\varpiup	symbol	math	U+03D6	varpiup		ID		\varpi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \varpiup
+\varpropto	symbol	math	U+221D	varpropto	proportional-to	RELOP		\varpropto	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \varpropto
+\varrho	symbol	math	U+03F1	varrho		ID		\varrho	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \varrho
+\varrhosl	symbol	math	U+03F1	varrhosl		ID		\varrho	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \varrhosl
+\varrhoup	symbol	math	U+03F1	varrhoup		ID		\varrho	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \varrhoup
+\varsigma	symbol	math	U+03C2	varsigma		ID		\varsigma	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \varsigma
+\varsigmasl	symbol	math	U+03C2	varsigmasl		ID		\varsigma	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \varsigmasl
+\varsigmaup	symbol	math	U+03C2	varsigmaup		ID		\varsigma	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \varsigmaup
+\varspadesuit	symbol	math	U+2664	varspadesuit		ID			lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \varspadesuit
+\varsubsetneq	symbol	math	U+228A	varsubsetneq	subset-of-and-not-equals	RELOP		\varsubsetneq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \varsubsetneq
+\varsubsetneqq	symbol	math	U+2ACB	varsubsetneqq	subset-of-and-not-equals	RELOP		\varsubsetneqq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \varsubsetneqq
+\varsupsetneq	symbol	math	U+228B	varsupsetneq	superset-of-and-not-equals	RELOP		\varsupsetneq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \varsupsetneq
+\varsupsetneqq	symbol	math	U+2ACC	varsupsetneqq	superset-of-and-not-equals	RELOP		\varsupsetneqq	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \varsupsetneqq
+\vartheta	symbol	math	U+03D1	vartheta		ID		\vartheta	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \vartheta
+\varthetasl	symbol	math	U+03D1	varthetasl		ID		\vartheta	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \varthetasl
+\varthetaup	symbol	math	U+03D1	varthetaup		ID		\vartheta	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \varthetaup
+\vartriangle	symbol	math	U+25B3	vartriangle		RELOP		\vartriangle	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \vartriangle
+\vartriangleleft	symbol	math	U+22B2	vartriangleleft		RELOP		\vartriangleleft	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \vartriangleleft
+\vartriangleright	symbol	math	U+22B3	vartriangleright		RELOP		\vartriangleright	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathrel; codepoint from extract \vartriangleright
+\veebar	symbol	math	U+22BB	veebar	exclusive-or	BINOP		\veebar	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathbin; codepoint from extract \veebar
+\xi	symbol	math	U+03BE	xi		ID		\xi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \xi
+\xisl	symbol	math	U+03BE	xisl		ID		\xi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \xisl
+\xiup	symbol	math	U+03BE	xiup		ID		\xi	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \xiup
+\zeta	symbol	math	U+03B6	zeta		ID		\zeta	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \zeta
+\zetasl	symbol	math	U+03B6	zetasl		ID		\zeta	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \zetasl
+\zetaup	symbol	math	U+03B6	zetaup		ID		\zeta	lib-symb/kpfonts/tex/latex/kpfonts/kpfonts.sty	re@DeclareMathSymbol mathord; codepoint from extract \zetaup

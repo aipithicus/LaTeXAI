@@ -1,0 +1,1189 @@
+# -*- mode: Perl -*-
+# /=====================================================================\ #
+# |  kpfonts.sty                                                      | #
+# | Generated from lib-symb/kpfonts/symbols.tsv                            | #
+# |=====================================================================| #
+# | Part of LaTeXAI / LaTeXML:                                          | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# \=========================================================ooo==U==ooo=/ #
+# Class: semantic
+# Generated from lib-symb/kpfonts/symbols.tsv by tools/dev/symbind.pl
+# Do not edit; regenerate with lsymb --generate kpfonts
+# Written from lib-symb/kpfonts/provenance.json
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+DeclareOption('centertags', undef);    # face-selection; does not change meaning
+DeclareOption('classicReIm', undef);    # face-selection; does not change meaning
+DeclareOption('easyscsl', undef);    # face-selection; does not change meaning
+DeclareOption('frenchstyle', undef);    # face-selection; does not change meaning
+DeclareOption('fullintlimits', undef);    # face-selection; does not change meaning
+DeclareOption('fulloldstyle', undef);    # face-selection; does not change meaning
+DeclareOption('fulloldstylenums', undef);    # face-selection; does not change meaning
+DeclareOption('fullsumlimits', undef);    # face-selection; does not change meaning
+DeclareOption('fullveryoldstyle', undef);    # face-selection; does not change meaning
+DeclareOption('intlimits', undef);    # face-selection; does not change meaning
+DeclareOption('largesmallcaps', undef);    # face-selection; does not change meaning
+DeclareOption('leqno', undef);    # face-selection; does not change meaning
+DeclareOption('light', undef);    # face-selection; does not change meaning
+DeclareOption('lightmath', undef);    # face-selection; does not change meaning
+DeclareOption('lighttext', undef);    # face-selection; does not change meaning
+DeclareOption('mathcalasscript', undef);    # face-selection; does not change meaning
+DeclareOption('namelimits', undef);    # face-selection; does not change meaning
+DeclareOption('narrowiints', undef);    # face-selection; does not change meaning
+DeclareOption('noDcommand', undef);    # face-selection; does not change meaning
+DeclareOption('noamsmath', undef);    # face-selection; does not change meaning
+DeclareOption('nofligatures', undef);    # face-selection; does not change meaning
+DeclareOption('nointlimits', undef);    # face-selection; does not change meaning
+DeclareOption('nomath', undef);    # face-selection; does not change meaning
+DeclareOption('nomathscript', undef);    # face-selection; does not change meaning
+DeclareOption('nonamelimits', undef);    # face-selection; does not change meaning
+DeclareOption('nosf', undef);    # face-selection; does not change meaning
+DeclareOption('nosumlimits', undef);    # face-selection; does not change meaning
+DeclareOption('notext', undef);    # face-selection; does not change meaning
+DeclareOption('notextcomp', undef);    # face-selection; does not change meaning
+DeclareOption('nott', undef);    # face-selection; does not change meaning
+DeclareOption('nowarning', undef);    # face-selection; does not change meaning
+DeclareOption('oldstyle', undef);    # face-selection; does not change meaning
+DeclareOption('oldstylemath', undef);    # face-selection; does not change meaning
+DeclareOption('oldstylenums', undef);    # face-selection; does not change meaning
+DeclareOption('oldstylenumsmath', undef);    # face-selection; does not change meaning
+DeclareOption('onlyrm', undef);    # face-selection; does not change meaning
+DeclareOption('partialup', undef);    # face-selection; does not change meaning
+DeclareOption('reqno', undef);    # face-selection; does not change meaning
+DeclareOption('rmmathbb', undef);    # face-selection; does not change meaning
+DeclareOption('rmx', undef);    # face-selection; does not change meaning
+DeclareOption('sfmath', undef);    # face-selection; does not change meaning
+DeclareOption('sfmathbb', undef);    # face-selection; does not change meaning
+DeclareOption('slantedGreeks', undef);    # face-selection; does not change meaning
+DeclareOption('sumlimits', undef);    # face-selection; does not change meaning
+DeclareOption('tbtags', undef);    # face-selection; does not change meaning
+DeclareOption('upright', undef);    # face-selection; does not change meaning
+DeclareOption('uprightRoman', undef);    # face-selection; does not change meaning
+DeclareOption('uprightgreeks', undef);    # face-selection; does not change meaning
+DeclareOption('veryoldstyle', undef);    # face-selection; does not change meaning
+DeclareOption('veryoldstylemath', undef);    # face-selection; does not change meaning
+DeclareOption('widermath', undef);    # face-selection; does not change meaning
+DeclareOption(undef, undef);
+ProcessOptions();
+
+RequirePackage('amsfonts');
+
+DefMathI('\Bbbk', undef, "\x{1D55C}",
+  role => 'ID');
+DefMathI('\Bot', undef, "\x{22A5}",
+  role => 'ID');
+DefMathI('\Bumpeq', undef, "\x{224E}",
+  role => 'RELOP', meaning => 'geometrically-equals');
+DefMathI('\Cap', undef, "\x{22D2}",
+  role => 'BINOP', meaning => 'double-intersection');
+DefMathI('\Colonapprox', undef, UTF(0x3A).UTF(0x3A)."\x{2248}",
+  role => 'RELOP');
+DefMathI('\Coloneq', undef, UTF(0x3A).UTF(0x3A).UTF(0x2D),
+  role => 'RELOP');
+DefMathI('\Coloneqq', undef, "\x{2A74}",
+  role => 'RELOP');
+DefMathI('\Colonsim', undef, UTF(0x3A).UTF(0x3A)."\x{223C}",
+  role => 'RELOP');
+DefMathI('\Cup', undef, "\x{22D3}",
+  role => 'BINOP', meaning => 'double-union');
+DefMathI('\Delta', undef, "\x{0394}",
+  role => 'ID');
+DefMathI('\Deltasl', undef, "\x{0394}",
+  role => 'ID');
+DefMathI('\Deltaup', undef, "\x{0394}");
+DefMathI('\Diamond', undef, "\x{25C7}",
+  role => 'ID');
+DefMathI('\DiamondLeft', undef, "\x{21D0}"."\x{25C7}",
+  role => 'RELOP');
+DefMathI('\DiamondRight', undef, "\x{25C7}"."\x{21D2}",
+  role => 'RELOP');
+DefMathI('\Diamondblack', undef, "\x{25C6}",
+  role => 'ID');
+DefMathI('\Diamonddot', undef, "\x{27D0}",
+  role => 'ID');
+DefMathI('\DiamonddotLeft', undef, "\x{21D0}"."\x{27D0}",
+  role => 'RELOP');
+DefMathI('\DiamonddotRight', undef, "\x{27D0}"."\x{21D2}",
+  role => 'RELOP');
+DefMathI('\Diamonddotleft', undef, "\x{2190}"."\x{27D0}",
+  role => 'RELOP');
+DefMathI('\Diamonddotright', undef, "\x{27D0}"."\x{2192}",
+  role => 'RELOP');
+DefMathI('\Diamondleft', undef, "\x{2190}"."\x{25C7}",
+  role => 'RELOP');
+DefMathI('\Diamondright', undef, "\x{25C7}"."\x{2192}",
+  role => 'RELOP');
+DefMathI('\Eqcolon', undef, UTF(0x2D).UTF(0x3A).UTF(0x3A),
+  role => 'RELOP');
+DefMathI('\Eqqcolon', undef, UTF(0x3D).UTF(0x3A).UTF(0x3A),
+  role => 'RELOP');
+DefMathI('\Finv', undef, "\x{2132}",
+  role => 'ID');
+DefMathI('\Game', undef, "\x{2141}",
+  role => 'ID');
+DefMathI('\Gamma', undef, "\x{0393}",
+  role => 'ID');
+DefMathI('\Gammasl', undef, "\x{0393}",
+  role => 'ID');
+DefMathI('\Gammaup', undef, "\x{0393}");
+DefMathI('\Im', undef, "\x{2111}",
+  role => 'ID', meaning => 'imaginary-part');
+DefMathI('\Join', undef, "\x{2A1D}",
+  role => 'RELOP', meaning => 'join');
+DefMathI('\Lambda', undef, "\x{039B}",
+  role => 'ID');
+DefMathI('\Lambdasl', undef, "\x{039B}",
+  role => 'ID');
+DefMathI('\Lambdaup', undef, "\x{039B}");
+DefMathI('\Lbag', undef, "\x{27C5}",
+  role => 'OPEN');
+DefMathI('\Lleftarrow', undef, "\x{21DA}",
+  role => 'RELOP');
+DefMathI('\Lsh', undef, "\x{21B0}",
+  role => 'RELOP');
+DefMathI('\Mappedfromchar', undef, "\x{2AE4}",
+  role => 'RELOP');
+DefMathI('\Mapstochar', undef, UTF(0x7C),
+  role => 'RELOP');
+DefMathI('\Mmapstochar', undef, "\x{2AE5}",
+  role => 'RELOP');
+DefMathI('\Nearrow', undef, "\x{21D7}",
+  role => 'RELOP');
+DefMathI('\Nwarrow', undef, "\x{21D6}",
+  role => 'RELOP');
+DefMathI('\Omega', undef, "\x{03A9}",
+  role => 'ID');
+DefMathI('\Omegasl', undef, "\x{03A9}",
+  role => 'ID');
+DefMathI('\Omegaup', undef, "\x{03A9}");
+DefMathI('\Perp', undef, "\x{2AEB}",
+  role => 'RELOP');
+DefMathI('\Phi', undef, "\x{03A6}",
+  role => 'ID');
+DefMathI('\Phisl', undef, "\x{03A6}",
+  role => 'ID');
+DefMathI('\Phiup', undef, "\x{03A6}");
+DefMathI('\Pi', undef, "\x{03A0}",
+  role => 'ID');
+DefMathI('\Pisl', undef, "\x{03A0}",
+  role => 'ID');
+DefMathI('\Piup', undef, "\x{03A0}");
+DefMathI('\Psi', undef, "\x{03A8}",
+  role => 'ID');
+DefMathI('\Psisl', undef, "\x{03A8}",
+  role => 'ID');
+DefMathI('\Psiup', undef, "\x{03A8}");
+DefMathI('\Rbag', undef, "\x{27C6}",
+  role => 'CLOSE');
+DefMathI('\Re', undef, "\x{211C}",
+  role => 'ID', meaning => 'real-part');
+DefMathI('\Rrightarrow', undef, "\x{21DB}",
+  role => 'RELOP');
+DefMathI('\Rsh', undef, "\x{21B1}",
+  role => 'RELOP');
+DefMathI('\Searrow', undef, "\x{21D8}",
+  role => 'RELOP');
+DefMathI('\Sigma', undef, "\x{03A3}",
+  role => 'ID');
+DefMathI('\Sigmasl', undef, "\x{03A3}",
+  role => 'ID');
+DefMathI('\Sigmaup', undef, "\x{03A3}");
+DefMathI('\Subset', undef, "\x{22D0}",
+  role => 'RELOP', meaning => 'double-subset-of');
+DefMathI('\Supset', undef, "\x{22D1}",
+  role => 'RELOP', meaning => 'double-superset-of');
+DefMathI('\Swarrow', undef, "\x{21D9}",
+  role => 'RELOP');
+DefMathI('\Theta', undef, "\x{0398}",
+  role => 'ID');
+DefMathI('\Thetasl', undef, "\x{0398}",
+  role => 'ID');
+DefMathI('\Thetaup', undef, "\x{0398}");
+DefMathI('\Top', undef, "\x{22A4}",
+  role => 'ID');
+DefMathI('\Upsilon', undef, "\x{03A5}",
+  role => 'ID');
+DefMathI('\Upsilonsl', undef, "\x{03A5}",
+  role => 'ID');
+DefMathI('\Upsilonup', undef, "\x{03A5}");
+DefMathI('\VDash', undef, "\x{22AB}",
+  role => 'RELOP');
+DefMathI('\Vdash', undef, "\x{22A9}",
+  role => 'RELOP', meaning => 'forces');
+DefMathI('\Vvdash', undef, "\x{22AA}",
+  role => 'RELOP');
+DefMathI('\Wr', undef, "\x{2240}",
+  role => 'BINOP');
+DefMathI('\Xi', undef, "\x{039E}",
+  role => 'ID');
+DefMathI('\Xisl', undef, "\x{039E}",
+  role => 'ID');
+DefMathI('\Xiup', undef, "\x{039E}");
+DefMathI('\alpha', undef, "\x{03B1}",
+  role => 'ID');
+DefMathI('\alphasl', undef, "\x{03B1}",
+  role => 'ID');
+DefMathI('\alphaup', undef, "\x{03B1}",
+  role => 'ID');
+DefMathI('\angle', undef, "\x{2220}",
+  role => 'ID');
+DefMathI('\approxeq', undef, "\x{224A}",
+  role => 'RELOP', meaning => 'approximately-equals-or-equals');
+DefMathI('\backepsilon', undef, "\x{03F6}",
+  role => 'RELOP');
+DefMathI('\backprime', undef, "\x{2035}",
+  role => 'ID');
+DefMathI('\backsim', undef, "\x{223D}",
+  role => 'RELOP');
+DefMathI('\backsimeq', undef, "\x{22CD}",
+  role => 'RELOP');
+DefMathI('\barwedge', undef, "\x{22BC}",
+  role => 'BINOP', meaning => 'not-and');
+DefMathI('\because', undef, "\x{2235}",
+  role => 'RELOP', meaning => 'because');
+DefMathI('\beta', undef, "\x{03B2}",
+  role => 'ID');
+DefMathI('\betasl', undef, "\x{03B2}",
+  role => 'ID');
+DefMathI('\betaup', undef, "\x{03B2}",
+  role => 'ID');
+DefMathI('\beth', undef, "\x{2136}",
+  role => 'ID');
+DefMathI('\between', undef, "\x{226C}",
+  role => 'RELOP', meaning => 'between');
+DefMathI('\bigcapop', undef, "\x{22C2}",
+  role => 'OPFUNCTION', meaning => 'intersection');
+DefMathI('\bigcupop', undef, "\x{22C3}",
+  role => 'OPFUNCTION', meaning => 'union');
+DefMathI('\bignplusop', undef, UTF(0x5C).UTF(0x6C).UTF(0x78).UTF(0x40).UTF(0x6B).UTF(0x6C).UTF(0x75).UTF(0x64).UTF(0x67).UTF(0x65).UTF(0x64).UTF(0x7B).UTF(0x5C).UTF(0x62).UTF(0x69).UTF(0x67).UTF(0x63).UTF(0x61).UTF(0x70).UTF(0x5C).UTF(0x6D).UTF(0x61).UTF(0x74).UTF(0x68).UTF(0x63).UTF(0x68).UTF(0x6F).UTF(0x69).UTF(0x63).UTF(0x65).UTF(0x27).UTF(0xA).UTF(0x20).UTF(0x20).UTF(0x20).UTF(0x20).UTF(0x2E).UTF(0x20).UTF(0x27).UTF(0x7B).UTF(0x5C).UTF(0x6C).UTF(0x78).UTF(0x40).UTF(0x74).UTF(0x77).UTF(0x65).UTF(0x61).UTF(0x6B).UTF(0x65).UTF(0x64).UTF(0x7B).UTF(0x77).UTF(0x69).UTF(0x64).UTF(0x74).UTF(0x68).UTF(0x3D).UTF(0x30).UTF(0x70).UTF(0x74).UTF(0x2C).UTF(0x78).UTF(0x6F).UTF(0x66).UTF(0x66).UTF(0x73).UTF(0x65).UTF(0x74).UTF(0x3D).UTF(0x2D).UTF(0x31).UTF(0x2E).UTF(0x36).UTF(0x65).UTF(0x6D).UTF(0x2C).UTF(0x79).UTF(0x6F).UTF(0x66).UTF(0x66).UTF(0x73).UTF(0x65).UTF(0x74).UTF(0x3D).UTF(0x30).UTF(0x2E).UTF(0x32).UTF(0x65).UTF(0x78).UTF(0x7D).UTF(0x7B).UTF(0x2B).UTF(0x7D).UTF(0x7D).UTF(0x27).UTF(0xA).UTF(0x20).UTF(0x20).UTF(0x20).UTF(0x20).UTF(0x2E).UTF(0x20).UTF(0x27).UTF(0x7B).UTF(0x5C).UTF(0x6C).UTF(0x78).UTF(0x40).UTF(0x74).UTF(0x77).UTF(0x65).UTF(0x61).UTF(0x6B).UTF(0x65).UTF(0x64).UTF(0x7B).UTF(0x77).UTF(0x69).UTF(0x64).UTF(0x74).UTF(0x68).UTF(0x3D).UTF(0x30).UTF(0x70).UTF(0x74).UTF(0x2C).UTF(0x78).UTF(0x6F).UTF(0x66).UTF(0x66).UTF(0x73).UTF(0x65).UTF(0x74).UTF(0x3D).UTF(0x2D).UTF(0x31).UTF(0x2E).UTF(0x33).UTF(0x65).UTF(0x6D).UTF(0x2C).UTF(0x79).UTF(0x6F).UTF(0x66).UTF(0x66).UTF(0x73).UTF(0x65).UTF(0x74).UTF(0x3D).UTF(0x30).UTF(0x2E).UTF(0x32).UTF(0x65).UTF(0x78).UTF(0x7D).UTF(0x7B).UTF(0x2B).UTF(0x7D).UTF(0x7D).UTF(0x27).UTF(0xA).UTF(0x20).UTF(0x20).UTF(0x20).UTF(0x20).UTF(0x2E).UTF(0x20).UTF(0x27).UTF(0x7B).UTF(0x5C).UTF(0x6C).UTF(0x78).UTF(0x40).UTF(0x74).UTF(0x77).UTF(0x65).UTF(0x61).UTF(0x6B).UTF(0x65).UTF(0x64).UTF(0x7B).UTF(0x77).UTF(0x69).UTF(0x64).UTF(0x74).UTF(0x68).UTF(0x3D).UTF(0x30).UTF(0x70).UTF(0x74).UTF(0x2C).UTF(0x78).UTF(0x6F).UTF(0x66).UTF(0x66).UTF(0x73).UTF(0x65).UTF(0x74).UTF(0x3D).UTF(0x2D).UTF(0x31).UTF(0x2E).UTF(0x33).UTF(0x65).UTF(0x6D).UTF(0x2C).UTF(0x79).UTF(0x6F).UTF(0x66).UTF(0x66).UTF(0x73).UTF(0x65).UTF(0x74).UTF(0x3D).UTF(0x30).UTF(0x2E).UTF(0x32).UTF(0x65).UTF(0x78).UTF(0x7D).UTF(0x7B).UTF(0x2B).UTF(0x7D).UTF(0x7D).UTF(0x27).UTF(0xA).UTF(0x20).UTF(0x20).UTF(0x20).UTF(0x20).UTF(0x2E).UTF(0x20).UTF(0x27).UTF(0x7B).UTF(0x5C).UTF(0x6C).UTF(0x78).UTF(0x40).UTF(0x74).UTF(0x77).UTF(0x65).UTF(0x61).UTF(0x6B).UTF(0x65).UTF(0x64).UTF(0x7B).UTF(0x77).UTF(0x69).UTF(0x64).UTF(0x74).UTF(0x68).UTF(0x3D).UTF(0x30).UTF(0x70).UTF(0x74).UTF(0x2C).UTF(0x78).UTF(0x6F).UTF(0x66).UTF(0x66).UTF(0x73).UTF(0x65).UTF(0x74).UTF(0x3D).UTF(0x2D).UTF(0x31).UTF(0x2E).UTF(0x33).UTF(0x65).UTF(0x6D).UTF(0x2C).UTF(0x79).UTF(0x6F).UTF(0x66).UTF(0x66).UTF(0x73).UTF(0x65).UTF(0x74).UTF(0x3D).UTF(0x30).UTF(0x2E).UTF(0x32).UTF(0x65).UTF(0x78).UTF(0x7D).UTF(0x7B).UTF(0x2B).UTF(0x7D).UTF(0x7D).UTF(0x7D),
+  role => 'OPFUNCTION', meaning => 'intersection-plus');
+DefMathI('\bigodotop', undef, "\x{2A00}",
+  role => 'OPFUNCTION');
+DefMathI('\bigoplusop', undef, "\x{2A01}",
+  role => 'OPFUNCTION', meaning => 'direct-sum');
+DefMathI('\bigotimesop', undef, "\x{2A02}",
+  role => 'OPFUNCTION', meaning => 'tensor-product');
+DefMathI('\bigsqcapop', undef, "\x{2A05}",
+  role => 'OPFUNCTION');
+DefMathI('\bigsqcupop', undef, "\x{2A06}",
+  role => 'OPFUNCTION', meaning => 'square-union');
+DefMathI('\bigstar', undef, "\x{2605}",
+  role => 'ID');
+DefMathI('\biguplusop', undef, "\x{2A04}",
+  role => 'OPFUNCTION', meaning => 'symmetric-difference');
+DefMathI('\bigveeop', undef, "\x{22C1}",
+  role => 'OPFUNCTION', meaning => 'or');
+DefMathI('\bigwedgeop', undef, "\x{22C0}",
+  role => 'OPFUNCTION', meaning => 'and');
+DefMathI('\blacklozenge', undef, "\x{29EB}",
+  role => 'ID');
+DefMathI('\blacksquare', undef, "\x{25A0}",
+  role => 'ID');
+DefMathI('\blacktriangle', undef, "\x{25B2}",
+  role => 'ID');
+DefMathI('\blacktriangledown', undef, "\x{25BC}",
+  role => 'ID');
+DefMathI('\blacktriangleleft', undef, "\x{25C0}",
+  role => 'RELOP');
+DefMathI('\blacktriangleright', undef, "\x{25B6}",
+  role => 'RELOP');
+DefMathI('\boxLeft', undef, "\x{21D0}"."\x{25A1}",
+  role => 'RELOP');
+DefMathI('\boxRight', undef, "\x{25A1}"."\x{21D2}",
+  role => 'RELOP');
+DefMathI('\boxast', undef, "\x{29C6}",
+  role => 'BINOP');
+DefMathI('\boxbar', undef, "\x{25EB}",
+  role => 'BINOP');
+DefMathI('\boxbslash', undef, "\x{29C4}",
+  role => 'BINOP');
+DefMathI('\boxdot', undef, "\x{22A1}",
+  role => 'BINOP');
+DefMathI('\boxdotLeft', undef, "\x{21D0}"."\x{22A1}",
+  role => 'RELOP');
+DefMathI('\boxdotRight', undef, "\x{22A1}"."\x{21D2}",
+  role => 'RELOP');
+DefMathI('\boxdotleft', undef, "\x{2190}"."\x{22A1}",
+  role => 'RELOP');
+DefMathI('\boxdotright', undef, "\x{22A1}"."\x{2192}",
+  role => 'RELOP');
+DefMathI('\boxleft', undef, "\x{22A3}"."\x{20DE}",
+  role => 'RELOP');
+DefMathI('\boxminus', undef, "\x{229F}",
+  role => 'BINOP');
+DefMathI('\boxplus', undef, "\x{229E}",
+  role => 'BINOP');
+DefMathI('\boxright', undef, "\x{22A2}"."\x{20DE}",
+  role => 'RELOP');
+DefMathI('\boxslash', undef, "\x{29C5}",
+  role => 'BINOP');
+DefMathI('\boxtimes', undef, "\x{22A0}",
+  role => 'BINOP');
+DefMathI('\bumpeq', undef, "\x{224F}",
+  role => 'RELOP', meaning => 'difference-between');
+DefMathI('\centerdot', undef, "\x{2219}",
+  role => 'BINOP');
+DefMathI('\chi', undef, "\x{03C7}",
+  role => 'ID');
+DefMathI('\chisl', undef, "\x{03C7}",
+  role => 'ID');
+DefMathI('\chiup', undef, "\x{03C7}",
+  role => 'ID');
+DefMathI('\circeq', undef, "\x{2257}",
+  role => 'RELOP');
+DefMathI('\circlearrowleft', undef, "\x{21BA}",
+  role => 'RELOP');
+DefMathI('\circlearrowright', undef, "\x{21BB}",
+  role => 'RELOP');
+DefMathI('\circledS', undef, "\x{24C8}",
+  role => 'ID');
+DefMathI('\circledast', undef, "\x{229B}",
+  role => 'BINOP');
+DefMathI('\circledbar', undef, "\x{29B6}",
+  role => 'BINOP');
+DefMathI('\circledbslash', undef, "\x{29B8}",
+  role => 'BINOP');
+DefMathI('\circledcirc', undef, "\x{229A}",
+  role => 'BINOP');
+DefMathI('\circleddash', undef, "\x{229D}",
+  role => 'BINOP');
+DefMathI('\circleddotleft', undef, "\x{2190}"."\x{2299}",
+  role => 'RELOP');
+DefMathI('\circleddotright', undef, "\x{2299}"."\x{2192}",
+  role => 'RELOP');
+DefMathI('\circledgtr', undef, "\x{29C1}",
+  role => 'RELOP');
+DefMathI('\circledless', undef, "\x{29C0}",
+  role => 'RELOP');
+DefMathI('\circledvee', undef, "\x{2228}"."\x{20DD}",
+  role => 'BINOP');
+DefMathI('\circledwedge', undef, "\x{2227}"."\x{20DD}",
+  role => 'BINOP');
+DefMathI('\circleleft', undef, "\x{2190}"."\x{25CB}",
+  role => 'RELOP');
+DefMathI('\circleright', undef, "\x{25CB}"."\x{2192}",
+  role => 'RELOP');
+DefMathI('\colonapprox', undef, UTF(0x3A)."\x{2248}",
+  role => 'RELOP');
+DefMathI('\coloneq', undef, "\x{2254}",
+  role => 'RELOP');
+DefMathI('\coloneqq', undef, "\x{2254}",
+  role => 'RELOP');
+DefMathI('\colonsim', undef, UTF(0x3A)."\x{223C}",
+  role => 'RELOP');
+DefMathI('\complement', undef, "\x{2201}",
+  role => 'ID', meaning => 'complement');
+DefMathI('\cong', undef, "\x{2245}",
+  role => 'RELOP', meaning => 'approximately-equals');
+DefMathI('\coprodop', undef, "\x{2210}",
+  role => 'OPFUNCTION', meaning => 'coproduct');
+DefMathI('\curlyeqprec', undef, "\x{22DE}",
+  role => 'RELOP', meaning => 'equals-or-preceeds');
+DefMathI('\curlyeqsucc', undef, "\x{22DF}",
+  role => 'RELOP', meaning => 'equals-or-succeeds');
+DefMathI('\curlyvee', undef, "\x{22CE}",
+  role => 'BINOP', meaning => 'or');
+DefMathI('\curlywedge', undef, "\x{22CF}",
+  role => 'BINOP', meaning => 'and');
+DefMathI('\curvearrowleft', undef, "\x{21B6}",
+  role => 'RELOP');
+DefMathI('\curvearrowright', undef, "\x{21B7}",
+  role => 'RELOP');
+DefMathI('\daleth', undef, "\x{2138}",
+  role => 'ID');
+DefMathI('\dashleftarrow', undef, "\x{21E0}",
+  role => 'RELOP');
+DefMathI('\dashrightarrow', undef, "\x{21E2}",
+  role => 'RELOP');
+DefMathI('\delta', undef, "\x{03B4}",
+  role => 'ID');
+DefMathI('\deltasl', undef, "\x{03B4}",
+  role => 'ID');
+DefMathI('\deltaup', undef, "\x{03B4}",
+  role => 'ID');
+DefMathI('\diagdown', undef, "\x{2572}",
+  role => 'ID');
+DefMathI('\diagup', undef, "\x{2571}",
+  role => 'ID');
+DefMathI('\digamma', undef, "\x{03DD}",
+  role => 'ID');
+DefMathI('\divideontimes', undef, "\x{22C7}",
+  role => 'BINOP');
+DefMathI('\doteq', undef, "\x{2250}",
+  role => 'RELOP', meaning => 'approaches-limit');
+DefMathI('\doteqdot', undef, "\x{2251}",
+  role => 'RELOP', meaning => 'geometrically-equals');
+DefMathI('\dotplus', undef, "\x{2214}",
+  role => 'BINOP');
+DefMathI('\doublebarwedge', undef, "\x{2A5E}",
+  role => 'BINOP');
+DefMathI('\downdownarrows', undef, "\x{21CA}",
+  role => 'RELOP');
+DefMathI('\downharpoonleft', undef, "\x{21C3}",
+  role => 'RELOP');
+DefMathI('\downharpoonright', undef, "\x{21C2}",
+  role => 'RELOP');
+DefMathI('\epsilon', undef, "\x{03F5}",
+  role => 'ID');
+DefMathI('\epsilonsl', undef, "\x{03F5}",
+  role => 'ID');
+DefMathI('\epsilonup', undef, "\x{03F5}",
+  role => 'ID');
+DefMathI('\eqcirc', undef, "\x{2256}",
+  role => 'RELOP');
+DefMathI('\eqcolon', undef, "\x{2255}",
+  role => 'RELOP');
+DefMathI('\eqqcolon', undef, "\x{2255}",
+  role => 'RELOP');
+DefMathI('\eqsim', undef, "\x{2242}",
+  role => 'RELOP');
+DefMathI('\eqslantgtr', undef, "\x{2A96}",
+  role => 'RELOP', meaning => 'greater-than-or-equals');
+DefMathI('\eqslantless', undef, "\x{2A95}",
+  role => 'RELOP', meaning => 'less-than-or-equals');
+DefMathI('\eta', undef, "\x{03B7}",
+  role => 'ID');
+DefMathI('\etasl', undef, "\x{03B7}",
+  role => 'ID');
+DefMathI('\etaup', undef, "\x{03B7}",
+  role => 'ID');
+DefMathI('\eth', undef, UTF(0xF0),
+  role => 'ID');
+DefMathI('\fallingdotseq', undef, "\x{2252}",
+  role => 'RELOP', meaning => 'approximately-equals-or-image-of');
+DefMathI('\fintop', undef, "\x{2A0F}",
+  role => 'OPFUNCTION', meaning => 'integral');
+DefMathI('\gamma', undef, "\x{03B3}",
+  role => 'ID');
+DefMathI('\gammasl', undef, "\x{03B3}",
+  role => 'ID');
+DefMathI('\gammaup', undef, "\x{03B3}",
+  role => 'ID');
+DefMathI('\geqq', undef, "\x{2267}",
+  role => 'RELOP', meaning => 'greater-than-or-equals');
+DefMathI('\geqslant', undef, "\x{2A7E}",
+  role => 'RELOP', meaning => 'greater-than-or-equals');
+DefMathI('\ggg', undef, "\x{22D9}",
+  role => 'RELOP', meaning => 'very-much-greater-than');
+DefMathI('\gimel', undef, "\x{2137}",
+  role => 'ID');
+DefMathI('\gnapprox', undef, "\x{2A8A}",
+  role => 'RELOP', meaning => 'greater-than-and-not-approximately-equals');
+DefMathI('\gneq', undef, "\x{2A88}",
+  role => 'RELOP', meaning => 'greater-than-and-not-equals');
+DefMathI('\gneqq', undef, "\x{2269}",
+  role => 'RELOP', meaning => 'greater-than-and-not-equals');
+DefMathI('\gnsim', undef, "\x{22E7}",
+  role => 'RELOP', meaning => 'greater-than-and-not-equivalent-to');
+DefMathI('\gtrapprox', undef, "\x{2A86}",
+  role => 'RELOP', meaning => 'greater-than-or-approximately-equals');
+DefMathI('\gtrdot', undef, "\x{22D7}",
+  role => 'BINOP');
+DefMathI('\gtreqless', undef, "\x{22DB}",
+  role => 'RELOP', meaning => 'greater-than-or-equals-or-less-than');
+DefMathI('\gtreqqless', undef, "\x{2A8C}",
+  role => 'RELOP', meaning => 'greater-than-or-equals-or-less-than');
+DefMathI('\gtrless', undef, "\x{2277}",
+  role => 'RELOP', meaning => 'greater-than-or-less-than');
+DefMathI('\gtrsim', undef, "\x{2273}",
+  role => 'RELOP', meaning => 'greater-than-or-equivalent-to');
+DefMathI('\gvertneqq', undef, "\x{2269}",
+  role => 'RELOP', meaning => 'greater-than-and-not-equals');
+DefMathI('\hbar', undef, "\x{210F}",
+  role => 'ID', meaning => 'Planck-constant-over-2-pi');
+DefMathI('\hslash', undef, "\x{210F}",
+  role => 'ID', meaning => 'Planck-constant-over-2-pi');
+DefMathI('\idotsintop', undef, "\x{222B}"."\x{22EF}"."\x{222B}",
+  role => 'OPFUNCTION', meaning => 'multiple-integral');
+DefMathI('\iiiintop', undef, "\x{2A0C}",
+  role => 'OPFUNCTION', meaning => 'quadruple-integral');
+DefMathI('\iiintop', undef, "\x{222D}",
+  role => 'OPFUNCTION', meaning => 'triple-integral');
+DefMathI('\iintop', undef, "\x{222C}",
+  role => 'OPFUNCTION', meaning => 'double-integral');
+DefMathI('\intercal', undef, "\x{22BA}",
+  role => 'BINOP');
+DefMathI('\invamp', undef, "\x{214B}",
+  role => 'BINOP');
+DefMathI('\iota', undef, "\x{03B9}",
+  role => 'ID');
+DefMathI('\iotasl', undef, "\x{03B9}",
+  role => 'ID');
+DefMathI('\iotaup', undef, "\x{03B9}",
+  role => 'ID');
+DefMathI('\kappa', undef, "\x{03BA}",
+  role => 'ID');
+DefMathI('\kappasl', undef, "\x{03BA}",
+  role => 'ID');
+DefMathI('\kappaup', undef, "\x{03BA}",
+  role => 'ID');
+DefMathI('\kppounds', undef, UTF(0xA3),
+  role => 'ID');
+DefMathI('\lJoin', undef, "\x{22C9}",
+  role => 'RELOP');
+DefMathI('\lambda', undef, "\x{03BB}",
+  role => 'ID');
+DefMathI('\lambdabar', undef, "\x{019B}",
+  role => 'ID');
+DefMathI('\lambdasl', undef, "\x{03BB}",
+  role => 'ID');
+DefMathI('\lambdaslash', undef, "\x{019B}",
+  role => 'ID');
+DefMathI('\lambdaup', undef, "\x{03BB}",
+  role => 'ID');
+DefMathI('\leftarrowtail', undef, "\x{21A2}",
+  role => 'RELOP');
+DefMathI('\leftleftarrows', undef, "\x{21C7}",
+  role => 'RELOP');
+DefMathI('\leftrightarrows', undef, "\x{21C6}",
+  role => 'RELOP');
+DefMathI('\leftrightharpoons', undef, "\x{21CB}",
+  role => 'RELOP');
+DefMathI('\leftrightsquigarrow', undef, "\x{21AD}",
+  role => 'RELOP');
+DefMathI('\leftsquigarrow', undef, "\x{21DC}",
+  role => 'RELOP');
+DefMathI('\leftthreetimes', undef, "\x{22CB}",
+  role => 'BINOP', meaning => 'left-semidirect-product');
+DefMathI('\leqq', undef, "\x{2266}",
+  role => 'RELOP', meaning => 'less-than-or-equals');
+DefMathI('\leqslant', undef, "\x{2A7D}",
+  role => 'RELOP', meaning => 'less-than-or-equals');
+DefMathI('\lessapprox', undef, "\x{2A85}",
+  role => 'RELOP', meaning => 'less-than-or-approximately-equals');
+DefMathI('\lessdot', undef, "\x{22D6}",
+  role => 'BINOP');
+DefMathI('\lesseqgtr', undef, "\x{22DA}",
+  role => 'RELOP', meaning => 'less-than-or-equals-or-greater-than');
+DefMathI('\lesseqqgtr', undef, "\x{2A8B}",
+  role => 'RELOP', meaning => 'less-than-or-equals-or-greater-than');
+DefMathI('\lessgtr', undef, "\x{2276}",
+  role => 'RELOP', meaning => 'less-than-or-greater-than');
+DefMathI('\lesssim', undef, "\x{2272}",
+  role => 'RELOP', meaning => 'less-than-or-similar-to');
+DefMathI('\lhd', undef, "\x{22B2}",
+  role => 'BINOP', meaning => 'subgroup-of');
+DefMathI('\lll', undef, "\x{22D8}",
+  role => 'RELOP', meaning => 'very-much-less-than');
+DefMathI('\lnapprox', undef, "\x{2A89}",
+  role => 'RELOP', meaning => 'less-than-and-not-approximately-equals');
+DefMathI('\lneq', undef, "\x{2A87}",
+  role => 'RELOP', meaning => 'less-than-and-not-equals');
+DefMathI('\lneqq', undef, "\x{2268}",
+  role => 'RELOP', meaning => 'less-than-and-not-equals');
+DefMathI('\lnsim', undef, "\x{22E6}",
+  role => 'RELOP', meaning => 'less-than-and-not-equivalent-to');
+DefMathI('\looparrowleft', undef, "\x{21AB}",
+  role => 'RELOP');
+DefMathI('\looparrowright', undef, "\x{21AC}",
+  role => 'RELOP');
+DefMathI('\lozenge', undef, "\x{25CA}",
+  role => 'ID');
+DefMathI('\lrtimes', undef, "\x{22C8}",
+  role => 'RELOP');
+DefMathI('\ltimes', undef, "\x{22C9}",
+  role => 'BINOP', meaning => 'left-normal-factor-semidirect-product');
+DefMathI('\lvertneqq', undef, "\x{2268}",
+  role => 'RELOP', meaning => 'less-than-and-not-equals');
+DefMathI('\mappedfromchar', undef, "\x{2ADE}",
+  role => 'RELOP');
+DefConstructor('\mathbf{}', '#1', bounded => 1, requireMath => 1,
+  font => { family => 'serif', series => 'bold', shape => 'upright' });
+DefConstructor('\mathcal{}', '#1', bounded => 1, requireMath => 1,
+  font => { family => 'caligraphic', series => 'medium', shape => 'upright' });
+DefConstructor('\mathit{}', '#1', bounded => 1, requireMath => 1,
+  font => { family => 'serif', series => 'medium', shape => 'upright' });
+DefConstructor('\mathrm{}', '#1', bounded => 1, requireMath => 1,
+  font => { family => 'serif', series => 'medium', shape => 'upright' });
+DefConstructor('\mathscr{}', '#1', bounded => 1, requireMath => 1,
+  font => { family => 'script', series => 'medium', shape => 'upright' });
+DefConstructor('\mathsf{}', '#1', bounded => 1, requireMath => 1,
+  font => { family => 'sansserif', series => 'medium', shape => 'upright' });
+DefConstructor('\mathtt{}', '#1', bounded => 1, requireMath => 1,
+  font => { family => 'typewriter', series => 'medium', shape => 'upright' });
+DefMathI('\measuredangle', undef, "\x{2221}",
+  role => 'ID');
+DefMathI('\medbullet', undef, "\x{2022}",
+  role => 'BINOP');
+DefMathI('\medcirc', undef, "\x{25CB}",
+  role => 'BINOP');
+DefMathI('\mho', undef, "\x{2127}",
+  role => 'ID');
+DefMathI('\mmapstochar', undef, "\x{2AE3}",
+  role => 'RELOP');
+DefMathI('\mu', undef, "\x{03BC}",
+  role => 'ID');
+DefMathI('\multimap', undef, "\x{22B8}",
+  role => 'RELOP');
+DefMathI('\multimapboth', undef, "\x{29DF}",
+  role => 'RELOP');
+DefMathI('\multimapdotbothA', undef, "\x{22B6}",
+  role => 'RELOP');
+DefMathI('\multimapdotbothB', undef, "\x{22B7}",
+  role => 'RELOP');
+DefMathI('\multimapinv', undef, "\x{27DC}",
+  role => 'RELOP');
+DefMathI('\musl', undef, "\x{03BC}",
+  role => 'ID');
+DefMathI('\muup', undef, "\x{03BC}",
+  role => 'ID');
+DefMathI('\nBumpeq', undef, "\x{224E}"."\x{0338}",
+  role => 'RELOP');
+DefMathI('\nLeftarrow', undef, "\x{21CD}",
+  role => 'RELOP');
+DefMathI('\nLeftrightarrow', undef, "\x{21CE}",
+  role => 'RELOP');
+DefMathI('\nRightarrow', undef, "\x{21CF}",
+  role => 'RELOP');
+DefMathI('\nSubset', undef, "\x{22D0}"."\x{0338}",
+  role => 'RELOP', meaning => 'not-double-subset-of');
+DefMathI('\nSupset', undef, "\x{22D1}"."\x{0338}",
+  role => 'RELOP', meaning => 'not-double-superset-of');
+DefMathI('\nVDash', undef, "\x{22AF}",
+  role => 'RELOP');
+DefMathI('\nVdash', undef, "\x{22AE}",
+  role => 'RELOP', meaning => 'not-forces');
+DefMathI('\napprox', undef, "\x{2249}",
+  role => 'RELOP', meaning => 'not-approximately-equals');
+DefMathI('\napproxeq', undef, "\x{224A}"."\x{0338}",
+  role => 'RELOP', meaning => 'not-approximately-equals');
+DefMathI('\nasymp', undef, "\x{226D}",
+  role => 'RELOP', meaning => 'not-equivalent-to');
+DefMathI('\nbacksim', undef, "\x{223D}"."\x{0337}",
+  role => 'RELOP');
+DefMathI('\nbacksimeq', undef, "\x{22CD}"."\x{0338}",
+  role => 'RELOP');
+DefMathI('\nbumpeq', undef, "\x{224F}"."\x{0338}",
+  role => 'RELOP');
+DefMathI('\ncong', undef, "\x{2247}",
+  role => 'RELOP', meaning => 'not-approximately-equals');
+DefMathI('\neq', undef, "\x{2260}",
+  role => 'RELOP', meaning => 'not-equals');
+DefMathI('\nequiv', undef, "\x{2262}",
+  role => 'RELOP', meaning => 'not-equivalent-to');
+DefMathI('\nexists', undef, "\x{2204}",
+  role => 'ID', meaning => 'not-exists');
+DefMathI('\ngeq', undef, "\x{2271}",
+  role => 'RELOP', meaning => 'not-greater-than-nor-equals');
+DefMathI('\ngeqq', undef, "\x{2267}"."\x{0338}",
+  role => 'RELOP', meaning => 'not-greater-than-nor-equals');
+DefMathI('\ngeqslant', undef, "\x{2A7E}"."\x{0338}",
+  role => 'RELOP', meaning => 'not-greater-than-nor-equals');
+DefMathI('\ngg', undef, "\x{226B}"."\x{0338}",
+  role => 'RELOP');
+DefMathI('\ngtr', undef, "\x{226F}",
+  role => 'RELOP', meaning => 'not-greater-than');
+DefMathI('\ngtrapprox', undef, "\x{2A86}"."\x{0338}",
+  role => 'RELOP', meaning => 'not-greater-than-nor-approximately-equals');
+DefMathI('\ngtrless', undef, "\x{2278}",
+  role => 'RELOP', meaning => 'not-greater-than-nor-less-than');
+DefMathI('\ngtrsim', undef, "\x{2273}"."\x{0338}",
+  role => 'RELOP', meaning => 'not-greater-than-nor-equivalent-to');
+DefMathI('\nleftarrow', undef, "\x{219A}",
+  role => 'RELOP');
+DefMathI('\nleftrightarrow', undef, "\x{21AE}",
+  role => 'RELOP');
+DefMathI('\nleq', undef, "\x{2270}",
+  role => 'RELOP', meaning => 'not-less-than-nor-greater-than');
+DefMathI('\nleqq', undef, "\x{2266}"."\x{0338}",
+  role => 'RELOP', meaning => 'not-less-than-nor-equals');
+DefMathI('\nleqslant', undef, "\x{2A7D}"."\x{0338}",
+  role => 'RELOP', meaning => 'not-less-than-nor-equals');
+DefMathI('\nless', undef, "\x{226E}",
+  role => 'RELOP', meaning => 'not-less-than');
+DefMathI('\nlessapprox', undef, "\x{2A85}"."\x{0338}",
+  role => 'RELOP', meaning => 'not-less-than-nor-approximately-equals');
+DefMathI('\nlessgtr', undef, "\x{2279}",
+  role => 'RELOP', meaning => 'not-less-than-nor-greater-than');
+DefMathI('\nlesssim', undef, "\x{2272}"."\x{0338}",
+  role => 'RELOP', meaning => 'not-less-than-nor-similar-to');
+DefMathI('\nll', undef, "\x{226A}"."\x{0338}",
+  role => 'RELOP', meaning => 'not-much-less-than');
+DefMathI('\nmid', undef, "\x{2224}",
+  role => 'RELOP', meaning => 'not-divides');
+DefMathI('\notin', undef, "\x{2209}",
+  role => 'RELOP', meaning => 'not-element-of');
+DefMathI('\notni', undef, "\x{220C}",
+  role => 'RELOP', meaning => 'not-contains');
+DefMathI('\nparallel', undef, "\x{2226}",
+  role => 'RELOP', meaning => 'not-parallel-to');
+DefMathI('\nplus', undef, UTF(0x5C).UTF(0x6C).UTF(0x78).UTF(0x40).UTF(0x6B).UTF(0x6C).UTF(0x75).UTF(0x64).UTF(0x67).UTF(0x65).UTF(0x64).UTF(0x7B).UTF(0x5C).UTF(0x63).UTF(0x61).UTF(0x70).UTF(0x7B).UTF(0x5C).UTF(0x73).UTF(0x63).UTF(0x72).UTF(0x69).UTF(0x70).UTF(0x74).UTF(0x73).UTF(0x63).UTF(0x72).UTF(0x69).UTF(0x70).UTF(0x74).UTF(0x73).UTF(0x74).UTF(0x79).UTF(0x6C).UTF(0x65).UTF(0x5C).UTF(0x6C).UTF(0x78).UTF(0x40).UTF(0x74).UTF(0x77).UTF(0x65).UTF(0x61).UTF(0x6B).UTF(0x65).UTF(0x64).UTF(0x7B).UTF(0x77).UTF(0x69).UTF(0x64).UTF(0x74).UTF(0x68).UTF(0x3D).UTF(0x30).UTF(0x70).UTF(0x74).UTF(0x2C).UTF(0x78).UTF(0x6F).UTF(0x66).UTF(0x66).UTF(0x73).UTF(0x65).UTF(0x74).UTF(0x3D).UTF(0x2D).UTF(0x30).UTF(0x2E).UTF(0x37).UTF(0x35).UTF(0x65).UTF(0x6D).UTF(0x2C).UTF(0x79).UTF(0x6F).UTF(0x66).UTF(0x66).UTF(0x73).UTF(0x65).UTF(0x74).UTF(0x3D).UTF(0x30).UTF(0x2E).UTF(0x32).UTF(0x65).UTF(0x78).UTF(0x7D).UTF(0x7B).UTF(0x2B).UTF(0x7D).UTF(0x7D).UTF(0x7D),
+  role => 'BINOP', meaning => 'intersection-plus');
+DefMathI('\nprec', undef, "\x{2280}",
+  role => 'RELOP', meaning => 'not-precedes');
+DefMathI('\nprecapprox', undef, "\x{2AB7}"."\x{0338}",
+  role => 'RELOP', meaning => 'not-precedes-nor-approximately-equals');
+DefMathI('\npreccurlyeq', undef, "\x{227C}"."\x{0338}",
+  role => 'RELOP', meaning => 'not-precedes-nor-equals');
+DefMathI('\npreceq', undef, "\x{22E0}",
+  role => 'RELOP', meaning => 'not-precedes-nor-equals');
+DefMathI('\npreceqq', undef, "\x{2AB3}"."\x{0338}",
+  role => 'RELOP', meaning => 'not-precedes-nor-equals');
+DefMathI('\nprecsim', undef, "\x{227E}"."\x{0338}",
+  role => 'RELOP', meaning => 'not-precedes-nor-equivalent-to');
+DefMathI('\nrightarrow', undef, "\x{219B}",
+  role => 'RELOP');
+DefMathI('\nshortmid', undef, "\x{2224}",
+  role => 'RELOP', meaning => 'not-divides');
+DefMathI('\nshortparallel', undef, "\x{2226}",
+  role => 'RELOP', meaning => 'not-parallel-to');
+DefMathI('\nsim', undef, "\x{2241}",
+  role => 'RELOP', meaning => 'not-similar-to');
+DefMathI('\nsimeq', undef, "\x{2243}"."\x{0338}",
+  role => 'RELOP', meaning => 'not-equivalent-to-nor-equals');
+DefMathI('\nsqsubset', undef, "\x{228F}"."\x{0338}",
+  role => 'RELOP', meaning => 'not-square-image-of');
+DefMathI('\nsqsubseteq', undef, "\x{22E2}",
+  role => 'RELOP', meaning => 'not-square-image-of-nor-equals');
+DefMathI('\nsqsupset', undef, "\x{2290}"."\x{0338}",
+  role => 'RELOP', meaning => 'not-square-original-of');
+DefMathI('\nsqsupseteq', undef, "\x{22E3}",
+  role => 'RELOP', meaning => 'not-square-original-of-nor-equals');
+DefMathI('\nsubset', undef, "\x{2284}",
+  role => 'RELOP', meaning => 'not-subset-of');
+DefMathI('\nsubseteq', undef, "\x{2288}",
+  role => 'RELOP', meaning => 'not-subset-of-nor-equals');
+DefMathI('\nsubseteqq', undef, "\x{2AC5}"."\x{0338}",
+  role => 'RELOP', meaning => 'not-subset-of-nor-equals');
+DefMathI('\nsucc', undef, "\x{2281}",
+  role => 'RELOP', meaning => 'not-succeeds');
+DefMathI('\nsuccapprox', undef, "\x{2AB8}"."\x{0338}",
+  role => 'RELOP', meaning => 'not-succeeds-nor-approximately-equals');
+DefMathI('\nsucccurlyeq', undef, "\x{227D}"."\x{0338}",
+  role => 'RELOP', meaning => 'not-succeeds-nor-equals');
+DefMathI('\nsucceq', undef, "\x{22E1}",
+  role => 'RELOP', meaning => 'not-succeeds-nor-equals');
+DefMathI('\nsucceqq', undef, "\x{2AB4}"."\x{0338}",
+  role => 'RELOP', meaning => 'not-succeeds-nor-equals');
+DefMathI('\nsuccsim', undef, "\x{227F}"."\x{0338}",
+  role => 'RELOP', meaning => 'not-succeeds-nor-equivalent-to');
+DefMathI('\nsupset', undef, "\x{2285}",
+  role => 'RELOP', meaning => 'not-superset-of');
+DefMathI('\nsupseteq', undef, "\x{2289}",
+  role => 'RELOP', meaning => 'not-superset-of-nor-equals');
+DefMathI('\nsupseteqq', undef, "\x{2AC6}"."\x{0338}",
+  role => 'RELOP', meaning => 'not-superset-of-nor-equals');
+DefMathI('\nthickapprox', undef, "\x{2249}",
+  role => 'RELOP', meaning => 'not-approximately-equals');
+DefMathI('\ntriangleleft', undef, "\x{22EA}",
+  role => 'RELOP', meaning => 'not-subgroup-of');
+DefMathI('\ntrianglelefteq', undef, "\x{22EC}",
+  role => 'RELOP', meaning => 'not-subgroup-of-nor-equals');
+DefMathI('\ntriangleright', undef, "\x{22EB}",
+  role => 'RELOP', meaning => 'not-contains');
+DefMathI('\ntrianglerighteq', undef, "\x{22ED}",
+  role => 'RELOP', meaning => 'not-contains-nor-equals');
+DefMathI('\ntwoheadleftarrow', undef, "\x{2B34}",
+  role => 'RELOP');
+DefMathI('\ntwoheadrightarrow', undef, "\x{2900}",
+  role => 'RELOP');
+DefMathI('\nu', undef, "\x{03BD}",
+  role => 'ID');
+DefMathI('\nusl', undef, "\x{03BD}",
+  role => 'ID');
+DefMathI('\nuup', undef, "\x{03BD}",
+  role => 'ID');
+DefMathI('\nvDash', undef, "\x{22AD}",
+  role => 'RELOP');
+DefMathI('\nvdash', undef, "\x{22AC}",
+  role => 'RELOP', meaning => 'not-proves');
+DefMathI('\oiiintclockwiseop', undef, "\x{222D}"."\x{20D9}",
+  role => 'OPFUNCTION', meaning => 'triple-clockwise-contour-integral');
+DefMathI('\oiiintctrclockwiseop', undef, "\x{222D}"."\x{20DA}",
+  role => 'OPFUNCTION', meaning => 'triple-counterclockwise-contour-integral');
+DefMathI('\oiiintop', undef, "\x{2230}",
+  role => 'OPFUNCTION', meaning => 'triple-contour-integral');
+DefMathI('\oiintclockwiseop', undef, "\x{222C}"."\x{20D9}",
+  role => 'OPFUNCTION', meaning => 'double-clockwise-contour-integral');
+DefMathI('\oiintctrclockwiseop', undef, "\x{222C}"."\x{20DA}",
+  role => 'OPFUNCTION', meaning => 'double-counterclockwise-contour-integral');
+DefMathI('\oiintop', undef, "\x{222F}",
+  role => 'OPFUNCTION', meaning => 'double-contour-integral');
+DefMathI('\ointclockwiseop', undef, "\x{2232}",
+  role => 'OPFUNCTION', meaning => 'clockwise-contour-integral');
+DefMathI('\ointctrclockwiseop', undef, "\x{2233}",
+  role => 'OPFUNCTION', meaning => 'counter-clockwise-contour-integral');
+DefMathI('\omega', undef, "\x{03C9}",
+  role => 'ID');
+DefMathI('\omegasl', undef, "\x{03C9}",
+  role => 'ID');
+DefMathI('\omegaup', undef, "\x{03C9}",
+  role => 'ID');
+DefMathI('\otherDelta', undef, "\x{0394}",
+  role => 'ID');
+DefMathI('\otherGamma', undef, "\x{0393}",
+  role => 'ID');
+DefMathI('\otherLambda', undef, "\x{039B}",
+  role => 'ID');
+DefMathI('\otherOmega', undef, "\x{03A9}",
+  role => 'ID');
+DefMathI('\otherPhi', undef, "\x{03A6}",
+  role => 'ID');
+DefMathI('\otherPi', undef, "\x{03A0}",
+  role => 'ID');
+DefMathI('\otherPsi', undef, "\x{03A8}",
+  role => 'ID');
+DefMathI('\otherSigma', undef, "\x{03A3}",
+  role => 'ID');
+DefMathI('\otherTheta', undef, "\x{0398}",
+  role => 'ID');
+DefMathI('\otherUpsilon', undef, "\x{03A5}",
+  role => 'ID');
+DefMathI('\otherXi', undef, "\x{039E}",
+  role => 'ID');
+DefMathI('\otheralpha', undef, "\x{03B1}",
+  role => 'ID');
+DefMathI('\otherbeta', undef, "\x{03B2}",
+  role => 'ID');
+DefMathI('\otherchi', undef, "\x{03C7}",
+  role => 'ID');
+DefMathI('\otherdelta', undef, "\x{03B4}",
+  role => 'ID');
+DefMathI('\otherepsilon', undef, "\x{03F5}",
+  role => 'ID');
+DefMathI('\othereta', undef, "\x{03B7}",
+  role => 'ID');
+DefMathI('\othergamma', undef, "\x{03B3}",
+  role => 'ID');
+DefMathI('\otheriota', undef, "\x{03B9}",
+  role => 'ID');
+DefMathI('\otherkappa', undef, "\x{03BA}",
+  role => 'ID');
+DefMathI('\otherlambda', undef, "\x{03BB}",
+  role => 'ID');
+DefMathI('\othermu', undef, "\x{03BC}",
+  role => 'ID');
+DefMathI('\othernu', undef, "\x{03BD}",
+  role => 'ID');
+DefMathI('\otheromega', undef, "\x{03C9}",
+  role => 'ID');
+DefMathI('\otherphi', undef, "\x{03D5}",
+  role => 'ID');
+DefMathI('\otherpi', undef, "\x{03C0}",
+  role => 'ID');
+DefMathI('\otherpsi', undef, "\x{03C8}",
+  role => 'ID');
+DefMathI('\otherrho', undef, "\x{03C1}",
+  role => 'ID');
+DefMathI('\othersigma', undef, "\x{03C3}",
+  role => 'ID');
+DefMathI('\othertau', undef, "\x{03C4}",
+  role => 'ID');
+DefMathI('\othertheta', undef, "\x{03B8}",
+  role => 'ID');
+DefMathI('\otherupsilon', undef, "\x{03C5}",
+  role => 'ID');
+DefMathI('\othervarepsilon', undef, "\x{03B5}",
+  role => 'ID');
+DefMathI('\othervarphi', undef, "\x{03C6}",
+  role => 'ID');
+DefMathI('\othervarpi', undef, "\x{03D6}",
+  role => 'ID');
+DefMathI('\othervarrho', undef, "\x{03F1}",
+  role => 'ID');
+DefMathI('\othervarsigma', undef, "\x{03C2}",
+  role => 'ID');
+DefMathI('\othervartheta', undef, "\x{03D1}",
+  role => 'ID');
+DefMathI('\otherxi', undef, "\x{03BE}",
+  role => 'ID');
+DefMathI('\otherzeta', undef, "\x{03B6}",
+  role => 'ID');
+DefMathI('\partial', undef, "\x{2202}",
+  role => 'ID', meaning => 'partial-differential');
+DefMathI('\partialsl', undef, "\x{2202}",
+  role => 'ID', meaning => 'partial-differential');
+DefMathI('\partialup', undef, "\x{2202}",
+  role => 'ID', meaning => 'partial-differential');
+DefMathI('\phi', undef, "\x{03D5}",
+  role => 'ID');
+DefMathI('\phisl', undef, "\x{03D5}",
+  role => 'ID');
+DefMathI('\phiup', undef, "\x{03D5}",
+  role => 'ID');
+DefMathI('\pi', undef, "\x{03C0}",
+  role => 'ID');
+DefMathI('\pisl', undef, "\x{03C0}",
+  role => 'ID');
+DefMathI('\pitchfork', undef, "\x{22D4}",
+  role => 'RELOP', meaning => 'proper-intersection');
+DefMathI('\piup', undef, "\x{03C0}",
+  role => 'ID');
+DefMathI('\precapprox', undef, "\x{2AB7}",
+  role => 'RELOP', meaning => 'precedes-or-approximately-equals');
+DefMathI('\preccurlyeq', undef, "\x{227C}",
+  role => 'RELOP', meaning => 'precedes-or-equals');
+DefMathI('\preceqq', undef, "\x{2AB3}",
+  role => 'RELOP', meaning => 'precedes-or-equals');
+DefMathI('\precnapprox', undef, "\x{2AB9}",
+  role => 'RELOP', meaning => 'precedes-and-not-approximately-equals');
+DefMathI('\precneqq', undef, "\x{2AB5}",
+  role => 'RELOP', meaning => 'precedes-and-not-equals');
+DefMathI('\precnsim', undef, "\x{22E8}",
+  role => 'RELOP', meaning => 'precedes-and-not-equivalent-to');
+DefMathI('\precsim', undef, "\x{227E}",
+  role => 'RELOP', meaning => 'precedes-or-equivalent-to');
+DefMathI('\prodop', undef, "\x{220F}",
+  role => 'OPFUNCTION', meaning => 'product');
+DefMathI('\psi', undef, "\x{03C8}",
+  role => 'ID');
+DefMathI('\psisl', undef, "\x{03C8}",
+  role => 'ID');
+DefMathI('\psiup', undef, "\x{03C8}",
+  role => 'ID');
+DefMathI('\rJoin', undef, "\x{22CA}",
+  role => 'RELOP', meaning => 'right-normal-factor-semidirect-product');
+DefMathI('\rhd', undef, "\x{22B3}",
+  role => 'BINOP', meaning => 'contains-as-subgroup');
+DefMathI('\rho', undef, "\x{03C1}",
+  role => 'ID');
+DefMathI('\rhosl', undef, "\x{03C1}",
+  role => 'ID');
+DefMathI('\rhoup', undef, "\x{03C1}",
+  role => 'ID');
+DefMathI('\rightarrowtail', undef, "\x{21A3}",
+  role => 'RELOP');
+DefMathI('\rightleftarrows', undef, "\x{21C4}",
+  role => 'RELOP');
+DefMathI('\rightleftharpoons', undef, "\x{21CC}",
+  role => 'RELOP');
+DefMathI('\rightrightarrows', undef, "\x{21C9}",
+  role => 'RELOP');
+DefMathI('\rightsquigarrow', undef, "\x{219D}",
+  role => 'RELOP');
+DefMathI('\rightthreetimes', undef, "\x{22CC}",
+  role => 'BINOP', meaning => 'right-semidirect-product');
+DefMathI('\risingdotseq', undef, "\x{2253}",
+  role => 'RELOP', meaning => 'image-of-or-approximately-equals');
+DefMathI('\rtimes', undef, "\x{22CA}",
+  role => 'BINOP', meaning => 'right-normal-factor-semidirect-product');
+DefMathI('\shortmid', undef, "\x{2223}",
+  role => 'RELOP', meaning => 'divides');
+DefMathI('\shortparallel', undef, "\x{2225}",
+  role => 'RELOP', meaning => 'parallel-to');
+DefMathI('\sigma', undef, "\x{03C3}",
+  role => 'ID');
+DefMathI('\sigmasl', undef, "\x{03C3}",
+  role => 'ID');
+DefMathI('\sigmaup', undef, "\x{03C3}",
+  role => 'ID');
+DefMathI('\smallfrown', undef, "\x{2322}",
+  role => 'RELOP');
+DefMathI('\smallsetminus', undef, "\x{2216}",
+  role => 'BINOP', meaning => 'set-minus');
+DefMathI('\smallsmile', undef, "\x{2323}",
+  role => 'RELOP');
+DefMathI('\sphericalangle', undef, "\x{2222}",
+  role => 'ID');
+DefMathI('\sqintop', undef, "\x{2A16}",
+  role => 'OPFUNCTION', meaning => 'square-contour-integral');
+DefMathI('\sqsubset', undef, "\x{228F}",
+  role => 'RELOP', meaning => 'square-image-of');
+DefMathI('\sqsupset', undef, "\x{2290}",
+  role => 'RELOP', meaning => 'square-original-of');
+DefMathI('\square', undef, "\x{25A1}",
+  role => 'ID');
+DefMathI('\strictfi', undef, "\x{297C}",
+  role => 'RELOP');
+DefMathI('\strictif', undef, "\x{297D}",
+  role => 'RELOP');
+DefMathI('\strictiff', undef, "\x{297C}"."\x{297D}",
+  role => 'RELOP');
+DefMathI('\subseteqq', undef, "\x{2AC5}",
+  role => 'RELOP', meaning => 'subset-of-or-equals');
+DefMathI('\subsetneq', undef, "\x{228A}",
+  role => 'RELOP', meaning => 'subset-of-and-not-equals');
+DefMathI('\subsetneqq', undef, "\x{2ACB}",
+  role => 'RELOP', meaning => 'subset-of-and-not-equals');
+DefMathI('\succapprox', undef, "\x{2AB8}",
+  role => 'RELOP', meaning => 'succeeds-or-approximately-equals');
+DefMathI('\succcurlyeq', undef, "\x{227D}",
+  role => 'RELOP', meaning => 'succeeds-or-equals');
+DefMathI('\succeqq', undef, "\x{2AB4}",
+  role => 'RELOP', meaning => 'succeeds-or-equals');
+DefMathI('\succnapprox', undef, "\x{2ABA}",
+  role => 'RELOP', meaning => 'succeeds-and-not-approximately-equals');
+DefMathI('\succneqq', undef, "\x{2AB6}",
+  role => 'RELOP', meaning => 'succeeds-and-not-equals');
+DefMathI('\succnsim', undef, "\x{22E9}",
+  role => 'RELOP', meaning => 'succeeds-and-not-equivalent-to');
+DefMathI('\succsim', undef, "\x{227F}",
+  role => 'RELOP', meaning => 'succeeds-or-equivalent-to');
+DefMathI('\sumop', undef, "\x{2211}",
+  role => 'OPFUNCTION', meaning => 'sum');
+DefMathI('\supseteqq', undef, "\x{2AC6}",
+  role => 'RELOP', meaning => 'superset-of-or-equals');
+DefMathI('\supsetneq', undef, "\x{228B}",
+  role => 'RELOP', meaning => 'superset-of-and-not-equals');
+DefMathI('\supsetneqq', undef, "\x{2ACC}",
+  role => 'RELOP', meaning => 'superset-of-and-not-equals');
+DefMathI('\tau', undef, "\x{03C4}",
+  role => 'ID');
+DefMathI('\tausl', undef, "\x{03C4}",
+  role => 'ID');
+DefMathI('\tauup', undef, "\x{03C4}",
+  role => 'ID');
+DefMathI('\therefore', undef, "\x{2234}",
+  role => 'RELOP', meaning => 'therefore');
+DefMathI('\theta', undef, "\x{03B8}",
+  role => 'ID');
+DefMathI('\thetasl', undef, "\x{03B8}",
+  role => 'ID');
+DefMathI('\thetaup', undef, "\x{03B8}",
+  role => 'ID');
+DefMathI('\thickapprox', undef, "\x{2248}",
+  role => 'RELOP', meaning => 'approximately-equals');
+DefMathI('\thicksim', undef, "\x{223C}",
+  role => 'RELOP');
+DefMathI('\triangledown', undef, "\x{25BD}",
+  role => 'ID');
+DefMathI('\trianglelefteq', undef, "\x{22B4}",
+  role => 'RELOP');
+DefMathI('\triangleq', undef, "\x{225C}",
+  role => 'RELOP');
+DefMathI('\trianglerighteq', undef, "\x{22B5}",
+  role => 'RELOP');
+DefMathI('\twoheadleftarrow', undef, "\x{219E}",
+  role => 'RELOP');
+DefMathI('\twoheadrightarrow', undef, "\x{21A0}",
+  role => 'RELOP');
+DefMathI('\unlhd', undef, "\x{22B4}",
+  role => 'BINOP', meaning => 'subgroup-of-or-equals');
+DefMathI('\unrhd', undef, "\x{22B5}",
+  role => 'BINOP', meaning => 'contains-as-subgroup-or-equals');
+DefMathI('\upharpoonleft', undef, "\x{21BF}",
+  role => 'RELOP');
+DefMathI('\upharpoonright', undef, "\x{21BE}",
+  role => 'RELOP');
+DefMathI('\upsilon', undef, "\x{03C5}",
+  role => 'ID');
+DefMathI('\upsilonsl', undef, "\x{03C5}",
+  role => 'ID');
+DefMathI('\upsilonup', undef, "\x{03C5}",
+  role => 'ID');
+DefMathI('\upuparrows', undef, "\x{21C8}",
+  role => 'RELOP');
+DefMathI('\vDash', undef, "\x{22A8}",
+  role => 'RELOP');
+DefMathI('\varDelta', undef, "\x{0394}",
+  role => 'ID');
+DefMathI('\varGamma', undef, "\x{0393}",
+  role => 'ID');
+DefMathI('\varLambda', undef, "\x{039B}",
+  role => 'ID');
+DefMathI('\varOmega', undef, "\x{03A9}",
+  role => 'ID');
+DefMathI('\varPhi', undef, "\x{03A6}",
+  role => 'ID');
+DefMathI('\varPi', undef, "\x{03A0}",
+  role => 'ID');
+DefMathI('\varPsi', undef, "\x{03A8}",
+  role => 'ID');
+DefMathI('\varSigma', undef, "\x{03A3}",
+  role => 'ID');
+DefMathI('\varTheta', undef, "\x{0398}",
+  role => 'ID');
+DefMathI('\varUpsilon', undef, "\x{03A5}",
+  role => 'ID');
+DefMathI('\varXi', undef, "\x{039E}",
+  role => 'ID');
+DefMathI('\varclubsuit', undef, "\x{2667}",
+  role => 'ID');
+DefMathI('\vardiamondsuit', undef, "\x{2666}",
+  role => 'ID');
+DefMathI('\varemptyset', undef, "\x{2205}",
+  role => 'ID');
+DefMathI('\varepsilon', undef, "\x{03B5}",
+  role => 'ID');
+DefMathI('\varepsilonsl', undef, "\x{03B5}",
+  role => 'ID');
+DefMathI('\varepsilonup', undef, "\x{03B5}",
+  role => 'ID');
+DefMathI('\varheartsuit', undef, "\x{2665}",
+  role => 'ID');
+DefMathI('\varkappa', undef, "\x{03F0}",
+  role => 'ID');
+DefMathI('\varnothing', undef, "\x{2205}",
+  role => 'ID', meaning => 'empty-set');
+DefMathI('\varoiiintclockwiseop', undef, "\x{222D}"."\x{20D9}",
+  role => 'OPFUNCTION', meaning => 'triple-clockwise-contour-integral');
+DefMathI('\varoiiintctrclockwiseop', undef, "\x{222D}"."\x{20DA}",
+  role => 'OPFUNCTION', meaning => 'triple-counterclockwise-contour-integral');
+DefMathI('\varoiintclockwiseop', undef, "\x{222C}"."\x{20D9}",
+  role => 'OPFUNCTION', meaning => 'double-clockwise-contour-integral');
+DefMathI('\varoiintctrclockwiseop', undef, "\x{222C}"."\x{20DA}",
+  role => 'OPFUNCTION', meaning => 'double-counterclockwise-contour-integral');
+DefMathI('\varointclockwiseop', undef, "\x{2232}",
+  role => 'OPFUNCTION', meaning => 'clockwise-contour-integral');
+DefMathI('\varointctrclockwiseop', undef, "\x{2233}",
+  role => 'OPFUNCTION', meaning => 'counter-clockwise-contour-integral');
+DefMathI('\varparallel', undef, "\x{2AFD}",
+  role => 'RELOP');
+DefMathI('\varphi', undef, "\x{03C6}",
+  role => 'ID');
+DefMathI('\varphisl', undef, "\x{03C6}",
+  role => 'ID');
+DefMathI('\varphiup', undef, "\x{03C6}",
+  role => 'ID');
+DefMathI('\varpi', undef, "\x{03D6}",
+  role => 'ID');
+DefMathI('\varpisl', undef, "\x{03D6}",
+  role => 'ID');
+DefMathI('\varpiup', undef, "\x{03D6}",
+  role => 'ID');
+DefMathI('\varpropto', undef, "\x{221D}",
+  role => 'RELOP', meaning => 'proportional-to');
+DefMathI('\varrho', undef, "\x{03F1}",
+  role => 'ID');
+DefMathI('\varrhosl', undef, "\x{03F1}",
+  role => 'ID');
+DefMathI('\varrhoup', undef, "\x{03F1}",
+  role => 'ID');
+DefMathI('\varsigma', undef, "\x{03C2}",
+  role => 'ID');
+DefMathI('\varsigmasl', undef, "\x{03C2}",
+  role => 'ID');
+DefMathI('\varsigmaup', undef, "\x{03C2}",
+  role => 'ID');
+DefMathI('\varspadesuit', undef, "\x{2664}",
+  role => 'ID');
+DefMathI('\varsubsetneq', undef, "\x{228A}",
+  role => 'RELOP', meaning => 'subset-of-and-not-equals');
+DefMathI('\varsubsetneqq', undef, "\x{2ACB}",
+  role => 'RELOP', meaning => 'subset-of-and-not-equals');
+DefMathI('\varsupsetneq', undef, "\x{228B}",
+  role => 'RELOP', meaning => 'superset-of-and-not-equals');
+DefMathI('\varsupsetneqq', undef, "\x{2ACC}",
+  role => 'RELOP', meaning => 'superset-of-and-not-equals');
+DefMathI('\vartheta', undef, "\x{03D1}",
+  role => 'ID');
+DefMathI('\varthetasl', undef, "\x{03D1}",
+  role => 'ID');
+DefMathI('\varthetaup', undef, "\x{03D1}",
+  role => 'ID');
+DefMathI('\vartriangle', undef, "\x{25B3}",
+  role => 'RELOP');
+DefMathI('\vartriangleleft', undef, "\x{22B2}",
+  role => 'RELOP');
+DefMathI('\vartriangleright', undef, "\x{22B3}",
+  role => 'RELOP');
+DefMathI('\veebar', undef, "\x{22BB}",
+  role => 'BINOP', meaning => 'exclusive-or');
+DefMathI('\xi', undef, "\x{03BE}",
+  role => 'ID');
+DefMathI('\xisl', undef, "\x{03BE}",
+  role => 'ID');
+DefMathI('\xiup', undef, "\x{03BE}",
+  role => 'ID');
+DefMathI('\zeta', undef, "\x{03B6}",
+  role => 'ID');
+DefMathI('\zetasl', undef, "\x{03B6}",
+  role => 'ID');
+DefMathI('\zetaup', undef, "\x{03B6}",
+  role => 'ID');
+
+1;
