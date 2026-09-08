@@ -255,13 +255,13 @@ moreFactors :
         # Given an explicit COMPOSEOP, we'll assume the preceding is
         # an implicit lambda of some sort(?)
         | COMPOSEOP makeComposition[$arg[0],$item[1]]
-        | Factor moreFactors[ApplyNary(InvisibleTimes(),$arg[0],$item[1])] ##before |
+        | Factor moreFactors[CaptureDecision(ApplyNary(InvisibleTimes(),$arg[0],$item[1]),'moreFactors','product',$arg[0],$item[1])] ##before |
         | { ($forbidEvalAt || $forbidVertBar ? undef : 1); }
           evalAtOp maybeEvalAt[$arg[0],$item[2]]
         | { ($forbidEvalAt || $forbidVertBar ? undef : 1); } ## conditional probability?
           evalAtOp ExpressionsNoBars
           { ApplyNary(Annotate($item[2],role=>'MODIFIEROP', meaning=>'conditional'),$arg[0],$item[3]); }
-        | Factor moreFactors[ApplyNary(InvisibleTimes(),$arg[0],$item[1])]
+        | Factor moreFactors[CaptureDecision(ApplyNary(InvisibleTimes(),$arg[0],$item[1]),'moreFactors','product',$arg[0],$item[1])]
         | { $arg[0]; }
 
 ExpressionsNoBars : <rulevar: local $forbidVertBar = 1>
@@ -532,10 +532,10 @@ forbidArgs :
 requireArgs :
           OPEN Argument (argPunct Argument {[$item[1],$item[2]];})(s?)
                balancedClose[$item[1]]
-                  { ApplyDelimited($arg[0],$item[1],$item[2],
-                                   map(@$_,@{$item[3]}),$item[4]); }
+                  { CaptureDecision(ApplyDelimited($arg[0],$item[1],$item[2],
+                                   map(@$_,@{$item[3]}),$item[4]),'requireArgs','application',$arg[0],$item[1],1); }
         # Hmm, should only be applicable to _some_ functions ???
-        | barearg                               { Apply($arg[0],$item[1]); }
+        | barearg                               { CaptureDecision(Apply($arg[0],$item[1]),'requireArgs','application',$arg[0],$item[1],1); }
 
 # addArgs[$function]; We've got a function; Add following arguments to a
 #   function, if present.  Also recognizes compostion type ops (something
@@ -544,7 +544,7 @@ addArgs :
           /^\Z/ { $arg[0];}   # short circuit!
         | addEasyArgs[$arg[0]]
         # Accept bare arg (w/o parens) ONLY if an explicit APPLYOP
-        | APPLYOP barearg                               { Apply($arg[0],$item[2]);}
+        | APPLYOP barearg                               { CaptureDecision(Apply($arg[0],$item[2]),'addArgs','application',$arg[0],$item[2],1);}
         | { $arg[0]; }   # Just return the function itself,then.
 
 # addOpFunArgs[$function]; Same as above but for functions classified as
@@ -554,7 +554,7 @@ addOpFunArgs :
           /^\Z/ { $arg[0];}   # short circuit!
         | addEasyArgs[$arg[0]]
         # Accept bare arg (w/o parens) for this class of functions.
-        | APPLYOP(?) barearg                            { Apply($arg[0],$item[2]);}
+        | APPLYOP(?) barearg                            { CaptureDecision(Apply($arg[0],$item[2]),'addOpFunArgs','application',$arg[0],$item[2],scalar(@{$item[1]}));}
         | { $arg[0]; }   # Just return the function itself,then.
 
 # addTrigFunArgs[$function]; Yet another variation;
@@ -563,7 +563,7 @@ addTrigFunArgs :
           /^\Z/ { $arg[0];}   # short circuit!
         | addEasyArgs[$arg[0]]
         # Accept bare arg (w/o parens) for this class of functions.
-        | APPLYOP(?) trigBarearg                        { Apply($arg[0],$item[2]);}
+        | APPLYOP(?) trigBarearg                        { CaptureDecision(Apply($arg[0],$item[2]),'addTrigFunArgs','application',$arg[0],$item[2],scalar(@{$item[1]}));}
         | { $arg[0]; }   # Just return the function itself,then.
 
 # addEasyArgs[$function]; gets unambiguous compositions or parenthesized arguments
@@ -573,8 +573,8 @@ addEasyArgs :
         |  APPLYOP(?) OPEN Argument
                       (argPunct Argument {[$item[1],$item[2]];})(s?)
                    balancedClose[$item[2]]
-                  { ApplyDelimited($arg[0],$item[2],$item[3],
-                                   map(@$_,@{$item[4]}),$item[5]); }
+                  { CaptureDecision(ApplyDelimited($arg[0],$item[2],$item[3],
+                                   map(@$_,@{$item[4]}),$item[5]),'addEasyArgs','application',$arg[0],$item[2],scalar(@{$item[1]})); }
 
 # A function (or other) argument would normally be a simple expression,
 # but often relations (esp. Statistics) or arrows appear, so allow those as well.
@@ -614,7 +614,7 @@ addOpArgs :
 moreOpArgFactors :
           /^\Z/ { $arg[0];}   # short circuit!
         | MulOp Factor moreOpArgFactors[ApplyNary($item[1],$arg[0],$item[2])]
-        | Factor moreOpArgFactors[ApplyNary(InvisibleTimes(),$arg[0],$item[1])]
+        | Factor moreOpArgFactors[CaptureDecision(ApplyNary(InvisibleTimes(),$arg[0],$item[1]),'moreOpArgFactors','product',$arg[0],$item[1])]
         | { $arg[0]; }
 
 # addIntOpArgs[$bigop]; Add following Term to a INTOP as integrand, if present.
@@ -634,7 +634,7 @@ addIntOpArgs :
 moreIntOpArgFactors :
           /^\Z/ { $arg[0];}   # short circuit!
         | MulOp IntFactor moreIntOpArgFactors[ApplyNary($item[1],$arg[0],$item[2])]
-        | IntFactor moreIntOpArgFactors[ApplyNary(InvisibleTimes(),$arg[0],$item[1])]
+        | IntFactor moreIntOpArgFactors[CaptureDecision(ApplyNary(InvisibleTimes(),$arg[0],$item[1]),'moreIntOpArgFactors','product',$arg[0],$item[1])]
         | { $arg[0]; }
 
 IntFactor :

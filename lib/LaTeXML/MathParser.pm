@@ -24,10 +24,11 @@ use LaTeXML::Core::Token;
 use LaTeXML::Common::Font;
 use LaTeXML::Common::XML;
 use List::Util qw(min max);
+use JSON::PP ();
 use base (qw(Exporter));
 
 our @EXPORT_OK = (qw(&Lookup &New &Absent &Apply &ApplyNary &recApply &CatSymbols
-    &Annotate &InvisibleTimes &InvisibleComma &MorphVertbar
+    &Annotate &CaptureDecision &InvisibleTimes &InvisibleComma &MorphVertbar
     &TwoPartRelop &NewFormulae &NewFormula &NewList
     &ApplyDelimited &NewScript &DecorateOperator &InterpretDelimited &NewEvalAt
     &LeftRec
@@ -36,7 +37,7 @@ our @EXPORT_OK = (qw(&Lookup &New &Absent &Apply &ApplyNary &recApply &CatSymbol
     &isMatchingClose &Fence));
 our %EXPORT_TAGS = (constructors
     => [qw(&Lookup &New &Absent &Apply &ApplyNary &recApply &CatSymbols
-      &Annotate &InvisibleTimes &InvisibleComma &MorphVertbar
+      &Annotate &CaptureDecision &InvisibleTimes &InvisibleComma &MorphVertbar
       &TwoPartRelop &NewFormulae &NewFormula &NewList
       &ApplyDelimited &NewScript &DecorateOperator &InterpretDelimited &NewEvalAt
       &LeftRec
@@ -1284,6 +1285,33 @@ sub Apply {
   my $font = p_getAttribute($op, '_font');
   return ['ltx:XMApp', { ($font ? (_font => $font) : ()) }, $op, @args]; }
 
+# Annotate only newly constructed parser results. Failed alternatives discard
+# these arrays, so speculative branches never stamp the input lexemes.
+sub _captureDecisionRole {
+  my ($node) = @_;
+  if ((p_getQName($node) || '') eq 'ltx:XMRef') {
+    my $id = p_getAttribute($node, 'idref');
+    $node = $id && $LaTeXML::MathParser::DOCUMENT ? $LaTeXML::MathParser::DOCUMENT->lookupID($id) : undef; }
+  # Reading evidence must not issue errors or attempt to repair missing refs.
+  return p_getAttribute($node, 'role') || 'none'; }
+
+sub CaptureDecision {
+  my ($result, $rule, $decision, $left, $right, $explicit) = @_;
+  return $result unless $STATE && $STATE->lookupValue('CAPTURE_PROVENANCE');
+  my $event = { rule => $rule, decision => $decision, evidence => {
+      leftRole => _captureDecisionRole($left), rightRole => _captureDecisionRole($right),
+      leftShape => p_getQName($left) || 'none', rightShape => p_getQName($right) || 'none',
+      explicitApply => $explicit ? JSON::PP::true : JSON::PP::false } };
+  my @targets = ref $result eq 'ARRAY' && $result->[0] eq 'ltx:XMDual'
+    ? p_element_nodes($result) : ($result);
+  my $json = JSON::PP->new->canonical;
+  foreach my $target (@targets) {
+    next unless ref $target eq 'ARRAY' && $target->[0] eq 'ltx:XMApp';
+    my $old = $target->[1]{'capture:juxtaposition'};
+    my $events = $old ? $json->decode($old) : [];
+    $target->[1]{'capture:juxtaposition'} = $json->encode([@$events, $event]); }
+  return $result; }
+
 # Apply $op to a `delimited' list of arguments of the form
 #     open, expr (punct expr)* close
 # after extracting the opening and closing delimiters, and the separating punctuation
@@ -1500,6 +1528,7 @@ sub ApplyNary {
   my $opname    = p_getTokenMeaning($rop) || '__undef_meaning__';
   my $opcontent = p_getValue($rop)        || '__undef_content__';
   my @args      = ();
+  my $decisions;
   if (p_getQName($arg1) eq 'ltx:XMApp') {
     my ($op1, @args1) = p_element_nodes($arg1);
     my $rop1 = realizeXMNode($op1);
@@ -1508,13 +1537,17 @@ sub ApplyNary {
       # Especially an ID! (but really only important if the id is referenced somewhere?)
       && !(grep { p_getAttribute(realizeXMNode($arg1), $_) } qw(enclose xml:id))) {
       # Note that $op1 GOES AWAY!!!
+      $decisions = p_getAttribute($arg1, 'capture:juxtaposition')
+        if $STATE && $STATE->lookupValue('CAPTURE_PROVENANCE');
       ReplacedBy($op1, $rop, 1);
       push(@args, @args1); }
     else {
       push(@args, $arg1); } }
   else {
     push(@args, $arg1); }
-  return Apply($op, @args, $arg2); }
+  my $result = Apply($op, @args, $arg2);
+  $result->[1]{'capture:juxtaposition'} = $decisions if defined $decisions;
+  return $result; }
 
 # Usually we just expect to compare a token + to another.
 # but want (to some extent) to deal with embellished operators (eg. sub, sup...)

@@ -23,6 +23,8 @@ $\operatorname{tr}A$   $\mathrm{tr}A$   $\mathbf{v}$   $\boldsymbol{v}$
 \DeclareMathOperator{\Hom}{Hom} $\Hom(A,B)$
 ```
 
+The table describes the underlying engine reading without capture evidence; the implemented E2 and E3 attributes below now retain part of the missing information.
+
 | Source | Engine's reading | What survives, and what does not |
 | :--- | :--- | :--- |
 | `\operatorname{tr}A` | application of `tr` (`role="OPFUNCTION"`) to `A` | the operator reading survives as a role; that `\operatorname` licensed it survives only in the bytes |
@@ -51,6 +53,8 @@ Outside math mode a font is presentation, and this rule does not apply. Prose ty
 
 ## 4. What this buys downstream
 
+The first E3 slice is `capture:juxtaposition` on `XMApp`: an ordered JSON array of `{rule, decision, evidence}` records. `decision` is `application` or `product`; evidence contains the observed left and right roles and node shapes plus `explicitApply`, which says whether an APPLYOP was present. `none` means the input node had no role; `UNKNOWN` retains the parser's explicit unknown role. A known role does not establish that the author declared it. Applications with an `XMDual` record the same decision on its content and presentation applications. Product flattening retains earlier decisions in order. These annotations are attached only to newly constructed parser results, so failed alternatives discard them; explicit multiplication and operators without arguments get no adjacency marker. Grammar alternatives and parser tree construction are unchanged. This slice covers `moreFactors`, `moreOpArgFactors`, `moreIntOpArgFactors`, `requireArgs`, `addArgs`, `addOpFunArgs`, `addTrigFunArgs`, and `addEasyArgs`.
+
 The first E2 slice is `capture:mathAlphabets` on `XMTok`: a JSON array of command stacks in source-box order. Each stack runs outermost to innermost and includes the backslash, including invoked aliases. Adjacent identical stacks collapse, while redundant nested commands remain: `\mathbb{\mathbb{R}}` records `[["\\mathbb","\\mathbb"]]`. A merged token whose first run requested upright and whose second run did not records `[["\\mathrm"],[]]`. Empty stacks appear only in a token with at least one explicit request. This is ordered request evidence, not character offsets or a claim that the resolved font honored the request. Text-mode entry clears the inherited request stack, including for math nested inside that text. The nine command families in this slice are `\mathbb`, `\mathbf`, `\mathrm`, `\mathcal`, `\mathfrak`, `\mathsf`, `\mathit`, `\boldsymbol`, and `\bm`; their resident package overrides use the same capture hook. Optional foreign attributes are already admitted by the common RelaxNG attribute rule.
 
 Implemented label evidence uses `capture:labelValues` on the labeled element: a JSON object from each cleaned `labels` key to the text digested from `\@currentlabel` at that particular `\label`. Several labels on one target can have different values. Empty strings and `"0"` are retained. A visible optional item label is not necessarily this reference value. The Markdown consumer resolves a matching label through this map; `ltx:tags`, `refnum`, and capture-off output remain unchanged.
@@ -66,4 +70,4 @@ The engine's job ends at handing over evidence. Every decision about what the no
 
 ## 5. Scope of the kernel changes
 
-Changes under `lib/LaTeXML/Core/` and `lib/LaTeXML/Common/` are judged against E1 through E5. A change that makes the engine keep something it used to discard is in scope. A change that makes the engine decide something it used to leave open is not, unless the decision is itself recorded under E3. `MathParser` and the post-processors stay as they are and serve as oracles; the contract is satisfied by recording around them, not by rewriting them.
+Changes under `lib/LaTeXML/Core/` and `lib/LaTeXML/Common/` are judged against E1 through E5. A change that makes the engine keep something it used to discard is in scope. A change that makes the engine decide something it used to leave open is not, unless the decision is itself recorded under E3. The parser and post-processors remain oracles for the `ltx` tree. E3 may annotate results at existing grammar actions; it must not change alternatives, their order, or the trees those actions construct.

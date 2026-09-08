@@ -555,6 +555,37 @@ is(without_capture($alphabet_xml), without_capture(fixture_document('math-alphab
 assert_partition($alphabet_xml, 'math-alphabet fixture');
 validate_capture_document($alphabet_xml, 'capture-math-alphabets');
 
+my $juxtaposition_xml = fixture_document('juxtaposition');
+my $juxtaposition_xc = xpath($juxtaposition_xml);
+my @formulas = $juxtaposition_xc->findnodes('//ltx:Math');
+my @decisions;
+for my $index (0 .. $#formulas) {
+  my @apps = xpath($formulas[$index])->findnodes('.//ltx:XMApp[@capture:juxtaposition]');
+  push @decisions, [map { @{ JSON::PP->new->decode(cattr($_, 'juxtaposition')) } } @apps]; }
+is($decisions[0][0]{decision}, 'application', 'declared operator is recorded as application');
+is($decisions[0][0]{evidence}{leftRole}, 'OPFUNCTION', 'declared operator records its known role');
+is($decisions[0][0]{rule}, 'addEasyArgs', 'declared operator records the deciding grammar rule');
+is($decisions[1][0]{decision}, 'product', 'undeclared f(x) retains the engine product reading');
+is($decisions[1][0]{evidence}{leftRole}, 'UNKNOWN', 'undeclared f records the absence of a function role');
+is($decisions[1][0]{evidence}{rightShape}, 'ltx:XMDual', 'f(x) retains the delimited right-hand shape');
+is($decisions[2][0]{decision}, 'product', 'cT records implicit multiplication');
+is($decisions[2][0]{evidence}{rightRole}, 'UNKNOWN', 'cT records the right identifier role');
+is($decisions[2][0]{evidence}{rightShape}, 'ltx:XMTok', 'cT differs from the delimited f(x) evidence');
+is(scalar(@{ $decisions[3] }), 2, 'flattening abc preserves both adjacency decisions');
+is(scalar(@{ $decisions[4] }), 0, 'explicit multiplication is not marked as a juxtaposition guess');
+is(scalar(@{ $decisions[5] }), 0, 'a declared operator without an argument has no application decision');
+is($decisions[6][0]{rule}, 'addTrigFunArgs', 'bare trig argument records its actual grammar rule');
+ok($decisions[7][0]{evidence}{explicitApply}, 'explicit application records its APPLYOP evidence');
+is($decisions[7][0]{rule}, 'requireArgs', 'explicit application records requireArgs');
+is(without_capture($juxtaposition_xml), without_capture(fixture_document('juxtaposition', '--no-capture')),
+  'juxtaposition evidence leaves the complete ltx tree unchanged');
+my $juxtaposition_noparse = fixture_document('juxtaposition', '--noparse');
+is(xpath($juxtaposition_noparse)->findvalue('count(//*[@capture:juxtaposition])'), 0,
+  'no parser means no parser decision markers');
+foreach my $math (@formulas) { assert_source_bytes($juxtaposition_xml, $math, 'juxtaposition fixture math'); }
+assert_partition($juxtaposition_xml, 'juxtaposition fixture');
+validate_capture_document($juxtaposition_xml, 'capture-juxtaposition');
+
 done_testing();
 
 #**********************************************************************
