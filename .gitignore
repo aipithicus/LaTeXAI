@@ -30,6 +30,9 @@ lib-symb/*
 lib-katex/*
 !lib-katex/README.md
 
+
+**/.snapshot**
+
 .mcp.json
 DocOps.md
 
