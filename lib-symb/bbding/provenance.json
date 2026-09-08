@@ -1,0 +1,39 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/bbding",
+      "date" : "",
+      "docs" : {
+         "kind" : "directory-zip",
+         "url" : "https://mirrors.ctan.org/fonts/bbding.zip"
+      },
+      "license" : "lppl",
+      "path" : "/fonts/bbding",
+      "version" : "1.01"
+   },
+   "fetched_at" : "2026-09-08T11:38:37Z",
+   "package" : "bbding",
+   "runfiles" : [
+      "fonts/source/public/bbding/bbding10.mf",
+      "fonts/tfm/public/bbding/bbding10.tfm",
+      "tex/latex/bbding/Uding.fd",
+      "tex/latex/bbding/bbding.sty"
+   ],
+   "styles" : [
+      "tex/latex/bbding/bbding.sty"
+   ],
+   "table" : {
+      "authored_at" : "2026-09-08T11:43:02Z",
+      "rows" : 124,
+      "tool" : "tools/dev/symbind.pl --author"
+   },
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/bbding.tar.xz",
+      "bundle" : false,
+      "bytes" : 11680,
+      "filtered" : false,
+      "package" : "bbding",
+      "revision" : "77682",
+      "sha512" : "7d17bc9a105135da725db1efce688b4d1a35bef1e826de23b713479919b6f51469cc3c581945783dcdc6c6dd75a8fba4c9f9337f3c0ce55cf8ff5cc3e95d1046",
+      "snapshot" : null
+   }
+}

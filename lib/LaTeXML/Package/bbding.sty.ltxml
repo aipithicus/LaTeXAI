@@ -1,21 +1,144 @@
 # -*- mode: Perl -*-
 # /=====================================================================\ #
-# | bbding.sty                                                          | #
-# | Implementation for LaTeXML                                          | #
+# |  bbding.sty                                                       | #
+# | Generated from lib-symb/bbding/symbols.tsv                            | #
 # |=====================================================================| #
-# | Part of LaTeXML:                                                    | #
+# | Part of LaTeXAI / LaTeXML:                                          | #
 # |  Public domain software, produced as part of work done by the       | #
 # |  United States Government & not subject to copyright in the US.     | #
-# |---------------------------------------------------------------------| #
-# | Bruce Miller <bruce.miller@nist.gov>                        #_#     | #
-# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
 # \=========================================================ooo==U==ooo=/ #
+# Class: semantic
+# Generated from lib-symb/bbding/symbols.tsv by tools/dev/symbind.pl
+# Do not edit; regenerate with lsymb --generate bbding
+# Written from lib-symb/bbding/provenance.json
 package LaTeXML::Package::Pool;
 use strict;
 use warnings;
 use LaTeXML::Package;
 
-InputDefinitions('bbding', type => 'sty', noltxml => 1);
+DefPrimitiveI('\ArrowBoldDownRight', undef, "\x{27A5}");
+DefPrimitiveI('\ArrowBoldRightCircled', undef, "\x{27B2}");
+DefPrimitiveI('\ArrowBoldRightShort', undef, "\x{27A7}");
+DefPrimitiveI('\ArrowBoldRightStrobe', undef, "\x{279F}");
+DefPrimitiveI('\ArrowBoldUpRight', undef, "\x{27A6}");
+DefPrimitiveI('\Asterisk', undef, "\x{273D}");
+DefPrimitiveI('\AsteriskBold', undef, "\x{2731}");
+DefPrimitiveI('\AsteriskCenterOpen', undef, "\x{2732}");
+DefPrimitiveI('\AsteriskRoundedEnds', undef, "\x{2749}");
+DefPrimitiveI('\AsteriskThin', undef, "\x{2733}");
+DefPrimitiveI('\AsteriskThinCenterOpen', undef, "\x{2733}");
+DefPrimitiveI('\Checkmark', undef, "\x{2713}");
+DefPrimitiveI('\CheckmarkBold', undef, "\x{2714}");
+DefPrimitiveI('\CircleShadow', undef, "\x{274D}");
+DefPrimitiveI('\CircleSolid', undef, "\x{25CF}");
+DefPrimitiveI('\Cross', undef, "\x{271D}");
+DefPrimitiveI('\CrossBoldOutline', undef, "\x{271F}");
+DefPrimitiveI('\CrossClowerTips', undef, "\x{2725}");
+DefPrimitiveI('\CrossMaltese', undef, "\x{2720}");
+DefPrimitiveI('\CrossOpenShadow', undef, "\x{271E}");
+DefPrimitiveI('\CrossOutline', undef, "\x{271F}");
+DefPrimitiveI('\DavidStar', undef, "\x{2721}");
+DefPrimitiveI('\DavidStarSolid', undef, "\x{2736}");
+DefPrimitiveI('\DiamondSolid', undef, "\x{25C6}");
+DefPrimitiveI('\EightAsterisk', undef, "\x{274B}");
+DefPrimitiveI('\EightFlowerPetal', undef, "\x{2741}");
+DefPrimitiveI('\EightFlowerPetalRemoved', undef, "\x{274A}");
+DefPrimitiveI('\EightStar', undef, "\x{2737}");
+DefPrimitiveI('\EightStarBold', undef, "\x{2738}");
+DefPrimitiveI('\EightStarConvex', undef, "\x{2735}");
+DefPrimitiveI('\EightStarTaper', undef, "\x{2734}");
+DefPrimitiveI('\Ellipse', undef, "\x{2B2D}");
+DefPrimitiveI('\EllipseShadow', undef, "\x{2B2D}");
+DefPrimitiveI('\EllipseSolid', undef, "\x{2B2C}");
+DefPrimitiveI('\Envelope', undef, "\x{2709}");
+DefPrimitiveI('\FiveFlowerOpen', undef, "\x{2740}");
+DefPrimitiveI('\FiveFlowerPetal', undef, "\x{273F}");
+DefPrimitiveI('\FiveStar', undef, "\x{2605}");
+DefPrimitiveI('\FiveStarCenterOpen', undef, "\x{272B}");
+DefPrimitiveI('\FiveStarConvex', undef, "\x{272F}");
+DefPrimitiveI('\FiveStarLines', undef, "\x{26E4}");
+DefPrimitiveI('\FiveStarOpen', undef, "\x{2606}");
+DefPrimitiveI('\FiveStarOpenCircled', undef, "\x{272A}");
+DefPrimitiveI('\FiveStarOpenDotted', undef, "\x{272C}");
+DefPrimitiveI('\FiveStarOutline', undef, "\x{272D}");
+DefPrimitiveI('\FiveStarOutlineHeavy', undef, "\x{272E}");
+DefPrimitiveI('\FiveStarShadow', undef, "\x{2730}");
+DefPrimitiveI('\FourAsterisk', undef, "\x{2722}");
+DefPrimitiveI('\FourClowerOpen', undef, "\x{1F340}");
+DefPrimitiveI('\FourClowerSolid', undef, "\x{1F340}");
+DefPrimitiveI('\FourStar', undef, "\x{2726}");
+DefPrimitiveI('\FourStarOpen', undef, "\x{2727}");
+DefPrimitiveI('\HalfCircleLeft', undef, "\x{25D6}");
+DefPrimitiveI('\HalfCircleRight', undef, "\x{25D7}");
+DefPrimitiveI('\HandCuffLeft', undef, "\x{261A}");
+DefPrimitiveI('\HandCuffLeftUp', undef, "\x{261A}");
+DefPrimitiveI('\HandCuffRight', undef, "\x{261B}");
+DefPrimitiveI('\HandCuffRightUp', undef, "\x{261B}");
+DefPrimitiveI('\HandLeft', undef, "\x{1F598}");
+DefPrimitiveI('\HandLeftUp', undef, "\x{1F598}");
+DefPrimitiveI('\HandPencilLeft', undef, "\x{270D}");
+DefPrimitiveI('\HandRight', undef, "\x{1F599}");
+DefPrimitiveI('\HandRightUp', undef, "\x{1F599}");
+DefPrimitiveI('\JackStar', undef, "\x{2723}");
+DefPrimitiveI('\JackStarBold', undef, "\x{2724}");
+DefPrimitiveI('\NibLeft', undef, "\x{2711}");
+DefPrimitiveI('\NibRight', undef, "\x{2711}");
+DefPrimitiveI('\NibSolidLeft', undef, "\x{2712}");
+DefPrimitiveI('\NibSolidRight', undef, "\x{2712}");
+DefPrimitiveI('\OrnamentDiamondSolid', undef, "\x{2756}");
+DefPrimitiveI('\Peace', undef, "\x{270C}");
+DefPrimitiveI('\PencilLeft', undef, "\x{1F589}");
+DefPrimitiveI('\PencilLeftDown', undef, "\x{1F589}");
+DefPrimitiveI('\PencilLeftUp', undef, "\x{1F589}");
+DefPrimitiveI('\PencilRight', undef, "\x{270F}");
+DefPrimitiveI('\PencilRightDown', undef, "\x{270E}");
+DefPrimitiveI('\PencilRightUp', undef, "\x{2710}");
+DefPrimitiveI('\Phone', undef, "\x{260E}");
+DefPrimitiveI('\PhoneHandset', undef, "\x{2706}");
+DefPrimitiveI('\Plane', undef, "\x{2708}");
+DefPrimitiveI('\Plus', undef, "\x{271A}");
+DefPrimitiveI('\PlusCenterOpen', undef, "\x{271C}");
+DefPrimitiveI('\PlusOutline', undef, "\x{2719}");
+DefPrimitiveI('\PlusThinCenterOpen', undef, "\x{271B}");
+DefPrimitiveI('\Rectangle', undef, "\x{2759}");
+DefPrimitiveI('\RectangleBold', undef, "\x{275A}");
+DefPrimitiveI('\RectangleThin', undef, "\x{2758}");
+DefPrimitiveI('\ScissorHollowLeft', undef, "\x{2704}");
+DefPrimitiveI('\ScissorHollowRight', undef, "\x{2704}");
+DefPrimitiveI('\ScissorLeft', undef, "\x{2702}");
+DefPrimitiveI('\ScissorLeftBrokenBottom', undef, "\x{2701}");
+DefPrimitiveI('\ScissorLeftBrokenTop', undef, "\x{2703}");
+DefPrimitiveI('\ScissorRight', undef, "\x{2702}");
+DefPrimitiveI('\ScissorRightBrokenBottom', undef, "\x{2701}");
+DefPrimitiveI('\ScissorRightBrokenTop', undef, "\x{2703}");
+DefPrimitiveI('\SixFlowerAltPetal', undef, "\x{2743}");
+DefPrimitiveI('\SixFlowerAlternate', undef, "\x{273E}");
+DefPrimitiveI('\SixFlowerOpenCenter', undef, "\x{273C}");
+DefPrimitiveI('\SixFlowerPetalDotted', undef, "\x{273E}");
+DefPrimitiveI('\SixFlowerPetalRemoved', undef, "\x{273B}");
+DefPrimitiveI('\SixFlowerRemovedOpenPetal', undef, "\x{273E}");
+DefPrimitiveI('\SixStar', undef, "\x{2736}");
+DefPrimitiveI('\SixteenStarLight', undef, "\x{273A}");
+DefPrimitiveI('\Snowflake', undef, "\x{2745}");
+DefPrimitiveI('\SnowflakeChevron', undef, "\x{2744}");
+DefPrimitiveI('\SnowflakeChevronBold', undef, "\x{2746}");
+DefPrimitiveI('\Sparkle', undef, "\x{2747}");
+DefPrimitiveI('\SparkleBold', undef, "\x{2748}");
+DefPrimitiveI('\Square', undef, "\x{25A1}");
+DefPrimitiveI('\SquareCastShadowBottomRight', undef, "\x{2751}");
+DefPrimitiveI('\SquareCastShadowTopLeft', undef, "\x{2750}");
+DefPrimitiveI('\SquareCastShadowTopRight', undef, "\x{2752}");
+DefPrimitiveI('\SquareShadowBottomRight', undef, "\x{274F}");
+DefPrimitiveI('\SquareShadowTopLeft', undef, "\x{2750}");
+DefPrimitiveI('\SquareShadowTopRight', undef, "\x{2750}");
+DefPrimitiveI('\SquareSolid', undef, "\x{25A0}");
+DefPrimitiveI('\SunshineOpenCircled', undef, "\x{2742}");
+DefPrimitiveI('\Tape', undef, "\x{2707}");
+DefPrimitiveI('\TriangleDown', undef, "\x{25BC}");
+DefPrimitiveI('\TriangleUp', undef, "\x{25B2}");
+DefPrimitiveI('\TwelweStar', undef, "\x{2739}");
+DefPrimitiveI('\XSolid', undef, "\x{2715}");
+DefPrimitiveI('\XSolidBold', undef, "\x{2716}");
+DefPrimitiveI('\XSolidBrush', undef, "\x{2717}");
 
-# See the font map ding.fontmap.ltxml for the Unicode equivalences.
 1;
