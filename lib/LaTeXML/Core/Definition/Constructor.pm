@@ -94,6 +94,8 @@ sub invoke {
   my $font   = $STATE->lookupValue('font');
   my $mode   = $STATE->lookupValue('MODE');
   my $ismath = $STATE->lookupValue('IN_MATH');
+  my $alphabets = $capturing && $ismath
+    ? [@{ $STATE->lookupValue('CAPTURE_MATH_ALPHABETS') || [] }] : undef;
   # Parse AND digest the arguments to the Constructor
   my $parms = $$self{parameters};
   my @args  = ($parms ? $parms->readArgumentsAndDigest($stomach, $self) : ());
@@ -126,6 +128,7 @@ sub invoke {
   } if $capturing && !defined $props{captureSpan};
   $props{mode}        = $mode                           unless defined $props{mode};
   $props{isMath}      = $ismath                         unless defined $props{isMath};
+  $props{captureMathAlphabets} = $alphabets if defined $alphabets;
   $props{level}       = $stomach->getBoxingLevel;
   $props{scriptlevel} = $stomach->getScriptLevel if $ismath;
   # Now create the Whatsit, itself.

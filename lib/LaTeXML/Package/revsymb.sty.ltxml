@@ -20,7 +20,7 @@ use warnings;
 use LaTeXML::Package;
 
 DefMath('\lambdabar', "\x{03BB}\x{0304}");
-DefConstructor('\mathbb{}', '#1', bounded => 1, requireMath => 1,
+DefConstructor('\mathbb{}', '#1', beforeDigest => \&captureMathAlphabet, bounded => 1, requireMath => 1,
   font => { family => 'blackboard', series => 'medium', shape => 'upright' });
 DefMacro('\Bbb{}', '\mathbb{#1}');
 

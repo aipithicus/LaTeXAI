@@ -18,7 +18,7 @@ use LaTeXML::Package;
 # Only defines \mathfrak to use the Euler Fraktur font
 DefConstructor('\EuFrak{}', '#1', bounded => 1, requireMath => 1,
   font => { family => 'fraktur', series => 'medium', shape => 'upright' });
-DefConstructor('\mathfrak{}', '#1', bounded => 1, requireMath => 1,
+DefConstructor('\mathfrak{}', '#1', beforeDigest => \&captureMathAlphabet, bounded => 1, requireMath => 1,
   font => { family => 'fraktur', series => 'medium', shape => 'upright' });
 
 1;

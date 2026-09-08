@@ -515,6 +515,8 @@ sub beginMode {
     $STATE->assignValue(BOUND_MODE => $mode,   'local');    # New value within this frame!
     $STATE->assignValue(MODE       => $mode,   'local');
     $STATE->assignValue(IN_MATH    => $ismath, 'local');
+    $STATE->assignValue(CAPTURE_MATH_ALPHABETS => undef, 'local')
+      if !$ismath && $STATE->lookupValue('CAPTURE_PROVENANCE');
     Debug("MODE bind $mode, from $prevmode "
         . ($prevbound eq $prevmode ? '' : "(in $prevbound) ")
         . ", for " . Stringify($LaTeXML::CURRENT_TOKEN))

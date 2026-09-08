@@ -99,6 +99,28 @@ sub normalized_capture_xml {
   $engine->setAttribute(revision => 'CAPTURE_REVISION') if $engine;
   return $copy->toStringC14N(0); }
 
+sub fixture_document {
+  my ($name, @flags) = @_;
+  my $output = File::Spec->catfile($TEMP, join('-', $name, @flags) . '.xml');
+  my ($status, $messages) = run_command($^X, '-I', File::Spec->catdir($ROOT, 'lib'),
+    File::Spec->catfile($ROOT, 'tools', 'dev', 'capture-fixture.pl'), @flags,
+    File::Spec->catfile($FIXTURES, "$name.tex"), $output);
+  is($status, 0, "$name @flags converts without errors or warnings") or diag($messages);
+  return XML::LibXML->load_xml(location => $output); }
+
+sub without_capture {
+  my ($document) = @_;
+  my $copy = $document->cloneNode(1);
+  foreach my $node (xpath($copy)->findnodes('/ltx:document/capture:ledger')) {
+    my $indent = $node->previousSibling;
+    $indent->unbindNode if $indent && $indent->nodeType == XML_TEXT_NODE && $indent->data =~ /^\s*$/;
+    $node->unbindNode; }
+  foreach my $attr (xpath($copy)->findnodes('//@capture:*')) {
+    $attr->ownerElement->removeAttributeNS($CAPTURE_NS, $attr->localname); }
+  my $xml = $copy->toString(0);
+  $xml =~ s/ xmlns:capture="\Q$CAPTURE_NS\E"//g;
+  return $xml; }
+
 sub resolved_capture_file {
   my ($document, $file) = @_;
   my $root = $document->documentElement;
@@ -507,6 +529,31 @@ for my $strategy (qw(deferred indexed)) {
   like($projection->{markdown}, qr/1; A; 0; second\./, "$strategy resolves distinct labels on shared targets"); }
 is($label_xml->toString, $label_before, 'label projection leaves the capture IR unchanged');
 validate_capture_document($label_xml, 'capture-label-values');
+
+my $alphabet_xml = fixture_document('math-alphabets');
+my $alphabet_xc = xpath($alphabet_xml);
+for my $case (
+  ['R', ['\\mathbb', '\\mathbb']], ['L', ['\\mathbf', '\\mathcal']],
+  ['g', ['\\mathfrak']], ['T', ['\\mathsf']], ['x', ['\\mathit']],
+  ['v', ['\\boldsymbol']], ['w', ['\\bm']], ['a', ['\\mathbf']], ['b', ['\\mathbf']]) {
+  my ($value, $stack) = @$case;
+  my ($token) = $alphabet_xc->findnodes('//ltx:XMTok[text()="' . $value . '"]');
+  is_deeply(JSON::PP->new->decode(cattr($token, 'mathAlphabets')), [$stack],
+    "requested alphabet stack survives on $value"); }
+my ($alpha) = $alphabet_xc->findnodes('//ltx:XMTok[@name="alpha"]');
+is_deeply(JSON::PP->new->decode(cattr($alpha, 'mathAlphabets')), [['\\mathbf']],
+  'primitive math symbols retain the request even when their resolved font ignores it');
+my @tr = $alphabet_xc->findnodes('//ltx:XMTok[text()="tr"]');
+is_deeply(JSON::PP->new->decode(cattr($tr[0], 'mathAlphabets')), [['\\mathrm']],
+  'multi-letter default upright font still records the explicit request');
+is_deeply(JSON::PP->new->decode(cattr($tr[1], 'mathAlphabets')), [['\\mathrm'], []],
+  'ligature preserves distinct explicit and unmarked source runs');
+is($alphabet_xc->findvalue('count(//ltx:text[@capture:mathAlphabets] | //ltx:XMTok[text()="z" or text()="q"][@capture:mathAlphabets])'), 0,
+  'alphabet requests stop at text mode and do not leak into later or nested math');
+is(without_capture($alphabet_xml), without_capture(fixture_document('math-alphabets', '--no-capture')),
+  'alphabet metadata leaves the complete ltx tree unchanged');
+assert_partition($alphabet_xml, 'math-alphabet fixture');
+validate_capture_document($alphabet_xml, 'capture-math-alphabets');
 
 done_testing();
 

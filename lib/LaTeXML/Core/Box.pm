@@ -56,6 +56,10 @@ sub Box {
 
 sub new {
   my ($class, $string, $font, $locator, $tokens, %properties) = @_;
+  if ($STATE && $STATE->lookupValue('CAPTURE_PROVENANCE')
+    && ($properties{mode} || $STATE->lookupValue('MODE') || '') =~ /math$/) {
+    $properties{captureMathAlphabets} = [@{ $STATE->lookupValue('CAPTURE_MATH_ALPHABETS') || [] }]
+      unless exists $properties{captureMathAlphabets}; }
   return bless { string => $string,
     tokens     => $tokens,
     properties => { font => $font, locator => $locator, %properties }

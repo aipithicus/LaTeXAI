@@ -16,7 +16,7 @@ use warnings;
 use LaTeXML::Package;
 
 #======================================================================
-DefConstructor('\mathbb{}', '#1', bounded => 1, requireMath => 1,
+DefConstructor('\mathbb{}', '#1', beforeDigest => \&captureMathAlphabet, bounded => 1, requireMath => 1,
   font => { encoding => 'U', family => 'blackboard', series => 'medium', shape => 'upright' });
 
 DefConstructor('\textbb{}', '#1', bounded => 1, forbidMath => 1,

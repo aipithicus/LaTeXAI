@@ -15,6 +15,14 @@ use strict;
 use warnings;
 use LaTeXML::Package;
 
+# Called inside a math alphabet constructor's bounded digestion frame. Keep
+# every request, including redundant nested requests and invoked aliases.
+sub captureMathAlphabet {
+  return unless LookupValue('CAPTURE_PROVENANCE') && LookupValue('IN_MATH');
+  AssignValue('CAPTURE_MATH_ALPHABETS' =>
+      [@{ LookupValue('CAPTURE_MATH_ALPHABETS') || [] }, ToString($LaTeXML::CURRENT_TOKEN)]);
+  return; }
+
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # LaTeXML Enhancemens to Math Representation to preserve Semantics
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -983,4 +991,3 @@ sub equationgroupJoinCols {
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 1;
-

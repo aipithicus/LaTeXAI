@@ -164,7 +164,7 @@ DefConstructor('\text{}', "<ltx:text _noautoclose='true'>#1</ltx:text>",
   mode => 'restricted_horizontal', locked => 1);
 
 # RevTeX3 (obsolete in RevTeX4)
-DefConstructor('\bm{}', '#1', bounded => 1, requireMath => 1, font => { forcebold => 1 });
+DefConstructor('\bm{}', '#1', beforeDigest => \&captureMathAlphabet, bounded => 1, requireMath => 1, font => { forcebold => 1 });
 DefConstructor('\bbox{}', '#1',
   bounded => 1, requireMath => 1, font => { forcebold => 1 },
   locked  => 1);

@@ -22,6 +22,7 @@ use LaTeXML::Version;
 use LaTeXML::Util::Radix;
 use Unicode::Normalize;
 use Data::Dumper;
+use JSON::PP ();
 use Scalar::Util qw(blessed);
 use base         qw(LaTeXML::Common::Object);
 
@@ -635,6 +636,7 @@ sub finalize_rec {
         $base =~ s!\\!/!g;
         setAttribute($self, $node, 'capture:base' => $base); } }
     if (my $box = getNodeBox($self, $node)) {
+      _captureMathAlphabets($self, $node, $box) if $node->localname eq 'XMTok';
       if (my $loc = $box->getLocator) {
         my $loc_attr = $loc->toAttribute;
         if (defined $loc_attr && length($loc_attr)) {
@@ -667,6 +669,28 @@ sub finalize_rec {
   return; }
 
 #======================================================================
+# Requested alphabets follow the source boxes through math ligatures. A
+# merged token can contain both an explicit run and an unmarked run; retain
+# both instead of assigning the last character's request to the whole token.
+sub _captureAlphabetStacks {
+  my ($box) = @_;
+  return () unless $box;
+  return map { _captureAlphabetStacks($_) } $box->unlist
+    if $box->isa('LaTeXML::Core::List');
+  return ($box->getProperty('captureMathAlphabets') || []); }
+
+sub _captureMathAlphabets {
+  my ($self, $node, $box) = @_;
+  my (@runs, $previous, $requested);
+  my $json = JSON::PP->new->canonical;
+  foreach my $stack (_captureAlphabetStacks($box)) {
+    $requested ||= scalar(@$stack);
+    my $encoded = $json->encode($stack);
+    push @runs, $stack if !defined $previous || $encoded ne $previous;
+    $previous = $encoded; }
+  setAttribute($self, $node, 'capture:mathAlphabets' => $json->encode(\@runs)) if $requested;
+  return; }
+
 # Experimental Serializer
 # inserts formatting whitespace ONLY where allowed by the schema
 #======================================================================

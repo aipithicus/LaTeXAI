@@ -591,17 +591,17 @@ DefMathI('\lvertneqq', undef, "\x{2268}",
   role => 'RELOP', meaning => 'less-than-and-not-equals');
 DefMathI('\mappedfromchar', undef, "\x{2ADE}",
   role => 'RELOP');
-DefConstructor('\mathbf{}', '#1', bounded => 1, requireMath => 1,
+DefConstructor('\mathbf{}', '#1', beforeDigest => \&captureMathAlphabet, bounded => 1, requireMath => 1,
   font => { family => 'serif', series => 'bold', shape => 'upright' });
-DefConstructor('\mathcal{}', '#1', bounded => 1, requireMath => 1,
+DefConstructor('\mathcal{}', '#1', beforeDigest => \&captureMathAlphabet, bounded => 1, requireMath => 1,
   font => { family => 'caligraphic', series => 'medium', shape => 'upright' });
-DefConstructor('\mathit{}', '#1', bounded => 1, requireMath => 1,
+DefConstructor('\mathit{}', '#1', beforeDigest => \&captureMathAlphabet, bounded => 1, requireMath => 1,
   font => { family => 'serif', series => 'medium', shape => 'upright' });
-DefConstructor('\mathrm{}', '#1', bounded => 1, requireMath => 1,
+DefConstructor('\mathrm{}', '#1', beforeDigest => \&captureMathAlphabet, bounded => 1, requireMath => 1,
   font => { family => 'serif', series => 'medium', shape => 'upright' });
 DefConstructor('\mathscr{}', '#1', bounded => 1, requireMath => 1,
   font => { family => 'script', series => 'medium', shape => 'upright' });
-DefConstructor('\mathsf{}', '#1', bounded => 1, requireMath => 1,
+DefConstructor('\mathsf{}', '#1', beforeDigest => \&captureMathAlphabet, bounded => 1, requireMath => 1,
   font => { family => 'sansserif', series => 'medium', shape => 'upright' });
 DefConstructor('\mathtt{}', '#1', bounded => 1, requireMath => 1,
   font => { family => 'typewriter', series => 'medium', shape => 'upright' });
