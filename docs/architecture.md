@@ -72,9 +72,9 @@ Every entry under `lib-ctan/` satisfies the **entry rule**: it is data the pool 
 
 An entry is named by its CTAN id and cut from one vendoring unit; the archive and revision are recorded in its provenance, and two entries cut from the same archive pin the same revision. Kernel files that CTAN does not catalogue are members of an entry named for their archive (`latex`, `graphics`) and are never entries of their own. A dependency a raw package requires is its own entry, marked in provenance as requested by the requirer; the census reads one entry, so a binding is never written from a dependency's source.
 
-**Lockfile.** Provenance is the pin, not the trees. Each root gitignores its runfiles and tracks its README and `*/provenance.json`; `lib-ctan/` also tracks `ls-R` and `entries.txt` once they exist. A clone restores trees with `lctan --restore` from those pins.
+**Lockfile.** Provenance is the pin, not the trees. Each root gitignores its runfiles and tracks its README and `*/provenance.json`; `lib-ctan/` also tracks `ls-R` and `entries.txt` once they exist. A clone restores `lib-ctan/` and `lib-park/` trees with `lctan --restore` from those pins. `lib-katex/` also tracks `derived/*.tsv` (the tables consumers read) and restores copied sources with `lkatex --restore --clone` from a KaTeX checkout at the provenance tag and commit.
 
-Status (2026-09-07): `lib-ctan/` is indexed (`ls-R` committed with provenance); the kpsewhich shim answers from it. `lib-park/` holds packages with no current demand. `lib-symb/` and `lib-katex/` remain specified.
+Status (2026-09-08): `lib-ctan/` is indexed (`ls-R` committed with provenance); the kpsewhich shim answers from it. `lib-park/` holds packages with no current demand. `lib-symb/` remains specified. `lib-katex/` holds derived tables at the KaTeX tag recorded in its provenance.
 
 ## 6. Layers, and what gets a binding
 
@@ -108,7 +108,7 @@ The search order in `FindFile_aux` (`lib/LaTeXML/Package.pm`), which no vendorin
 4. the raw file in a `--path` directory regardless;
 5. kpsewhich, with both the binding name and the raw name as candidates.
 
-Steps 1 to 4 look in flat, explicitly named directories. Step 5 is the only tree search. The texmf index answers step 5: `LATEXML_KPSEWHICH` names the shim, the engine asks it once at startup for the roots and reads `lib-ctan/ls-R` into a cache. Upstream then spawns kpsewhich for every name the cache lacks (MiKTeX has no ls-R). `LATEXML_KPSEWHICH_CACHE_ONLY` makes the cache authoritative: a miss returns undef with no process. The aliases and the corpus worker set both. `LATEXML_KPSEWHICH` is read when the path module loads, so it is set by the process that starts perl, never from inside a running perl. A reference root is never on a `--path` and never in the index, so nothing under it can be found by any step; a lint refuses a golden whose recorded search paths name one.
+Steps 1 to 4 look in flat, explicitly named directories. Step 5 is the only tree search. The texmf index answers step 5: `LATEXML_KPSEWHICH` names the shim, the engine asks it once at startup for the roots and reads `lib-ctan/ls-R` into a cache. Upstream then spawns kpsewhich for every name the cache lacks (MiKTeX has no ls-R). `LATEXML_KPSEWHICH_CACHE_ONLY` makes the cache authoritative: a miss returns undef with no process. The aliases and the corpus worker set both. `LATEXML_KPSEWHICH` is read when the path module loads, so it is set by the process that starts perl, never from inside a running perl. A reference root is never on a `--path` and never in the index, so nothing under it can be found by any step. That guarantee is structural: the index writer walks `lib-ctan` only, and the aliases and the corpus worker never pass a reference root as `--path`. Fixture goldens omit the searchpaths processing instruction (`includepathpis => 0`), so they are not the place that check would run.
 
 `--includestyles` governs step 2 only. A passthrough interprets its raw file regardless, which is what the resident library serves.
 
@@ -120,7 +120,7 @@ A notation binding is generated from `lib-symb/<pkg>/symbols.tsv`: one row per c
 
 **Bindings never carry the mapping.** A generated binding emits LaTeXML tokens (name, meaning, role, font, codepoint) and nothing a renderer would recognise. The IR is renderer-neutral, and a binding that knew about KaTeX would be fork dialect.
 
-`lib-katex/` is the truth about what KaTeX accepts, vendored verbatim at a tag. Each table is the truth about our mapping. The checker holds the second against the first: every `katex` name exists, codepoints agree where KaTeX defines one, KaTeX's atom group agrees with our role. Blanks are legitimate, reported, and expected to be rare; post emits the codepoint for them.
+`lib-katex/derived/` is KaTeX's facts at a tag: names it knows, atom groups, operator limits, alphabet switches. The `katex` column of each `lib-symb` table is our mapping. The checker holds the mapping against the facts: every non-blank `katex` name exists in the derived tables, codepoints agree where KaTeX defines one, KaTeX's atom group agrees with our role. Blanks are legitimate, reported, and expected to be rare; post emits the codepoint when a symbols row with that codepoint has `accept_unicode` set.
 
 Every symbol binding maps to a real codepoint: no private-use characters, no font slots. Text-mode symbols are emitted as the bare character, and the codepoint is the normalized token.
 
@@ -142,6 +142,7 @@ Goldens and receipts answer different questions. A golden says a binding does wh
 | project an IR manuscript and compare traversal strategies | [`markdown-projection.md`](markdown-projection.md) |
 | run the corpus | the launcher outside tracked files, per codex-scientiae's worker contract; runs land under codex-scientiae's `artifacts/latexai/<stamp>/` |
 | build a notation table and its binding | not yet documented; the recipe gains a section when the table tooling lands |
+| vendor or restore the KaTeX reference tables | `lkatex` (`tools/dev/vendor-katex.pl`); pin is `lib-katex/provenance.json` |
 | build or rebuild the texmf index, restore pins, fetch archive members | [`recipes/fetch-ctan.md`](recipes/fetch-ctan.md) (`lctan --index`, `--check`, `--from`, `--restore`) |
 
 ## 12. Rules that follow

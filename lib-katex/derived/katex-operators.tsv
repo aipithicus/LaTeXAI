@@ -1,0 +1,108 @@
+name	kind	limits	source	expansion
+\Colonapprox	macro	1	macros.ts	\html@mathml{\mathrel{\dblcolon\mathrel{\mkern-1.2mu}\approx}}{\mathop{\char"2237\char"2248}}
+\Coloneq	macro	1	macros.ts	\html@mathml{\mathrel{\dblcolon\mathrel{\mkern-1.2mu}\mathrel{-}}}{\mathop{\char"2237\char"2212}}
+\Coloneqq	macro	1	macros.ts	\html@mathml{\mathrel{\dblcolon\mathrel{\mkern-1.2mu}=}}{\mathop{\char"2237\char"3d}}
+\Colonsim	macro	1	macros.ts	\html@mathml{\mathrel{\dblcolon\mathrel{\mkern-1.2mu}\sim}}{\mathop{\char"2237\char"223c}}
+\Eqcolon	macro	1	macros.ts	\html@mathml{\mathrel{\mathrel{-}\mathrel{\mkern-1.2mu}\dblcolon}}{\mathop{\char"2212\char"2237}}
+\Eqqcolon	macro	1	macros.ts	\html@mathml{\mathrel{=\mathrel{\mkern-1.2mu}\dblcolon}}{\mathop{\char"3d\char"2237}}
+\Pr	named	1	op.ts	
+\arccos	named	0	op.ts	
+\arcctg	named	0	op.ts	
+\arcsin	named	0	op.ts	
+\arctan	named	0	op.ts	
+\arctg	named	0	op.ts	
+\arg	named	0	op.ts	
+\argmax	macro	1	macros.ts	\DOTSB\operatorname*{arg\,max}
+\argmin	macro	1	macros.ts	\DOTSB\operatorname*{arg\,min}
+\bigcap	big	1	op.ts	
+\bigcup	big	1	op.ts	
+\bigodot	big	1	op.ts	
+\bigoplus	big	1	op.ts	
+\bigotimes	big	1	op.ts	
+\bigsqcup	big	1	op.ts	
+\biguplus	big	1	op.ts	
+\bigvee	big	1	op.ts	
+\bigwedge	big	1	op.ts	
+\ch	named	0	op.ts	
+\colonapprox	macro	1	macros.ts	\html@mathml{\mathrel{\vcentcolon\mathrel{\mkern-1.2mu}\approx}}{\mathop{\char"3a\char"2248}}
+\coloneq	macro	1	macros.ts	\html@mathml{\mathrel{\vcentcolon\mathrel{\mkern-1.2mu}\mathrel{-}}}{\mathop{\char"3a\char"2212}}
+\coloneqq	macro	1	macros.ts	\html@mathml{\mathrel{\vcentcolon\mathrel{\mkern-1.2mu}=}}{\mathop{\char"2254}}
+\colonsim	macro	1	macros.ts	\html@mathml{\mathrel{\vcentcolon\mathrel{\mkern-1.2mu}\sim}}{\mathop{\char"3a\char"223c}}
+\coprod	big	1	op.ts	
+\cos	named	0	op.ts	
+\cosec	named	0	op.ts	
+\cosh	named	0	op.ts	
+\cot	named	0	op.ts	
+\cotg	named	0	op.ts	
+\coth	named	0	op.ts	
+\csc	named	0	op.ts	
+\ctg	named	0	op.ts	
+\cth	named	0	op.ts	
+\dblcolon	macro	1	macros.ts	\html@mathml{\mathrel{\vcentcolon\mathrel{\mkern-.9mu}\vcentcolon}}{\mathop{\char"2237}}
+\deg	named	0	op.ts	
+\det	named	1	op.ts	
+\dim	named	0	op.ts	
+\eqcolon	macro	1	macros.ts	\html@mathml{\mathrel{\mathrel{-}\mathrel{\mkern-1.2mu}\vcentcolon}}{\mathop{\char"2239}}
+\eqqcolon	macro	1	macros.ts	\html@mathml{\mathrel{=\mathrel{\mkern-1.2mu}\vcentcolon}}{\mathop{\char"2255}}
+\exp	named	0	op.ts	
+\gcd	named	1	op.ts	
+\hom	named	0	op.ts	
+\iiint	big	0	op.ts	
+\iint	big	0	op.ts	
+\inf	named	1	op.ts	
+\injlim	macro	1	macros.ts	\DOTSB\operatorname*{inj\,lim}
+\int	big	0	op.ts	
+\intop	big	1	op.ts	
+\ker	named	0	op.ts	
+\lg	named	0	op.ts	
+\lim	named	1	op.ts	
+\liminf	macro	1	macros.ts	\DOTSB\operatorname*{lim\,inf}
+\limsup	macro	1	macros.ts	\DOTSB\operatorname*{lim\,sup}
+\llcorner	macro	1	macros.ts	\html@mathml{\@llcorner}{\mathop{\char"231e}}
+\ln	named	0	op.ts	
+\log	named	0	op.ts	
+\lrcorner	macro	1	macros.ts	\html@mathml{\@lrcorner}{\mathop{\char"231f}}
+\max	named	1	op.ts	
+\min	named	1	op.ts	
+\oiiint	big	0	op.ts	
+\oiint	big	0	op.ts	
+\oint	big	0	op.ts	
+\plim	macro	1	macros.ts	\DOTSB\mathop{\operatorname{plim}}\limits
+\prod	big	1	op.ts	
+\projlim	macro	1	macros.ts	\DOTSB\operatorname*{proj\,lim}
+\sec	named	0	op.ts	
+\sh	named	0	op.ts	
+\sin	named	0	op.ts	
+\sinh	named	0	op.ts	
+\smallint	big	1	op.ts	
+\sum	big	1	op.ts	
+\sup	named	1	op.ts	
+\tan	named	0	op.ts	
+\tanh	named	0	op.ts	
+\tg	named	0	op.ts	
+\th	named	0	op.ts	
+\ulcorner	macro	1	macros.ts	\html@mathml{\@ulcorner}{\mathop{\char"231c}}
+\urcorner	macro	1	macros.ts	\html@mathml{\@urcorner}{\mathop{\char"231d}}
+\varinjlim	macro	1	macros.ts	\DOTSB\operatorname*{\underrightarrow{lim}}
+\varliminf	macro	1	macros.ts	\DOTSB\operatorname*{\underline{lim}}
+\varlimsup	macro	1	macros.ts	\DOTSB\operatorname*{\overline{lim}}
+\varprojlim	macro	1	macros.ts	\DOTSB\operatorname*{\underleftarrow{lim}}
+\vcentcolon	macro	1	macros.ts	\mathrel{\mathop\ordinarycolon}
+∏	big	1	op.ts	
+∐	big	1	op.ts	
+∑	big	1	op.ts	
+∫	big	0	op.ts	
+∬	big	0	op.ts	
+∭	big	0	op.ts	
+∮	big	0	op.ts	
+∯	big	0	op.ts	
+∰	big	0	op.ts	
+⋀	big	1	op.ts	
+⋁	big	1	op.ts	
+⋂	big	1	op.ts	
+⋃	big	1	op.ts	
+⨀	big	1	op.ts	
+⨁	big	1	op.ts	
+⨂	big	1	op.ts	
+⨄	big	1	op.ts	
+⨆	big	1	op.ts	

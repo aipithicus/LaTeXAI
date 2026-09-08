@@ -1,0 +1,337 @@
+name	kind	expansion	primary
+\!	construct	\tmspace-{3mu}{.1667em}	
+\,	construct	\tmspace+{3mu}{.1667em}	
+\:	construct	\tmspace+{4mu}{.2222em}	
+\;	construct	\tmspace+{5mu}{.2777em}	
+\>	construct	\mskip{4mu}	
+\@firstoftwo	contextual		
+\@hspace	construct	\hskip #1\relax	
+\@hspacer	construct	\rule{0pt}{0pt}\hskip #1\relax	
+\@ifnextchar	contextual		
+\@ifstar	construct	\@ifnextchar *{\@firstoftwo{#1}}	
+\@secondoftwo	contextual		
+\AA	construct	\r A	
+\Alpha	construct	\mathrm{A}	
+\Bbbk	construct	\Bbb{k}	
+\Beta	construct	\mathrm{B}	
+\Bra	construct	\left\langle#1\right|	
+\Braket	construct	\bra@ket{\left\langle}{\,\middle\vert\,}{\,\middle\vert\,}{\right\rangle}	
+\Chi	construct	\mathrm{X}	
+\Colonapprox	operator	\html@mathml{\mathrel{\dblcolon\mathrel{\mkern-1.2mu}\approx}}{\mathop{\char"2237\char"2248}}	
+\Coloneq	operator	\html@mathml{\mathrel{\dblcolon\mathrel{\mkern-1.2mu}\mathrel{-}}}{\mathop{\char"2237\char"2212}}	
+\Coloneqq	operator	\html@mathml{\mathrel{\dblcolon\mathrel{\mkern-1.2mu}=}}{\mathop{\char"2237\char"3d}}	
+\Colonsim	operator	\html@mathml{\mathrel{\dblcolon\mathrel{\mkern-1.2mu}\sim}}{\mathop{\char"2237\char"223c}}	
+\Complex	construct	\mathbb{C}	
+\DOTSB	alias	\relax	\relax
+\DOTSI	alias	\relax	\relax
+\DOTSX	alias	\relax	\relax
+\Dagger	alias	\ddagger	\ddagger
+\Darr	alias	\Downarrow	\Downarrow
+\Epsilon	construct	\mathrm{E}	
+\Eqcolon	operator	\html@mathml{\mathrel{\mathrel{-}\mathrel{\mkern-1.2mu}\dblcolon}}{\mathop{\char"2212\char"2237}}	
+\Eqqcolon	operator	\html@mathml{\mathrel{=\mathrel{\mkern-1.2mu}\dblcolon}}{\mathop{\char"3d\char"2237}}	
+\Eta	construct	\mathrm{H}	
+\Harr	alias	\Leftrightarrow	\Leftrightarrow
+\Iota	construct	\mathrm{I}	
+\KaTeX	construct	\textrm{\html@mathml{	
+\Kappa	construct	\mathrm{K}	
+\Ket	construct	\left|#1\right\rangle	
+\LaTeX	construct	\textrm{\html@mathml{	
+\Larr	alias	\Leftarrow	\Leftarrow
+\Lrarr	alias	\Leftrightarrow	\Leftrightarrow
+\Mu	construct	\mathrm{M}	
+\N	construct	\mathbb{N}	
+\Nu	construct	\mathrm{N}	
+\Omicron	construct	\mathrm{O}	
+\R	construct	\mathbb{R}	
+\Rarr	alias	\Rightarrow	\Rightarrow
+\Reals	construct	\mathbb{R}	
+\Rho	construct	\mathrm{P}	
+\Set	construct	\bra@set{\left\{\:}{\;\middle\vert\;}{\;\middle\Vert\;}{\:\right\}}	
+\Tau	construct	\mathrm{T}	
+\TeX	construct	\textrm{\html@mathml{T\kern-.1667em\raisebox{-.5ex}{E}\kern-.125emX}{TeX}}	
+\TextOrMath	contextual		
+\Uarr	alias	\Uparrow	\Uparrow
+\Z	construct	\mathbb{Z}	
+\Zeta	construct	\mathrm{Z}	
+\aa	construct	\r a	
+\alef	alias	\aleph	\aleph
+\alefsym	alias	\aleph	\aleph
+\angln	construct	{\angl n}	
+\approxcolon	construct	\mathrel{\approx\mathrel{\mkern-1.2mu}\vcentcolon}	
+\approxcoloncolon	construct	\mathrel{\approx\mathrel{\mkern-1.2mu}\dblcolon}	
+\argmax	operator	\DOTSB\operatorname*{arg\,max}	
+\argmin	operator	\DOTSB\operatorname*{arg\,min}	
+\bgroup	construct	{	
+\blue	construct	\textcolor{##6495ed}{#1}	
+\blueA	construct	\textcolor{##ccfaff}{#1}	
+\blueB	construct	\textcolor{##80f6ff}{#1}	
+\blueC	construct	\textcolor{##63d9ea}{#1}	
+\blueD	construct	\textcolor{##11accd}{#1}	
+\blueE	construct	\textcolor{##0c7f99}{#1}	
+\bmod	construct	\mathchoice{\mskip1mu}{\mskip1mu}{\mskip5mu}{\mskip5mu}\mathbin{\rm mod}\mathchoice{\mskip1mu}{\mskip1mu}{\mskip5mu}{\mskip5mu}	
+\boxed	construct	\fbox{$\displaystyle{#1}$}	
+\bra	construct	\mathinner{\langle{#1}|}	
+\bra@ket			
+\bra@set			
+\braket	construct	\mathinner{\langle{#1}\rangle}	
+\bull	alias	\bullet	\bullet
+\cdots	contextual		
+\char	contextual		
+\clap	construct	\mathclap{\textrm{#1}}	
+\clubs	alias	\clubsuit	\clubsuit
+\cnums	construct	\mathbb{C}	
+\colon	construct	\nobreak\mskip2mu\mathpunct{}\mathchoice{\mkern-3mu}{\mkern-3mu}{}{}{:}\mskip6mu\relax	
+\colonapprox	operator	\html@mathml{\mathrel{\vcentcolon\mathrel{\mkern-1.2mu}\approx}}{\mathop{\char"3a\char"2248}}	
+\coloncolon	alias	\dblcolon	\dblcolon
+\coloncolonapprox	alias	\Colonapprox	\Colonapprox
+\coloncolonequals	alias	\Coloneqq	\Coloneqq
+\coloncolonminus	alias	\Coloneq	\Coloneq
+\coloncolonsim	alias	\Colonsim	\Colonsim
+\coloneq	operator	\html@mathml{\mathrel{\vcentcolon\mathrel{\mkern-1.2mu}\mathrel{-}}}{\mathop{\char"3a\char"2212}}	
+\coloneqq	operator	\html@mathml{\mathrel{\vcentcolon\mathrel{\mkern-1.2mu}=}}{\mathop{\char"2254}}	
+\colonequals	alias	\coloneqq	\coloneqq
+\colonminus	alias	\coloneq	\coloneq
+\colonsim	operator	\html@mathml{\mathrel{\vcentcolon\mathrel{\mkern-1.2mu}\sim}}{\mathop{\char"3a\char"223c}}	
+\copyright	construct	\TextOrMath{\textcopyright}{\text{\textcopyright}}	
+\dArr	alias	\Downarrow	\Downarrow
+\darr	alias	\downarrow	\downarrow
+\dblcolon	operator	\html@mathml{\mathrel{\vcentcolon\mathrel{\mkern-.9mu}\vcentcolon}}{\mathop{\char"2237}}	
+\ddddot	construct	{\overset{\raisebox{-0.1ex}{\normalsize ....}}{#1}}	
+\dddot	construct	{\overset{\raisebox{-0.1ex}{\normalsize ...}}{#1}}	
+\diamonds	alias	\diamondsuit	\diamondsuit
+\dots	contextual		
+\dotsb	alias	\cdots	\cdots
+\dotsc	contextual		
+\dotsi	construct	\!\cdots	
+\dotsm	alias	\cdots	\cdots
+\dotso	contextual		
+\dotsx	construct	\ldots\,	
+\egroup	construct	}	
+\empty	alias	\emptyset	\emptyset
+\enskip	construct	\hskip.5em\relax	
+\enspace	construct	\kern.5em 	
+\eqcolon	operator	\html@mathml{\mathrel{\mathrel{-}\mathrel{\mkern-1.2mu}\vcentcolon}}{\mathop{\char"2239}}	
+\eqqcolon	operator	\html@mathml{\mathrel{=\mathrel{\mkern-1.2mu}\vcentcolon}}{\mathop{\char"2255}}	
+\equalscolon	alias	\eqqcolon	\eqqcolon
+\equalscoloncolon	alias	\Eqqcolon	\Eqqcolon
+\errmessage	contextual		
+\exist	alias	\exists	\exists
+\expandafter	contextual		
+\goldA	construct	\textcolor{##ffd0a9}{#1}	
+\goldB	construct	\textcolor{##ffbb71}{#1}	
+\goldC	construct	\textcolor{##ff9c39}{#1}	
+\goldD	construct	\textcolor{##e07d10}{#1}	
+\goldE	construct	\textcolor{##a75a05}{#1}	
+\gray	construct	\textcolor{gray}{#1}	
+\grayA	construct	\textcolor{##f6f7f7}{#1}	
+\grayB	construct	\textcolor{##f0f1f2}{#1}	
+\grayC	construct	\textcolor{##e3e5e6}{#1}	
+\grayD	construct	\textcolor{##d6d8da}{#1}	
+\grayE	construct	\textcolor{##babec2}{#1}	
+\grayF	construct	\textcolor{##888d93}{#1}	
+\grayG	construct	\textcolor{##626569}{#1}	
+\grayH	construct	\textcolor{##3b3e40}{#1}	
+\grayI	construct	\textcolor{##21242c}{#1}	
+\green	construct	\textcolor{##28ae7b}{#1}	
+\greenA	construct	\textcolor{##b6ffb0}{#1}	
+\greenB	construct	\textcolor{##8af281}{#1}	
+\greenC	construct	\textcolor{##74cf70}{#1}	
+\greenD	construct	\textcolor{##1fab54}{#1}	
+\greenE	construct	\textcolor{##0d923f}{#1}	
+\gvertneqq	construct	\html@mathml{\@gvertneqq}{≩}	
+\hArr	alias	\Leftrightarrow	\Leftrightarrow
+\harr	alias	\leftrightarrow	\leftrightarrow
+\hearts	alias	\heartsuit	\heartsuit
+\hspace	construct	\@ifstar\@hspacer\@hspace	
+\iff	construct	\DOTSB\;\Longleftrightarrow\;	
+\image	alias	\Im	\Im
+\imath	construct	\html@mathml{\@imath}{ı}	
+\impliedby	construct	\DOTSB\;\Longleftarrow\;	
+\implies	construct	\DOTSB\;\Longrightarrow\;	
+\infin	alias	\infty	\infty
+\injlim	operator	\DOTSB\operatorname*{inj\,lim}	
+\isin	alias	\in	\in
+\jmath	construct	\html@mathml{\@jmath}{ȷ}	
+\kaBlue	construct	\textcolor{##314453}{#1}	
+\kaGreen	construct	\textcolor{##71B307}{#1}	
+\ket	construct	\mathinner{|{#1}\rangle}	
+\lArr	alias	\Leftarrow	\Leftarrow
+\lBrace	construct	\html@mathml{\mathopen{\{\mkern-3.2mu[}}{\mathopen{\char`⦃}}	
+\lang	alias	\langle	\langle
+\larr	alias	\leftarrow	\leftarrow
+\liminf	operator	\DOTSB\operatorname*{lim\,inf}	
+\limsup	operator	\DOTSB\operatorname*{lim\,sup}	
+\llap	construct	\mathllap{\textrm{#1}}	
+\llbracket	construct	\html@mathml{\mathopen{[\mkern-3.2mu[}}{\mathopen{\char`⟦}}	
+\llcorner	operator	\html@mathml{\@llcorner}{\mathop{\char"231e}}	
+\lq	construct	`	
+\lrArr	alias	\Leftrightarrow	\Leftrightarrow
+\lrarr	alias	\leftrightarrow	\leftrightarrow
+\lrcorner	operator	\html@mathml{\@lrcorner}{\mathop{\char"231f}}	
+\lvertneqq	construct	\html@mathml{\@lvertneqq}{≨}	
+\mapsfrom	construct	\html@mathml{\mathrel{\mathreflectbox{\mapsto}}}{\mathrel{\char`↤}}	
+\maroonA	construct	\textcolor{##ffbde0}{#1}	
+\maroonB	construct	\textcolor{##ff92c6}{#1}	
+\maroonC	construct	\textcolor{##ed5fa6}{#1}	
+\maroonD	construct	\textcolor{##ca337c}{#1}	
+\maroonE	construct	\textcolor{##9e034e}{#1}	
+\mathstrut	construct	\vphantom{(}	
+\medspace	construct	\:	
+\message	contextual		
+\mintA	construct	\textcolor{##f5f9e8}{#1}	
+\mintB	construct	\textcolor{##edf2df}{#1}	
+\mintC	construct	\textcolor{##e0e5cc}{#1}	
+\minuscolon	alias	\eqcolon	\eqcolon
+\minuscoloncolon	alias	\Eqcolon	\Eqcolon
+\minuso	construct	\mathbin{\html@mathml{{\mathrlap{\mathchoice{\kern{0.145em}}{\kern{0.145em}}{\kern{0.1015em}}{\kern{0.0725em}}\circ}{-}}}{\char`⦵}}	
+\mod	construct	\allowbreak\mathchoice{\mkern18mu}{\mkern12mu}{\mkern12mu}{\mkern12mu}{\rm mod}\,\,#1	
+\natnums	construct	\mathbb{N}	
+\ne	alias	\neq	\neq
+\negmedspace	construct	\tmspace-{4mu}{.2222em}	
+\negthickspace	construct	\tmspace-{5mu}{.277em}	
+\negthinspace	construct	\!	
+\neq	construct	\html@mathml{\mathrel{\not=}}{\mathrel{\char`≠}}	
+\newcommand	contextual		
+\newline	construct	\\\relax	
+\ngeqq	construct	\html@mathml{\@ngeqq}{≱}	
+\ngeqslant	construct	\html@mathml{\@ngeqslant}{≱}	
+\nleqq	construct	\html@mathml{\@nleqq}{≰}	
+\nleqslant	construct	\html@mathml{\@nleqslant}{≰}	
+\noexpand	contextual		
+\not	construct	\html@mathml{\mathrel{\mathrlap\@not}\nobreak}{\char"338}	
+\notin	construct	\html@mathml{\mathrel{{\in}\mathllap{/\mskip1mu}}}{\mathrel{\char`∉}}	
+\notni	construct	\html@mathml{\not\ni}{\mathrel{\char`∌}}	
+\nshortmid	construct	\html@mathml{\@nshortmid}{∤}	
+\nshortparallel	construct	\html@mathml{\@nshortparallel}{∦}	
+\nsubseteqq	construct	\html@mathml{\@nsubseteqq}{⊈}	
+\nsupseteqq	construct	\html@mathml{\@nsupseteqq}{⊉}	
+\orange	construct	\textcolor{##ffa500}{#1}	
+\ordinarycolon	construct	:	
+\pink	construct	\textcolor{##ff00af}{#1}	
+\plim	operator	\DOTSB\mathop{\operatorname{plim}}\limits	
+\plusmn	alias	\pm	\pm
+\pmod	construct	\pod{{\rm mod}\mkern6mu#1}	
+\pod	construct	\allowbreak\mathchoice{\mkern18mu}{\mkern8mu}{\mkern8mu}{\mkern8mu}(#1)	
+\projlim	operator	\DOTSB\operatorname*{proj\,lim}	
+\providecommand	contextual		
+\purple	construct	\textcolor{##9d38bd}{#1}	
+\purpleA	construct	\textcolor{##ddd7ff}{#1}	
+\purpleB	construct	\textcolor{##c6b9fc}{#1}	
+\purpleC	construct	\textcolor{##aa87ff}{#1}	
+\purpleD	construct	\textcolor{##7854ab}{#1}	
+\purpleE	construct	\textcolor{##543b78}{#1}	
+\qquad	construct	\hskip2em\relax	
+\quad	construct	\hskip1em\relax	
+\rArr	alias	\Rightarrow	\Rightarrow
+\rBrace	construct	\html@mathml{\mathclose{]\mkern-3.2mu\}}}{\mathclose{\char`⦄}}	
+\rang	alias	\rangle	\rangle
+\rarr	alias	\rightarrow	\rightarrow
+\ratio	alias	\vcentcolon	\vcentcolon
+\real	alias	\Re	\Re
+\reals	construct	\mathbb{R}	
+\red	construct	\textcolor{##df0030}{#1}	
+\redA	construct	\textcolor{##fca9a9}{#1}	
+\redB	construct	\textcolor{##ff8482}{#1}	
+\redC	construct	\textcolor{##f9685d}{#1}	
+\redD	construct	\textcolor{##e84d39}{#1}	
+\redE	construct	\textcolor{##bc2612}{#1}	
+\renewcommand	contextual		
+\rlap	construct	\mathrlap{\textrm{#1}}	
+\rq	construct	'	
+\rrbracket	construct	\html@mathml{\mathclose{]\mkern-3.2mu]}}{\mathclose{\char`⟧}}	
+\sdot	alias	\cdot	\cdot
+\sect	alias	\S	\S
+\set	construct	\bra@set{\{\,}{\mid}{}{\,\}}	
+\show	contextual		
+\simcolon	construct	\mathrel{\sim\mathrel{\mkern-1.2mu}\vcentcolon}	
+\simcoloncolon	construct	\mathrel{\sim\mathrel{\mkern-1.2mu}\dblcolon}	
+\spades	alias	\spadesuit	\spadesuit
+\sub	alias	\subset	\subset
+\sube	alias	\subseteq	\subseteq
+\substack	construct	\begin{subarray}{c}#1\end{subarray}	
+\supe	alias	\supseteq	\supseteq
+\tag	construct	\@ifstar\tag@literal\tag@paren	
+\tag@literal	contextual		
+\tag@paren	construct	\tag@literal{({#1})}	
+\tealA	construct	\textcolor{##94fff5}{#1}	
+\tealB	construct	\textcolor{##26edd5}{#1}	
+\tealC	construct	\textcolor{##01d1c1}{#1}	
+\tealD	construct	\textcolor{##01a995}{#1}	
+\tealE	construct	\textcolor{##208170}{#1}	
+\textcopyright	construct	\html@mathml{\textcircled{c}}{\char`©}	
+\textregistered	construct	\html@mathml{\textcircled{\scriptsize R}}{\char`®}	
+\thetasym	alias	\vartheta	\vartheta
+\thickspace	construct	\;	
+\thinspace	construct	\,	
+\tmspace	construct	\TextOrMath{\kern#1#3}{\mskip#1#2}\relax	
+\uArr	alias	\Uparrow	\Uparrow
+\uarr	alias	\uparrow	\uparrow
+\ulcorner	operator	\html@mathml{\@ulcorner}{\mathop{\char"231c}}	
+\underbar	construct	\underline{\text{#1}}	
+\urcorner	operator	\html@mathml{\@urcorner}{\mathop{\char"231d}}	
+\varDelta	construct	\mathit{\Delta}	
+\varGamma	construct	\mathit{\Gamma}	
+\varLambda	construct	\mathit{\Lambda}	
+\varOmega	construct	\mathit{\Omega}	
+\varPhi	construct	\mathit{\Phi}	
+\varPi	construct	\mathit{\Pi}	
+\varPsi	construct	\mathit{\Psi}	
+\varSigma	construct	\mathit{\Sigma}	
+\varTheta	construct	\mathit{\Theta}	
+\varUpsilon	construct	\mathit{\Upsilon}	
+\varXi	construct	\mathit{\Xi}	
+\varcoppa	construct	\mbox{\coppa}	
+\varinjlim	operator	\DOTSB\operatorname*{\underrightarrow{lim}}	
+\varliminf	operator	\DOTSB\operatorname*{\underline{lim}}	
+\varlimsup	operator	\DOTSB\operatorname*{\overline{lim}}	
+\varprojlim	operator	\DOTSB\operatorname*{\underleftarrow{lim}}	
+\varsubsetneq	construct	\html@mathml{\@varsubsetneq}{⊊}	
+\varsubsetneqq	construct	\html@mathml{\@varsubsetneqq}{⫋}	
+\varsupsetneq	construct	\html@mathml{\@varsupsetneq}{⊋}	
+\varsupsetneqq	construct	\html@mathml{\@varsupsetneqq}{⫌}	
+\vcentcolon	operator	\mathrel{\mathop\ordinarycolon}	
+\vdots	construct	{\varvdots\rule{0pt}{15pt}}	
+\weierp	alias	\wp	\wp
+~	alias	\nobreakspace	\nobreakspace
+©	alias	\copyright	\copyright
+®	alias	\textregistered	\textregistered
+‼	construct	\mathclose{!\mkern-0.8mu!}	
+ℋ	construct	\mathscr{H}	
+ℌ	construct	\mathfrak{H}	
+ℐ	construct	\mathscr{I}	
+ℒ	construct	\mathscr{L}	
+ℛ	construct	\mathscr{R}	
+ℨ	construct	\mathfrak{Z}	
+ℬ	construct	\mathscr{B}	
+ℭ	construct	\mathfrak{C}	
+ℰ	construct	\mathscr{E}	
+ℱ	construct	\mathscr{F}	
+ℳ	construct	\mathscr{M}	
+↤	alias	\mapsfrom	\mapsfrom
+∉	alias	\notin	\notin
+∌	alias	\notni	\notni
+∷	alias	\dblcolon	\dblcolon
+∹	alias	\eqcolon	\eqcolon
+≔	alias	\coloneqq	\coloneqq
+≕	alias	\eqqcolon	\eqqcolon
+≘	construct	\html@mathml{\mathrel{=\kern{-1em}\raisebox{0.4em}{$\scriptsize\frown$}}}{\mathrel{\char`≘}}	
+≙	construct	\html@mathml{\stackrel{\tiny\wedge}{=}}{\mathrel{\char`≘}}	
+≚	construct	\html@mathml{\stackrel{\tiny\vee}{=}}{\mathrel{\char`≚}}	
+≛	construct	\html@mathml{\stackrel{\scriptsize\star}{=}}{\mathrel{\char`≛}}	
+≝	construct	\html@mathml{\stackrel{\tiny\mathrm{def}}{=}}{\mathrel{\char`≝}}	
+≞	construct	\html@mathml{\stackrel{\tiny\mathrm{m}}{=}}{\mathrel{\char`≞}}	
+≟	construct	\html@mathml{\stackrel{\tiny?}{=}}{\mathrel{\char`≟}}	
+≠	alias	\neq	\neq
+⋮	alias	\vdots	\vdots
+⌜	alias	\ulcorner	\ulcorner
+⌝	alias	\urcorner	\urcorner
+⌞	alias	\llcorner	\llcorner
+⌟	alias	\lrcorner	\lrcorner
+⟂	alias	\perp	\perp
+⟦	alias	\llbracket	\llbracket
+⟧	alias	\rrbracket	\rrbracket
+⦃	alias	\lBrace	\lBrace
+⦄	alias	\rBrace	\rBrace
+⦵	alias	\minuso	\minuso
+⩴	alias	\Coloneqq	\Coloneqq

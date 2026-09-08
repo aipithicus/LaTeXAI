@@ -29,6 +29,9 @@ lib-symb/*
 !lib-symb/README.md
 lib-katex/*
 !lib-katex/README.md
+!lib-katex/provenance.json
+!lib-katex/derived/
+!lib-katex/derived/*.tsv
 
 
 **/.snapshot**
