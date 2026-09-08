@@ -1,0 +1,148 @@
+command	kind	mode	codepoint	name	meaning	role	font	katex	source	note
+\OE	text	text	U+0152	OE				\OE	lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator; codepoint from extract \OE
+\ae	text	text	U+00E6	ae				\ae	lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator; codepoint from extract \ae
+\dh	text	text	U+00F0	dh					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator; codepoint from extract \dh
+\i	text	text	U+0131	i				\i	lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator; codepoint from extract \i
+\j	text	text	U+0237	j				\j	lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator; codepoint from extract \j
+\ng	text	text	U+014B	ng					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\o	text	text	U+00F8	o				\o	lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator; codepoint from extract \o
+\oe	text	text	U+0153	oe				\oe	lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator; codepoint from extract \oe
+\textacutemacron	text	text	U+1DC4	textacutemacron					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textacutewedge	text	text	U+1DC7	textacutewedge					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textadvancing	text	text	U+031F	textadvancing					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textbabygamma	text	text	U+0264	textbabygamma					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textbardotlessj	text	text	U+025F	textbardotlessj					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textbarglotstop	text	text	U+02A1	textbarglotstop					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textbari	text	text	U+0268	textbari					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textbaro	text	text	U+0275	textbaro					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textbarrevglotstop	text	text	U+02A2	textbarrevglotstop					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textbaru	text	text	U+0289	textbaru					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textbeltl	text	text	U+026C	textbeltl					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textbeta	text	text	U+03B2	textbeta				\beta	lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textbottomtiebar	text	text	U+203F	textbottomtiebar					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textbrevemacron	text	text	U+1DCB	textbrevemacron					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textbullseye	text	text	U+0298	textbullseye					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textceltpal	text	text	U+02B9	textceltpal					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textchi	text	text	U+03C7	textchi				\chi	lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textcloseepsilon	text	text	U+029A	textcloseepsilon					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textcloserevepsilon	text	text	U+025E	textcloserevepsilon					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textcorner	text	text	U+02FA	textcorner					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textcrh	text	text	U+0127	textcrh					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textctc	text	text	U+0255	textctc					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textctj	text	text	U+029D	textctj					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textctz	text	text	U+0291	textctz					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textdotbreve	text	text	U+0310	textdotbreve					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textdoublebarpipe	text	text	U+01C2	textdoublebarpipe					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textdoublepipe	text	text	U+01C1	textdoublepipe					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textdoublevbaraccent	text	text	U+030E	textdoublevbaraccent					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textdoublevertline	text	text	U+2016	textdoublevertline					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textdownstep	text	text	U+2193	textdownstep				\downarrow	lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textdyoghlig	text	text	U+02A4	textdyoghlig					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textepsilon	text	text	U+025B	textepsilon					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textesh	text	text	U+0283	textesh					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textfallrise	text	text	U+02E9	textfallrise					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textfishhookr	text	text	U+027E	textfishhookr					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textgamma	text	text	U+0263	textgamma					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textglotstop	text	text	U+0294	textglotstop					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textgravedot	text	text	U+0340	textgravedot					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textgravemacron	text	text	U+1DC5	textgravemacron					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\texthalflength	text	text	U+02D1	texthalflength					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\texthardsign	text	text	U+02E1	texthardsign					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\texthighrise	text	text	U+02E6	texthighrise					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\texthtb	text	text	U+0253	texthtb					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\texthtbardotlessj	text	text	U+0284	texthtbardotlessj					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\texthtc	text	text	U+0188	texthtc					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\texthtd	text	text	U+0257	texthtd					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\texthtg	text	text	U+0260	texthtg					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\texthth	text	text	U+0266	texthth					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\texththeng	text	text	U+0267	texththeng					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\texthtscg	text	text	U+029B	texthtscg					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\texthvlig	text	text	U+0195	texthvlig					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textinvscr	text	text	U+0281	textinvscr					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textinvsubbridge	text	text	U+033A	textinvsubbridge					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textlengthmark	text	text	U+02D0	textlengthmark					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textlhookt	text	text	U+01AB	textlhookt					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textlowering	text	text	U+031E	textlowering					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textlowrise	text	text	U+02E8	textlowrise					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textltailm	text	text	U+0271	textltailm					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textltailn	text	text	U+0272	textltailn					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textltilde	text	text	U+026B	textltilde					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textlyoghlig	text	text	U+026E	textlyoghlig					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textopeno	text	text	U+0254	textopeno					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textovercross	text	text	U+033D	textovercross					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textoverw	text	text	U+030B	textoverw					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textphi	text	text	U+0278	textphi					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textpipe	text	text	U+01C0	textpipe					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textpolhook	text	text	U+0328	textpolhook					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textprimstress	text	text	U+02C8	textprimstress					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textraising	text	text	U+031D	textraising					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textramshorns	text	text	U+0264	textramshorns					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textretracting	text	text	U+031E	textretracting					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textreve	text	text	U+0258	textreve					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textrevepsilon	text	text	U+025C	textrevepsilon					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textrevglotstop	text	text	U+0295	textrevglotstop					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textrhookrevepsilon	text	text	U+025D	textrhookrevepsilon					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textrhookschwa	text	text	U+025A	textrhookschwa					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textrhoticity	text	text	U+02DE	textrhoticity					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textrisefall	text	text	U+02E5	textrisefall					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textroundcap	text	text	U+0311	textroundcap					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textrtaild	text	text	U+0256	textrtaild					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textrtaill	text	text	U+026D	textrtaill					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textrtailn	text	text	U+0273	textrtailn					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textrtailr	text	text	U+027D	textrtailr					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textrtails	text	text	U+0282	textrtails					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textrtailt	text	text	U+0288	textrtailt					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textrtailz	text	text	U+0290	textrtailz					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textsca	text	text	U+1D00	textsca					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textscb	text	text	U+0253	textscb					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textscg	text	text	U+0262	textscg					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textsch	text	text	U+0286	textsch					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textschwa	text	text	U+0259	textschwa					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textsci	text	text	U+026A	textsci					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textscn	text	text	U+0274	textscn					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textscoelig	text	text	U+0276	textscoelig					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textscr	text	text	U+0280	textscr					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textscripta	text	text	U+0251	textscripta					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textscriptg	text	text	U+0261	textscriptg					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textscriptv	text	text	U+028B	textscriptv					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textscy	text	text	U+028F	textscy					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textseagull	text	text	U+033C	textseagull					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textsecstress	text	text	U+02CC	textsecstress					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textsoftsign	text	text	U+02B2	textsoftsign					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textstretchc	text	text	U+0297	textstretchc					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textsubacute	text	text	U+0317	textsubacute					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textsubarch	text	text	U+032F	textsubarch					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textsubbar	text	text	U+0320	textsubbar					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textsubbridge	text	text	U+032A	textsubbridge					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textsubcircum	text	text	U+032D	textsubcircum					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textsubdot	text	text	U+0323	textsubdot					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textsubgrave	text	text	U+0316	textsubgrave					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textsublhalfring	text	text	U+0319	textsublhalfring					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textsubrhalfring	text	text	U+031C	textsubrhalfring					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textsubring	text	text	U+0325	textsubring					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textsubsquare	text	text	U+033B	textsubsquare					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textsubtilde	text	text	U+0330	textsubtilde					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textsubumlaut	text	text	U+0324	textsubumlaut					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textsubwedge	text	text	U+032C	textsubwedge					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textsuperimposetilde	text	text	U+0334	textsuperimposetilde					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textsyllabic	text	text	U+0329	textsyllabic					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\texttheta	text	text	U+03B8	texttheta				\theta	lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textthorn	text	text	U+00FE	textthorn					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\texttildedot	text	text	U+1DC0	texttildedot					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textturna	text	text	U+0250	textturna					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textturnh	text	text	U+0265	textturnh					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textturnk	text	text	U+029E	textturnk					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textturnm	text	text	U+026F	textturnm					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textturnmrleg	text	text	U+0270	textturnmrleg					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textturnr	text	text	U+0279	textturnr					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textturnrrtail	text	text	U+027B	textturnrrtail					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textturnscripta	text	text	U+0252	textturnscripta					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textturnv	text	text	U+028C	textturnv					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textturnw	text	text	U+028D	textturnw					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textturny	text	text	U+028E	textturny					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textupsilon	text	text	U+028A	textupsilon					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textupstep	text	text	U+2191	textupstep				\uparrow	lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textvbaraccent	text	text	U+030D	textvbaraccent					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textvertline	text	text	U+007C	textvertline				\textbar	lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\textyogh	text	text	U+0292	textyogh					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator
+\th	text	text	U+00FE	th					lib-symb/tipa/tex/latex/tipa/t3enc.def	tipa command; codepoint filled from T3 map or curator; codepoint from extract \th
