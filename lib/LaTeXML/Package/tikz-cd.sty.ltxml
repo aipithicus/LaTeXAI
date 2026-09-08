@@ -17,13 +17,14 @@
 # not already provided it) for the bounded layout no-ops below. Loading it
 # does not expose TikZ's unrelated surface.
 # Covers the tikzcd matrix, including standalone use outside math (wrapped in
-# ltx:Math, not a numbered equation), arrow/ar bracket syntax, the twelve
-# DIR_MAP directions, one quoted math label with prime/swap, numeric from/to,
-# and the style branches listed below. Case-insensitive direction shortcuts
-# are an existing fork extension. Bends, valued and bare shift left/right, a
-# closed set of xcolor names, and decorations retain cd:style traces; exact
-# path geometry, color rendering, and orientation of composite glyphs are not
-# rendered.
+# ltx:Math, not a numbered equation), arrow/ar bracket syntax, nonempty
+# r/l/u/d direction strings (cd:dir is the source spelling; the twelve DIR_MAP
+# keys keep their glyphs, other chains use net displacement), one quoted math
+# label with prime/swap, numeric from/to, and the style branches listed below.
+# Case-insensitive direction shortcuts are an existing fork extension. Bends,
+# valued and bare shift left/right, a closed set of xcolor names, and
+# decorations retain cd:style traces; exact path geometry, color rendering,
+# and orientation of composite glyphs are not rendered.
 # Dense adjacent edges can retain explicit parser residue. Endpoint resolution
 # keeps the existing explicit-to precedence and direction-relative-to-from
 # convention; general source-order routing semantics remain a design follow-up.
@@ -339,9 +340,11 @@ sub parse_tikzcd_arrow_options {
       next;
     }
 
-    # Direction shortcut
+    # Direction: any nonempty r/l/u/d chain, including the twelve DIR_MAP keys
+    # and aliases such as rd/ru or longer walks (rrdd, rrr). cd:dir keeps the
+    # source spelling; routing walks the lowercased steps.
     my $low = lc($item_str);
-    if (exists $DIR_MAP{$low}) {
+    if ($low =~ /^[ruld]+$/) {
       $res{direction} = $low;
       $res{dir} = $item_str;
       $has_target = 1;
@@ -439,8 +442,7 @@ sub parse_tikzcd_arrow_options {
 
   # Assign default direction arrow characters if not overridden by style
   if (!defined $res{arrow_char}) {
-    my $d = $res{direction} || 'r';
-    my $info = $DIR_MAP{$d} || $DIR_MAP{'r'};
+    my $info = tikzcd_direction_info($res{direction} || 'r');
     $res{arrow_cs}   = $info->{cs};
     $res{arrow_char} = $info->{char};
     $res{meaning}    = $info->{meaning} unless defined $res{meaning};
@@ -472,6 +474,32 @@ sub resolve_tikzcd_direction {
   }
   return if $row < 1 || $column < 1;
   return "$row-$column"; }
+
+# Glyph for a direction string. Named DIR_MAP keys keep their existing
+# arrows; other r/l/u/d chains use net displacement (rd and dr share searrow;
+# rrr is a long right arrow).
+sub tikzcd_direction_info {
+  my ($direction) = @_;
+  return $DIR_MAP{$direction} if $direction && $DIR_MAP{$direction};
+  return $DIR_MAP{'r'} unless defined $direction && $direction =~ /^[ruld]+$/;
+  my ($row, $col) = (0, 0);
+  foreach my $step (split('', $direction)) {
+    if    ($step eq 'r') { $col++; }
+    elsif ($step eq 'l') { $col--; }
+    elsif ($step eq 'u') { $row--; }
+    elsif ($step eq 'd') { $row++; }
+  }
+  my $key = 'r';
+  if ($col && $row) {
+    $key = ($row < 0 ? 'u' : 'd') . ($col < 0 ? 'l' : 'r');
+  }
+  elsif ($col) {
+    $key = abs($col) >= 2 ? ($col > 0 ? 'rr' : 'll') : ($col > 0 ? 'r' : 'l');
+  }
+  elsif ($row) {
+    $key = abs($row) >= 2 ? ($row > 0 ? 'dd' : 'uu') : ($row > 0 ? 'd' : 'u');
+  }
+  return $DIR_MAP{$key} || $DIR_MAP{'r'}; }
 
 sub split_token_items {
   my ($tokens) = @_;

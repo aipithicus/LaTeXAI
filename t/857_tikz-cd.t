@@ -69,6 +69,35 @@ subtest 'standalone tikzcd is Math-wrapped and keeps shift/color traces' => sub 
     'no fallback kludge is accepted');
 };
 
+subtest 'r/l/u/d chains keep source spelling and numeric routes' => sub {
+  my $core = LaTeXML::Core->new(%LaTeXML::Util::Test::CORE_OPTIONS_FOR_TESTS);
+  my $dom = $core->convertFile('t/tikz-cd/chains.tex');
+  cmp_ok($core->getStatusCode, '<', 2, 'chains fixture has no engine errors');
+  my $xp = XML::LibXML::XPathContext->new($dom->getDocument);
+  $xp->registerNs(ltx => 'http://dlmf.nist.gov/LaTeXML');
+  $xp->registerNs(cd => 'http://dlmf.nist.gov/LaTeXML/cd');
+  my %expected = (
+    rd   => ['1-1', '2-2'],
+    ru   => ['2-1', '1-2'],
+    rrdd => ['1-1', '3-3'],
+    rrr  => ['1-1', '1-4'],
+  );
+  for my $dir (sort keys %expected) {
+    my ($from, $to) = @{ $expected{$dir} };
+    is($xp->findvalue('count(//ltx:XMApp[@cd:dir="' . $dir
+          . '" and @cd:from="' . $from . '" and @cd:to="' . $to . '"])'), 1,
+      "$dir keeps its source spelling and numeric route");
+  }
+  is($xp->findvalue('count(//ltx:XMApp[@cd:dir="dr"])'), 0,
+    'rd is not rewritten as dr');
+  is($xp->findvalue('count(//ltx:XMApp[@cd:dir="ur"])'), 0,
+    'ru is not rewritten as ur');
+  is($xp->findvalue('count(//ltx:Math[contains(@class,"ltx_math_unparsed")])'), 0,
+    'chain diagrams parse');
+  is($xp->findvalue('count(//*[@meaning="parse_kludge"])'), 0,
+    'no fallback kludge is accepted');
+};
+
 subtest 'unsupported requests cannot masquerade as plain arrows' => sub {
   for my $body (
     '\tikzcdset{arrows=dashed}\begin{tikzcd}A\arrow[r]&B\end{tikzcd}',
@@ -77,7 +106,6 @@ subtest 'unsupported requests cannot masquerade as plain arrows' => sub {
     '\begin{tikzcd}A\arrow[r,phantom]&B\end{tikzcd}',
     '\begin{tikzcd}A\arrow[r,harpoon]&B\end{tikzcd}',
     '\begin{tikzcd}A\arrow[r,Mapsto]&B\end{tikzcd}',
-    '\begin{tikzcd}A\arrow[rrr]&B\end{tikzcd}',
     '\begin{tikzcd}A\arrow[r,labels={font=\tiny}]&B\end{tikzcd}',
     '\begin{tikzcd}A\arrow[r,"f","g"]&B\end{tikzcd}',
     '\begin{tikzcd}A\arrow[r,"f"{description}]&B\end{tikzcd}',
