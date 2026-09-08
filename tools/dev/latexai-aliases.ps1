@@ -25,6 +25,7 @@ $script:LaTeXAIGen  = Join-Path $script:LaTeXAIRoot 'tools\dev\generate.pl'
 $script:LaTeXAICtan = Join-Path $script:LaTeXAIRoot 'tools\dev\fetch-ctan.pl'
 $script:LaTeXAIGold = Join-Path $script:LaTeXAIRoot 'tools\dev\golden.pl'
 $script:LaTeXAIKatex = Join-Path $script:LaTeXAIRoot 'tools\dev\vendor-katex.pl'
+$script:LaTeXAISymb  = Join-Path $script:LaTeXAIRoot 'tools\dev\symbind.pl'
 
 $script:PerlRoot = $env:PERL_ROOT
 if (-not $script:PerlRoot -and $env:PERL_HOME) {
@@ -102,6 +103,9 @@ function Invoke-LaTeXAIGolden { & $script:StrawberryPerl $script:LaTeXAIGold @ar
 # Vendor a pinned KaTeX clone into lib-katex/ and derive the reference tables.
 function Invoke-LaTeXAIVendorKatex { & $script:StrawberryPerl $script:LaTeXAIKatex @args }
 
+# Extract, author, seed, check, or generate notation tables under lib-symb/.
+function Invoke-LaTeXAISymbind { & $script:StrawberryPerl $script:LaTeXAISymb @args }
+
 # Quick math probe.
 function Test-LaTeXMLMath {
     param(
@@ -130,6 +134,7 @@ function Get-LaTeXAIAliases {
         'lctan' = 'Invoke-LaTeXAIFetchCtan' # perl tools/dev/fetch-ctan.pl [opts] <pkg>...
         'lgold'  = 'Invoke-LaTeXAIGolden'     # perl tools/dev/golden.pl [--force] t/<suite>/<case>.tex
         'lkatex' = 'Invoke-LaTeXAIVendorKatex' # perl tools/dev/vendor-katex.pl --clone|--restore|--derive|--check
+        'lsymb'  = 'Invoke-LaTeXAISymbind'     # perl tools/dev/symbind.pl --extract|--author|--seed-katex|--check|--generate
         'lrun'   = 'New-LaTeXAIRun'           # start a named run: logs group under temp/logs/<stamp>/
         'lmath'  = 'Test-LaTeXMLMath'         # probe a math literal
     }

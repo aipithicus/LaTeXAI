@@ -72,9 +72,9 @@ Every entry under `lib-ctan/` satisfies the **entry rule**: it is data the pool 
 
 An entry is named by its CTAN id and cut from one vendoring unit; the archive and revision are recorded in its provenance, and two entries cut from the same archive pin the same revision. Kernel files that CTAN does not catalogue are members of an entry named for their archive (`latex`, `graphics`) and are never entries of their own. A dependency a raw package requires is its own entry, marked in provenance as requested by the requirer; the census reads one entry, so a binding is never written from a dependency's source.
 
-**Lockfile.** Provenance is the pin, not the trees. Each root gitignores its runfiles and tracks its README and `*/provenance.json`; `lib-ctan/` also tracks `ls-R` and `entries.txt` once they exist. A clone restores `lib-ctan/` and `lib-park/` trees with `lctan --restore` from those pins. `lib-katex/` also tracks `derived/*.tsv` (the tables consumers read) and restores copied sources with `lkatex --restore --clone` from a KaTeX checkout at the provenance tag and commit.
+**Lockfile.** Provenance is the pin, not the trees. Each root gitignores its runfiles and tracks its README and `*/provenance.json`; `lib-ctan/` also tracks `ls-R` and `entries.txt` once they exist. A clone restores `lib-ctan/` and `lib-park/` trees with `lctan --restore` from those pins. `lib-katex/` also tracks `derived/*.tsv` (the tables consumers read) and restores copied sources with `lkatex --restore --clone` from a KaTeX checkout at the provenance tag and commit. `lib-symb/` also tracks `symbols.tsv` (the curated tables a notation binding is generated from) and restores TeX trees with `lctan --restore --outdir=lib-symb`.
 
-Status (2026-09-08): `lib-ctan/` is indexed (`ls-R` committed with provenance); the kpsewhich shim answers from it. `lib-park/` holds packages with no current demand. `lib-symb/` remains specified. `lib-katex/` holds derived tables at the KaTeX tag recorded in its provenance.
+Status (2026-09-08): `lib-ctan/` is indexed (`ls-R` committed with provenance); the kpsewhich shim answers from it. `lib-park/` holds packages with no current demand. `lib-symb/` holds extracted kernel and native tables plus generated-package tables. `lib-katex/` holds derived tables at the KaTeX tag recorded in its provenance.
 
 ## 6. Layers, and what gets a binding
 
@@ -141,7 +141,7 @@ Goldens and receipts answer different questions. A golden says a binding does wh
 | write a fixture and read its golden | [`testing.md`](testing.md) |
 | project an IR manuscript and compare traversal strategies | [`markdown-projection.md`](markdown-projection.md) |
 | run the corpus | the launcher outside tracked files, per codex-scientiae's worker contract; runs land under codex-scientiae's `artifacts/latexai/<stamp>/` |
-| build a notation table and its binding | not yet documented; the recipe gains a section when the table tooling lands |
+| build a notation table and its binding | `lsymb` (`tools/dev/symbind.pl`); tables in `lib-symb/` (`_kernel/`, `_latexml/<pkg>/`, or `<pkg>/`) |
 | vendor or restore the KaTeX reference tables | `lkatex` (`tools/dev/vendor-katex.pl`); pin is `lib-katex/provenance.json` |
 | build or rebuild the texmf index, restore pins, fetch archive members | [`recipes/fetch-ctan.md`](recipes/fetch-ctan.md) (`lctan --index`, `--check`, `--from`, `--restore`) |
 

@@ -27,6 +27,14 @@ lib-park/*/*
 !lib-park/*/provenance.json
 lib-symb/*
 !lib-symb/README.md
+!lib-symb/*/
+lib-symb/*/*
+!lib-symb/*/provenance.json
+!lib-symb/*/symbols.tsv
+!lib-symb/_latexml/*/
+lib-symb/_latexml/*/*
+!lib-symb/_latexml/*/provenance.json
+!lib-symb/_latexml/*/symbols.tsv
 lib-katex/*
 !lib-katex/README.md
 !lib-katex/provenance.json

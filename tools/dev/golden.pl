@@ -20,7 +20,10 @@
 #     (a \label digested inside a hook and dropped; every \ref to it dangles);
 #   - an ltx:ERROR element (a construct the binding left undefined);
 #   - an engine-internal \lx@... control sequence in text or a tex attribute
-#     (a binding's private macro leaked into math or running text).
+#     (a binding's private macro leaked into math or running text);
+#   - a private-use character (U+E000–U+F8FF, planes 15 and 16) or a leaked
+#     font-slot construct (class ltx_nounicode: an unmapped glyph emitted as
+#     the control sequence rather than a codepoint).
 # Each check corresponds to a golden that was committed with the defect in it.
 # --lenient reports the lint and writes anyway, for a case that exercises the
 # failure on purpose. --check digests and lints without writing, for
@@ -73,6 +76,27 @@ sub lint_golden {
     (my $snippet = $node->isa('XML::LibXML::Attr') ? $node->value : $node->data) =~ s/\s+/ /g;
     $snippet = substr($snippet, 0, 80) . '...' if length($snippet) > 80;
     push(@problems, "engine-internal \\lx\@ token in $where: $snippet"); }
+  # 4. No private-use codepoints; no leaked font-slot (unmapped glyph).
+  foreach my $el ($xpc->findnodes('//*[@class]')) {
+    my $cls = $el->getAttribute('class') // '';
+    if ($cls =~ /\bltx_nounicode\b/) {
+      my $snippet = $el->textContent;
+      $snippet =~ s/\s+/ /g;
+      $snippet = substr($snippet, 0, 80) . '...' if length($snippet) > 80;
+      push(@problems, "leaked font-slot (ltx_nounicode) on " . $el->nodeName . ": $snippet"); } }
+  foreach my $node ($xpc->findnodes('//text() | //@*')) {
+    my $is_attr = $node->isa('XML::LibXML::Attr');
+    next if $is_attr && $node->nodeName eq 'class';    # nounicode already reported
+    my $text = $is_attr ? $node->value : $node->data;
+    next unless defined $text && $text =~ /\p{Co}/;
+    my %seen;
+    while ($text =~ /(\p{Co})/g) {
+      my $cp = sprintf('U+%04X', ord($1));
+      next if $seen{$cp}++;
+      my $where = $is_attr
+        ? '@' . $node->nodeName . ' on ' . $node->ownerElement->nodeName
+        : 'text in ' . ($node->parentNode ? $node->parentNode->nodeName : '?');
+      push(@problems, "private-use $cp in $where"); } }
   return @problems; }
 
 my $failures = 0;
