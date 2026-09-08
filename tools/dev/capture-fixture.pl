@@ -16,13 +16,14 @@ use LaTeXML::Core;
 my $golden = 0;
 my $capture = 1;
 my $noparse = 0;
-GetOptions('golden' => \$golden, 'capture!' => \$capture, 'noparse' => \$noparse)
-  or die "Usage: $0 [--golden] [--no-capture] [--noparse] input.tex output.xml\n";
+my $autoload = 0;
+GetOptions('golden' => \$golden, 'capture!' => \$capture, 'noparse' => \$noparse, 'autoload' => \$autoload)
+  or die "Usage: $0 [--golden] [--no-capture] [--noparse] [--autoload] input.tex output.xml\n";
 my ($input, $output) = @ARGV;
 die "Usage: $0 [--golden] input.tex output.xml\n" unless defined $output && @ARGV == 2;
 $input = abs_path($input) or die "Cannot resolve input\n";
 my $core = LaTeXML::Core->new(
-  preload => ['LaTeX.pool'], searchpaths => [dirname($input)], capture => $capture, nomathparse => $noparse,
+  preload => $autoload ? [] : ['LaTeX.pool'], searchpaths => [dirname($input)], capture => $capture, nomathparse => $noparse,
   includecomments => 0, includepathpis => 0, verbosity => -2);
 my $document = $core->convertFile($input);
 die $core->getStatusMessage . "\n" if $core->getStatusCode;

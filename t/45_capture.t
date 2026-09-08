@@ -510,6 +510,12 @@ foreach my $math (xpath($raw_input_xml)->findnodes('//ltx:Math')) {
   assert_source_bytes($raw_input_xml, $math, 'raw-input fixture math'); }
 assert_partition($raw_input_xml, 'raw-input fixture');
 
+for my $flags (['--autoload'], ['--autoload', '--no-capture']) {
+  my $auto_xml = fixture_document('raw-input', @$flags);
+  like(xpath($auto_xml)->findvalue('string(//ltx:p)'), qr/^The first token after the command is retained\./,
+    "UseRawInputEncoding autoloads LaTeX before documentclass (@$flags)");
+  is(xpath($auto_xml)->findvalue('count(//ltx:ERROR)'), 0, 'autoload emits no undefined-command residue'); }
+
 my $label_path = File::Spec->catfile($TEMP, 'label-values.xml');
 my ($label_status, $label_messages) = run_command($^X, '-I', File::Spec->catdir($ROOT, 'lib'),
   File::Spec->catfile($ROOT, 'tools', 'dev', 'capture-fixture.pl'),

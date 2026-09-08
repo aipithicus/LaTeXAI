@@ -32,7 +32,7 @@ LoadFormat('plain');
 # stuff the token back to be reexecuted.
 foreach my $ltxtrigger (qw(documentclass
   newcommand renewcommand newenvironment renewenvironment
-  NeedsTeXFormat ProvidesFile
+  NeedsTeXFormat ProvidesFile UseRawInputEncoding
   ProvidesPackage RequirePackage PassOptionsToPackage
   makeatletter makeatother
   typeout begin listfiles nofiles)) {
