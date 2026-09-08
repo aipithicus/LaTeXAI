@@ -46,6 +46,29 @@ subtest 'all directions survive dense-cell parser residue' => sub {
     'no fallback kludge is accepted');
 };
 
+subtest 'standalone tikzcd is Math-wrapped and keeps shift/color traces' => sub {
+  my $core = LaTeXML::Core->new(%LaTeXML::Util::Test::CORE_OPTIONS_FOR_TESTS);
+  my $dom = $core->convertFile('t/tikz-cd/standalone.tex');
+  cmp_ok($core->getStatusCode, '<', 2, 'standalone fixture has no engine errors');
+  my $xp = XML::LibXML::XPathContext->new($dom->getDocument);
+  $xp->registerNs(ltx => 'http://dlmf.nist.gov/LaTeXML');
+  $xp->registerNs(cd => 'http://dlmf.nist.gov/LaTeXML/cd');
+  is($xp->findvalue('count(//ltx:XMArray)'), 2, 'two diagrams');
+  is($xp->findvalue('count(//ltx:XMArray[not(ancestor::ltx:Math)])'), 0,
+    'no diagram XMArray outside Math');
+  is($xp->findvalue('count(//ltx:equation)'), 0,
+    'standalone diagrams are not numbered equations');
+  is($xp->findvalue('count(//ltx:Math)'), 2, 'each standalone diagram is one Math');
+  is($xp->findvalue('count(//ltx:XMApp[@cd:from and contains(@cd:style,"shift left") and contains(@cd:style,"red")])'), 1,
+    'bare shift left and red share an edge style trace');
+  is($xp->findvalue('count(//ltx:XMApp[@cd:from and contains(@cd:style,"shift right") and contains(@cd:style,"blue")])'), 1,
+    'bare shift right and blue share an edge style trace');
+  is($xp->findvalue('count(//ltx:Math[contains(@class,"ltx_math_unparsed")])'), 0,
+    'two parallel edges parse without residue');
+  is($xp->findvalue('count(//*[@meaning="parse_kludge"])'), 0,
+    'no fallback kludge is accepted');
+};
+
 subtest 'unsupported requests cannot masquerade as plain arrows' => sub {
   for my $body (
     '\tikzcdset{arrows=dashed}\begin{tikzcd}A\arrow[r]&B\end{tikzcd}',

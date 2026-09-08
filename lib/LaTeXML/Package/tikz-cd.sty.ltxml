@@ -16,11 +16,14 @@
 # executes no raw TikZ, and defines tikzcdset (and tikzset only when TikZ has
 # not already provided it) for the bounded layout no-ops below. Loading it
 # does not expose TikZ's unrelated surface.
-# Covers the tikzcd matrix, arrow/ar bracket syntax, the twelve DIR_MAP
-# directions, one quoted math label with prime/swap, numeric from/to, and
-# the style branches listed below. Case-insensitive direction shortcuts are
-# an existing fork extension. Bends/shifts/decorations retain cd:style traces;
-# exact path geometry and orientation of composite glyphs are not rendered.
+# Covers the tikzcd matrix, including standalone use outside math (wrapped in
+# ltx:Math, not a numbered equation), arrow/ar bracket syntax, the twelve
+# DIR_MAP directions, one quoted math label with prime/swap, numeric from/to,
+# and the style branches listed below. Case-insensitive direction shortcuts
+# are an existing fork extension. Bends, valued and bare shift left/right, a
+# closed set of xcolor names, and decorations retain cd:style traces; exact
+# path geometry, color rendering, and orientation of composite glyphs are not
+# rendered.
 # Dense adjacent edges can retain explicit parser residue. Endpoint resolution
 # keeps the existing explicit-to precedence and direction-relative-to-from
 # convention; general source-order routing semantics remain a design follow-up.
@@ -109,11 +112,16 @@ DefParameterType('OptionalTikzCdOptions', sub {
 
 # Define \tikzcd environment / macro
 # Syntax: \begin{tikzcd}[<options>] ... \end{tikzcd}
+# The matrix constructors emit XM* and so require math. tikzcd itself is a
+# display object and is often used in center/figure without an outer $ or \[.
+# Wrap only that text-mode case, and do not use \[ (a numbered equation).
+our @TIKZCD_ENSURE_MATH;
+
 DefMacro('\tikzcd OptionalTikzCdOptions', sub {
     my ($gullet, $options) = @_;
     check_tikzcd_layout_options($options);
     my $name = 'tikzcd';
-    my $bindings = Tokens(
+    my @toks = (
       T_CS('\lx@gen@matrix@bindings'), T_BEGIN,
       Explode("name=$name,datameaning=commutative-diagram"),
       T_END,
@@ -123,10 +131,21 @@ DefMacro('\tikzcd OptionalTikzCdOptions', sub {
       T_END,
       T_CS('\lx@begin@alignment')
     );
-    return $bindings;
+    if (LookupValue('IN_MATH')) {
+      push @TIKZCD_ENSURE_MATH, 0;
+    }
+    else {
+      push @TIKZCD_ENSURE_MATH, 1;
+      unshift @toks, T_CS('\lx@begin@inline@math');
+    }
+    return Tokens(@toks);
 });
 
-DefMacro('\endtikzcd', '\lx@end@alignment\lx@end@gen@matrix');
+DefMacro('\endtikzcd', sub {
+    my @toks = (T_CS('\lx@end@alignment'), T_CS('\lx@end@gen@matrix'));
+    push @toks, T_CS('\\lx@end@inline@math') if pop @TIKZCD_ENSURE_MATH;
+    return Tokens(@toks);
+});
 
 DefPrimitive('\lx@tikzcd@bindings', sub {
     Let("\\\\", '\lx@alignment@newline@noskip');
@@ -209,6 +228,13 @@ DefConstructor('\lx@tikzcd@arrow OptionalTikzCdOptions', sub {
     }
     return;
   }
+);
+
+# xcolor's core named colors. Traced as cd:style; not painted.
+our %TIKZCD_COLOR = map { $_ => 1 } qw(
+  red green blue cyan magenta yellow
+  black gray white darkgray lightgray
+  brown lime olive orange pink purple teal violet
 );
 
 # Direction map to character and control sequence
@@ -388,6 +414,14 @@ sub parse_tikzcd_arrow_options {
       $res{arrow_char} = "\x{21A6}";
       $res{arrow_cs} = '\mapsto';
       push(@styles, 'mapsto');
+    }
+    elsif ($low eq 'shift left' || $low eq 'shift right') {
+      # Package default (shift left=+0.56ex); the flag form is not a no-op.
+      $res{shift} = $low;
+      push(@styles, $low);
+    }
+    elsif ($TIKZCD_COLOR{$low}) {
+      push(@styles, $low);
     }
     else {
       Error('unsupported', 'tikzcd-arrow-option', undef,

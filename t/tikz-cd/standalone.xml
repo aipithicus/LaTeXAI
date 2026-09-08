@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="tikz-cd"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML" xmlns:cd="http://dlmf.nist.gov/LaTeXML/cd">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <p align="center"><Math mode="inline" tex="\begin{tikzcd}A\arrow[r]&amp;B\end{tikzcd}" text="commutative-diagram@(Array[[A  absent, B]])" xml:id="m1">
+        <XMath>
+          <XMDual>
+            <XMApp>
+              <XMTok meaning="commutative-diagram"/>
+              <XMRef idref="m1.1"/>
+            </XMApp>
+            <XMArray xml:id="m1.1">
+              <XMRow>
+                <XMCell align="center">
+                  <XMApp>
+                    <XMApp cd:dir="r" cd:from="1-1" cd:labelpos="above" cd:style="plain" cd:to="1-2" role="ARROW">
+                      <XMTok font="italic" meaning="rightarrow" name="rightarrow" role="ARROW" stretchy="true">→</XMTok>
+                    </XMApp>
+                    <XMTok font="italic" role="UNKNOWN">A</XMTok>
+                    <XMTok meaning="absent"/>
+                  </XMApp>
+                </XMCell>
+                <XMCell align="center">
+                  <XMTok font="italic" role="UNKNOWN">B</XMTok>
+                </XMCell>
+              </XMRow>
+            </XMArray>
+          </XMDual>
+        </XMath>
+      </Math></p>
+  </para>
+  <para xml:id="p2">
+    <p><Math mode="inline" tex="\begin{tikzcd}A\arrow[r, red, shift left]\arrow[r, blue, shift right]&amp;B\end{ti%&#10;kzcd}" text="commutative-diagram@(Array[[A  (), B]])" xml:id="p2.m1">
+        <XMath>
+          <XMDual>
+            <XMApp>
+              <XMTok meaning="commutative-diagram"/>
+              <XMRef idref="p2.m1.1"/>
+            </XMApp>
+            <XMArray xml:id="p2.m1.1">
+              <XMRow>
+                <XMCell align="center">
+                  <XMApp>
+                    <XMApp cd:dir="r" cd:from="1-1" cd:labelpos="above" cd:style="red,shift left" cd:to="1-2" role="ARROW">
+                      <XMTok font="italic" meaning="rightarrow" name="rightarrow" role="ARROW" stretchy="true">→</XMTok>
+                    </XMApp>
+                    <XMTok font="italic" role="UNKNOWN">A</XMTok>
+                    <XMApp cd:dir="r" cd:from="1-1" cd:labelpos="above" cd:style="blue,shift right" cd:to="1-2" role="ARROW">
+                      <XMTok font="italic" meaning="rightarrow" name="rightarrow" role="ARROW" stretchy="true">→</XMTok>
+                    </XMApp>
+                  </XMApp>
+                </XMCell>
+                <XMCell align="center">
+                  <XMTok font="italic" role="UNKNOWN">B</XMTok>
+                </XMCell>
+              </XMRow>
+            </XMArray>
+          </XMDual>
+        </XMath>
+      </Math></p>
+  </para>
+</document>
