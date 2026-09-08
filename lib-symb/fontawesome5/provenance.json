@@ -1,0 +1,78 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/fontawesome5",
+      "date" : "",
+      "docs" : {
+         "kind" : "directory-zip",
+         "url" : "https://mirrors.ctan.org/fonts/fontawesome5.zip"
+      },
+      "license" : [
+         "ofl",
+         "lppl1.3c"
+      ],
+      "path" : "/fonts/fontawesome5",
+      "version" : "5.15.4"
+   },
+   "fetched_at" : "2026-09-08T11:38:40Z",
+   "package" : "fontawesome5",
+   "runfiles" : [
+      "fonts/enc/dvips/fontawesome5/fa5brands0.enc",
+      "fonts/enc/dvips/fontawesome5/fa5brands1.enc",
+      "fonts/enc/dvips/fontawesome5/fa5free0.enc",
+      "fonts/enc/dvips/fontawesome5/fa5free1.enc",
+      "fonts/enc/dvips/fontawesome5/fa5free2.enc",
+      "fonts/enc/dvips/fontawesome5/fa5free3.enc",
+      "fonts/map/dvips/fontawesome5/fontawesome5.map",
+      "fonts/opentype/public/fontawesome5/FontAwesome5Brands-Regular-400.otf",
+      "fonts/opentype/public/fontawesome5/FontAwesome5Free-Regular-400.otf",
+      "fonts/opentype/public/fontawesome5/FontAwesome5Free-Solid-900.otf",
+      "fonts/tfm/public/fontawesome5/fa5brands0.tfm",
+      "fonts/tfm/public/fontawesome5/fa5brands1.tfm",
+      "fonts/tfm/public/fontawesome5/fa5free0regular.tfm",
+      "fonts/tfm/public/fontawesome5/fa5free0solid.tfm",
+      "fonts/tfm/public/fontawesome5/fa5free1regular.tfm",
+      "fonts/tfm/public/fontawesome5/fa5free1solid.tfm",
+      "fonts/tfm/public/fontawesome5/fa5free2regular.tfm",
+      "fonts/tfm/public/fontawesome5/fa5free2solid.tfm",
+      "fonts/tfm/public/fontawesome5/fa5free3regular.tfm",
+      "fonts/tfm/public/fontawesome5/fa5free3solid.tfm",
+      "fonts/type1/public/fontawesome5/FontAwesome5Brands-Regular.pfb",
+      "fonts/type1/public/fontawesome5/FontAwesome5Free-Regular.pfb",
+      "fonts/type1/public/fontawesome5/FontAwesome5Free-Solid.pfb",
+      "tex/latex/fontawesome5/fontawesome5-generic-helper.sty",
+      "tex/latex/fontawesome5/fontawesome5-mapping.def",
+      "tex/latex/fontawesome5/fontawesome5-utex-helper.sty",
+      "tex/latex/fontawesome5/fontawesome5.lua",
+      "tex/latex/fontawesome5/fontawesome5.sty",
+      "tex/latex/fontawesome5/tufontawesomebrands.fd",
+      "tex/latex/fontawesome5/tufontawesomefree.fd",
+      "tex/latex/fontawesome5/tufontawesomepro.fd",
+      "tex/latex/fontawesome5/ufontawesomebrands0.fd",
+      "tex/latex/fontawesome5/ufontawesomebrands1.fd",
+      "tex/latex/fontawesome5/ufontawesomefree0.fd",
+      "tex/latex/fontawesome5/ufontawesomefree1.fd",
+      "tex/latex/fontawesome5/ufontawesomefree2.fd",
+      "tex/latex/fontawesome5/ufontawesomefree3.fd"
+   ],
+   "styles" : [
+      "tex/latex/fontawesome5/fontawesome5-generic-helper.sty",
+      "tex/latex/fontawesome5/fontawesome5-mapping.def",
+      "tex/latex/fontawesome5/fontawesome5-utex-helper.sty",
+      "tex/latex/fontawesome5/fontawesome5.sty"
+   ],
+   "table" : {
+      "authored_at" : "2026-09-08T11:43:34Z",
+      "rows" : 1451,
+      "tool" : "tools/dev/symbind.pl --author"
+   },
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/fontawesome5.tar.xz",
+      "bundle" : false,
+      "bytes" : 866328,
+      "filtered" : false,
+      "package" : "fontawesome5",
+      "revision" : "77682",
+      "sha512" : "11a9100d10aefeb0b22d7f98f87f00ad4cae8efeb7c8c46c619fe94bbfe5fa240190d9b992067db2cdbbec489fc726f5272c7d80f8af2cdc6e8313b2c690530d",
+      "snapshot" : null
+   }
+}
