@@ -14,6 +14,7 @@ package LaTeXML::Package::Pool;
 use strict;
 use warnings;
 use LaTeXML::Package;
+use JSON::PP ();
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 AssignValue('plain_constructs.pool.ltxml_loaded' => undef);    # Force RELOAD!
@@ -3786,6 +3787,11 @@ DefConstructor('\lx@label Semiverbatim', sub {
       my $node   = $document->getNode;
       my %labels = map { ($_ => 1) } $label, split(/\s+/, $node->getAttribute('labels') || '');
       $document->setAttribute($node, labels => join(' ', sort keys %labels));
+      if (LookupValue('CAPTURE_PROVENANCE') && defined $props{captureLabelValue}) {
+        my $values = $node->getAttributeNS('http://dlmf.nist.gov/LaTeXML/capture', 'labelValues');
+        my $map = defined $values && length $values ? JSON::PP->new->decode($values) : {};
+        $map->{$label} = $props{captureLabelValue};
+        $document->setAttribute($node, 'capture:labelValues' => JSON::PP->new->canonical->encode($map)); }
       $document->setNode($savenode); } },
   reversion => sub {    # disappear from tex/content-tex strings, but NOT in general reversion!
     (defined $LaTeXML::DUAL_BRANCH ? () : Tokens(T_CS('\label'), T_BEGIN, Revert($_[1]), T_END)); },
@@ -3799,7 +3805,9 @@ DefConstructor('\lx@label Semiverbatim', sub {
       unshift(@{ LookupValue('scopes_for_counter:' . $ctr) }, $scope);
       $STATE->activateScope($scope);
       $_[0]->beginMode('restricted_horizontal');
-      AssignValue('LABEL@' . $label, DigestText(T_CS('\@currentlabel')), 'global');
+      my $value = DigestText(T_CS('\@currentlabel'));
+      AssignValue('LABEL@' . $label, $value, 'global');
+      $_[1]->setProperty(captureLabelValue => ToString($value)) if LookupValue('CAPTURE_PROVENANCE');
       $_[0]->endMode('restricted_horizontal'); }
     return; });
 Let('\label', '\lx@label');
@@ -5959,4 +5967,3 @@ EOL
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 1;
-

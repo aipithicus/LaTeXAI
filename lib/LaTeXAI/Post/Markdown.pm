@@ -4,6 +4,7 @@ use warnings;
 use utf8;
 use Time::HiRes qw(time);
 use File::Spec;
+use JSON::PP ();
 
 our $VERSION = '0.1';
 my $LTX = 'http://dlmf.nist.gov/LaTeXML';
@@ -205,6 +206,12 @@ sub _register {
   return unless $id || $node->hasAttribute('labels') || $SECTION{$name}
     || $name =~ /^(document|abstract|bibliography|bibitem|note|theorem|proof|float|figure|table)$/;
   my $r = { id => $id, name => $name, tags => {} };
+  if (my $values = $node->getAttributeNS('http://dlmf.nist.gov/LaTeXML/capture', 'labelValues')) {
+    my $map = eval { JSON::PP->new->decode($values) };
+    if (ref $map eq 'HASH' && !grep { !defined $_ || ref $_ } values %$map) {
+      $r->{label_values} = $map; }
+    else { $self->_issue('invalid-label-values', $node, $values); }
+  }
   $self->{records}{$key} = $r;
   push @{$self->{record_order}}, $r;
   $self->{counters}{metadata_records}++;
@@ -443,8 +450,11 @@ sub _reference {
   my $key = $spec->{key} || '';
   my $r = $self->{targets}{$key};
   if (!$r) { push @{$self->{issues}}, { kind => 'unresolved-reference', key => $key }; return $explicit || '\[reference: ' . escape($key) . '\]'; }
-  my $text = $explicit || (($spec->{show} || '') =~ /title/ ? $self->_record_label($r) : '')
-    || $self->_label_text($r->{tags}{refnum}) || $self->_record_label($r);
+  my $text = $explicit || (($spec->{show} || '') =~ /title/ ? $self->_record_label($r) : '');
+  if (!length $text) {
+    $text = defined $r->{label_values}{$key} ? escape($r->{label_values}{$key})
+      : ($self->_label_text($r->{tags}{refnum}) || $self->_record_label($r));
+  }
   if (!length $text) {
     push @{$self->{issues}}, { kind => 'unlabeled-reference', key => $key };
     $text = '\[reference: ' . escape($key) . '\]';

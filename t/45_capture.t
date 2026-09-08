@@ -18,6 +18,8 @@ use IPC::Open3;
 use Symbol qw(gensym);
 use XML::LibXML;
 use XML::LibXML::XPathContext;
+use JSON::PP ();
+use LaTeXAI::Post::Markdown;
 
 use LaTeXML::Core;
 use LaTeXML::Core::Token;
@@ -485,6 +487,26 @@ like(xpath($raw_input_off->getDocument)->findvalue('string(//ltx:p)'),
 foreach my $math (xpath($raw_input_xml)->findnodes('//ltx:Math')) {
   assert_source_bytes($raw_input_xml, $math, 'raw-input fixture math'); }
 assert_partition($raw_input_xml, 'raw-input fixture');
+
+my $label_path = File::Spec->catfile($TEMP, 'label-values.xml');
+my ($label_status, $label_messages) = run_command($^X, '-I', File::Spec->catdir($ROOT, 'lib'),
+  File::Spec->catfile($ROOT, 'tools', 'dev', 'capture-fixture.pl'),
+  File::Spec->catfile($FIXTURES, 'label-values.tex'), $label_path);
+is($label_status, 0, 'label-value fixture converts without errors or warnings') or diag($label_messages);
+my $label_xml = XML::LibXML->load_xml(location => $label_path);
+my @labeled_items = xpath($label_xml)->findnodes('//ltx:item');
+is_deeply(JSON::PP->new->decode(cattr($labeled_items[0], 'labelValues')), { 'LABEL:plain' => '1' },
+  'plain optional item records currentlabel, not its visible Case D text');
+is_deeply(JSON::PP->new->decode(cattr($labeled_items[1], 'labelValues')),
+  { 'LABEL:custom' => 'A', 'LABEL:zero' => '0', 'LABEL:second' => 'second' },
+  'one target retains each label-time value, including zero');
+my $label_before = $label_xml->toString;
+for my $strategy (qw(deferred indexed)) {
+  my $projection = LaTeXAI::Post::Markdown->new(toc => 0)->project($label_xml, strategy => $strategy);
+  like($projection->{markdown}, qr/Case A/, "$strategy resolves the custom counter in a heading");
+  like($projection->{markdown}, qr/1; A; 0; second\./, "$strategy resolves distinct labels on shared targets"); }
+is($label_xml->toString, $label_before, 'label projection leaves the capture IR unchanged');
+validate_capture_document($label_xml, 'capture-label-values');
 
 done_testing();
 

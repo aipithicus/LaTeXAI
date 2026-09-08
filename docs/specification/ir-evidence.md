@@ -51,6 +51,8 @@ Outside math mode a font is presentation, and this rule does not apply. Prose ty
 
 ## 4. What this buys downstream
 
+Implemented label evidence uses `capture:labelValues` on the labeled element: a JSON object from each cleaned `labels` key to the text digested from `\@currentlabel` at that particular `\label`. Several labels on one target can have different values. Empty strings and `"0"` are retained. A visible optional item label is not necessarily this reference value. The Markdown consumer resolves a matching label through this map; `ltx:tags`, `refnum`, and capture-off output remain unchanged.
+
 The projection from the IR to the math register is a set of rules over the tree's roles, meanings, and fonts, weighted by E3 and checked against E1 and E2. Concretely:
 
 - `role="OPFUNCTION"` is strong evidence that a run is an operator name; the register may lower `\operatorname{tr}` to `\mathrm{tr}` and record the source form from E1 as provenance.

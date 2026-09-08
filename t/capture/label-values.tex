@@ -1,0 +1,18 @@
+\documentclass{article}
+\usepackage{enumitem}
+\newcounter{desccounter}
+\renewcommand{\thedesccounter}{\Alph{desccounter}}
+\newcommand{\descitem}[1]{\refstepcounter{desccounter}\item[Case \Alph{desccounter} #1]}
+\begin{document}
+\section{Context}
+\begin{enumerate}
+\item[Case D]\label{plain} Plain optional label.
+\descitem{custom}\label{custom} Custom counter value.
+\makeatletter
+\def\@currentlabel{0}\label{zero}
+\def\@currentlabel{second}\label{second}
+\makeatother
+\end{enumerate}
+\subsection{Case \ref{custom}}
+\ref{plain}; \ref{custom}; \ref{zero}; \ref{second}.
+\end{document}

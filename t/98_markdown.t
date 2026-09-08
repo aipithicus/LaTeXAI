@@ -149,6 +149,25 @@ is_deeply($unlabeled->{report}{issues}, [{kind => 'unlabeled-reference', key => 
   'missing reference text is distinguished from a missing target');
 
 # The repository parser returns undef for absent attributes in parsed files.
+my $captured_labels = <<'XML';
+<section><title>Case <ref labelref="LABEL:custom"/></title></section>
+<description><item xml:id="case" labels="LABEL:custom LABEL:zero LABEL:empty LABEL:syntax"
+ xmlns:capture="http://dlmf.nist.gov/LaTeXML/capture"
+ capture:labelValues='{"LABEL:custom":"D","LABEL:zero":"0","LABEL:empty":"","LABEL:syntax":"a_b"}'>
+<tags><tag>Case D (condition)</tag><tag role="refnum">wrong fallback</tag></tags><p>Body.</p></item></description>
+<p><ref labelref="LABEL:zero"/>; <ref labelref="LABEL:syntax"/>; <ref labelref="LABEL:empty"/>.</p>
+XML
+for my $strategy (qw(deferred indexed)) {
+  my $values = project($captured_labels, $strategy);
+  like($values->{markdown}, qr/## Case D/, "$strategy uses the label-time value in headings");
+  like($values->{markdown}, qr/0; a\\_b;/, "$strategy preserves zero and escapes label text");
+  is_deeply($values->{report}{issues}, [{kind => 'unlabeled-reference', key => 'LABEL:empty'}],
+    "$strategy distinguishes empty captured values from absent metadata"); }
+my $invalid_values = project('<item xml:id="bad" xmlns:capture="http://dlmf.nist.gov/LaTeXML/capture" capture:labelValues="[]"><p>Body.</p></item>');
+ok(grep($_->{kind} eq 'invalid-label-values', @{$invalid_values->{report}{issues}}),
+  'malformed label metadata is reported');
+
+# The repository parser returns undef for absent attributes in parsed files.
 my ($xmlfh, $xmlpath) = tempfile(SUFFIX => '.xml', UNLINK => 1);
 binmode $xmlfh, ':raw';
 print {$xmlfh} '<document xmlns="http://dlmf.nist.gov/LaTeXML"><title>Quiet</title><section xml:id="s"><title><tag>1</tag> Name</title><p>Body.</p></section></document>';
