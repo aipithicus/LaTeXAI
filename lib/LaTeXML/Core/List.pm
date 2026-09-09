@@ -73,6 +73,26 @@ sub unlist {
   my ($self) = @_;
   return @{ $$self{boxes} }; }
 
+# Push boxes onto an existing List in place, matching List()'s storage:
+# horizontal children splice into a horizontal parent; font from the last
+# new box that has one; locator stays with the first box.
+sub appendBoxes {
+  my ($self, @boxes) = @_;
+  my $mode = $self->getProperty('mode') || '';
+  @boxes = grep { defined $_ } @boxes;
+  return $self unless @boxes;
+  if ($mode eq 'horizontal') {
+    @boxes = map { ((ref $_ eq 'LaTeXML::Core::List')
+          && (($_->getProperty('mode') || '') eq 'horizontal')
+        ? $_->unlist : $_); } @boxes; }
+  push @{ $$self{boxes} }, @boxes;
+  my $font;
+  foreach my $bx (reverse @boxes) {
+    $font = $bx->getFont;
+    last if defined $font; }
+  $$self{properties}{font} = $font if defined $font;
+  return $self; }
+
 sub revert {
   no warnings 'recursion';
   my ($self) = @_;

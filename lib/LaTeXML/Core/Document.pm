@@ -52,7 +52,8 @@ sub new {
   # We'll set the DocType when the 1st Element gets added.
   return bless { document => $doc, node => $doc, model => $model,
     idstore    => {}, labelstore => {},
-    node_fonts => {}, node_boxes => {}, node_properties => {},
+    node_fonts => {}, node_boxes => {}, node_box_acc => {},
+    node_properties => {},
     pending    => [], progress   => 0 }, $class; }
 
 our $CONSTRUCTION_PROGRESS_QUANTUM = 500;
@@ -1907,6 +1908,11 @@ sub setNodeBox {
       delete $$self{node_boxes}{$prevboxid}; } }
   $$self{node_boxes_refs}{$boxid}++;
   $node->setAttribute(_box => $boxid);
+  # Acc keyed by node identity, not intern id: wrapNodes shares interned
+  # boxes across nodes. Reset to this single box; append/remove alias to
+  # $$list{boxes} after they intern a List for this node.
+  my $stored = ref $box ? $box : $$self{node_boxes}{$boxid};
+  $$self{node_box_acc}{ $node->unique_key } = [$stored] if $stored;
   return $boxid; }
 
 sub getNodeBox {
@@ -1917,9 +1923,28 @@ sub getNodeBox {
   if (my $boxid = $node->getAttribute('_box')) {
     return $$self{node_boxes}{$boxid}; } }
 
+# Last box the already-there check would see through unlist, without copying.
+sub _nodeBoxLast {
+  my ($origbox, $acc) = @_;
+  if (ref $origbox eq 'LaTeXML::Core::List') {
+    my $boxes = ($acc && $acc == $$origbox{boxes}) ? $acc : $$origbox{boxes};
+    return $boxes->[-1] if $boxes && @$boxes; }
+  return $origbox; }
+
+# Intern a List for this node and point the accumulator at its boxes array.
+sub _internNodeBoxList {
+  my ($self, $node, $list) = @_;
+  setNodeBox($self, $node, $list);
+  if ((ref $list eq 'LaTeXML::Core::List')) {
+    $$self{node_box_acc}{ $node->unique_key } = $$list{boxes}; }
+  return; }
+
 # When material is added to an element, especially an autoopened one,
 # we need to adjust the record of boxes that created the node.
 # (while attempting to avoid duplication)
+# Intern the List once on the second append, then mutate $$list{boxes} in
+# place so _box stays a live intern id for the current list. Copy-on-write
+# when the interned List is shared (refcount > 1), e.g. after wrapNodes.
 sub appendNodeBox {
   my ($self, $node, $box) = @_;
   return                          unless $box;
@@ -1928,11 +1953,19 @@ sub appendNodeBox {
     my $origbox = getNodeBox($self, $node);
     if (!$origbox) {
       setNodeBox($self, $node, $box); }
-    elsif (($box eq $origbox) || ($box eq ($origbox->unlist)[-1])) {
+    elsif (($box eq $origbox)
+      || ($box eq _nodeBoxLast($origbox, $$self{node_box_acc}{ $node->unique_key }))) {
     }    # Already there
     else {
-      setNodeBox($self, $node, List($origbox, $box,
-          mode => $origbox->getProperty('mode'))); }
+      my $acc  = $$self{node_box_acc}{ $node->unique_key };
+      my $live = (ref $origbox eq 'LaTeXML::Core::List')
+        && $acc && ($acc == $$origbox{boxes});
+      my $refs = $$self{node_boxes_refs}{"$origbox"} || 0;
+      if ($live && $refs <= 1) {
+        $origbox->appendBoxes($box); }
+      else {
+        _internNodeBoxList($self, $node,
+          List($origbox, $box, mode => $origbox->getProperty('mode'))); } }
     $node = $node->parentNode;
   } while ($node && ($node->nodeType == XML_ELEMENT_NODE)
     && $node->getAttribute('_autoopened'));
@@ -1948,12 +1981,17 @@ sub removeNodeBox {
     #    Debug("Remove $box (".ToString($box).") from $origbox (".ToString($origbox).")?");
     if    (!$origbox) { }
     elsif ($origbox eq $box) {
-      $node->removeAttribute('_box'); }
+      $node->removeAttribute('_box');
+      delete $$self{node_box_acc}{ $node->unique_key }; }
     else {
-      my @b = $origbox->unlist;
+      my $acc  = $$self{node_box_acc}{ $node->unique_key };
+      my $live = (ref $origbox eq 'LaTeXML::Core::List')
+        && $acc && ($acc == $$origbox{boxes});
+      my @b = $live ? @$acc : $origbox->unlist;
       # Note that this does NOT see (or remove) boxes embedded within a parent's Whatsit
       if (grep { $_ eq $box; } @b) {
-        setNodeBox($self, $node, List((grep { $_ ne $box; } @b),
+        _internNodeBoxList($self, $node,
+          List((grep { $_ ne $box; } @b),
             mode => $origbox->getProperty('mode'))); } }
     $node = $node->parentNode;
   } while ($node && ($node->nodeType == XML_ELEMENT_NODE)
