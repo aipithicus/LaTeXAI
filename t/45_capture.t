@@ -14,6 +14,8 @@ use File::Temp qw(tempdir);
 use File::Path qw(make_path);
 use POSIX ();
 use FindBin;
+use lib File::Spec->catdir($FindBin::Bin, '..', 'tools', 'dev');
+use CaptureStrip qw(without_capture);
 use IPC::Open3;
 use Symbol qw(gensym);
 use XML::LibXML;
@@ -107,21 +109,6 @@ sub fixture_document {
     File::Spec->catfile($FIXTURES, "$name.tex"), $output);
   is($status, 0, "$name @flags converts without errors or warnings") or diag($messages);
   return XML::LibXML->load_xml(location => $output); }
-
-sub without_capture {
-  my ($document) = @_;
-  my $copy = $document->cloneNode(1);
-  foreach my $node (xpath($copy)->findnodes('/ltx:document/capture:ledger')) {
-    my $indent = $node->previousSibling;
-    $indent->unbindNode if $indent && $indent->nodeType == XML_TEXT_NODE && $indent->data =~ /^\s*$/;
-    $node->unbindNode; }
-  foreach my $attr (xpath($copy)->findnodes('//@capture:*')) {
-    $attr->ownerElement->removeAttributeNS($CAPTURE_NS, $attr->localname); }
-  foreach my $text (xpath($copy)->findnodes('//text()')) {
-    $text->unbindNode if $text->data =~ /^\s*$/; }
-  my $xml = $copy->toString(0);
-  $xml =~ s/ xmlns:capture="\Q$CAPTURE_NS\E"//g;
-  return $xml; }
 
 sub resolved_capture_file {
   my ($document, $file) = @_;

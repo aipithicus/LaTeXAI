@@ -112,3 +112,12 @@ ltst --exec $auditExec t                    # compare after editing
 ```
 
 Use a new baseline directory for each investigation and leave `LATEXAI_CAPTURE_OFF_COMPARE` unset while recording. The audit fails on a byte difference or an omitted baseline conversion and reports new fixtures outside the baseline. Capture-on conversions and bespoke drivers that do not call `convert_texfile_as_test` need their own assertions, including the capture-off hash check in `t/45_capture.t`. Do not load this helper through `PERL5OPT`: that would also instrument child utilities instead of just the test drivers.
+
+A second, opt-in pass compares the capture-on `ltx` tree against the capture-off serialization of the same fixture. Set `LATEXAI_CAPTURE_ON_AUDIT=1`. After each capture-off conversion the helper converts the same source again with `capture => 1` and otherwise identical Core options, strips the ledger, every `capture:*` attribute, and the capture namespace (the same strip as `t/45_capture.t`, in `tools/dev/CaptureStrip.pm`), and compares that string plus the `ltx:ERROR` count. A difference fails and is recorded per driver under the baseline directory as `capture-on-audit.json`. This pass is independent of recording or comparing the capture-off bytes:
+
+```powershell
+$env:LATEXAI_CAPTURE_OFF_BASELINE = Join-Path (Get-LaTeXAIRoot) 'temp/t/capture-off-baseline'
+$env:LATEXAI_CAPTURE_ON_AUDIT = '1'
+$auditExec = '"' + "$env:PERL_ROOT/perl/bin/perl.exe" + '" -I lib -I tools/dev -MCaptureOffAudit'
+ltst --exec $auditExec t
+```
