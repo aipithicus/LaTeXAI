@@ -62,6 +62,10 @@ sub new {
   $state->assignValue(PERL_INPUT_ENCODING => $options{inputencoding});
   $state->assignValue(NOMATHPARSE         => $options{nomathparse} || 0, 'global');
   $state->assignValue(CAPTURE_PROVENANCE  => $options{capture} || 0, 'global');
+  # Package flag, not a State lookup: Tokens() and substituteParameters
+  # test this before any per-element scan. Cleared when capture is off so a
+  # process that converts many documents cannot inherit a stale on-value.
+  $LaTeXML::Core::Tokens::CAPTURE_ACTIVE = $options{capture} ? 1 : 0;
   return bless { state => $state,
     nomathparse => $options{nomathparse} || 0,
     preload     => $options{preload},

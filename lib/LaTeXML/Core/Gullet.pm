@@ -734,7 +734,7 @@ sub readBalanced {
   local $LaTeXML::ALIGN_STATE = 1000000;
   my $fully_expand = (defined $expanded)     && ($expanded > 1);
   my $startloc     = ($$self{verbosity} > 0) && getLocator($self);
-  my $capturing    = $STATE && $STATE->lookupValue('CAPTURE_PROVENANCE');
+  my $capturing = $LaTeXML::Core::Tokens::CAPTURE_ACTIVE;
   # Does we need to expand to get the { ???
   if ($require_open) {
     my $token = ($expanded ? readXToken($self, 0) : readToken($self));
@@ -745,13 +745,6 @@ sub readBalanced {
   my @occurrences = ();
   my $level       = 1;
   my ($token, $cc, $defn, $atoken, $atype, $ahidden);
-  my $collect = sub {
-    my ($tok, $occ) = @_;
-    return unless defined $tok;
-    push(@tokens, $tok);
-    if ($capturing) {
-      push(@occurrences, defined $occ ? $occ : _cloneOccurrence($$self{current_occurrence}, $tok)); }
-    return; };
   # Inlined readToken (we'll keep comments in the result)
   while (1) {
     if (@{ $$self{pending_comments} }) {
@@ -760,31 +753,41 @@ sub readBalanced {
       $$self{pending_comments} = [];
       $$self{pending_comment_occurrences} = [];
       for my $i (0 .. $#comments) {
-        $collect->($comments[$i], $comment_occs[$i]); } }
+        push(@tokens, $comments[$i]);
+        push(@occurrences, $comment_occs[$i]) if $capturing; } }
     # Examine pushback first
     while (($token = _shiftPushback($self)) && $CATCODE_HOLD[$cc = $$token[1]]) {
-      if    ($cc == CC_COMMENT) { $collect->($token); }
-      elsif ($cc == CC_MARKER)  { handleMarker($self, $token); } }
+      if ($cc == CC_COMMENT) {
+        push(@tokens, $token);
+        push(@occurrences, _cloneOccurrence($$self{current_occurrence}, $token)) if $capturing; }
+      elsif ($cc == CC_MARKER) { handleMarker($self, $token); } }
     if (!defined $token) {    # Else read from current mouth
       while (($token = _readMouthToken($self)) && $CATCODE_HOLD[$cc = $$token[1]]) {
-        if    ($cc == CC_COMMENT) { $collect->($token); }
-        elsif ($cc == CC_MARKER)  { handleMarker($self, $token); } } }
+        if ($cc == CC_COMMENT) {
+          push(@tokens, $token);
+          push(@occurrences, _cloneOccurrence($$self{current_occurrence}, $token)) if $capturing; }
+        elsif ($cc == CC_MARKER) { handleMarker($self, $token); } } }
     ProgressStep() if ($$self{progress}++ % $TOKEN_PROGRESS_QUANTUM) == 0;
     if (!defined $token) {
       # What's the right error handling now?
       last; }
     elsif (($cc == CC_CS) && ($$token[0] eq '\dont_expand')) {
-      $collect->(readToken($self)); }    # Pass on NEXT token, unchanged.
+      my $next = readToken($self);    # Pass on NEXT token, unchanged.
+      if (defined $next) {
+        push(@tokens, $next);
+        push(@occurrences, _cloneOccurrence($$self{current_occurrence}, $next)) if $capturing; } }
     elsif ($cc == CC_END) {
       $LaTeXML::ALIGN_STATE--;
       $level--;
       if (!$level) {
         last; }
-      $collect->($token); }
+      push(@tokens, $token);
+      push(@occurrences, _cloneOccurrence($$self{current_occurrence}, $token)) if $capturing; }
     elsif ($cc == CC_BEGIN) {
       $LaTeXML::ALIGN_STATE++;
       $level++;
-      $collect->($token); }
+      push(@tokens, $token);
+      push(@occurrences, _cloneOccurrence($$self{current_occurrence}, $token)) if $capturing; }
     ## Wow!!!!! See TeX the Program \S 309
     # Not sure if this code still applies within scan_toks???
     elsif (!$LaTeXML::ALIGN_STATE    # SHOULD count nesting of { }!!! when SCANNED (not digested)
@@ -816,10 +819,11 @@ sub readBalanced {
             || ($capturing ? _cloneOccurrence($invocation_occurrence, $t) : undef);
           if    ($tcc == CC_MARKER) { handleMarker($self, $t); }
           elsif (($tcc == CC_PARAM) && $macrodef) {
-            $collect->($t, $occ);
-            $collect->($t, $occ); }    # "unpack" to cover the packParameters at end!
+            push(@tokens, $t, $t);
+            push(@occurrences, $occ, $occ) if $capturing; }
           else {
-            $collect->($t, $occ); }
+            push(@tokens, $t);
+            push(@occurrences, $occ) if $capturing; }
           $i++; }
       }
       else {    # otherwise, prepend to pushback to be expanded further.
@@ -831,7 +835,8 @@ sub readBalanced {
     else {
       if ($expanded && ($$token[1] == CC_CS) && !(defined $defn)) {
         $STATE->generateErrorStub($self, $token); }    # cs SHOULD have defn by now; report early!
-      $collect->($token); }                            # just return it
+      push(@tokens, $token);
+      push(@occurrences, _cloneOccurrence($$self{current_occurrence}, $token)) if $capturing; }
   }
   if ($level > 0) {
  # TODO: The current implementation has a limitation where if the balancing end is in a different mouth,
@@ -1113,7 +1118,7 @@ sub readArg {
   else {
     if ($expanded) {
       my $wrapped = Tokens(T_BEGIN, $token, T_END);
-      if ($STATE && $STATE->lookupValue('CAPTURE_PROVENANCE')) {
+      if ($LaTeXML::Core::Tokens::CAPTURE_ACTIVE) {
         $wrapped->setCaptureOccurrences([
             undef,
             _cloneOccurrence($$self{current_occurrence}, $token),
@@ -1122,7 +1127,7 @@ sub readArg {
           readBalanced($self, $expanded, 0, 1); }); }
     else {
       my $tokens = Tokens($token);
-      if ($STATE && $STATE->lookupValue('CAPTURE_PROVENANCE')) {
+      if ($LaTeXML::Core::Tokens::CAPTURE_ACTIVE) {
         $tokens->setCaptureOccurrences([_cloneOccurrence($$self{current_occurrence}, $token)]); }
       return $tokens; } } }
 

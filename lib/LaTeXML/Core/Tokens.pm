@@ -29,6 +29,10 @@ our @EXPORT = (    # Global STATE; This gets bound by LaTeXML.pm
 # original flatten-and-bless path.
 fieldhash my %CAPTURE_OCCURRENCES;
 
+# Set in Core::new beside CAPTURE_PROVENANCE. Capture-off paths test this
+# before scanning arguments for occurrence-bearing Tokens.
+our $CAPTURE_ACTIVE = 0;
+
 sub hasCaptureOccurrences {
   my ($self) = @_;
   return exists $CAPTURE_OCCURRENCES{$self}; }
@@ -52,6 +56,12 @@ sub setCaptureOccurrences {
 sub Tokens {
   my (@tokens) = @_;
   my $r;
+  unless ($CAPTURE_ACTIVE) {
+    @tokens = map { (($r = ref $_) eq 'LaTeXML::Core::Token' ? $_
+        : ($r eq 'LaTeXML::Core::Tokens' ? @$_
+          : Error('misdefined', $r, undef, "Expected a Token, got " . Stringify($_)) || T_OTHER(Stringify($_)))) }
+      @tokens;
+    return bless [@tokens], 'LaTeXML::Core::Tokens'; }
   my $need = 0;
   foreach my $t (@tokens) {
     if ((ref $t eq 'LaTeXML::Core::Tokens') && $CAPTURE_OCCURRENCES{$t}) {
@@ -166,10 +176,11 @@ sub substituteParameters {
   my @in     = @{$self};    # ->unlist
   my @result = ();
   my $need   = 0;
-  foreach my $arg (@args) {
-    if ($arg && (ref $arg eq 'LaTeXML::Core::Tokens') && $CAPTURE_OCCURRENCES{$arg}) {
-      $need = 1;
-      last; } }
+  if ($CAPTURE_ACTIVE) {
+    foreach my $arg (@args) {
+      if ($arg && (ref $arg eq 'LaTeXML::Core::Tokens') && $CAPTURE_OCCURRENCES{$arg}) {
+        $need = 1;
+        last; } } }
   unless ($need) {
     while (my $token = shift(@in)) {
       if ($$token[1] != CC_ARG) {    # Non-match; copy it
