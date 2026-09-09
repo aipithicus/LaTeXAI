@@ -279,11 +279,7 @@ Factor  :
         # should be explicitly {, and moreover the array should be only 1 or 2 columns!
         | LBRACE ARRAY { InterpretDelimited(New('cases'),$item[1],$item[2],Absent()); }
         | ARRAY RBRACE { InterpretDelimited(New('cases'),Absent(),$item[1],$item[2]); }
-        | preScripted['FUNCTION'] addArgs[$item[1]]
-        | preScripted['OPFUNCTION'] addOpFunArgs[$item[1]]
-        | preScripted['TRIGFUNCTION'] addTrigFunArgs[$item[1]]
-        | preScripted['ATOM_OR_ID'] maybeArgs[$item[1]]
-        | preScripted['UNKNOWN'] doubtArgs[$item[1]]
+        | preScriptedFunLike[1] applyNamed[$item[1][0], $item[1][1]]
         | NUMBER   addScripts[$item[1]]
         | SCRIPTOPEN scriptFactorOpen[$item[1]]
         | OPEN factorOpen[$item[1]]
@@ -314,17 +310,43 @@ Factor  :
 
 ATOM_OR_ID : ATOM | ID | ARRAY
 
+# preScriptedFunLike[$allowTrig]: FLOAT prescripts once, then FUNCTION /
+# OPFUNCTION / TRIGFUNCTION (if $allowTrig) / ATOM_OR_ID / UNKNOWN, each with
+# addScripts. Returns [argsRuleName, node] so addArgs (etc.) still wrap the
+# fully scripted node, as preScripted['RULE'] addArgs[$item[1]] did.
+# $allowTrig is 1 for Factor and aBarearg, 0 for aTrigBarearg.
+preScriptedFunLike :
+          FLOATSUPERSCRIPT inpreScriptedFunLike[$arg[0]]
+            { [$item[2][0], NewScript($item[2][1], $item[1], 'pre')]; }
+        | FLOATSUBSCRIPT inpreScriptedFunLike[$arg[0]]
+            { [$item[2][0], NewScript($item[2][1], $item[1], 'pre')]; }
+        | funLikeAtom[$arg[0]]
+inpreScriptedFunLike :
+          POSTSUPERSCRIPT inpreScriptedFunLike[$arg[0]]
+            { [$item[2][0], NewScript($item[2][1], $item[1], 'pre')]; }
+        | POSTSUBSCRIPT inpreScriptedFunLike[$arg[0]]
+            { [$item[2][0], NewScript($item[2][1], $item[1], 'pre')]; }
+        | FLOATSUPERSCRIPT inpreScriptedFunLike[$arg[0]]
+            { [$item[2][0], NewScript($item[2][1], $item[1], 'pre')]; }
+        | FLOATSUBSCRIPT inpreScriptedFunLike[$arg[0]]
+            { [$item[2][0], NewScript($item[2][1], $item[1], 'pre')]; }
+        | funLikeAtom[$arg[0]]
+funLikeAtom :
+          FUNCTION addScripts[$item[1]] { ['addArgs', $item[2]]; }
+        | OPFUNCTION addScripts[$item[1]] { ['addOpFunArgs', $item[2]]; }
+        | { ($arg[0] ? 1 : undef); }
+          TRIGFUNCTION addScripts[$item[1]] { ['addTrigFunArgs', $item[2]]; }
+        | ATOM_OR_ID addScripts[$item[1]] { ['maybeArgs', $item[2]]; }
+        | UNKNOWN addScripts[$item[1]] { ['doubtArgs', $item[2]]; }
+applyNamed :
+          <matchrule:$arg[0]>[$arg[1]]
 
 # A restricted sort of Factor for the unparenthesized argument to a function.
 # Note f g h => f*g*h, but f g h x => f(g(h(x)))  Seems like what people mean...
 # Should there be a special case for trigs?
 barearg : aBarearg moreBareargs[$item[1]]
 aBarearg :
-          preScripted['FUNCTION'] addArgs[$item[1]]
-        | preScripted['OPFUNCTION'] addOpFunArgs[$item[1]]
-        | preScripted['TRIGFUNCTION'] addTrigFunArgs[$item[1]]
-        | preScripted['ATOM_OR_ID'] maybeArgs[$item[1]]
-        | preScripted['UNKNOWN'] doubtArgs[$item[1]]
+          preScriptedFunLike[1] applyNamed[$item[1][0], $item[1][1]]
         | NUMBER   addScripts[$item[1]]
         | VERTBAR absExpression VERTBAR
             addScripts[Fence(MorphVertbar($item[1],'OPEN'),$item[2],MorphVertbar($item[3],'CLOSE'))]
@@ -339,10 +361,7 @@ moreBareargs :
 # A variation that does not allow a bare trig function
 trigBarearg : aTrigBarearg moreTrigBareargs[$item[1]]
 aTrigBarearg :
-          preScripted['FUNCTION'] addArgs[$item[1]]
-        | preScripted['OPFUNCTION'] addOpFunArgs[$item[1]]
-        | preScripted['ATOM_OR_ID'] maybeArgs[$item[1]]
-        | preScripted['UNKNOWN'] doubtArgs[$item[1]]
+          preScriptedFunLike[0] applyNamed[$item[1][0], $item[1][1]]
         | NUMBER   addScripts[$item[1]]
         | VERTBAR absExpression VERTBAR
           addScripts[Fence(MorphVertbar($item[1],'OPEN'),$item[2],MorphVertbar($item[3],'CLOSE'))]
