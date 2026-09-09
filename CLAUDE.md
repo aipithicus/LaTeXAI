@@ -1,0 +1,1 @@
+Don't use bash in this project. Use Nushell or powershell or pwsh_exec because bash doesn't have strawberry-perl in PATH and because its bad with escaping characters and encoding-sensitive things 
