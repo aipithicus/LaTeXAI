@@ -283,6 +283,24 @@ sub unreadExpansion {
     definitionOrigin => ($author ? 'author' : 'engine'),
     frameId        => $frame_id,
   };
+  # Substituted argument tokens keep the occurrence they were read with.
+  # The definition's own expansion body (trivial macros, unused parameters)
+  # is the same Tokens object stored on the definition; those occurrences
+  # are the definition site and must not become the carrier's source.
+  my $defn_body = ($definition && (ref $tokens eq 'LaTeXML::Core::Tokens')
+    && $$definition{expansion} && ($tokens == $$definition{expansion}));
+  if ((ref $tokens eq 'LaTeXML::Core::Tokens') && $tokens->hasCaptureOccurrences
+    && !$defn_body) {
+    my $stored = $tokens->getCaptureOccurrences;
+    my @flat   = @$tokens;
+    my @occs   = ();
+    for my $i (0 .. $#flat) {
+      my $own = $stored->[$i];
+      if ($own && (defined $$own{sourceId} || $$own{origin} || $$own{authorCallsite})) {
+        push(@occs, $own); }
+      else {
+        push(@occs, _cloneOccurrence($occurrence, $flat[$i])); } }
+    return $self->unreadWithOccurrences(\@occs, @flat); }
   return $self->unreadWithOccurrence($occurrence, $tokens); }
 
 sub getSource {
@@ -523,6 +541,8 @@ sub peekToken {
   return; }
 
 # Unread tokens are assumed to be not-yet expanded.
+# Capture-off branch: pushback only. No occurrence array, no per-token
+# clone. This is the capture-off path the ownership change must not tax.
 sub unread {
   my ($self, @tokens) = @_;
   unless ($STATE && $STATE->lookupValue('CAPTURE_PROVENANCE')) {
@@ -544,7 +564,42 @@ sub unread {
         unshift(@$pb, T_OTHER($token)); } }
     $LaTeXML::ALIGN_STATE += $level;
     return; }
-  return $self->unreadWithOccurrence($$self{current_occurrence}, @tokens); }
+  my ($flat, $occs) = _flattenUnreadWithOccurrences($$self{current_occurrence}, @tokens);
+  return $self->unreadWithOccurrences($occs, @$flat); }
+
+# Flatten Tokens, keeping a stored per-token occurrence when the Tokens
+# object opted in. Tokens without a stored array fall back to $fallback
+# (the current occurrence), matching the pre-carrier unreadWithOccurrence
+# behaviour. An opted-in undef slot stays undef: that token is generated
+# and must not inherit a callsite's source bytes.
+sub _flattenUnreadWithOccurrences {
+  my ($fallback, @tokens) = @_;
+  my @flat = ();
+  my @occs = ();
+  foreach my $token (@tokens) {
+    my $r = ref $token;
+    if (!defined $token) { }
+    elsif ($r eq 'LaTeXML::Core::Tokens') {
+      if (my $stored = $token->getCaptureOccurrences) {
+        my $n = scalar(@$token);
+        for (my $i = 0 ; $i < $n ; $i++) {
+          my $inner = $$token[$i];
+          if (ref $inner eq 'LaTeXML::Core::Tokens') {
+            my $inner_fallback = ($i < @$stored && $stored->[$i]) ? $stored->[$i] : $fallback;
+            my ($f2, $o2) = _flattenUnreadWithOccurrences($inner_fallback, $inner);
+            push(@flat, @$f2);
+            push(@occs, @$o2); }
+          else {
+            push(@flat, $inner);
+            push(@occs, ($i < @$stored ? $stored->[$i] : undef)); } } }
+      else {
+        my ($f2, $o2) = _flattenUnreadWithOccurrences($fallback, @$token);
+        push(@flat, @$f2);
+        push(@occs, @$o2); } }
+    else {
+      push(@flat, $token);
+      push(@occs, $fallback); } }
+  return (\@flat, \@occs); }
 
 sub unreadWithOccurrence {
   my ($self, $occurrence, @tokens) = @_;
@@ -679,45 +734,57 @@ sub readBalanced {
   local $LaTeXML::ALIGN_STATE = 1000000;
   my $fully_expand = (defined $expanded)     && ($expanded > 1);
   my $startloc     = ($$self{verbosity} > 0) && getLocator($self);
+  my $capturing    = $STATE && $STATE->lookupValue('CAPTURE_PROVENANCE');
   # Does we need to expand to get the { ???
   if ($require_open) {
     my $token = ($expanded ? readXToken($self, 0) : readToken($self));
     if ((!$token) || ($$token[1] != CC_BEGIN && !Equals($STATE->lookupMeaning($token), T_BEGIN))) {
       Error('expected', '{', $self, "Expected opening '{'");
       return TokensI(); } }
-  my @tokens = ();
-  my $level  = 1;
+  my @tokens      = ();
+  my @occurrences = ();
+  my $level       = 1;
   my ($token, $cc, $defn, $atoken, $atype, $ahidden);
+  my $collect = sub {
+    my ($tok, $occ) = @_;
+    return unless defined $tok;
+    push(@tokens, $tok);
+    if ($capturing) {
+      push(@occurrences, defined $occ ? $occ : _cloneOccurrence($$self{current_occurrence}, $tok)); }
+    return; };
   # Inlined readToken (we'll keep comments in the result)
   while (1) {
     if (@{ $$self{pending_comments} }) {
-      push(@tokens, @{ $$self{pending_comments} });
+      my @comments = @{ $$self{pending_comments} };
+      my @comment_occs = @{ $$self{pending_comment_occurrences} };
       $$self{pending_comments} = [];
-      $$self{pending_comment_occurrences} = []; }
+      $$self{pending_comment_occurrences} = [];
+      for my $i (0 .. $#comments) {
+        $collect->($comments[$i], $comment_occs[$i]); } }
     # Examine pushback first
     while (($token = _shiftPushback($self)) && $CATCODE_HOLD[$cc = $$token[1]]) {
-      if    ($cc == CC_COMMENT) { push(@tokens, $token); }
+      if    ($cc == CC_COMMENT) { $collect->($token); }
       elsif ($cc == CC_MARKER)  { handleMarker($self, $token); } }
     if (!defined $token) {    # Else read from current mouth
       while (($token = _readMouthToken($self)) && $CATCODE_HOLD[$cc = $$token[1]]) {
-        if    ($cc == CC_COMMENT) { push(@tokens, $token); }
+        if    ($cc == CC_COMMENT) { $collect->($token); }
         elsif ($cc == CC_MARKER)  { handleMarker($self, $token); } } }
     ProgressStep() if ($$self{progress}++ % $TOKEN_PROGRESS_QUANTUM) == 0;
     if (!defined $token) {
       # What's the right error handling now?
       last; }
     elsif (($cc == CC_CS) && ($$token[0] eq '\dont_expand')) {
-      push(@tokens, readToken($self)); }    # Pass on NEXT token, unchanged.
+      $collect->(readToken($self)); }    # Pass on NEXT token, unchanged.
     elsif ($cc == CC_END) {
       $LaTeXML::ALIGN_STATE--;
       $level--;
       if (!$level) {
         last; }
-      push(@tokens, $token); }
+      $collect->($token); }
     elsif ($cc == CC_BEGIN) {
       $LaTeXML::ALIGN_STATE++;
       $level++;
-      push(@tokens, $token); }
+      $collect->($token); }
     ## Wow!!!!! See TeX the Program \S 309
     # Not sure if this code still applies within scan_toks???
     elsif (!$LaTeXML::ALIGN_STATE    # SHOULD count nesting of { }!!! when SCANNED (not digested)
@@ -740,24 +807,31 @@ sub readBalanced {
       # If a special \the type command, push the expansion directly into the result
       # Well, almost directly: handle any MARKER tokens now, and possibly un-pack T_PARAM
       if (!$fully_expand && $$DEFERRED_COMMANDS{ $$defn{cs}[0] }) {
+        my $exp_occs = ((ref $expansion eq 'LaTeXML::Core::Tokens')
+          ? $expansion->getCaptureOccurrences : undef);
+        my $i = 0;
         foreach my $t (@$expansion) {
-          my $cc = $$t[1];
-          if    ($cc == CC_MARKER) { handleMarker($self, $t); }
-          elsif (($cc == CC_PARAM) && $macrodef) {
-            push(@tokens, $t, $t); }    # "unpack" to cover the packParameters at end!
+          my $tcc = $$t[1];
+          my $occ = ($exp_occs && $exp_occs->[$i])
+            || ($capturing ? _cloneOccurrence($invocation_occurrence, $t) : undef);
+          if    ($tcc == CC_MARKER) { handleMarker($self, $t); }
+          elsif (($tcc == CC_PARAM) && $macrodef) {
+            $collect->($t, $occ);
+            $collect->($t, $occ); }    # "unpack" to cover the packParameters at end!
           else {
-            push(@tokens, $t); } }
+            $collect->($t, $occ); }
+          $i++; }
       }
       else {    # otherwise, prepend to pushback to be expanded further.
         if ($expansion) {
-          if ($STATE && $STATE->lookupValue('CAPTURE_PROVENANCE')) {
+          if ($capturing) {
             $self->unreadExpansion($expansion, $defn, $invocation_occurrence); }
           else {
             unread($self, $expansion); } } } }
     else {
       if ($expanded && ($$token[1] == CC_CS) && !(defined $defn)) {
         $STATE->generateErrorStub($self, $token); }    # cs SHOULD have defn by now; report early!
-      push(@tokens, $token); }                         # just return it
+      $collect->($token); }                            # just return it
   }
   if ($level > 0) {
  # TODO: The current implementation has a limitation where if the balancing end is in a different mouth,
@@ -765,7 +839,14 @@ sub readBalanced {
     my $loc_message = $startloc ? ("Started at " . ToString($startloc)) : ("Ended at " . ToString(getLocator($self)));
     Error('expected', "}", $self, "Gullet->readBalanced ran out of input in an unbalanced state.",
       $loc_message); }
-  return ($macrodef ? TokensI(@tokens)->packParameters : TokensI(@tokens)); }
+  my $result = ($macrodef ? TokensI(@tokens)->packParameters : TokensI(@tokens));
+  # Definition templates (macrodef) are not a source replay; their tokens
+  # take the expansion wrapper at unreadExpansion so author macros stay
+  # callsite-only. Argument collections (macrodef false) keep the author's
+  # occurrences.
+  if ($capturing && !$macrodef && @tokens && @occurrences == @$result) {
+    $result->setCaptureOccurrences(\@occurrences); }
+  return $result; }
 
 #======================================================================
 
@@ -1031,10 +1112,19 @@ sub readArg {
     return readBalanced($self, $expanded, 0, 0); }
   else {
     if ($expanded) {
-      return $self->readingFromMouth(Tokens(T_BEGIN, $token, T_END), sub {
+      my $wrapped = Tokens(T_BEGIN, $token, T_END);
+      if ($STATE && $STATE->lookupValue('CAPTURE_PROVENANCE')) {
+        $wrapped->setCaptureOccurrences([
+            undef,
+            _cloneOccurrence($$self{current_occurrence}, $token),
+            undef]); }
+      return $self->readingFromMouth($wrapped, sub {
           readBalanced($self, $expanded, 0, 1); }); }
     else {
-      return Tokens($token); } } }
+      my $tokens = Tokens($token);
+      if ($STATE && $STATE->lookupValue('CAPTURE_PROVENANCE')) {
+        $tokens->setCaptureOccurrences([_cloneOccurrence($$self{current_occurrence}, $token)]); }
+      return $tokens; } } }
 
 # Note that this returns an empty array if [] is present,
 # otherwise $default or undef.

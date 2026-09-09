@@ -16,6 +16,7 @@ use LaTeXML::Global;
 use LaTeXML::Common::Object;
 use LaTeXML::Common::Error;
 use LaTeXML::Core::Parameter;
+use LaTeXML::Core::Token;
 use LaTeXML::Core::Tokens;
 use base qw(LaTeXML::Common::Object);
 
@@ -53,7 +54,20 @@ sub revertArguments {
   my @tokens = ();
   foreach my $parameter (@$self) {
     next if $$parameter{novalue};
-    push(@tokens, $parameter->revert(shift(@args))); }
+    my $arg = shift(@args);
+    # Keep Tokens that carry per-token occurrences as a unit so Invocation
+    # and Tokens() can replay them. Flattening through Revert would drop the
+    # fieldhash. Capture-off Tokens never hasCaptureOccurrences.
+    if ($arg && (ref $arg eq 'LaTeXML::Core::Tokens') && $arg->hasCaptureOccurrences) {
+      my $spec = $$parameter{spec} || '';
+      if ($spec =~ /^\{/) {
+        push(@tokens, T_BEGIN, $arg, T_END); }
+      elsif ($$parameter{optional} && scalar(@$arg)) {
+        push(@tokens, T_OTHER('['), $arg, T_OTHER(']')); }
+      else {
+        push(@tokens, $arg); } }
+    else {
+      push(@tokens, $parameter->revert($arg)); } }
   return @tokens; }
 
 sub readArguments {

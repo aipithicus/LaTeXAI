@@ -6,7 +6,7 @@
   <resource capture:byteEnd="111" capture:byteStart="95" capture:file="frontmatter.tex" capture:fromCol="1" capture:fromLine="5" capture:locator="frontmatter.tex#textrange(from=5;1,to=5;16)" capture:toCol="16" capture:toLine="5" src="ltx-article.css" type="text/css"/>
   <title>Title</title>
   <creator role="author">
-    <personname capture:byteEnd="122" capture:byteStart="112" capture:file="frontmatter.tex" capture:fromCol="1" capture:fromLine="6" capture:locator="frontmatter.tex#textrange(from=6;1,to=6;10)" capture:toCol="10" capture:toLine="6">First Author</personname>
+    <personname capture:byteEnd="65" capture:byteStart="36" capture:file="frontmatter.tex" capture:fromCol="1" capture:fromLine="3" capture:locator="frontmatter.tex#textrange(from=3;1,to=3;29)" capture:toCol="29" capture:toLine="3">First Author</personname>
     <contact name="Affiliation: " role="affiliation">First university</contact>
   </creator>
   <para capture:byteEnd="124" capture:byteStart="123" capture:file="frontmatter.tex" capture:fromCol="2" capture:fromLine="7" capture:locator="frontmatter.tex#textrange(from=7;2,to=7;2)" capture:toCol="2" capture:toLine="7" xml:id="p1">

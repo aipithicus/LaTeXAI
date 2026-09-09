@@ -16,11 +16,34 @@ use LaTeXML::Global;
 use LaTeXML::Common::Object;
 use LaTeXML::Common::Error;
 use LaTeXML::Core::Token;
+use Hash::Util::FieldHash qw(fieldhash);
 use base qw(LaTeXML::Common::Object);
 use base qw(Exporter);
 our @EXPORT = (    # Global STATE; This gets bound by LaTeXML.pm
   qw(&Tokens &TokensI),
 );
+
+# Per-token source occurrences travel beside the token list, never on the
+# Token objects (T_BEGIN and friends are shared constants). Absent with
+# capture off: nothing writes this fieldhash, so Tokens() stays on the
+# original flatten-and-bless path.
+fieldhash my %CAPTURE_OCCURRENCES;
+
+sub hasCaptureOccurrences {
+  my ($self) = @_;
+  return exists $CAPTURE_OCCURRENCES{$self}; }
+
+sub getCaptureOccurrences {
+  my ($self) = @_;
+  return $CAPTURE_OCCURRENCES{$self}; }
+
+sub setCaptureOccurrences {
+  my ($self, $occurrences) = @_;
+  if ($occurrences) {
+    $CAPTURE_OCCURRENCES{$self} = $occurrences; }
+  else {
+    delete $CAPTURE_OCCURRENCES{$self}; }
+  return $self; }
 
 #======================================================================
 # Token List constructors.
@@ -29,12 +52,40 @@ our @EXPORT = (    # Global STATE; This gets bound by LaTeXML.pm
 sub Tokens {
   my (@tokens) = @_;
   my $r;
-  # faster than foreach
-  @tokens = map { (($r = ref $_) eq 'LaTeXML::Core::Token' ? $_
-      : ($r eq 'LaTeXML::Core::Tokens' ? @$_
-        : Error('misdefined', $r, undef, "Expected a Token, got " . Stringify($_)) || T_OTHER(Stringify($_)))) }
-    @tokens;
-  return bless [@tokens], 'LaTeXML::Core::Tokens'; }
+  my $need = 0;
+  foreach my $t (@tokens) {
+    if ((ref $t eq 'LaTeXML::Core::Tokens') && $CAPTURE_OCCURRENCES{$t}) {
+      $need = 1;
+      last; } }
+  unless ($need) {
+    # faster than foreach
+    @tokens = map { (($r = ref $_) eq 'LaTeXML::Core::Token' ? $_
+        : ($r eq 'LaTeXML::Core::Tokens' ? @$_
+          : Error('misdefined', $r, undef, "Expected a Token, got " . Stringify($_)) || T_OTHER(Stringify($_)))) }
+      @tokens;
+    return bless [@tokens], 'LaTeXML::Core::Tokens'; }
+  my @flat = ();
+  my @occs = ();
+  foreach my $t (@tokens) {
+    $r = ref $t;
+    if ($r eq 'LaTeXML::Core::Token') {
+      push(@flat, $t);
+      push(@occs, undef); }
+    elsif ($r eq 'LaTeXML::Core::Tokens') {
+      my $stored = $CAPTURE_OCCURRENCES{$t};
+      my $n      = scalar(@$t);
+      push(@flat, @$t);
+      if ($stored && @$stored == $n) {
+        push(@occs, @$stored); }
+      else {
+        push(@occs, (undef) x $n); } }
+    else {
+      Error('misdefined', $r, undef, "Expected a Token, got " . Stringify($t));
+      push(@flat, T_OTHER(Stringify($t)));
+      push(@occs, undef); } }
+  my $out = bless [@flat], 'LaTeXML::Core::Tokens';
+  $CAPTURE_OCCURRENCES{$out} = \@occs;
+  return $out; }
 
 sub TokensI {
   my (@tokens) = @_;
@@ -49,7 +100,10 @@ sub unlist {
 # Return a shallow copy of the Tokens
 sub clone {
   my ($self) = @_;
-  return bless [@$self], ref $self; }
+  my $copy = bless [@$self], ref $self;
+  if (my $occ = $CAPTURE_OCCURRENCES{$self}) {
+    $CAPTURE_OCCURRENCES{$copy} = [@$occ]; }
+  return $copy; }
 
 # Return a string containing the TeX form of the Tokens
 sub revert {
@@ -87,7 +141,10 @@ sub beDigested {
 
 sub neutralize {
   my ($self, @extraspecials) = @_;
-  return Tokens(map { $_->neutralize(@extraspecials) } @$self); }
+  my $out = Tokens(map { $_->neutralize(@extraspecials) } @$self);
+  if (my $occ = $CAPTURE_OCCURRENCES{$self}) {
+    $CAPTURE_OCCURRENCES{$out} = [@$occ]; }
+  return $out; }
 
 sub isBalanced {
   my ($self) = @_;
@@ -108,13 +165,39 @@ sub substituteParameters {
   my ($self, @args) = @_;
   my @in     = @{$self};    # ->unlist
   my @result = ();
+  my $need   = 0;
+  foreach my $arg (@args) {
+    if ($arg && (ref $arg eq 'LaTeXML::Core::Tokens') && $CAPTURE_OCCURRENCES{$arg}) {
+      $need = 1;
+      last; } }
+  unless ($need) {
+    while (my $token = shift(@in)) {
+      if ($$token[1] != CC_ARG) {    # Non-match; copy it
+        push(@result, $token); }
+      else {
+        if (my $arg = $args[ord($$token[0]) - ord("0") - 1]) {
+          push(@result, (ref $arg eq 'LaTeXML::Core::Token' ? $arg : @$arg)); } } }    # ->unlist
+    return bless [@result], 'LaTeXML::Core::Tokens'; }
+  my @occs = ();
   while (my $token = shift(@in)) {
-    if ($$token[1] != CC_ARG) {    # Non-match; copy it
-      push(@result, $token); }
-    else {
-      if (my $arg = $args[ord($$token[0]) - ord("0") - 1]) {
-        push(@result, (ref $arg eq 'LaTeXML::Core::Token' ? $arg : @$arg)); } } }    # ->unlist
-  return bless [@result], 'LaTeXML::Core::Tokens'; }
+    if ($$token[1] != CC_ARG) {    # template token: unreadExpansion stamps generated
+      push(@result, $token);
+      push(@occs,   undef); }
+    elsif (my $arg = $args[ord($$token[0]) - ord("0") - 1]) {
+      if (ref $arg eq 'LaTeXML::Core::Token') {
+        push(@result, $arg);
+        push(@occs,   undef); }
+      else {
+        my $stored = $CAPTURE_OCCURRENCES{$arg};
+        my $n      = scalar(@$arg);
+        push(@result, @$arg);
+        if ($stored && @$stored == $n) {
+          push(@occs, @$stored); }
+        else {
+          push(@occs, (undef) x $n); } } } }
+  my $out = bless [@result], 'LaTeXML::Core::Tokens';
+  $CAPTURE_OCCURRENCES{$out} = \@occs;
+  return $out; }
 
 # Packs repeated CC_PARAM tokens into CC_ARG tokens for use as a macro body (and other token lists)
 # Also unwraps \noexpand tokens, since that is also needed for macro bodies

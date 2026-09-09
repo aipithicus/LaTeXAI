@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="amstext"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML" xmlns:capture="http://dlmf.nist.gov/LaTeXML/capture" capture:base="CAPTURE_BASE" capture:byteEnd="61" capture:byteStart="45" capture:file="nested-text.tex" capture:fromCol="1" capture:fromLine="3" capture:locator="nested-text.tex#textrange(from=3;1,to=3;16)" capture:toCol="16" capture:toLine="3">
+  <resource capture:byteEnd="61" capture:byteStart="45" capture:file="nested-text.tex" capture:fromCol="1" capture:fromLine="3" capture:locator="nested-text.tex#textrange(from=3;1,to=3;16)" capture:toCol="16" capture:toLine="3" src="LaTeXML.css" type="text/css"/>
+  <resource capture:byteEnd="61" capture:byteStart="45" capture:file="nested-text.tex" capture:fromCol="1" capture:fromLine="3" capture:locator="nested-text.tex#textrange(from=3;1,to=3;16)" capture:toCol="16" capture:toLine="3" src="ltx-article.css" type="text/css"/>
+  <para capture:byteEnd="87" capture:byteStart="71" capture:file="nested-text.tex" capture:fromCol="10" capture:fromLine="4" capture:locator="nested-text.tex#textrange(from=4;10,to=4;25)" capture:toCol="25" capture:toLine="4" xml:id="p1">
+    <p capture:byteEnd="87" capture:byteStart="71" capture:file="nested-text.tex" capture:fromCol="10" capture:fromLine="4" capture:locator="nested-text.tex#textrange(from=4;10,to=4;25)" capture:toCol="25" capture:toLine="4"><text capture:byteEnd="87" capture:byteStart="71" capture:file="nested-text.tex" capture:fromCol="10" capture:fromLine="4" capture:locator="nested-text.tex#textrange(from=4;10,to=4;25)" capture:toCol="25" capture:toLine="4" class="ltx_markedasmath">plain <Math capture:byteEnd="86" capture:byteStart="83" capture:file="nested-text.tex" capture:fromCol="22" capture:fromLine="4" capture:locator="nested-text.tex#textrange(from=4;22,to=4;24)" capture:provenance="source" capture:source="$z$" capture:toCol="24" capture:toLine="4" mode="inline" tex="z" text="z" xml:id="p1.m1.m1">
+          <XMath capture:byteEnd="86" capture:byteStart="83" capture:file="nested-text.tex" capture:fromCol="22" capture:fromLine="4" capture:locator="nested-text.tex#textrange(from=4;22,to=4;24)" capture:toCol="24" capture:toLine="4">
+            <XMTok capture:byteEnd="88" capture:byteStart="87" capture:file="nested-text.tex" capture:fromCol="27" capture:fromLine="4" capture:locator="nested-text.tex#textrange(from=4;27,to=4;27)" capture:toCol="27" capture:toLine="4" font="italic" role="UNKNOWN">z</XMTok>
+          </XMath>
+        </Math></text></p>
+  </para>
+  <capture:ledger>
+    <capture:engine capture="true" includestyles="false" lexematize="false" noparse="false" revision="CAPTURE_REVISION" version="0.8.8">
+      <capture:preload name="LaTeX.pool"/>
+    </capture:engine>
+    <capture:packages>
+      <capture:package kind="package" name="textcomp" options="" requestOrigin="transitive" resolved="../../lib/LaTeXML/Package/textcomp.sty.ltxml" route="binding"/>
+      <capture:package kind="class" name="article" options="" requestByteEnd="14" requestByteStart="0" requestFile="nested-text.tex" requestOrigin="source" resolved="../../lib/LaTeXML/Package/article.cls.ltxml" route="binding"/>
+      <capture:package kind="package" name="amsgen" options="" requestOrigin="transitive" resolved="../../lib/LaTeXML/Package/amsgen.sty.ltxml" route="binding"/>
+      <capture:package kind="package" name="amstext" options="" requestByteEnd="35" requestByteStart="24" requestFile="nested-text.tex" requestOrigin="source" resolved="../../lib/LaTeXML/Package/amstext.sty.ltxml" route="binding"/>
+    </capture:packages>
+    <capture:math callsiteOnly="0" crossSource="0" display="0" failedCells="0" inline="1" parser="run" source="1" total="1" unlocated="0" unparsed="0"/>
+    <capture:encoding substitutions="0"/>
+    <capture:messages errors="0" warnings="0"/>
+  </capture:ledger>
+</document>

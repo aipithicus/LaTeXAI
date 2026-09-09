@@ -155,6 +155,13 @@ sub assert_source_bytes {
   is(capture_decode($slice), cattr($math, 'source'), "$label decoded source matches retained bytes");
   return ($raw, $start, $end, $slice); }
 
+# Complements assert_source_bytes: the interval may match the file and still
+# name the wrong construct (a later callsite). This checks authorship.
+sub assert_owns_slice {
+  my ($document, $carrier, $expected, $label) = @_;
+  is(cattr($carrier, 'source'), $expected, "$label recorded slice is the author's construct");
+  return; }
+
 sub assert_partition {
   my ($document, $label) = @_;
   my $xc = xpath($document);
@@ -486,7 +493,8 @@ is($frontmatter_xc->findvalue('string(//ltx:personname)'), 'First Author', 'fron
 like($frontmatter_xc->findvalue('string(//ltx:contact)'), qr/First university/,
   'front matter preserves the affiliation');
 foreach my $math ($frontmatter_xc->findnodes('//ltx:Math')) {
-  assert_source_bytes($frontmatter_xml, $math, 'front-matter fixture math'); }
+  assert_source_bytes($frontmatter_xml, $math, 'front-matter fixture math');
+  assert_owns_slice($frontmatter_xml, $math, '\[a=b\]', 'front-matter body display'); }
 assert_partition($frontmatter_xml, 'front-matter fixture');
 my $frontmatter_golden = XML::LibXML->load_xml(location => File::Spec->catfile($FIXTURES, 'frontmatter.xml'));
 is(normalized_capture_xml($frontmatter_xml), normalized_capture_xml($frontmatter_golden),
@@ -591,6 +599,68 @@ is(xpath($juxtaposition_noparse)->findvalue('count(//*[@capture:juxtaposition])'
 foreach my $math (@formulas) { assert_source_bytes($juxtaposition_xml, $math, 'juxtaposition fixture math'); }
 assert_partition($juxtaposition_xml, 'juxtaposition fixture');
 validate_capture_document($juxtaposition_xml, 'capture-juxtaposition');
+
+# Deferred title math is re-digested at \maketitle; the recorded slice must
+# still be the author's $x=y$, not the callsite. Body display stays put.
+my $deferred_path = File::Spec->catfile($TEMP, 'deferred-title.xml');
+my ($deferred_status, $deferred_messages) = run_command($^X, '-I', File::Spec->catdir($ROOT, 'lib'),
+  File::Spec->catfile($ROOT, 'tools', 'dev', 'capture-fixture.pl'),
+  File::Spec->catfile($FIXTURES, 'deferred-title.tex'), $deferred_path);
+is($deferred_status, 0, 'deferred-title converts without errors or warnings') or diag($deferred_messages);
+my $deferred_xml = XML::LibXML->load_xml(location => $deferred_path);
+my $deferred_xc = xpath($deferred_xml);
+my ($deferred_title) = $deferred_xc->findnodes('//ltx:title//ltx:Math');
+my ($deferred_body)  = $deferred_xc->findnodes('//ltx:equation//ltx:Math');
+ok($deferred_title, 'deferred-title has title math');
+ok($deferred_body,  'deferred-title has body display math');
+is(0 + cattr($deferred_title, 'byteStart'), 40, 'deferred-title title byteStart');
+is(0 + cattr($deferred_title, 'byteEnd'),   45, 'deferred-title title byteEnd');
+is(0 + cattr($deferred_title, 'fromLine'),   2, 'deferred-title title fromLine');
+is(0 + cattr($deferred_title, 'fromCol'),   19, 'deferred-title title fromCol');
+is(0 + cattr($deferred_title, 'toCol'),     23, 'deferred-title title toCol');
+is(cattr($deferred_title, 'provenance'), 'source', 'deferred-title title provenance');
+assert_owns_slice($deferred_xml, $deferred_title, '$x=y$', 'deferred-title title math');
+assert_source_bytes($deferred_xml, $deferred_title, 'deferred-title title math');
+is(0 + cattr($deferred_body, 'byteStart'), 144, 'deferred-title body byteStart');
+is(0 + cattr($deferred_body, 'byteEnd'),   151, 'deferred-title body byteEnd');
+assert_owns_slice($deferred_xml, $deferred_body, '\[a=b\]', 'deferred-title body display');
+assert_source_bytes($deferred_xml, $deferred_body, 'deferred-title body display');
+assert_partition($deferred_xml, 'deferred-title fixture');
+my $deferred_golden = XML::LibXML->load_xml(location => File::Spec->catfile($FIXTURES, 'deferred-title.xml'));
+is(normalized_capture_xml($deferred_xml), normalized_capture_xml($deferred_golden),
+  'deferred-title capture golden matches after base and revision normalization only');
+validate_capture_document($deferred_xml, 'capture-deferred-title');
+
+# Nested text-mode math inside an alphabet command must keep its own dollars.
+# cleanup_Math unwraps the outer Math when it is only XMText (upstream);
+# the remaining carrier is the inner $z$.
+my $nested_path = File::Spec->catfile($TEMP, 'nested-text.xml');
+my ($nested_status, $nested_messages) = run_command($^X, '-I', File::Spec->catdir($ROOT, 'lib'),
+  File::Spec->catfile($ROOT, 'tools', 'dev', 'capture-fixture.pl'),
+  File::Spec->catfile($FIXTURES, 'nested-text.tex'), $nested_path);
+is($nested_status, 0, 'nested-text converts without errors or warnings') or diag($nested_messages);
+my $nested_xml = XML::LibXML->load_xml(location => $nested_path);
+my $nested_xc = xpath($nested_xml);
+my @nested_math = $nested_xc->findnodes('//ltx:Math');
+is(scalar(@nested_math), 1, 'nested-text keeps the inner math carrier after cleanup_Math unwrap');
+my $nested_inner = $nested_math[0];
+is(0 + cattr($nested_inner, 'byteStart'), 83, 'nested-text inner byteStart');
+is(0 + cattr($nested_inner, 'byteEnd'),   86, 'nested-text inner byteEnd');
+is(0 + cattr($nested_inner, 'fromLine'),   4, 'nested-text inner fromLine');
+is(0 + cattr($nested_inner, 'fromCol'),   22, 'nested-text inner fromCol');
+is(0 + cattr($nested_inner, 'toCol'),     24, 'nested-text inner toCol');
+is(cattr($nested_inner, 'provenance'), 'source', 'nested-text inner provenance');
+assert_owns_slice($nested_xml, $nested_inner, '$z$', 'nested-text inner math');
+assert_source_bytes($nested_xml, $nested_inner, 'nested-text inner math');
+my ($nested_z) = $nested_xc->findnodes('//ltx:XMTok[text()="z"]');
+ok($nested_z, 'nested-text has the inner z token');
+ok(!$nested_z->hasAttributeNS($CAPTURE_NS, 'mathAlphabets'),
+  'inner XMTok carries no math alphabet request from text-mode math');
+assert_partition($nested_xml, 'nested-text fixture');
+my $nested_golden = XML::LibXML->load_xml(location => File::Spec->catfile($FIXTURES, 'nested-text.xml'));
+is(normalized_capture_xml($nested_xml), normalized_capture_xml($nested_golden),
+  'nested-text capture golden matches after base and revision normalization only');
+validate_capture_document($nested_xml, 'capture-nested-text');
 
 done_testing();
 
