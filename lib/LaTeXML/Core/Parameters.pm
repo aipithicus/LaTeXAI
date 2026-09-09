@@ -16,7 +16,6 @@ use LaTeXML::Global;
 use LaTeXML::Common::Object;
 use LaTeXML::Common::Error;
 use LaTeXML::Core::Parameter;
-use LaTeXML::Core::Token;
 use LaTeXML::Core::Tokens;
 use base qw(LaTeXML::Common::Object);
 
@@ -49,6 +48,8 @@ sub getNumArgs {
     $n++ unless $$parameter{novalue}; }
   return $n; }
 
+our $REVERT_DROPS = 0;
+
 sub revertArguments {
   my ($self, @args) = @_;
   my @tokens = ();
@@ -57,18 +58,41 @@ sub revertArguments {
     my $arg = shift(@args);
     # Keep Tokens that carry per-token occurrences as a unit so Invocation
     # and Tokens() can replay them. Flattening through Revert would drop the
-    # fieldhash. Capture-off Tokens never hasCaptureOccurrences.
+    # fieldhash. Extents always come from the parameter's own reverter;
+    # occurrences ride only when that output is the argument tokens, or
+    # those tokens wrapped by one leading and one trailing delimiter.
     if ($arg && (ref $arg eq 'LaTeXML::Core::Tokens') && $arg->hasCaptureOccurrences) {
-      my $spec = $$parameter{spec} || '';
-      if ($spec =~ /^\{/) {
-        push(@tokens, T_BEGIN, $arg, T_END); }
-      elsif ($$parameter{optional} && scalar(@$arg)) {
-        push(@tokens, T_OTHER('['), $arg, T_OTHER(']')); }
+      my @rev  = $parameter->revert($arg);
+      my $wrap = _occurrence_reversion_wrap($arg, \@rev);
+      if ($wrap && $wrap eq 'bare') {
+        push(@tokens, $arg); }
+      elsif ($wrap && $wrap eq 'wrap') {
+        push(@tokens, $rev[0], $arg, $rev[-1]); }
       else {
-        push(@tokens, $arg); } }
+        $REVERT_DROPS++;
+        push(@tokens, @rev); } }
     else {
       push(@tokens, $parameter->revert($arg)); } }
   return @tokens; }
+
+# Identity of the argument's own Token objects, not equals(): the wrapper
+# tokens (T_BEGIN/T_END constants, or a fresh T_OTHER('[') from Optional)
+# are recognized only as the extra leading/trailing pair.
+sub _occurrence_reversion_wrap {
+  my ($arg, $rev) = @_;
+  my @arg = @$arg;
+  my @rev = @$rev;
+  return 'bare' if @rev == @arg && _same_token_identity(\@rev, \@arg);
+  return 'wrap' if @rev == (@arg + 2) && @rev >= 2
+    && _same_token_identity([@rev[1 .. $#rev - 1]], \@arg);
+  return; }
+
+sub _same_token_identity {
+  my ($a, $b) = @_;
+  return 0 unless @$a == @$b;
+  for my $i (0 .. $#$a) {
+    return 0 unless defined $a->[$i] && defined $b->[$i] && $a->[$i] == $b->[$i]; }
+  return 1; }
 
 sub readArguments {
   no warnings 'recursion';
@@ -97,6 +121,10 @@ sub reparseArgument {
         $self->readArguments($gullet); }); }
   else {
     return (); } }
+
+END {
+  print STDERR "LATEXAI_REVERT_DROPS=$REVERT_DROPS\n"
+    if $ENV{LATEXAI_COUNT_REVERT_DROPS}; }
 
 #======================================================================
 1;

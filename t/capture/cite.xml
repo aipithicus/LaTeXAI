@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="natbib"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML" xmlns:capture="http://dlmf.nist.gov/LaTeXML/capture" capture:base="CAPTURE_BASE" capture:byteEnd="60" capture:byteStart="44" capture:file="cite.tex" capture:fromCol="1" capture:fromLine="3" capture:locator="cite.tex#textrange(from=3;1,to=3;16)" capture:toCol="16" capture:toLine="3">
+  <resource capture:byteEnd="60" capture:byteStart="44" capture:file="cite.tex" capture:fromCol="1" capture:fromLine="3" capture:locator="cite.tex#textrange(from=3;1,to=3;16)" capture:toCol="16" capture:toLine="3" src="LaTeXML.css" type="text/css"/>
+  <resource capture:byteEnd="60" capture:byteStart="44" capture:file="cite.tex" capture:fromCol="1" capture:fromLine="3" capture:locator="cite.tex#textrange(from=3;1,to=3;16)" capture:toCol="16" capture:toLine="3" src="ltx-article.css" type="text/css"/>
+  <para capture:byteEnd="62" capture:byteStart="61" capture:file="cite.tex" capture:fromCol="2" capture:fromLine="4" capture:locator="cite.tex#textrange(from=4;2,to=4;2)" capture:toCol="2" capture:toLine="4" xml:id="p1">
+    <p capture:byteEnd="62" capture:byteStart="61" capture:file="cite.tex" capture:fromCol="2" capture:fromLine="4" capture:locator="cite.tex#textrange(from=4;2,to=4;2)" capture:toCol="2" capture:toLine="4">Cite <cite capture:byteEnd="89" capture:byteStart="66" capture:file="cite.tex" capture:fromCol="6" capture:fromLine="4" capture:locator="cite.tex#textrange(from=4;6,to=4;28)" capture:toCol="28" capture:toLine="4" class="ltx_citemacro_citep">(<bibref bibrefs="key_one,key_two" capture:byteEnd="89" capture:byteStart="66" capture:file="cite.tex" capture:fromCol="6" capture:fromLine="4" capture:locator="cite.tex#textrange(from=4;6,to=4;28)" capture:toCol="28" capture:toLine="4" separator=";" show="AuthorsPhrase1Year" yyseparator=",">
+          <bibrefphrase capture:byteEnd="89" capture:byteStart="66" capture:file="cite.tex" capture:fromCol="6" capture:fromLine="4" capture:locator="cite.tex#textrange(from=4;6,to=4;28)" capture:toCol="28" capture:toLine="4">, </bibrefphrase>
+        </bibref>)</cite> and <cite capture:byteEnd="109" capture:byteStart="94" capture:file="cite.tex" capture:fromCol="34" capture:fromLine="4" capture:locator="cite.tex#textrange(from=4;34,to=4;48)" capture:toCol="48" capture:toLine="4" class="ltx_citemacro_citet"><bibref bibrefs="key_one" capture:byteEnd="109" capture:byteStart="94" capture:file="cite.tex" capture:fromCol="34" capture:fromLine="4" capture:locator="cite.tex#textrange(from=4;34,to=4;48)" capture:toCol="48" capture:toLine="4" separator=";" show="Authors Phrase1YearPhrase2" yyseparator=",">
+          <bibrefphrase capture:byteEnd="109" capture:byteStart="94" capture:file="cite.tex" capture:fromCol="34" capture:fromLine="4" capture:locator="cite.tex#textrange(from=4;34,to=4;48)" capture:toCol="48" capture:toLine="4">(</bibrefphrase>
+          <bibrefphrase capture:byteEnd="109" capture:byteStart="94" capture:file="cite.tex" capture:fromCol="34" capture:fromLine="4" capture:locator="cite.tex#textrange(from=4;34,to=4;48)" capture:toCol="48" capture:toLine="4">)</bibrefphrase>
+        </bibref></cite>.</p>
+  </para>
+  <bibliography capture:byteEnd="134" capture:byteStart="111" capture:file="cite.tex" capture:fromCol="1" capture:fromLine="5" capture:locator="cite.tex#textrange(from=5;1,to=5;23)" capture:toCol="23" capture:toLine="5" xml:id="bib">
+    <title capture:byteEnd="134" capture:byteStart="111" capture:file="cite.tex" capture:fromCol="1" capture:fromLine="5" capture:locator="cite.tex#textrange(from=5;1,to=5;23)" capture:toCol="23" capture:toLine="5">References</title>
+    <biblist capture:byteEnd="134" capture:byteStart="111" capture:file="cite.tex" capture:fromCol="1" capture:fromLine="5" capture:locator="cite.tex#textrange(from=5;1,to=5;23)" capture:toCol="23" capture:toLine="5">
+      <bibitem capture:byteEnd="168" capture:byteStart="138" capture:file="cite.tex" capture:fromCol="1" capture:fromLine="6" capture:locator="cite.tex#textrange(from=6;1,to=6;30)" capture:toCol="30" capture:toLine="6" key="key_one" xml:id="bib.bib1">
+        <tags capture:byteEnd="168" capture:byteStart="138" capture:file="cite.tex" capture:fromCol="1" capture:fromLine="6" capture:locator="cite.tex#textrange(from=6;1,to=6;30)" capture:toCol="30" capture:toLine="6">
+          <tag capture:byteEnd="168" capture:byteStart="138" capture:file="cite.tex" capture:fromCol="1" capture:fromLine="6" capture:locator="cite.tex#textrange(from=6;1,to=6;30)" capture:toCol="30" capture:toLine="6" role="number">1</tag>
+          <tag capture:byteEnd="168" capture:byteStart="138" capture:file="cite.tex" capture:fromCol="1" capture:fromLine="6" capture:locator="cite.tex#textrange(from=6;1,to=6;30)" capture:toCol="30" capture:toLine="6" role="year">2020</tag>
+          <tag capture:byteEnd="168" capture:byteStart="138" capture:file="cite.tex" capture:fromCol="1" capture:fromLine="6" capture:locator="cite.tex#textrange(from=6;1,to=6;30)" capture:toCol="30" capture:toLine="6" role="authors">Alpha</tag>
+          <tag capture:byteEnd="168" capture:byteStart="138" capture:file="cite.tex" capture:fromCol="1" capture:fromLine="6" capture:locator="cite.tex#textrange(from=6;1,to=6;30)" capture:toCol="30" capture:toLine="6" role="refnum">Alpha (2020)</tag>
+          <tag capture:byteEnd="168" capture:byteStart="138" capture:file="cite.tex" capture:fromCol="1" capture:fromLine="6" capture:locator="cite.tex#textrange(from=6;1,to=6;30)" capture:toCol="30" capture:toLine="6" role="key">key_one</tag>
+        </tags>
+        <bibblock capture:byteEnd="168" capture:byteStart="138" capture:file="cite.tex" capture:fromCol="1" capture:fromLine="6" capture:locator="cite.tex#textrange(from=6;1,to=6;30)" capture:toCol="30" capture:toLine="6"> A. Alpha. First. 2020.
+</bibblock>
+      </bibitem>
+      <bibitem capture:byteEnd="221" capture:byteStart="192" capture:file="cite.tex" capture:fromCol="1" capture:fromLine="7" capture:locator="cite.tex#textrange(from=7;1,to=7;29)" capture:toCol="29" capture:toLine="7" key="key_two" xml:id="bib.bib2">
+        <tags capture:byteEnd="221" capture:byteStart="192" capture:file="cite.tex" capture:fromCol="1" capture:fromLine="7" capture:locator="cite.tex#textrange(from=7;1,to=7;29)" capture:toCol="29" capture:toLine="7">
+          <tag capture:byteEnd="221" capture:byteStart="192" capture:file="cite.tex" capture:fromCol="1" capture:fromLine="7" capture:locator="cite.tex#textrange(from=7;1,to=7;29)" capture:toCol="29" capture:toLine="7" role="number">2</tag>
+          <tag capture:byteEnd="221" capture:byteStart="192" capture:file="cite.tex" capture:fromCol="1" capture:fromLine="7" capture:locator="cite.tex#textrange(from=7;1,to=7;29)" capture:toCol="29" capture:toLine="7" role="year">2021</tag>
+          <tag capture:byteEnd="221" capture:byteStart="192" capture:file="cite.tex" capture:fromCol="1" capture:fromLine="7" capture:locator="cite.tex#textrange(from=7;1,to=7;29)" capture:toCol="29" capture:toLine="7" role="authors">Beta</tag>
+          <tag capture:byteEnd="221" capture:byteStart="192" capture:file="cite.tex" capture:fromCol="1" capture:fromLine="7" capture:locator="cite.tex#textrange(from=7;1,to=7;29)" capture:toCol="29" capture:toLine="7" role="refnum">Beta (2021)</tag>
+          <tag capture:byteEnd="221" capture:byteStart="192" capture:file="cite.tex" capture:fromCol="1" capture:fromLine="7" capture:locator="cite.tex#textrange(from=7;1,to=7;29)" capture:toCol="29" capture:toLine="7" role="key">key_two</tag>
+        </tags>
+        <bibblock capture:byteEnd="221" capture:byteStart="192" capture:file="cite.tex" capture:fromCol="1" capture:fromLine="7" capture:locator="cite.tex#textrange(from=7;1,to=7;29)" capture:toCol="29" capture:toLine="7"> B. Beta. Second. 2021.
+</bibblock>
+      </bibitem>
+    </biblist>
+  </bibliography>
+  <capture:ledger>
+    <capture:engine capture="true" includestyles="false" lexematize="false" noparse="false" revision="CAPTURE_REVISION" version="0.8.8">
+      <capture:preload name="LaTeX.pool"/>
+    </capture:engine>
+    <capture:packages>
+      <capture:package kind="package" name="textcomp" options="" requestOrigin="transitive" resolved="../../lib/LaTeXML/Package/textcomp.sty.ltxml" route="binding"/>
+      <capture:package kind="class" name="article" options="" requestByteEnd="14" requestByteStart="0" requestFile="cite.tex" requestOrigin="source" resolved="../../lib/LaTeXML/Package/article.cls.ltxml" route="binding"/>
+      <capture:package kind="package" name="natbib" options="" requestByteEnd="35" requestByteStart="24" requestFile="cite.tex" requestOrigin="source" resolved="../../lib/LaTeXML/Package/natbib.sty.ltxml" route="binding"/>
+    </capture:packages>
+    <capture:math callsiteOnly="0" crossSource="0" display="0" failedCells="0" inline="0" parser="run" source="0" total="0" unlocated="0" unparsed="0"/>
+    <capture:encoding substitutions="0"/>
+    <capture:messages errors="0" warnings="0"/>
+  </capture:ledger>
+</document>

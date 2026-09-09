@@ -117,6 +117,8 @@ sub without_capture {
     $node->unbindNode; }
   foreach my $attr (xpath($copy)->findnodes('//@capture:*')) {
     $attr->ownerElement->removeAttributeNS($CAPTURE_NS, $attr->localname); }
+  foreach my $text (xpath($copy)->findnodes('//text()')) {
+    $text->unbindNode if $text->data =~ /^\s*$/; }
   my $xml = $copy->toString(0);
   $xml =~ s/ xmlns:capture="\Q$CAPTURE_NS\E"//g;
   return $xml; }
@@ -661,6 +663,29 @@ my $nested_golden = XML::LibXML->load_xml(location => File::Spec->catfile($FIXTU
 is(normalized_capture_xml($nested_xml), normalized_capture_xml($nested_golden),
   'nested-text capture golden matches after base and revision normalization only');
 validate_capture_document($nested_xml, 'capture-nested-text');
+
+# Citation keys are Semiverbatim; re-invocation must keep the parameter
+# type's braces so \@@bibref does not swallow one token and spill the rest.
+my $cite_path = File::Spec->catfile($TEMP, 'cite.xml');
+my ($cite_status, $cite_messages) = run_command($^X, '-I', File::Spec->catdir($ROOT, 'lib'),
+  File::Spec->catfile($ROOT, 'tools', 'dev', 'capture-fixture.pl'),
+  File::Spec->catfile($FIXTURES, 'cite.tex'), $cite_path);
+is($cite_status, 0, 'cite converts without errors or warnings') or diag($cite_messages);
+my $cite_xml = XML::LibXML->load_xml(location => $cite_path);
+my $cite_xc = xpath($cite_xml);
+my @cite_bibrefs = $cite_xc->findnodes('//ltx:bibref');
+ok(scalar(@cite_bibrefs) >= 1, 'cite fixture emits bibref elements');
+is($cite_bibrefs[0]->getAttribute('bibrefs'), 'key_one,key_two',
+  'first bibref carries both citation keys');
+is($cite_xc->findvalue('count(//ltx:bibref/text()[normalize-space()])'), 0,
+  'no bibref has a text child');
+is(without_capture($cite_xml), without_capture(fixture_document('cite', '--no-capture')),
+  'cite capture metadata leaves the complete ltx tree unchanged');
+assert_partition($cite_xml, 'cite fixture');
+my $cite_golden = XML::LibXML->load_xml(location => File::Spec->catfile($FIXTURES, 'cite.xml'));
+is(normalized_capture_xml($cite_xml), normalized_capture_xml($cite_golden),
+  'cite capture golden matches after base and revision normalization only');
+validate_capture_document($cite_xml, 'capture-cite');
 
 done_testing();
 
