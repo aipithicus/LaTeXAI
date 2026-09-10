@@ -45,6 +45,7 @@ lib-katex/*
 **/.snapshot**
 
 .mcp.json
+.grok/
 DocOps.md
 /scripts/local.psd1
 
