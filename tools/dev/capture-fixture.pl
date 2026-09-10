@@ -17,8 +17,10 @@ my $golden = 0;
 my $capture = 1;
 my $noparse = 0;
 my $autoload = 0;
-GetOptions('golden' => \$golden, 'capture!' => \$capture, 'noparse' => \$noparse, 'autoload' => \$autoload)
-  or die "Usage: $0 [--golden] [--no-capture] [--noparse] [--autoload] input.tex output.xml\n";
+my $compact = 0;
+GetOptions('golden' => \$golden, 'capture!' => \$capture, 'noparse' => \$noparse, 'autoload' => \$autoload,
+  'compact' => \$compact)
+  or die "Usage: $0 [--golden] [--compact] [--no-capture] [--noparse] [--autoload] input.tex output.xml\n";
 my ($input, $output) = @ARGV;
 die "Usage: $0 [--golden] input.tex output.xml\n" unless defined $output && @ARGV == 2;
 $input = abs_path($input) or die "Cannot resolve input\n";
@@ -36,6 +38,6 @@ if ($golden) {
 }
 open(my $out, '>:raw', $output) or die "Cannot write $output: $!";
 # Core::Document returns characters; LibXML::Document::toString returns bytes.
-print {$out} encode('UTF-8', $document->toString(1));
+print {$out} $compact ? $document->getDocument->toString(0) : encode('UTF-8', $document->toString(1));
 close($out);
 print $core->getStatusMessage . "\n";

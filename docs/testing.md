@@ -80,6 +80,8 @@ A binding that replaces an existing passthrough or hybrid keeps the same case na
 
 `tools/dev/capture-fixture.pl --golden <source.tex> <golden.xml>` writes a capture golden with this driver's configuration and normalization. Run it with the repository Perl and `-I lib`, in a fresh process: package definitions can produce redefinition warnings across repeated engine states. The helper refuses any engine warning or error. Without `--golden` it writes the unnormalized capture document for assertions and schema validation.
 
+Use `--compact` for tree-comparison inputs and load them with `keep_blanks => 1`. This prevents serializer indentation and parser defaults from being confused with manuscript whitespace. Goldens retain their existing formatting and normalization.
+
 ## 5. Where output goes
 
 - **Logs.** Every `latexml` and `latexmlpost` run writes `<jobname>.latexml.log` to the current directory unless told otherwise. Tests and aliases pass `--log` so the file lands under `temp/logs/<runstamp>/`, one directory per run. The stamp is `LATEXAI_RUNSTAMP` when set, otherwise minted when the aliases load (once per `pwsh_exec` command) or when a bespoke driver starts. `lrun` sets the variable for the current process, so `lrun; ltst t/851_extarrows.t; lxml …` in one command groups everything under one stamp, and `ltst` exports it to the drivers it runs. A log at the repository root is a bug in whatever wrote it.
@@ -99,25 +101,33 @@ ltst t                        # everything; required for changes under Core/ or 
 
 Report failures with the harness output, not a summary.
 
-## 7. Capture-off byte comparisons
+## 7. Capture regression audit
 
-`lgold --check` digests and lints; it does not compare the result with the existing golden. For a capture change that promises unchanged capture-off output, `tools/dev/CaptureOffAudit.pm` records or compares the raw XML returned by each standard fixture conversion, before test normalization, using that driver's actual options. Keep the same source paths and options between runs:
-
-```powershell
-$env:LATEXAI_CAPTURE_OFF_BASELINE = Join-Path (Get-LaTeXAIRoot) 'temp/t/capture-off-baseline'
-$auditExec = '"' + "$env:PERL_ROOT/perl/bin/perl.exe" + '" -I lib -I tools/dev -MCaptureOffAudit'
-ltst --exec $auditExec t                    # record before editing
-$env:LATEXAI_CAPTURE_OFF_COMPARE = '1'
-ltst --exec $auditExec t                    # compare after editing
-```
-
-Use a new baseline directory for each investigation and leave `LATEXAI_CAPTURE_OFF_COMPARE` unset while recording. The audit fails on a byte difference or an omitted baseline conversion and reports new fixtures outside the baseline. Capture-on conversions and bespoke drivers that do not call `convert_texfile_as_test` need their own assertions, including the capture-off hash check in `t/45_capture.t`. Do not load this helper through `PERL5OPT`: that would also instrument child utilities instead of just the test drivers.
-
-A second, opt-in pass compares the capture-on `ltx` tree against the capture-off serialization of the same fixture. Set `LATEXAI_CAPTURE_ON_AUDIT=1`. After each capture-off conversion the helper converts the same source again with `capture => 1` and otherwise identical Core options, strips the ledger, every `capture:*` attribute, and the capture namespace (the same strip as `t/45_capture.t`, in `tools/dev/CaptureStrip.pm`), and compares that string plus the `ltx:ERROR` count. A difference fails and is recorded per driver under the baseline directory as `capture-on-audit.json`. This pass is independent of recording or comparing the capture-off bytes:
+`lgold --check` digests and lints; it does not compare existing goldens. The audit has two independent checks: exact raw capture-off bytes and capture-on/off tree and diagnostic differences. Run through the repository PowerShell profile, from the repository root:
 
 ```powershell
-$env:LATEXAI_CAPTURE_OFF_BASELINE = Join-Path (Get-LaTeXAIRoot) 'temp/t/capture-off-baseline'
-$env:LATEXAI_CAPTURE_ON_AUDIT = '1'
-$auditExec = '"' + "$env:PERL_ROOT/perl/bin/perl.exe" + '" -I lib -I tools/dev -MCaptureOffAudit'
-ltst --exec $auditExec t
+lgen
+$auditPerl = "$env:PERL_ROOT/perl/bin/perl.exe"
+& $auditPerl -I lib tools/dev/capture-audit.pl record --output temp/t/audit-baseline
+& $auditPerl -I lib tools/dev/capture-audit.pl compare --baseline temp/t/audit-baseline --output temp/t/audit-replay
 ```
+
+No driver arguments selects every `t/*.t` driver. Append named drivers for a bounded audit; comparison requires the same selection. `--jobs N` sets independent driver workers (default one); keep this setting identical when comparing. Record and replay run separately, with fixed inputs. Every output directory must be new. Record is an explicit baseline operation; compare never modifies or renews its baseline, including on failure. Do not inject the observer through `PERL5OPT` or use the superseded `LATEXAI_CAPTURE_OFF_*` / `LATEXAI_CAPTURE_ON_AUDIT` interface.
+
+To retain the older raw-byte check while establishing a new paired baseline, add `--legacy-off <old-directory>` to record. This reads the original per-driver JSON/XML layout and fails on changed, added or omitted conversions; it never overwrites those files. Generic historical difference reasons cannot reconstruct missing historical capture-on trees. A newly recorded pair describes its own recorded input state, not a reconstruction of the historical run.
+
+The audit observes `LaTeXML::Util::Test` conversions before golden normalization and retains their original raw bytes. It also runs fresh off/on controls in separate Perl processes with the driver's complete Core options, differing only in capture. This avoids confusing repeated-pool warnings in the prove process with capture effects. Original driver diagnostics and their differences from the fresh off control remain separate evidence. It records suite inventories, skip reasons, conversion failures, and drivers with zero observed conversions. Direct conversions outside `convert_texfile_as_test` are excluded from this count. In particular, `t/45_capture.t` owns fresh-process capture fixtures; the extpfeil, scalerel, nicematrix and tikz-cd drivers also contain direct checks outside the observer. Post-processing, daemon, unit and Markdown tests are not implicitly capture comparisons. `t/99_capture_audit.t` independently exercises the helper and gate in fresh processes.
+
+Each driver report retains fixture identities, options, source/support hashes, raw and stripped XML (`driver-off`, fresh `off`, fresh `on`), helper requests/results/logs, engine status and error-node counts. `run.json` reconciles the complete selected driver set and the ordinary harness result. A record is qualified only if all selected drivers report, conversions are accounted for, the ordinary tests pass, and the input state stays fixed during the run. It can contain explicitly recorded residuals. The manifest records the checkout and dirty input identity (including restorable uncommitted content), generated revision, library/test/tool file hashes, runtime and relevant environment. Freeze these inputs during conversions; a unique output name alone is insufficient. Generated version metadata is distinct from Git identity.
+
+The comparison dispositions are deliberately conservative:
+
+- An unchanged known residual passes and remains in the report.
+- A newly different fixture, changed residual, removed residual, changed fixture/options/support inputs, or coverage change fails for review.
+- Raw capture-off changes fail independently, even when the capture-on and capture-off trees still agree.
+- Process failure, invalid/missing helper output and conversion failure remain distinct from IR differences. Engine diagnostics and `ltx:ERROR` nodes are separate observations.
+- Ordinary suite success cannot override audit failure. An audit implementation change requires a new explicitly recorded baseline; the comparator cannot silently reinterpret an old baseline.
+
+`CaptureStrip.pm` removes capture attributes, unused capture namespace declarations and the ledger. It retains comments and every text node, including whitespace-only prose and verbatim content, and canonicalizes the DOM directly without re-parsing it. The audit compares live DOMs; file-based capture checks use compact LibXML serialization. The Core serializer currently ignores its format argument, so `Core::Document->toString(0)` does not produce that compact input. Both original serializations remain available for inspection; no engine repair is performed by the comparison.
+
+Read `run.json` and the per-driver reports before explaining a change or deliberately establishing a replacement baseline. Retain the previous baseline and its report. Report the exact selected/omitted surface, the actual harness result, residuals and input identities; a fixture audit does not qualify a manuscript corpus.

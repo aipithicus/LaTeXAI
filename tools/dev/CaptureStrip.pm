@@ -24,8 +24,9 @@ sub _xpath {
   return $xc; }
 
 # Strip the ledger, every capture:* attribute, the capture namespace
-# declaration, and whitespace-only text (pretty-print wrapping of capture
-# attributes must not look like an ltx-tree change).
+# declaration. Preserve every text node, including whitespace-only content.
+# Callers comparing files must serialize compactly; formatting cannot be
+# distinguished from manuscript text after it has entered the DOM.
 sub without_capture {
   my ($document) = @_;
   my $dom = _libxml($document);
@@ -33,16 +34,15 @@ sub without_capture {
   my $copy = $dom->cloneNode(1);
   my $xc   = _xpath($copy);
   foreach my $node ($xc->findnodes('/ltx:document/capture:ledger')) {
-    my $indent = $node->previousSibling;
-    $indent->unbindNode if $indent && $indent->nodeType == XML_TEXT_NODE && $indent->data =~ /^\s*$/;
     $node->unbindNode; }
   foreach my $attr ($xc->findnodes('//@capture:*')) {
     $attr->ownerElement->removeAttributeNS($CAPTURE_NS, $attr->localname); }
-  foreach my $text ($xc->findnodes('//text()')) {
-    $text->unbindNode if $text->data =~ /^\s*$/; }
-  my $xml = $copy->toString(0);
+  # Canonicalize the clone directly. Re-parsing a serialization here would
+  # introduce parser-default dependence into the comparison itself.
+  my $xml = $copy->toStringC14N(1);
   utf8::decode($xml) if defined $xml && !utf8::is_utf8($xml);
-  $xml =~ s/ xmlns:capture="\Q$CAPTURE_NS\E"//g;
+  my @remaining_capture_elements = $xc->findnodes('//*[namespace-uri()="' . $CAPTURE_NS . '"]');
+  $xml =~ s/ xmlns(?::[\w.-]+)?="\Q$CAPTURE_NS\E"//g unless @remaining_capture_elements;
   return $xml; }
 
 sub error_count {

@@ -105,10 +105,10 @@ sub fixture_document {
   my ($name, @flags) = @_;
   my $output = File::Spec->catfile($TEMP, join('-', $name, @flags) . '.xml');
   my ($status, $messages) = run_command($^X, '-I', File::Spec->catdir($ROOT, 'lib'),
-    File::Spec->catfile($ROOT, 'tools', 'dev', 'capture-fixture.pl'), @flags,
+    File::Spec->catfile($ROOT, 'tools', 'dev', 'capture-fixture.pl'), '--compact', @flags,
     File::Spec->catfile($FIXTURES, "$name.tex"), $output);
   is($status, 0, "$name @flags converts without errors or warnings") or diag($messages);
-  return XML::LibXML->load_xml(location => $output); }
+  return XML::LibXML->load_xml(location => $output, keep_blanks => 1); }
 
 sub resolved_capture_file {
   my ($document, $file) = @_;
@@ -655,10 +655,10 @@ validate_capture_document($nested_xml, 'capture-nested-text');
 # type's braces so \@@bibref does not swallow one token and spill the rest.
 my $cite_path = File::Spec->catfile($TEMP, 'cite.xml');
 my ($cite_status, $cite_messages) = run_command($^X, '-I', File::Spec->catdir($ROOT, 'lib'),
-  File::Spec->catfile($ROOT, 'tools', 'dev', 'capture-fixture.pl'),
+  File::Spec->catfile($ROOT, 'tools', 'dev', 'capture-fixture.pl'), '--compact',
   File::Spec->catfile($FIXTURES, 'cite.tex'), $cite_path);
 is($cite_status, 0, 'cite converts without errors or warnings') or diag($cite_messages);
-my $cite_xml = XML::LibXML->load_xml(location => $cite_path);
+my $cite_xml = XML::LibXML->load_xml(location => $cite_path, keep_blanks => 1);
 my $cite_xc = xpath($cite_xml);
 my @cite_bibrefs = $cite_xc->findnodes('//ltx:bibref');
 ok(scalar(@cite_bibrefs) >= 1, 'cite fixture emits bibref elements');

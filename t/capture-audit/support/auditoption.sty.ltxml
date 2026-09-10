@@ -1,0 +1,5 @@
+# Test-only preload: its marker proves that the child's search path and
+# non-default preload were used, rather than merely echoed in a response.
+use LaTeXML::Package;
+DefMacro('\auditoption', 'AUDITOPTION');
+1;

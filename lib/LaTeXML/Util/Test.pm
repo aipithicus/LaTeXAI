@@ -15,6 +15,12 @@ use LaTeXML::Post::XMath;
 use Config;
 
 use base qw(Exporter);
+our $CAPTURE_AUDIT_OBSERVER;
+
+# Optional tooling observer. It never selects tests or changes their verdicts.
+sub capture_audit_event {
+  $CAPTURE_AUDIT_OBSERVER->(@_) if $CAPTURE_AUDIT_OBSERVER;
+  return; }
 #  @Test::More::EXPORT);
 our @EXPORT = (qw(&latexml_ok &latexml_tests),
   qw(&process_domstring &process_xmlfile &process_htmlfile
@@ -27,8 +33,11 @@ our @EXPORT = (qw(&latexml_ok &latexml_tests),
 # Skip any that have no corresponding *.xml file.
 sub latexml_tests {
   my ($directory, %options) = @_;
+  capture_audit_event('suite', directory => $directory, options => \%options);
   my $DIR;
   if ($options{texlive_min} && (texlive_version() < $options{texlive_min})) {
+    capture_audit_event('skip_suite', directory => $directory,
+      reason => "Requirement minimal texlive $options{texlive_min} not met.");
     plan skip_all => "Requirement minimal texlive $options{texlive_min} not met.";
     return done_testing(); }
   if (!opendir($DIR, $directory)) {
@@ -55,7 +64,9 @@ sub latexml_tests {
         foreach my $name (@core_tests) {
           my $test = "$directory/$name";
         SKIP: {
-            skip("No file $test.xml", 1) unless (-f "$test.xml");
+            unless (-f "$test.xml") {
+              capture_audit_event('skip', name => $test, reason => "No file $test.xml");
+              skip("No file $test.xml", 1); }
             next unless check_requirements($test, 1, $$requires{'*'}, $$requires{$name});
             latexml_ok("$test.tex", "$test.xml", $test, $options{compare}, $options{core_options},
               $options{strict}); } }
@@ -100,17 +111,20 @@ sub check_requirements {
       if (pathname_kpsewhich($reqmt) || pathname_find($reqmt)) { }
       else {
         my $message = "Missing requirement $reqmt for $test";
+        capture_audit_event('skip', name => $test, reason => $message);
         diag("Skip: $message");
         skip($message, $ntests);
         return 0; } }
     # Check if specific texlive versions are required for this test
     if ($texlive_min && (texlive_version() < $texlive_min)) {
       my $message = "Minimal texlive $texlive_min requirement not met for $test";
+      capture_audit_event('skip', name => $test, reason => $message);
       diag("Skip: $message");
       skip($message, $ntests);
       return 0; }
     elsif ($required_env && !$ENV{$required_env}) {
       my $message = "$test is only checked in continuous integration. (use make test CI=true)";
+      capture_audit_event('skip', name => $test, reason => $message);
       diag("Skip: $message");
       skip($message, $ntests);
       return 0; } }
@@ -149,9 +163,18 @@ sub convert_texfile_as_test {
   my %core_options = $options{core_options} ? %{ $options{core_options} } : %CORE_OPTIONS_FOR_TESTS;
   my $latexml      = eval { LaTeXML::Core->new(%core_options) };
   if (!$latexml) {
+    capture_audit_event('conversion', options => \%options, core_options => \%core_options,
+      failure => "Core construction failed: $@");
     do_fail($name, "Couldn't instanciate LaTeXML: " . @!); return; }
   else {
     my $dom = eval { $latexml->convertFile($texpath); };
+    my $conversion_error = $@;
+    capture_audit_event('conversion', options => \%options, core_options => \%core_options,
+      document => $dom, status_code => $latexml->getStatusCode,
+      status_message => $latexml->getStatusMessage,
+      failure => !$dom ? "Conversion failed: $conversion_error" :
+        ($options{strict} && $name !~ /fatal/ && $latexml->getStatusCode >= 2)
+        ? 'Strict conversion failed' : undef);
     if (!$dom) {
       do_fail($name, "Couldn't convert $texpath: " . @!); return; }
     # LaTeXAI: a strict suite fails on any error the engine counted (status 2 = errors,

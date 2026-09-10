@@ -1,0 +1,7 @@
+# Test-only controlled residual. The off document is always identical;
+# changing the on document must fail even with the same failing fixture name.
+use LaTeXML::Package;
+my $reading = LookupValue('CAPTURE_PROVENANCE')
+  ? ($ENV{LATEXAI_AUDIT_TEST_RESIDUAL} || 'stable') : ($ENV{LATEXAI_AUDIT_TEST_OFF} || 'stable');
+DefMacro('\auditresidual', $reading);
+1;
