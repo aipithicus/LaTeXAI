@@ -9,7 +9,7 @@ use Encode qw(encode);
 use Digest::SHA qw(sha256_hex);
 use LaTeXML::Util::Test ();
 use CaptureAudit qw(json_bytes read_json write_json write_raw read_raw file_hash
-  object_hash run_conversion compare_case tree_hashes verify_artifacts);
+  object_hash run_conversion compare_case tree_hashes verify_artifacts restrip_report);
 use CaptureStrip qw(without_capture error_count);
 
 # Only load in primary prove processes, through capture-audit.pl --exec.
@@ -30,6 +30,9 @@ my %seen_legacy;
 my %ordinals;
 if ($baseline) {
   push @{ $report->{issues} }, @{ verify_artifacts("$baseline_root/$driver", $baseline) };
+  if ($ENV{LATEXAI_AUDIT_RESTRIP_BASELINE}) {
+    $baseline = restrip_report("$baseline_root/$driver", $baseline, "$directory/baseline-projection");
+  }
 }
 
 sub observe {

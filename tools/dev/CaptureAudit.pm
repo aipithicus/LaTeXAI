@@ -7,11 +7,14 @@ use Digest::SHA qw(sha256_hex);
 use Encode qw(encode);
 use File::Find;
 use File::Spec;
+use File::Basename qw(basename);
 use JSON::PP;
 use Config;
 use MIME::Base64 qw(encode_base64);
+use XML::LibXML;
+use CaptureStrip qw(without_capture);
 our @EXPORT_OK = qw(json_bytes read_json write_json read_raw write_raw file_hash
-  object_hash run_conversion compare_case finish_run snapshot tree_hashes verify_artifacts);
+  object_hash run_conversion compare_case finish_run snapshot tree_hashes verify_artifacts restrip_report);
 our $FORMAT = 'latexai-capture-audit/1';
 
 sub json_bytes { return JSON::PP->new->canonical->utf8->encode($_[0]); }
@@ -135,12 +138,80 @@ sub verify_artifacts {
   }
   return \@issues; }
 
+# Explicitly project retained canonical DOM evidence through the current strip.
+# The pretty raw serialization is not a DOM round trip: it introduces whitespace.
+# Never overwrite a historical report, raw output, diagnostic or strict verdict.
+sub restrip_report {
+  my ($directory, $report, $output) = @_;
+  my @issues = @{ verify_artifacts($directory, $report) };
+  die "Cannot re-strip corrupt evidence: @issues\n" if @issues;
+  die "Projection output already exists: $output\n" if -e $output;
+  die "Projection report differs from retained evidence\n"
+    unless object_hash($report) eq object_hash(read_json("$directory/report.json"));
+  # XML::LibXML 2.0210 initializes keepBlanks after creating the context;
+  # no_blanks => 0 can therefore inherit an earlier parser's no_blanks => 1.
+  # Use the audit's fresh-process boundary for historical DOM parsing too.
+  # https://github.com/cpan-authors/XML-LibXML/issues/88
+  my $status = system($^X, '-I', 'lib', '-I', 'tools/dev', '-MCaptureAudit', '-e',
+    'CaptureAudit::_restrip_report(@ARGV)', $directory, $output);
+  die "Baseline projection process failed: $status\n" if $status;
+  my $projection = read_json("$output/projection.json");
+  my $projected = JSON::PP->new->utf8->decode(json_bytes($report));
+  $projected->{cases} = $projection->{cases};
+  return $projected; }
+
+sub _restrip_report {
+  my ($directory, $output) = @_;
+  my $report = read_json("$directory/report.json");
+  my @issues = @{ verify_artifacts($directory, $report) };
+  die "Cannot re-strip corrupt evidence: @issues\n" if @issues;
+  die "Projection output already exists: $output\n" if -e $output;
+  require File::Path;
+  File::Path::make_path($output);
+  my $projected = JSON::PP->new->utf8->decode(json_bytes($report));
+  my %changes;
+  for my $key (sort keys %{ $projected->{cases} }) {
+    my $case = $projected->{cases}{$key};
+    next if $case->{excluded};
+    die "Cannot re-strip failed or incomplete case: $key\n"
+      if $case->{failure} || !$case->{residual};
+    for my $side (qw(off on)) {
+      my $file = "$key.$side.stripped.xml";
+      my $old_hash = $case->{residual}{$side}{stripped_sha256};
+      die "Unverified retained tree: $file\n"
+        unless ($report->{artifacts}{$file} || '') eq ($old_hash || '')
+        && -f "$directory/$file" && file_hash("$directory/$file") eq $old_hash;
+      # All parsing in this fresh process retains whitespace. Canonical
+      # evidence has no external DTD to load.
+      my $dom = XML::LibXML->new(no_blanks => 0, load_ext_dtd => 0,
+        expand_entities => 0, no_network => 1)->load_xml(string => read_raw("$directory/$file"));
+      my $xml = encode('UTF-8', without_capture($dom));
+      write_raw("$output/$file", $xml);
+      my $new_hash = sha256_hex($xml);
+      $case->{residual}{$side}{stripped_sha256} = $new_hash;
+      $changes{$key}{$side} = { before => $old_hash, after => $new_hash }
+        if $old_hash ne $new_hash;
+    }
+    $case->{tree_different} = $case->{residual}{off}{stripped_sha256} ne $case->{residual}{on}{stripped_sha256}
+      ? JSON::PP::true : JSON::PP::false;
+    $case->{different} = object_hash($case->{residual}{off}) ne object_hash($case->{residual}{on})
+      ? JSON::PP::true : JSON::PP::false;
+  }
+  # This is derived comparison evidence, not a newly qualified baseline.
+  write_json("$output/projection.json", { source_report_sha256 => file_hash("$directory/report.json"),
+      strip_sha256 => file_hash('tools/dev/CaptureStrip.pm'), changes => \%changes,
+      cases => $projected->{cases}, artifacts => { map { basename($_) => file_hash($_) }
+        glob("$output/*.xml") } });
+  return $projected; }
+
 # A per-driver END block cannot detect an entirely omitted driver.
 sub finish_run {
-  my ($directory, $drivers, $baseline_dir, $prove_status, $before, $after) = @_;
+  my ($directory, $drivers, $baseline_dir, $prove_status, $before, $after, $restrip_pin) = @_;
   my @issues;
   my $baseline = $baseline_dir ? read_json("$baseline_dir/run.json") : undef;
   if ($baseline) {
+    push @issues, 'baseline-restrip-pin-mismatch'
+      if $restrip_pin && file_hash("$baseline_dir/run.json") ne $restrip_pin;
     push @issues, 'baseline-not-qualified' unless $baseline->{qualified};
     for my $driver (@{ $baseline->{drivers} }) {
       my $path = "$baseline_dir/$driver/report.json";
@@ -155,16 +226,18 @@ sub finish_run {
     for my $key (qw(perl environment root)) {
       push @issues, "changed-runtime-$key"
         unless object_hash($baseline->{before}{$key}) eq object_hash($before->{$key}); }
-    # Engine/library changes are the subject of comparison. The comparator
-    # itself must stay identical; a new normalizer needs a new explicit record.
+    # The explicit, hash-pinned re-strip records both implementation identities
+    # and derived baseline trees. The conversion helper must still be identical.
     for my $file (qw(tools/dev/CaptureAudit.pm tools/dev/CaptureOffAudit.pm
         tools/dev/capture-on-one.pl tools/dev/CaptureStrip.pm tools/dev/capture-audit.pl)) {
+      next if $restrip_pin && $file ne 'tools/dev/capture-on-one.pl';
       push @issues, "changed-audit-implementation:$file"
         unless ($baseline->{before}{files}{$file} || '') eq ($before->{files}{$file} || ''); }
   }
   push @issues, 'input-state-changed-during-run' unless object_hash($before) eq object_hash($after);
   push @issues, "prove-failed:$prove_status" if $prove_status;
   my %reports;
+  my %projections;
   my ($audited, $different, $skipped, $tree_different, $diagnostics_different) = (0, 0, 0, 0, 0);
   for my $driver (@$drivers) {
     my $path = "$directory/$driver/report.json";
@@ -180,6 +253,20 @@ sub finish_run {
     $diagnostics_different += scalar(grep { $_->{diagnostics_different} } values %{ $report->{cases} });
     $skipped += scalar(@{ $report->{skips} });
     push @issues, map { "$driver:$_" } @{ $report->{issues} };
+    if ($restrip_pin) {
+      my $projection_path = "$directory/$driver/baseline-projection/projection.json";
+      if (!-f $projection_path) { push @issues, "missing-baseline-projection:$driver"; }
+      else {
+        my $projection = read_json($projection_path);
+        push @issues, "$driver:projection-source-mismatch"
+          unless $projection->{source_report_sha256} eq file_hash("$baseline_dir/$driver/report.json");
+        push @issues, "$driver:projection-strip-mismatch"
+          unless $projection->{strip_sha256} eq ($before->{files}{'tools/dev/CaptureStrip.pm'} || '');
+        push @issues, map { "$driver:projection-$_" }
+          @{ verify_artifacts("$directory/$driver/baseline-projection", $projection) };
+        $projections{$driver} = { sha256 => file_hash($projection_path), changes => $projection->{changes} };
+      }
+    }
   }
   my $run = { format => $FORMAT, mode => $baseline ? 'compare' : 'record',
     baseline => $baseline_dir, drivers => $drivers, reports => \%reports,
@@ -187,6 +274,10 @@ sub finish_run {
     audited => $audited, different => $different, skipped => $skipped,
     tree_different => $tree_different, diagnostics_different => $diagnostics_different,
     issues => \@issues, qualified => @issues ? JSON::PP::false : JSON::PP::true };
+  $run->{baseline_restrip} = { source_run_sha256 => $restrip_pin,
+    source_implementation => { map { $_ => $baseline->{before}{files}{$_} }
+      grep { m{^tools/dev/} } keys %{ $baseline->{before}{files} } },
+    projections => \%projections } if $restrip_pin;
   write_json("$directory/run.json", $run);
   return $run; }
 

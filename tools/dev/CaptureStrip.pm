@@ -33,7 +33,7 @@ sub without_capture {
   return unless $dom;
   my $copy = $dom->cloneNode(1);
   my $xc   = _xpath($copy);
-  foreach my $node ($xc->findnodes('/ltx:document/capture:ledger')) {
+  foreach my $node ($xc->findnodes('/*/capture:ledger')) {
     $node->unbindNode; }
   foreach my $attr ($xc->findnodes('//@capture:*')) {
     $attr->ownerElement->removeAttributeNS($CAPTURE_NS, $attr->localname); }

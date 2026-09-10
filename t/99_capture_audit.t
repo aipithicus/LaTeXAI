@@ -11,7 +11,7 @@ use IPC::Run3;
 use XML::LibXML;
 use lib File::Spec->catdir($FindBin::Bin, '..', 'tools', 'dev');
 use CaptureAudit qw(read_json write_json read_raw write_raw run_conversion
-  json_bytes object_hash finish_run tree_hashes);
+  json_bytes object_hash finish_run tree_hashes restrip_report compare_case file_hash);
 use CaptureStrip qw(without_capture);
 
 chdir File::Spec->catdir($FindBin::Bin, '..') or die $!;
@@ -20,12 +20,13 @@ $temp = abs_path($temp);
 my %defaults = (preload => [], searchpaths => [], includecomments => 0,
   includepathpis => 0, verbosity => -2);
 my $counter = 0;
+local $ENV{LATEXAI_AUDIT_RESTRIP_BASELINE};
 sub convert {
   my ($source, $options) = @_;
   my $result = run_conversion({ texpath => $source, options => $options }, "$temp/helper-" . ++$counter);
   ok(!$result->{failure}, 'fresh-process conversion succeeds') or diag(json_bytes($result));
   return $result; }
-sub xml { return XML::LibXML->new(load_ext_dtd => 0)->load_xml(string => $_[0]); }
+sub xml { return XML::LibXML->new(load_ext_dtd => 0, no_blanks => 0)->load_xml(string => $_[0]); }
 
 my $ns = 'http://dlmf.nist.gov/LaTeXML';
 my $capture = 'http://dlmf.nist.gov/LaTeXML/capture';
@@ -44,6 +45,19 @@ for my $tag ('text', 'verbatim') {
 like(without_capture(xml(qq{<document xmlns="$ns"><!--witness--><p>\x{3b1}</p></document>})),
   qr/<!--witness-->.*\x{3b1}/, 'comments and Unicode survive canonicalization');
 is($off->toString, $raw_off, 'all strip checks preserve off DOM');
+for my $root ('ltx:custom', 'foreign:document', 'document') {
+  my $namespaces = qq{xmlns:ltx="$ns" xmlns:foreign="urn:audit:foreign" xmlns:c="$capture"};
+  my $body = '<!--witness--><ltx:text>a</ltx:text> <ltx:text>b</ltx:text>'
+    . '<foreign:ledger revision="manuscript"/>';
+  my $plain = xml(qq{<$root $namespaces>$body</$root>});
+  my $captured = xml(qq{<$root $namespaces c:source="author">$body<c:ledger><c:engine revision="old"/></c:ledger></$root>});
+  my $original = $captured->toString;
+  is(without_capture($captured), without_capture($plain), "$root ledger stripped by namespace under the actual root");
+  is($captured->toString, $original, "$root input stays unchanged");
+  my $changed = xml(qq{<$root $namespaces>$body<ltx:text>changed</ltx:text></$root>});
+  isnt(without_capture($captured), without_capture($changed), "$root manuscript change stays observable");
+  like(without_capture($captured), qr/foreign:ledger revision="manuscript"/, "$root foreign ledger survives");
+}
 XML::LibXML->new(no_blanks => 1)->load_xml(string => '<root><child/></root>');
 isnt(without_capture($off), without_capture($no_space), 'another parser cannot silently disable audit whitespace');
 
@@ -182,6 +196,64 @@ is(object_hash(tree_hashes($base_dir)), $baseline_hash, 'all successful and fail
 my $state = { root => 'test', perl => {}, environment => {}, files => {} };
 my $run = finish_run($base_dir, ['v1-driver.t'], undef, 0, $state, $state);
 ok($run->{qualified}, 'completed ordinary and audit observations qualify a record');
+{
+  # A legacy canonical pair retains the ledger under a foreign root. Re-strip
+  # both sides without recreating the engine run or adopting candidate output.
+  my $legacy_dir = "$temp/legacy-root";
+  make_path($legacy_dir);
+  my $legacy = JSON::PP->new->utf8->decode(json_bytes($base_report));
+  my $key = $keys[0];
+  my $case = $legacy->{cases}{$key};
+  my $text = '<!--keep--><text>a</text> <text>b</text>';
+  for my $side (qw(off on)) {
+    my $ledger = $side eq 'on' ? '<c:ledger><c:engine revision="old"></c:engine></c:ledger>' : '';
+    my $file = "$key.$side.stripped.xml";
+    write_raw("$legacy_dir/$file", qq{<root xmlns:c="$capture">$text$ledger</root>});
+    $case->{residual}{$side} = { %{ $case->{residual}{off} }, stripped_sha256 => file_hash("$legacy_dir/$file") };
+    $legacy->{artifacts} = {} if $side eq 'off';
+    $legacy->{artifacts}{$file} = file_hash("$legacy_dir/$file");
+  }
+  write_json("$legacy_dir/report.json", $legacy);
+  my $original = object_hash(tree_hashes($legacy_dir));
+  XML::LibXML->new(no_blanks => 1)->load_xml(string => '<root><child/></root>');
+  my $projected = restrip_report($legacy_dir, $legacy, "$temp/projected-root");
+  ok(!$projected->{cases}{$key}{different}, 'legacy custom-root metadata residual disappears on both re-stripped sides')
+    or diag(json_bytes($projected->{cases}{$key}{residual}));
+  is(object_hash(tree_hashes($legacy_dir)), $original, 'projection preserves every original baseline byte');
+  is_deeply($projected->{cases}{$key}{driver_diagnostics}, $case->{driver_diagnostics}, 'projection preserves diagnostics');
+  is($projected->{cases}{$key}{off_raw_sha256}, $case->{off_raw_sha256}, 'projection preserves independent raw-byte gate');
+  my $candidate = JSON::PP->new->utf8->decode(json_bytes($projected->{cases}{$key}));
+  write_raw("$temp/current-root.xml", qq{<root>$text</root>});
+  $candidate->{residual}{on}{stripped_sha256} = file_hash("$temp/current-root.xml");
+  is_deeply(compare_case($projected->{cases}{$key}, $candidate), [], 'revision change passes under one strip implementation');
+  like(read_raw("$temp/projected-root/$key.on.stripped.xml"), qr{<!--keep--><text>a</text> <text>b</text>}, 'retained canonical whitespace and comments survive re-parsing');
+  $candidate->{residual}{on}{stripped_sha256} = 'manuscript-change';
+  $candidate->{different} = JSON::PP::true;
+  like(join(' ', @{ compare_case($projected->{cases}{$key}, $candidate) }), qr/new-residual/, 'real custom-root tree drift still fails after re-stripping');
+  write_raw("$legacy_dir/$key.on.stripped.xml", '<tampered/>');
+  ok(!eval { restrip_report($legacy_dir, $legacy, "$temp/corrupt-projection"); 1 }, 'corrupt legacy tree cannot be re-stripped');
+  like($@, qr/corrupt evidence/, 'corrupt projection reports the integrity failure');
+}
+{
+  write_raw($driver, driver_text('t/capture-audit/residual.tex'));
+  local $ENV{LATEXAI_AUDIT_RESTRIP_BASELINE} = file_hash("$base_dir/run.json");
+  my ($status, $report, $out, $log) = prove_driver('explicit-restrip', $base_dir, 'known');
+  is($status, 0, 'real observer re-strips an explicitly selected baseline') or diag($log);
+  my $current_state = { %$state, files => { 'tools/dev/CaptureStrip.pm' => file_hash('tools/dev/CaptureStrip.pm') } };
+  my $strict = finish_run($out, ['v1-driver.t'], $base_dir, 0, $current_state, $current_state,
+    $ENV{LATEXAI_AUDIT_RESTRIP_BASELINE});
+  ok($strict->{qualified}, 'explicit projection qualifies with original baseline and current implementation identities')
+    or diag(json_bytes($strict->{issues}));
+  is($strict->{baseline_restrip}{source_run_sha256}, file_hash("$base_dir/run.json"), 'qualification pins original baseline run');
+  my $unpinned = finish_run($out, ['v1-driver.t'], $base_dir, 0, $current_state, $current_state);
+  like(join(' ', @{ $unpinned->{issues} }), qr/changed-audit-implementation/, 'implicit reinterpretation remains forbidden');
+  my $bad_pin = finish_run($out, ['v1-driver.t'], $base_dir, 0, $current_state, $current_state, '0' x 64);
+  like(join(' ', @{ $bad_pin->{issues} }), qr/baseline-restrip-pin-mismatch/, 'wrong source pin fails strict qualification');
+  write_raw("$out/v1-driver.t/baseline-projection/$keys[0].on.stripped.xml", '<tampered/>');
+  my $bad_projection = finish_run($out, ['v1-driver.t'], $base_dir, 0, $current_state, $current_state,
+    $ENV{LATEXAI_AUDIT_RESTRIP_BASELINE});
+  like(join(' ', @{ $bad_projection->{issues} }), qr/projection-artifact-integrity/, 'modified projected evidence fails qualification');
+}
 my $missing_driver = finish_run($same_dir, ['v1-driver.t', 'absent.t'], $base_dir, 0, $state, $state);
 ok(!$missing_driver->{qualified}, 'entire missing driver cannot escape per-driver checks');
 like(join(' ', @{ $missing_driver->{issues} }), qr/missing-driver-report:absent.t/, 'missing driver is named');
