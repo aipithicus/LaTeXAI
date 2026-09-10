@@ -20,8 +20,9 @@
                 "run",
                 "--project",
                 "<SCIENCE_FACILITY>/mcp/pwsh_exec",
-                "--no-cache",
                 "--locked",
+                "--no-sync",
+                "--offline",
                 "<SCIENCE_FACILITY>/mcp/pwsh_exec/server.py"
             ],
             "tool_timeout_sec": 29400,
