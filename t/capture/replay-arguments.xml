@@ -1,0 +1,325 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="amsmath,subfig"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML" xmlns:capture="http://dlmf.nist.gov/LaTeXML/capture" capture:base="CAPTURE_BASE">
+  <resource capture:byteEnd="125" capture:byteStart="109" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="5" capture:locator="replay-arguments.tex#textrange(from=5;1,to=5;16)" capture:toCol="16" capture:toLine="5" src="LaTeXML.css" type="text/css"/>
+  <resource capture:byteEnd="125" capture:byteStart="109" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="5" capture:locator="replay-arguments.tex#textrange(from=5;1,to=5;16)" capture:toCol="16" capture:toLine="5" src="ltx-article.css" type="text/css"/>
+  <section capture:byteEnd="153" capture:byteStart="126" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="6" capture:locator="replay-arguments.tex#textrange(from=6;1,to=6;27)" capture:toCol="27" capture:toLine="6" inlist="toc" xml:id="S1">
+    <tags>
+      <tag>1</tag>
+      <tag role="refnum">1</tag>
+      <tag role="typerefnum">§1</tag>
+    </tags>
+    <title capture:byteEnd="153" capture:byteStart="126" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="6" capture:locator="replay-arguments.tex#textrange(from=6;1,to=6;27)" capture:toCol="27" capture:toLine="6"><tag close=" ">1</tag>The <Math capture:byteEnd="147" capture:byteStart="139" capture:file="replay-arguments.tex" capture:fromCol="14" capture:fromLine="6" capture:locator="replay-arguments.tex#textrange(from=6;14,to=6;21)" capture:provenance="source" capture:source="$\alpha$" capture:toCol="21" capture:toLine="6" mode="inline" tex="\alpha" text="alpha" xml:id="S1.m1">
+        <XMath capture:byteEnd="147" capture:byteStart="139" capture:file="replay-arguments.tex" capture:fromCol="14" capture:fromLine="6" capture:locator="replay-arguments.tex#textrange(from=6;14,to=6;21)" capture:toCol="21" capture:toLine="6">
+          <XMTok capture:byteEnd="153" capture:byteStart="152" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="6" capture:locator="replay-arguments.tex#textrange(from=6;1,to=6;28)" capture:toCol="28" capture:toLine="6" font="italic" name="alpha" role="UNKNOWN">α</XMTok>
+        </XMath>
+      </Math> case</title>
+    <subsection capture:byteEnd="175" capture:byteStart="154" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="7" capture:locator="replay-arguments.tex#textrange(from=7;1,to=7;21)" capture:toCol="21" capture:toLine="7" inlist="toc" xml:id="S1.SS1">
+      <tags>
+        <tag>1.1</tag>
+        <tag role="refnum">1.1</tag>
+        <tag role="typerefnum">§1.1</tag>
+      </tags>
+      <title capture:byteEnd="175" capture:byteStart="154" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="7" capture:locator="replay-arguments.tex#textrange(from=7;1,to=7;21)" capture:toCol="21" capture:toLine="7"><tag close=" ">1.1</tag><Math capture:byteEnd="174" capture:byteStart="166" capture:file="replay-arguments.tex" capture:fromCol="13" capture:fromLine="7" capture:locator="replay-arguments.tex#textrange(from=7;13,to=7;20)" capture:provenance="source" capture:source="$T^{*}T$" capture:toCol="20" capture:toLine="7" mode="inline" tex="T^{*}T" text="T ^ * * T" xml:id="S1.SS1.m1">
+          <XMath capture:byteEnd="174" capture:byteStart="166" capture:file="replay-arguments.tex" capture:fromCol="13" capture:fromLine="7" capture:locator="replay-arguments.tex#textrange(from=7;13,to=7;20)" capture:toCol="20" capture:toLine="7">
+            <XMApp capture:byteEnd="174" capture:byteStart="166" capture:file="replay-arguments.tex" capture:fromCol="13" capture:fromLine="7" capture:juxtaposition="[{&quot;decision&quot;:&quot;product&quot;,&quot;evidence&quot;:{&quot;explicitApply&quot;:false,&quot;leftRole&quot;:&quot;none&quot;,&quot;leftShape&quot;:&quot;ltx:XMApp&quot;,&quot;rightRole&quot;:&quot;UNKNOWN&quot;,&quot;rightShape&quot;:&quot;ltx:XMTok&quot;},&quot;rule&quot;:&quot;moreFactors&quot;}]" capture:locator="replay-arguments.tex#textrange(from=7;13,to=7;20)" capture:toCol="20" capture:toLine="7">
+              <XMTok capture:byteEnd="174" capture:byteStart="166" capture:file="replay-arguments.tex" capture:fromCol="13" capture:fromLine="7" capture:locator="replay-arguments.tex#textrange(from=7;13,to=7;20)" capture:toCol="20" capture:toLine="7" meaning="times" role="MULOP">⁢</XMTok>
+              <XMApp capture:byteEnd="174" capture:byteStart="166" capture:file="replay-arguments.tex" capture:fromCol="13" capture:fromLine="7" capture:locator="replay-arguments.tex#textrange(from=7;13,to=7;20)" capture:toCol="20" capture:toLine="7">
+                <XMTok capture:byteEnd="174" capture:byteStart="166" capture:file="replay-arguments.tex" capture:fromCol="13" capture:fromLine="7" capture:locator="replay-arguments.tex#textrange(from=7;13,to=7;20)" capture:toCol="20" capture:toLine="7" role="SUPERSCRIPTOP" scriptpos="post1"/>
+                <XMTok capture:byteEnd="175" capture:byteStart="174" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="7" capture:locator="replay-arguments.tex#textrange(from=7;1,to=7;22)" capture:toCol="22" capture:toLine="7" font="italic" role="UNKNOWN">T</XMTok>
+                <XMTok capture:byteEnd="175" capture:byteStart="174" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="7" capture:locator="replay-arguments.tex#textrange(from=7;1,to=7;22)" capture:toCol="22" capture:toLine="7" fontsize="70%" meaning="times" role="MULOP">∗</XMTok>
+              </XMApp>
+              <XMTok capture:byteEnd="175" capture:byteStart="174" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="7" capture:locator="replay-arguments.tex#textrange(from=7;1,to=7;22)" capture:toCol="22" capture:toLine="7" font="italic" role="UNKNOWN">T</XMTok>
+            </XMApp>
+          </XMath>
+        </Math></title>
+    </subsection>
+  </section>
+  <section capture:byteEnd="203" capture:byteStart="176" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="8" capture:locator="replay-arguments.tex#textrange(from=8;1,to=8;27)" capture:toCol="27" capture:toLine="8" xml:id="Sx1">
+    <title capture:byteEnd="203" capture:byteStart="176" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="8" capture:locator="replay-arguments.tex#textrange(from=8;1,to=8;27)" capture:toCol="27" capture:toLine="8">Starred <Math capture:byteEnd="202" capture:byteStart="194" capture:file="replay-arguments.tex" capture:fromCol="19" capture:fromLine="8" capture:locator="replay-arguments.tex#textrange(from=8;19,to=8;26)" capture:provenance="source" capture:source="$\delta$" capture:toCol="26" capture:toLine="8" mode="inline" tex="\delta" text="delta" xml:id="Sx1.m1">
+        <XMath capture:byteEnd="202" capture:byteStart="194" capture:file="replay-arguments.tex" capture:fromCol="19" capture:fromLine="8" capture:locator="replay-arguments.tex#textrange(from=8;19,to=8;26)" capture:toCol="26" capture:toLine="8">
+          <XMTok capture:byteEnd="203" capture:byteStart="202" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="8" capture:locator="replay-arguments.tex#textrange(from=8;1,to=8;28)" capture:toCol="28" capture:toLine="8" font="italic" name="delta" role="UNKNOWN">δ</XMTok>
+        </XMath>
+      </Math></title>
+  </section>
+  <section capture:byteEnd="240" capture:byteStart="204" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="9" capture:locator="replay-arguments.tex#textrange(from=9;1,to=9;36)" capture:toCol="36" capture:toLine="9" inlist="toc" xml:id="S2">
+    <tags>
+      <tag>2</tag>
+      <tag role="refnum">2</tag>
+      <tag role="typerefnum">§2</tag>
+    </tags>
+    <title capture:byteEnd="240" capture:byteStart="204" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="9" capture:locator="replay-arguments.tex#textrange(from=9;1,to=9;36)" capture:toCol="36" capture:toLine="9"><tag close=" ">2</tag>Long <Math capture:byteEnd="239" capture:byteStart="229" capture:file="replay-arguments.tex" capture:fromCol="26" capture:fromLine="9" capture:locator="replay-arguments.tex#textrange(from=9;26,to=9;35)" capture:provenance="source" capture:source="$\epsilon$" capture:toCol="35" capture:toLine="9" mode="inline" tex="\epsilon" text="epsilon" xml:id="S2.m1">
+        <XMath capture:byteEnd="239" capture:byteStart="229" capture:file="replay-arguments.tex" capture:fromCol="26" capture:fromLine="9" capture:locator="replay-arguments.tex#textrange(from=9;26,to=9;35)" capture:toCol="35" capture:toLine="9">
+          <XMTok capture:byteEnd="240" capture:byteStart="239" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="9" capture:locator="replay-arguments.tex#textrange(from=9;1,to=9;37)" capture:toCol="37" capture:toLine="9" font="italic" name="epsilon" role="UNKNOWN">ϵ</XMTok>
+        </XMath>
+      </Math></title>
+    <toctitle capture:byteEnd="240" capture:byteStart="204" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="9" capture:locator="replay-arguments.tex#textrange(from=9;1,to=9;36)" capture:toCol="36" capture:toLine="9"><tag close=" ">2</tag>Short <Math capture:byteEnd="222" capture:byteStart="219" capture:file="replay-arguments.tex" capture:fromCol="16" capture:fromLine="9" capture:locator="replay-arguments.tex#textrange(from=9;16,to=9;18)" capture:provenance="source" capture:source="$s$" capture:toCol="18" capture:toLine="9" mode="inline" tex="s" text="s" xml:id="S2.m2">
+        <XMath capture:byteEnd="222" capture:byteStart="219" capture:file="replay-arguments.tex" capture:fromCol="16" capture:fromLine="9" capture:locator="replay-arguments.tex#textrange(from=9;16,to=9;18)" capture:toCol="18" capture:toLine="9">
+          <XMTok capture:byteEnd="240" capture:byteStart="239" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="9" capture:locator="replay-arguments.tex#textrange(from=9;1,to=9;37)" capture:toCol="37" capture:toLine="9" font="italic" role="UNKNOWN">s</XMTok>
+        </XMath>
+      </Math></toctitle>
+    <para capture:byteEnd="374" capture:byteStart="241" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="10" capture:locator="replay-arguments.tex#textrange(from=10;1,to=14;13)" capture:toCol="13" capture:toLine="14" xml:id="S2.p1">
+      <itemize capture:byteEnd="374" capture:byteStart="241" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="10" capture:locator="replay-arguments.tex#textrange(from=10;1,to=14;13)" capture:toCol="13" capture:toLine="14" xml:id="S2.I1">
+        <item capture:byteEnd="271" capture:byteStart="257" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="11" capture:locator="replay-arguments.tex#textrange(from=11;1,to=11;14)" capture:toCol="14" capture:toLine="11" xml:id="S2.I1.ix1">
+          <tags>
+            <tag><Math capture:byteEnd="270" capture:byteStart="263" capture:file="replay-arguments.tex" capture:fromCol="7" capture:fromLine="11" capture:locator="replay-arguments.tex#textrange(from=11;7,to=11;13)" capture:provenance="source" capture:source="$\beta$" capture:toCol="13" capture:toLine="11" mode="inline" tex="\beta" text="beta" xml:id="S2.I1.ix1.m1">
+                <XMath capture:byteEnd="270" capture:byteStart="263" capture:file="replay-arguments.tex" capture:fromCol="7" capture:fromLine="11" capture:locator="replay-arguments.tex#textrange(from=11;7,to=11;13)" capture:toCol="13" capture:toLine="11">
+                  <XMTok capture:byteEnd="271" capture:byteStart="270" capture:file="replay-arguments.tex" capture:fromCol="15" capture:fromLine="11" capture:locator="replay-arguments.tex#textrange(from=11;15,to=11;15)" capture:toCol="15" capture:toLine="11" font="italic" name="beta" role="UNKNOWN">β</XMTok>
+                </XMath>
+              </Math></tag>
+            <tag role="typerefnum">item <Math capture:byteEnd="270" capture:byteStart="263" capture:file="replay-arguments.tex" capture:fromCol="7" capture:fromLine="11" capture:locator="replay-arguments.tex#textrange(from=11;7,to=11;13)" capture:provenance="source" capture:source="$\beta$" capture:toCol="13" capture:toLine="11" mode="inline" tex="\beta" text="beta" xml:id="S2.I1.ix1.m2">
+                <XMath capture:byteEnd="270" capture:byteStart="263" capture:file="replay-arguments.tex" capture:fromCol="7" capture:fromLine="11" capture:locator="replay-arguments.tex#textrange(from=11;7,to=11;13)" capture:toCol="13" capture:toLine="11">
+                  <XMTok capture:byteEnd="271" capture:byteStart="270" capture:file="replay-arguments.tex" capture:fromCol="15" capture:fromLine="11" capture:locator="replay-arguments.tex#textrange(from=11;15,to=11;15)" capture:toCol="15" capture:toLine="11" font="italic" name="beta" role="UNKNOWN">β</XMTok>
+                </XMath>
+              </Math></tag>
+          </tags>
+          <para capture:byteEnd="273" capture:byteStart="272" capture:file="replay-arguments.tex" capture:fromCol="17" capture:fromLine="11" capture:locator="replay-arguments.tex#textrange(from=11;17,to=11;17)" capture:toCol="17" capture:toLine="11" xml:id="S2.I1.ix1.p1">
+            <p capture:byteEnd="273" capture:byteStart="272" capture:file="replay-arguments.tex" capture:fromCol="17" capture:fromLine="11" capture:locator="replay-arguments.tex#textrange(from=11;17,to=11;17)" capture:toCol="17" capture:toLine="11">First.</p>
+          </para>
+        </item>
+        <item capture:byteEnd="295" capture:byteStart="279" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="12" capture:locator="replay-arguments.tex#textrange(from=12;1,to=12;16)" capture:toCol="16" capture:toLine="12" xml:id="S2.I1.ix2">
+          <tags>
+            <tag><Math capture:byteEnd="294" capture:byteStart="285" capture:file="replay-arguments.tex" capture:fromCol="7" capture:fromLine="12" capture:locator="replay-arguments.tex#textrange(from=12;7,to=12;15)" capture:provenance="source" capture:source="$\beta+1$" capture:toCol="15" capture:toLine="12" mode="inline" tex="\beta+1" text="beta + 1" xml:id="S2.I1.ix2.m1">
+                <XMath capture:byteEnd="294" capture:byteStart="285" capture:file="replay-arguments.tex" capture:fromCol="7" capture:fromLine="12" capture:locator="replay-arguments.tex#textrange(from=12;7,to=12;15)" capture:toCol="15" capture:toLine="12">
+                  <XMApp capture:byteEnd="294" capture:byteStart="285" capture:file="replay-arguments.tex" capture:fromCol="7" capture:fromLine="12" capture:locator="replay-arguments.tex#textrange(from=12;7,to=12;15)" capture:toCol="15" capture:toLine="12">
+                    <XMTok capture:byteEnd="295" capture:byteStart="294" capture:file="replay-arguments.tex" capture:fromCol="17" capture:fromLine="12" capture:locator="replay-arguments.tex#textrange(from=12;17,to=12;17)" capture:toCol="17" capture:toLine="12" meaning="plus" role="ADDOP">+</XMTok>
+                    <XMTok capture:byteEnd="295" capture:byteStart="294" capture:file="replay-arguments.tex" capture:fromCol="17" capture:fromLine="12" capture:locator="replay-arguments.tex#textrange(from=12;17,to=12;17)" capture:toCol="17" capture:toLine="12" font="italic" name="beta" role="UNKNOWN">β</XMTok>
+                    <XMTok capture:byteEnd="295" capture:byteStart="294" capture:file="replay-arguments.tex" capture:fromCol="17" capture:fromLine="12" capture:locator="replay-arguments.tex#textrange(from=12;17,to=12;17)" capture:toCol="17" capture:toLine="12" meaning="1" role="NUMBER">1</XMTok>
+                  </XMApp>
+                </XMath>
+              </Math></tag>
+            <tag role="typerefnum">item <Math capture:byteEnd="294" capture:byteStart="285" capture:file="replay-arguments.tex" capture:fromCol="7" capture:fromLine="12" capture:locator="replay-arguments.tex#textrange(from=12;7,to=12;15)" capture:provenance="source" capture:source="$\beta+1$" capture:toCol="15" capture:toLine="12" mode="inline" tex="\beta+1" text="beta + 1" xml:id="S2.I1.ix2.m2">
+                <XMath capture:byteEnd="294" capture:byteStart="285" capture:file="replay-arguments.tex" capture:fromCol="7" capture:fromLine="12" capture:locator="replay-arguments.tex#textrange(from=12;7,to=12;15)" capture:toCol="15" capture:toLine="12">
+                  <XMApp capture:byteEnd="294" capture:byteStart="285" capture:file="replay-arguments.tex" capture:fromCol="7" capture:fromLine="12" capture:locator="replay-arguments.tex#textrange(from=12;7,to=12;15)" capture:toCol="15" capture:toLine="12">
+                    <XMTok capture:byteEnd="295" capture:byteStart="294" capture:file="replay-arguments.tex" capture:fromCol="17" capture:fromLine="12" capture:locator="replay-arguments.tex#textrange(from=12;17,to=12;17)" capture:toCol="17" capture:toLine="12" meaning="plus" role="ADDOP">+</XMTok>
+                    <XMTok capture:byteEnd="295" capture:byteStart="294" capture:file="replay-arguments.tex" capture:fromCol="17" capture:fromLine="12" capture:locator="replay-arguments.tex#textrange(from=12;17,to=12;17)" capture:toCol="17" capture:toLine="12" font="italic" name="beta" role="UNKNOWN">β</XMTok>
+                    <XMTok capture:byteEnd="295" capture:byteStart="294" capture:file="replay-arguments.tex" capture:fromCol="17" capture:fromLine="12" capture:locator="replay-arguments.tex#textrange(from=12;17,to=12;17)" capture:toCol="17" capture:toLine="12" meaning="1" role="NUMBER">1</XMTok>
+                  </XMApp>
+                </XMath>
+              </Math></tag>
+          </tags>
+          <para capture:byteEnd="297" capture:byteStart="296" capture:file="replay-arguments.tex" capture:fromCol="19" capture:fromLine="12" capture:locator="replay-arguments.tex#textrange(from=12;19,to=12;19)" capture:toCol="19" capture:toLine="12" xml:id="S2.I1.ix2.p1">
+            <p capture:byteEnd="297" capture:byteStart="296" capture:file="replay-arguments.tex" capture:fromCol="19" capture:fromLine="12" capture:locator="replay-arguments.tex#textrange(from=12;19,to=12;19)" capture:toCol="19" capture:toLine="12">Second.</p>
+          </para>
+        </item>
+        <item capture:byteEnd="318" capture:byteStart="304" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="13" capture:locator="replay-arguments.tex#textrange(from=13;1,to=13;14)" capture:toCol="14" capture:toLine="13" xml:id="S2.I1.ix3">
+          <tags>
+            <tag><Math capture:byteEnd="317" capture:byteStart="310" capture:file="replay-arguments.tex" capture:fromCol="7" capture:fromLine="13" capture:locator="replay-arguments.tex#textrange(from=13;7,to=13;13)" capture:provenance="source" capture:source="$\beta$" capture:toCol="13" capture:toLine="13" mode="inline" tex="\beta" text="beta" xml:id="S2.I1.ix3.m1">
+                <XMath capture:byteEnd="317" capture:byteStart="310" capture:file="replay-arguments.tex" capture:fromCol="7" capture:fromLine="13" capture:locator="replay-arguments.tex#textrange(from=13;7,to=13;13)" capture:toCol="13" capture:toLine="13">
+                  <XMTok capture:byteEnd="318" capture:byteStart="317" capture:file="replay-arguments.tex" capture:fromCol="15" capture:fromLine="13" capture:locator="replay-arguments.tex#textrange(from=13;15,to=13;15)" capture:toCol="15" capture:toLine="13" font="italic" name="beta" role="UNKNOWN">β</XMTok>
+                </XMath>
+              </Math></tag>
+            <tag role="typerefnum">item <Math capture:byteEnd="317" capture:byteStart="310" capture:file="replay-arguments.tex" capture:fromCol="7" capture:fromLine="13" capture:locator="replay-arguments.tex#textrange(from=13;7,to=13;13)" capture:provenance="source" capture:source="$\beta$" capture:toCol="13" capture:toLine="13" mode="inline" tex="\beta" text="beta" xml:id="S2.I1.ix3.m2">
+                <XMath capture:byteEnd="317" capture:byteStart="310" capture:file="replay-arguments.tex" capture:fromCol="7" capture:fromLine="13" capture:locator="replay-arguments.tex#textrange(from=13;7,to=13;13)" capture:toCol="13" capture:toLine="13">
+                  <XMTok capture:byteEnd="318" capture:byteStart="317" capture:file="replay-arguments.tex" capture:fromCol="15" capture:fromLine="13" capture:locator="replay-arguments.tex#textrange(from=13;15,to=13;15)" capture:toCol="15" capture:toLine="13" font="italic" name="beta" role="UNKNOWN">β</XMTok>
+                </XMath>
+              </Math></tag>
+          </tags>
+          <para capture:byteEnd="320" capture:byteStart="319" capture:file="replay-arguments.tex" capture:fromCol="17" capture:fromLine="13" capture:locator="replay-arguments.tex#textrange(from=13;17,to=13;17)" capture:toCol="17" capture:toLine="13" xml:id="S2.I1.ix3.p1">
+            <p capture:byteEnd="320" capture:byteStart="319" capture:file="replay-arguments.tex" capture:fromCol="17" capture:fromLine="13" capture:locator="replay-arguments.tex#textrange(from=13;17,to=13;17)" capture:toCol="17" capture:toLine="13">Same text at a different author location.</p>
+          </para>
+        </item>
+      </itemize>
+      <description capture:byteEnd="436" capture:byteStart="375" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="15" capture:locator="replay-arguments.tex#textrange(from=15;1,to=17;17)" capture:toCol="17" capture:toLine="17" xml:id="S2.I2">
+        <item capture:byteEnd="405" capture:byteStart="395" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="16" capture:locator="replay-arguments.tex#textrange(from=16;1,to=16;10)" capture:toCol="10" capture:toLine="16" xml:id="S2.I2.ix1">
+          <tags>
+            <tag><Math capture:byteEnd="404" capture:byteStart="401" capture:file="replay-arguments.tex" capture:fromCol="7" capture:fromLine="16" capture:locator="replay-arguments.tex#textrange(from=16;7,to=16;9)" capture:provenance="source" capture:source="$d$" capture:toCol="9" capture:toLine="16" mode="inline" tex="d" text="d" xml:id="S2.I2.ix1.m1">
+                <XMath capture:byteEnd="404" capture:byteStart="401" capture:file="replay-arguments.tex" capture:fromCol="7" capture:fromLine="16" capture:locator="replay-arguments.tex#textrange(from=16;7,to=16;9)" capture:toCol="9" capture:toLine="16">
+                  <XMTok capture:byteEnd="405" capture:byteStart="404" capture:file="replay-arguments.tex" capture:fromCol="11" capture:fromLine="16" capture:locator="replay-arguments.tex#textrange(from=16;11,to=16;11)" capture:toCol="11" capture:toLine="16" font="italic" role="UNKNOWN">d</XMTok>
+                </XMath>
+              </Math></tag>
+            <tag role="typerefnum">item <Math capture:byteEnd="404" capture:byteStart="401" capture:file="replay-arguments.tex" capture:fromCol="7" capture:fromLine="16" capture:locator="replay-arguments.tex#textrange(from=16;7,to=16;9)" capture:provenance="source" capture:source="$d$" capture:toCol="9" capture:toLine="16" mode="inline" tex="d" text="d" xml:id="S2.I2.ix1.m2">
+                <XMath capture:byteEnd="404" capture:byteStart="401" capture:file="replay-arguments.tex" capture:fromCol="7" capture:fromLine="16" capture:locator="replay-arguments.tex#textrange(from=16;7,to=16;9)" capture:toCol="9" capture:toLine="16">
+                  <XMTok capture:byteEnd="405" capture:byteStart="404" capture:file="replay-arguments.tex" capture:fromCol="11" capture:fromLine="16" capture:locator="replay-arguments.tex#textrange(from=16;11,to=16;11)" capture:toCol="11" capture:toLine="16" font="italic" role="UNKNOWN">d</XMTok>
+                </XMath>
+              </Math></tag>
+          </tags>
+          <para capture:byteEnd="407" capture:byteStart="406" capture:file="replay-arguments.tex" capture:fromCol="13" capture:fromLine="16" capture:locator="replay-arguments.tex#textrange(from=16;13,to=16;13)" capture:toCol="13" capture:toLine="16" xml:id="S2.I2.ix1.p1">
+            <p capture:byteEnd="407" capture:byteStart="406" capture:file="replay-arguments.tex" capture:fromCol="13" capture:fromLine="16" capture:locator="replay-arguments.tex#textrange(from=16;13,to=16;13)" capture:toCol="13" capture:toLine="16">Description.</p>
+          </para>
+        </item>
+      </description>
+    </para>
+    <figure capture:byteEnd="662" capture:byteStart="437" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="18" capture:labelValues="{&quot;LABEL:fig:inside&quot;:&quot;1&quot;,&quot;LABEL:fig:outside&quot;:&quot;1&quot;}" capture:locator="replay-arguments.tex#textrange(from=18;1,to=23;12)" capture:toCol="12" capture:toLine="23" inlist="lof" labels="LABEL:fig:inside LABEL:fig:outside" xml:id="S2.F1">
+      <tags>
+        <tag>Figure 1</tag>
+        <tag role="refnum">1</tag>
+        <tag role="typerefnum">Figure 1</tag>
+      </tags>
+      <figure capture:byteEnd="461" capture:byteStart="452" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="19" capture:locator="replay-arguments.tex#textrange(from=19;1,to=19;9)" capture:toCol="9" capture:toLine="19" class="ltx_figure_panel" xml:id="S2.F1.sf1">
+        <tags>
+          <tag>(a)</tag>
+          <tag role="refnum">1a</tag>
+        </tags>
+        <rule capture:byteEnd="492" capture:byteStart="477" capture:file="replay-arguments.tex" capture:fromCol="26" capture:fromLine="19" capture:locator="replay-arguments.tex#textrange(from=19;26,to=19;40)" capture:toCol="40" capture:toLine="19" height="10.0pt" width="10.0pt"/>
+        <toccaption capture:byteEnd="461" capture:byteStart="452" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="19" capture:locator="replay-arguments.tex#textrange(from=19;1,to=19;9)" capture:toCol="9" capture:toLine="19"><tag capture:byteEnd="461" capture:byteStart="452" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="19" capture:locator="replay-arguments.tex#textrange(from=19;1,to=19;9)" capture:toCol="9" capture:toLine="19" close=" ">a</tag><Math capture:byteEnd="470" capture:byteStart="462" capture:file="replay-arguments.tex" capture:fromCol="11" capture:fromLine="19" capture:locator="replay-arguments.tex#textrange(from=19;11,to=19;18)" capture:provenance="source" capture:source="$\gamma$" capture:toCol="18" capture:toLine="19" mode="inline" tex="\gamma" text="gamma" xml:id="S2.F1.sf1.m1">
+            <XMath capture:byteEnd="470" capture:byteStart="462" capture:file="replay-arguments.tex" capture:fromCol="11" capture:fromLine="19" capture:locator="replay-arguments.tex#textrange(from=19;11,to=19;18)" capture:toCol="18" capture:toLine="19">
+              <XMTok capture:byteEnd="493" capture:byteStart="492" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="19" capture:locator="replay-arguments.tex#textrange(from=19;1,to=19;42)" capture:toCol="42" capture:toLine="19" font="italic" name="gamma" role="UNKNOWN">γ</XMTok>
+            </XMath>
+          </Math> case</toccaption>
+        <caption capture:byteEnd="461" capture:byteStart="452" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="19" capture:locator="replay-arguments.tex#textrange(from=19;1,to=19;9)" capture:toCol="9" capture:toLine="19"><tag capture:byteEnd="461" capture:byteStart="452" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="19" capture:locator="replay-arguments.tex#textrange(from=19;1,to=19;9)" capture:toCol="9" capture:toLine="19" close=" ">(a)</tag><Math capture:byteEnd="470" capture:byteStart="462" capture:file="replay-arguments.tex" capture:fromCol="11" capture:fromLine="19" capture:locator="replay-arguments.tex#textrange(from=19;11,to=19;18)" capture:provenance="source" capture:source="$\gamma$" capture:toCol="18" capture:toLine="19" mode="inline" tex="\gamma" text="gamma" xml:id="S2.F1.sf1.m2">
+            <XMath capture:byteEnd="470" capture:byteStart="462" capture:file="replay-arguments.tex" capture:fromCol="11" capture:fromLine="19" capture:locator="replay-arguments.tex#textrange(from=19;11,to=19;18)" capture:toCol="18" capture:toLine="19">
+              <XMTok capture:byteEnd="493" capture:byteStart="492" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="19" capture:locator="replay-arguments.tex#textrange(from=19;1,to=19;42)" capture:toCol="42" capture:toLine="19" font="italic" name="gamma" role="UNKNOWN">γ</XMTok>
+            </XMath>
+          </Math> case</caption>
+      </figure>
+      <break class="ltx_break"/>
+      <figure capture:byteEnd="503" capture:byteStart="494" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="20" capture:locator="replay-arguments.tex#textrange(from=20;1,to=20;9)" capture:toCol="9" capture:toLine="20" class="ltx_figure_panel" xml:id="S2.F1.sf2">
+        <tags>
+          <tag>(b)</tag>
+          <tag role="refnum">1b</tag>
+        </tags>
+        <rule capture:byteEnd="536" capture:byteStart="521" capture:file="replay-arguments.tex" capture:fromCol="28" capture:fromLine="20" capture:locator="replay-arguments.tex#textrange(from=20;28,to=20;42)" capture:toCol="42" capture:toLine="20" height="10.0pt" width="10.0pt"/>
+        <toccaption capture:byteEnd="503" capture:byteStart="494" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="20" capture:locator="replay-arguments.tex#textrange(from=20;1,to=20;9)" capture:toCol="9" capture:toLine="20"><tag capture:byteEnd="503" capture:byteStart="494" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="20" capture:locator="replay-arguments.tex#textrange(from=20;1,to=20;9)" capture:toCol="9" capture:toLine="20" close=" ">b</tag><Math capture:byteEnd="514" capture:byteStart="504" capture:file="replay-arguments.tex" capture:fromCol="11" capture:fromLine="20" capture:locator="replay-arguments.tex#textrange(from=20;11,to=20;20)" capture:provenance="source" capture:source="$\gamma+1$" capture:toCol="20" capture:toLine="20" mode="inline" tex="\gamma+1" text="gamma + 1" xml:id="S2.F1.sf2.m1">
+            <XMath capture:byteEnd="514" capture:byteStart="504" capture:file="replay-arguments.tex" capture:fromCol="11" capture:fromLine="20" capture:locator="replay-arguments.tex#textrange(from=20;11,to=20;20)" capture:toCol="20" capture:toLine="20">
+              <XMApp capture:byteEnd="514" capture:byteStart="504" capture:file="replay-arguments.tex" capture:fromCol="11" capture:fromLine="20" capture:locator="replay-arguments.tex#textrange(from=20;11,to=20;20)" capture:toCol="20" capture:toLine="20">
+                <XMTok capture:byteEnd="537" capture:byteStart="536" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="20" capture:locator="replay-arguments.tex#textrange(from=20;1,to=20;44)" capture:toCol="44" capture:toLine="20" meaning="plus" role="ADDOP">+</XMTok>
+                <XMTok capture:byteEnd="537" capture:byteStart="536" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="20" capture:locator="replay-arguments.tex#textrange(from=20;1,to=20;44)" capture:toCol="44" capture:toLine="20" font="italic" name="gamma" role="UNKNOWN">γ</XMTok>
+                <XMTok capture:byteEnd="537" capture:byteStart="536" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="20" capture:locator="replay-arguments.tex#textrange(from=20;1,to=20;44)" capture:toCol="44" capture:toLine="20" meaning="1" role="NUMBER">1</XMTok>
+              </XMApp>
+            </XMath>
+          </Math> case</toccaption>
+        <caption capture:byteEnd="503" capture:byteStart="494" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="20" capture:locator="replay-arguments.tex#textrange(from=20;1,to=20;9)" capture:toCol="9" capture:toLine="20"><tag capture:byteEnd="503" capture:byteStart="494" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="20" capture:locator="replay-arguments.tex#textrange(from=20;1,to=20;9)" capture:toCol="9" capture:toLine="20" close=" ">(b)</tag><Math capture:byteEnd="514" capture:byteStart="504" capture:file="replay-arguments.tex" capture:fromCol="11" capture:fromLine="20" capture:locator="replay-arguments.tex#textrange(from=20;11,to=20;20)" capture:provenance="source" capture:source="$\gamma+1$" capture:toCol="20" capture:toLine="20" mode="inline" tex="\gamma+1" text="gamma + 1" xml:id="S2.F1.sf2.m2">
+            <XMath capture:byteEnd="514" capture:byteStart="504" capture:file="replay-arguments.tex" capture:fromCol="11" capture:fromLine="20" capture:locator="replay-arguments.tex#textrange(from=20;11,to=20;20)" capture:toCol="20" capture:toLine="20">
+              <XMApp capture:byteEnd="514" capture:byteStart="504" capture:file="replay-arguments.tex" capture:fromCol="11" capture:fromLine="20" capture:locator="replay-arguments.tex#textrange(from=20;11,to=20;20)" capture:toCol="20" capture:toLine="20">
+                <XMTok capture:byteEnd="537" capture:byteStart="536" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="20" capture:locator="replay-arguments.tex#textrange(from=20;1,to=20;44)" capture:toCol="44" capture:toLine="20" meaning="plus" role="ADDOP">+</XMTok>
+                <XMTok capture:byteEnd="537" capture:byteStart="536" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="20" capture:locator="replay-arguments.tex#textrange(from=20;1,to=20;44)" capture:toCol="44" capture:toLine="20" font="italic" name="gamma" role="UNKNOWN">γ</XMTok>
+                <XMTok capture:byteEnd="537" capture:byteStart="536" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="20" capture:locator="replay-arguments.tex#textrange(from=20;1,to=20;44)" capture:toCol="44" capture:toLine="20" meaning="1" role="NUMBER">1</XMTok>
+              </XMApp>
+            </XMath>
+          </Math> case</caption>
+      </figure>
+      <break class="ltx_break"/>
+      <figure capture:byteEnd="547" capture:byteStart="538" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="21" capture:locator="replay-arguments.tex#textrange(from=21;1,to=21;9)" capture:toCol="9" capture:toLine="21" class="ltx_figure_panel" xml:id="S2.F1.sf3">
+        <tags>
+          <tag>(c)</tag>
+          <tag role="refnum">1c</tag>
+        </tags>
+        <rule capture:byteEnd="578" capture:byteStart="563" capture:file="replay-arguments.tex" capture:fromCol="26" capture:fromLine="21" capture:locator="replay-arguments.tex#textrange(from=21;26,to=21;40)" capture:toCol="40" capture:toLine="21" height="10.0pt" width="10.0pt"/>
+        <toccaption capture:byteEnd="547" capture:byteStart="538" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="21" capture:locator="replay-arguments.tex#textrange(from=21;1,to=21;9)" capture:toCol="9" capture:toLine="21"><tag capture:byteEnd="547" capture:byteStart="538" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="21" capture:locator="replay-arguments.tex#textrange(from=21;1,to=21;9)" capture:toCol="9" capture:toLine="21" close=" ">c</tag>Grouped <Math capture:byteEnd="560" capture:byteStart="557" capture:file="replay-arguments.tex" capture:fromCol="20" capture:fromLine="21" capture:locator="replay-arguments.tex#textrange(from=21;20,to=21;22)" capture:provenance="source" capture:source="$h$" capture:toCol="22" capture:toLine="21" mode="inline" tex="h" text="h" xml:id="S2.F1.sf3.m1">
+            <XMath capture:byteEnd="560" capture:byteStart="557" capture:file="replay-arguments.tex" capture:fromCol="20" capture:fromLine="21" capture:locator="replay-arguments.tex#textrange(from=21;20,to=21;22)" capture:toCol="22" capture:toLine="21">
+              <XMTok capture:byteEnd="579" capture:byteStart="578" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="21" capture:locator="replay-arguments.tex#textrange(from=21;1,to=21;42)" capture:toCol="42" capture:toLine="21" font="italic" role="UNKNOWN">h</XMTok>
+            </XMath>
+          </Math></toccaption>
+        <caption capture:byteEnd="547" capture:byteStart="538" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="21" capture:locator="replay-arguments.tex#textrange(from=21;1,to=21;9)" capture:toCol="9" capture:toLine="21"><tag capture:byteEnd="547" capture:byteStart="538" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="21" capture:locator="replay-arguments.tex#textrange(from=21;1,to=21;9)" capture:toCol="9" capture:toLine="21" close=" ">(c)</tag>Grouped <Math capture:byteEnd="560" capture:byteStart="557" capture:file="replay-arguments.tex" capture:fromCol="20" capture:fromLine="21" capture:locator="replay-arguments.tex#textrange(from=21;20,to=21;22)" capture:provenance="source" capture:source="$h$" capture:toCol="22" capture:toLine="21" mode="inline" tex="h" text="h" xml:id="S2.F1.sf3.m2">
+            <XMath capture:byteEnd="560" capture:byteStart="557" capture:file="replay-arguments.tex" capture:fromCol="20" capture:fromLine="21" capture:locator="replay-arguments.tex#textrange(from=21;20,to=21;22)" capture:toCol="22" capture:toLine="21">
+              <XMTok capture:byteEnd="579" capture:byteStart="578" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="21" capture:locator="replay-arguments.tex#textrange(from=21;1,to=21;42)" capture:toCol="42" capture:toLine="21" font="italic" role="UNKNOWN">h</XMTok>
+            </XMath>
+          </Math></caption>
+      </figure>
+      <toccaption capture:byteEnd="649" capture:byteStart="580" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="22" capture:locator="replay-arguments.tex#textrange(from=22;1,to=22;69)" capture:toCol="69" capture:toLine="22"><tag capture:byteEnd="649" capture:byteStart="580" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="22" capture:locator="replay-arguments.tex#textrange(from=22;1,to=22;69)" capture:toCol="69" capture:toLine="22" close=" ">1</tag>Short <Math capture:byteEnd="598" capture:byteStart="595" capture:file="replay-arguments.tex" capture:fromCol="16" capture:fromLine="22" capture:locator="replay-arguments.tex#textrange(from=22;16,to=22;18)" capture:provenance="source" capture:source="$k$" capture:toCol="18" capture:toLine="22" mode="inline" tex="k" text="k" xml:id="S2.F1.m1">
+          <XMath capture:byteEnd="598" capture:byteStart="595" capture:file="replay-arguments.tex" capture:fromCol="16" capture:fromLine="22" capture:locator="replay-arguments.tex#textrange(from=22;16,to=22;18)" capture:toCol="18" capture:toLine="22">
+            <XMTok capture:byteEnd="649" capture:byteStart="648" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="22" capture:locator="replay-arguments.tex#textrange(from=22;1,to=22;70)" capture:toCol="70" capture:toLine="22" font="italic" role="UNKNOWN">k</XMTok>
+          </XMath>
+        </Math></toccaption>
+      <caption capture:byteEnd="649" capture:byteStart="580" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="22" capture:locator="replay-arguments.tex#textrange(from=22;1,to=22;69)" capture:toCol="69" capture:toLine="22"><tag capture:byteEnd="649" capture:byteStart="580" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="22" capture:locator="replay-arguments.tex#textrange(from=22;1,to=22;69)" capture:toCol="69" capture:toLine="22" close=": ">Figure 1</tag>Caption <Math capture:byteEnd="611" capture:byteStart="608" capture:file="replay-arguments.tex" capture:fromCol="29" capture:fromLine="22" capture:locator="replay-arguments.tex#textrange(from=22;29,to=22;31)" capture:provenance="source" capture:source="$c$" capture:toCol="31" capture:toLine="22" mode="inline" tex="c" text="c" xml:id="S2.F1.m2">
+          <XMath capture:byteEnd="611" capture:byteStart="608" capture:file="replay-arguments.tex" capture:fromCol="29" capture:fromLine="22" capture:locator="replay-arguments.tex#textrange(from=22;29,to=22;31)" capture:toCol="31" capture:toLine="22">
+            <XMTok capture:byteEnd="649" capture:byteStart="648" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="22" capture:locator="replay-arguments.tex#textrange(from=22;1,to=22;70)" capture:toCol="70" capture:toLine="22" font="italic" role="UNKNOWN">c</XMTok>
+          </XMath>
+        </Math></caption>
+    </figure>
+    <para capture:byteEnd="711" capture:byteStart="663" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="24" capture:locator="replay-arguments.tex#textrange(from=24;1,to=24;48)" capture:toCol="48" capture:toLine="24" xml:id="S2.p2">
+      <equation capture:byteEnd="711" capture:byteStart="663" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="24" capture:locator="replay-arguments.tex#textrange(from=24;1,to=24;48)" capture:toCol="48" capture:toLine="24" xml:id="S2.Ex1">
+        <tags capture:byteEnd="697" capture:byteStart="682" capture:file="replay-arguments.tex" capture:fromCol="20" capture:fromLine="24" capture:locator="replay-arguments.tex#textrange(from=24;20,to=24;34)" capture:toCol="34" capture:toLine="24">
+          <tag capture:byteEnd="697" capture:byteStart="682" capture:file="replay-arguments.tex" capture:fromCol="20" capture:fromLine="24" capture:locator="replay-arguments.tex#textrange(from=24;20,to=24;34)" capture:toCol="34" capture:toLine="24">(<Math capture:byteEnd="696" capture:byteStart="687" capture:file="replay-arguments.tex" capture:fromCol="25" capture:fromLine="24" capture:locator="replay-arguments.tex#textrange(from=24;25,to=24;33)" capture:provenance="source" capture:source="$\dagger$" capture:toCol="33" capture:toLine="24" mode="inline" tex="\dagger" text="dagger" xml:id="S2.Ex1.m1">
+              <XMath capture:byteEnd="696" capture:byteStart="687" capture:file="replay-arguments.tex" capture:fromCol="25" capture:fromLine="24" capture:locator="replay-arguments.tex#textrange(from=24;25,to=24;33)" capture:toCol="33" capture:toLine="24">
+                <XMTok capture:byteEnd="697" capture:byteStart="696" capture:file="replay-arguments.tex" capture:fromCol="35" capture:fromLine="24" capture:locator="replay-arguments.tex#textrange(from=24;35,to=24;35)" capture:toCol="35" capture:toLine="24" name="dagger" role="MULOP">†</XMTok>
+              </XMath>
+            </Math>)</tag>
+          <tag capture:byteEnd="697" capture:byteStart="682" capture:file="replay-arguments.tex" capture:fromCol="20" capture:fromLine="24" capture:locator="replay-arguments.tex#textrange(from=24;20,to=24;34)" capture:toCol="34" capture:toLine="24" role="refnum"><Math capture:byteEnd="696" capture:byteStart="687" capture:file="replay-arguments.tex" capture:fromCol="25" capture:fromLine="24" capture:locator="replay-arguments.tex#textrange(from=24;25,to=24;33)" capture:provenance="source" capture:source="$\dagger$" capture:toCol="33" capture:toLine="24" mode="inline" tex="\dagger" text="dagger" xml:id="S2.Ex1.m2">
+              <XMath capture:byteEnd="696" capture:byteStart="687" capture:file="replay-arguments.tex" capture:fromCol="25" capture:fromLine="24" capture:locator="replay-arguments.tex#textrange(from=24;25,to=24;33)" capture:toCol="33" capture:toLine="24">
+                <XMTok capture:byteEnd="697" capture:byteStart="696" capture:file="replay-arguments.tex" capture:fromCol="35" capture:fromLine="24" capture:locator="replay-arguments.tex#textrange(from=24;35,to=24;35)" capture:toCol="35" capture:toLine="24" name="dagger" role="MULOP">†</XMTok>
+              </XMath>
+            </Math></tag>
+        </tags>
+        <Math capture:byteEnd="711" capture:byteStart="663" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="24" capture:locator="replay-arguments.tex#textrange(from=24;1,to=24;48)" capture:provenance="source" capture:source="\begin{equation}x=y\tag{$\dagger$}\end{equation}" capture:toCol="48" capture:toLine="24" mode="display" tex="x=y" text="x = y" xml:id="S2.Ex1.m3">
+          <XMath capture:byteEnd="711" capture:byteStart="663" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="24" capture:locator="replay-arguments.tex#textrange(from=24;1,to=24;48)" capture:toCol="48" capture:toLine="24">
+            <XMApp capture:byteEnd="711" capture:byteStart="663" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="24" capture:locator="replay-arguments.tex#textrange(from=24;1,to=24;48)" capture:toCol="48" capture:toLine="24">
+              <XMTok capture:byteEnd="681" capture:byteStart="680" capture:file="replay-arguments.tex" capture:fromCol="19" capture:fromLine="24" capture:locator="replay-arguments.tex#textrange(from=24;19,to=24;19)" capture:toCol="19" capture:toLine="24" meaning="equals" role="RELOP">=</XMTok>
+              <XMTok capture:byteEnd="680" capture:byteStart="679" capture:file="replay-arguments.tex" capture:fromCol="18" capture:fromLine="24" capture:locator="replay-arguments.tex#textrange(from=24;18,to=24;18)" capture:toCol="18" capture:toLine="24" font="italic" role="UNKNOWN">x</XMTok>
+              <XMTok capture:byteEnd="682" capture:byteStart="681" capture:file="replay-arguments.tex" capture:fromCol="20" capture:fromLine="24" capture:locator="replay-arguments.tex#textrange(from=24;20,to=24;20)" capture:toCol="20" capture:toLine="24" font="italic" role="UNKNOWN">y</XMTok>
+            </XMApp>
+          </XMath>
+        </Math>
+      </equation>
+      <equation capture:byteEnd="762" capture:byteStart="712" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="25" capture:locator="replay-arguments.tex#textrange(from=25;1,to=25;50)" capture:toCol="50" capture:toLine="25" xml:id="S2.Ex2">
+        <tags capture:byteEnd="748" capture:byteStart="731" capture:file="replay-arguments.tex" capture:fromCol="20" capture:fromLine="25" capture:locator="replay-arguments.tex#textrange(from=25;20,to=25;36)" capture:toCol="36" capture:toLine="25">
+          <tag capture:byteEnd="748" capture:byteStart="731" capture:file="replay-arguments.tex" capture:fromCol="20" capture:fromLine="25" capture:locator="replay-arguments.tex#textrange(from=25;20,to=25;36)" capture:toCol="36" capture:toLine="25"><Math capture:byteEnd="747" capture:byteStart="737" capture:file="replay-arguments.tex" capture:fromCol="26" capture:fromLine="25" capture:locator="replay-arguments.tex#textrange(from=25;26,to=25;35)" capture:provenance="source" capture:source="$\ddagger$" capture:toCol="35" capture:toLine="25" mode="inline" tex="\ddagger" text="ddagger" xml:id="S2.Ex2.m1">
+              <XMath capture:byteEnd="747" capture:byteStart="737" capture:file="replay-arguments.tex" capture:fromCol="26" capture:fromLine="25" capture:locator="replay-arguments.tex#textrange(from=25;26,to=25;35)" capture:toCol="35" capture:toLine="25">
+                <XMTok capture:byteEnd="748" capture:byteStart="747" capture:file="replay-arguments.tex" capture:fromCol="37" capture:fromLine="25" capture:locator="replay-arguments.tex#textrange(from=25;37,to=25;37)" capture:toCol="37" capture:toLine="25" name="ddagger" role="MULOP">‡</XMTok>
+              </XMath>
+            </Math></tag>
+          <tag capture:byteEnd="748" capture:byteStart="731" capture:file="replay-arguments.tex" capture:fromCol="20" capture:fromLine="25" capture:locator="replay-arguments.tex#textrange(from=25;20,to=25;36)" capture:toCol="36" capture:toLine="25" role="refnum"><Math capture:byteEnd="747" capture:byteStart="737" capture:file="replay-arguments.tex" capture:fromCol="26" capture:fromLine="25" capture:locator="replay-arguments.tex#textrange(from=25;26,to=25;35)" capture:provenance="source" capture:source="$\ddagger$" capture:toCol="35" capture:toLine="25" mode="inline" tex="\ddagger" text="ddagger" xml:id="S2.Ex2.m2">
+              <XMath capture:byteEnd="747" capture:byteStart="737" capture:file="replay-arguments.tex" capture:fromCol="26" capture:fromLine="25" capture:locator="replay-arguments.tex#textrange(from=25;26,to=25;35)" capture:toCol="35" capture:toLine="25">
+                <XMTok capture:byteEnd="748" capture:byteStart="747" capture:file="replay-arguments.tex" capture:fromCol="37" capture:fromLine="25" capture:locator="replay-arguments.tex#textrange(from=25;37,to=25;37)" capture:toCol="37" capture:toLine="25" name="ddagger" role="MULOP">‡</XMTok>
+              </XMath>
+            </Math></tag>
+        </tags>
+        <Math capture:byteEnd="762" capture:byteStart="712" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="25" capture:locator="replay-arguments.tex#textrange(from=25;1,to=25;50)" capture:provenance="source" capture:source="\begin{equation}u=v\tag*{$\ddagger$}\end{equation}" capture:toCol="50" capture:toLine="25" mode="display" tex="u=v" text="u = v" xml:id="S2.Ex2.m3">
+          <XMath capture:byteEnd="762" capture:byteStart="712" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="25" capture:locator="replay-arguments.tex#textrange(from=25;1,to=25;50)" capture:toCol="50" capture:toLine="25">
+            <XMApp capture:byteEnd="762" capture:byteStart="712" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="25" capture:locator="replay-arguments.tex#textrange(from=25;1,to=25;50)" capture:toCol="50" capture:toLine="25">
+              <XMTok capture:byteEnd="730" capture:byteStart="729" capture:file="replay-arguments.tex" capture:fromCol="19" capture:fromLine="25" capture:locator="replay-arguments.tex#textrange(from=25;19,to=25;19)" capture:toCol="19" capture:toLine="25" meaning="equals" role="RELOP">=</XMTok>
+              <XMTok capture:byteEnd="729" capture:byteStart="728" capture:file="replay-arguments.tex" capture:fromCol="18" capture:fromLine="25" capture:locator="replay-arguments.tex#textrange(from=25;18,to=25;18)" capture:toCol="18" capture:toLine="25" font="italic" role="UNKNOWN">u</XMTok>
+              <XMTok capture:byteEnd="731" capture:byteStart="730" capture:file="replay-arguments.tex" capture:fromCol="20" capture:fromLine="25" capture:locator="replay-arguments.tex#textrange(from=25;20,to=25;20)" capture:toCol="20" capture:toLine="25" font="italic" role="UNKNOWN">v</XMTok>
+            </XMApp>
+          </XMath>
+        </Math>
+      </equation>
+      <equation capture:byteEnd="816" capture:byteStart="763" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="26" capture:locator="replay-arguments.tex#textrange(from=26;1,to=26;53)" capture:toCol="53" capture:toLine="26" xml:id="S2.Ex3">
+        <tags capture:byteEnd="802" capture:byteStart="782" capture:file="replay-arguments.tex" capture:fromCol="20" capture:fromLine="26" capture:locator="replay-arguments.tex#textrange(from=26;20,to=26;39)" capture:toCol="39" capture:toLine="26">
+          <tag capture:byteEnd="802" capture:byteStart="782" capture:file="replay-arguments.tex" capture:fromCol="20" capture:fromLine="26" capture:locator="replay-arguments.tex#textrange(from=26;20,to=26;39)" capture:toCol="39" capture:toLine="26">(Prefix <Math capture:byteEnd="801" capture:byteStart="798" capture:file="replay-arguments.tex" capture:fromCol="36" capture:fromLine="26" capture:locator="replay-arguments.tex#textrange(from=26;36,to=26;38)" capture:provenance="source" capture:source="$q$" capture:toCol="38" capture:toLine="26" mode="inline" tex="q" text="q" xml:id="S2.Ex3.m1">
+              <XMath capture:byteEnd="801" capture:byteStart="798" capture:file="replay-arguments.tex" capture:fromCol="36" capture:fromLine="26" capture:locator="replay-arguments.tex#textrange(from=26;36,to=26;38)" capture:toCol="38" capture:toLine="26">
+                <XMTok capture:byteEnd="802" capture:byteStart="801" capture:file="replay-arguments.tex" capture:fromCol="40" capture:fromLine="26" capture:locator="replay-arguments.tex#textrange(from=26;40,to=26;40)" capture:toCol="40" capture:toLine="26" font="italic" role="UNKNOWN">q</XMTok>
+              </XMath>
+            </Math>)</tag>
+          <tag capture:byteEnd="802" capture:byteStart="782" capture:file="replay-arguments.tex" capture:fromCol="20" capture:fromLine="26" capture:locator="replay-arguments.tex#textrange(from=26;20,to=26;39)" capture:toCol="39" capture:toLine="26" role="refnum">Prefix <Math capture:byteEnd="801" capture:byteStart="798" capture:file="replay-arguments.tex" capture:fromCol="36" capture:fromLine="26" capture:locator="replay-arguments.tex#textrange(from=26;36,to=26;38)" capture:provenance="source" capture:source="$q$" capture:toCol="38" capture:toLine="26" mode="inline" tex="q" text="q" xml:id="S2.Ex3.m2">
+              <XMath capture:byteEnd="801" capture:byteStart="798" capture:file="replay-arguments.tex" capture:fromCol="36" capture:fromLine="26" capture:locator="replay-arguments.tex#textrange(from=26;36,to=26;38)" capture:toCol="38" capture:toLine="26">
+                <XMTok capture:byteEnd="802" capture:byteStart="801" capture:file="replay-arguments.tex" capture:fromCol="40" capture:fromLine="26" capture:locator="replay-arguments.tex#textrange(from=26;40,to=26;40)" capture:toCol="40" capture:toLine="26" font="italic" role="UNKNOWN">q</XMTok>
+              </XMath>
+            </Math></tag>
+        </tags>
+        <Math capture:byteEnd="816" capture:byteStart="763" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="26" capture:locator="replay-arguments.tex#textrange(from=26;1,to=26;53)" capture:provenance="source" capture:source="\begin{equation}a=b\tag{\tagprefix $q$}\end{equation}" capture:toCol="53" capture:toLine="26" mode="display" tex="a=b" text="a = b" xml:id="S2.Ex3.m3">
+          <XMath capture:byteEnd="816" capture:byteStart="763" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="26" capture:locator="replay-arguments.tex#textrange(from=26;1,to=26;53)" capture:toCol="53" capture:toLine="26">
+            <XMApp capture:byteEnd="816" capture:byteStart="763" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="26" capture:locator="replay-arguments.tex#textrange(from=26;1,to=26;53)" capture:toCol="53" capture:toLine="26">
+              <XMTok capture:byteEnd="781" capture:byteStart="780" capture:file="replay-arguments.tex" capture:fromCol="19" capture:fromLine="26" capture:locator="replay-arguments.tex#textrange(from=26;19,to=26;19)" capture:toCol="19" capture:toLine="26" meaning="equals" role="RELOP">=</XMTok>
+              <XMTok capture:byteEnd="780" capture:byteStart="779" capture:file="replay-arguments.tex" capture:fromCol="18" capture:fromLine="26" capture:locator="replay-arguments.tex#textrange(from=26;18,to=26;18)" capture:toCol="18" capture:toLine="26" font="italic" role="UNKNOWN">a</XMTok>
+              <XMTok capture:byteEnd="782" capture:byteStart="781" capture:file="replay-arguments.tex" capture:fromCol="20" capture:fromLine="26" capture:locator="replay-arguments.tex#textrange(from=26;20,to=26;20)" capture:toCol="20" capture:toLine="26" font="italic" role="UNKNOWN">b</XMTok>
+            </XMApp>
+          </XMath>
+        </Math>
+      </equation>
+      <p capture:byteEnd="832" capture:byteStart="829" capture:file="replay-arguments.tex" capture:fromCol="13" capture:fromLine="27" capture:locator="replay-arguments.tex#textrange(from=27;13,to=27;15)" capture:toCol="15" capture:toLine="27"><Math capture:byteEnd="832" capture:byteStart="829" capture:file="replay-arguments.tex" capture:fromCol="13" capture:fromLine="27" capture:locator="replay-arguments.tex#textrange(from=27;13,to=27;15)" capture:provenance="source" capture:source="$r$" capture:toCol="15" capture:toLine="27" mode="inline" tex="r" text="r" xml:id="S2.p2.m1">
+          <XMath capture:byteEnd="832" capture:byteStart="829" capture:file="replay-arguments.tex" capture:fromCol="13" capture:fromLine="27" capture:locator="replay-arguments.tex#textrange(from=27;13,to=27;15)" capture:toCol="15" capture:toLine="27">
+            <XMTok capture:byteEnd="836" capture:byteStart="835" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="27" capture:locator="replay-arguments.tex#textrange(from=27;1,to=27;20)" capture:toCol="20" capture:toLine="27" font="italic" role="UNKNOWN">r</XMTok>
+          </XMath>
+        </Math>
+EN<Math capture:byteEnd="853" capture:byteStart="850" capture:file="replay-arguments.tex" capture:fromCol="14" capture:fromLine="28" capture:locator="replay-arguments.tex#textrange(from=28;14,to=28;16)" capture:provenance="source" capture:source="$f$" capture:toCol="16" capture:toLine="28" mode="inline" tex="f" text="f" xml:id="S2.p2.m2">
+          <XMath capture:byteEnd="853" capture:byteStart="850" capture:file="replay-arguments.tex" capture:fromCol="14" capture:fromLine="28" capture:locator="replay-arguments.tex#textrange(from=28;14,to=28;16)" capture:toCol="16" capture:toLine="28">
+            <XMTok capture:byteEnd="856" capture:byteStart="855" capture:file="replay-arguments.tex" capture:fromCol="1" capture:fromLine="28" capture:locator="replay-arguments.tex#textrange(from=28;1,to=28;20)" capture:toCol="20" capture:toLine="28" font="italic" role="UNKNOWN">f</XMTok>
+          </XMath>
+        </Math></p>
+    </para>
+  </section>
+  <capture:ledger>
+    <capture:engine capture="true" includestyles="false" lexematize="false" noparse="false" revision="CAPTURE_REVISION" version="0.8.8">
+      <capture:preload name="LaTeX.pool"/>
+    </capture:engine>
+    <capture:packages>
+      <capture:package kind="package" name="textcomp" options="" requestOrigin="transitive" resolved="../../lib/LaTeXML/Package/textcomp.sty.ltxml" route="binding"/>
+      <capture:package kind="class" name="article" options="" requestByteEnd="14" requestByteStart="0" requestFile="replay-arguments.tex" requestOrigin="source" resolved="../../lib/LaTeXML/Package/article.cls.ltxml" route="binding"/>
+      <capture:package kind="package" name="amsgen" options="" requestOrigin="transitive" resolved="../../lib/LaTeXML/Package/amsgen.sty.ltxml" route="binding"/>
+      <capture:package kind="package" name="amsbsy" options="" requestOrigin="transitive" resolved="../../lib/LaTeXML/Package/amsbsy.sty.ltxml" route="binding"/>
+      <capture:package kind="package" name="amsgen" options="" requestOrigin="transitive" resolved="../../lib/LaTeXML/Package/amsgen.sty.ltxml" route="binding"/>
+      <capture:package kind="package" name="amstext" options="" requestOrigin="transitive" resolved="../../lib/LaTeXML/Package/amstext.sty.ltxml" route="binding"/>
+      <capture:package kind="package" name="amsgen" options="" requestOrigin="transitive" resolved="../../lib/LaTeXML/Package/amsgen.sty.ltxml" route="binding"/>
+      <capture:package kind="package" name="amsopn" options="" requestOrigin="transitive" resolved="../../lib/LaTeXML/Package/amsopn.sty.ltxml" route="binding"/>
+      <capture:package kind="package" name="amsmath" options="" requestByteEnd="35" requestByteStart="24" requestFile="replay-arguments.tex" requestOrigin="source" resolved="../../lib/LaTeXML/Package/amsmath.sty.ltxml" route="binding"/>
+      <capture:package kind="package" name="subfig" options="" requestByteEnd="35" requestByteStart="24" requestFile="replay-arguments.tex" requestOrigin="source" resolved="../../lib/LaTeXML/Package/subfig.sty.ltxml" route="binding"/>
+    </capture:packages>
+    <capture:math callsiteOnly="0" crossSource="0" display="9" failedCells="0" inline="23" parser="run" source="32" total="32" unlocated="0" unparsed="0"/>
+    <capture:encoding substitutions="0"/>
+    <capture:messages errors="0" warnings="0"/>
+  </capture:ledger>
+</document>

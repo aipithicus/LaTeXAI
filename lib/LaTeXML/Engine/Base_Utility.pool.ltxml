@@ -24,10 +24,10 @@ DefMacro('\lx@ifundefined{}{}{}', sub {
     my ($gullet, $name, $if, $else) = @_;
     my $cs = T_CS('\\' . ToString(Expand($name)));
     if (IsDefined($cs)) {
-      return ($else ? $else->unlist : ()); }
+      return ($else ? $else : ()); }
     else {
       $STATE->assignMeaning($cs, $STATE->lookupMeaning(T_CS('\relax')));    # Let w/o AfterAssign
-      return ($if ? $if->unlist : ()); } },
+      return ($if ? $if : ()); } },
   locked => 1);
 
 sub isDefinable {
@@ -38,6 +38,16 @@ sub isDefinable {
   return (((!defined $meaning) || ($meaning eq LookupMeaning(T_CS('\relax')))
         || LookupValue('2.09_COMPATIBILITY'))    # Let redefinitions happen in compatibility mode.
       && (($name ne 'relax') && ($name !~ /^end/))); }
+
+# Internal storage for an already-read argument (item labels and equation
+# tags). A callback returns the Tokens as a replay, so unreadExpansion keeps
+# their occurrences. Ordinary author macro definitions remain templates.
+DefPrimitive('\lx@def@replay Token {}', sub {
+    my ($stomach, $cs, $body) = @_;
+    $body = $body->packParameters;
+    DefMacroI($cs, undef, sub { $body; });
+    AfterAssignment();
+    return; });
 
 DefMacro('\lx@strip@braces{}', sub { $_[1]->stripBraces; });
 #======================================================================

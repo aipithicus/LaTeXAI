@@ -87,11 +87,41 @@ DefConditional('\ifmeasuring@');    # but we won't use it?
 DefConditional('\iftagsleft@');     # but we won't use it?
 Let('\notag', '\nonumber');
 
-DefMacro('\tag OptionalMatch:* {}',
+my $tag_template = TokenizeInternal(
   # expand \theequation, but in text mode! undo formatting if *
   '\lx@equation@settag{\ifx#1*\let\fnum@equation\relax\fi'
     . '\expandafter\def\expandafter\theequation\expandafter{#2}'
-    . '\lx@make@tags{equation}}', locked => 1);
+    . '\lx@make@tags{equation}}')->packParameters;
+my $tag_replay_template = TokenizeInternal(
+  '\lx@equation@settag{\ifx#1*\let\fnum@equation\relax\fi'
+    . '\lx@equation@storetag{#2}\lx@make@tags{equation}}')->packParameters;
+DefMacro('\tag OptionalMatch:* {}', sub {
+    my ($gullet, @args) = @_;
+    return ($LaTeXML::Core::Tokens::CAPTURE_ACTIVE ? $tag_replay_template : $tag_template)
+      ->substituteParameters(@args); }, locked => 1);
+
+# The original expandafter chain expands the first tag token once before
+# storing the rest. Do that inside the occurrence-bearing argument mouth,
+# then explicitly store it as a replay rather than an author definition.
+DefPrimitive('\lx@equation@storetag{}', sub {
+    my ($stomach, $body) = @_;
+    my $gullet = $stomach->getGullet;
+    my $expanded = $gullet->readingFromMouth($body, sub {
+        my $first = $gullet->readToken;
+        if ($first) {
+          my $occ = $gullet->getCurrentOccurrence;
+          if (my $defn = $STATE->lookupExpandable($first)) {
+            local $LaTeXML::CURRENT_TOKEN = $first;
+            my $expansion = $defn->invoke($gullet, 1);
+            $gullet->unreadExpansion($expansion, $defn, $occ); }
+          else { $gullet->unreadWithOccurrence($occ, $first); } }
+        my (@tokens, @occs);
+        while (my $token = $gullet->readToken) {
+          push(@tokens, $token);
+          push(@occs, $gullet->getCurrentOccurrence); }
+        return Tokens(@tokens)->setCaptureOccurrences(\@occs); });
+    Digest(T_CS('\lx@def@replay'), T_CS('\theequation'), T_BEGIN, $expanded, T_END);
+    return; });
 
 # Note that \intertext may or may not be preceded by an explicit \\, with no apparent difference in TeX.
 # latexml, however, can end up with 2, which end up incrementing coutners twice!

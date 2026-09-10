@@ -1020,6 +1020,7 @@ sub readKeyword {
 # But, see readUntilBrace for that case.
 sub readUntil {
   my ($self, $delim) = @_;
+  return $self->_readUntilWithOccurrences($delim) if $LaTeXML::Core::Tokens::CAPTURE_ACTIVE;
   my @tokens = ();
   my $token;
   my $nbraces  = 0;
@@ -1064,6 +1065,62 @@ sub readUntil {
   if (($nbraces == 1) && ($tokens[0][1] == CC_BEGIN) && ($tokens[-1][1] == CC_END)) {
     shift(@tokens); pop(@tokens); }
   return TokensI(@tokens); }
+
+# Capture's delimited reader mirrors readUntil, including brace stripping
+# and failed-match pushback. Keep the capture-off token loop unchanged.
+sub _readUntilWithOccurrences {
+  my ($self, $delim) = @_;
+  my (@tokens, @occs);
+  my $token;
+  my $nbraces = 0;
+  my @want = $delim->unlist;
+  my $ntomatch = scalar(@want);
+  my $append = sub {
+    my ($t) = @_;
+    push(@tokens, $t);
+    push(@occs, _cloneOccurrence($$self{current_occurrence}, $t)); };
+  my $balanced = sub {
+    $nbraces++;
+    $append->($token);
+    my $body = readBalanced($self);
+    push(@tokens, @$body, T_END);
+    push(@occs, @{ $body->getCaptureOccurrences || [(undef) x scalar(@$body)] },
+      _cloneOccurrence($$self{current_occurrence}, T_END)); };
+  if ($ntomatch == 1) {
+    my $want = $want[0];
+    while (($token = readToken($self)) && !$token->equals($want)) {
+      if ($$token[1] == CC_MARKER) {
+        handleMarker($self, $token); }
+      elsif ($$token[1] == CC_BEGIN) {
+        $balanced->(); }
+      elsif ($$token[2] && ($$token[0] eq '\special_relax') && $$token[2]->equals($want)) {
+        last; }
+      else { $append->($token); } } }
+  else {
+    my (@ring, @ring_occs);
+    while (1) {
+      while ((scalar(@ring) < $ntomatch) && ($token = readToken($self))) {
+        if ($$token[1] == CC_BEGIN) {
+          push(@tokens, @ring);
+          push(@occs, @ring_occs);
+          $balanced->();
+          @ring = (); @ring_occs = (); }
+        else {
+          push(@ring, $token);
+          push(@ring_occs, _cloneOccurrence($$self{current_occurrence}, $token)); } }
+      my $i;
+      for ($i = 0; ($i < $ntomatch) && $ring[$i] && $ring[$i]->equals($want[$i]); $i++) { }
+      last if $i >= $ntomatch;
+      last unless $token;
+      push(@tokens, shift(@ring));
+      push(@occs, shift(@ring_occs)); } }
+  if (!defined $token) {
+    $self->unreadWithOccurrences(\@occs, @tokens);
+    return; }
+  if (($nbraces == 1) && ($tokens[0][1] == CC_BEGIN) && ($tokens[-1][1] == CC_END)) {
+    shift(@tokens); pop(@tokens);
+    shift(@occs); pop(@occs); }
+  return TokensI(@tokens)->setCaptureOccurrences(\@occs); }
 
 sub readUntilBrace {
   my ($self) = @_;

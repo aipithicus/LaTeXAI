@@ -469,6 +469,38 @@ $positions_core->withState(sub {
         return; });
     return; });
 
+# Delimited replay covers brace stripping, a partial multi-token match, and
+# failed-read pushback. Compare both reader branches on the same token input.
+$positions_core->withState(sub {
+    my ($state) = @_;
+    my $gullet = $state->getStomach->getGullet;
+    foreach my $case (['{x}!', '!', 'x', [1]], ['a{x}!', '!', 'a{x}', [0, 1, 2, 3]],
+      ['E{x}ENyEND', 'END', 'E{x}ENy', [0 .. 6]], ['ab', '!', undef, [0, 1]]) {
+      foreach my $capture (0, 1) {
+        local $LaTeXML::Core::Tokens::CAPTURE_ACTIVE = $capture;
+        my @tokens = map { $_ eq '{' ? T_BEGIN : $_ eq '}' ? T_END : T_OTHER($_) } split('', $case->[0]);
+        my $input = Tokens(@tokens)->setCaptureOccurrences([
+            map { { sourceId => 'reader-test', byteStart => $_, byteEnd => $_ + 1 } } 0 .. $#tokens]);
+        $gullet->readingFromMouth($input, sub {
+            my $result = $gullet->readUntil(Tokens(map { T_OTHER($_) } split('', $case->[1])));
+            is(defined($result) ? $result->toString : undef, $case->[2],
+              "delimited reader capture=$capture preserves $case->[0]");
+            if ($result && $capture) {
+              is_deeply([map { $_->{byteStart} } @{ $result->getCaptureOccurrences }], $case->[3],
+                'delimited replay keeps occurrence slots across braces and partial matches'); }
+            elsif (!defined $result) {
+              my (@rest, @positions);
+              while (my $token = $gullet->readToken) {
+                push(@rest, $token->toString);
+                push(@positions, $gullet->getCurrentOccurrence->{byteStart}) if $capture; }
+              is(join('', @rest), $case->[0], 'failed delimited read restores its input');
+              is_deeply(\@positions, $case->[3], 'failed capture read restores original occurrences') if $capture;
+            }
+            return; });
+      }
+    }
+    return; });
+
 # Reduced from the interval paper's llncs front matter. Before the fix its
 # affiliation text was consumed as part of an internal attribute name.
 my $frontmatter_path = File::Spec->catfile($TEMP, 'frontmatter.xml');
@@ -723,6 +755,46 @@ my $endpoint_golden = XML::LibXML->load_xml(location => File::Spec->catfile($FIX
 is(normalized_capture_xml($endpoint_xml), normalized_capture_xml($endpoint_golden),
   'macro endpoints capture golden matches after base and revision normalization only');
 validate_capture_document($endpoint_xml, 'capture-macro-endpoint');
+
+# Replayed title, list and binding arguments must retain each author's math
+# delimiters, even when one stored argument is digested into multiple tags.
+my $replay_xml = fixture_document('replay-arguments');
+my $replay_xc = xpath($replay_xml);
+my @replay_math = $replay_xc->findnodes('//ltx:Math');
+is(scalar(@replay_math), 32, 'replay arguments has the expected carriers');
+my $replay_raw = slurp_raw(File::Spec->catfile($FIXTURES, 'replay-arguments.tex'));
+my %replay_counts;
+foreach my $math (@replay_math) {
+  my $tex = $math->getAttribute('tex');
+  $replay_counts{$tex}++;
+  my $expected = $tex eq 'x=y' ? '\begin{equation}x=y\tag{$\dagger$}\end{equation}'
+    : $tex eq 'u=v' ? '\begin{equation}u=v\tag*{$\ddagger$}\end{equation}'
+    : $tex eq 'a=b' ? '\begin{equation}a=b\tag{\tagprefix $q$}\end{equation}' : '$' . $tex . '$';
+  my $label = 'replayed ' . $math->getAttribute('xml:id');
+  is(cattr($math, 'provenance'), 'source', "$label owns source");
+  assert_owns_slice($replay_xml, $math, $expected, $label);
+  if (cattr($math, 'provenance') eq 'source') {
+    my (undef, $start, $end) = assert_source_bytes($replay_xml, $math, $label);
+    my $expected_start = index($replay_raw, encode('UTF-8', $expected));
+    $expected_start = index($replay_raw, encode('UTF-8', $expected), $expected_start + 1)
+      if $math->getAttribute('xml:id') =~ /\.I1\.ix3\./;
+    is($start, $expected_start, "$label starts at the independent author bytes");
+    is($end, $expected_start + length(encode('UTF-8', $expected)), "$label ends at the author delimiter");
+  }
+}
+is_deeply(\%replay_counts, {
+    '\alpha' => 1, 'T^{*}T' => 1, '\delta' => 1, '\epsilon' => 1, s => 1,
+    '\beta' => 4, '\beta+1' => 2, d => 2, '\gamma' => 2, '\gamma+1' => 2,
+    h => 2, k => 1, c => 1, r => 1, f => 1, q => 2,
+    '\dagger' => 2, '\ddagger' => 2, 'x=y' => 1, 'u=v' => 1, 'a=b' => 1 },
+  'each stored label, caption and tag is replayed with its own occurrence');
+is(without_capture($replay_xml), without_capture(fixture_document('replay-arguments', '--no-capture')),
+  'argument replay preserves the complete stripped document');
+assert_partition($replay_xml, 'replay arguments fixture');
+my $replay_golden = XML::LibXML->load_xml(location => File::Spec->catfile($FIXTURES, 'replay-arguments.xml'));
+is(normalized_capture_xml($replay_xml), normalized_capture_xml($replay_golden),
+  'replay arguments golden matches after base and revision normalization only');
+validate_capture_document($replay_xml, 'capture-replay-arguments');
 
 done_testing();
 

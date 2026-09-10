@@ -1380,11 +1380,14 @@ sub RefStepItemCounter {
       my $formatter = ($counter =~ /^\@desc/ ? T_CS('\descriptionlabel') : T_CS('\makelabel'));
       my $typename  = (IsDefined(T_CS('\\' . $counter . 'name'))
         ? T_CS('\\' . $counter . 'name') : T_CS('\itemtyperefname'));
+      my $replay = $LaTeXML::Core::Tokens::CAPTURE_ACTIVE;
+      my $def = $replay ? T_CS('\lx@def@replay') : T_CS('\def');
+      my $label = $replay ? $ttag : Tokens(Revert($tag));
       my $tags = Digest(T_BEGIN,
         T_CS('\let'), T_CS('\the' . $counter),   T_CS('\@empty'),
-        T_CS('\def'), T_CS('\fnum@' . $counter), T_BEGIN, $formatter, T_BEGIN, Revert($tag), T_END, T_END,
-        T_CS('\def'), T_CS('\typerefnum@' . $counter),
-        T_BEGIN,      $typename, T_SPACE, Revert($tag), T_END,
+        $def, T_CS('\fnum@' . $counter), T_BEGIN, $formatter, T_BEGIN, $label, T_END, T_END,
+        $def, T_CS('\typerefnum@' . $counter),
+        T_BEGIN,      $typename, T_SPACE, $label, T_END,
         Invocation(T_CS('\lx@make@tags'), T_OTHER($counter)),
         T_END);
 
@@ -5644,10 +5647,15 @@ DefMacroI('\showoutput',    undef, Tokens());
 DefMacro('\@ifnextchar DefToken {}{}', sub {
     my ($gullet, $token, $if, $else) = @_;
     my $next = $gullet->readNonSpace;
+    # Keep the selected argument intact and replay the lookahead at its own
+    # occurrence; neither belongs to the conditional's expansion wrapper.
+    my $lookahead = $next;
+    if ($next && $LaTeXML::Core::Tokens::CAPTURE_ACTIVE) {
+      $lookahead = Tokens($next)->setCaptureOccurrences([$gullet->getCurrentOccurrence]); }
     # NOTE: Not actually substituting, but collapsing ## pairs!!!!
     # use \egroup for $next, if we've fallen off end?
-    ((XEquals($token, (defined $next ? $next : T_END)) ? $if : $else)->unlist,
-      (defined $next ? ($next) : ())); });
+    ((XEquals($token, (defined $next ? $next : T_END)) ? $if : $else),
+      (defined $next ? ($lookahead) : ())); });
 Let('\kernel@ifnextchar', '\@ifnextchar');
 
 # Hacky version matches multiple chars! but does NOT expand

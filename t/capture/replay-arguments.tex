@@ -1,0 +1,29 @@
+\documentclass{article}
+\usepackage{amsmath,subfig}
+\newcommand{\tagprefix}{Prefix }
+\def\untilpair#1END{#1}
+\begin{document}
+\section{The $\alpha$ case}
+\subsection{$T^{*}T$}
+\section*{Starred $\delta$}
+\section[Short $s$]{Long $\epsilon$}
+\begin{itemize}
+\item[$\beta$] First.
+\item[$\beta+1$] Second.
+\item[$\beta$] Same text at a different author location.
+\end{itemize}
+\begin{description}
+\item[$d$] Description.
+\end{description}
+\begin{figure}
+\subfloat[$\gamma$ case]{\rule{1em}{1em}}
+\subfloat[$\gamma+1$ case]{\rule{1em}{1em}}
+\subfloat[{Grouped $h$}]{\rule{1em}{1em}}
+\caption[Short $k$]{Caption $c$\label{fig:inside}}\label{fig:outside}
+\end{figure}
+\begin{equation}x=y\tag{$\dagger$}\end{equation}
+\begin{equation}u=v\tag*{$\ddagger$}\end{equation}
+\begin{equation}a=b\tag{\tagprefix $q$}\end{equation}
+\untilpair {$r$}END
+\untilpair EN$f$END
+\end{document}
