@@ -1,0 +1,22 @@
+\documentclass{article}
+\usepackage{amsmath}
+\DeclareMathOperator{\dom}{dom}
+\newcommand{\authorrel}{\mathrel{\mathchoice{=}{=}{=}{=}}}
+\newcommand{\openmath}{$p}
+\newcommand{\closemath}{q$}
+\newcommand{\wholemath}{$r=s$}
+\newcommand{\openalignment}{\begin{align}\dom}
+\begin{document}
+Inline control: $\dom T$.
+\begin{equation}\dom U\end{equation}
+\begin{align}
+\dom V &= W\\
+X &\authorrel Y\\
+Z &\authorrel\\
+A\authorrel & B
+\end{align}
+\openalignment C &= D\end{align}
+Generated opening: \openmath +t$.
+Distinct invocations: \openmath +\closemath.
+Whole-formula control: \wholemath.
+\end{document}

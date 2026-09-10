@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="amsmath"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML" xmlns:capture="http://dlmf.nist.gov/LaTeXML/capture" capture:base="CAPTURE_BASE" capture:byteEnd="285" capture:byteStart="269" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="9" capture:locator="macro-endpoint.tex#textrange(from=9;1,to=9;16)" capture:toCol="16" capture:toLine="9">
+  <resource capture:byteEnd="285" capture:byteStart="269" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="9" capture:locator="macro-endpoint.tex#textrange(from=9;1,to=9;16)" capture:toCol="16" capture:toLine="9" src="LaTeXML.css" type="text/css"/>
+  <resource capture:byteEnd="285" capture:byteStart="269" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="9" capture:locator="macro-endpoint.tex#textrange(from=9;1,to=9;16)" capture:toCol="16" capture:toLine="9" src="ltx-article.css" type="text/css"/>
+  <para capture:byteEnd="287" capture:byteStart="286" capture:file="macro-endpoint.tex" capture:fromCol="2" capture:fromLine="10" capture:locator="macro-endpoint.tex#textrange(from=10;2,to=10;2)" capture:toCol="2" capture:toLine="10" xml:id="p1">
+    <p capture:byteEnd="287" capture:byteStart="286" capture:file="macro-endpoint.tex" capture:fromCol="2" capture:fromLine="10" capture:locator="macro-endpoint.tex#textrange(from=10;2,to=10;2)" capture:toCol="2" capture:toLine="10">Inline control: <Math capture:byteEnd="310" capture:byteStart="302" capture:file="macro-endpoint.tex" capture:fromCol="17" capture:fromLine="10" capture:locator="macro-endpoint.tex#textrange(from=10;17,to=10;24)" capture:provenance="source" capture:source="$\dom T$" capture:toCol="24" capture:toLine="10" content-tex="\dom T" mode="inline" tex="\operatorname{dom}T" text="dom@(T)" xml:id="p1.m1">
+        <XMath capture:byteEnd="310" capture:byteStart="302" capture:file="macro-endpoint.tex" capture:fromCol="17" capture:fromLine="10" capture:locator="macro-endpoint.tex#textrange(from=10;17,to=10;24)" capture:toCol="24" capture:toLine="10">
+          <XMApp capture:byteEnd="310" capture:byteStart="302" capture:file="macro-endpoint.tex" capture:fromCol="17" capture:fromLine="10" capture:juxtaposition="[{&quot;decision&quot;:&quot;application&quot;,&quot;evidence&quot;:{&quot;explicitApply&quot;:false,&quot;leftRole&quot;:&quot;OPFUNCTION&quot;,&quot;leftShape&quot;:&quot;ltx:XMTok&quot;,&quot;rightRole&quot;:&quot;UNKNOWN&quot;,&quot;rightShape&quot;:&quot;ltx:XMTok&quot;},&quot;rule&quot;:&quot;addOpFunArgs&quot;}]" capture:locator="macro-endpoint.tex#textrange(from=10;17,to=10;24)" capture:toCol="24" capture:toLine="10">
+            <XMTok capture:byteEnd="307" capture:byteStart="303" capture:file="macro-endpoint.tex" capture:fromCol="22" capture:fromLine="10" capture:locator="macro-endpoint.tex#textrange(from=10;22,to=10;22)" capture:toCol="22" capture:toLine="10" name="dom" role="OPFUNCTION" scriptpos="post">dom</XMTok>
+            <XMTok capture:byteEnd="309" capture:byteStart="308" capture:file="macro-endpoint.tex" capture:fromCol="24" capture:fromLine="10" capture:locator="macro-endpoint.tex#textrange(from=10;24,to=10;24)" capture:toCol="24" capture:toLine="10" font="italic" role="UNKNOWN">T</XMTok>
+          </XMApp>
+        </XMath>
+      </Math>.</p>
+    <equation capture:byteEnd="348" capture:byteStart="312" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="11" capture:locator="macro-endpoint.tex#textrange(from=11;1,to=11;36)" capture:toCol="36" capture:toLine="11" xml:id="S0.E1">
+      <tags>
+        <tag>(1)</tag>
+        <tag role="refnum">1</tag>
+      </tags>
+      <Math capture:byteEnd="348" capture:byteStart="312" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="11" capture:locator="macro-endpoint.tex#textrange(from=11;1,to=11;36)" capture:provenance="source" capture:source="\begin{equation}\dom U\end{equation}" capture:toCol="36" capture:toLine="11" content-tex="\dom U" mode="display" tex="\operatorname{dom}U" text="dom@(U)" xml:id="S0.E1.m1">
+        <XMath capture:byteEnd="348" capture:byteStart="312" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="11" capture:locator="macro-endpoint.tex#textrange(from=11;1,to=11;36)" capture:toCol="36" capture:toLine="11">
+          <XMApp capture:byteEnd="348" capture:byteStart="312" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="11" capture:juxtaposition="[{&quot;decision&quot;:&quot;application&quot;,&quot;evidence&quot;:{&quot;explicitApply&quot;:false,&quot;leftRole&quot;:&quot;OPFUNCTION&quot;,&quot;leftShape&quot;:&quot;ltx:XMTok&quot;,&quot;rightRole&quot;:&quot;UNKNOWN&quot;,&quot;rightShape&quot;:&quot;ltx:XMTok&quot;},&quot;rule&quot;:&quot;addOpFunArgs&quot;}]" capture:locator="macro-endpoint.tex#textrange(from=11;1,to=11;36)" capture:toCol="36" capture:toLine="11">
+            <XMTok capture:byteEnd="332" capture:byteStart="328" capture:file="macro-endpoint.tex" capture:fromCol="21" capture:fromLine="11" capture:locator="macro-endpoint.tex#textrange(from=11;21,to=11;21)" capture:toCol="21" capture:toLine="11" name="dom" role="OPFUNCTION" scriptpos="post">dom</XMTok>
+            <XMTok capture:byteEnd="334" capture:byteStart="333" capture:file="macro-endpoint.tex" capture:fromCol="23" capture:fromLine="11" capture:locator="macro-endpoint.tex#textrange(from=11;23,to=11;23)" capture:toCol="23" capture:toLine="11" font="italic" role="UNKNOWN">U</XMTok>
+          </XMApp>
+        </XMath>
+      </Math>
+    </equation>
+    <equationgroup capture:byteEnd="362" capture:byteStart="349" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="12" capture:locator="macro-endpoint.tex#textrange(from=12;1,to=12;13)" capture:toCol="13" capture:toLine="12" class="ltx_eqn_align" xml:id="S0.EGx1">
+      <equation capture:byteEnd="362" capture:byteStart="349" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="12" capture:locator="macro-endpoint.tex#textrange(from=12;1,to=12;13)" capture:toCol="13" capture:toLine="12" xml:id="S0.E2">
+        <tags>
+          <tag>(2)</tag>
+          <tag role="refnum">2</tag>
+        </tags>
+        <MathFork capture:byteEnd="362" capture:byteStart="349" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="12" capture:locator="macro-endpoint.tex#textrange(from=12;1,to=12;13)" capture:toCol="13" capture:toLine="12">
+          <Math capture:byteEnd="362" capture:byteStart="349" capture:file="macro-endpoint.tex" capture:fromCol="5" capture:fromLine="13" capture:locator="macro-endpoint.tex#textrange(from=13;5,to=13;5)" capture:provenance="source" capture:source="\begin{align}" capture:toCol="5" capture:toLine="13" content-tex="\displaystyle\dom V=W" tex="\displaystyle\operatorname{dom}V=W" text="dom@(V) = W" xml:id="S0.E2.m3">
+            <XMath capture:byteEnd="367" capture:byteStart="363" capture:file="macro-endpoint.tex" capture:fromCol="5" capture:fromLine="13" capture:locator="macro-endpoint.tex#textrange(from=13;5,to=13;5)" capture:toCol="5" capture:toLine="13">
+              <XMApp capture:byteEnd="367" capture:byteStart="363" capture:file="macro-endpoint.tex" capture:fromCol="5" capture:fromLine="13" capture:locator="macro-endpoint.tex#textrange(from=13;5,to=13;5)" capture:toCol="5" capture:toLine="13">
+                <XMTok capture:byteEnd="372" capture:byteStart="371" capture:file="macro-endpoint.tex" capture:fromCol="10" capture:fromLine="13" capture:locator="macro-endpoint.tex#textrange(from=13;10,to=13;10)" capture:toCol="10" capture:toLine="13" meaning="equals" role="RELOP">=</XMTok>
+                <XMApp capture:byteEnd="367" capture:byteStart="363" capture:file="macro-endpoint.tex" capture:fromCol="5" capture:fromLine="13" capture:juxtaposition="[{&quot;decision&quot;:&quot;application&quot;,&quot;evidence&quot;:{&quot;explicitApply&quot;:false,&quot;leftRole&quot;:&quot;OPFUNCTION&quot;,&quot;leftShape&quot;:&quot;ltx:XMTok&quot;,&quot;rightRole&quot;:&quot;UNKNOWN&quot;,&quot;rightShape&quot;:&quot;ltx:XMTok&quot;},&quot;rule&quot;:&quot;addOpFunArgs&quot;}]" capture:locator="macro-endpoint.tex#textrange(from=13;5,to=13;5)" capture:toCol="5" capture:toLine="13">
+                  <XMTok capture:byteEnd="367" capture:byteStart="363" capture:file="macro-endpoint.tex" capture:fromCol="5" capture:fromLine="13" capture:locator="macro-endpoint.tex#textrange(from=13;5,to=13;5)" capture:toCol="5" capture:toLine="13" name="dom" role="OPFUNCTION" scriptpos="post">dom</XMTok>
+                  <XMTok capture:byteEnd="369" capture:byteStart="368" capture:file="macro-endpoint.tex" capture:fromCol="7" capture:fromLine="13" capture:locator="macro-endpoint.tex#textrange(from=13;7,to=13;7)" capture:toCol="7" capture:toLine="13" font="italic" role="UNKNOWN">V</XMTok>
+                </XMApp>
+                <XMTok capture:byteEnd="374" capture:byteStart="373" capture:file="macro-endpoint.tex" capture:fromCol="12" capture:fromLine="13" capture:locator="macro-endpoint.tex#textrange(from=13;12,to=13;12)" capture:toCol="12" capture:toLine="13" font="italic" role="UNKNOWN">W</XMTok>
+              </XMApp>
+            </XMath>
+          </Math>
+          <MathBranch capture:byteEnd="362" capture:byteStart="349" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="12" capture:locator="macro-endpoint.tex#textrange(from=12;1,to=12;13)" capture:toCol="13" capture:toLine="12">
+            <td align="right" capture:byteEnd="362" capture:byteStart="349" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="12" capture:locator="macro-endpoint.tex#textrange(from=12;1,to=12;13)" capture:toCol="13" capture:toLine="12"><Math capture:byteEnd="371" capture:byteStart="363" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="13" capture:locator="macro-endpoint.tex#textrange(from=13;1,to=13;8)" capture:provenance="source" capture:source="\dom V &amp;" capture:toCol="8" capture:toLine="13" content-tex="\displaystyle\dom V" mode="inline" tex="\displaystyle\operatorname{dom}V" text="dom@(V)" xml:id="S0.E2.m1">
+                <XMath capture:byteEnd="371" capture:byteStart="363" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="13" capture:locator="macro-endpoint.tex#textrange(from=13;1,to=13;8)" capture:toCol="8" capture:toLine="13">
+                  <XMApp capture:byteEnd="371" capture:byteStart="363" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="13" capture:juxtaposition="[{&quot;decision&quot;:&quot;application&quot;,&quot;evidence&quot;:{&quot;explicitApply&quot;:false,&quot;leftRole&quot;:&quot;OPFUNCTION&quot;,&quot;leftShape&quot;:&quot;ltx:XMTok&quot;,&quot;rightRole&quot;:&quot;UNKNOWN&quot;,&quot;rightShape&quot;:&quot;ltx:XMTok&quot;},&quot;rule&quot;:&quot;addOpFunArgs&quot;}]" capture:locator="macro-endpoint.tex#textrange(from=13;1,to=13;8)" capture:toCol="8" capture:toLine="13">
+                    <XMTok capture:byteEnd="367" capture:byteStart="363" capture:file="macro-endpoint.tex" capture:fromCol="5" capture:fromLine="13" capture:locator="macro-endpoint.tex#textrange(from=13;5,to=13;5)" capture:toCol="5" capture:toLine="13" name="dom" role="OPFUNCTION" scriptpos="post">dom</XMTok>
+                    <XMTok capture:byteEnd="369" capture:byteStart="368" capture:file="macro-endpoint.tex" capture:fromCol="7" capture:fromLine="13" capture:locator="macro-endpoint.tex#textrange(from=13;7,to=13;7)" capture:toCol="7" capture:toLine="13" font="italic" role="UNKNOWN">V</XMTok>
+                  </XMApp>
+                </XMath>
+              </Math></td>
+            <td align="left" capture:byteEnd="362" capture:byteStart="349" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="12" capture:locator="macro-endpoint.tex#textrange(from=12;1,to=12;13)" capture:toCol="13" capture:toLine="12"><Math capture:byteEnd="376" capture:byteStart="371" capture:file="macro-endpoint.tex" capture:fromCol="9" capture:fromLine="13" capture:locator="macro-endpoint.tex#textrange(from=13;9,to=13;13)" capture:provenance="source" capture:source="= W\\" capture:toCol="13" capture:toLine="13" mode="inline" tex="\displaystyle=W" text="absent = W" xml:id="S0.E2.m2">
+                <XMath capture:byteEnd="376" capture:byteStart="371" capture:file="macro-endpoint.tex" capture:fromCol="9" capture:fromLine="13" capture:locator="macro-endpoint.tex#textrange(from=13;9,to=13;13)" capture:toCol="13" capture:toLine="13">
+                  <XMApp capture:byteEnd="376" capture:byteStart="371" capture:file="macro-endpoint.tex" capture:fromCol="9" capture:fromLine="13" capture:locator="macro-endpoint.tex#textrange(from=13;9,to=13;13)" capture:toCol="13" capture:toLine="13">
+                    <XMTok capture:byteEnd="372" capture:byteStart="371" capture:file="macro-endpoint.tex" capture:fromCol="10" capture:fromLine="13" capture:locator="macro-endpoint.tex#textrange(from=13;10,to=13;10)" capture:toCol="10" capture:toLine="13" meaning="equals" role="RELOP">=</XMTok>
+                    <XMTok capture:byteEnd="376" capture:byteStart="371" capture:file="macro-endpoint.tex" capture:fromCol="9" capture:fromLine="13" capture:locator="macro-endpoint.tex#textrange(from=13;9,to=13;13)" capture:toCol="13" capture:toLine="13" meaning="absent"/>
+                    <XMTok capture:byteEnd="374" capture:byteStart="373" capture:file="macro-endpoint.tex" capture:fromCol="12" capture:fromLine="13" capture:locator="macro-endpoint.tex#textrange(from=13;12,to=13;12)" capture:toCol="12" capture:toLine="13" font="italic" role="UNKNOWN">W</XMTok>
+                  </XMApp>
+                </XMath>
+              </Math></td>
+          </MathBranch>
+        </MathFork>
+      </equation>
+      <equation capture:byteEnd="362" capture:byteStart="349" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="12" capture:locator="macro-endpoint.tex#textrange(from=12;1,to=12;13)" capture:toCol="13" capture:toLine="12" xml:id="S0.E3">
+        <tags>
+          <tag>(3)</tag>
+          <tag role="refnum">3</tag>
+        </tags>
+        <MathFork capture:byteEnd="362" capture:byteStart="349" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="12" capture:locator="macro-endpoint.tex#textrange(from=12;1,to=12;13)" capture:toCol="13" capture:toLine="12">
+          <Math capture:byteEnd="362" capture:byteStart="349" capture:file="macro-endpoint.tex" capture:fromCol="2" capture:fromLine="14" capture:locator="macro-endpoint.tex#textrange(from=14;2,to=14;2)" capture:provenance="source" capture:source="\begin{align}" capture:toCol="2" capture:toLine="14" tex="\displaystyle X\mathrel{\mathchoice{=}{=}{=}{=}}Y" text="X = Y" xml:id="S0.E3.m3">
+            <XMath capture:byteEnd="378" capture:byteStart="377" capture:file="macro-endpoint.tex" capture:fromCol="2" capture:fromLine="14" capture:locator="macro-endpoint.tex#textrange(from=14;2,to=14;2)" capture:toCol="2" capture:toLine="14">
+              <XMApp capture:byteEnd="378" capture:byteStart="377" capture:file="macro-endpoint.tex" capture:fromCol="2" capture:fromLine="14" capture:locator="macro-endpoint.tex#textrange(from=14;2,to=14;2)" capture:toCol="2" capture:toLine="14">
+                <XMTok capture:byteEnd="390" capture:byteStart="380" capture:file="macro-endpoint.tex" capture:fromCol="14" capture:fromLine="14" capture:locator="macro-endpoint.tex#textrange(from=14;14,to=14;14)" capture:toCol="14" capture:toLine="14" meaning="equals" role="RELOP">=</XMTok>
+                <XMTok capture:byteEnd="378" capture:byteStart="377" capture:file="macro-endpoint.tex" capture:fromCol="2" capture:fromLine="14" capture:locator="macro-endpoint.tex#textrange(from=14;2,to=14;2)" capture:toCol="2" capture:toLine="14" font="italic" role="UNKNOWN">X</XMTok>
+                <XMTok capture:byteEnd="392" capture:byteStart="391" capture:file="macro-endpoint.tex" capture:fromCol="16" capture:fromLine="14" capture:locator="macro-endpoint.tex#textrange(from=14;16,to=14;16)" capture:toCol="16" capture:toLine="14" font="italic" role="UNKNOWN">Y</XMTok>
+              </XMApp>
+            </XMath>
+          </Math>
+          <MathBranch capture:byteEnd="362" capture:byteStart="349" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="12" capture:locator="macro-endpoint.tex#textrange(from=12;1,to=12;13)" capture:toCol="13" capture:toLine="12">
+            <td align="right" capture:byteEnd="362" capture:byteStart="349" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="12" capture:locator="macro-endpoint.tex#textrange(from=12;1,to=12;13)" capture:toCol="13" capture:toLine="12"><Math capture:byteEnd="380" capture:byteStart="377" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="14" capture:locator="macro-endpoint.tex#textrange(from=14;1,to=14;3)" capture:provenance="source" capture:source="X &amp;" capture:toCol="3" capture:toLine="14" mode="inline" tex="\displaystyle X" text="X" xml:id="S0.E3.m1">
+                <XMath capture:byteEnd="380" capture:byteStart="377" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="14" capture:locator="macro-endpoint.tex#textrange(from=14;1,to=14;3)" capture:toCol="3" capture:toLine="14">
+                  <XMTok capture:byteEnd="378" capture:byteStart="377" capture:file="macro-endpoint.tex" capture:fromCol="2" capture:fromLine="14" capture:locator="macro-endpoint.tex#textrange(from=14;2,to=14;2)" capture:toCol="2" capture:toLine="14" font="italic" role="UNKNOWN">X</XMTok>
+                </XMath>
+              </Math></td>
+            <td align="left" capture:byteEnd="362" capture:byteStart="349" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="12" capture:locator="macro-endpoint.tex#textrange(from=12;1,to=12;13)" capture:toCol="13" capture:toLine="12"><Math capture:byteEnd="394" capture:byteStart="380" capture:file="macro-endpoint.tex" capture:fromCol="4" capture:fromLine="14" capture:locator="macro-endpoint.tex#textrange(from=14;4,to=14;17)" capture:provenance="source" capture:source="\authorrel Y\\" capture:toCol="17" capture:toLine="14" mode="inline" tex="\displaystyle\mathrel{\mathchoice{=}{=}{=}{=}}Y" text="absent = Y" xml:id="S0.E3.m2">
+                <XMath capture:byteEnd="394" capture:byteStart="380" capture:file="macro-endpoint.tex" capture:fromCol="4" capture:fromLine="14" capture:locator="macro-endpoint.tex#textrange(from=14;4,to=14;17)" capture:toCol="17" capture:toLine="14">
+                  <XMApp capture:byteEnd="394" capture:byteStart="380" capture:file="macro-endpoint.tex" capture:fromCol="4" capture:fromLine="14" capture:locator="macro-endpoint.tex#textrange(from=14;4,to=14;17)" capture:toCol="17" capture:toLine="14">
+                    <XMTok capture:byteEnd="390" capture:byteStart="380" capture:file="macro-endpoint.tex" capture:fromCol="14" capture:fromLine="14" capture:locator="macro-endpoint.tex#textrange(from=14;14,to=14;14)" capture:toCol="14" capture:toLine="14" meaning="equals" role="RELOP">=</XMTok>
+                    <XMTok capture:byteEnd="394" capture:byteStart="380" capture:file="macro-endpoint.tex" capture:fromCol="4" capture:fromLine="14" capture:locator="macro-endpoint.tex#textrange(from=14;4,to=14;17)" capture:toCol="17" capture:toLine="14" meaning="absent"/>
+                    <XMTok capture:byteEnd="392" capture:byteStart="391" capture:file="macro-endpoint.tex" capture:fromCol="16" capture:fromLine="14" capture:locator="macro-endpoint.tex#textrange(from=14;16,to=14;16)" capture:toCol="16" capture:toLine="14" font="italic" role="UNKNOWN">Y</XMTok>
+                  </XMApp>
+                </XMath>
+              </Math></td>
+          </MathBranch>
+        </MathFork>
+      </equation>
+      <equation capture:byteEnd="362" capture:byteStart="349" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="12" capture:locator="macro-endpoint.tex#textrange(from=12;1,to=12;13)" capture:toCol="13" capture:toLine="12" xml:id="S0.E4">
+        <tags>
+          <tag>(4)</tag>
+          <tag role="refnum">4</tag>
+        </tags>
+        <MathFork capture:byteEnd="362" capture:byteStart="349" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="12" capture:locator="macro-endpoint.tex#textrange(from=12;1,to=12;13)" capture:toCol="13" capture:toLine="12">
+          <Math capture:byteEnd="362" capture:byteStart="349" capture:file="macro-endpoint.tex" capture:fromCol="2" capture:fromLine="15" capture:locator="macro-endpoint.tex#textrange(from=15;2,to=15;2)" capture:provenance="source" capture:source="\begin{align}" capture:toCol="2" capture:toLine="15" tex="\displaystyle Z\mathrel{\mathchoice{=}{=}{=}{=}}" text="Z = absent" xml:id="S0.E4.m3">
+            <XMath capture:byteEnd="396" capture:byteStart="395" capture:file="macro-endpoint.tex" capture:fromCol="2" capture:fromLine="15" capture:locator="macro-endpoint.tex#textrange(from=15;2,to=15;2)" capture:toCol="2" capture:toLine="15">
+              <XMApp capture:byteEnd="396" capture:byteStart="395" capture:file="macro-endpoint.tex" capture:fromCol="2" capture:fromLine="15" capture:locator="macro-endpoint.tex#textrange(from=15;2,to=15;2)" capture:toCol="2" capture:toLine="15">
+                <XMTok capture:byteEnd="408" capture:byteStart="398" capture:file="macro-endpoint.tex" capture:fromCol="14" capture:fromLine="15" capture:locator="macro-endpoint.tex#textrange(from=15;14,to=15;14)" capture:toCol="14" capture:toLine="15" meaning="equals" role="RELOP">=</XMTok>
+                <XMTok capture:byteEnd="396" capture:byteStart="395" capture:file="macro-endpoint.tex" capture:fromCol="2" capture:fromLine="15" capture:locator="macro-endpoint.tex#textrange(from=15;2,to=15;2)" capture:toCol="2" capture:toLine="15" font="italic" role="UNKNOWN">Z</XMTok>
+                <XMTok capture:byteEnd="396" capture:byteStart="395" capture:file="macro-endpoint.tex" capture:fromCol="2" capture:fromLine="15" capture:locator="macro-endpoint.tex#textrange(from=15;2,to=15;2)" capture:toCol="2" capture:toLine="15" meaning="absent"/>
+              </XMApp>
+            </XMath>
+          </Math>
+          <MathBranch capture:byteEnd="362" capture:byteStart="349" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="12" capture:locator="macro-endpoint.tex#textrange(from=12;1,to=12;13)" capture:toCol="13" capture:toLine="12">
+            <td align="right" capture:byteEnd="362" capture:byteStart="349" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="12" capture:locator="macro-endpoint.tex#textrange(from=12;1,to=12;13)" capture:toCol="13" capture:toLine="12"><Math capture:byteEnd="398" capture:byteStart="395" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="15" capture:locator="macro-endpoint.tex#textrange(from=15;1,to=15;3)" capture:provenance="source" capture:source="Z &amp;" capture:toCol="3" capture:toLine="15" mode="inline" tex="\displaystyle Z" text="Z" xml:id="S0.E4.m1">
+                <XMath capture:byteEnd="398" capture:byteStart="395" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="15" capture:locator="macro-endpoint.tex#textrange(from=15;1,to=15;3)" capture:toCol="3" capture:toLine="15">
+                  <XMTok capture:byteEnd="396" capture:byteStart="395" capture:file="macro-endpoint.tex" capture:fromCol="2" capture:fromLine="15" capture:locator="macro-endpoint.tex#textrange(from=15;2,to=15;2)" capture:toCol="2" capture:toLine="15" font="italic" role="UNKNOWN">Z</XMTok>
+                </XMath>
+              </Math></td>
+            <td align="left" capture:byteEnd="362" capture:byteStart="349" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="12" capture:locator="macro-endpoint.tex#textrange(from=12;1,to=12;13)" capture:toCol="13" capture:toLine="12"><Math capture:byteEnd="410" capture:byteStart="398" capture:file="macro-endpoint.tex" capture:fromCol="4" capture:fromLine="15" capture:locator="macro-endpoint.tex#textrange(from=15;4,to=15;15)" capture:provenance="source" capture:source="\authorrel\\" capture:toCol="15" capture:toLine="15" mode="inline" tex="\displaystyle\mathrel{\mathchoice{=}{=}{=}{=}}" text="=" xml:id="S0.E4.m2">
+                <XMath capture:byteEnd="410" capture:byteStart="398" capture:file="macro-endpoint.tex" capture:fromCol="4" capture:fromLine="15" capture:locator="macro-endpoint.tex#textrange(from=15;4,to=15;15)" capture:toCol="15" capture:toLine="15">
+                  <XMTok capture:byteEnd="408" capture:byteStart="398" capture:file="macro-endpoint.tex" capture:fromCol="14" capture:fromLine="15" capture:locator="macro-endpoint.tex#textrange(from=15;14,to=15;14)" capture:toCol="14" capture:toLine="15" meaning="equals" role="RELOP">=</XMTok>
+                </XMath>
+              </Math></td>
+          </MathBranch>
+        </MathFork>
+      </equation>
+      <equation capture:byteEnd="362" capture:byteStart="349" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="12" capture:locator="macro-endpoint.tex#textrange(from=12;1,to=12;13)" capture:toCol="13" capture:toLine="12" xml:id="S0.E5">
+        <tags>
+          <tag>(5)</tag>
+          <tag role="refnum">5</tag>
+        </tags>
+        <MathFork capture:byteEnd="362" capture:byteStart="349" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="12" capture:locator="macro-endpoint.tex#textrange(from=12;1,to=12;13)" capture:toCol="13" capture:toLine="12">
+          <Math capture:byteEnd="362" capture:byteStart="349" capture:file="macro-endpoint.tex" capture:fromCol="2" capture:fromLine="16" capture:locator="macro-endpoint.tex#textrange(from=16;2,to=16;2)" capture:provenance="source" capture:source="\begin{align}" capture:toCol="2" capture:toLine="16" tex="\displaystyle A\mathrel{\mathchoice{=}{=}{=}{=}}B" text="A = B" xml:id="S0.E5.m3">
+            <XMath capture:byteEnd="412" capture:byteStart="411" capture:file="macro-endpoint.tex" capture:fromCol="2" capture:fromLine="16" capture:locator="macro-endpoint.tex#textrange(from=16;2,to=16;2)" capture:toCol="2" capture:toLine="16">
+              <XMApp capture:byteEnd="412" capture:byteStart="411" capture:file="macro-endpoint.tex" capture:fromCol="2" capture:fromLine="16" capture:locator="macro-endpoint.tex#textrange(from=16;2,to=16;2)" capture:toCol="2" capture:toLine="16">
+                <XMTok capture:byteEnd="422" capture:byteStart="412" capture:file="macro-endpoint.tex" capture:fromCol="12" capture:fromLine="16" capture:locator="macro-endpoint.tex#textrange(from=16;12,to=16;12)" capture:toCol="12" capture:toLine="16" meaning="equals" role="RELOP">=</XMTok>
+                <XMTok capture:byteEnd="412" capture:byteStart="411" capture:file="macro-endpoint.tex" capture:fromCol="2" capture:fromLine="16" capture:locator="macro-endpoint.tex#textrange(from=16;2,to=16;2)" capture:toCol="2" capture:toLine="16" font="italic" role="UNKNOWN">A</XMTok>
+                <XMTok capture:byteEnd="426" capture:byteStart="425" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="16" capture:locator="macro-endpoint.tex#textrange(from=16;1,to=16;16)" capture:toCol="16" capture:toLine="16" font="italic" role="UNKNOWN">B</XMTok>
+              </XMApp>
+            </XMath>
+          </Math>
+          <MathBranch capture:byteEnd="362" capture:byteStart="349" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="12" capture:locator="macro-endpoint.tex#textrange(from=12;1,to=12;13)" capture:toCol="13" capture:toLine="12">
+            <td align="right" capture:byteEnd="362" capture:byteStart="349" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="12" capture:locator="macro-endpoint.tex#textrange(from=12;1,to=12;13)" capture:toCol="13" capture:toLine="12"><Math capture:byteEnd="424" capture:byteStart="411" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="16" capture:locator="macro-endpoint.tex#textrange(from=16;1,to=16;13)" capture:provenance="source" capture:source="A\authorrel &amp;" capture:toCol="13" capture:toLine="16" mode="inline" tex="\displaystyle A\mathrel{\mathchoice{=}{=}{=}{=}}" text="A = absent" xml:id="S0.E5.m1">
+                <XMath capture:byteEnd="424" capture:byteStart="411" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="16" capture:locator="macro-endpoint.tex#textrange(from=16;1,to=16;13)" capture:toCol="13" capture:toLine="16">
+                  <XMApp capture:byteEnd="424" capture:byteStart="411" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="16" capture:locator="macro-endpoint.tex#textrange(from=16;1,to=16;13)" capture:toCol="13" capture:toLine="16">
+                    <XMTok capture:byteEnd="422" capture:byteStart="412" capture:file="macro-endpoint.tex" capture:fromCol="12" capture:fromLine="16" capture:locator="macro-endpoint.tex#textrange(from=16;12,to=16;12)" capture:toCol="12" capture:toLine="16" meaning="equals" role="RELOP">=</XMTok>
+                    <XMTok capture:byteEnd="412" capture:byteStart="411" capture:file="macro-endpoint.tex" capture:fromCol="2" capture:fromLine="16" capture:locator="macro-endpoint.tex#textrange(from=16;2,to=16;2)" capture:toCol="2" capture:toLine="16" font="italic" role="UNKNOWN">A</XMTok>
+                    <XMTok capture:byteEnd="424" capture:byteStart="411" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="16" capture:locator="macro-endpoint.tex#textrange(from=16;1,to=16;13)" capture:toCol="13" capture:toLine="16" meaning="absent"/>
+                  </XMApp>
+                </XMath>
+              </Math></td>
+            <td align="left" capture:byteEnd="362" capture:byteStart="349" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="12" capture:locator="macro-endpoint.tex#textrange(from=12;1,to=12;13)" capture:toCol="13" capture:toLine="12"><Math capture:byteEnd="438" capture:byteStart="425" capture:file="macro-endpoint.tex" capture:fromCol="15" capture:fromLine="16" capture:locator="macro-endpoint.tex#textrange(from=16;15,to=17;11)" capture:provenance="source" capture:source="B&#10;\end{align}" capture:toCol="11" capture:toLine="17" mode="inline" tex="\displaystyle B" text="B" xml:id="S0.E5.m2">
+                <XMath capture:byteEnd="438" capture:byteStart="425" capture:file="macro-endpoint.tex" capture:fromCol="15" capture:fromLine="16" capture:locator="macro-endpoint.tex#textrange(from=16;15,to=17;11)" capture:toCol="11" capture:toLine="17">
+                  <XMTok capture:byteEnd="426" capture:byteStart="425" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="16" capture:locator="macro-endpoint.tex#textrange(from=16;1,to=16;16)" capture:toCol="16" capture:toLine="16" font="italic" role="UNKNOWN">B</XMTok>
+                </XMath>
+              </Math></td>
+          </MathBranch>
+        </MathFork>
+      </equation>
+    </equationgroup>
+    <equationgroup capture:byteEnd="453" capture:byteStart="439" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="18" capture:locator="macro-endpoint.tex#textrange(from=18;1,to=18;14)" capture:toCol="14" capture:toLine="18" class="ltx_eqn_align" xml:id="S0.EGx2">
+      <equation capture:byteEnd="453" capture:byteStart="439" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="18" capture:locator="macro-endpoint.tex#textrange(from=18;1,to=18;14)" capture:toCol="14" capture:toLine="18" xml:id="S0.E6">
+        <tags>
+          <tag>(6)</tag>
+          <tag role="refnum">6</tag>
+        </tags>
+        <MathFork capture:byteEnd="453" capture:byteStart="439" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="18" capture:locator="macro-endpoint.tex#textrange(from=18;1,to=18;14)" capture:toCol="14" capture:toLine="18">
+          <Math capture:callsite="\openalignment" capture:callsiteEnd="453" capture:callsiteFile="macro-endpoint.tex" capture:callsiteStart="439" capture:fromCol="15" capture:fromLine="18" capture:locator="macro-endpoint.tex#textrange(from=18;15,to=18;15)" capture:provenance="callsite-only" capture:toCol="15" capture:toLine="18" content-tex="\displaystyle\dom C=D" tex="\displaystyle\operatorname{dom}C=D" text="dom@(C) = D" xml:id="S0.E6.m3">
+            <XMath capture:byteEnd="453" capture:byteStart="439" capture:file="macro-endpoint.tex" capture:fromCol="15" capture:fromLine="18" capture:locator="macro-endpoint.tex#textrange(from=18;15,to=18;15)" capture:toCol="15" capture:toLine="18">
+              <XMApp capture:byteEnd="453" capture:byteStart="439" capture:file="macro-endpoint.tex" capture:fromCol="15" capture:fromLine="18" capture:locator="macro-endpoint.tex#textrange(from=18;15,to=18;15)" capture:toCol="15" capture:toLine="18">
+                <XMTok capture:byteEnd="458" capture:byteStart="457" capture:file="macro-endpoint.tex" capture:fromCol="20" capture:fromLine="18" capture:locator="macro-endpoint.tex#textrange(from=18;20,to=18;20)" capture:toCol="20" capture:toLine="18" meaning="equals" role="RELOP">=</XMTok>
+                <XMApp capture:byteEnd="453" capture:byteStart="439" capture:file="macro-endpoint.tex" capture:fromCol="15" capture:fromLine="18" capture:juxtaposition="[{&quot;decision&quot;:&quot;application&quot;,&quot;evidence&quot;:{&quot;explicitApply&quot;:false,&quot;leftRole&quot;:&quot;OPFUNCTION&quot;,&quot;leftShape&quot;:&quot;ltx:XMTok&quot;,&quot;rightRole&quot;:&quot;UNKNOWN&quot;,&quot;rightShape&quot;:&quot;ltx:XMTok&quot;},&quot;rule&quot;:&quot;addOpFunArgs&quot;}]" capture:locator="macro-endpoint.tex#textrange(from=18;15,to=18;15)" capture:toCol="15" capture:toLine="18">
+                  <XMTok capture:byteEnd="453" capture:byteStart="439" capture:file="macro-endpoint.tex" capture:fromCol="15" capture:fromLine="18" capture:locator="macro-endpoint.tex#textrange(from=18;15,to=18;15)" capture:toCol="15" capture:toLine="18" name="dom" role="OPFUNCTION" scriptpos="post">dom</XMTok>
+                  <XMTok capture:byteEnd="455" capture:byteStart="454" capture:file="macro-endpoint.tex" capture:fromCol="17" capture:fromLine="18" capture:locator="macro-endpoint.tex#textrange(from=18;17,to=18;17)" capture:toCol="17" capture:toLine="18" font="italic" role="UNKNOWN">C</XMTok>
+                </XMApp>
+                <XMTok capture:byteEnd="460" capture:byteStart="459" capture:file="macro-endpoint.tex" capture:fromCol="22" capture:fromLine="18" capture:locator="macro-endpoint.tex#textrange(from=18;22,to=18;22)" capture:toCol="22" capture:toLine="18" font="italic" role="UNKNOWN">D</XMTok>
+              </XMApp>
+            </XMath>
+          </Math>
+          <MathBranch capture:byteEnd="453" capture:byteStart="439" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="18" capture:locator="macro-endpoint.tex#textrange(from=18;1,to=18;14)" capture:toCol="14" capture:toLine="18">
+            <td align="right" capture:byteEnd="453" capture:byteStart="439" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="18" capture:locator="macro-endpoint.tex#textrange(from=18;1,to=18;14)" capture:toCol="14" capture:toLine="18"><Math capture:fromCol="1" capture:fromLine="18" capture:locator="macro-endpoint.tex#textrange(from=18;1,to=18;18)" capture:provenance="unlocated" capture:toCol="18" capture:toLine="18" capture:unlocatedReason="mixed-endpoint-provenance" content-tex="\displaystyle\dom C" mode="inline" tex="\displaystyle\operatorname{dom}C" text="dom@(C)" xml:id="S0.E6.m1">
+                <XMath capture:byteEnd="457" capture:byteStart="439" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="18" capture:locator="macro-endpoint.tex#textrange(from=18;1,to=18;18)" capture:toCol="18" capture:toLine="18">
+                  <XMApp capture:byteEnd="457" capture:byteStart="439" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="18" capture:juxtaposition="[{&quot;decision&quot;:&quot;application&quot;,&quot;evidence&quot;:{&quot;explicitApply&quot;:false,&quot;leftRole&quot;:&quot;OPFUNCTION&quot;,&quot;leftShape&quot;:&quot;ltx:XMTok&quot;,&quot;rightRole&quot;:&quot;UNKNOWN&quot;,&quot;rightShape&quot;:&quot;ltx:XMTok&quot;},&quot;rule&quot;:&quot;addOpFunArgs&quot;}]" capture:locator="macro-endpoint.tex#textrange(from=18;1,to=18;18)" capture:toCol="18" capture:toLine="18">
+                    <XMTok capture:byteEnd="453" capture:byteStart="439" capture:file="macro-endpoint.tex" capture:fromCol="15" capture:fromLine="18" capture:locator="macro-endpoint.tex#textrange(from=18;15,to=18;15)" capture:toCol="15" capture:toLine="18" name="dom" role="OPFUNCTION" scriptpos="post">dom</XMTok>
+                    <XMTok capture:byteEnd="455" capture:byteStart="454" capture:file="macro-endpoint.tex" capture:fromCol="17" capture:fromLine="18" capture:locator="macro-endpoint.tex#textrange(from=18;17,to=18;17)" capture:toCol="17" capture:toLine="18" font="italic" role="UNKNOWN">C</XMTok>
+                  </XMApp>
+                </XMath>
+              </Math></td>
+            <td align="left" capture:byteEnd="453" capture:byteStart="439" capture:file="macro-endpoint.tex" capture:fromCol="1" capture:fromLine="18" capture:locator="macro-endpoint.tex#textrange(from=18;1,to=18;14)" capture:toCol="14" capture:toLine="18"><Math capture:byteEnd="471" capture:byteStart="457" capture:file="macro-endpoint.tex" capture:fromCol="19" capture:fromLine="18" capture:locator="macro-endpoint.tex#textrange(from=18;19,to=18;32)" capture:provenance="source" capture:source="= D\end{align}" capture:toCol="32" capture:toLine="18" mode="inline" tex="\displaystyle=D" text="absent = D" xml:id="S0.E6.m2">
+                <XMath capture:byteEnd="471" capture:byteStart="457" capture:file="macro-endpoint.tex" capture:fromCol="19" capture:fromLine="18" capture:locator="macro-endpoint.tex#textrange(from=18;19,to=18;32)" capture:toCol="32" capture:toLine="18">
+                  <XMApp capture:byteEnd="471" capture:byteStart="457" capture:file="macro-endpoint.tex" capture:fromCol="19" capture:fromLine="18" capture:locator="macro-endpoint.tex#textrange(from=18;19,to=18;32)" capture:toCol="32" capture:toLine="18">
+                    <XMTok capture:byteEnd="458" capture:byteStart="457" capture:file="macro-endpoint.tex" capture:fromCol="20" capture:fromLine="18" capture:locator="macro-endpoint.tex#textrange(from=18;20,to=18;20)" capture:toCol="20" capture:toLine="18" meaning="equals" role="RELOP">=</XMTok>
+                    <XMTok capture:byteEnd="471" capture:byteStart="457" capture:file="macro-endpoint.tex" capture:fromCol="19" capture:fromLine="18" capture:locator="macro-endpoint.tex#textrange(from=18;19,to=18;32)" capture:toCol="32" capture:toLine="18" meaning="absent"/>
+                    <XMTok capture:byteEnd="460" capture:byteStart="459" capture:file="macro-endpoint.tex" capture:fromCol="22" capture:fromLine="18" capture:locator="macro-endpoint.tex#textrange(from=18;22,to=18;22)" capture:toCol="22" capture:toLine="18" font="italic" role="UNKNOWN">D</XMTok>
+                  </XMApp>
+                </XMath>
+              </Math></td>
+          </MathBranch>
+        </MathFork>
+      </equation>
+    </equationgroup>
+    <p capture:byteEnd="473" capture:byteStart="472" capture:file="macro-endpoint.tex" capture:fromCol="2" capture:fromLine="19" capture:locator="macro-endpoint.tex#textrange(from=19;2,to=19;2)" capture:toCol="2" capture:toLine="19">Generated opening: <Math capture:fromCol="20" capture:fromLine="19" capture:locator="macro-endpoint.tex#textrange(from=19;20,to=19;32)" capture:provenance="unlocated" capture:toCol="32" capture:toLine="19" capture:unlocatedReason="mixed-endpoint-provenance" mode="inline" tex="p+t" text="p + t" xml:id="p1.m2">
+        <XMath capture:byteEnd="504" capture:byteStart="491" capture:file="macro-endpoint.tex" capture:fromCol="20" capture:fromLine="19" capture:locator="macro-endpoint.tex#textrange(from=19;20,to=19;32)" capture:toCol="32" capture:toLine="19">
+          <XMApp capture:byteEnd="504" capture:byteStart="491" capture:file="macro-endpoint.tex" capture:fromCol="20" capture:fromLine="19" capture:locator="macro-endpoint.tex#textrange(from=19;20,to=19;32)" capture:toCol="32" capture:toLine="19">
+            <XMTok capture:byteEnd="502" capture:byteStart="501" capture:file="macro-endpoint.tex" capture:fromCol="31" capture:fromLine="19" capture:locator="macro-endpoint.tex#textrange(from=19;31,to=19;31)" capture:toCol="31" capture:toLine="19" meaning="plus" role="ADDOP">+</XMTok>
+            <XMTok capture:byteEnd="500" capture:byteStart="491" capture:file="macro-endpoint.tex" capture:fromCol="29" capture:fromLine="19" capture:locator="macro-endpoint.tex#textrange(from=19;29,to=19;29)" capture:toCol="29" capture:toLine="19" font="italic" role="UNKNOWN">p</XMTok>
+            <XMTok capture:byteEnd="503" capture:byteStart="502" capture:file="macro-endpoint.tex" capture:fromCol="32" capture:fromLine="19" capture:locator="macro-endpoint.tex#textrange(from=19;32,to=19;32)" capture:toCol="32" capture:toLine="19" font="italic" role="UNKNOWN">t</XMTok>
+          </XMApp>
+        </XMath>
+      </Math>.
+Distinct invocations: <Math capture:fromCol="23" capture:fromLine="20" capture:locator="macro-endpoint.tex#textrange(from=20;23,to=20;43)" capture:provenance="unlocated" capture:toCol="43" capture:toLine="20" capture:unlocatedReason="distinct-author-invocations" mode="inline" tex="p+q" text="p + q" xml:id="p1.m3">
+        <XMath capture:byteEnd="549" capture:byteStart="528" capture:file="macro-endpoint.tex" capture:fromCol="23" capture:fromLine="20" capture:locator="macro-endpoint.tex#textrange(from=20;23,to=20;43)" capture:toCol="43" capture:toLine="20">
+          <XMApp capture:byteEnd="549" capture:byteStart="528" capture:file="macro-endpoint.tex" capture:fromCol="23" capture:fromLine="20" capture:locator="macro-endpoint.tex#textrange(from=20;23,to=20;43)" capture:toCol="43" capture:toLine="20">
+            <XMTok capture:byteEnd="539" capture:byteStart="538" capture:file="macro-endpoint.tex" capture:fromCol="34" capture:fromLine="20" capture:locator="macro-endpoint.tex#textrange(from=20;34,to=20;34)" capture:toCol="34" capture:toLine="20" meaning="plus" role="ADDOP">+</XMTok>
+            <XMTok capture:byteEnd="537" capture:byteStart="528" capture:file="macro-endpoint.tex" capture:fromCol="32" capture:fromLine="20" capture:locator="macro-endpoint.tex#textrange(from=20;32,to=20;32)" capture:toCol="32" capture:toLine="20" font="italic" role="UNKNOWN">p</XMTok>
+            <XMTok capture:byteEnd="549" capture:byteStart="539" capture:file="macro-endpoint.tex" capture:fromCol="44" capture:fromLine="20" capture:locator="macro-endpoint.tex#textrange(from=20;44,to=20;44)" capture:toCol="44" capture:toLine="20" font="italic" role="UNKNOWN">q</XMTok>
+          </XMApp>
+        </XMath>
+      </Math>.
+Whole-formula control: <Math capture:callsite="\wholemath" capture:callsiteEnd="584" capture:callsiteFile="macro-endpoint.tex" capture:callsiteStart="574" capture:fromCol="24" capture:fromLine="21" capture:locator="macro-endpoint.tex#textrange(from=21;24,to=21;33)" capture:provenance="callsite-only" capture:toCol="33" capture:toLine="21" mode="inline" tex="r=s" text="r = s" xml:id="p1.m4">
+        <XMath capture:byteEnd="584" capture:byteStart="574" capture:file="macro-endpoint.tex" capture:fromCol="24" capture:fromLine="21" capture:locator="macro-endpoint.tex#textrange(from=21;24,to=21;33)" capture:toCol="33" capture:toLine="21">
+          <XMApp capture:byteEnd="584" capture:byteStart="574" capture:file="macro-endpoint.tex" capture:fromCol="24" capture:fromLine="21" capture:locator="macro-endpoint.tex#textrange(from=21;24,to=21;33)" capture:toCol="33" capture:toLine="21">
+            <XMTok capture:byteEnd="584" capture:byteStart="574" capture:file="macro-endpoint.tex" capture:fromCol="34" capture:fromLine="21" capture:locator="macro-endpoint.tex#textrange(from=21;34,to=21;34)" capture:toCol="34" capture:toLine="21" meaning="equals" role="RELOP">=</XMTok>
+            <XMTok capture:byteEnd="584" capture:byteStart="574" capture:file="macro-endpoint.tex" capture:fromCol="34" capture:fromLine="21" capture:locator="macro-endpoint.tex#textrange(from=21;34,to=21;34)" capture:toCol="34" capture:toLine="21" font="italic" role="UNKNOWN">r</XMTok>
+            <XMTok capture:byteEnd="584" capture:byteStart="574" capture:file="macro-endpoint.tex" capture:fromCol="34" capture:fromLine="21" capture:locator="macro-endpoint.tex#textrange(from=21;34,to=21;34)" capture:toCol="34" capture:toLine="21" font="italic" role="UNKNOWN">s</XMTok>
+          </XMApp>
+        </XMath>
+      </Math>.</p>
+  </para>
+  <capture:ledger>
+    <capture:engine capture="true" includestyles="false" lexematize="false" noparse="false" revision="CAPTURE_REVISION" version="0.8.8">
+      <capture:preload name="LaTeX.pool"/>
+    </capture:engine>
+    <capture:packages>
+      <capture:package kind="package" name="textcomp" options="" requestOrigin="transitive" resolved="../../lib/LaTeXML/Package/textcomp.sty.ltxml" route="binding"/>
+      <capture:package kind="class" name="article" options="" requestByteEnd="14" requestByteStart="0" requestFile="macro-endpoint.tex" requestOrigin="source" resolved="../../lib/LaTeXML/Package/article.cls.ltxml" route="binding"/>
+      <capture:package kind="package" name="amsgen" options="" requestOrigin="transitive" resolved="../../lib/LaTeXML/Package/amsgen.sty.ltxml" route="binding"/>
+      <capture:package kind="package" name="amsbsy" options="" requestOrigin="transitive" resolved="../../lib/LaTeXML/Package/amsbsy.sty.ltxml" route="binding"/>
+      <capture:package kind="package" name="amsgen" options="" requestOrigin="transitive" resolved="../../lib/LaTeXML/Package/amsgen.sty.ltxml" route="binding"/>
+      <capture:package kind="package" name="amstext" options="" requestOrigin="transitive" resolved="../../lib/LaTeXML/Package/amstext.sty.ltxml" route="binding"/>
+      <capture:package kind="package" name="amsgen" options="" requestOrigin="transitive" resolved="../../lib/LaTeXML/Package/amsgen.sty.ltxml" route="binding"/>
+      <capture:package kind="package" name="amsopn" options="" requestOrigin="transitive" resolved="../../lib/LaTeXML/Package/amsopn.sty.ltxml" route="binding"/>
+      <capture:package kind="package" name="amsmath" options="" requestByteEnd="35" requestByteStart="24" requestFile="macro-endpoint.tex" requestOrigin="source" resolved="../../lib/LaTeXML/Package/amsmath.sty.ltxml" route="binding"/>
+    </capture:packages>
+    <capture:math callsiteOnly="2" crossSource="0" display="16" failedCells="0" inline="4" parser="run" source="15" total="20" unlocated="3" unparsed="0"/>
+    <capture:encoding substitutions="0"/>
+    <capture:messages errors="0" warnings="0"/>
+  </capture:ledger>
+</document>

@@ -674,6 +674,56 @@ is(normalized_capture_xml($cite_xml), normalized_capture_xml($cite_golden),
   'cite capture golden matches after base and revision normalization only');
 validate_capture_document($cite_xml, 'capture-cite');
 
+# Mixed endpoints belong to one recorded alignment cell. A macro-generated
+# delimiter or alignment is not evidence for an authored cell interval.
+my $endpoint_xml = fixture_document('macro-endpoint');
+my $endpoint_xc = xpath($endpoint_xml);
+my @endpoint_math = $endpoint_xc->findnodes('//ltx:Math');
+is(scalar(@endpoint_math), 20, 'macro endpoints fixture has the expected carriers');
+my %endpoint_by_id = map { $_->getAttribute('xml:id') => $_ } @endpoint_math;
+my $endpoint_raw = slurp_raw(File::Spec->catfile($FIXTURES, 'macro-endpoint.tex'));
+for my $case (
+  ['p1.m1', '$\dom T$', 'inline macro control'],
+  ['S0.E1.m1', '\begin{equation}\dom U\end{equation}', 'equation macro control'],
+  ['S0.E2.m1', '\dom V &', 'operator at cell start'],
+  ['S0.E3.m2', '\authorrel Y\\\\', 'relation at cell start'],
+  ['S0.E4.m2', '\authorrel\\\\', 'relation-only cell'],
+  ['S0.E5.m1', 'A\authorrel &', 'relation at cell end']) {
+  my ($id, $expected, $label) = @$case;
+  my $math = $endpoint_by_id{$id};
+  ok($math, "$label carrier exists");
+  next unless $math;
+  is(cattr($math, 'provenance'), 'source', "$label owns source");
+  assert_owns_slice($endpoint_xml, $math, $expected, $label);
+  if (cattr($math, 'provenance') eq 'source') {
+    my (undef, $start, $end) = assert_source_bytes($endpoint_xml, $math, $label);
+    my $expected_start = index($endpoint_raw, encode('UTF-8', $expected));
+    is($start, $expected_start, "$label starts at the independently located author bytes");
+    is($end, $expected_start + length(encode('UTF-8', $expected)), "$label ends at the recorded boundary");
+  }
+}
+for my $case (
+  ['p1.m2', 'mixed-endpoint-provenance', 'generated opening delimiter'],
+  ['p1.m3', 'distinct-author-invocations', 'distinct same-file invocations'],
+  ['S0.E6.m1', 'mixed-endpoint-provenance', 'macro-generated alignment']) {
+  my ($id, $reason, $label) = @$case;
+  my $math = $endpoint_by_id{$id};
+  ok($math, "$label carrier exists");
+  next unless $math;
+  is(cattr($math, 'provenance'), 'unlocated', "$label remains unresolved");
+  is(cattr($math, 'unlocatedReason'), $reason, "$label preserves explicit residue");
+  ok(!$math->hasAttributeNS($CAPTURE_NS, 'source'), "$label is not given a guessed source slice");
+}
+is(cattr($endpoint_by_id{'p1.m4'}, 'provenance'), 'callsite-only', 'whole-formula macro remains callsite-only');
+is(cattr($endpoint_by_id{'p1.m4'}, 'callsite'), '\wholemath', 'whole-formula callsite remains exact');
+is(without_capture($endpoint_xml), without_capture(fixture_document('macro-endpoint', '--no-capture')),
+  'mixed endpoint provenance does not change the stripped document');
+assert_partition($endpoint_xml, 'macro endpoints fixture');
+my $endpoint_golden = XML::LibXML->load_xml(location => File::Spec->catfile($FIXTURES, 'macro-endpoint.xml'));
+is(normalized_capture_xml($endpoint_xml), normalized_capture_xml($endpoint_golden),
+  'macro endpoints capture golden matches after base and revision normalization only');
+validate_capture_document($endpoint_xml, 'capture-macro-endpoint');
+
 done_testing();
 
 #**********************************************************************
