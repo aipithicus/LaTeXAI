@@ -1,5 +1,5 @@
 {
-    "_comment": "Copy to .mcp.json (gitignored) and replace the <...> placeholders. PERL_ROOT is the portable Strawberry Perl root; PERL_HOME is derived by scripts/profile.ps1 as its perl\\ subdirectory. MCP_POWERSHELL_PROFILE must point at this checkout's scripts/profile.ps1. CDXSCI_ROOT belongs in scripts/local.psd1 or this env block. Keep .codex/config.toml and .grok/config.toml in agreement by hand. tool_timeout_sec 29400 is the gauntlet WaitTimeoutSeconds (28800) plus 600 s drainage; Codex default is 60 s and Grok default is 6000 s — both are too short without this field (Grok honors it on [mcp_servers.pwsh_exec] in .grok/config.toml / .codex/config.toml).",
+    "_comment": "Copy to .mcp.json (gitignored) and replace the <...> placeholders. PERL_ROOT is the portable Strawberry Perl root; PERL_HOME is derived by scripts/profile.ps1 as its perl\\ subdirectory. MCP_POWERSHELL_PROFILE must point at this checkout's scripts/profile.ps1. CDXSCI_ROOT belongs in scripts/local.psd1 or this env block. Keep .codex/config.toml and .grok/config.toml in agreement by hand. pwsh_exec command is the owned CPython under mcp/pwsh_exec/deps/python (restore writes the concrete path); uv.exe is restore-only. tool_timeout_sec 29400 is the gauntlet WaitTimeoutSeconds (28800) plus 600 s drainage; Codex default is 60 s and Grok default is 6000 s — both are too short without this field (Grok honors it on [mcp_servers.pwsh_exec] in .grok/config.toml).",
     "mcpServers": {
         "nushell": {
             "command": "<SCIENCE_FACILITY>/mcp/nushell-mcp/deps/nushell/nu.exe",
@@ -15,14 +15,9 @@
             }
         },
         "pwsh_exec": {
-            "command": "<SCIENCE_FACILITY>/mcp/pwsh_exec/deps/bin/uv/uv.exe",
+            "command": "<SCIENCE_FACILITY>/mcp/pwsh_exec/deps/python/cpython-<version>-*/python.exe",
             "args": [
-                "run",
-                "--project",
-                "<SCIENCE_FACILITY>/mcp/pwsh_exec",
-                "--locked",
-                "--no-sync",
-                "--offline",
+                "-B",
                 "<SCIENCE_FACILITY>/mcp/pwsh_exec/server.py"
             ],
             "tool_timeout_sec": 29400,
