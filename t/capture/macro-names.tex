@@ -1,0 +1,26 @@
+\documentclass{article}
+\usepackage{amsmath}
+\newcommand{\eq}{$e=q$}
+\newcommand{\helper}{$h=k$}
+\newcommand{\authormiddle}{\helper}
+\newcommand{\authorouter}{\authormiddle}
+\let\alias\eq
+\newcommand{\isasymparallel}{\ensuremath{\parallel}}
+\newcommand{\witharg}[1]{$#1$}
+\newcommand{\replay}[1]{#1}
+\newcommand{\openmath}{$u}
+\newcommand{\closemath}{v$}
+\begin{document}
+Direct: \eq.
+Nested: \authorouter.
+Helper itself: \helper.
+Alias: \alias.
+Isabelle style: \isasymparallel.
+Parameterized: \witharg{x}.
+Replayed macro: \replay{\eq}.
+Replayed source: \replay{$r=s$}.
+Source control: $\isasymparallel$.
+Distinct invocations: \openmath+\closemath.
+\renewcommand{\eq}{$a=b$}
+Redefined: \eq.
+\end{document}

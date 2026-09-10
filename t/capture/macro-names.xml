@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="amsmath"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML" xmlns:capture="http://dlmf.nist.gov/LaTeXML/capture" capture:base="CAPTURE_BASE" capture:byteEnd="371" capture:byteStart="355" capture:file="macro-names.tex" capture:fromCol="1" capture:fromLine="13" capture:locator="macro-names.tex#textrange(from=13;1,to=13;16)" capture:toCol="16" capture:toLine="13">
+  <resource capture:byteEnd="371" capture:byteStart="355" capture:file="macro-names.tex" capture:fromCol="1" capture:fromLine="13" capture:locator="macro-names.tex#textrange(from=13;1,to=13;16)" capture:toCol="16" capture:toLine="13" src="LaTeXML.css" type="text/css"/>
+  <resource capture:byteEnd="371" capture:byteStart="355" capture:file="macro-names.tex" capture:fromCol="1" capture:fromLine="13" capture:locator="macro-names.tex#textrange(from=13;1,to=13;16)" capture:toCol="16" capture:toLine="13" src="ltx-article.css" type="text/css"/>
+  <para capture:byteEnd="373" capture:byteStart="372" capture:file="macro-names.tex" capture:fromCol="2" capture:fromLine="14" capture:locator="macro-names.tex#textrange(from=14;2,to=14;2)" capture:toCol="2" capture:toLine="14" xml:id="p1">
+    <p capture:byteEnd="373" capture:byteStart="372" capture:file="macro-names.tex" capture:fromCol="2" capture:fromLine="14" capture:locator="macro-names.tex#textrange(from=14;2,to=14;2)" capture:toCol="2" capture:toLine="14">Direct: <Math capture:callsite="\eq" capture:callsiteEnd="383" capture:callsiteFile="macro-names.tex" capture:callsiteStart="380" capture:fromCol="9" capture:fromLine="14" capture:locator="macro-names.tex#textrange(from=14;9,to=14;11)" capture:macro="\eq" capture:provenance="callsite-only" capture:toCol="11" capture:toLine="14" mode="inline" tex="e=q" text="e = q" xml:id="p1.m1">
+        <XMath capture:byteEnd="383" capture:byteStart="380" capture:file="macro-names.tex" capture:fromCol="9" capture:fromLine="14" capture:locator="macro-names.tex#textrange(from=14;9,to=14;11)" capture:toCol="11" capture:toLine="14">
+          <XMApp capture:byteEnd="383" capture:byteStart="380" capture:file="macro-names.tex" capture:fromCol="9" capture:fromLine="14" capture:locator="macro-names.tex#textrange(from=14;9,to=14;11)" capture:toCol="11" capture:toLine="14">
+            <XMTok capture:byteEnd="383" capture:byteStart="380" capture:file="macro-names.tex" capture:fromCol="12" capture:fromLine="14" capture:locator="macro-names.tex#textrange(from=14;12,to=14;12)" capture:toCol="12" capture:toLine="14" meaning="equals" role="RELOP">=</XMTok>
+            <XMTok capture:byteEnd="383" capture:byteStart="380" capture:file="macro-names.tex" capture:fromCol="12" capture:fromLine="14" capture:locator="macro-names.tex#textrange(from=14;12,to=14;12)" capture:toCol="12" capture:toLine="14" font="italic" role="UNKNOWN">e</XMTok>
+            <XMTok capture:byteEnd="383" capture:byteStart="380" capture:file="macro-names.tex" capture:fromCol="12" capture:fromLine="14" capture:locator="macro-names.tex#textrange(from=14;12,to=14;12)" capture:toCol="12" capture:toLine="14" font="italic" role="UNKNOWN">q</XMTok>
+          </XMApp>
+        </XMath>
+      </Math>.
+Nested: <Math capture:callsite="\authorouter" capture:callsiteEnd="405" capture:callsiteFile="macro-names.tex" capture:callsiteStart="393" capture:fromCol="9" capture:fromLine="15" capture:locator="macro-names.tex#textrange(from=15;9,to=15;20)" capture:macro="\authorouter" capture:provenance="callsite-only" capture:toCol="20" capture:toLine="15" mode="inline" tex="h=k" text="h = k" xml:id="p1.m2">
+        <XMath capture:byteEnd="405" capture:byteStart="393" capture:file="macro-names.tex" capture:fromCol="9" capture:fromLine="15" capture:locator="macro-names.tex#textrange(from=15;9,to=15;20)" capture:toCol="20" capture:toLine="15">
+          <XMApp capture:byteEnd="405" capture:byteStart="393" capture:file="macro-names.tex" capture:fromCol="9" capture:fromLine="15" capture:locator="macro-names.tex#textrange(from=15;9,to=15;20)" capture:toCol="20" capture:toLine="15">
+            <XMTok capture:byteEnd="405" capture:byteStart="393" capture:file="macro-names.tex" capture:fromCol="21" capture:fromLine="15" capture:locator="macro-names.tex#textrange(from=15;21,to=15;21)" capture:toCol="21" capture:toLine="15" meaning="equals" role="RELOP">=</XMTok>
+            <XMTok capture:byteEnd="405" capture:byteStart="393" capture:file="macro-names.tex" capture:fromCol="21" capture:fromLine="15" capture:locator="macro-names.tex#textrange(from=15;21,to=15;21)" capture:toCol="21" capture:toLine="15" font="italic" role="UNKNOWN">h</XMTok>
+            <XMTok capture:byteEnd="405" capture:byteStart="393" capture:file="macro-names.tex" capture:fromCol="21" capture:fromLine="15" capture:locator="macro-names.tex#textrange(from=15;21,to=15;21)" capture:toCol="21" capture:toLine="15" font="italic" role="UNKNOWN">k</XMTok>
+          </XMApp>
+        </XMath>
+      </Math>.
+Helper itself: <Math capture:callsite="\helper" capture:callsiteEnd="429" capture:callsiteFile="macro-names.tex" capture:callsiteStart="422" capture:fromCol="16" capture:fromLine="16" capture:locator="macro-names.tex#textrange(from=16;16,to=16;22)" capture:macro="\helper" capture:provenance="callsite-only" capture:toCol="22" capture:toLine="16" mode="inline" tex="h=k" text="h = k" xml:id="p1.m3">
+        <XMath capture:byteEnd="429" capture:byteStart="422" capture:file="macro-names.tex" capture:fromCol="16" capture:fromLine="16" capture:locator="macro-names.tex#textrange(from=16;16,to=16;22)" capture:toCol="22" capture:toLine="16">
+          <XMApp capture:byteEnd="429" capture:byteStart="422" capture:file="macro-names.tex" capture:fromCol="16" capture:fromLine="16" capture:locator="macro-names.tex#textrange(from=16;16,to=16;22)" capture:toCol="22" capture:toLine="16">
+            <XMTok capture:byteEnd="429" capture:byteStart="422" capture:file="macro-names.tex" capture:fromCol="23" capture:fromLine="16" capture:locator="macro-names.tex#textrange(from=16;23,to=16;23)" capture:toCol="23" capture:toLine="16" meaning="equals" role="RELOP">=</XMTok>
+            <XMTok capture:byteEnd="429" capture:byteStart="422" capture:file="macro-names.tex" capture:fromCol="23" capture:fromLine="16" capture:locator="macro-names.tex#textrange(from=16;23,to=16;23)" capture:toCol="23" capture:toLine="16" font="italic" role="UNKNOWN">h</XMTok>
+            <XMTok capture:byteEnd="429" capture:byteStart="422" capture:file="macro-names.tex" capture:fromCol="23" capture:fromLine="16" capture:locator="macro-names.tex#textrange(from=16;23,to=16;23)" capture:toCol="23" capture:toLine="16" font="italic" role="UNKNOWN">k</XMTok>
+          </XMApp>
+        </XMath>
+      </Math>.
+Alias: <Math capture:callsite="\alias" capture:callsiteEnd="444" capture:callsiteFile="macro-names.tex" capture:callsiteStart="438" capture:fromCol="8" capture:fromLine="17" capture:locator="macro-names.tex#textrange(from=17;8,to=17;13)" capture:macro="\alias" capture:provenance="callsite-only" capture:toCol="13" capture:toLine="17" mode="inline" tex="e=q" text="e = q" xml:id="p1.m4">
+        <XMath capture:byteEnd="444" capture:byteStart="438" capture:file="macro-names.tex" capture:fromCol="8" capture:fromLine="17" capture:locator="macro-names.tex#textrange(from=17;8,to=17;13)" capture:toCol="13" capture:toLine="17">
+          <XMApp capture:byteEnd="444" capture:byteStart="438" capture:file="macro-names.tex" capture:fromCol="8" capture:fromLine="17" capture:locator="macro-names.tex#textrange(from=17;8,to=17;13)" capture:toCol="13" capture:toLine="17">
+            <XMTok capture:byteEnd="444" capture:byteStart="438" capture:file="macro-names.tex" capture:fromCol="14" capture:fromLine="17" capture:locator="macro-names.tex#textrange(from=17;14,to=17;14)" capture:toCol="14" capture:toLine="17" meaning="equals" role="RELOP">=</XMTok>
+            <XMTok capture:byteEnd="444" capture:byteStart="438" capture:file="macro-names.tex" capture:fromCol="14" capture:fromLine="17" capture:locator="macro-names.tex#textrange(from=17;14,to=17;14)" capture:toCol="14" capture:toLine="17" font="italic" role="UNKNOWN">e</XMTok>
+            <XMTok capture:byteEnd="444" capture:byteStart="438" capture:file="macro-names.tex" capture:fromCol="14" capture:fromLine="17" capture:locator="macro-names.tex#textrange(from=17;14,to=17;14)" capture:toCol="14" capture:toLine="17" font="italic" role="UNKNOWN">q</XMTok>
+          </XMApp>
+        </XMath>
+      </Math>.
+Isabelle style: <Math capture:callsite="\isasymparallel" capture:callsiteEnd="477" capture:callsiteFile="macro-names.tex" capture:callsiteStart="462" capture:fromCol="17" capture:fromLine="18" capture:locator="macro-names.tex#textrange(from=18;17,to=18;31)" capture:macro="\isasymparallel" capture:provenance="callsite-only" capture:toCol="31" capture:toLine="18" mode="inline" tex="\parallel" text="parallel-to" xml:id="p1.m5">
+        <XMath capture:byteEnd="477" capture:byteStart="462" capture:file="macro-names.tex" capture:fromCol="17" capture:fromLine="18" capture:locator="macro-names.tex#textrange(from=18;17,to=18;31)" capture:toCol="31" capture:toLine="18">
+          <XMTok capture:byteEnd="477" capture:byteStart="462" capture:file="macro-names.tex" capture:fromCol="32" capture:fromLine="18" capture:locator="macro-names.tex#textrange(from=18;32,to=18;32)" capture:toCol="32" capture:toLine="18" meaning="parallel-to" name="parallel" role="VERTBAR">∥</XMTok>
+        </XMath>
+      </Math>.
+Parameterized: <Math capture:callsite="\witharg" capture:callsiteEnd="502" capture:callsiteFile="macro-names.tex" capture:callsiteStart="494" capture:fromCol="16" capture:fromLine="19" capture:locator="macro-names.tex#textrange(from=19;16,to=19;23)" capture:macro="\witharg" capture:provenance="callsite-only" capture:toCol="23" capture:toLine="19" mode="inline" tex="x" text="x" xml:id="p1.m6">
+        <XMath capture:byteEnd="502" capture:byteStart="494" capture:file="macro-names.tex" capture:fromCol="16" capture:fromLine="19" capture:locator="macro-names.tex#textrange(from=19;16,to=19;23)" capture:toCol="23" capture:toLine="19">
+          <XMTok capture:byteEnd="505" capture:byteStart="504" capture:file="macro-names.tex" capture:fromCol="27" capture:fromLine="19" capture:locator="macro-names.tex#textrange(from=19;27,to=19;27)" capture:toCol="27" capture:toLine="19" font="italic" role="UNKNOWN">x</XMTok>
+        </XMath>
+      </Math>.
+Replayed macro: <Math capture:callsite="\eq" capture:callsiteEnd="534" capture:callsiteFile="macro-names.tex" capture:callsiteStart="531" capture:fromCol="25" capture:fromLine="20" capture:locator="macro-names.tex#textrange(from=20;25,to=20;27)" capture:macro="\eq" capture:provenance="callsite-only" capture:toCol="27" capture:toLine="20" mode="inline" tex="e=q" text="e = q" xml:id="p1.m7">
+        <XMath capture:byteEnd="534" capture:byteStart="531" capture:file="macro-names.tex" capture:fromCol="25" capture:fromLine="20" capture:locator="macro-names.tex#textrange(from=20;25,to=20;27)" capture:toCol="27" capture:toLine="20">
+          <XMApp capture:byteEnd="534" capture:byteStart="531" capture:file="macro-names.tex" capture:fromCol="25" capture:fromLine="20" capture:locator="macro-names.tex#textrange(from=20;25,to=20;27)" capture:toCol="27" capture:toLine="20">
+            <XMTok capture:byteEnd="535" capture:byteStart="534" capture:file="macro-names.tex" capture:fromCol="29" capture:fromLine="20" capture:locator="macro-names.tex#textrange(from=20;29,to=20;29)" capture:toCol="29" capture:toLine="20" meaning="equals" role="RELOP">=</XMTok>
+            <XMTok capture:byteEnd="535" capture:byteStart="534" capture:file="macro-names.tex" capture:fromCol="29" capture:fromLine="20" capture:locator="macro-names.tex#textrange(from=20;29,to=20;29)" capture:toCol="29" capture:toLine="20" font="italic" role="UNKNOWN">e</XMTok>
+            <XMTok capture:byteEnd="535" capture:byteStart="534" capture:file="macro-names.tex" capture:fromCol="29" capture:fromLine="20" capture:locator="macro-names.tex#textrange(from=20;29,to=20;29)" capture:toCol="29" capture:toLine="20" font="italic" role="UNKNOWN">q</XMTok>
+          </XMApp>
+        </XMath>
+      </Math>.
+Replayed source: <Math capture:byteEnd="567" capture:byteStart="562" capture:file="macro-names.tex" capture:fromCol="26" capture:fromLine="21" capture:locator="macro-names.tex#textrange(from=21;26,to=21;30)" capture:provenance="source" capture:source="$r=s$" capture:toCol="30" capture:toLine="21" mode="inline" tex="r=s" text="r = s" xml:id="p1.m8">
+        <XMath capture:byteEnd="567" capture:byteStart="562" capture:file="macro-names.tex" capture:fromCol="26" capture:fromLine="21" capture:locator="macro-names.tex#textrange(from=21;26,to=21;30)" capture:toCol="30" capture:toLine="21">
+          <XMApp capture:byteEnd="567" capture:byteStart="562" capture:file="macro-names.tex" capture:fromCol="26" capture:fromLine="21" capture:locator="macro-names.tex#textrange(from=21;26,to=21;30)" capture:toCol="30" capture:toLine="21">
+            <XMTok capture:byteEnd="568" capture:byteStart="567" capture:file="macro-names.tex" capture:fromCol="32" capture:fromLine="21" capture:locator="macro-names.tex#textrange(from=21;32,to=21;32)" capture:toCol="32" capture:toLine="21" meaning="equals" role="RELOP">=</XMTok>
+            <XMTok capture:byteEnd="568" capture:byteStart="567" capture:file="macro-names.tex" capture:fromCol="32" capture:fromLine="21" capture:locator="macro-names.tex#textrange(from=21;32,to=21;32)" capture:toCol="32" capture:toLine="21" font="italic" role="UNKNOWN">r</XMTok>
+            <XMTok capture:byteEnd="568" capture:byteStart="567" capture:file="macro-names.tex" capture:fromCol="32" capture:fromLine="21" capture:locator="macro-names.tex#textrange(from=21;32,to=21;32)" capture:toCol="32" capture:toLine="21" font="italic" role="UNKNOWN">s</XMTok>
+          </XMApp>
+        </XMath>
+      </Math>.
+Source control: <Math capture:byteEnd="603" capture:byteStart="586" capture:file="macro-names.tex" capture:fromCol="17" capture:fromLine="22" capture:locator="macro-names.tex#textrange(from=22;17,to=22;33)" capture:provenance="source" capture:source="$\isasymparallel$" capture:toCol="33" capture:toLine="22" mode="inline" tex="\parallel" text="parallel-to" xml:id="p1.m9">
+        <XMath capture:byteEnd="603" capture:byteStart="586" capture:file="macro-names.tex" capture:fromCol="17" capture:fromLine="22" capture:locator="macro-names.tex#textrange(from=22;17,to=22;33)" capture:toCol="33" capture:toLine="22">
+          <XMTok capture:byteEnd="602" capture:byteStart="587" capture:file="macro-names.tex" capture:fromCol="33" capture:fromLine="22" capture:locator="macro-names.tex#textrange(from=22;33,to=22;33)" capture:toCol="33" capture:toLine="22" meaning="parallel-to" name="parallel" role="VERTBAR">∥</XMTok>
+        </XMath>
+      </Math>.
+Distinct invocations: <Math capture:fromCol="23" capture:fromLine="23" capture:locator="macro-names.tex#textrange(from=23;23,to=23;42)" capture:provenance="unlocated" capture:toCol="42" capture:toLine="23" capture:unlocatedReason="distinct-author-invocations" mode="inline" tex="u+v" text="u + v" xml:id="p1.m10">
+        <XMath capture:byteEnd="647" capture:byteStart="627" capture:file="macro-names.tex" capture:fromCol="23" capture:fromLine="23" capture:locator="macro-names.tex#textrange(from=23;23,to=23;42)" capture:toCol="42" capture:toLine="23">
+          <XMApp capture:byteEnd="647" capture:byteStart="627" capture:file="macro-names.tex" capture:fromCol="23" capture:fromLine="23" capture:locator="macro-names.tex#textrange(from=23;23,to=23;42)" capture:toCol="42" capture:toLine="23">
+            <XMTok capture:byteEnd="637" capture:byteStart="636" capture:file="macro-names.tex" capture:fromCol="33" capture:fromLine="23" capture:locator="macro-names.tex#textrange(from=23;33,to=23;33)" capture:toCol="33" capture:toLine="23" meaning="plus" role="ADDOP">+</XMTok>
+            <XMTok capture:byteEnd="636" capture:byteStart="627" capture:file="macro-names.tex" capture:fromCol="32" capture:fromLine="23" capture:locator="macro-names.tex#textrange(from=23;32,to=23;32)" capture:toCol="32" capture:toLine="23" font="italic" role="UNKNOWN">u</XMTok>
+            <XMTok capture:byteEnd="647" capture:byteStart="637" capture:file="macro-names.tex" capture:fromCol="43" capture:fromLine="23" capture:locator="macro-names.tex#textrange(from=23;43,to=23;43)" capture:toCol="43" capture:toLine="23" font="italic" role="UNKNOWN">v</XMTok>
+          </XMApp>
+        </XMath>
+      </Math>.
+
+Redefined: <Math capture:callsite="\eq" capture:callsiteEnd="689" capture:callsiteFile="macro-names.tex" capture:callsiteStart="686" capture:fromCol="12" capture:fromLine="25" capture:locator="macro-names.tex#textrange(from=25;12,to=25;14)" capture:macro="\eq" capture:provenance="callsite-only" capture:toCol="14" capture:toLine="25" mode="inline" tex="a=b" text="a = b" xml:id="p1.m11">
+        <XMath capture:byteEnd="689" capture:byteStart="686" capture:file="macro-names.tex" capture:fromCol="12" capture:fromLine="25" capture:locator="macro-names.tex#textrange(from=25;12,to=25;14)" capture:toCol="14" capture:toLine="25">
+          <XMApp capture:byteEnd="689" capture:byteStart="686" capture:file="macro-names.tex" capture:fromCol="12" capture:fromLine="25" capture:locator="macro-names.tex#textrange(from=25;12,to=25;14)" capture:toCol="14" capture:toLine="25">
+            <XMTok capture:byteEnd="689" capture:byteStart="686" capture:file="macro-names.tex" capture:fromCol="15" capture:fromLine="25" capture:locator="macro-names.tex#textrange(from=25;15,to=25;15)" capture:toCol="15" capture:toLine="25" meaning="equals" role="RELOP">=</XMTok>
+            <XMTok capture:byteEnd="689" capture:byteStart="686" capture:file="macro-names.tex" capture:fromCol="15" capture:fromLine="25" capture:locator="macro-names.tex#textrange(from=25;15,to=25;15)" capture:toCol="15" capture:toLine="25" font="italic" role="UNKNOWN">a</XMTok>
+            <XMTok capture:byteEnd="689" capture:byteStart="686" capture:file="macro-names.tex" capture:fromCol="15" capture:fromLine="25" capture:locator="macro-names.tex#textrange(from=25;15,to=25;15)" capture:toCol="15" capture:toLine="25" font="italic" role="UNKNOWN">b</XMTok>
+          </XMApp>
+        </XMath>
+      </Math>.</p>
+  </para>
+  <capture:ledger>
+    <capture:engine capture="true" includestyles="false" lexematize="false" noparse="false" revision="CAPTURE_REVISION" version="0.8.8">
+      <capture:preload name="LaTeX.pool"/>
+    </capture:engine>
+    <capture:packages>
+      <capture:package kind="package" name="textcomp" options="" requestOrigin="transitive" resolved="../../lib/LaTeXML/Package/textcomp.sty.ltxml" route="binding"/>
+      <capture:package kind="class" name="article" options="" requestByteEnd="14" requestByteStart="0" requestFile="macro-names.tex" requestOrigin="source" resolved="../../lib/LaTeXML/Package/article.cls.ltxml" route="binding"/>
+      <capture:package kind="package" name="amsgen" options="" requestOrigin="transitive" resolved="../../lib/LaTeXML/Package/amsgen.sty.ltxml" route="binding"/>
+      <capture:package kind="package" name="amsbsy" options="" requestOrigin="transitive" resolved="../../lib/LaTeXML/Package/amsbsy.sty.ltxml" route="binding"/>
+      <capture:package kind="package" name="amsgen" options="" requestOrigin="transitive" resolved="../../lib/LaTeXML/Package/amsgen.sty.ltxml" route="binding"/>
+      <capture:package kind="package" name="amstext" options="" requestOrigin="transitive" resolved="../../lib/LaTeXML/Package/amstext.sty.ltxml" route="binding"/>
+      <capture:package kind="package" name="amsgen" options="" requestOrigin="transitive" resolved="../../lib/LaTeXML/Package/amsgen.sty.ltxml" route="binding"/>
+      <capture:package kind="package" name="amsopn" options="" requestOrigin="transitive" resolved="../../lib/LaTeXML/Package/amsopn.sty.ltxml" route="binding"/>
+      <capture:package kind="package" name="amsmath" options="" requestByteEnd="35" requestByteStart="24" requestFile="macro-names.tex" requestOrigin="source" resolved="../../lib/LaTeXML/Package/amsmath.sty.ltxml" route="binding"/>
+    </capture:packages>
+    <capture:math callsiteOnly="8" crossSource="0" display="0" failedCells="0" inline="11" parser="run" source="2" total="11" unlocated="1" unparsed="0"/>
+    <capture:encoding substitutions="0"/>
+    <capture:messages errors="0" warnings="0"/>
+  </capture:ledger>
+</document>

@@ -771,6 +771,7 @@ foreach my $math (@replay_math) {
     : $tex eq 'u=v' ? '\begin{equation}u=v\tag*{$\ddagger$}\end{equation}'
     : $tex eq 'a=b' ? '\begin{equation}a=b\tag{\tagprefix $q$}\end{equation}' : '$' . $tex . '$';
   my $label = 'replayed ' . $math->getAttribute('xml:id');
+  ok(!$math->hasAttributeNS($CAPTURE_NS, 'macro'), "$label has no whole-formula macro name");
   is(cattr($math, 'provenance'), 'source', "$label owns source");
   assert_owns_slice($replay_xml, $math, $expected, $label);
   if (cattr($math, 'provenance') eq 'source') {
@@ -795,6 +796,53 @@ my $replay_golden = XML::LibXML->load_xml(location => File::Spec->catfile($FIXTU
 is(normalized_capture_xml($replay_xml), normalized_capture_xml($replay_golden),
   'replay arguments golden matches after base and revision normalization only');
 validate_capture_document($replay_xml, 'capture-replay-arguments');
+
+# The name belongs to the recorded author invocation, including aliases and
+# replayed invocations. Nested helpers and redefinitions must not replace it.
+my $names_xml = fixture_document('macro-names');
+my @names_math = xpath($names_xml)->findnodes('//ltx:Math');
+is(scalar(@names_math), 11, 'macro names fixture has the expected carriers');
+my $names_raw = slurp_raw(File::Spec->catfile($FIXTURES, 'macro-names.tex'));
+my @named_cases = (
+  [0, '\eq', 'Direct: ', 'e=q'],
+  [1, '\authorouter', 'Nested: ', 'h=k'],
+  [2, '\helper', 'Helper itself: ', 'h=k'],
+  [3, '\alias', 'Alias: ', 'e=q'],
+  [4, '\isasymparallel', 'Isabelle style: ', '\parallel'],
+  [5, '\witharg', 'Parameterized: ', 'x'],
+  [6, '\eq', 'Replayed macro: \replay{', 'e=q'],
+  [10, '\eq', 'Redefined: ', 'a=b']);
+for my $case (@named_cases) {
+  my ($index, $name, $prefix, $tex) = @$case;
+  my $math = $names_math[$index];
+  my $label = "macro name case $index";
+  is($math->getAttribute('tex'), $tex, "$label keeps expanded TeX");
+  is(cattr($math, 'provenance'), 'callsite-only', "$label stays callsite-only");
+  is(cattr($math, 'macro'), $name, "$label names the author invocation");
+  is(cattr($math, 'callsite'), $name, "$label keeps its original callsite slice");
+  my $start = index($names_raw, $prefix . $name) + length($prefix);
+  is(0 + cattr($math, 'callsiteStart'), $start, "$label starts at independent author bytes");
+  is(0 + cattr($math, 'callsiteEnd'), $start + length($name), "$label ends at the author token");
+  is(resolved_capture_file($names_xml, cattr($math, 'callsiteFile')),
+    abs_path(File::Spec->catfile($FIXTURES, 'macro-names.tex')), "$label names the author file");
+  ok(!$math->hasAttributeNS($CAPTURE_NS, 'source'), "$label does not claim source ownership");
+}
+assert_owns_slice($names_xml, $names_math[7], '$r=s$', 'replayed source control');
+assert_owns_slice($names_xml, $names_math[8], '$\isasymparallel$', 'literal source control');
+for my $index (7, 8, 9) {
+  ok(!$names_math[$index]->hasAttributeNS($CAPTURE_NS, 'macro'),
+    "non-callsite carrier $index has no macro name");
+}
+is(cattr($names_math[9], 'provenance'), 'unlocated', 'distinct invocations remain unlocated');
+is(cattr($names_math[9], 'unlocatedReason'), 'distinct-author-invocations',
+  'distinct invocations retain the unresolved reason');
+is(without_capture($names_xml), without_capture(fixture_document('macro-names', '--no-capture')),
+  'macro names preserve the complete stripped document');
+assert_partition($names_xml, 'macro names fixture');
+my $names_golden = XML::LibXML->load_xml(location => File::Spec->catfile($FIXTURES, 'macro-names.xml'));
+is(normalized_capture_xml($names_xml), normalized_capture_xml($names_golden),
+  'macro names golden matches after base and revision normalization only');
+validate_capture_document($names_xml, 'capture-macro-names');
 
 done_testing();
 

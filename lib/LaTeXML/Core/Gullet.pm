@@ -274,7 +274,12 @@ sub unreadExpansion {
     if ($author && !$$author{crossSource}) {
       my $registry = $STATE && $STATE->lookupValue('SOURCE_REGISTRY');
       $frame_id = ($registry ? $registry->nextFrameId : undef);
-      $author = { %$author, authorFrameId => $frame_id }; }
+      # Name the token that owns this author frame, not the installed
+      # definition (which may be reached through \let) or a nested helper.
+      # Inherited authorCallsite records keep this identity through expansion.
+      my $token = $$author{token};
+      $author = { %$author, authorFrameId => $frame_id,
+        authorMacro => ($token && $token->getCatcode == CC_CS ? $token->getCSName : undef) }; }
     else { $author = undef; } }
   my $occurrence = {
     generated      => 1,

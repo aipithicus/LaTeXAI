@@ -504,6 +504,8 @@ sub _captureMath {
     setAttribute($self, $node, 'capture:callsiteStart' => $byte_start);
     setAttribute($self, $node, 'capture:callsiteEnd'   => $byte_end);
     setAttribute($self, $node, 'capture:callsite'      => $slice);
+    setAttribute($self, $node, 'capture:macro' => $$start_occurrence{authorMacro})
+      if defined $$start_occurrence{authorMacro};
     return; }
 
   my $reason = ($start_kind ne $end_kind ? 'mixed-endpoint-provenance'
