@@ -12,8 +12,8 @@
 # different perl first, and stock LaTeXML is not installed anywhere.
 
 $script:LaTeXAIRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..\..')).Path
-$script:LaTeXAILib  = Join-Path $script:LaTeXAIRoot 'lib'
-$script:LaTeXAIBin  = Join-Path $script:LaTeXAIRoot 'bin'
+$script:LaTeXAILib = Join-Path $script:LaTeXAIRoot 'lib'
+$script:LaTeXAIBin = Join-Path $script:LaTeXAIRoot 'bin'
 # Logs are grouped by run: temp/logs/<runstamp>/. The stamp is LATEXAI_RUNSTAMP
 # when the caller set one (so a batch of commands shares a directory), else it
 # is minted when this file loads. Under the pwsh_exec MCP that is once per
@@ -21,11 +21,11 @@ $script:LaTeXAIBin  = Join-Path $script:LaTeXAIRoot 'bin'
 # the same command string to group several invocations.
 $script:LaTeXAIRunStamp = if ($env:LATEXAI_RUNSTAMP) { $env:LATEXAI_RUNSTAMP } else { Get-Date -Format 'yyyyMMdd_HHmmss' }
 $script:LaTeXAILogs = Join-Path $script:LaTeXAIRoot "temp\logs\$script:LaTeXAIRunStamp"
-$script:LaTeXAIGen  = Join-Path $script:LaTeXAIRoot 'tools\dev\generate.pl'
+$script:LaTeXAIGen = Join-Path $script:LaTeXAIRoot 'tools\dev\generate.pl'
 $script:LaTeXAICtan = Join-Path $script:LaTeXAIRoot 'tools\dev\fetch-ctan.pl'
 $script:LaTeXAIGold = Join-Path $script:LaTeXAIRoot 'tools\dev\golden.pl'
 $script:LaTeXAIKatex = Join-Path $script:LaTeXAIRoot 'tools\dev\vendor-katex.pl'
-$script:LaTeXAISymb  = Join-Path $script:LaTeXAIRoot 'tools\dev\symbind.pl'
+$script:LaTeXAISymb = Join-Path $script:LaTeXAIRoot 'tools\dev\symbind.pl'
 
 $script:PerlRoot = $env:PERL_ROOT
 if (-not $script:PerlRoot -and $env:PERL_HOME) {
@@ -38,7 +38,7 @@ $script:StrawberryPerl = Join-Path $script:PerlRoot 'perl\bin\perl.exe'
 # The plain prove script, run through our perl. prove.bat re-locates itself
 # through PATH (perl -S), which fails whenever Strawberry is not on PATH; the
 # whole point of these wrappers is to never depend on PATH.
-$script:ProveScript    = Join-Path $script:PerlRoot 'perl\bin\prove'
+$script:ProveScript = Join-Path $script:PerlRoot 'perl\bin\prove'
 # Not machine-specific: the checkout's kpsewhich shim. Pathname.pm reads
 # LATEXML_KPSEWHICH when it loads, so this must be set before any perl starts.
 $script:Kpsewhich = Join-Path $script:LaTeXAIRoot 'tools\dev\kpsewhich.cmd'
@@ -80,9 +80,9 @@ function script:Add-LaTeXAILogDefault {
 
 # Core engine CLIs, run from lib/ only. generate.pl puts the compiled grammar
 # and the stamped version module in lib/, so no second include path is needed.
-function Invoke-LaTeXML     { & $script:StrawberryPerl -I $script:LaTeXAILib (Join-Path $script:LaTeXAIBin 'latexml')     @(Add-LaTeXAILogDefault $args) }
+function Invoke-LaTeXML { & $script:StrawberryPerl -I $script:LaTeXAILib (Join-Path $script:LaTeXAIBin 'latexml')     @(Add-LaTeXAILogDefault $args) }
 function Invoke-LaTeXMLPost { & $script:StrawberryPerl -I $script:LaTeXAILib (Join-Path $script:LaTeXAIBin 'latexmlpost') @(Add-LaTeXAILogDefault $args) }
-function Invoke-LaTeXMLC    { & $script:StrawberryPerl -I $script:LaTeXAILib (Join-Path $script:LaTeXAIBin 'latexmlc')    @(Add-LaTeXAILogDefault $args) }
+function Invoke-LaTeXMLC { & $script:StrawberryPerl -I $script:LaTeXAILib (Join-Path $script:LaTeXAIBin 'latexmlc')    @(Add-LaTeXAILogDefault $args) }
 
 # Test runner: Strawberry's prove with the LaTeXAI lib on the include path.
 # Bespoke drivers read LATEXAI_RUNSTAMP so their logs join this run's directory.
@@ -126,12 +126,12 @@ function Test-LaTeXMLMath {
 
 function Get-LaTeXAIAliases {
     return @{
-        'lxml'  = 'Invoke-LaTeXML'        # latexml -I lib [args]      (log -> temp/logs/)
-        'lxmlp' = 'Invoke-LaTeXMLPost'    # latexmlpost                (log -> temp/logs/)
-        'lxmlc' = 'Invoke-LaTeXMLC'       # latexmlc                   (log -> temp/logs/)
-        'ltst'  = 'Invoke-LaTeXMLTest'    # prove -I lib [drivers]
-        'lgen'  = 'Invoke-LaTeXAIGenerate' # perl tools/dev/generate.pl [--force]
-        'lctan' = 'Invoke-LaTeXAIFetchCtan' # perl tools/dev/fetch-ctan.pl [opts] <pkg>...
+        'lxml'   = 'Invoke-LaTeXML'        # latexml -I lib [args]      (log -> temp/logs/)
+        'lxmlp'  = 'Invoke-LaTeXMLPost'    # latexmlpost                (log -> temp/logs/)
+        'lxmlc'  = 'Invoke-LaTeXMLC'       # latexmlc                   (log -> temp/logs/)
+        'ltst'   = 'Invoke-LaTeXMLTest'    # prove -I lib [drivers]
+        'lgen'   = 'Invoke-LaTeXAIGenerate' # perl tools/dev/generate.pl [--force]
+        'lctan'  = 'Invoke-LaTeXAIFetchCtan' # perl tools/dev/fetch-ctan.pl [opts] <pkg>...
         'lgold'  = 'Invoke-LaTeXAIGolden'     # perl tools/dev/golden.pl [--force] t/<suite>/<case>.tex
         'lkatex' = 'Invoke-LaTeXAIVendorKatex' # perl tools/dev/vendor-katex.pl --clone|--restore|--derive|--check
         'lsymb'  = 'Invoke-LaTeXAISymbind'     # perl tools/dev/symbind.pl --extract|--author|--seed-katex|--check|--generate

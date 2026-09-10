@@ -51,7 +51,7 @@ function Invoke-Perl {
 $rows = [Collections.Generic.List[object]]::new()
 $index = 0
 foreach ($item in $source.inputs) {
-    foreach ($pair in @(@{Path=$item.xml;Hash=$item.xmlSha256},@{Path=$item.receipt;Hash=$item.receiptSha256})) {
+    foreach ($pair in @(@{Path = $item.xml; Hash = $item.xmlSha256 }, @{Path = $item.receipt; Hash = $item.receiptSha256 })) {
         if ((Get-FileHash -LiteralPath $pair.Path -Algorithm SHA256).Hash.ToLowerInvariant() -ne $pair.Hash) {
             throw "Input drift: $($pair.Path)"
         }
@@ -63,24 +63,24 @@ foreach ($item in $source.inputs) {
     $assetRoot = $paths[0]
     $prepared = Join-Path $dir 'prepared.xml'
     $prepReport = Join-Path $dir 'preparation.json'
-    $args = @('bin/latexai-markdown','--prepare-only','--output',$prepared,'--report',$prepReport,'--asset-root',$assetRoot)
-    foreach ($path in $paths) { $args += @('--path',$path) }
+    $args = @('bin/latexai-markdown', '--prepare-only', '--output', $prepared, '--report', $prepReport, '--asset-root', $assetRoot)
+    foreach ($path in $paths) { $args += @('--path', $path) }
     $args += $item.xml
     $prepProcess = Invoke-Perl -Arguments $args -Log (Join-Path $dir 'preparation.log')
-    $strategies = if ($index++ % 2 -eq 0) { @('deferred','indexed') } else { @('indexed','deferred') }
+    $strategies = if ($index++ % 2 -eq 0) { @('deferred', 'indexed') } else { @('indexed', 'deferred') }
     $results = @{}
     foreach ($strategy in $strategies) {
         $md = Join-Path $dir "$strategy.md"
         $json = Join-Path $dir "$strategy.json"
-        $processStats = Invoke-Perl -Arguments @('tools/dev/markdown-benchmark.pl',$prepared,$strategy,[string]$Repetitions,$md,$json,$assetRoot) -Log (Join-Path $dir "$strategy.log")
+        $processStats = Invoke-Perl -Arguments @('tools/dev/markdown-benchmark.pl', $prepared, $strategy, [string]$Repetitions, $md, $json, $assetRoot) -Log (Join-Path $dir "$strategy.log")
         $result = Get-Content -LiteralPath $json -Raw | ConvertFrom-Json
         $result | Add-Member -NotePropertyName process -NotePropertyValue $processStats
-        [IO.File]::WriteAllText($json,($result | ConvertTo-Json -Depth 30)+"`n",$utf8)
+        [IO.File]::WriteAllText($json, ($result | ConvertTo-Json -Depth 30) + "`n", $utf8)
         $results[$strategy] = $result
     }
     if ($results.deferred.output_sha256 -ne $results.indexed.output_sha256) { throw "Strategy output mismatch: $($item.slug)" }
-    $left = @($results.deferred.projection.issues | ForEach-Object {$_ | ConvertTo-Json -Compress} | Sort-Object) -join "`n"
-    $right = @($results.indexed.projection.issues | ForEach-Object {$_ | ConvertTo-Json -Compress} | Sort-Object) -join "`n"
+    $left = @($results.deferred.projection.issues | ForEach-Object { $_ | ConvertTo-Json -Compress } | Sort-Object) -join "`n"
+    $right = @($results.indexed.projection.issues | ForEach-Object { $_ | ConvertTo-Json -Compress } | Sort-Object) -join "`n"
     if ($left -ne $right) { throw "Strategy diagnostic mismatch: $($item.slug)" }
     $row = [ordered]@{
         slug = $item.slug; input_sha256 = $item.xmlSha256
@@ -100,18 +100,18 @@ foreach ($item in $source.inputs) {
         input_counts = $item.counts
     }
     $rows.Add($row)
-    Write-Host ('{0}: deferred={1:N2} ms indexed={2:N2} ms; identical; math={3} bibliography={4}' -f $row.slug,$row.deferred_ms,$row.indexed_ms,$row.selected_math,$row.bibliography_entries)
+    Write-Host ('{0}: deferred={1:N2} ms indexed={2:N2} ms; identical; math={3} bibliography={4}' -f $row.slug, $row.deferred_ms, $row.indexed_ms, $row.selected_math, $row.bibliography_entries)
 }
-$code = @(Get-Item -LiteralPath (Join-Path $repo 'lib/LaTeXAI/Post.pm'),(Join-Path $repo 'lib/LaTeXAI/Post/Markdown.pm'),(Join-Path $repo 'bin/latexai-markdown'),(Join-Path $repo 'tools/dev/markdown-benchmark.pl'),$PSCommandPath | ForEach-Object {
-    [ordered]@{path=$_.FullName;sha256=(Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()}
-})
+$code = @(Get-Item -LiteralPath (Join-Path $repo 'lib/LaTeXAI/Post.pm'), (Join-Path $repo 'lib/LaTeXAI/Post/Markdown.pm'), (Join-Path $repo 'bin/latexai-markdown'), (Join-Path $repo 'tools/dev/markdown-benchmark.pl'), $PSCommandPath | ForEach-Object {
+        [ordered]@{path = $_.FullName; sha256 = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant() }
+    })
 $report = [ordered]@{
-    schema='latexai/markdown-traversal-comparison/0.1'; created_utc=[datetime]::UtcNow.ToString('o')
-    manifest=$manifestPath; manifest_sha256=(Get-FileHash -LiteralPath $manifestPath -Algorithm SHA256).Hash.ToLowerInvariant()
-    checkout_commit=(& git -C $repo rev-parse HEAD); code=$code; repetitions=$Repetitions
-    method='Sequential isolated process per input/strategy; alternating strategy order across papers; one untimed warmup, then repeated projections of one parsed DOM. Preparation, parse, projection phases and process peak working set (sampled every 20 ms while alive) reported separately.'
-    limits='Both implementations buffer Markdown fragments. This compares traversal organization, not streaming-memory behavior or LaTeXML HTML speed. Sampled peak working set includes runtime, parser and warmup, may miss the final 20 ms, and is not incremental projector allocation. Input diagnostics remain independent.'
-    inputs=$rows.ToArray()
+    schema = 'latexai/markdown-traversal-comparison/0.1'; created_utc = [datetime]::UtcNow.ToString('o')
+    manifest = $manifestPath; manifest_sha256 = (Get-FileHash -LiteralPath $manifestPath -Algorithm SHA256).Hash.ToLowerInvariant()
+    checkout_commit = (& git -C $repo rev-parse HEAD); code = $code; repetitions = $Repetitions
+    method = 'Sequential isolated process per input/strategy; alternating strategy order across papers; one untimed warmup, then repeated projections of one parsed DOM. Preparation, parse, projection phases and process peak working set (sampled every 20 ms while alive) reported separately.'
+    limits = 'Both implementations buffer Markdown fragments. This compares traversal organization, not streaming-memory behavior or LaTeXML HTML speed. Sampled peak working set includes runtime, parser and warmup, may miss the final 20 ms, and is not incremental projector allocation. Input diagnostics remain independent.'
+    inputs = $rows.ToArray()
 }
-[IO.File]::WriteAllText((Join-Path $outRoot 'comparison.json'),($report | ConvertTo-Json -Depth 30)+"`n",$utf8)
+[IO.File]::WriteAllText((Join-Path $outRoot 'comparison.json'), ($report | ConvertTo-Json -Depth 30) + "`n", $utf8)
 Write-Host "Comparison saved: $outRoot"
