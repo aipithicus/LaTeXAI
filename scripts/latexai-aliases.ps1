@@ -1,19 +1,27 @@
-# tools/dev/latexai-aliases.ps1
+#requires -Version 7.5
+# scripts/latexai-aliases.ps1
 #
 # Development-loop wrappers for the LaTeXAI engine. Dot-sourced by
-# tools/dev/profile.ps1, which the pwsh_exec MCP server loads via
+# scripts/profile.ps1, which the pwsh_exec MCP server loads via
 # MCP_POWERSHELL_PROFILE. Nothing here is needed to build an installable
 # distribution; that path is Makefile.PL and blib/, untouched.
 #
-# The repository root is derived from this file's location, so the loop holds
-# for any checkout path. The only machine-specific fact is PERL_ROOT (the
-# portable Strawberry Perl root), read from the environment the MCP config sets.
+# The repository root is derived from scripts/latexai-common.ps1. PERL_ROOT is
+# resolved by that helper (explicit, environment, then scripts/local.psd1).
 # Ambient PATH is bypassed on purpose: MSYS and the Bash tool resolve a
 # different perl first, and stock LaTeXML is not installed anywhere.
 
-$script:LaTeXAIRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..\..')).Path
-$script:LaTeXAILib = Join-Path $script:LaTeXAIRoot 'lib'
-$script:LaTeXAIBin = Join-Path $script:LaTeXAIRoot 'bin'
+if (-not (Get-Command -Name Resolve-LaTeXAIRuntime -ErrorAction SilentlyContinue)) {
+    . (Join-Path $PSScriptRoot 'latexai-common.ps1')
+}
+if (-not $script:LaTeXAIRuntime) {
+    $script:LaTeXAIRuntime = Resolve-LaTeXAIRuntime -RequirePerl
+    Set-LaTeXAIRuntimeEnvironment -Runtime $script:LaTeXAIRuntime
+}
+
+$script:LaTeXAIRoot = $script:LaTeXAIRuntime.CheckoutRoot
+$script:LaTeXAILib = $script:LaTeXAIRuntime.LibDirectory
+$script:LaTeXAIBin = $script:LaTeXAIRuntime.BinDirectory
 # Logs are grouped by run: temp/logs/<runstamp>/. The stamp is LATEXAI_RUNSTAMP
 # when the caller set one (so a batch of commands shares a directory), else it
 # is minted when this file loads. Under the pwsh_exec MCP that is once per
@@ -21,36 +29,20 @@ $script:LaTeXAIBin = Join-Path $script:LaTeXAIRoot 'bin'
 # the same command string to group several invocations.
 $script:LaTeXAIRunStamp = if ($env:LATEXAI_RUNSTAMP) { $env:LATEXAI_RUNSTAMP } else { Get-Date -Format 'yyyyMMdd_HHmmss' }
 $script:LaTeXAILogs = Join-Path $script:LaTeXAIRoot "temp\logs\$script:LaTeXAIRunStamp"
-$script:LaTeXAIGen = Join-Path $script:LaTeXAIRoot 'tools\dev\generate.pl'
+$script:LaTeXAIGen = $script:LaTeXAIRuntime.GenerateScript
 $script:LaTeXAICtan = Join-Path $script:LaTeXAIRoot 'tools\dev\fetch-ctan.pl'
 $script:LaTeXAIGold = Join-Path $script:LaTeXAIRoot 'tools\dev\golden.pl'
 $script:LaTeXAIKatex = Join-Path $script:LaTeXAIRoot 'tools\dev\vendor-katex.pl'
 $script:LaTeXAISymb = Join-Path $script:LaTeXAIRoot 'tools\dev\symbind.pl'
-
-$script:PerlRoot = $env:PERL_ROOT
-if (-not $script:PerlRoot -and $env:PERL_HOME) {
-    $script:PerlRoot = Split-Path -Parent $env:PERL_HOME
-}
-if (-not $script:PerlRoot) {
-    Write-Warning "latexai-aliases: PERL_ROOT (or PERL_HOME) is not set; lxml/ltst/lmath/lgen will not work in this session."
-}
-$script:StrawberryPerl = Join-Path $script:PerlRoot 'perl\bin\perl.exe'
-# The plain prove script, run through our perl. prove.bat re-locates itself
-# through PATH (perl -S), which fails whenever Strawberry is not on PATH; the
-# whole point of these wrappers is to never depend on PATH.
-$script:ProveScript = Join-Path $script:PerlRoot 'perl\bin\prove'
-# Not machine-specific: the checkout's kpsewhich shim. Pathname.pm reads
-# LATEXML_KPSEWHICH when it loads, so this must be set before any perl starts.
-$script:Kpsewhich = Join-Path $script:LaTeXAIRoot 'tools\dev\kpsewhich.cmd'
-if (Test-Path -LiteralPath $script:Kpsewhich) {
-    $env:LATEXML_KPSEWHICH = $script:Kpsewhich
-    # lib-ctan/ls-R is the whole answer; a cache miss is definitive. Do not
-    # spawn cmd+perl per FindFile miss (the batch pays this on every missing file).
-    $env:LATEXML_KPSEWHICH_CACHE_ONLY = '1'
-}
+$script:StrawberryPerl = $script:LaTeXAIRuntime.PerlPath
+$script:ProveScript = $script:LaTeXAIRuntime.ProveScript
+$script:Kpsewhich = $script:LaTeXAIRuntime.Kpsewhich
+$script:LaTeXAITestRun = Join-Path $PSScriptRoot 'test-run.ps1'
+$script:LaTeXAIGauntletRun = Join-Path $PSScriptRoot 'gauntlet-run.ps1'
 
 function Get-LaTeXAIRoot { $script:LaTeXAIRoot }
 function Get-LaTeXAIRunStamp { $script:LaTeXAIRunStamp }
+function Get-LaTeXAIRuntime { $script:LaTeXAIRuntime }
 
 # Start a named run: every alias and every test driver in this process (and in
 # child processes) logs under temp/logs/<stamp>/ until the process ends.
@@ -91,6 +83,19 @@ function Invoke-LaTeXMLTest {
     & $script:StrawberryPerl $script:ProveScript -I $script:LaTeXAILib @args
 }
 
+# Parallel TAP batches through the shared executor. Requires CDXSCI_ROOT.
+function Invoke-LaTeXAITestBatch {
+    & $script:LaTeXAITestRun @args
+}
+
+function Invoke-LaTeXAIGauntlet {
+    & $script:LaTeXAIGauntletRun @args
+}
+
+function Show-LaTeXAIConfig {
+    Show-LaTeXAIRuntime @args
+}
+
 # Regenerate MathGrammar.pm and Version.pm into lib/ (idempotent; --force to redo).
 function Invoke-LaTeXAIGenerate { & $script:StrawberryPerl $script:LaTeXAIGen @args }
 
@@ -126,17 +131,20 @@ function Test-LaTeXMLMath {
 
 function Get-LaTeXAIAliases {
     return @{
-        'lxml'   = 'Invoke-LaTeXML'        # latexml -I lib [args]      (log -> temp/logs/)
-        'lxmlp'  = 'Invoke-LaTeXMLPost'    # latexmlpost                (log -> temp/logs/)
-        'lxmlc'  = 'Invoke-LaTeXMLC'       # latexmlc                   (log -> temp/logs/)
-        'ltst'   = 'Invoke-LaTeXMLTest'    # prove -I lib [drivers]
-        'lgen'   = 'Invoke-LaTeXAIGenerate' # perl tools/dev/generate.pl [--force]
-        'lctan'  = 'Invoke-LaTeXAIFetchCtan' # perl tools/dev/fetch-ctan.pl [opts] <pkg>...
-        'lgold'  = 'Invoke-LaTeXAIGolden'     # perl tools/dev/golden.pl [--force] t/<suite>/<case>.tex
-        'lkatex' = 'Invoke-LaTeXAIVendorKatex' # perl tools/dev/vendor-katex.pl --clone|--restore|--derive|--check
-        'lsymb'  = 'Invoke-LaTeXAISymbind'     # perl tools/dev/symbind.pl --extract|--author|--seed-katex|--check|--generate
-        'lrun'   = 'New-LaTeXAIRun'           # start a named run: logs group under temp/logs/<stamp>/
-        'lmath'  = 'Test-LaTeXMLMath'         # probe a math literal
+        'lxml'     = 'Invoke-LaTeXML'          # latexml -I lib [args]      (log -> temp/logs/)
+        'lxmlp'    = 'Invoke-LaTeXMLPost'      # latexmlpost                (log -> temp/logs/)
+        'lxmlc'    = 'Invoke-LaTeXMLC'         # latexmlc                   (log -> temp/logs/)
+        'ltst'     = 'Invoke-LaTeXMLTest'      # prove -I lib [drivers]
+        'ltbatch'  = 'Invoke-LaTeXAITestBatch' # scripts/test-run.ps1 [opts]
+        'lgauntlet'= 'Invoke-LaTeXAIGauntlet'  # scripts/gauntlet-run.ps1 [opts]
+        'lcfg'     = 'Show-LaTeXAIConfig'      # runtime/selection preview; no lgen or tests
+        'lgen'     = 'Invoke-LaTeXAIGenerate'  # perl tools/dev/generate.pl [--force]
+        'lctan'    = 'Invoke-LaTeXAIFetchCtan' # perl tools/dev/fetch-ctan.pl [opts] <pkg>...
+        'lgold'    = 'Invoke-LaTeXAIGolden'    # perl tools/dev/golden.pl [--force] t/<suite>/<case>.tex
+        'lkatex'   = 'Invoke-LaTeXAIVendorKatex' # perl tools/dev/vendor-katex.pl --clone|--restore|--derive|--check
+        'lsymb'    = 'Invoke-LaTeXAISymbind'   # perl tools/dev/symbind.pl --extract|--author|--seed-katex|--check|--generate
+        'lrun'     = 'New-LaTeXAIRun'          # start a named run: logs group under temp/logs/<stamp>/
+        'lmath'    = 'Test-LaTeXMLMath'        # probe a math literal
     }
 }
 

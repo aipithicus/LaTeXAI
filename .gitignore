@@ -46,6 +46,7 @@ lib-katex/*
 
 .mcp.json
 DocOps.md
+/scripts/local.psd1
 
 
 # Ignore perltidy files

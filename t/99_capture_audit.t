@@ -15,6 +15,11 @@ use CaptureAudit qw(read_json write_json read_raw write_raw run_conversion
 use CaptureStrip qw(without_capture);
 
 chdir File::Spec->catdir($FindBin::Bin, '..') or die $!;
+{
+  my $files = tree_hashes('scripts');
+  ok(!exists $files->{'scripts/local.psd1'}, 'ignored local config is not snapshotted');
+  ok(exists $files->{'scripts/latexai-common.ps1'}, 'tracked scripts are snapshotted');
+}
 my $temp = tempdir('capture-audit-XXXXXX', DIR => 'temp/t', CLEANUP => 1);
 $temp = abs_path($temp);
 my %defaults = (preload => [], searchpaths => [], includecomments => 0,

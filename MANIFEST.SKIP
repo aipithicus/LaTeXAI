@@ -13,6 +13,7 @@
 ^blib/
 ^release/
 ^tools/
+^scripts/
 ^save/
 ^pm_to_blib$
 \.aux$

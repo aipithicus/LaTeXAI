@@ -1,0 +1,19 @@
+# -*- mode: Perl -*-
+# gauntlet.sty.ltxml: preload for corpus (gauntlet) runs.
+#
+# Real papers hit the default MAX_ERRORS (100) long before the document ends,
+# which turns an error count into a fatal stop. Raise it so every paper runs
+# to completion and the receipt counts what actually happened. Lexeme
+# serialization of math is on so the IR carries the lexemes downstream.
+#
+# Loaded by scripts/gauntlet-worker.ps1 through
+#   --path=scripts/preloads --preload=gauntlet.sty
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+AssignValue('MAX_ERRORS'      => 100000, 'global');
+AssignValue('LEXEMATIZE_MATH' => 1,      'global');
+
+1;

@@ -1,0 +1,21 @@
+# -*- mode: Perl -*-
+# scripts/preloads/lxprofile.sty.ltxml — opt-in preload for the gauntlet.
+#
+# Sets the TRACE_PROFILE bit on TRACING so LaTeXML's own macro profiler
+# (Core/Definition.pm startProfiling/stopProfiling) records every
+# expansion, digestion, and absorption and prints "Profiling results:"
+# at the end of the log. gauntlet-worker.ps1 folds that block into
+# receipt.json as details.profile. Overhead is a few percent; the
+# Expandable "trivial macro" shortcut is disabled while profiling, so
+# durations are comparable between articles but not with unprofiled runs.
+#
+# Enable with:  scripts/gauntlet-run.ps1 -Profile   (adds --preload=lxprofile.sty)
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+use LaTeXML::Global;
+
+AssignValue(TRACING => (LookupValue('TRACING') || 0) | TRACE_PROFILE, 'global');
+
+1;

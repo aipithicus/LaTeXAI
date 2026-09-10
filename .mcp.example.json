@@ -1,5 +1,5 @@
 {
-    "_comment": "Copy to .mcp.json (gitignored) and replace the <...> placeholders. PERL_ROOT is the portable Strawberry Perl root; PERL_HOME is its perl\\ subdirectory. MCP_POWERSHELL_PROFILE must point at this checkout's tools/dev/profile.ps1. Keep .codex/config.toml in agreement by hand.",
+    "_comment": "Copy to .mcp.json (gitignored) and replace the <...> placeholders. PERL_ROOT is the portable Strawberry Perl root; PERL_HOME is derived by scripts/profile.ps1 as its perl\\ subdirectory. MCP_POWERSHELL_PROFILE must point at this checkout's scripts/profile.ps1. CDXSCI_ROOT belongs in scripts/local.psd1 or this env block. Keep .codex/config.toml in agreement by hand.",
     "mcpServers": {
         "nushell": {
             "command": "<SCIENCE_FACILITY>/mcp/nushell-mcp/deps/nushell/nu.exe",
@@ -25,12 +25,10 @@
             ],
             "env": {
                 "MCP_POWERSHELL_EXECUTABLE": "<SCIENCE_FACILITY>/mcp/pwsh_exec/deps/bin/pwsh/pwsh.exe",
-                "MCP_POWERSHELL_PROFILE": "<LATEXAI_ROOT>/tools/dev/profile.ps1",
+                "MCP_POWERSHELL_PROFILE": "<LATEXAI_ROOT>/scripts/profile.ps1",
                 "PERL_ROOT": "<PERL_ROOT>",
-                "PERL_HOME": "<PERL_ROOT>/perl",
-                "LATEXAI_ROOT": "<LATEXAI_ROOT>",
-                "LATEXML_KPSEWHICH": "<LATEXAI_ROOT>/tools/dev/kpsewhich.cmd",
-                "LATEXML_KPSEWHICH_CACHE_ONLY": "1"
+                "CDXSCI_ROOT": "<CDXSCI_ROOT>",
+                "LATEXAI_ROOT": "<LATEXAI_ROOT>"
             }
         },
         "mdnav": {

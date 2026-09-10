@@ -1,0 +1,60 @@
+@{
+    PowerShellMinimumVersion = '7.5'
+    ScriptIdentity = @(
+        'scripts/profile.ps1'
+        'scripts/latexai-common.ps1'
+        'scripts/latexai-aliases.ps1'
+        'scripts/gauntlet-run.ps1'
+        'scripts/gauntlet-worker.ps1'
+        'scripts/markdown-compare.ps1'
+        'scripts/kpsewhich.cmd'
+        'scripts/test-run.ps1'
+        'scripts/test-jobs.ps1'
+        'scripts/test-worker.ps1'
+        'scripts/policy.psd1'
+        'scripts/preloads/gauntlet.sty.ltxml'
+        'scripts/preloads/lxprofile.sty.ltxml'
+        'tools/dev/kpsewhich.pl'
+        'tools/dev/tap-run.pl'
+        'tools/dev/generate.pl'
+    )
+    Gauntlet = @{
+        MaxWorkers = 10
+        ReservedCores = 2
+        ProcessTimeoutSeconds = 3600
+        # Zero remains the existing gauntlet wait default until I3 qualifies a finite batch budget.
+        WaitTimeoutSeconds = 0
+        SearchPath = @('scripts/preloads')
+        Preload = @('gauntlet.sty')
+    }
+    Test = @{
+        Budgets = @{
+            ProcessTimeoutSeconds = 900
+            WaitTimeoutSeconds = 7200
+            ReservedCores = 2
+            MinItemsPerWorker = 1
+        }
+        Selections = @{
+            math = @('t/40_math.t', 't/70_parse.t')
+            capture = @('t/45_capture.t', 't/99_capture_audit.t')
+            bindings = @('t/8*.t')
+        }
+        DefaultEstimatedCost = 10
+        EstimatedCost = @{
+            't/40_math.t' = 100
+            't/70_parse.t' = 80
+            't/45_capture.t' = 90
+            't/99_capture_audit.t' = 70
+            't/65_graphics.t' = 40
+            't/80_complex.t' = 50
+            't/878_tikz.t' = 40
+            't/879_forest.t' = 40
+            't/857_tikz-cd.t' = 40
+        }
+        ExtraWrites = @{
+            't/02_kpsewhich.t' = @('temp/t/kpsewhich')
+            't/003_unit_imagemagick.t' = @('t/unit/triangle.png')
+            't/931_epub.t' = @('931_test.log')
+        }
+    }
+}

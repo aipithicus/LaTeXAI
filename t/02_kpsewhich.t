@@ -9,7 +9,7 @@ use FindBin;
 
 BEGIN {
   my $root = File::Spec->catdir($FindBin::Bin, '..');
-  my $cmd  = File::Spec->rel2abs(File::Spec->catfile($root, 'tools', 'dev', 'kpsewhich.cmd'));
+  my $cmd  = File::Spec->rel2abs(File::Spec->catfile($root, 'scripts', 'kpsewhich.cmd'));
   $ENV{LATEXML_KPSEWHICH} = $cmd;
 }
 

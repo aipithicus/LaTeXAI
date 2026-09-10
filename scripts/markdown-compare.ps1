@@ -1,4 +1,4 @@
-#requires -Version 7.0
+#requires -Version 7.5
 <# Compare the two Markdown traversals on a hash-pinned input manifest.
    Preparation runs once per input. Each strategy gets its own Perl process,
    one untimed warmup and repeated runs over the same parsed DOM. #>
@@ -6,13 +6,16 @@
 param(
     [Parameter(Mandatory)][string] $Manifest,
     [Parameter(Mandatory)][string] $OutputDirectory,
-    [ValidateRange(3, 99)][int] $Repetitions = 9
+    [ValidateRange(3, 99)][int] $Repetitions = 9,
+    [string] $PerlRoot = ''
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
-$repo = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '../..')).Path
-if (-not $env:PERL_ROOT) { throw 'Use the repository pwsh_exec profile: PERL_ROOT is required.' }
-$perl = Join-Path $env:PERL_ROOT 'perl/bin/perl.exe'
+. (Join-Path $PSScriptRoot 'latexai-common.ps1')
+$runtime = Resolve-LaTeXAIRuntime -PerlRoot $PerlRoot -RequirePerl
+Set-LaTeXAIRuntimeEnvironment -Runtime $runtime
+$repo = $runtime.CheckoutRoot
+$perl = $runtime.PerlPath
 $manifestPath = (Resolve-Path -LiteralPath $Manifest).Path
 $source = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
 if ($source.schema -ne 'latexai/markdown-projection-inputs/0.1') { throw 'Unsupported input manifest' }

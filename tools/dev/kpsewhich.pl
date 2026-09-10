@@ -1,5 +1,6 @@
 #!/usr/bin/env perl
-# tools/dev/kpsewhich.pl — LATEXML_KPSEWHICH target. Answers from lib-ctan/ls-R
+# tools/dev/kpsewhich.pl — LATEXML_KPSEWHICH target, invoked by scripts/kpsewhich.cmd.
+# Answers from lib-ctan/ls-R
 # only. No banner, no warnings on stdout.
 use strict;
 use warnings;

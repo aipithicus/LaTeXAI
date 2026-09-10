@@ -43,6 +43,7 @@ sub tree_hashes {
         return unless -f $_;
         my $path = $File::Find::name;
         $path =~ s{\\}{/}g;
+        return if $path =~ m{(?:^|/)scripts/local\.psd1$};
         $files{$path} = file_hash($File::Find::name);
       } }, $root); }
   return \%files; }
@@ -57,7 +58,9 @@ sub snapshot {
   my $head = _git('rev-parse', 'HEAD'); chomp($head);
   my $patch = _git('diff', '--binary', 'HEAD', '--');
   my $status = _git('status', '--porcelain=v1', '--untracked-files=all');
-  my $files = tree_hashes(qw(lib lib-ctan lib-symb t tools/dev));
+  # scripts/ holds tracked development machinery. scripts/local.psd1 is machine
+  # configuration and is excluded below; resolved runtimes stay in environment.
+  my $files = tree_hashes(qw(lib lib-ctan lib-symb t tools/dev scripts));
   my %changes;
   for my $path (split(/\0/, _git('diff', '--name-only', '-z', 'HEAD', '--')
         . _git('ls-files', '--others', '--exclude-standard', '-z'))) {

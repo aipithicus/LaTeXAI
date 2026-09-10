@@ -67,7 +67,7 @@ An external `<bibliography files="...">` without entries requires preparation. `
 
 ```powershell
 ltst t/98_markdown.t
-./tools/dev/markdown-compare.ps1 `
+./scripts/markdown-compare.ps1 `
   -Manifest D:/path/to/inputs.json `
   -OutputDirectory D:/path/to/new-comparison-directory `
   -Repetitions 15

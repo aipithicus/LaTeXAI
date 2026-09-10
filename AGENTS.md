@@ -23,7 +23,7 @@ Behavioral expectations, development loop, and repository conventions for AI age
 
 ## 2. Development Loop
 
-**Run through the `pwsh_exec` MCP.** The repository owns its loop: `tools/dev/profile.ps1` is the PowerShell profile the server loads (both gitignored MCP configs, `.mcp.json` and `.codex/config.toml`, name it in `MCP_POWERSHELL_PROFILE`; `.mcp.example.json` is the tracked template), and it dot-sources `tools/dev/latexai-aliases.ps1`. The aliases derive the repo root from their own location and resolve Strawberry Perl from `$env:PERL_ROOT` (`PERL_HOME` is its `perl\` subdirectory), the one machine-specific value, which the MCP config's `env` block supplies. Ambient `PATH` is bypassed on purpose: the Bash tool and MSYS resolve a different `perl` first, and stock LaTeXML is not installed anywhere. If the aliases warn that `PERL_ROOT` is unset, the session is not using this repository's MCP config; fix that, do not hardcode a path.
+**Run through the `pwsh_exec` MCP.** The repository owns its loop: `scripts/profile.ps1` is the PowerShell profile the server loads (both gitignored MCP configs, `.mcp.json` and `.codex/config.toml`, name it in `MCP_POWERSHELL_PROFILE`; `.mcp.example.json` is the tracked template). The profile requires PowerShell 7.5+, loads `scripts/latexai-common.ps1`, and dotsources `scripts/latexai-aliases.ps1`. Checkout paths are derived from the common helper. `PERL_ROOT` and `CDXSCI_ROOT` come from explicit arguments, then the caller environment, then the ignored `scripts/local.psd1` (see `scripts/local.example.psd1`). `PERL_HOME` is derived from `PERL_ROOT`. Ambient `PATH` is bypassed on purpose: the Bash tool and MSYS resolve a different `perl` first, and stock LaTeXML is not installed anywhere. Loading the profile or running `lmath` does not require `CDXSCI_ROOT`; gauntlet and TAP batches do. If resolution reports `PERL_ROOT` unset, fix the environment or local file — do not hardcode a host path.
 
 | Alias | Expands to | Use |
 | :--- | :--- | :--- |
@@ -37,6 +37,9 @@ Behavioral expectations, development loop, and repository conventions for AI age
 | `lxmlp` | `… bin/latexmlpost` | post-processing, only when an oracle comparison needs it |
 | `lxmlc` | `… bin/latexmlc` | combined driver |
 | `ltst` | `prove -I lib` | run test drivers, e.g. `ltst t/40_math.t` |
+| `ltbatch [opts]` | `scripts/test-run.ps1` | TAP batches through the shared executor; `-Selection math|capture|bindings|full` |
+| `lgauntlet [opts]` | `scripts/gauntlet-run.ps1` | corpus inventory batches; requires `CDXSCI_ROOT` |
+| `lcfg` | runtime/selection preview | no grammar generation, tests or conversions |
 | `lmath '<tex>' [-Preload x] [-Capture] [flags]` | `lxml [--preload=x] [--capture] [flags] literal:<tex>` | quick math probe; extra flags pass through |
 
 Facts that save a round trip:
@@ -44,9 +47,10 @@ Facts that save a round trip:
 - Run `lgen` after a fresh clone and after editing `lib/LaTeXML/MathGrammar`. It writes the gitignored `lib/LaTeXML/MathGrammar.pm` and `lib/LaTeXML/Version.pm`; with those in place `-I lib` is the whole include path. `Makefile.PL`, the Makefile, and `blib/` are untouched and remain the path to an installable distribution; nothing in the development loop runs them.
 - The CLI aliases default `--log` into `temp/logs/<runstamp>/`, named after the job as `latexml` itself would. The stamp is `LATEXAI_RUNSTAMP` if set, else minted per process (per `pwsh_exec` command); `lrun` sets it so several invocations in one command share a directory, and `ltst` passes it to the drivers. Pass `--log=` yourself to override. A `.latexml.log` at the repository root means something bypassed the aliases.
 - The version flag is `--VERSION` (uppercase). `--version` prints usage.
-- **No TeX distribution is installed.** The aliases set `LATEXML_KPSEWHICH` to `tools/dev/kpsewhich.cmd`, which answers from `lib-ctan/ls-R`, and `LATEXML_KPSEWHICH_CACHE_ONLY=1` so a miss in that cache does not spawn a process (FindFile would otherwise pay cmd+perl per missing file). `Pathname.pm` reads `LATEXML_KPSEWHICH` when it loads, so it must be in the environment before perl starts (the aliases and the gauntlet worker do this). Unset both and upstream looks for a real `kpsewhich` on PATH. Real-paper runs still need `--includestyles` plus a preload that raises `MAX_ERRORS` and turns on `LEXEMATIZE_MATH`; toy probes with `lmath` do not.
+- **No TeX distribution is installed.** The aliases set `LATEXML_KPSEWHICH` to `scripts/kpsewhich.cmd`, which answers from `lib-ctan/ls-R` via `tools/dev/kpsewhich.pl`, and `LATEXML_KPSEWHICH_CACHE_ONLY=1` so a miss in that cache does not spawn a process (FindFile would otherwise pay cmd+perl per missing file). `Pathname.pm` reads `LATEXML_KPSEWHICH` when it loads, so it must be in the environment before perl starts (the aliases and the gauntlet worker do this). Unset both and upstream looks for a real `kpsewhich` on PATH. Real-paper runs still need `--includestyles` plus a preload that raises `MAX_ERRORS` and turns on `LEXEMATIZE_MATH` (`scripts/preloads/gauntlet.sty.ltxml`); toy probes with `lmath` do not. Do not apply gauntlet preloads to ordinary unit tests.
 - `--capture` (fork feature) emits `capture:*` provenance attributes on every element and `capture:source` on `ltx:Math`. `--noparse`, `--tex` and `--preload` are unchanged upstream switches; `--tex` output is the expansion oracle for drift measurements.
 - Fallback without the aliases: `& "$env:PERL_ROOT\perl\bin\perl.exe" -I lib bin/latexml --log=temp/logs/<job>.latexml.log …`.
+- `ltbatch` and `lgauntlet` import the batch executor at `CDXSCI_ROOT`. That checkout must load; an in-progress executor rewrite that calls helpers not yet wired into the module will fail before any driver runs. `lcfg` / `scripts/test-run.ps1 -Preview` / `scripts/gauntlet-run.ps1 -Preview` report resolved runtimes and job addresses without starting work.
 
 ---
 
