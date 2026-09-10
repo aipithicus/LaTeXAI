@@ -21,11 +21,10 @@
   -Path entries are resolved by the runner against the codex root.
   -Profile adds the lxprofile.sty preload (LaTeXML's TRACE_PROFILE bit); the
   worker folds the log's "Profiling results" block into receipt details.profile.
-  Routine batches use ten workers and a 60-minute per-process timeout. Override
-  -MaxWorkers for measured resource constraints or controlled profiling, and
-  -ProcessTimeoutSeconds for a different job budget. -WaitTimeoutSeconds bounds
-  the whole batch; its policy default is currently zero (unbounded wait) until
-  I3 qualifies a finite batch budget.
+  Routine batches use ten workers, a 60-minute per-process timeout and an
+  8-hour batch wait. Pass -WaitTimeoutSeconds 0 only as an explicit unbounded
+  diagnostic. -Package with -EvidenceDirectory is observed-route selection;
+  -SelectOnly writes the frozen list without converting.
 #>
 
 [CmdletBinding()]
@@ -44,13 +43,19 @@ param(
     [bool] $Kpsewhich = $true,
     [switch] $Profile,
     [switch] $FailOnArticleFailure,
-    [switch] $Preview
+    [switch] $Preview,
+    [string[]] $Package = @(),
+    [ValidateSet('binding', 'raw', 'raw-local', 'missing', 'union')] [string] $PackageRoute = 'union',
+    [string] $EvidenceDirectory = '',
+    [switch] $SelectOnly,
+    [ValidateSet('source', 'output')] [string] $ConversionWorkingDirectory
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 . (Join-Path $PSScriptRoot 'latexai-common.ps1')
+. (Join-Path $PSScriptRoot 'gauntlet-select.ps1')
 $runtime = Resolve-LaTeXAIRuntime -PerlRoot $PerlRoot -CdxsciRoot $CdxsciRoot `
     -PowerShellExecutable $PowerShellExecutable -RequirePerl -RequireCdxsci
 Set-LaTeXAIRuntimeEnvironment -Runtime $runtime -IncludeCdxsci
@@ -60,11 +65,33 @@ if ($null -eq $ReservedCores) { $ReservedCores = [int]$policy.ReservedCores }
 if ($null -eq $ProcessTimeoutSeconds) { $ProcessTimeoutSeconds = [int]$policy.ProcessTimeoutSeconds }
 if ($null -eq $WaitTimeoutSeconds) { $WaitTimeoutSeconds = [int]$policy.WaitTimeoutSeconds }
 if (-not $PSBoundParameters.ContainsKey('Preload')) { $Preload = @($policy.Preload) }
+if (-not $PSBoundParameters.ContainsKey('ConversionWorkingDirectory')) {
+    $ConversionWorkingDirectory = [string]$policy.ConversionWorkingDirectory
+}
+$nativeTimeout = [int]$policy.NativeTimeoutSeconds
+if ($nativeTimeout -le 0) { $nativeTimeout = [int]$ProcessTimeoutSeconds }
 
 $engineRoot = $runtime.CheckoutRoot
 $worker = Join-Path $PSScriptRoot 'gauntlet-worker.ps1'
 if (-not (Test-Path -LiteralPath $worker -PathType Leaf)) { throw "worker not found: '$worker'" }
 $perl = $runtime.PerlPath
+
+$packageSelection = $null
+if (@($Package).Count -gt 0) {
+    if ([string]::IsNullOrWhiteSpace($EvidenceDirectory)) {
+        throw 'LaTeXAI: -Package requires -EvidenceDirectory naming a retained gauntlet run with receipt.json files.'
+    }
+    $packageSelection = Select-LaTeXAIGauntletPackage -CdxsciRoot $runtime.CdxsciRoot `
+        -EvidenceDirectory $EvidenceDirectory -Package $Package -Route $PackageRoute
+    $Path = @($packageSelection.selected | ForEach-Object { $_.path })
+    if ($SelectOnly) {
+        $packageSelection | ConvertTo-Json -Depth 8
+        return
+    }
+    if ($Path.Count -eq 0 -and -not $Preview) {
+        throw 'LaTeXAI: package selection produced no inventory articles. See incompleteness in the selection object.'
+    }
+}
 
 if ($Preview) {
     [ordered]@{
@@ -76,11 +103,18 @@ if ($Preview) {
         kpsewhich = $runtime.Kpsewhich
         worker = $worker
         path = @($Path)
+        conversionWorkingDirectory = $ConversionWorkingDirectory
+        packageSelection = $packageSelection
         budgets = [ordered]@{
-            MaxWorkers = $MaxWorkers
-            ReservedCores = $ReservedCores
-            ProcessTimeoutSeconds = $ProcessTimeoutSeconds
-            WaitTimeoutSeconds = $WaitTimeoutSeconds
+            requested = [ordered]@{
+                MaxWorkers = $MaxWorkers
+                ReservedCores = $ReservedCores
+                ProcessTimeoutSeconds = $ProcessTimeoutSeconds
+                WaitTimeoutSeconds = $WaitTimeoutSeconds
+                NativeTimeoutSeconds = $nativeTimeout
+            }
+            policy = $policy
+            unboundedWait = [bool]($WaitTimeoutSeconds -eq 0)
         }
         trackedScripts = $runtime.TrackedScripts
         generatedModules = $runtime.GeneratedModules
@@ -96,16 +130,22 @@ foreach ($generated in @('lib/LaTeXML/Version.pm', 'lib/LaTeXML/MathGrammar.pm')
 
 Push-Location $engineRoot
 try {
-    $osName = & $perl -e 'print $^O' 2>$null
-    if ($osName -ne 'MSWin32') { throw "perl at '$perl' is not the Windows build (`$^O=$osName)" }
-    $loaded = & $perl -I lib -MLaTeXML -MXML::LibXML -e 'print $LaTeXML::VERSION' 2>$null
-    if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($loaded)) {
-        throw "LaTeXML does not load under '$perl' with -I lib"
+    $osProbe = Invoke-LaTeXAINative -FilePath $perl -Arguments @('-e', 'print $^O') -WorkingDirectory $engineRoot -TimeoutSeconds 30
+    if ($osProbe.TimedOut -or $osProbe.StdOut.Trim() -ne 'MSWin32') {
+        throw "perl at '$perl' is not the Windows build (outcome=$($osProbe.Outcome) `$^O=$($osProbe.StdOut))"
     }
-    $engineVersion = [string]$loaded
-    $engineCommit = (& git rev-parse --short HEAD 2>$null)
-    if ($LASTEXITCODE -ne 0) { $engineCommit = 'unknown' }
-    elseif (@(& git status --porcelain 2>$null).Count -gt 0) { $engineCommit = "$engineCommit+dirty" }
+    $loadProbe = Invoke-LaTeXAINative -FilePath $perl -Arguments @('-I', 'lib', '-MLaTeXML', '-MXML::LibXML', '-e', 'print $LaTeXML::VERSION') `
+        -WorkingDirectory $engineRoot -TimeoutSeconds 60
+    if ($loadProbe.TimedOut -or $loadProbe.ExitCode -ne 0 -or [string]::IsNullOrWhiteSpace($loadProbe.StdOut)) {
+        throw "LaTeXML does not load under '$perl' with -I lib ($($loadProbe.Outcome))"
+    }
+    $engineVersion = [string]$loadProbe.StdOut
+    $gitProbe = Invoke-LaTeXAINative -FilePath 'git' -Arguments @('rev-parse', '--short', 'HEAD') -WorkingDirectory $engineRoot -TimeoutSeconds 30
+    $engineCommit = if ($gitProbe.ExitCode -eq 0) { $gitProbe.StdOut.Trim() } else { 'unknown' }
+    $dirtyProbe = Invoke-LaTeXAINative -FilePath 'git' -Arguments @('status', '--porcelain') -WorkingDirectory $engineRoot -TimeoutSeconds 30
+    if ($engineCommit -ne 'unknown' -and @($dirtyProbe.StdOut -split "`r?`n" | Where-Object { $_ -ne '' }).Count -gt 0) {
+        $engineCommit = "$engineCommit+dirty"
+    }
     if ($Kpsewhich) {
         $kpse = $runtime.Kpsewhich
         if (-not (Test-Path -LiteralPath $kpse -PathType Leaf)) {
@@ -113,8 +153,13 @@ try {
         }
         $env:LATEXML_KPSEWHICH = (Resolve-Path -LiteralPath $kpse).Path
         $env:LATEXML_KPSEWHICH_CACHE_ONLY = '1'
-        $startup = & $kpse --expand-var
-        $startupLines = @($startup -split "`r?`n" | Where-Object { $_ -ne '' })
+        $kpsePl = Join-Path $engineRoot 'tools\dev\kpsewhich.pl'
+        $startup = Invoke-LaTeXAINative -FilePath $perl -Arguments @($kpsePl, '--expand-var') `
+            -WorkingDirectory $engineRoot -TimeoutSeconds 30
+        if ($startup.TimedOut -or $startup.ExitCode -ne 0) {
+            throw "kpsewhich shim startup failed ($($startup.Outcome)): $($startup.StdErr)"
+        }
+        $startupLines = @($startup.StdOut -split "`r?`n" | Where-Object { $_ -ne '' })
         if ($startupLines.Count -lt 2) {
             throw "kpsewhich shim startup call returned $($startupLines.Count) line(s), expected the lib-ctan root and the same path with a trailing slash"
         }
@@ -136,6 +181,8 @@ $workerParameter = @{
     IncludeStyles = $IncludeStyles
     SearchPath = @($policy.SearchPath)
     Kpsewhich = $Kpsewhich
+    TimeoutSeconds = $nativeTimeout
+    ConversionWorkingDirectory = $ConversionWorkingDirectory
 }
 $preloads = @($Preload | Where-Object { $_ })
 if ($Profile -and ($preloads -notcontains 'lxprofile.sty')) { $preloads += 'lxprofile.sty' }

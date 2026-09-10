@@ -14,39 +14,14 @@ param(
     [Parameter(Mandatory)] [string] $CheckoutRoot,
     [Parameter(Mandatory)] [string] $PerlPath,
     [Parameter(Mandatory)] [string] $TapRunScript,
-    [Parameter(Mandatory)] [string] $LibDirectory
+    [Parameter(Mandatory)] [string] $LibDirectory,
+    [int] $TimeoutSeconds = -1
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $utf8 = [System.Text.UTF8Encoding]::new($false)
-
-function Invoke-Native {
-    param(
-        [Parameter(Mandatory)] [string] $FilePath,
-        [string[]] $Arguments = @(),
-        [string] $WorkingDirectory = ''
-    )
-    $psi = [System.Diagnostics.ProcessStartInfo]::new($FilePath)
-    foreach ($argument in $Arguments) { $psi.ArgumentList.Add($argument) }
-    $psi.UseShellExecute = $false
-    $psi.RedirectStandardOutput = $true
-    $psi.RedirectStandardError = $true
-    $psi.CreateNoWindow = $true
-    if ($WorkingDirectory) { $psi.WorkingDirectory = $WorkingDirectory }
-    $process = [System.Diagnostics.Process]::Start($psi)
-    try {
-        $stdoutTask = $process.StandardOutput.ReadToEndAsync()
-        $stderrTask = $process.StandardError.ReadToEndAsync()
-        $process.WaitForExit()
-        return [pscustomobject]@{
-            ExitCode = $process.ExitCode
-            StdOut = $stdoutTask.GetAwaiter().GetResult()
-            StdErr = $stderrTask.GetAwaiter().GetResult()
-        }
-    }
-    finally { $process.Dispose() }
-}
+. (Join-Path $PSScriptRoot 'latexai-common.ps1')
 
 foreach ($path in @($ResultPath, $TapPath, $StdOutPath, $StdErrPath)) {
     $dir = [System.IO.Path]::GetDirectoryName($path)
@@ -65,9 +40,13 @@ $arguments = @(
     '--cwd', $CheckoutRoot
     $Driver
 )
-$run = Invoke-Native -FilePath $PerlPath -Arguments $arguments -WorkingDirectory $CheckoutRoot
-[System.IO.File]::WriteAllText($StdOutPath, [string]$run.StdOut, $utf8)
-[System.IO.File]::WriteAllText($StdErrPath, [string]$run.StdErr, $utf8)
+$nativeTimeout = $TimeoutSeconds
+if ($nativeTimeout -lt 0) { $nativeTimeout = Get-LaTeXAINativeTimeoutSeconds -Family Test }
+$run = Invoke-LaTeXAINative -FilePath $PerlPath -Arguments $arguments -WorkingDirectory $CheckoutRoot `
+    -TimeoutSeconds $nativeTimeout -StdOutPath $StdOutPath -StdErrPath $StdErrPath
+if ($run.TimedOut) {
+    throw "TAP worker timed out for '$Driver' after $($run.TimeoutSecondsEffective)s"
+}
 
 if (-not (Test-Path -LiteralPath $ResultPath -PathType Leaf)) {
     throw "TAP worker produced no result.json for '$Driver' (exit $($run.ExitCode))"

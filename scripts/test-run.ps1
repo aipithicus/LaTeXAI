@@ -47,23 +47,11 @@ function Save-LaTeXAIJson {
 }
 
 function Invoke-LaTeXAIGenerateOnce {
-    $psi = [System.Diagnostics.ProcessStartInfo]::new($runtime.PerlPath)
-    $psi.ArgumentList.Add($runtime.GenerateScript)
-    $psi.WorkingDirectory = $runtime.CheckoutRoot
-    $psi.UseShellExecute = $false
-    $psi.RedirectStandardOutput = $true
-    $psi.RedirectStandardError = $true
-    $psi.CreateNoWindow = $true
-    $process = [System.Diagnostics.Process]::Start($psi)
-    try {
-        $stdout = $process.StandardOutput.ReadToEndAsync()
-        $stderr = $process.StandardError.ReadToEndAsync()
-        $process.WaitForExit()
-        if ($process.ExitCode -ne 0) {
-            throw "lgen failed: $($stdout.GetAwaiter().GetResult())$($stderr.GetAwaiter().GetResult())"
-        }
+    $run = Invoke-LaTeXAINative -FilePath $runtime.PerlPath -Arguments @($runtime.GenerateScript) `
+        -WorkingDirectory $runtime.CheckoutRoot -TimeoutSeconds 60
+    if ($run.TimedOut -or $run.ExitCode -ne 0) {
+        throw "lgen failed ($($run.Outcome)): $($run.StdOut)$($run.StdErr)"
     }
-    finally { $process.Dispose() }
 }
 
 if ([string]::IsNullOrWhiteSpace($Selection) -and @($Path).Count -eq 0) { $Selection = 'full' }
@@ -110,11 +98,15 @@ $previewObject = [ordered]@{
     powershell = $runtime.ChildPowerShell
     runDirectory = $RunDirectory
     budgets = [ordered]@{
-        MaxWorkers = $MaxWorkers
-        ReservedCores = $ReservedCores
-        ProcessTimeoutSeconds = $ProcessTimeoutSeconds
-        WaitTimeoutSeconds = $WaitTimeoutSeconds
-        MinItemsPerWorker = $MinItemsPerWorker
+        requested = [ordered]@{
+            MaxWorkers = $MaxWorkers
+            ReservedCores = $ReservedCores
+            ProcessTimeoutSeconds = $ProcessTimeoutSeconds
+            WaitTimeoutSeconds = $WaitTimeoutSeconds
+            MinItemsPerWorker = $MinItemsPerWorker
+        }
+        policy = $runtime.Policy.Test.Budgets
+        unboundedWait = [bool]($WaitTimeoutSeconds -eq 0)
     }
     generatedModules = $runtime.GeneratedModules
     trackedScripts = $runtime.TrackedScripts

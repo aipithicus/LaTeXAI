@@ -7,7 +7,8 @@ param(
     [Parameter(Mandatory)][string] $Manifest,
     [Parameter(Mandatory)][string] $OutputDirectory,
     [ValidateRange(3, 99)][int] $Repetitions = 9,
-    [string] $PerlRoot = ''
+    [string] $PerlRoot = '',
+    [nullable[int]] $TimeoutSeconds = $null
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
@@ -17,39 +18,35 @@ Set-LaTeXAIRuntimeEnvironment -Runtime $runtime
 $repo = $runtime.CheckoutRoot
 $perl = $runtime.PerlPath
 $manifestPath = (Resolve-Path -LiteralPath $Manifest).Path
-$source = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+$source = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json -DateKind String
 if ($source.schema -ne 'latexai/markdown-projection-inputs/0.1') { throw 'Unsupported input manifest' }
 $outRoot = [IO.Path]::GetFullPath($OutputDirectory)
 if (Test-Path -LiteralPath $outRoot) { throw "Choose a new output directory; refusing to overwrite $outRoot" }
 [IO.Directory]::CreateDirectory($outRoot) | Out-Null
 $utf8 = [Text.UTF8Encoding]::new($false)
+$mdTimeout = Get-LaTeXAINativeTimeoutSeconds -Family Markdown -Override $TimeoutSeconds
+$mdCleanup = [int]$runtime.Policy.Markdown.CleanupTimeoutSeconds
+$mdSlice = [int]$runtime.Policy.Markdown.WaitSliceMilliseconds
 function Invoke-Perl {
     param([string[]] $Arguments, [string] $Log)
-    $psi = [Diagnostics.ProcessStartInfo]::new($perl)
-    $psi.WorkingDirectory = $repo
-    $psi.UseShellExecute = $false
-    $psi.CreateNoWindow = $true
-    $psi.RedirectStandardOutput = $true
-    $psi.RedirectStandardError = $true
-    foreach ($arg in $Arguments) { $psi.ArgumentList.Add($arg) }
-    $timer = [Diagnostics.Stopwatch]::StartNew()
-    $process = [Diagnostics.Process]::Start($psi)
-    try {
-        $stdout = $process.StandardOutput.ReadToEndAsync()
-        $stderr = $process.StandardError.ReadToEndAsync()
-        $peak = $null
-        do {
-            $process.Refresh()
-            $observed = $process.PeakWorkingSet64
-            if ($observed -gt $peak) { $peak = $observed }
-        } until ($process.WaitForExit(20))
-        $timer.Stop()
-        $text = $stdout.GetAwaiter().GetResult() + $stderr.GetAwaiter().GetResult()
-        [IO.File]::WriteAllText($Log, $text, $utf8)
-        if ($process.ExitCode -ne 0) { throw "Perl exit $($process.ExitCode):`n$text" }
-        return [ordered]@{ process_ms = $timer.Elapsed.TotalMilliseconds; sampled_peak_working_set_bytes = $peak }
+    $stdoutPath = [IO.Path]::ChangeExtension($Log, '.stdout.txt')
+    if ($stdoutPath -eq $Log) { $stdoutPath = "$Log.stdout.txt" }
+    $stderrPath = [IO.Path]::ChangeExtension($Log, '.stderr.txt')
+    if ($stderrPath -eq $Log) { $stderrPath = "$Log.stderr.txt" }
+    $run = Invoke-LaTeXAINative -FilePath $perl -Arguments $Arguments -WorkingDirectory $repo `
+        -TimeoutSeconds $mdTimeout -CleanupTimeoutSeconds $mdCleanup `
+        -WaitSliceMilliseconds $mdSlice -StdOutPath $stdoutPath -StdErrPath $stderrPath `
+        -SamplePeakWorkingSet
+    if ($run.TimedOut -or $run.Outcome -eq 'failed-to-launch' -or $run.ExitCode -ne 0) {
+        throw "Perl $($run.Outcome) exit $($run.ExitCode):`n$($run.StdOut)`n$($run.StdErr)"
     }
-    finally { $process.Dispose() }
+    return [ordered]@{
+        process_ms = $run.DurationMs
+        sampled_peak_working_set_bytes = $run.PeakWorkingSetBytes
+        stdout_path = $stdoutPath
+        stderr_path = $stderrPath
+        timeout_seconds = $run.TimeoutSecondsEffective
+    }
 }
 $rows = [Collections.Generic.List[object]]::new()
 $index = 0
@@ -76,7 +73,7 @@ foreach ($item in $source.inputs) {
         $md = Join-Path $dir "$strategy.md"
         $json = Join-Path $dir "$strategy.json"
         $processStats = Invoke-Perl -Arguments @('tools/dev/markdown-benchmark.pl', $prepared, $strategy, [string]$Repetitions, $md, $json, $assetRoot) -Log (Join-Path $dir "$strategy.log")
-        $result = Get-Content -LiteralPath $json -Raw | ConvertFrom-Json
+        $result = Get-Content -LiteralPath $json -Raw | ConvertFrom-Json -DateKind String
         $result | Add-Member -NotePropertyName process -NotePropertyValue $processStats
         [IO.File]::WriteAllText($json, ($result | ConvertTo-Json -Depth 30) + "`n", $utf8)
         $results[$strategy] = $result
@@ -112,7 +109,7 @@ $report = [ordered]@{
     schema = 'latexai/markdown-traversal-comparison/0.1'; created_utc = [datetime]::UtcNow.ToString('o')
     manifest = $manifestPath; manifest_sha256 = (Get-FileHash -LiteralPath $manifestPath -Algorithm SHA256).Hash.ToLowerInvariant()
     checkout_commit = (& git -C $repo rev-parse HEAD); code = $code; repetitions = $Repetitions
-    method = 'Sequential isolated process per input/strategy; alternating strategy order across papers; one untimed warmup, then repeated projections of one parsed DOM. Preparation, parse, projection phases and process peak working set (sampled every 20 ms while alive) reported separately.'
+    method = 'Sequential isolated process per input/strategy; alternating strategy order across papers; one untimed warmup, then repeated projections of one parsed DOM. Native waits use scripts/latexai-common.ps1 Invoke-LaTeXAINative. Preparation, parse, projection phases and process peak working set (sampled on the wait slice while alive; metric still sampled_peak_working_set_bytes) reported separately. Stdout and stderr are retained as sibling .stdout.txt/.stderr.txt files, not concatenated into the only log.'
     limits = 'Both implementations buffer Markdown fragments. This compares traversal organization, not streaming-memory behavior or LaTeXML HTML speed. Sampled peak working set includes runtime, parser and warmup, may miss the final 20 ms, and is not incremental projector allocation. Input diagnostics remain independent.'
     inputs = $rows.ToArray()
 }

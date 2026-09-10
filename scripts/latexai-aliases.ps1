@@ -70,20 +70,39 @@ function script:Add-LaTeXAILogDefault {
     return @("--log=$(Join-Path $script:LaTeXAILogs "$job.latexml.log")") + $CliArgs
 }
 
+function script:Invoke-LaTeXAIPerl {
+    param([Parameter(Mandatory)] [string[]] $PerlArguments)
+    $timeout = Get-LaTeXAINativeTimeoutSeconds -Family Direct
+    $run = Invoke-LaTeXAINative -FilePath $script:StrawberryPerl -Arguments $PerlArguments `
+        -WorkingDirectory $script:LaTeXAIRoot -TimeoutSeconds $timeout
+    Write-LaTeXAINativeStreams -Run $run
+}
+
 # Core engine CLIs, run from lib/ only. generate.pl puts the compiled grammar
 # and the stamped version module in lib/, so no second include path is needed.
-function Invoke-LaTeXML { & $script:StrawberryPerl -I $script:LaTeXAILib (Join-Path $script:LaTeXAIBin 'latexml')     @(Add-LaTeXAILogDefault $args) }
-function Invoke-LaTeXMLPost { & $script:StrawberryPerl -I $script:LaTeXAILib (Join-Path $script:LaTeXAIBin 'latexmlpost') @(Add-LaTeXAILogDefault $args) }
-function Invoke-LaTeXMLC { & $script:StrawberryPerl -I $script:LaTeXAILib (Join-Path $script:LaTeXAIBin 'latexmlc')    @(Add-LaTeXAILogDefault $args) }
+function Invoke-LaTeXML {
+    script:Invoke-LaTeXAIPerl -PerlArguments (@('-I', $script:LaTeXAILib, (Join-Path $script:LaTeXAIBin 'latexml')) + @(Add-LaTeXAILogDefault $args))
+}
+function Invoke-LaTeXMLPost {
+    script:Invoke-LaTeXAIPerl -PerlArguments (@('-I', $script:LaTeXAILib, (Join-Path $script:LaTeXAIBin 'latexmlpost')) + @(Add-LaTeXAILogDefault $args))
+}
+function Invoke-LaTeXMLC {
+    script:Invoke-LaTeXAIPerl -PerlArguments (@('-I', $script:LaTeXAILib, (Join-Path $script:LaTeXAIBin 'latexmlc')) + @(Add-LaTeXAILogDefault $args))
+}
 
 # Test runner: Strawberry's prove with the LaTeXAI lib on the include path.
 # Bespoke drivers read LATEXAI_RUNSTAMP so their logs join this run's directory.
 function Invoke-LaTeXMLTest {
     $env:LATEXAI_RUNSTAMP = $script:LaTeXAIRunStamp
-    & $script:StrawberryPerl $script:ProveScript -I $script:LaTeXAILib @args
+    $timeout = Get-LaTeXAINativeTimeoutSeconds -Family Test
+    $run = Invoke-LaTeXAINative -FilePath $script:StrawberryPerl `
+        -Arguments (@($script:ProveScript, '-I', $script:LaTeXAILib) + @($args)) `
+        -WorkingDirectory $script:LaTeXAIRoot -TimeoutSeconds $timeout
+    Write-LaTeXAINativeStreams -Run $run
 }
 
 # Parallel TAP batches through the shared executor. Requires CDXSCI_ROOT.
+
 function Invoke-LaTeXAITestBatch {
     & $script:LaTeXAITestRun @args
 }
@@ -96,20 +115,11 @@ function Show-LaTeXAIConfig {
     Show-LaTeXAIRuntime @args
 }
 
-# Regenerate MathGrammar.pm and Version.pm into lib/ (idempotent; --force to redo).
-function Invoke-LaTeXAIGenerate { & $script:StrawberryPerl $script:LaTeXAIGen @args }
-
-# Vendor packages into lib-ctan/<pkg>/ (CTAN metadata + TeX Live runfiles + provenance).
-function Invoke-LaTeXAIFetchCtan { & $script:StrawberryPerl $script:LaTeXAICtan @args }
-
-# Write a fixture's golden with the test driver's own configuration (refuses on errors).
-function Invoke-LaTeXAIGolden { & $script:StrawberryPerl $script:LaTeXAIGold @args }
-
-# Vendor a pinned KaTeX clone into lib-katex/ and derive the reference tables.
-function Invoke-LaTeXAIVendorKatex { & $script:StrawberryPerl $script:LaTeXAIKatex @args }
-
-# Extract, author, seed, check, or generate notation tables under lib-symb/.
-function Invoke-LaTeXAISymbind { & $script:StrawberryPerl $script:LaTeXAISymb @args }
+function Invoke-LaTeXAIGenerate { script:Invoke-LaTeXAIPerl -PerlArguments (@($script:LaTeXAIGen) + @($args)) }
+function Invoke-LaTeXAIFetchCtan { script:Invoke-LaTeXAIPerl -PerlArguments (@($script:LaTeXAICtan) + @($args)) }
+function Invoke-LaTeXAIGolden { script:Invoke-LaTeXAIPerl -PerlArguments (@($script:LaTeXAIGold) + @($args)) }
+function Invoke-LaTeXAIVendorKatex { script:Invoke-LaTeXAIPerl -PerlArguments (@($script:LaTeXAIKatex) + @($args)) }
+function Invoke-LaTeXAISymbind { script:Invoke-LaTeXAIPerl -PerlArguments (@($script:LaTeXAISymb) + @($args)) }
 
 # Quick math probe.
 function Test-LaTeXMLMath {

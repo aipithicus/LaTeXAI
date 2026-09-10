@@ -5,6 +5,7 @@
         'scripts/latexai-common.ps1'
         'scripts/latexai-aliases.ps1'
         'scripts/gauntlet-run.ps1'
+        'scripts/gauntlet-select.ps1'
         'scripts/gauntlet-worker.ps1'
         'scripts/markdown-compare.ps1'
         'scripts/kpsewhich.cmd'
@@ -18,14 +19,27 @@
         'tools/dev/tap-run.pl'
         'tools/dev/generate.pl'
     )
+    Direct = @{
+        TimeoutSeconds = 300
+        CleanupTimeoutSeconds = 15
+        WaitSliceMilliseconds = 50
+    }
+    Markdown = @{
+        TimeoutSeconds = 900
+        CleanupTimeoutSeconds = 15
+        WaitSliceMilliseconds = 20
+        SamplePeakWorkingSet = $true
+    }
     Gauntlet = @{
         MaxWorkers = 10
         ReservedCores = 2
         ProcessTimeoutSeconds = 3600
-        # Zero remains the existing gauntlet wait default until I3 qualifies a finite batch budget.
-        WaitTimeoutSeconds = 0
+        WaitTimeoutSeconds = 28800
+        NativeTimeoutSeconds = 3600
+        CleanupTimeoutSeconds = 30
         SearchPath = @('scripts/preloads')
         Preload = @('gauntlet.sty')
+        ConversionWorkingDirectory = 'source'
     }
     Test = @{
         Budgets = @{

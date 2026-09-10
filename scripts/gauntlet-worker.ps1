@@ -35,11 +35,14 @@ param(
     [string[]] $SearchPath = @(),
     [bool] $IncludeStyles = $true,
     [string[]] $LatexmlArgument = @(),
-    [bool] $Kpsewhich = $true
+    [bool] $Kpsewhich = $true,
+    [int] $TimeoutSeconds = -1,
+    [ValidateSet('source', 'output')] [string] $ConversionWorkingDirectory = 'source'
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'latexai-common.ps1')
 $startedUtc = [datetime]::UtcNow
 $utf8 = [System.Text.UTF8Encoding]::new($false)
 $engineName = 'latexai'
@@ -96,32 +99,23 @@ function Resolve-Perl {
 }
 
 function Invoke-Native {
-    <# Run a native process with stdout/stderr captured to strings, never to
-       the PowerShell streams. Returns exit code and both captures. #>
     param(
         [Parameter(Mandatory)] [string] $FilePath,
         [string[]] $Arguments = @(),
-        [string] $WorkingDirectory = ''
+        [string] $WorkingDirectory = '',
+        [int] $TimeoutSeconds = 0
     )
-    $psi = [System.Diagnostics.ProcessStartInfo]::new($FilePath)
-    foreach ($argument in $Arguments) { $psi.ArgumentList.Add($argument) }
-    $psi.UseShellExecute = $false
-    $psi.RedirectStandardOutput = $true
-    $psi.RedirectStandardError = $true
-    $psi.CreateNoWindow = $true
-    if ($WorkingDirectory) { $psi.WorkingDirectory = $WorkingDirectory }
-    $process = [System.Diagnostics.Process]::Start($psi)
-    try {
-        $stdoutTask = $process.StandardOutput.ReadToEndAsync()
-        $stderrTask = $process.StandardError.ReadToEndAsync()
-        $process.WaitForExit()
-        return [pscustomobject]@{
-            ExitCode = $process.ExitCode
-            StdOut = $stdoutTask.GetAwaiter().GetResult()
-            StdErr = $stderrTask.GetAwaiter().GetResult()
-        }
+    $run = Invoke-LaTeXAINative -FilePath $FilePath -Arguments $Arguments `
+        -WorkingDirectory $WorkingDirectory -TimeoutSeconds $TimeoutSeconds
+    return [pscustomobject]@{
+        ExitCode = $run.ExitCode
+        StdOut = [string]$run.StdOut
+        StdErr = [string]$run.StdErr
+        TimedOut = [bool]$run.TimedOut
+        Outcome = [string]$run.Outcome
+        DurationMs = $run.DurationMs
+        CleanupComplete = [bool]$run.CleanupComplete
     }
-    finally { $process.Dispose() }
 }
 
 $script:DefinitionTextCache = @{}
@@ -260,13 +254,16 @@ try {
         Remove-Item -LiteralPath Env:LATEXML_KPSEWHICH_CACHE_ONLY -ErrorAction SilentlyContinue
     }
 
+    $nativeTimeout = $TimeoutSeconds
+    if ($nativeTimeout -lt 0) { $nativeTimeout = Get-LaTeXAINativeTimeoutSeconds -Family Gauntlet }
+
     if ([string]::IsNullOrWhiteSpace($EngineVersion)) {
-        $probe = Invoke-Native -FilePath $perl -WorkingDirectory $engineRoot `
+        $probe = Invoke-Native -FilePath $perl -WorkingDirectory $engineRoot -TimeoutSeconds 30 `
             -Arguments @('-I', $libDirectory, '-MLaTeXML', '-e', 'print $LaTeXML::VERSION')
         $script:EngineVersion = if ($probe.ExitCode -eq 0) { $probe.StdOut.Trim() } else { 'unknown' }
     }
     if ([string]::IsNullOrWhiteSpace($EngineCommit)) {
-        $probe = Invoke-Native -FilePath 'git' -WorkingDirectory $engineRoot `
+        $probe = Invoke-Native -FilePath 'git' -WorkingDirectory $engineRoot -TimeoutSeconds 30 `
             -Arguments @('rev-parse', '--short', 'HEAD')
         $script:EngineCommit = if ($probe.ExitCode -eq 0) { $probe.StdOut.Trim() } else { 'unknown' }
     }
@@ -294,13 +291,20 @@ try {
     }
     $arguments.Add("--log=$logPath")
     $arguments.Add("--destination=$xmlPath")
-    $arguments.Add($Entrypoint)
+    $conversionCwd = $sourceTree
+    $sourceArgument = $Entrypoint
+    if ($ConversionWorkingDirectory -eq 'output') {
+        $conversionCwd = $OutDirectory
+        $sourceArgument = $entryFile
+    }
+    $arguments.Add($sourceArgument)
 
-    $latexmlStarted = [datetime]::UtcNow
-    $run = Invoke-Native -FilePath $perl -Arguments $arguments.ToArray() -WorkingDirectory $sourceTree
-    $latexmlMs = [math]::Round(([datetime]::UtcNow - $latexmlStarted).TotalMilliseconds, 2)
+    $run = Invoke-Native -FilePath $perl -Arguments $arguments.ToArray() `
+        -WorkingDirectory $conversionCwd -TimeoutSeconds $nativeTimeout
+    $latexmlMs = [double]$run.DurationMs
     [System.IO.File]::WriteAllText($stdoutPath, $run.StdOut, $utf8)
     [System.IO.File]::WriteAllText($stderrPath, $run.StdErr, $utf8)
+    $logParseStarted = [datetime]::UtcNow
 
     # The log's last "Conversion complete|failed: ..." line carries the engine's own tally.
     # The rest of the log carries what that tally summarizes: every file the engine read
@@ -418,6 +422,7 @@ try {
         $packages.Add([ordered]@{ name = $name; route = 'missing' })
     }
     $packagesRaw = @($packages | Where-Object { $_.route -like 'raw*' }).Count
+    $logParseMs = [math]::Round(([datetime]::UtcNow - $logParseStarted).TotalMilliseconds, 2)
 
     # Undefined macros attributed to a definition site. A macro the engine reports as
     # undefined is looked up in the paper's own tree and in the vendored CTAN source of
@@ -425,6 +430,7 @@ try {
     # route is binding residue; against 'raw-local' it means raw execution did not
     # define it; 'paper:<file>' means the paper's own definition never ran; 'none'
     # means no source in reach defines it.
+    $attributionStarted = [datetime]::UtcNow
     $attribution = @($undefined | ForEach-Object {
             $macro = $_
             $where = Find-DefinitionSource -Macro $macro -SourceTree $sourceTree `
@@ -432,6 +438,7 @@ try {
             [ordered]@{ macro = $macro; source = $where }
         })
     $unattributed = @($attribution | Where-Object { $_.source -eq 'none' }).Count
+    $attributionMs = [math]::Round(([datetime]::UtcNow - $attributionStarted).TotalMilliseconds, 2)
 
     $xmlBytes = 0L
     $ltxErrors = 0
@@ -441,6 +448,7 @@ try {
     $errorNodes = @()
     $danglingList = @()
     $leakList = @()
+    $xmlInspectStarted = [datetime]::UtcNow
     if (Test-Path -LiteralPath $xmlPath -PathType Leaf) {
         $xmlBytes = [System.IO.FileInfo]::new($xmlPath).Length
         $xmlText = [System.IO.File]::ReadAllText($xmlPath)
@@ -468,6 +476,7 @@ try {
         $leakList = @($leaks | ForEach-Object { $_.Value } | Sort-Object -Unique | Select-Object -First 40)
         $xmlText = $null
     }
+    $xmlInspectMs = [math]::Round(([datetime]::UtcNow - $xmlInspectStarted).TotalMilliseconds, 2)
 
     foreach ($candidate in @($xmlPath, $logPath, $stdoutPath, $stderrPath)) {
         if (Test-Path -LiteralPath $candidate -PathType Leaf) {
@@ -476,9 +485,12 @@ try {
     }
     $stores.Add('receipt.json')
 
-    $ok = ($run.ExitCode -eq 0) -and ($fatals -eq 0) -and ($xmlBytes -gt 0)
+    $ok = (-not $run.TimedOut) -and ($run.ExitCode -eq 0) -and ($fatals -eq 0) -and ($xmlBytes -gt 0)
+    $workerMs = [math]::Round(([datetime]::UtcNow - $startedUtc).TotalMilliseconds, 2)
+    $residualMs = [math]::Round($workerMs - $latexmlMs - $logParseMs - $attributionMs - $xmlInspectMs, 2)
     $counts = @{
-        exitCode = $run.ExitCode
+        exitCode = if ($null -eq $run.ExitCode) { -1 } else { $run.ExitCode }
+        timedOut = [int][bool]$run.TimedOut
         fatals = $fatals
         errors = $errors
         warnings = $warnings
@@ -494,6 +506,11 @@ try {
         mathElements = $mathElements
         outputBytes = $xmlBytes
         latexmlMs = $latexmlMs
+        logParseMs = $logParseMs
+        attributionMs = $attributionMs
+        xmlInspectMs = $xmlInspectMs
+        workerMs = $workerMs
+        residualMs = $residualMs
     }
     $taxonomyRows = @($taxonomy.GetEnumerator() | Sort-Object -Property @{ Expression = 'Value'; Descending = $true }, Name |
         ForEach-Object {
@@ -512,6 +529,9 @@ try {
         internalLeaks = @($leakList)
         perl = $perl
         arguments = @($arguments.ToArray())
+        conversionWorkingDirectory = $conversionCwd
+        nativeOutcome = $run.Outcome
+        nativeCleanupComplete = [bool]$run.CleanupComplete
     }
     if ($phases.Count -gt 0) { $details.phases = $phases }
     if ($null -ne $profileTotals) {

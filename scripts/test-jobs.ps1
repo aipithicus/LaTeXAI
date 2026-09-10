@@ -219,6 +219,7 @@ function Get-LaTeXAITestJob {
                 PerlPath = $Runtime.PerlPath
                 TapRunScript = $tapRun
                 LibDirectory = $Runtime.LibDirectory
+                TimeoutSeconds = $TimeoutSeconds
             } -RuntimeProfile 'latexai-tap' -ProcessSpec $processSpec `
             -EstimatedCost $cost -Writes $writes.ToArray() `
             -WorkingDirectory $checkout -Metadata $metadata))
