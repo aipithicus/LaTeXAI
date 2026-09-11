@@ -2,8 +2,8 @@
 # scripts/profile.ps1
 #
 # PowerShell profile for the LaTeXAI development loop. The pwsh_exec MCP
-# server dot-sources whatever MCP_POWERSHELL_PROFILE names; both .mcp.json and
-# .codex/config.toml point it here. Interactive-console furniture (history,
+# server dot-sources whatever MCP_POWERSHELL_PROFILE names; .mcp.json,
+# .grok/config.toml, and .codex/config.toml point it here. Interactive-console furniture (history,
 # prompt) is deliberately absent: this runs in a non-interactive child.
 # Machine bindings come from the caller environment or scripts/local.psd1.
 # Loading this profile does not require CDXSCI_ROOT.

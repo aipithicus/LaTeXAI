@@ -1,0 +1,38 @@
+# Copy to .grok/config.toml (gitignored). Grok project toml replaces a
+# same-named personal ~/.grok pwsh_exec entirely. No tool_timeout_sec.
+
+[mcp_servers.nushell]
+command = "<SCIENCE_FACILITY>/mcp/nushell-mcp/deps/nushell/nu.exe"
+args = [
+  "--mcp",
+  "--config",
+  "<SCIENCE_FACILITY>/mcp/nushell-mcp/config.nu",
+]
+startup_timeout_sec = 30
+
+[mcp_servers.nushell.env]
+NU_MCP_OUTPUT_LIMIT = "20kb"
+NO_COLOR = "1"
+NU_LOG_LEVEL = "warn"
+
+[mcp_servers.pwsh_exec]
+command = "<SCIENCE_FACILITY>/mcp/pwsh_exec/deps/python/cpython-<version>-windows-x86_64-none/python.exe"
+args = [
+  "-B",
+  "<SCIENCE_FACILITY>/mcp/pwsh_exec/server.py",
+]
+startup_timeout_sec = 30
+
+[mcp_servers.pwsh_exec.env]
+MCP_POWERSHELL_EXECUTABLE = "<SCIENCE_FACILITY>/mcp/pwsh_exec/deps/bin/pwsh/pwsh.exe"
+MCP_POWERSHELL_PROFILE = "<LATEXAI_ROOT>/scripts/profile.ps1"
+PERL_ROOT = "<PERL_ROOT>"
+CDXSCI_ROOT = "<CDXSCI_ROOT>"
+LATEXAI_ROOT = "<LATEXAI_ROOT>"
+
+[mcp_servers.mdnav]
+command = "node"
+args = [
+  "<SCIENCE_FACILITY>/mcp/mdnav/src/index.ts",
+]
+startup_timeout_sec = 30
