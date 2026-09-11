@@ -73,6 +73,10 @@ for my $root ('ltx:custom', 'foreign:document', 'document') {
   my $plain = xml(qq{<document xmlns="$ns" xmlns:c="$capture"><bibliography/>\n</document>});
   my $pretty = xml(qq{<document xmlns="$ns" xmlns:c="$capture"><bibliography/>\n  <c:ledger><c:math total="0"/></c:ledger>\n</document>});
   is(without_capture($pretty), without_capture($plain), 'pretty-printed ledger indent is not manuscript text');
+  my $comment_plain = xml(qq{<document xmlns="$ns" xmlns:c="$capture"><bibliography/>\n<!-- x --></document>});
+  my $comment_pretty = xml(qq{<document xmlns="$ns" xmlns:c="$capture"><bibliography/>\n<!-- x -->\n  <c:ledger><c:math total="0"/></c:ledger>\n</document>});
+  is(without_capture($comment_pretty), without_capture($comment_plain),
+    'pretty-printed ledger newline after a trailing comment is not manuscript text');
 }
 XML::LibXML->new(no_blanks => 1)->load_xml(string => '<root><child/></root>');
 isnt(without_capture($off), without_capture($no_space), 'another parser cannot silently disable audit whitespace');
