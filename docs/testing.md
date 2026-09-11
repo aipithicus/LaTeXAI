@@ -153,12 +153,15 @@ Read `run.json` and the per-driver reports before explaining a change or deliber
 
 ### Manuscript corpus comparison
 
-`tools/dev/capture-corpus-audit.pl` compares two retained inventory runs with the same paper selection. It checks successful run/receipt coverage, article identities, diagnostic counts/details, every Math carrier and capture attribute, actual source/callsite bytes, and the complete stripped documents. Only timing and output-size counters are excluded; undefined-macro and missing-file lists are unordered multisets.
+`tools/dev/capture-corpus-audit.pl` compares two retained inventory runs with the same paper selection. `--mode replay` (default) is two capture-on runs: it checks successful run/receipt coverage, article identities, diagnostic counts/details, every Math carrier and capture attribute, actual source/callsite bytes, and the complete stripped documents. `--mode parity` is capture-off baseline vs capture-on candidate: it checks the same coverage, identities, diagnostics and stripped/projected documents, plus Math `tex` by `xml:id`. It does not compare capture records, ledgers or source hashes on the off side, and it ignores `--capture` when comparing projected invocation identity. Only timing and output-size counters are excluded; undefined-macro and missing-file lists are unordered multisets. Replay still requires `--capture` on both sides; a missing ledger is `missing-ledger` rather than a crash.
 
 ```powershell
 & $auditPerl -I lib tools/dev/capture-corpus-audit.pl `
   --baseline <retained-inventory-run> --candidate <fresh-inventory-run> `
   --output <new-comparison-directory> --project-baseline <retained-run.json-SHA256>
+& $auditPerl -I lib tools/dev/capture-corpus-audit.pl `
+  --mode parity --baseline <capture-off-run> --candidate <capture-on-run> `
+  --output <new-comparison-directory> --project-baseline <off-run.json-SHA256>
 ```
 
 Without projection, any stripped-document difference fails. An explicit hash-pinned projection verifies the top-level search-path processing instruction against each receipt's actual CLI arguments. It interprets the repository's former preload directory and current `scripts/preloads` as the same logical role, and resolves the recorded absolute/relative entrypoint and job-local output addresses. Search order, other paths, preloads and compiler options must still agree. Missing, duplicate, malformed or inconsistent instructions fail. Other PIs, comments, whitespace and manuscript nodes are untouched. This is an audit interpretation of historical execution metadata; runtime paths and the engine serializer are unchanged.

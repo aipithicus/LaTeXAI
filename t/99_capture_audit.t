@@ -176,10 +176,12 @@ isnt(without_capture($off), without_capture($no_space), 'another parser cannot s
   }
   my $retained = object_hash(tree_hashes($roots[0]));
   my $compare = sub {
-    my ($name, $pin) = @_;
-    my @args = ($^X, '-I', 'lib', 'tools/dev/capture-corpus-audit.pl', '--baseline', $roots[0],
-      '--candidate', $roots[1], '--output', "$temp/$name");
+    my ($name, $pin, $mode, $left, $right) = @_;
+    my @args = ($^X, '-I', 'lib', 'tools/dev/capture-corpus-audit.pl',
+      '--baseline', $left || $roots[0], '--candidate', $right || $roots[1],
+      '--output', "$temp/$name");
     push @args, '--project-baseline', $pin if defined $pin;
+    push @args, '--mode', $mode if defined $mode;
     my ($stdout, $stderr);
     run3(\@args, undef, \$stdout, \$stderr);
     my $status = $?;
@@ -215,6 +217,51 @@ isnt(without_capture($off), without_capture($no_space), 'another parser cannot s
   my ($diagnostic_status) = $compare->('corpus-diagnostic-change', file_hash("$roots[0]/run.json"));
   isnt($diagnostic_status, 0, 'corpus CLI rejects diagnostic drift even when timing counters legitimately differ');
   is(object_hash(tree_hashes($roots[0])), $retained, 'corpus comparisons preserve the entire retained input run');
+
+  my @parity = ("$temp/corpus off", "$temp/corpus on");
+  for my $i (0, 1) {
+    my $job = "$parity[$i]/jobs/p-one";
+    make_path($job);
+    my $receipt = read_json_after_clone($receipts[$i]);
+    $receipt->{status} = 'ok';
+    $receipt->{counts} = { mathElements => 0, errors => 0, workerMs => $i + 1, timedOut => 0 };
+    $receipt->{details}{$_} = [] for qw(taxonomy missingFiles undefinedMacros errorNodes internalLeaks danglingRefs);
+    if ($i == 0) {
+      @{ $receipt->{details}{arguments} } = grep { $_ ne '--capture' } @{ $receipt->{details}{arguments} };
+    }
+    my @args = @{ $receipt->{details}{arguments} };
+    $args[-3] = "--log=$job/p.log";
+    $args[-2] = "--destination=$job/p.xml";
+    $receipt->{details}{arguments} = \@args;
+    write_json("$job/receipt.json", $receipt);
+    write_json("$parity[$i]/run.json", { schema => 'codex-scientiae/inventory-run/0.1', jobs => 1,
+        receipts => { ok => 1, failed => 0, missing => 0 },
+        executor => { summary => { Succeeded => 1, Total => 1, TimedOut => 0 }, errors => [] } });
+    my $doc = $documents[$i]->cloneNode(1);
+    if ($i) {
+      my $ledger = $doc->createElementNS($capture, 'capture:ledger');
+      my $math = $doc->createElementNS($capture, 'capture:math');
+      $math->setAttribute($_, 0) for qw(source callsiteOnly crossSource unlocated total);
+      $ledger->appendChild($math); $doc->documentElement->appendChild($ledger);
+    }
+    write_raw("$job/p.xml", $doc->toString(0));
+  }
+  my $off_pin = file_hash("$parity[0]/run.json");
+  my ($parity_status, $parity_report) = $compare->('corpus-parity', $off_pin, 'parity', $parity[0], $parity[1]);
+  is($parity_status, 0, 'parity mode qualifies stripped off/on agreement') or diag(read_raw("$temp/corpus-parity.log"));
+  my $parity_result = read_json($parity_report);
+  is($parity_result->{mode}, 'parity', 'parity mode is recorded');
+  ok($parity_result->{qualified}, 'parity verdict is explicit');
+  my ($replay_off) = $compare->('corpus-replay-off', $off_pin, 'replay', $parity[0], $parity[1]);
+  isnt($replay_off, 0, 'replay mode rejects a capture-off baseline');
+  my $drift = read_raw("$parity[1]/jobs/p-one/p.xml"); $drift =~ s/a b/a changed b/;
+  write_raw("$parity[1]/jobs/p-one/p.xml", $drift);
+  my ($parity_drift) = $compare->('corpus-parity-drift', $off_pin, 'parity', $parity[0], $parity[1]);
+  isnt($parity_drift, 0, 'parity mode rejects manuscript drift after strip');
+  $drift =~ s/a changed b/a b/;
+  write_raw("$parity[1]/jobs/p-one/p.xml", $drift);
+  my ($swapped) = $compare->('corpus-parity-swapped', file_hash("$parity[1]/run.json"), 'parity', $parity[1], $parity[0]);
+  isnt($swapped, 0, 'parity mode requires capture-off baseline and capture-on candidate');
 }
 
 sub read_json_after_clone { return JSON::PP->new->utf8->decode(json_bytes($_[0])); }
