@@ -651,6 +651,20 @@ foreach my $math (@declare_math) { assert_source_bytes($declare_xml, $math, 'dec
 assert_partition($declare_xml, 'declare-roles fixture');
 validate_capture_document($declare_xml, 'capture-declare-roles');
 
+# Auto-opened ltx:text must still collapse when the only extra attributes are
+# capture provenance; otherwise capture-off and capture-on trees diverge.
+my $collapse_xml = fixture_document('text-collapse');
+my $collapse_off = fixture_document('text-collapse', '--no-capture');
+is(without_capture($collapse_xml), without_capture($collapse_off),
+  'font-wrapper collapse ignores capture attributes');
+is(xpath($collapse_off)->findvalue('count(//ltx:text)'),
+  xpath($collapse_xml)->findvalue('count(//ltx:text)'),
+  'capture does not add ltx:text wrappers');
+foreach my $math (xpath($collapse_xml)->findnodes('//ltx:Math')) {
+  assert_source_bytes($collapse_xml, $math, 'text-collapse fixture math'); }
+assert_partition($collapse_xml, 'text-collapse fixture');
+validate_capture_document($collapse_xml, 'capture-text-collapse');
+
 # Deferred title math is re-digested at \maketitle; the recorded slice must
 # still be the author's $x=y$, not the callsite. Body display stays put.
 my $deferred_path = File::Spec->catfile($TEMP, 'deferred-title.xml');

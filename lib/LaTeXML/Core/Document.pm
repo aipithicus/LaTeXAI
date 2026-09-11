@@ -33,7 +33,26 @@ use base         qw(LaTeXML::Common::Object);
 our $FONT_ELEMENT_NAME = "ltx:text";
 our $MATH_TOKEN_NAME   = "ltx:XMTok";
 our $MATH_HINT_NAME    = "ltx:XMHint";
+our $CAPTURE_NS        = 'http://dlmf.nist.gov/LaTeXML/capture';
 DebuggableFeature('document');
+
+# Capture provenance is not layout. Collapse must see the same ltx:text
+# attributes capture-off would see, or auto-opened wrappers survive the strip.
+sub _captureAttribute {
+  my ($attr) = @_;
+  return 0 unless $attr && $attr->nodeType == XML_ATTRIBUTE_NODE;
+  my $ns = $attr->namespaceURI || '';
+  return 1 if $ns eq $CAPTURE_NS || $ns eq 'http://www.w3.org/2000/xmlns/';
+  my $name = $attr->nodeName;
+  return ($name =~ /^(?:xmlns(?::|$)|capture:)/) ? 1 : 0; }
+
+sub _layoutAttributes {
+  my ($node) = @_;
+  return grep {
+    $_->nodeType == XML_ATTRIBUTE_NODE
+      && !_captureAttribute($_)
+      && $_->nodeName !~ /^_/
+  } $node->attributes; }
 
 #**********************************************************************
 
@@ -648,10 +667,10 @@ sub finalize_rec {
     if ($type == XML_ELEMENT_NODE) {
       my $was_forcefont = $child->getAttribute('_force_font');
       finalize_rec($self, $child);
-      # Also check if child is  $FONT_ELEMENT_NAME  AND has no attributes
+      # Also check if child is  $FONT_ELEMENT_NAME  AND has no layout attributes
       # AND providing $node can contain that child's content, we'll collapse it.
       if (($model->getNodeQName($child) eq $FONT_ELEMENT_NAME)
-        && !$was_forcefont && !$child->hasAttributes) {
+        && !$was_forcefont && !_layoutAttributes($child)) {
         my @grandchildren = $child->childNodes;
         if (!grep { !canContain($self, $qname, $_) } @grandchildren) {
           replaceNode($self, $child, @grandchildren); } }
@@ -1560,13 +1579,14 @@ sub autoCollapseChildren {
   if (($qname ne 'ltx:_Capture_')
     && (scalar(@c = $node->childNodes) == 1)                 # with single child
     && ($model->getNodeQName($c[0]) eq $FONT_ELEMENT_NAME)
-    # AND, $node can have all the attributes that the child has (but at least 'font')
-    && !(grep { !$model->canHaveAttribute($qname, $_) }
-      ('font', grep { /^[^_]/ } map { $_->nodeName } $c[0]->attributes))
-    # AND, $node doesn't have any attributes which collide!
-    && !(grep { $non_mergeable_attributes{ $_->nodeName }; } $c[0]->attributes)
-    # BUT, it isn't being forced somehow
     && !$c[0]->hasAttribute('_force_font')) {
+    my @layout = _layoutAttributes($c[0]);
+    # AND, $node can have all the attributes that the child has (but at least 'font')
+    # Capture attributes are not layout and are not in the schema.
+    return unless
+      !(grep { !$model->canHaveAttribute($qname, $_) }
+        ('font', grep { /^[^_]/ } map { $_->nodeName } @layout))
+      && !(grep { $non_mergeable_attributes{ $_->nodeName }; } @layout);
     my $c = $c[0];
     setNodeFont($self, $node, getNodeFont($self, $c));
     removeNode($self, $c);
