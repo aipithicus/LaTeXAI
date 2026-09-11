@@ -146,6 +146,8 @@ isnt(without_capture($off), without_capture($no_space), 'another parser cannot s
   $changed = read_json_after_clone($receipts[1]);
   $changed->{details}{arguments}[8] = '--destination=outside/p.xml';
   ok(!eval { project_searchpaths($documents[1], $changed, "$temp/new-job"); 1 }, 'unverified output address fails');
+  $changed->{details}{arguments}[8] = "--destination=$temp/new-job/wrong.xml";
+  ok(!eval { project_searchpaths($documents[1], $changed, "$temp/new-job"); 1 }, 'destination must identify the actual compared XML');
 
   my @roots = ("$temp/corpus old", "$temp/corpus new");
   for my $i (0, 1) {
@@ -154,12 +156,13 @@ isnt(without_capture($off), without_capture($no_space), 'another parser cannot s
     my $receipt = read_json_after_clone($receipts[$i]);
     $receipt->{status} = 'ok';
     $receipt->{counts} = { mathElements => 0, errors => 0, workerMs => $i + 1 };
+    $receipt->{counts}{timedOut} = 0 if $i;
     $receipt->{details}{$_} = [] for qw(taxonomy missingFiles undefinedMacros errorNodes internalLeaks danglingRefs);
     $receipt->{details}{arguments}[7] = "--log=$job/p.log";
     $receipt->{details}{arguments}[8] = "--destination=$job/p.xml";
     write_json("$job/receipt.json", $receipt);
     write_json("$roots[$i]/run.json", { schema => 'codex-scientiae/inventory-run/0.1', jobs => 1,
-        receipts => { ok => 1, failed => 0, missing => 0 }, executor => { summary => { Succeeded => 1 }, errors => [] } });
+        receipts => { ok => 1, failed => 0, missing => 0 }, executor => { summary => { Succeeded => 1, Total => 1, TimedOut => 0 }, errors => [] } });
     my $doc = $documents[$i]->cloneNode(1);
     my $ledger = $doc->createElementNS($capture, 'capture:ledger');
     my $math = $doc->createElementNS($capture, 'capture:math');
@@ -186,6 +189,14 @@ isnt(without_capture($off), without_capture($no_space), 'another parser cannot s
   my $result = read_json($projected_report);
   ok($result->{qualified}, 'projected corpus verdict is explicit');
   is($result->{exact_document_differences}, 1, 'literal document difference remains visible in passing projected report');
+  is(scalar(@{$result->{papers}[0]{derived_counts}}), 1, 'missing historical timeout count has explicit aggregate provenance');
+  my $original_aggregate = read_json("$roots[0]/run.json");
+  my $unproven_aggregate = read_json_after_clone($original_aggregate);
+  delete $unproven_aggregate->{executor}{summary}{TimedOut};
+  write_json("$roots[0]/run.json", $unproven_aggregate);
+  my ($unproven_timeout) = $compare->('corpus-unproven-timeout', file_hash("$roots[0]/run.json"));
+  isnt($unproven_timeout, 0, 'missing timeout observation is not guessed when aggregate evidence is absent');
+  write_json("$roots[0]/run.json", $original_aggregate);
   my ($wrong_pin) = $compare->('corpus-wrong-pin', '0' x 64);
   isnt($wrong_pin, 0, 'corpus CLI rejects wrong historical run identity');
   my $mutated = read_raw("$roots[1]/jobs/p-one/p.xml"); $mutated =~ s/a b/a changed b/;

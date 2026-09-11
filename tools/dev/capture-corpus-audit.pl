@@ -131,12 +131,25 @@ for my $slug (sort keys %{$inventories[0]}) {
   push @issues, "$slug:article-input" unless object_hash($old_receipt->{article}) eq object_hash($new_receipt->{article});
   my $before = inspect("$old_job/$slug.xml", $old_receipt, $old_job, "$output/$slug.baseline");
   my $after = inspect("$job/$slug.xml", $new_receipt, $job, "$output/$slug.candidate");
-  my %count_keys = map { $_ => 1 } (keys %{$old_receipt->{counts}}, keys %{$new_receipt->{counts}});
+  my @counts = ({%{$old_receipt->{counts}}}, {%{$new_receipt->{counts}}});
+  my @derived_counts;
+  if (defined $projection_pin) {
+    for my $i (0, 1) {
+      my $summary = $runs[$i]{executor}{summary};
+      if (!exists($counts[$i]{timedOut}) && exists($summary->{TimedOut}) && $summary->{TimedOut} == 0
+          && $summary->{Succeeded} == $runs[$i]{jobs} && $summary->{Total} == $runs[$i]{jobs}) {
+        $counts[$i]{timedOut} = 0;
+        push @derived_counts, { side => $i ? 'candidate' : 'baseline', field => 'timedOut', value => 0,
+          source => 'run.executor.summary.TimedOut', source_run_sha256 => $input_hashes{($i ? $current_root : $baseline_root) . '/run.json'} };
+      }
+    }
+  }
+  my %count_keys = map { $_ => 1 } (keys %{$counts[0]}, keys %{$counts[1]});
   my %measurements = map { $_ => 1 } qw(latexmlMs attributionMs logParseMs xmlInspectMs residualMs workerMs outputBytes);
   for my $key (sort keys %count_keys) {
     next if $measurements{$key};
     push @issues, "$slug:diagnostic-count:$key" unless
-      object_hash($old_receipt->{counts}{$key}) eq object_hash($new_receipt->{counts}{$key});
+      object_hash($counts[0]{$key}) eq object_hash($counts[1]{$key});
   }
   for my $key (qw(taxonomy missingFiles undefinedMacros errorNodes internalLeaks danglingRefs)) {
     my ($old_detail, $new_detail) = ($old_receipt->{details}{$key}, $new_receipt->{details}{$key});
@@ -165,7 +178,7 @@ for my $slug (sort keys %{$inventories[0]}) {
     }
   }
   push @issues, "$slug:classes" unless object_hash($before->{classes}) eq object_hash($after->{classes});
-  push @papers, { paper => $slug, before => $before, after => $after, changes => \@changes,
+  push @papers, { paper => $slug, before => $before, after => $after, changes => \@changes, derived_counts => \@derived_counts,
     exact_document_equal => $before->{stripped_sha256} eq $after->{stripped_sha256} ? JSON::PP::true : JSON::PP::false,
     projected_document_equal => $before->{projected_sha256} eq $after->{projected_sha256} ? JSON::PP::true : JSON::PP::false };
 }
@@ -176,7 +189,7 @@ my $exact_differences = scalar(grep { !$_->{exact_document_equal} } @papers);
 write_json("$output/comparison.json", { schema => 'latexai/corpus-comparison/1',
   baseline => $baseline_root, candidate => $current_root,
   baseline_projection => defined($projection_pin) ? { source_run_sha256 => $source_pin } : undef,
-  inputs => \%input_hashes, comparator => CaptureAudit::tree_hashes(qw(tools/dev/capture-corpus-audit.pl tools/dev/CaptureRuntime.pm tools/dev/CaptureStrip.pm)),
+  inputs => \%input_hashes, comparator => CaptureAudit::tree_hashes(qw(tools/dev/capture-corpus-audit.pl tools/dev/CaptureRuntime.pm tools/dev/CaptureStrip.pm tools/dev/CaptureAudit.pm)),
   papers => \@papers, exact_document_differences => $exact_differences,
   issues => \@issues, qualified => @issues ? JSON::PP::false : JSON::PP::true });
 for my $paper (@papers) {

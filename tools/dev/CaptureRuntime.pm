@@ -87,6 +87,7 @@ sub _invocation {
   my $source = canonical_path("$receipt->{article}{directory}/$receipt->{article}{slug}-tex");
   my $job = canonical_path($job_directory);
   my (@options, @paths, @roles);
+  my %outputs;
   my $entry = pop @args;
   $entry = "$source/$entry" unless $entry =~ m{^(?:[A-Za-z]:[/\\]|/)};
   $entry = canonical_path($entry);
@@ -105,10 +106,14 @@ sub _invocation {
     elsif ($arg =~ /^--(log|destination)=(.*)$/s) {
       my ($kind, $path) = ($1, canonical_path($2));
       die "Output address outside recorded job\n" unless index($path, "$job/") == 0;
+      die "Duplicate output option\n" if $outputs{$kind}++;
+      die "Destination does not name the compared XML\n"
+        if $kind eq 'destination' && $path ne "$job/$receipt->{article}{slug}.xml";
       push @options, { output => $kind };
     }
     else { push @options, $arg; }
   }
+  die "Missing recorded output option\n" unless $outputs{log} && $outputs{destination};
   my (%seen, @ordered, @ordered_roles);
   for my $i (reverse 0 .. $#paths) {
     next if $seen{$paths[$i]}++;
