@@ -44,9 +44,12 @@ $nativeTimeout = $TimeoutSeconds
 if ($nativeTimeout -lt 0) { $nativeTimeout = Get-LaTeXAINativeTimeoutSeconds -Family Test }
 $run = Invoke-LaTeXAINative -FilePath $PerlPath -Arguments $arguments -WorkingDirectory $CheckoutRoot `
     -TimeoutSeconds $nativeTimeout -StdOutPath $StdOutPath -StdErrPath $StdErrPath
+[IO.File]::WriteAllText((Join-Path (Split-Path $ResultPath -Parent) 'native.json'),
+    (($run | ConvertTo-Json -Depth 6) + "`n"), $utf8)
 if ($run.TimedOut) {
     throw "TAP worker timed out for '$Driver' after $($run.TimeoutSecondsEffective)s"
 }
+if (-not $run.CleanupComplete) { throw "TAP worker cleanup incomplete for '$Driver': $($run.StdErr)" }
 
 if (-not (Test-Path -LiteralPath $ResultPath -PathType Leaf)) {
     throw "TAP worker produced no result.json for '$Driver' (exit $($run.ExitCode))"

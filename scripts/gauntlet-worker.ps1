@@ -103,10 +103,13 @@ function Invoke-Native {
         [Parameter(Mandatory)] [string] $FilePath,
         [string[]] $Arguments = @(),
         [string] $WorkingDirectory = '',
-        [int] $TimeoutSeconds = 0
+        [int] $TimeoutSeconds = 0,
+        [string] $StdOutPath = '',
+        [string] $StdErrPath = ''
     )
     $run = Invoke-LaTeXAINative -FilePath $FilePath -Arguments $Arguments `
-        -WorkingDirectory $WorkingDirectory -TimeoutSeconds $TimeoutSeconds
+        -WorkingDirectory $WorkingDirectory -TimeoutSeconds $TimeoutSeconds `
+        -StdOutPath $StdOutPath -StdErrPath $StdErrPath
     return [pscustomobject]@{
         ExitCode = $run.ExitCode
         StdOut = [string]$run.StdOut
@@ -263,9 +266,15 @@ try {
         $script:EngineVersion = if ($probe.ExitCode -eq 0) { $probe.StdOut.Trim() } else { 'unknown' }
     }
     if ([string]::IsNullOrWhiteSpace($EngineCommit)) {
-        $probe = Invoke-Native -FilePath 'git' -WorkingDirectory $engineRoot -TimeoutSeconds 30 `
+        $git = (Get-Command git -CommandType Application -ErrorAction Stop | Select-Object -First 1).Source
+        $probe = Invoke-Native -FilePath $git -WorkingDirectory $engineRoot -TimeoutSeconds 30 `
             -Arguments @('rev-parse', '--short', 'HEAD')
-        $script:EngineCommit = if ($probe.ExitCode -eq 0) { $probe.StdOut.Trim() } else { 'unknown' }
+        if ($probe.ExitCode -ne 0 -or -not $probe.CleanupComplete) { throw "git identity probe failed: $($probe.StdErr)" }
+        $script:EngineCommit = $probe.StdOut.Trim()
+        $dirty = Invoke-Native -FilePath $git -WorkingDirectory $engineRoot -TimeoutSeconds 30 `
+            -Arguments @('status', '--porcelain')
+        if ($dirty.ExitCode -ne 0 -or -not $dirty.CleanupComplete) { throw "git status probe failed: $($dirty.StdErr)" }
+        if ($dirty.StdOut.Trim()) { $script:EngineCommit += '+dirty' }
     }
 
     $logPath = Join-Path $OutDirectory 'latexml.log'
@@ -300,10 +309,9 @@ try {
     $arguments.Add($sourceArgument)
 
     $run = Invoke-Native -FilePath $perl -Arguments $arguments.ToArray() `
-        -WorkingDirectory $conversionCwd -TimeoutSeconds $nativeTimeout
+        -WorkingDirectory $conversionCwd -TimeoutSeconds $nativeTimeout `
+        -StdOutPath $stdoutPath -StdErrPath $stderrPath
     $latexmlMs = [double]$run.DurationMs
-    [System.IO.File]::WriteAllText($stdoutPath, $run.StdOut, $utf8)
-    [System.IO.File]::WriteAllText($stderrPath, $run.StdErr, $utf8)
     $logParseStarted = [datetime]::UtcNow
 
     # The log's last "Conversion complete|failed: ..." line carries the engine's own tally.

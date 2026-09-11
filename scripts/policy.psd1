@@ -33,7 +33,7 @@
     Gauntlet = @{
         MaxWorkers = 10
         ReservedCores = 2
-        ProcessTimeoutSeconds = 3600
+        WorkerGraceSeconds = 60
         WaitTimeoutSeconds = 28800
         ExecutionTimeoutSeconds = 28800
         NativeTimeoutSeconds = 3600
@@ -44,7 +44,8 @@
     }
     Test = @{
         Budgets = @{
-            ProcessTimeoutSeconds = 900
+            NativeTimeoutSeconds = 900
+            WorkerGraceSeconds = 60
             WaitTimeoutSeconds = 7200
             ExecutionTimeoutSeconds = 7200
             CleanupTimeoutSeconds = 30

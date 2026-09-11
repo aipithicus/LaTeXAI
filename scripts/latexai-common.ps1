@@ -412,16 +412,15 @@ function Get-LaTeXAINativeTimeoutSeconds {
     switch ($Family) {
         'Markdown' { return [int]$policy.Markdown.TimeoutSeconds }
         'Gauntlet' { return [int]$policy.Gauntlet.NativeTimeoutSeconds }
-        'Test' { return [int]$policy.Test.Budgets.ProcessTimeoutSeconds }
+        'Test' { return [int]$policy.Test.Budgets.NativeTimeoutSeconds }
         default { return [int]$policy.Direct.TimeoutSeconds }
     }
 }
 
 function Invoke-LaTeXAINative {
-    <# Bounded native launch. The wait loop uses WaitForExit(slice) on the host
-       thread so pipeline stop remains possible. Timeout 0 is an explicit
-       unbounded diagnostic. Descendants are killed with Process.Kill(true).
-       Stream drain after stop has its own cleanup budget. #>
+    <# Bounded native launch with atomic Windows Job Object containment, streamed files,
+       and bounded memory capture. Timeout 0 explicitly disables the execution deadline.
+       Tree release and stream drain share one cleanup budget. #>
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)] [string] $FilePath,
@@ -463,95 +462,94 @@ function Invoke-LaTeXAINative {
         $result.DurationMs = [math]::Round(([datetime]::UtcNow - $started).TotalMilliseconds, 2)
         return [pscustomobject]$result
     }
-    $psi = [System.Diagnostics.ProcessStartInfo]::new($FilePath)
-    $psi.UseShellExecute = $false
-    $psi.RedirectStandardOutput = $true
-    $psi.RedirectStandardError = $true
-    $psi.CreateNoWindow = $true
-    $psi.StandardOutputEncoding = [System.Text.UTF8Encoding]::new($false)
-    $psi.StandardErrorEncoding = [System.Text.UTF8Encoding]::new($false)
-    foreach ($argument in @($Arguments)) { $psi.ArgumentList.Add($argument) }
-    if ($WorkingDirectory) { $psi.WorkingDirectory = $WorkingDirectory }
-
+    if (-not ('LaTeXAI.Dev.NativeProcess' -as [type])) {
+        $sourcePath = Join-Path $PSScriptRoot 'native/NativeProcess.cs'
+        $digest = (Get-FileHash -LiteralPath $sourcePath -Algorithm SHA256).Hash.ToLowerInvariant()
+        $cacheRoot = Join-Path (Split-Path $PSScriptRoot -Parent) (
+            'temp/native/{0}-{1}/{2}' -f $PSVersionTable.PSVersion, [Environment]::Version, $digest)
+        [void][IO.Directory]::CreateDirectory($cacheRoot)
+        $assembly = Join-Path $cacheRoot 'LaTeXAI.Native.dll'
+        if (-not [IO.File]::Exists($assembly)) {
+            $staging = Join-Path $cacheRoot (([guid]::NewGuid().ToString('N')) + '.dll')
+            try {
+                Add-Type -Path $sourcePath -OutputAssembly $staging -ErrorAction Stop
+                try { [IO.File]::Move($staging, $assembly, $false) }
+                catch { if (-not [IO.File]::Exists($assembly)) { throw } }
+            }
+            finally { if ([IO.File]::Exists($staging)) { [IO.File]::Delete($staging) } }
+        }
+        Add-Type -Path $assembly -ErrorAction Stop
+    }
+    $watch = [System.Diagnostics.Stopwatch]::StartNew()
     $process = $null
+    $peakProcess = $null
     try {
-        $process = [System.Diagnostics.Process]::Start($psi)
-    }
-    catch {
-        $result.StdErr = $_.Exception.Message
-        $result.DurationMs = [math]::Round(([datetime]::UtcNow - $started).TotalMilliseconds, 2)
-        return [pscustomobject]$result
-    }
-
-    $stdoutTask = $process.StandardOutput.ReadToEndAsync()
-    $stderrTask = $process.StandardError.ReadToEndAsync()
-    $deadline = if ($TimeoutSeconds -gt 0) { $started.AddSeconds($TimeoutSeconds) } else { [datetime]::MaxValue }
-    $peak = $null
-    try {
+        $process = [LaTeXAI.Dev.NativeProcess]::Start($FilePath, $Arguments, $WorkingDirectory,
+            $StdOutPath, $StdErrPath, 1MB)
+        if ($SamplePeakWorkingSet) {
+            try { $peakProcess = [System.Diagnostics.Process]::GetProcessById($process.Id) } catch {}
+        }
         while (-not $process.HasExited) {
-            if ([datetime]::UtcNow -ge $deadline) {
+            if ($TimeoutSeconds -gt 0 -and $watch.Elapsed.TotalSeconds -ge $TimeoutSeconds) {
                 $result.TimedOut = $true
-                try { $process.Kill($true) } catch { }
                 break
             }
-            if ($SamplePeakWorkingSet) {
+            if ($null -ne $peakProcess) {
                 try {
-                    $process.Refresh()
-                    $observed = $process.PeakWorkingSet64
-                    if ($null -eq $peak -or $observed -gt $peak) { $peak = $observed }
-                }
-                catch { }
+                    $peakProcess.Refresh()
+                    $observed = $peakProcess.PeakWorkingSet64
+                    if ($null -eq $result.PeakWorkingSetBytes -or $observed -gt $result.PeakWorkingSetBytes) {
+                        $result.PeakWorkingSetBytes = $observed
+                    }
+                } catch {}
             }
-            [void]$process.WaitForExit($WaitSliceMilliseconds)
-        }
-        if (-not $process.HasExited) {
-            $cleanupDeadline = [datetime]::UtcNow.AddSeconds([math]::Max(1, $CleanupTimeoutSeconds))
-            while (-not $process.HasExited -and [datetime]::UtcNow -lt $cleanupDeadline) {
-                [void]$process.WaitForExit($WaitSliceMilliseconds)
+            $slice = $WaitSliceMilliseconds
+            if ($TimeoutSeconds -gt 0) {
+                $slice = [int][math]::Max(1, [math]::Min($slice,
+                    ($TimeoutSeconds * 1000 - $watch.Elapsed.TotalMilliseconds)))
             }
+            $process.Wait($slice)
         }
-        $result.CleanupComplete = [bool]$process.HasExited
-        if ($process.HasExited) { $result.ExitCode = $process.ExitCode }
-        $drainMs = [math]::Max(1, $CleanupTimeoutSeconds) * 1000
-        [void][System.Threading.Tasks.Task]::WaitAll(@($stdoutTask, $stderrTask), $drainMs)
-        if ($stdoutTask.IsCompletedSuccessfully) { $result.StdOut = [string]$stdoutTask.Result }
-        elseif ($stdoutTask.IsCompleted) {
-            try { $result.StdOut = [string]$stdoutTask.GetAwaiter().GetResult() } catch { $result.StdOut = '' }
+        $cleanupWatch = [System.Diagnostics.Stopwatch]::StartNew()
+        if (-not $process.TreeReleased) { $process.Stop() }
+        while ($cleanupWatch.Elapsed.TotalSeconds -lt $CleanupTimeoutSeconds -and
+            -not ($process.HasExited -and $process.TreeReleased -and
+                $process.StdOut.Completion.IsCompleted -and $process.StdErr.Completion.IsCompleted)) {
+            $slice = [int][math]::Max(1, [math]::Min($WaitSliceMilliseconds,
+                ($CleanupTimeoutSeconds * 1000 - $cleanupWatch.Elapsed.TotalMilliseconds)))
+            [System.Threading.Thread]::Sleep($slice)
         }
-        if ($stderrTask.IsCompletedSuccessfully) { $result.StdErr = [string]$stderrTask.Result }
-        elseif ($stderrTask.IsCompleted) {
-            try { $result.StdErr = [string]$stderrTask.GetAwaiter().GetResult() } catch { }
+        $result.ExitCode = $process.ExitCode
+        $result.StdOut = $process.StdOut.Text
+        $result.StdErr = $process.StdErr.Text
+        $result.StdOutComplete = $process.StdOut.EndOfStream
+        $result.StdErrComplete = $process.StdErr.EndOfStream
+        $result.StdOutTruncated = $process.StdOut.Truncated
+        $result.StdErrTruncated = $process.StdErr.Truncated
+        $result.StdOutBytes = $process.StdOut.Bytes
+        $result.StdErrBytes = $process.StdErr.Bytes
+        $result.StdOutPath = $StdOutPath
+        $result.StdErrPath = $StdErrPath
+        $result.CleanupComplete = $process.HasExited -and $process.TreeReleased -and
+            $process.StdOut.EndOfStream -and $process.StdErr.EndOfStream
+        foreach ($stream in @($process.StdOut, $process.StdErr)) {
+            if ($stream.Failure) { $result.StdErr += "`nstream capture failed: $($stream.Failure)" }
         }
-        if ($SamplePeakWorkingSet -and $process.HasExited) {
-            try {
-                $process.Refresh()
-                $finalPeak = $process.PeakWorkingSet64
-                if ($null -eq $peak -or $finalPeak -gt $peak) { $peak = $finalPeak }
-            }
-            catch { }
-        }
-        $result.PeakWorkingSetBytes = $peak
         $result.Outcome = if ($result.TimedOut) {
             if ($result.CleanupComplete) { 'timed-out' } else { 'timed-out-cleanup-incomplete' }
         }
         elseif (-not $result.CleanupComplete) { 'cleanup-incomplete' }
         else { 'exited' }
     }
+    catch {
+        $result.StdErr += $_.Exception.Message
+        $result.Outcome = 'failed-to-launch'
+    }
     finally {
         if ($process) { $process.Dispose() }
+        if ($peakProcess) { $peakProcess.Dispose() }
     }
     $result.DurationMs = [math]::Round(([datetime]::UtcNow - $started).TotalMilliseconds, 2)
-    $utf8 = [System.Text.UTF8Encoding]::new($false)
-    if ($StdOutPath) {
-        $outDir = [System.IO.Path]::GetDirectoryName($StdOutPath)
-        if ($outDir) { [void][System.IO.Directory]::CreateDirectory($outDir) }
-        [System.IO.File]::WriteAllText($StdOutPath, [string]$result.StdOut, $utf8)
-    }
-    if ($StdErrPath) {
-        $errDir = [System.IO.Path]::GetDirectoryName($StdErrPath)
-        if ($errDir) { [void][System.IO.Directory]::CreateDirectory($errDir) }
-        [System.IO.File]::WriteAllText($StdErrPath, [string]$result.StdErr, $utf8)
-    }
     return [pscustomobject]$result
 }
 
@@ -566,6 +564,12 @@ function Write-LaTeXAINativeStreams {
     }
     if ($Run.Outcome -eq 'failed-to-launch') {
         throw ("LaTeXAI native launch failed: {0}: {1}" -f $Run.FilePath, $Run.StdErr)
+    }
+    if (-not $Run.CleanupComplete) {
+        throw ("LaTeXAI native cleanup incomplete: {0}" -f $Run.FilePath)
+    }
+    if ($Run.ExitCode -ne 0) {
+        throw ("LaTeXAI native command exited with code {0}: {1}" -f $Run.ExitCode, $Run.FilePath)
     }
 }
 
@@ -637,4 +641,3 @@ function Get-LaTeXAIXmlCensus {
         Method = 'xml-reader'
     }
 }
-

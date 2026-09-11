@@ -139,9 +139,11 @@ function Get-LaTeXAITestJob {
         [Parameter(Mandatory)] [System.Collections.IDictionary] $Runtime,
         [AllowEmptyCollection()] [string[]] $Path = @(),
         [string] $Selection = '',
-        [int] $TimeoutSeconds = 0
+        [int] $TimeoutSeconds = 0,
+        [nullable[int]] $ProcessTimeoutSeconds = $null
     )
     $checkout = $Runtime.CheckoutRoot
+    if ($null -eq $ProcessTimeoutSeconds) { $ProcessTimeoutSeconds = $TimeoutSeconds }
     $run = [System.IO.Path]::GetFullPath($RunDirectory)
     $worker = Join-Path $PSScriptRoot 'test-worker.ps1'
     if (-not (Test-Path -LiteralPath $worker -PathType Leaf)) {
@@ -194,7 +196,7 @@ function Get-LaTeXAITestJob {
                 HARNESS_OPTIONS = ''
             }
         }
-        if ($TimeoutSeconds -gt 0) { $processSpec.TimeoutSeconds = $TimeoutSeconds }
+        $processSpec.TimeoutSeconds = [int]$ProcessTimeoutSeconds
         $metadata = @{
             Domain = 'tap'
             Adapter = 'latexai-tap'

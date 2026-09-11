@@ -1,5 +1,5 @@
 {
-    "_comment": "Copy to .mcp.json (gitignored). Also copy .grok.example.toml to .grok/config.toml and .codex.example.toml to .codex/config.toml so Grok and Codex do not fall through to a personal generic pwsh_exec. PERL_ROOT is the portable Strawberry Perl root; PERL_HOME is derived by scripts/profile.ps1. MCP_POWERSHELL_PROFILE must be this checkout's scripts/profile.ps1. Do not set tool_timeout_sec on pwsh_exec here: child scripts own WaitTimeoutSeconds. pwsh_exec command is the owned CPython under mcp/pwsh_exec/deps/python (restore writes the concrete path); uv.exe is restore-only.",
+    "_comment": "Copy to .mcp.json (gitignored), replace placeholders, and follow docs/recipes/powershell-workflows.md. Remove PERL_ROOT/CDXSCI_ROOT env entries to use scripts/local.psd1. Long work uses start/wait.",
     "mcpServers": {
         "nushell": {
             "command": "<SCIENCE_FACILITY>/mcp/nushell-mcp/deps/nushell/nu.exe",
@@ -24,8 +24,7 @@
                 "MCP_POWERSHELL_EXECUTABLE": "<SCIENCE_FACILITY>/mcp/pwsh_exec/deps/bin/pwsh/pwsh.exe",
                 "MCP_POWERSHELL_PROFILE": "<LATEXAI_ROOT>/scripts/profile.ps1",
                 "PERL_ROOT": "<PERL_ROOT>",
-                "CDXSCI_ROOT": "<CDXSCI_ROOT>",
-                "LATEXAI_ROOT": "<LATEXAI_ROOT>"
+                "CDXSCI_ROOT": "<CDXSCI_ROOT>"
             }
         },
         "mdnav": {

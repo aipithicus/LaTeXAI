@@ -1,5 +1,7 @@
 # Copy to .grok/config.toml (gitignored). Grok project toml replaces a
-# same-named personal ~/.grok pwsh_exec entirely. No tool_timeout_sec.
+# same-named personal ~/.grok pwsh_exec entirely. Use start/wait for long work.
+# Setup: docs/recipes/powershell-workflows.md. Remove PERL_ROOT/CDXSCI_ROOT
+# env entries to use scripts/local.psd1; the profile derives LATEXAI_ROOT.
 
 [mcp_servers.nushell]
 command = "<SCIENCE_FACILITY>/mcp/nushell-mcp/deps/nushell/nu.exe"
@@ -16,6 +18,7 @@ NO_COLOR = "1"
 NU_LOG_LEVEL = "warn"
 
 [mcp_servers.pwsh_exec]
+tool_timeout_sec = 90 # Per request; the caller sets each started job's execution timeout.
 command = "<SCIENCE_FACILITY>/mcp/pwsh_exec/deps/python/cpython-<version>-windows-x86_64-none/python.exe"
 args = [
   "-B",
@@ -28,7 +31,6 @@ MCP_POWERSHELL_EXECUTABLE = "<SCIENCE_FACILITY>/mcp/pwsh_exec/deps/bin/pwsh/pwsh
 MCP_POWERSHELL_PROFILE = "<LATEXAI_ROOT>/scripts/profile.ps1"
 PERL_ROOT = "<PERL_ROOT>"
 CDXSCI_ROOT = "<CDXSCI_ROOT>"
-LATEXAI_ROOT = "<LATEXAI_ROOT>"
 
 [mcp_servers.mdnav]
 command = "node"

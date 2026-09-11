@@ -10,14 +10,13 @@ use Cwd qw(abs_path);
 use Digest::SHA qw(sha256_hex);
 use Encode qw(decode encode FB_DEFAULT);
 use File::Spec;
-use File::Temp qw(tempdir);
+use File::Temp qw(tempdir tempfile);
 use File::Path qw(make_path);
 use POSIX ();
 use FindBin;
 use lib File::Spec->catdir($FindBin::Bin, '..', 'tools', 'dev');
 use CaptureStrip qw(without_capture);
 use IPC::Open3;
-use Symbol qw(gensym);
 use XML::LibXML;
 use XML::LibXML::XPathContext;
 use JSON::PP ();
@@ -175,16 +174,21 @@ sub assert_partition {
 sub run_command {
   my (@command) = @_;
   my ($child_in, $child_out);
-  my $child_err = gensym;
-  my $pid = open3($child_in, $child_out, $child_err, @command);
+  # A child can fill stderr while we wait for stdout EOF. Spool stderr to a
+  # job-local file so both streams make progress, including on Windows pipes.
+  my ($child_err, $error_path) = tempfile(DIR => $TEMP, UNLINK => 1);
+  binmode($child_err, ':raw');
+  my $pid = open3($child_in, $child_out, '>&' . fileno($child_err), @command);
   close($child_in);
   local $/;
   my $stdout = <$child_out> // '';
-  my $stderr = <$child_err> // '';
   close($child_out);
-  close($child_err);
   waitpid($pid, 0);
-  return ($? >> 8, $stdout . $stderr); }
+  my $status = $? >> 8;
+  seek($child_err, 0, 0) or die "Cannot rewind $error_path: $!";
+  my $stderr = <$child_err> // '';
+  close($child_err);
+  return ($status, $stdout . $stderr); }
 
 sub validate_capture_document {
   my ($document, $name) = @_;
@@ -209,6 +213,12 @@ sub validate_capture_document {
 
 # Run the golden conversion first: loading the engine repeatedly in one Perl
 # process can legitimately accumulate redefinition warnings in later States.
+my $stream_fixture = File::Spec->catfile($TEMP, 'large-stderr.pl');
+write_raw($stream_fixture, 'print STDERR "e" x (128 * 1024); print STDOUT "ok";');
+my ($stream_status, $stream_output) = run_command($^X, $stream_fixture);
+is($stream_status, 0, 'subprocess helper drains a full stderr stream');
+is(substr($stream_output, 0, 2), 'ok', 'subprocess helper retains stdout');
+cmp_ok(length($stream_output), '>=', 2 + 128 * 1024, 'subprocess helper retains complete stderr');
 my ($crlf) = convert_document(File::Spec->catfile($FIXTURES, 'crlf.tex'));
 my $crlf_xml = $crlf->getDocument;
 

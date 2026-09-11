@@ -94,7 +94,7 @@ From the repository root, through the `pwsh_exec` profile. Run `lgen` first on a
 
 ```powershell
 lgen                          # compile grammar + stamp version into lib/ (idempotent)
-ltst t/85_nicematrix.t        # one package suite
+ltst t/856_nicematrix.t       # one package suite
 ltst t/40_math.t t/70_parse.t # the drivers covering a touched layer
 ltst t                        # everything; required for changes under Core/ or Common/
 ltbatch -Selection math       # same drivers as a TAP batch (requires CDXSCI_ROOT)
@@ -102,6 +102,13 @@ lcfg                          # runtime/selection preview; no tests
 ```
 
 `ltst` remains serial `prove` for a focused driver. `ltbatch` (`scripts/test-run.ps1`) plans one job per `t/*.t` driver, isolates output under `temp/t/test-batches/<stamp>/`, and uses the shared executor. Named selections (`math`, `capture`, `bindings`, `full`) are in `scripts/policy.psd1`. Do not overlap a TAP batch with a capture-audit `--jobs` run in the same checkout until their writes are proven disjoint.
+
+For MCP setup, long calls and timeout ownership, use the
+[PowerShell workflow recipe](recipes/powershell-workflows.md).
+TAP runs retain `native.json`, full executor evidence in `executor-execution.json`, and the
+domain summary in `execution.json`; missing or malformed worker evidence fails the batch.
+Run `scripts/tests/native-regressions.ps1`, `scripts/test-qualify.ps1` and
+`scripts/test-timeout.ps1` to qualify these infrastructure paths.
 
 Report failures with the harness output, not a summary.
 

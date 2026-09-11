@@ -36,6 +36,7 @@ param(
     [nullable[int]] $MaxWorkers = $null,
     [nullable[int]] $ReservedCores = $null,
     [nullable[int]] $ProcessTimeoutSeconds = $null,
+    [nullable[int]] $NativeTimeoutSeconds = $null,
     [nullable[int]] $WaitTimeoutSeconds = $null,
     [nullable[int]] $ExecutionTimeoutSeconds = $null,
     [nullable[int]] $CleanupTimeoutSeconds = $null,
@@ -64,7 +65,11 @@ Set-LaTeXAIRuntimeEnvironment -Runtime $runtime -IncludeCdxsci
 $policy = $runtime.Policy.Gauntlet
 if ($null -eq $MaxWorkers) { $MaxWorkers = [int]$policy.MaxWorkers }
 if ($null -eq $ReservedCores) { $ReservedCores = [int]$policy.ReservedCores }
-if ($null -eq $ProcessTimeoutSeconds) { $ProcessTimeoutSeconds = [int]$policy.ProcessTimeoutSeconds }
+if ($null -eq $NativeTimeoutSeconds) { $NativeTimeoutSeconds = [int]$policy.NativeTimeoutSeconds }
+if ($null -eq $ProcessTimeoutSeconds) {
+    $ProcessTimeoutSeconds = if ($NativeTimeoutSeconds -eq 0) { 0 }
+        else { $NativeTimeoutSeconds + [int]$policy.WorkerGraceSeconds }
+}
 if ($null -eq $WaitTimeoutSeconds) { $WaitTimeoutSeconds = [int]$policy.WaitTimeoutSeconds }
 if ($null -eq $ExecutionTimeoutSeconds) { $ExecutionTimeoutSeconds = [int]$policy.ExecutionTimeoutSeconds }
 if ($null -eq $CleanupTimeoutSeconds) { $CleanupTimeoutSeconds = [int]$policy.CleanupTimeoutSeconds }
@@ -72,8 +77,7 @@ if (-not $PSBoundParameters.ContainsKey('Preload')) { $Preload = @($policy.Prelo
 if (-not $PSBoundParameters.ContainsKey('ConversionWorkingDirectory')) {
     $ConversionWorkingDirectory = [string]$policy.ConversionWorkingDirectory
 }
-$nativeTimeout = [int]$policy.NativeTimeoutSeconds
-if ($nativeTimeout -le 0) { $nativeTimeout = [int]$ProcessTimeoutSeconds }
+$nativeTimeout = [int]$NativeTimeoutSeconds
 
 $engineRoot = $runtime.CheckoutRoot
 $worker = Join-Path $PSScriptRoot 'gauntlet-worker.ps1'
@@ -146,10 +150,13 @@ try {
         throw "LaTeXML does not load under '$perl' with -I lib ($($loadProbe.Outcome))"
     }
     $engineVersion = [string]$loadProbe.StdOut
-    $gitProbe = Invoke-LaTeXAINative -FilePath 'git' -Arguments @('rev-parse', '--short', 'HEAD') -WorkingDirectory $engineRoot -TimeoutSeconds 30
-    $engineCommit = if ($gitProbe.ExitCode -eq 0) { $gitProbe.StdOut.Trim() } else { 'unknown' }
-    $dirtyProbe = Invoke-LaTeXAINative -FilePath 'git' -Arguments @('status', '--porcelain') -WorkingDirectory $engineRoot -TimeoutSeconds 30
-    if ($engineCommit -ne 'unknown' -and @($dirtyProbe.StdOut -split "`r?`n" | Where-Object { $_ -ne '' }).Count -gt 0) {
+    $git = (Get-Command git -CommandType Application -ErrorAction Stop | Select-Object -First 1).Source
+    $gitProbe = Invoke-LaTeXAINative -FilePath $git -Arguments @('rev-parse', '--short', 'HEAD') -WorkingDirectory $engineRoot -TimeoutSeconds 30
+    if ($gitProbe.ExitCode -ne 0 -or -not $gitProbe.CleanupComplete) { throw "git identity probe failed: $($gitProbe.StdErr)" }
+    $engineCommit = $gitProbe.StdOut.Trim()
+    $dirtyProbe = Invoke-LaTeXAINative -FilePath $git -Arguments @('status', '--porcelain') -WorkingDirectory $engineRoot -TimeoutSeconds 30
+    if ($dirtyProbe.ExitCode -ne 0 -or -not $dirtyProbe.CleanupComplete) { throw "git status probe failed: $($dirtyProbe.StdErr)" }
+    if (@($dirtyProbe.StdOut -split "`r?`n" | Where-Object { $_ -ne '' }).Count -gt 0) {
         $engineCommit = "$engineCommit+dirty"
     }
     if ($Kpsewhich) {

@@ -15,6 +15,7 @@ param(
     [nullable[int]] $MaxWorkers = $null,
     [nullable[int]] $ReservedCores = $null,
     [nullable[int]] $ProcessTimeoutSeconds = $null,
+    [nullable[int]] $NativeTimeoutSeconds = $null,
     [nullable[int]] $WaitTimeoutSeconds = $null,
     [nullable[int]] $ExecutionTimeoutSeconds = $null,
     [nullable[int]] $CleanupTimeoutSeconds = $null,
@@ -34,7 +35,11 @@ $runtime = Resolve-LaTeXAIRuntime -PerlRoot $PerlRoot -CdxsciRoot $CdxsciRoot `
 Set-LaTeXAIRuntimeEnvironment -Runtime $runtime -IncludeCdxsci
 $budgets = $runtime.Policy.Test.Budgets
 if ($null -eq $ReservedCores) { $ReservedCores = [int]$budgets.ReservedCores }
-if ($null -eq $ProcessTimeoutSeconds) { $ProcessTimeoutSeconds = [int]$budgets.ProcessTimeoutSeconds }
+if ($null -eq $NativeTimeoutSeconds) { $NativeTimeoutSeconds = [int]$budgets.NativeTimeoutSeconds }
+if ($null -eq $ProcessTimeoutSeconds) {
+    $ProcessTimeoutSeconds = if ($NativeTimeoutSeconds -eq 0) { 0 }
+        else { $NativeTimeoutSeconds + [int]$budgets.WorkerGraceSeconds }
+}
 if ($null -eq $WaitTimeoutSeconds) { $WaitTimeoutSeconds = [int]$budgets.WaitTimeoutSeconds }
 if ($null -eq $ExecutionTimeoutSeconds) { $ExecutionTimeoutSeconds = [int]$budgets.ExecutionTimeoutSeconds }
 if ($null -eq $CleanupTimeoutSeconds) { $CleanupTimeoutSeconds = [int]$budgets.CleanupTimeoutSeconds }
@@ -74,7 +79,8 @@ else {
 [void][System.IO.Directory]::CreateDirectory($RunDirectory)
 
 $jobs = @(Get-LaTeXAITestJob -RunDirectory $RunDirectory -Runtime $runtime `
-    -Path $Path -Selection $Selection -TimeoutSeconds $ProcessTimeoutSeconds)
+    -Path $Path -Selection $Selection -TimeoutSeconds $NativeTimeoutSeconds `
+    -ProcessTimeoutSeconds $ProcessTimeoutSeconds)
 
 $jobViews = [System.Collections.Generic.List[object]]::new()
 foreach ($job in $jobs) {
@@ -106,6 +112,7 @@ $previewObject = [ordered]@{
             MaxWorkers = $MaxWorkers
             ReservedCores = $ReservedCores
             ProcessTimeoutSeconds = $ProcessTimeoutSeconds
+            NativeTimeoutSeconds = $NativeTimeoutSeconds
             WaitTimeoutSeconds = $WaitTimeoutSeconds
             ExecutionTimeoutSeconds = $ExecutionTimeoutSeconds
             CleanupTimeoutSeconds = $CleanupTimeoutSeconds
@@ -162,6 +169,10 @@ catch {
 }
 
 $results = @()
+# Persist executor evidence before interpreting worker files, which may be partial.
+if ($execution) {
+    Save-LaTeXAIJson -Path (Join-Path $RunDirectory 'executor-execution.json') -Object $execution
+}
 if ($execution -and $execution.PSObject.Properties['Results']) { $results = @($execution.Results) }
 $observations = @(foreach ($item in $results) {
         if ($null -eq $item) { continue }
@@ -175,9 +186,13 @@ $observations = @(foreach ($item in $results) {
         elseif ($meta) { $resultFile = [string]$meta.ResultPath }
         $tapEvidence = $null
         $missing = $true
+        $evidenceError = $null
         if ($resultFile -and (Test-Path -LiteralPath $resultFile -PathType Leaf)) {
-            $tapEvidence = Get-Content -LiteralPath $resultFile -Raw | ConvertFrom-Json -DateKind String
-            $missing = $false
+            try {
+                $tapEvidence = Get-Content -LiteralPath $resultFile -Raw | ConvertFrom-Json -DateKind String
+                $missing = $false
+            }
+            catch { $evidenceError = $_.Exception.Message }
         }
         $state = if ($item.PSObject.Properties['State']) { [string]$item.State }
             elseif ($item.PSObject.Properties['Status']) { [string]$item.Status }
@@ -192,6 +207,7 @@ $observations = @(foreach ($item in $results) {
             id = if ($inputObject) { [string]$inputObject.Id } else { $null }
             status = $state
             missingResult = $missing
+            evidenceError = $evidenceError
             driver = if ($meta -is [System.Collections.IDictionary]) { [string]$meta['RepositoryRelativePath'] }
                 elseif ($meta) { [string]$meta.RepositoryRelativePath } else { $null }
             aggregator = if ($tapEvidence) { $tapEvidence.aggregator } else { $null }
@@ -208,6 +224,8 @@ $report = [ordered]@{
     powershell = $runtime.ChildPowerShell
     perl = $runtime.PerlPath
     summary = $summary
+    cleanup = if ($execution) { $execution.Cleanup } else { $null }
+    runtime = if ($execution) { $execution.Runtime } else { $null }
     timing = if ($execution) { $execution.Timing } else { $null }
     errors = if ($execution) { @($execution.Errors) } else { @() }
     invokeError = if ($invokeError) { [string]$invokeError.Exception.Message } else { $null }
