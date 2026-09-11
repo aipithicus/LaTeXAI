@@ -11,7 +11,8 @@ use IPC::Run3;
 use XML::LibXML;
 use lib File::Spec->catdir($FindBin::Bin, '..', 'tools', 'dev');
 use CaptureAudit qw(read_json write_json read_raw write_raw run_conversion
-  json_bytes object_hash finish_run tree_hashes restrip_report compare_case file_hash);
+  json_bytes object_hash finish_run tree_hashes restrip_report compare_case
+  review_case_issues file_hash);
 use CaptureStrip qw(without_capture);
 use CaptureRuntime qw(canonical_path runtime_contract project_searchpaths);
 use MIME::Base64 qw(encode_base64);
@@ -288,6 +289,33 @@ is($plain_status, 0, 'ordinary golden success cannot mask the preceding audit fa
 my ($removed_status, $removed_report) = prove_driver('removed', $base_dir, 'stable');
 isnt($removed_status, 0, 'residual removal requires review');
 like(join(' ', @{ $removed_report->{issues} }), qr/removed-residual/, 'removal is identified');
+my $base_case = $base_report->{cases}{$keys[0]};
+my $removed_case = $removed_report->{cases}{$keys[0]};
+my $raw_removed = compare_case($base_case, $removed_case);
+is_deeply($raw_removed, ['removed-residual'], 'raw compare still names the removal');
+my $accept = {
+  format => $CaptureAudit::TRANSITION_FORMAT,
+  baseline_run_sha256 => 'test',
+  repair => 'test-remove',
+  entries => [{ driver => 'v1-driver.t', key => $keys[0],
+      prior_residual => $base_case->{residual}, expected => 'removed-residual' }] };
+my ($kept, $review) = review_case_issues($accept, 'v1-driver.t', $keys[0], $base_case, $removed_case, $raw_removed);
+is_deeply($kept, [], 'hash-matching removal is consumed');
+is($review->{expected}, 'removed-residual', 'applied transition is recorded');
+my $wrong_prior = { %$accept, entries => [{ %{ $accept->{entries}[0] },
+      prior_residual => { off => { stripped_sha256 => 'nope' }, on => { stripped_sha256 => 'nope' } } }] };
+my ($wrong_kept) = review_case_issues($wrong_prior, 'v1-driver.t', $keys[0], $base_case, $removed_case, $raw_removed);
+like(join(' ', @$wrong_kept), qr/transition-prior-residual/, 'stale residual signature is rejected');
+my ($unsat) = review_case_issues($accept, 'v1-driver.t', $keys[0], $base_case, $base_case, ['changed-residual']);
+like(join(' ', @$unsat), qr/transition-unsatisfied/, 'a remaining difference cannot use a removal entry');
+{
+  local $ENV{LATEXAI_AUDIT_TRANSITIONS} = "$temp/t-remove.json";
+  write_json($ENV{LATEXAI_AUDIT_TRANSITIONS}, $accept);
+  my ($ok_status, $ok_report, undef, $ok_log) = prove_driver('removed-reviewed', $base_dir, 'stable');
+  is($ok_status, 0, 'listed removal does not fail the driver') or diag($ok_log);
+  is($ok_report->{reviewed_transitions}[0]{expected}, 'removed-residual', 'driver records the review');
+  is_deeply($ok_report->{issues}, [], 'reviewed removal is not a remaining driver issue');
+}
 my ($clean_status, $clean_report, $clean_dir) = prove_driver('clean', undef, 'stable');
 is($clean_status, 0, 'equal pair can establish a baseline');
 my ($new_status, $new_report) = prove_driver('new-difference', $clean_dir, 'known');

@@ -15,7 +15,9 @@ use XML::LibXML;
 use CaptureStrip qw(without_capture);
 use CaptureRuntime qw(runtime_contract);
 our @EXPORT_OK = qw(json_bytes read_json write_json read_raw write_raw file_hash
-  object_hash run_conversion compare_case finish_run snapshot tree_hashes verify_artifacts restrip_report);
+  object_hash run_conversion compare_case review_case_issues finish_run snapshot
+  tree_hashes verify_artifacts restrip_report);
+our $TRANSITION_FORMAT = 'latexai/capture-transition/1';
 our $FORMAT = 'latexai-capture-audit/2';
 our $COMPARISON = 'latexai/capture-comparison/2';
 
@@ -135,6 +137,34 @@ sub compare_case {
       ? ($current->{different} ? 'changed-residual' : 'removed-residual')
       : ($current->{different} ? 'new-residual' : 'changed-pair'); }
   return \@issues; }
+
+sub review_case_issues {
+  my ($transitions, $driver, $key, $baseline, $current, $raw) = @_;
+  $raw = [@$raw];
+  return ($raw, undef) unless $transitions;
+  my ($entry) = grep { ($_->{driver} || '') eq $driver && ($_->{key} || '') eq $key }
+    @{ $transitions->{entries} || [] };
+  return ($raw, undef) unless $entry;
+  my @errors;
+  push @errors, 'transition-prior-residual'
+    unless $baseline && object_hash($entry->{prior_residual}) eq object_hash($baseline->{residual});
+  my $expected = $entry->{expected} || '';
+  if ($expected eq 'removed-residual') {
+    if ($current->{different}) {
+      return ([@$raw, @errors, 'transition-unsatisfied'], undef); }
+    my @rest = grep { $_ ne 'removed-residual' } @$raw;
+    return ([@errors, @rest], undef) if @errors || @rest;
+    return ([], { key => $key, driver => $driver, expected => $expected,
+        raw => ['removed-residual'] }); }
+  if ($expected eq 'changed-residual') {
+    push @errors, 'transition-expected-residual'
+      unless $entry->{expected_residual}
+      && object_hash($entry->{expected_residual}) eq object_hash($current->{residual});
+    my @rest = grep { $_ ne 'changed-residual' } @$raw;
+    return ([@errors, @rest], undef) if @errors || @rest;
+    return ([], { key => $key, driver => $driver, expected => $expected,
+        raw => ['changed-residual'] }); }
+  return ([@$raw, @errors, 'transition-unknown-expected'], undef); }
 
 sub verify_artifacts {
   my ($directory, $report) = @_;
@@ -258,6 +288,7 @@ sub finish_run {
   push @issues, "prove-failed:$prove_status" if $prove_status;
   my %reports;
   my %projections;
+  my %run_reviews;
   my ($audited, $different, $skipped, $tree_different, $diagnostics_different) = (0, 0, 0, 0, 0);
   for my $driver (@$drivers) {
     my $path = "$directory/$driver/report.json";
@@ -273,6 +304,8 @@ sub finish_run {
     $diagnostics_different += scalar(grep { $_->{diagnostics_different} } values %{ $report->{cases} });
     $skipped += scalar(@{ $report->{skips} });
     push @issues, map { "$driver:$_" } @{ $report->{issues} };
+    push @{ $run_reviews{$driver} }, @{ $report->{reviewed_transitions} || [] }
+      if $report->{reviewed_transitions};
     if ($projection_pin) {
       my $projection_path = "$directory/$driver/baseline-projection/projection.json";
       if (!-f $projection_path) { push @issues, "missing-baseline-projection:$driver"; }
@@ -288,6 +321,28 @@ sub finish_run {
       }
     }
   }
+  my $transitions_applied;
+  if (my $tpath = $ENV{LATEXAI_AUDIT_TRANSITIONS}) {
+    my $transitions = eval { read_json($tpath) };
+    if (!$transitions || ($transitions->{format} || '') ne $TRANSITION_FORMAT) {
+      push @issues, 'transition-format'; }
+    elsif (!$baseline_dir || file_hash("$baseline_dir/run.json") ne ($transitions->{baseline_run_sha256} || '')) {
+      push @issues, 'transition-baseline'; }
+    else {
+      my %used;
+      for my $driver (keys %run_reviews) {
+        for my $review (@{ $run_reviews{$driver} }) {
+          $used{"$driver:" . ($review->{key} || '')} = 1; } }
+      for my $entry (@{ $transitions->{entries} || [] }) {
+        my $id = ($entry->{driver} || '') . ':' . ($entry->{key} || '');
+        if ($used{$id}) { delete $used{$id}; }
+        else { push @issues, "unused-transition:$id"; } }
+      push @issues, "unexpected-transition:$_" for sort keys %used;
+      $transitions_applied = { format => $TRANSITION_FORMAT,
+        baseline_run_sha256 => $transitions->{baseline_run_sha256},
+        repair => $transitions->{repair},
+        entries => $transitions->{entries},
+        reviewed => \%run_reviews }; } }
   my $run = { format => $FORMAT, mode => $baseline ? 'compare' : 'record',
     comparison_contract => $COMPARISON,
     baseline => $baseline_dir, drivers => $drivers, reports => \%reports,
@@ -295,6 +350,7 @@ sub finish_run {
     audited => $audited, different => $different, skipped => $skipped,
     tree_different => $tree_different, diagnostics_different => $diagnostics_different,
     issues => \@issues, qualified => @issues ? JSON::PP::false : JSON::PP::true };
+  $run->{transitions} = $transitions_applied if $transitions_applied;
   $run->{baseline_projection} = { source_run_sha256 => $projection_pin,
     comparison_contract => $COMPARISON, runtime => $baseline_runtime,
     original_environment => $baseline->{before}{environment},

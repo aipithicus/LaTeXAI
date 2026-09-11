@@ -9,7 +9,7 @@ use Encode qw(encode);
 use Digest::SHA qw(sha256_hex);
 use LaTeXML::Util::Test ();
 use CaptureAudit qw(json_bytes read_json write_json write_raw read_raw file_hash
-  object_hash run_conversion compare_case tree_hashes verify_artifacts restrip_report);
+  object_hash run_conversion compare_case review_case_issues tree_hashes verify_artifacts restrip_report);
 use CaptureStrip qw(without_capture error_count);
 
 # Only load in primary prove processes, through capture-audit.pl --exec.
@@ -146,9 +146,15 @@ END {
   my $original_status = $?;
   if ($report) {
     if ($baseline_root) {
+      my $transitions = $ENV{LATEXAI_AUDIT_TRANSITIONS} && -f $ENV{LATEXAI_AUDIT_TRANSITIONS}
+        ? read_json($ENV{LATEXAI_AUDIT_TRANSITIONS}) : undef;
+      $report->{reviewed_transitions} = [];
       for my $key (sort keys %{ $report->{cases} }) {
-        push @{ $report->{issues} }, map { "$key:$_" }
-          @{ compare_case($baseline ? $baseline->{cases}{$key} : undef, $report->{cases}{$key}) };
+        my $raw = compare_case($baseline ? $baseline->{cases}{$key} : undef, $report->{cases}{$key});
+        my ($kept, $review) = review_case_issues($transitions, $driver, $key,
+          $baseline && $baseline->{cases}{$key}, $report->{cases}{$key}, $raw);
+        push @{ $report->{issues} }, map { "$key:$_" } @$kept;
+        push @{ $report->{reviewed_transitions} }, $review if $review;
       }
     }
     for my $name (sort keys %{ $report->{inventory} }) {

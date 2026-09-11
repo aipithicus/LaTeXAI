@@ -13,12 +13,12 @@ use CaptureAudit qw(snapshot write_json write_raw finish_run file_hash read_json
 use IPC::Run3;
 
 my $mode = shift @ARGV || '';
-my ($output, $baseline, $legacy, $projection_pin);
+my ($output, $baseline, $legacy, $projection_pin, $transitions);
 my $jobs = 10;
 GetOptions('output=s' => \$output, 'baseline=s' => \$baseline, 'legacy-off=s' => \$legacy, 'jobs=i' => \$jobs,
-  'project-baseline=s' => \$projection_pin)
+  'project-baseline=s' => \$projection_pin, 'transitions=s' => \$transitions)
   or die "Invalid audit arguments\n";
-die "usage: $0 record|compare --output NEW_DIR [--baseline DIR] [--project-baseline RUN_SHA256] [--legacy-off DIR] [t/driver.t ...]\n"
+die "usage: $0 record|compare --output NEW_DIR [--baseline DIR] [--project-baseline RUN_SHA256] [--transitions FILE] [--legacy-off DIR] [t/driver.t ...]\n"
   unless $mode =~ /^(record|compare)$/ && $output && (($mode eq 'compare') == !!$baseline);
 die "--jobs must be a positive integer\n" unless $jobs > 0;
 die "Output must be a new directory: $output\n" if -e $output;
@@ -49,6 +49,16 @@ local $ENV{LATEXAI_AUDIT_OUTPUT} = $output;
 local $ENV{LATEXAI_AUDIT_BASELINE} = $baseline;
 local $ENV{LATEXAI_AUDIT_LEGACY_OFF} = $legacy;
 local $ENV{LATEXAI_AUDIT_PROJECT_BASELINE} = $projection_pin;
+if (defined $transitions) {
+  die "--transitions requires compare\n" unless $mode eq 'compare';
+  $transitions = abs_path($transitions) or die "Transitions file missing\n";
+  my $record = read_json($transitions);
+  die "Invalid transitions format\n"
+    unless ($record->{format} || '') eq $CaptureAudit::TRANSITION_FORMAT;
+  die "Transitions baseline hash does not match --baseline run.json\n"
+    unless $record->{baseline_run_sha256} eq file_hash("$baseline/run.json");
+  $ENV{LATEXAI_AUDIT_TRANSITIONS} = $transitions;
+}
 local $ENV{LATEXAI_RUNSTAMP} = basename($output);
 local $ENV{LATEXAI_AUDIT_JOBS} = $jobs;
 my $before = snapshot();
