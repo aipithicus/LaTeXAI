@@ -569,3 +569,72 @@ function Write-LaTeXAINativeStreams {
     }
 }
 
+function Get-LaTeXAIXmlCensus {
+    param(
+        [Parameter(Mandatory)] [string] $XmlPath,
+        [int] $ExampleLimit = 40
+    )
+    $ltxNs = 'http://dlmf.nist.gov/LaTeXML'
+    $settings = [System.Xml.XmlReaderSettings]::new()
+    $settings.DtdProcessing = [System.Xml.DtdProcessing]::Prohibit
+    $settings.XmlResolver = $null
+    $settings.IgnoreComments = $false
+    $settings.IgnoreWhitespace = $false
+    $labelSet = [System.Collections.Generic.HashSet[string]]::new()
+    $labelRefs = [System.Collections.Generic.List[string]]::new()
+    $errorTexts = [System.Collections.Generic.List[string]]::new()
+    $leaks = [System.Collections.Generic.List[string]]::new()
+    $ltxErrors = 0
+    $mathElements = 0
+    $reader = $null
+    try {
+        $reader = [System.Xml.XmlReader]::Create((Resolve-Path -LiteralPath $XmlPath).Path, $settings)
+        while ($reader.Read()) {
+            if ($reader.NodeType -eq [System.Xml.XmlNodeType]::Text -or
+                    $reader.NodeType -eq [System.Xml.XmlNodeType]::CDATA) {
+                if ($reader.Value -match '\\lx@[A-Za-z@]*') {
+                    foreach ($m in [regex]::Matches($reader.Value, '\\lx@[A-Za-z@]*')) { $leaks.Add($m.Value) }
+                }
+                continue
+            }
+            if ($reader.NodeType -ne [System.Xml.XmlNodeType]::Element) { continue }
+            if ($reader.NamespaceURI -eq $ltxNs -and $reader.LocalName -eq 'ERROR') {
+                $ltxErrors++
+                $inner = $reader.ReadString()
+                if ($inner) { $errorTexts.Add($inner.Trim()) }
+            }
+            elseif ($reader.NamespaceURI -eq $ltxNs -and $reader.LocalName -eq 'Math') { $mathElements++ }
+            if ($reader.HasAttributes) {
+                while ($reader.MoveToNextAttribute()) {
+                    if ($reader.LocalName -eq 'labels') {
+                        foreach ($token in ($reader.Value -split '\s+')) { if ($token) { [void]$labelSet.Add($token) } }
+                    }
+                    elseif ($reader.LocalName -eq 'labelref') {
+                        foreach ($token in ($reader.Value -split '\s+')) { if ($token) { $labelRefs.Add($token) } }
+                    }
+                    if ($reader.Value -match '\\lx@[A-Za-z@]*') {
+                        foreach ($m in [regex]::Matches($reader.Value, '\\lx@[A-Za-z@]*')) { $leaks.Add($m.Value) }
+                    }
+                }
+                [void]$reader.MoveToElement()
+            }
+        }
+    }
+    finally { if ($reader) { $reader.Dispose() } }
+    $dangling = [System.Collections.Generic.List[string]]::new()
+    foreach ($token in $labelRefs) {
+        if (-not $labelSet.Contains($token)) { $dangling.Add($token) }
+    }
+    return [pscustomobject]@{
+        Bytes = [System.IO.FileInfo]::new($XmlPath).Length
+        LtxErrors = $ltxErrors
+        MathElements = $mathElements
+        DanglingRefs = $dangling.Count
+        InternalLeaks = $leaks.Count
+        ErrorNodes = @($errorTexts | Sort-Object -Unique | Select-Object -First $ExampleLimit)
+        DanglingList = @($dangling | Sort-Object -Unique | Select-Object -First $ExampleLimit)
+        LeakList = @($leaks | Sort-Object -Unique | Select-Object -First $ExampleLimit)
+        Method = 'xml-reader'
+    }
+}
+

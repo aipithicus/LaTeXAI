@@ -450,31 +450,15 @@ try {
     $leakList = @()
     $xmlInspectStarted = [datetime]::UtcNow
     if (Test-Path -LiteralPath $xmlPath -PathType Leaf) {
-        $xmlBytes = [System.IO.FileInfo]::new($xmlPath).Length
-        $xmlText = [System.IO.File]::ReadAllText($xmlPath)
-        # The CLI emits the ltx namespace as the default (no prefix); goldens use the prefix.
-        $ltxErrors = [regex]::Matches($xmlText, '<(?:ltx:)?ERROR\b').Count
-        $mathElements = [regex]::Matches($xmlText, '<(?:ltx:)?Math\b').Count
-        $errorNodes = @([regex]::Matches($xmlText, '<(?:ltx:)?ERROR[^>]*>([^<]{1,80})') |
-            ForEach-Object { $_.Groups[1].Value.Trim() } | Sort-Object -Unique | Select-Object -First 40)
-        # The golden lint's two checks, on a real document: a reference whose target label
-        # is on no element, and an engine-internal \lx@ control sequence leaked into the IR.
-        $labelSet = [System.Collections.Generic.HashSet[string]]::new()
-        foreach ($m in [regex]::Matches($xmlText, ' labels="([^"]*)"')) {
-            foreach ($token in ($m.Groups[1].Value -split '\s+')) { if ($token) { [void]$labelSet.Add($token) } }
-        }
-        $dangling = [System.Collections.Generic.List[string]]::new()
-        foreach ($m in [regex]::Matches($xmlText, ' labelref="([^"]*)"')) {
-            foreach ($token in ($m.Groups[1].Value -split '\s+')) {
-                if ($token -and -not $labelSet.Contains($token)) { $dangling.Add($token) }
-            }
-        }
-        $danglingRefs = $dangling.Count
-        $danglingList = @($dangling | Sort-Object -Unique | Select-Object -First 40)
-        $leaks = [regex]::Matches($xmlText, '\\lx@[A-Za-z@]*')
-        $internalLeaks = $leaks.Count
-        $leakList = @($leaks | ForEach-Object { $_.Value } | Sort-Object -Unique | Select-Object -First 40)
-        $xmlText = $null
+        $census = Get-LaTeXAIXmlCensus -XmlPath $xmlPath
+        $xmlBytes = $census.Bytes
+        $ltxErrors = $census.LtxErrors
+        $mathElements = $census.MathElements
+        $danglingRefs = $census.DanglingRefs
+        $internalLeaks = $census.InternalLeaks
+        $errorNodes = @($census.ErrorNodes)
+        $danglingList = @($census.DanglingList)
+        $leakList = @($census.LeakList)
     }
     $xmlInspectMs = [math]::Round(([datetime]::UtcNow - $xmlInspectStarted).TotalMilliseconds, 2)
 
@@ -532,6 +516,7 @@ try {
         conversionWorkingDirectory = $conversionCwd
         nativeOutcome = $run.Outcome
         nativeCleanupComplete = [bool]$run.CleanupComplete
+        xmlInspectMethod = 'xml-reader'
     }
     if ($phases.Count -gt 0) { $details.phases = $phases }
     if ($null -ne $profileTotals) {

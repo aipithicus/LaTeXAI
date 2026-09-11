@@ -37,6 +37,8 @@ param(
     [nullable[int]] $ReservedCores = $null,
     [nullable[int]] $ProcessTimeoutSeconds = $null,
     [nullable[int]] $WaitTimeoutSeconds = $null,
+    [nullable[int]] $ExecutionTimeoutSeconds = $null,
+    [nullable[int]] $CleanupTimeoutSeconds = $null,
     [string[]] $Preload,
     [bool] $IncludeStyles = $true,
     [string[]] $LatexmlArgument = @(),
@@ -64,6 +66,8 @@ if ($null -eq $MaxWorkers) { $MaxWorkers = [int]$policy.MaxWorkers }
 if ($null -eq $ReservedCores) { $ReservedCores = [int]$policy.ReservedCores }
 if ($null -eq $ProcessTimeoutSeconds) { $ProcessTimeoutSeconds = [int]$policy.ProcessTimeoutSeconds }
 if ($null -eq $WaitTimeoutSeconds) { $WaitTimeoutSeconds = [int]$policy.WaitTimeoutSeconds }
+if ($null -eq $ExecutionTimeoutSeconds) { $ExecutionTimeoutSeconds = [int]$policy.ExecutionTimeoutSeconds }
+if ($null -eq $CleanupTimeoutSeconds) { $CleanupTimeoutSeconds = [int]$policy.CleanupTimeoutSeconds }
 if (-not $PSBoundParameters.ContainsKey('Preload')) { $Preload = @($policy.Preload) }
 if (-not $PSBoundParameters.ContainsKey('ConversionWorkingDirectory')) {
     $ConversionWorkingDirectory = [string]$policy.ConversionWorkingDirectory
@@ -111,6 +115,8 @@ if ($Preview) {
                 ReservedCores = $ReservedCores
                 ProcessTimeoutSeconds = $ProcessTimeoutSeconds
                 WaitTimeoutSeconds = $WaitTimeoutSeconds
+                ExecutionTimeoutSeconds = $ExecutionTimeoutSeconds
+                CleanupTimeoutSeconds = $CleanupTimeoutSeconds
                 NativeTimeoutSeconds = $nativeTimeout
             }
             policy = $policy
@@ -202,9 +208,12 @@ $invoke = @{
     ReservedCores = $ReservedCores
     ProcessTimeoutSeconds = $ProcessTimeoutSeconds
     WaitTimeoutSeconds = $WaitTimeoutSeconds
+    ExecutionTimeoutSeconds = $ExecutionTimeoutSeconds
+    CleanupTimeoutSeconds = $CleanupTimeoutSeconds
     FailOnArticleFailure = $FailOnArticleFailure
 }
 if (@($Path).Count -gt 0) { $invoke.Path = $Path }
 
 & $runtime.BatchRunner @invoke
-exit $LASTEXITCODE
+$runnerExit = if (Get-Variable -Name LASTEXITCODE -ErrorAction SilentlyContinue) { [int]$LASTEXITCODE } else { 0 }
+exit $runnerExit

@@ -35,6 +35,7 @@
         ReservedCores = 2
         ProcessTimeoutSeconds = 3600
         WaitTimeoutSeconds = 28800
+        ExecutionTimeoutSeconds = 28800
         NativeTimeoutSeconds = 3600
         CleanupTimeoutSeconds = 30
         SearchPath = @('scripts/preloads')
@@ -45,6 +46,8 @@
         Budgets = @{
             ProcessTimeoutSeconds = 900
             WaitTimeoutSeconds = 7200
+            ExecutionTimeoutSeconds = 7200
+            CleanupTimeoutSeconds = 30
             ReservedCores = 2
             MinItemsPerWorker = 1
         }
@@ -55,15 +58,19 @@
         }
         DefaultEstimatedCost = 10
         EstimatedCost = @{
-            't/40_math.t' = 100
-            't/70_parse.t' = 80
-            't/45_capture.t' = 90
-            't/99_capture_audit.t' = 70
-            't/65_graphics.t' = 40
-            't/80_complex.t' = 50
+            't/99_capture_audit.t' = 125
+            't/45_capture.t' = 117
+            't/50_structure.t' = 91
+            't/53_alignment.t' = 79
+            't/22_fonts.t' = 67
+            't/10_expansion.t' = 65
+            't/70_parse.t' = 63
+            't/65_graphics.t' = 62
+            't/80_complex.t' = 51
+            't/857_tikz-cd.t' = 46
+            't/40_math.t' = 40
             't/878_tikz.t' = 40
             't/879_forest.t' = 40
-            't/857_tikz-cd.t' = 40
         }
         ExtraWrites = @{
             't/02_kpsewhich.t' = @('temp/t/kpsewhich')

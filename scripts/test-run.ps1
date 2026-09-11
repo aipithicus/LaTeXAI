@@ -16,6 +16,8 @@ param(
     [nullable[int]] $ReservedCores = $null,
     [nullable[int]] $ProcessTimeoutSeconds = $null,
     [nullable[int]] $WaitTimeoutSeconds = $null,
+    [nullable[int]] $ExecutionTimeoutSeconds = $null,
+    [nullable[int]] $CleanupTimeoutSeconds = $null,
     [nullable[int]] $MinItemsPerWorker = $null,
     [switch] $SkipGenerate,
     [switch] $Preview,
@@ -34,6 +36,8 @@ $budgets = $runtime.Policy.Test.Budgets
 if ($null -eq $ReservedCores) { $ReservedCores = [int]$budgets.ReservedCores }
 if ($null -eq $ProcessTimeoutSeconds) { $ProcessTimeoutSeconds = [int]$budgets.ProcessTimeoutSeconds }
 if ($null -eq $WaitTimeoutSeconds) { $WaitTimeoutSeconds = [int]$budgets.WaitTimeoutSeconds }
+if ($null -eq $ExecutionTimeoutSeconds) { $ExecutionTimeoutSeconds = [int]$budgets.ExecutionTimeoutSeconds }
+if ($null -eq $CleanupTimeoutSeconds) { $CleanupTimeoutSeconds = [int]$budgets.CleanupTimeoutSeconds }
 if ($null -eq $MinItemsPerWorker) { $MinItemsPerWorker = [int]$budgets.MinItemsPerWorker }
 
 Import-Module -Name $runtime.ExecutorManifest -Force -ErrorAction Stop
@@ -103,6 +107,8 @@ $previewObject = [ordered]@{
             ReservedCores = $ReservedCores
             ProcessTimeoutSeconds = $ProcessTimeoutSeconds
             WaitTimeoutSeconds = $WaitTimeoutSeconds
+            ExecutionTimeoutSeconds = $ExecutionTimeoutSeconds
+            CleanupTimeoutSeconds = $CleanupTimeoutSeconds
             MinItemsPerWorker = $MinItemsPerWorker
         }
         policy = $runtime.Policy.Test.Budgets
@@ -148,6 +154,7 @@ try {
         -MaxWorkers $MaxWorkers -ReservedCores $ReservedCores `
         -MinItemsPerWorker $MinItemsPerWorker `
         -ProcessTimeoutSeconds $ProcessTimeoutSeconds -WaitTimeoutSeconds $WaitTimeoutSeconds `
+        -ExecutionTimeoutSeconds $ExecutionTimeoutSeconds -CleanupTimeoutSeconds $CleanupTimeoutSeconds `
         -PowerShellPath $runtime.ChildPowerShell.Executable -CreateNoWindow $true -WindowStyle Hidden
 }
 catch {
