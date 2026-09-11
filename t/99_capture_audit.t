@@ -13,6 +13,8 @@ use lib File::Spec->catdir($FindBin::Bin, '..', 'tools', 'dev');
 use CaptureAudit qw(read_json write_json read_raw write_raw run_conversion
   json_bytes object_hash finish_run tree_hashes restrip_report compare_case file_hash);
 use CaptureStrip qw(without_capture);
+use CaptureRuntime qw(canonical_path runtime_contract project_searchpaths);
+use MIME::Base64 qw(encode_base64);
 
 chdir File::Spec->catdir($FindBin::Bin, '..') or die $!;
 {
@@ -25,7 +27,7 @@ $temp = abs_path($temp);
 my %defaults = (preload => [], searchpaths => [], includecomments => 0,
   includepathpis => 0, verbosity => -2);
 my $counter = 0;
-local $ENV{LATEXAI_AUDIT_RESTRIP_BASELINE};
+local $ENV{LATEXAI_AUDIT_PROJECT_BASELINE};
 sub convert {
   my ($source, $options) = @_;
   my $result = run_conversion({ texpath => $source, options => $options }, "$temp/helper-" . ++$counter);
@@ -65,6 +67,142 @@ for my $root ('ltx:custom', 'foreign:document', 'document') {
 }
 XML::LibXML->new(no_blanks => 1)->load_xml(string => '<root><child/></root>');
 isnt(without_capture($off), without_capture($no_space), 'another parser cannot silently disable audit whitespace');
+
+{
+  my $root = "$temp/runtime";
+  make_path("$root/old", "$root/new");
+  my $launcher = "\@echo off\nif \"%PERL_ROOT%\"==\"\" (\n  echo kpsewhich: missing PERL_ROOT 1>&2\n  exit /b 1\n)\n"
+    . '"%PERL_ROOT%\perl\bin\perl.exe" "%~dp0..\helper.pl" %*' . "\n";
+  write_raw("$root/old/wrapper.cmd", $launcher);
+  write_raw("$root/new/wrapper.cmd", $launcher);
+  write_raw("$root/helper.pl", '1;');
+  my $files = { map { $_ => file_hash("$root/$_") } qw(old/wrapper.cmd new/wrapper.cmd helper.pl) };
+  my $old = { root => $root, files => $files, environment => {
+      PERL_ROOT => 'C:\portable\perl', LATEXML_KPSEWHICH => "$root/old/wrapper.cmd",
+      LATEXAI_AUDIT_JOBS => 2, LATEXML_KPSEWHICH_CACHE_ONLY => 1 } };
+  my $new = { %$old, environment => { %{$old->{environment}}, PERL_ROOT => 'C:/portable/perl',
+      LATEXML_KPSEWHICH => "$root/new/wrapper.cmd", LATEXAI_AUDIT_JOBS => 10 } };
+  my ($a, $b) = (runtime_contract($old), runtime_contract($new));
+  is_deeply($a->{identity}, $b->{identity}, 'verified launcher relocation and path spelling preserve runtime meaning');
+  isnt($a->{evidence}{kpsewhich}{launcher}, $b->{evidence}{kpsewhich}{launcher}, 'physical launcher addresses remain evidence');
+  is($a->{execution}{workers}, 2, 'historical worker count stays recorded');
+  is($b->{execution}{workers}, 10, 'new worker count stays recorded');
+  is(canonical_path('D:\engine\scripts\..\tools\helper.pl'), 'D:/engine/tools/helper.pl', 'relative wrapper target resolves lexically');
+  isnt(canonical_path('D:/Case'), canonical_path('D:/case'), 'filename case is not silently folded');
+  for my $change ([LATEXML_KPSEWHICH_CACHE_ONLY => 0], [PERL5OPT => '-MChanged'], [PERL_ROOT => 'C:/other/perl']) {
+    my $changed = { %$new, environment => { %{$new->{environment}}, @$change } };
+    isnt(object_hash(runtime_contract($changed)->{identity}), object_hash($a->{identity}), "$change->[0] semantic drift fails equivalence");
+  }
+  # Historical source must be hash-verified, even if its old address no longer exists.
+  $old->{uncommitted_files_base64}{'old/wrapper.cmd'} = encode_base64($launcher, '');
+  unlink "$root/old/wrapper.cmd" or die $!;
+  is_deeply(runtime_contract($old)->{identity}, $a->{identity}, 'retained source proves a removed historical launcher');
+  $old->{uncommitted_files_base64}{'old/wrapper.cmd'} = encode_base64('tampered', '');
+  ok(!eval { runtime_contract($old); 1 }, 'unverified historical launcher fails closed');
+  for my $changed ($launcher . "echo extra\n", $launcher =~ s/ %\*/ --extra %*/r) {
+    write_raw("$root/new/wrapper.cmd", $changed);
+    my $state = { %$new, files => { %$files, 'new/wrapper.cmd' => file_hash("$root/new/wrapper.cmd") } };
+    isnt(object_hash(runtime_contract($state)->{identity}), object_hash($b->{identity}), 'extra wrapper behavior is not a relocation');
+  }
+  write_raw("$root/other.pl", '1;');
+  write_raw("$root/new/wrapper.cmd", $launcher =~ s/helper\.pl/other.pl/r);
+  my $changed_target = { %$new, files => { %$files, 'new/wrapper.cmd' => file_hash("$root/new/wrapper.cmd"),
+      'other.pl' => file_hash("$root/other.pl") } };
+  isnt(object_hash(runtime_contract($changed_target)->{identity}), object_hash($b->{identity}), 'different resolved helper is not a relocation');
+}
+{
+  my $engine = "$temp/engine";
+  my $article = "$temp/article";
+  my $source = "$article/p-tex";
+  my @receipts;
+  my @documents;
+  for my $variant (qw(old new)) {
+    my $support = "$engine/" . ($variant eq 'old' ? 'private/scripts' : 'scripts/preloads');
+    my $job = "$temp/$variant-job";
+    push @receipts, { article => { directory => $article, slug => 'p' }, details => { perl => 'C:/perl.exe',
+        arguments => ['-I', "$engine/lib", "$engine/bin/latexml", '--capture', "--path=$source", "--path=$support",
+          '--preload=gauntlet.sty', "--log=$job/p.log", "--destination=$job/p.xml",
+          ($variant eq 'old' ? "$source/p.tex" : 'p.tex')] } };
+    push @documents, xml(qq{<?latexml searchpaths="$support,$source"?><document xmlns="$ns"><p>a b</p><!--keep--></document>});
+  }
+  my $raw = $documents[0]->toString;
+  my $a = project_searchpaths($documents[0], $receipts[0], "$temp/old-job");
+  my $b = project_searchpaths($documents[1], $receipts[1], "$temp/new-job");
+  is_deeply($a->{identity}, $b->{identity}, 'recorded invocation proves preload relocation and source cwd equivalence');
+  is(without_capture($a->{document}), without_capture($b->{document}), 'only verified runtime metadata projects to logical roles');
+  is($documents[0]->toString, $raw, 'metadata projection preserves original XML');
+  my $changed_doc = $documents[1]->cloneNode(1);
+  ($changed_doc->findnodes('//*[local-name()="p"]'))[0]->appendText(' changed');
+  isnt(without_capture(project_searchpaths($changed_doc, $receipts[1], "$temp/new-job")->{document}),
+    without_capture($a->{document}), 'real manuscript drift survives runtime projection');
+  my $changed = read_json_after_clone($receipts[1]);
+  $changed->{details}{arguments}[3] = '--noparse';
+  isnt(object_hash(project_searchpaths($documents[1], $changed, "$temp/new-job")->{identity}),
+    object_hash($a->{identity}), 'changed compiler options stay observable');
+  my $lie = xml(qq{<?latexml searchpaths="elsewhere,$source"?><document/>});
+  ok(!eval { project_searchpaths($lie, $receipts[1], "$temp/new-job"); 1 }, 'PI not backed by invocation fails');
+  my $duplicate = xml(qq{<?latexml searchpaths="$engine/scripts/preloads,$source"?><?latexml searchpaths="$engine/scripts/preloads,$source"?><document/>});
+  ok(!eval { project_searchpaths($duplicate, $receipts[1], "$temp/new-job"); 1 }, 'duplicate runtime metadata fails');
+  $changed = read_json_after_clone($receipts[1]);
+  $changed->{details}{arguments}[8] = '--destination=outside/p.xml';
+  ok(!eval { project_searchpaths($documents[1], $changed, "$temp/new-job"); 1 }, 'unverified output address fails');
+
+  my @roots = ("$temp/corpus old", "$temp/corpus new");
+  for my $i (0, 1) {
+    my $job = "$roots[$i]/jobs/p-one";
+    make_path($job);
+    my $receipt = read_json_after_clone($receipts[$i]);
+    $receipt->{status} = 'ok';
+    $receipt->{counts} = { mathElements => 0, errors => 0, workerMs => $i + 1 };
+    $receipt->{details}{$_} = [] for qw(taxonomy missingFiles undefinedMacros errorNodes internalLeaks danglingRefs);
+    $receipt->{details}{arguments}[7] = "--log=$job/p.log";
+    $receipt->{details}{arguments}[8] = "--destination=$job/p.xml";
+    write_json("$job/receipt.json", $receipt);
+    write_json("$roots[$i]/run.json", { schema => 'codex-scientiae/inventory-run/0.1', jobs => 1,
+        receipts => { ok => 1, failed => 0, missing => 0 }, executor => { summary => { Succeeded => 1 }, errors => [] } });
+    my $doc = $documents[$i]->cloneNode(1);
+    my $ledger = $doc->createElementNS($capture, 'capture:ledger');
+    my $math = $doc->createElementNS($capture, 'capture:math');
+    $math->setAttribute($_, 0) for qw(source callsiteOnly crossSource unlocated total);
+    $ledger->appendChild($math); $doc->documentElement->appendChild($ledger);
+    write_raw("$job/p.xml", $doc->toString(0));
+  }
+  my $retained = object_hash(tree_hashes($roots[0]));
+  my $compare = sub {
+    my ($name, $pin) = @_;
+    my @args = ($^X, '-I', 'lib', 'tools/dev/capture-corpus-audit.pl', '--baseline', $roots[0],
+      '--candidate', $roots[1], '--output', "$temp/$name");
+    push @args, '--project-baseline', $pin if defined $pin;
+    my ($stdout, $stderr);
+    run3(\@args, undef, \$stdout, \$stderr);
+    my $status = $?;
+    write_raw("$temp/$name.log", ($stdout || '') . ($stderr || ''));
+    return ($status, "$temp/$name/comparison.json");
+  };
+  my ($exact_status) = $compare->('corpus-exact', undef);
+  isnt($exact_status, 0, 'corpus CLI retains exact path-metadata failure without a projection');
+  my ($projected_status, $projected_report) = $compare->('corpus-projected', file_hash("$roots[0]/run.json"));
+  is($projected_status, 0, 'corpus CLI qualifies a proven explicit relocation') or diag(read_raw("$temp/corpus-projected.log"));
+  my $result = read_json($projected_report);
+  ok($result->{qualified}, 'projected corpus verdict is explicit');
+  is($result->{exact_document_differences}, 1, 'literal document difference remains visible in passing projected report');
+  my ($wrong_pin) = $compare->('corpus-wrong-pin', '0' x 64);
+  isnt($wrong_pin, 0, 'corpus CLI rejects wrong historical run identity');
+  my $mutated = read_raw("$roots[1]/jobs/p-one/p.xml"); $mutated =~ s/a b/a changed b/;
+  write_raw("$roots[1]/jobs/p-one/p.xml", $mutated);
+  my ($content_status) = $compare->('corpus-content-change', file_hash("$roots[0]/run.json"));
+  isnt($content_status, 0, 'corpus CLI rejects manuscript drift despite valid relocation');
+  $mutated =~ s/a changed b/a b/;
+  write_raw("$roots[1]/jobs/p-one/p.xml", $mutated);
+  my $diagnostic = read_json("$roots[1]/jobs/p-one/receipt.json");
+  $diagnostic->{counts}{errors} = 1;
+  write_json("$roots[1]/jobs/p-one/receipt.json", $diagnostic);
+  my ($diagnostic_status) = $compare->('corpus-diagnostic-change', file_hash("$roots[0]/run.json"));
+  isnt($diagnostic_status, 0, 'corpus CLI rejects diagnostic drift even when timing counters legitimately differ');
+  is(object_hash(tree_hashes($roots[0])), $retained, 'corpus comparisons preserve the entire retained input run');
+}
+
+sub read_json_after_clone { return JSON::PP->new->utf8->decode(json_bytes($_[0])); }
 
 my %custom = (%defaults, preload => ['LaTeX.pool', 'auditoption.sty'],
   searchpaths => [abs_path('t/capture-audit/support')], nomathparse => 1);
@@ -241,22 +379,33 @@ ok($run->{qualified}, 'completed ordinary and audit observations qualify a recor
 }
 {
   write_raw($driver, driver_text('t/capture-audit/residual.tex'));
-  local $ENV{LATEXAI_AUDIT_RESTRIP_BASELINE} = file_hash("$base_dir/run.json");
+  local $ENV{LATEXAI_AUDIT_PROJECT_BASELINE} = file_hash("$base_dir/run.json");
   my ($status, $report, $out, $log) = prove_driver('explicit-restrip', $base_dir, 'known');
   is($status, 0, 'real observer re-strips an explicitly selected baseline') or diag($log);
   my $current_state = { %$state, files => { 'tools/dev/CaptureStrip.pm' => file_hash('tools/dev/CaptureStrip.pm') } };
   my $strict = finish_run($out, ['v1-driver.t'], $base_dir, 0, $current_state, $current_state,
-    $ENV{LATEXAI_AUDIT_RESTRIP_BASELINE});
+    $ENV{LATEXAI_AUDIT_PROJECT_BASELINE});
   ok($strict->{qualified}, 'explicit projection qualifies with original baseline and current implementation identities')
     or diag(json_bytes($strict->{issues}));
-  is($strict->{baseline_restrip}{source_run_sha256}, file_hash("$base_dir/run.json"), 'qualification pins original baseline run');
+  is($strict->{baseline_projection}{source_run_sha256}, file_hash("$base_dir/run.json"), 'qualification pins original baseline run');
   my $unpinned = finish_run($out, ['v1-driver.t'], $base_dir, 0, $current_state, $current_state);
   like(join(' ', @{ $unpinned->{issues} }), qr/changed-audit-implementation/, 'implicit reinterpretation remains forbidden');
   my $bad_pin = finish_run($out, ['v1-driver.t'], $base_dir, 0, $current_state, $current_state, '0' x 64);
-  like(join(' ', @{ $bad_pin->{issues} }), qr/baseline-restrip-pin-mismatch/, 'wrong source pin fails strict qualification');
+  like(join(' ', @{ $bad_pin->{issues} }), qr/baseline-projection-pin-mismatch/, 'wrong source pin fails strict qualification');
+  my $original_run = read_json("$base_dir/run.json");
+  my $historical_run = read_json_after_clone($original_run);
+  delete $historical_run->{comparison_contract};
+  write_json("$base_dir/run.json", $historical_run);
+  my $implicit_contract = finish_run($out, ['v1-driver.t'], $base_dir, 0, $current_state, $current_state);
+  like(join(' ', @{$implicit_contract->{issues}}), qr/changed-comparison-contract/, 'old comparison contract cannot be silently reinterpreted');
+  my $explicit_contract = finish_run($out, ['v1-driver.t'], $base_dir, 0, $current_state, $current_state,
+    file_hash("$base_dir/run.json"));
+  ok($explicit_contract->{qualified}, 'hash-pinned projection explicitly upgrades an old comparison contract')
+    or diag(json_bytes($explicit_contract->{issues}));
+  write_json("$base_dir/run.json", $original_run);
   write_raw("$out/v1-driver.t/baseline-projection/$keys[0].on.stripped.xml", '<tampered/>');
   my $bad_projection = finish_run($out, ['v1-driver.t'], $base_dir, 0, $current_state, $current_state,
-    $ENV{LATEXAI_AUDIT_RESTRIP_BASELINE});
+    $ENV{LATEXAI_AUDIT_PROJECT_BASELINE});
   like(join(' ', @{ $bad_projection->{issues} }), qr/projection-artifact-integrity/, 'modified projected evidence fails qualification');
 }
 my $missing_driver = finish_run($same_dir, ['v1-driver.t', 'absent.t'], $base_dir, 0, $state, $state);

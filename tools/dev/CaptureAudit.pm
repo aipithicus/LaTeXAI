@@ -13,9 +13,11 @@ use Config;
 use MIME::Base64 qw(encode_base64);
 use XML::LibXML;
 use CaptureStrip qw(without_capture);
+use CaptureRuntime qw(runtime_contract);
 our @EXPORT_OK = qw(json_bytes read_json write_json read_raw write_raw file_hash
   object_hash run_conversion compare_case finish_run snapshot tree_hashes verify_artifacts restrip_report);
-our $FORMAT = 'latexai-capture-audit/1';
+our $FORMAT = 'latexai-capture-audit/2';
+our $COMPARISON = 'latexai/capture-comparison/2';
 
 sub json_bytes { return JSON::PP->new->canonical->utf8->encode($_[0]); }
 sub read_raw {
@@ -69,7 +71,7 @@ sub snapshot {
   }
   require LaTeXML::Version;
   require XML::LibXML;
-  return {
+  my $snapshot = {
     format => $FORMAT, root => abs_path('.'), engine_commit => $head,
     dirty_status => $status, dirty_patch_sha256 => sha256_hex($patch),
     dirty_patch_base64 => encode_base64($patch, ''), uncommitted_files_base64 => \%changes,
@@ -80,7 +82,9 @@ sub snapshot {
       libxml_runtime => XML::LibXML::LIBXML_RUNTIME_VERSION() },
     environment => { map { $_ => $ENV{$_} } qw(PERL_ROOT PERL5LIB PERL5OPT
       LATEXML_KPSEWHICH LATEXML_KPSEWHICH_CACHE_ONLY LATEXAI_AUDIT_JOBS CI) },
-  }; }
+  };
+  $snapshot->{runtime_contract} = runtime_contract($snapshot);
+  return $snapshot; }
 
 # File-based JSON preserves nested options without shell quoting. Requests and
 # results remain evidence. A process failure always wins over the helper JSON.
@@ -209,12 +213,14 @@ sub _restrip_report {
 
 # A per-driver END block cannot detect an entirely omitted driver.
 sub finish_run {
-  my ($directory, $drivers, $baseline_dir, $prove_status, $before, $after, $restrip_pin) = @_;
+  my ($directory, $drivers, $baseline_dir, $prove_status, $before, $after, $projection_pin) = @_;
   my @issues;
   my $baseline = $baseline_dir ? read_json("$baseline_dir/run.json") : undef;
+  my $current_runtime = $before->{runtime_contract} || runtime_contract($before);
+  my $baseline_runtime;
   if ($baseline) {
-    push @issues, 'baseline-restrip-pin-mismatch'
-      if $restrip_pin && file_hash("$baseline_dir/run.json") ne $restrip_pin;
+    push @issues, 'baseline-projection-pin-mismatch'
+      if $projection_pin && file_hash("$baseline_dir/run.json") ne $projection_pin;
     push @issues, 'baseline-not-qualified' unless $baseline->{qualified};
     for my $driver (@{ $baseline->{drivers} }) {
       my $path = "$baseline_dir/$driver/report.json";
@@ -226,14 +232,25 @@ sub finish_run {
       }
     }
     push @issues, 'changed-driver-selection' unless object_hash($baseline->{drivers}) eq object_hash($drivers);
-    for my $key (qw(perl environment root)) {
+    for my $key (qw(perl root)) {
       push @issues, "changed-runtime-$key"
         unless object_hash($baseline->{before}{$key}) eq object_hash($before->{$key}); }
-    # The explicit, hash-pinned re-strip records both implementation identities
-    # and derived baseline trees. The conversion helper must still be identical.
+    my $same_contract = ($baseline->{comparison_contract} || '') eq $COMPARISON;
+    push @issues, 'changed-comparison-contract' unless $same_contract || $projection_pin;
+    if ($same_contract || $projection_pin) {
+      $baseline_runtime = runtime_contract($baseline->{before});
+      push @issues, 'changed-runtime-environment' unless
+        object_hash($baseline_runtime->{identity}) eq object_hash($current_runtime->{identity});
+    }
+    else {
+      push @issues, 'changed-runtime-environment' unless
+        object_hash($baseline->{before}{environment}) eq object_hash($before->{environment});
+    }
+    # An explicit projection records the old runtime interpretation and canonical
+    # trees under this comparison contract. Conversion still uses the same helper.
     for my $file (qw(tools/dev/CaptureAudit.pm tools/dev/CaptureOffAudit.pm
-        tools/dev/capture-on-one.pl tools/dev/CaptureStrip.pm tools/dev/capture-audit.pl)) {
-      next if $restrip_pin && $file ne 'tools/dev/capture-on-one.pl';
+        tools/dev/capture-on-one.pl tools/dev/CaptureStrip.pm tools/dev/capture-audit.pl tools/dev/CaptureRuntime.pm)) {
+      next if $projection_pin && $file ne 'tools/dev/capture-on-one.pl';
       push @issues, "changed-audit-implementation:$file"
         unless ($baseline->{before}{files}{$file} || '') eq ($before->{files}{$file} || ''); }
   }
@@ -256,7 +273,7 @@ sub finish_run {
     $diagnostics_different += scalar(grep { $_->{diagnostics_different} } values %{ $report->{cases} });
     $skipped += scalar(@{ $report->{skips} });
     push @issues, map { "$driver:$_" } @{ $report->{issues} };
-    if ($restrip_pin) {
+    if ($projection_pin) {
       my $projection_path = "$directory/$driver/baseline-projection/projection.json";
       if (!-f $projection_path) { push @issues, "missing-baseline-projection:$driver"; }
       else {
@@ -272,15 +289,18 @@ sub finish_run {
     }
   }
   my $run = { format => $FORMAT, mode => $baseline ? 'compare' : 'record',
+    comparison_contract => $COMPARISON,
     baseline => $baseline_dir, drivers => $drivers, reports => \%reports,
     before => $before, after_sha256 => object_hash($after),
     audited => $audited, different => $different, skipped => $skipped,
     tree_different => $tree_different, diagnostics_different => $diagnostics_different,
     issues => \@issues, qualified => @issues ? JSON::PP::false : JSON::PP::true };
-  $run->{baseline_restrip} = { source_run_sha256 => $restrip_pin,
+  $run->{baseline_projection} = { source_run_sha256 => $projection_pin,
+    comparison_contract => $COMPARISON, runtime => $baseline_runtime,
+    original_environment => $baseline->{before}{environment},
     source_implementation => { map { $_ => $baseline->{before}{files}{$_} }
       grep { m{^tools/dev/} } keys %{ $baseline->{before}{files} } },
-    projections => \%projections } if $restrip_pin;
+    projections => \%projections } if $projection_pin;
   write_json("$directory/run.json", $run);
   return $run; }
 

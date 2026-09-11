@@ -30,7 +30,7 @@ my %seen_legacy;
 my %ordinals;
 if ($baseline) {
   push @{ $report->{issues} }, @{ verify_artifacts("$baseline_root/$driver", $baseline) };
-  if ($ENV{LATEXAI_AUDIT_RESTRIP_BASELINE}) {
+  if ($ENV{LATEXAI_AUDIT_PROJECT_BASELINE}) {
     $baseline = restrip_report("$baseline_root/$driver", $baseline, "$directory/baseline-projection");
   }
 }
