@@ -348,17 +348,21 @@ sub compile_match {
 
 sub compile_match1 {
   my ($self, $document, $patternbox) = @_;
-  # Create a temporary document
-  my $capdocument = LaTeXML::Core::Document->new($document->getModel);
-  my $capture     = $capdocument->openElement('_Capture_', font => LaTeXML::Common::Font->new());
-  $capdocument->absorb($patternbox);
-  my @nodes = ($$self{mode} eq 'math'
-    ? $capdocument->findnodes("//ltx:XMath/*", $capture)
-    : $capture->childNodes);
-  my $frag = $capdocument->getDocument->createDocumentFragment;
-  map { $frag->appendChild($_) } @nodes;
-  # Convert the captured nodes to an XPath that would match them.
-  my ($xpath, $nnodes, @wilds) = domToXPath($capdocument, $frag);
+  # Pattern absorption is not manuscript conversion. Capture provenance on the
+  # dummy tree is compiled into the match xpath (domToXPath copies attributes)
+  # and then cannot match live tokens, so \lxDeclare / DefMathRewrite miss.
+  my ($xpath, $nnodes, @wilds);
+  _without_capture_provenance(sub {
+    my $capdocument = LaTeXML::Core::Document->new($document->getModel);
+    my $capture     = $capdocument->openElement('_Capture_', font => LaTeXML::Common::Font->new());
+    $capdocument->absorb($patternbox);
+    my @nodes = ($$self{mode} eq 'math'
+      ? $capdocument->findnodes("//ltx:XMath/*", $capture)
+      : $capture->childNodes);
+    my $frag = $capdocument->getDocument->createDocumentFragment;
+    map { $frag->appendChild($_) } @nodes;
+    ($xpath, $nnodes, @wilds) = domToXPath($capdocument, $frag);
+    return; });
   # The branches of an XMDual can contain "decorations", nodes that are ONLY visible
   # from either presentation or content, but not both.
   # [See LaTeXML::Core::Document->markXMNodeVisibility]
@@ -424,9 +428,22 @@ sub domToXPath {
   return ($xpath, $nnodes, @wilds); }
 
 # May need some work here;
+my $CAPTURE_NS = 'http://dlmf.nist.gov/LaTeXML/capture';
 my %EXCLUDED_MATCH_ATTRIBUTES = (
   scriptpos => 1, mathstyle => 1,
   'xml:id'  => 1, fontsize  => 1);    # [CONSTANT]
+
+# Pattern compilation must not see capture-on manuscript state.
+sub _without_capture_provenance {
+  my ($code) = @_;
+  return $code->() unless $STATE && $STATE->lookupValue('CAPTURE_PROVENANCE');
+  my $prev = $STATE->lookupValue('CAPTURE_PROVENANCE');
+  $STATE->assignValue(CAPTURE_PROVENANCE => 0, 'global');
+  eval { $code->(); 1; };
+  my $err = $@;
+  $STATE->assignValue(CAPTURE_PROVENANCE => $prev, 'global');
+  die $err if $err;
+  return; }
 
 sub domToXPath_rec {
   my ($document, $node, $axis, $pos) = @_;
@@ -477,6 +494,8 @@ sub domToXPath_rec {
       foreach my $attribute (grep { $_->nodeType == XML_ATTRIBUTE_NODE } $node->attributes) {
         my $key = $attribute->nodeName;
         next if ($key =~ /^_/) || $EXCLUDED_MATCH_ATTRIBUTES{$key};
+        next if ($key =~ /^capture:/)
+          || (($attribute->namespaceURI || '') eq $CAPTURE_NS);
         push(@predicates, "\@" . $key . "='" . $attribute->getValue . "'"); } }
     if (@children) {
       if (!grep { $_->nodeType != XML_TEXT_NODE } @children) {    # All are text nodes:

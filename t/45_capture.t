@@ -631,6 +631,26 @@ foreach my $math (@formulas) { assert_source_bytes($juxtaposition_xml, $math, 'j
 assert_partition($juxtaposition_xml, 'juxtaposition fixture');
 validate_capture_document($juxtaposition_xml, 'capture-juxtaposition');
 
+# \lxDeclare / DefMathRewrite compile a match xpath from a dummy tree. Capture
+# must not stamp provenance onto that tree, or declared roles miss and the
+# parser reads juxtaposition as multiplication.
+my $declare_xml = fixture_document('declare-roles');
+my $declare_xc  = xpath($declare_xml);
+my @declare_math = $declare_xc->findnodes('//ltx:Math');
+is($declare_math[0]->getAttribute('text'), 'g@(a) = g@(b)',
+  'declared function application survives capture');
+is($declare_xc->findvalue('string(//ltx:Math[1]//ltx:XMTok[text()="g"]/@role)'), 'FUNCTION',
+  'lxDeclare still assigns FUNCTION under capture');
+is($declare_xc->findvalue('count(//ltx:Math[1]//ltx:XMTok[@role="ID" and (text()="a" or text()="b")])'), 2,
+  'lxDeclare still assigns ID under capture');
+is($declare_math[1]->getAttribute('text'), '1 + 2',
+  'construction-time NUMBER roles are a capture-stable control');
+is(without_capture($declare_xml), without_capture(fixture_document('declare-roles', '--no-capture')),
+  'declared-role rewrite leaves the complete ltx tree unchanged');
+foreach my $math (@declare_math) { assert_source_bytes($declare_xml, $math, 'declare-roles fixture math'); }
+assert_partition($declare_xml, 'declare-roles fixture');
+validate_capture_document($declare_xml, 'capture-declare-roles');
+
 # Deferred title math is re-digested at \maketitle; the recorded slice must
 # still be the author's $x=y$, not the callsite. Body display stays put.
 my $deferred_path = File::Spec->catfile($TEMP, 'deferred-title.xml');
