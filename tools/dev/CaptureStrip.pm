@@ -34,7 +34,12 @@ sub without_capture {
   my $copy = $dom->cloneNode(1);
   my $xc   = _xpath($copy);
   foreach my $node ($xc->findnodes('/*/capture:ledger')) {
-    $node->unbindNode; }
+    my $prev = $node->previousSibling;
+    $node->unbindNode;
+    # Pretty-printed capture-on XML keeps the indent text node that sat
+    # before the ledger. That is not manuscript text.
+    if ($prev && $prev->nodeType == XML_TEXT_NODE && $prev->data =~ /\A\s*\z/) {
+      $prev->unbindNode; } }
   foreach my $attr ($xc->findnodes('//@capture:*')) {
     $attr->ownerElement->removeAttributeNS($CAPTURE_NS, $attr->localname); }
   # Canonicalize the clone directly. Re-parsing a serialization here would

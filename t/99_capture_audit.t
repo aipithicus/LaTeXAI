@@ -69,6 +69,11 @@ for my $root ('ltx:custom', 'foreign:document', 'document') {
   isnt(without_capture($captured), without_capture($changed), "$root manuscript change stays observable");
   like(without_capture($captured), qr/foreign:ledger revision="manuscript"/, "$root foreign ledger survives");
 }
+{
+  my $plain = xml(qq{<document xmlns="$ns" xmlns:c="$capture"><bibliography/>\n</document>});
+  my $pretty = xml(qq{<document xmlns="$ns" xmlns:c="$capture"><bibliography/>\n  <c:ledger><c:math total="0"/></c:ledger>\n</document>});
+  is(without_capture($pretty), without_capture($plain), 'pretty-printed ledger indent is not manuscript text');
+}
 XML::LibXML->new(no_blanks => 1)->load_xml(string => '<root><child/></root>');
 isnt(without_capture($off), without_capture($no_space), 'another parser cannot silently disable audit whitespace');
 
