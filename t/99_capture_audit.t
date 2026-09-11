@@ -29,6 +29,9 @@ my %defaults = (preload => [], searchpaths => [], includecomments => 0,
   includepathpis => 0, verbosity => -2);
 my $counter = 0;
 local $ENV{LATEXAI_AUDIT_PROJECT_BASELINE};
+# Nested under capture-audit.pl compare --transitions, the outer env would
+# otherwise fail dummy finish_run baselines as transition-baseline.
+local $ENV{LATEXAI_AUDIT_TRANSITIONS};
 sub convert {
   my ($source, $options) = @_;
   my $result = run_conversion({ texpath => $source, options => $options }, "$temp/helper-" . ++$counter);
