@@ -1,0 +1,10 @@
+\documentclass{article}
+\usepackage{ltxcmds}
+\begin{document}
+\makeatletter
+group=[\ltx@zapspace{A {B C} D}].
+nested=[\ltx@zapspace{A {{B C} D} E}].
+\def\word{B C}
+tokens=[\ltx@zapspace{A \word D}].
+\makeatother
+\end{document}

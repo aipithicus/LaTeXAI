@@ -22,6 +22,9 @@ use LaTeXML::Package;
 # Maps the public helper surface onto the LaTeX kernel equivalents
 # already in the pool. Register aliases, box tests, and character
 # constants are residue (on purpose: no IR effect; no native consumer).
+# Macro concatenation preserves prepend/append order and local/global
+# scope, including initially undefined or relaxed targets. Space removal
+# retains token identity and spaces protected by groups.
 
 DeclareOption(undef, sub { });
 ProcessOptions();
@@ -68,16 +71,48 @@ DefMacro('\ltx@ifblank{}{}{}', sub {
     $s =~ s/^\s+|\s+$//g;
     return (($s eq '') ? $yes : $no)->unlist; });
 DefMacro('\ltx@zapspace{}', sub {
-    my $s = ToString($_[1]);
-    $s =~ s/\s+//g;
-    return TokenizeInternal($s); });
+    my (@kept, $depth);
+    $depth = 0;
+    foreach my $token ($_[1]->unlist) {
+      my $cc = $token->getCatcode;
+      $depth++ if $cc == CC_BEGIN;
+      push(@kept, $token) unless $cc == CC_SPACE && !$depth;
+      $depth-- if $cc == CC_END;
+    }
+    return Tokens(@kept); });
 
-DefPrimitive('\ltx@GlobalAppendToMacro{}{}', sub {
-    AddToMacro($_[1], $_[2]);
-    return; });
-Let('\ltx@LocalAppendToMacro',  '\ltx@GlobalAppendToMacro');
-Let('\ltx@GlobalPrependToMacro', '\ltx@GlobalAppendToMacro');
-Let('\ltx@LocalPrependToMacro',  '\ltx@GlobalAppendToMacro');
+foreach my $scope (qw(Local Global)) {
+  foreach my $operation (qw(Append Prepend)) {
+    DefPrimitive('\ltx@' . $scope . $operation . 'ToMacro{}{}', sub {
+        my ($stomach, $target, $addition) = @_;
+        my @target = $target->unlist;
+        if (@target != 1 || $target[0]->getCatcode != CC_CS) {
+          Error('unexpected', 'ltxcmds-target', $stomach,
+            'Macro concatenation requires one control sequence');
+          return;
+        }
+        my $cs = $target[0];
+        my $definition = LookupDefinition($cs);
+        my @old;
+        if ($definition && !$definition->getCS->equals(T_CS('\relax'))) {
+          if (!$definition->isExpandable || ref($definition->getExpansion) eq 'CODE') {
+            Error('unsupported', 'ltxcmds-target', $stomach,
+              'Macro concatenation requires a token-list macro');
+            return;
+          }
+          my $expansion = $definition->getExpansion;
+          @old = (ref $expansion ? $expansion : TokenizeInternal($expansion))->unlist;
+        }
+        my @added = $addition->unlist;
+        local $LaTeXML::Core::State::UNLOCKED = 1;
+        DefMacroI($cs, undef,
+          Tokens($operation eq 'Prepend' ? (@added, @old) : (@old, @added)),
+          nopackParameters => 1, scope => lc($scope),
+          locked => ($definition && $$definition{locked}));
+        return;
+      });
+  }
+}
 
 DefRegister('\ltx@zero' => Number(0));
 DefRegister('\ltx@one'  => Number(1));

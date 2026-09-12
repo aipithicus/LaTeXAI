@@ -1,0 +1,27 @@
+\documentclass{article}
+\usepackage{ltxcmds}
+\begin{document}
+\makeatletter
+\def\sample{M}
+\ltx@GlobalPrependToMacro\sample{L}
+\ltx@GlobalAppendToMacro\sample{R}
+order=[\sample].
+{\ltx@LocalPrependToMacro\sample{a}
+ \ltx@LocalAppendToMacro\sample{b}
+ inside=[\sample].}
+outside=[\sample].
+{\ltx@GlobalPrependToMacro\sample{G}
+ \ltx@GlobalAppendToMacro\sample{H}}
+global=[\sample].
+\ltx@GlobalAppendToMacro\fresh{N}
+fresh=[\fresh].
+\let\relaxed\relax
+\ltx@LocalPrependToMacro{\relaxed}{P}
+relaxed=[\relaxed].
+\def\word{Before}
+\def\deferred{A}
+\ltx@GlobalAppendToMacro\deferred{\word}
+\def\word{After}
+deferred=[\deferred].
+\makeatother
+\end{document}
