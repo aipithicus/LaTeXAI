@@ -1,0 +1,54 @@
+# optional 2.2b (2005/01/26), written from optional.sty.
+# Class: semantic. Explicit option selection and opt/optv; interactive
+# AskOption is diagnosed because a manuscript conversion cannot prompt.
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+DeclareOption(undef, sub {
+  my $option = Expand(T_CS('\CurrentOption'));
+  my $prior = IsDefined(T_CS('\UseOption')) ? Expand(T_CS('\UseOption')) : Tokens();
+  DefMacroI('\UseOption', undef, Tokens($prior, T_OTHER(','), $option));
+  return;
+});
+ProcessOptions();
+
+sub _optional_setup {
+  return if LookupValue('optional_ready');
+  unless (IsDefined(T_CS('\UseOption'))) {
+    Error('missing', '\\UseOption', undef,
+      'Select optional text with package options or an explicit \\UseOption definition');
+    AssignValue('optional_selected' => {});
+    AssignValue('optional_ready' => 1);
+    return;
+  }
+  my %selected = map { $_ => 1 } grep { length($_) }
+    map { s/^\s+|\s+$//gr } split(/,/, ToString(Expand(T_CS('\UseOption'))));
+  AssignValue('optional_selected' => \%selected);
+  AssignValue('optional_all' => !keys(%selected));
+  AssignValue('optional_ready' => 1);
+  Warn('empty', '\\UseOption', undef, 'No options were selected; all optional text will be printed')
+    unless keys(%selected);
+  return;
+}
+DefPrimitive('\Opl@Setup', sub { _optional_setup(); return; });
+RawTeX('\AtBeginDocument{\Opl@Setup}');
+
+sub _optional_matches {
+  my ($labels) = @_;
+  _optional_setup();
+  return 1 if LookupValue('optional_all');
+  my $selected = LookupValue('optional_selected');
+  return scalar grep { $selected->{$_} } map { s/^\s+|\s+$//gr }
+    split(/,/, ToString(Expand($labels)));
+}
+# Read only the selector. The chosen branch must still be read normally;
+# in particular optv leaves the body's opening group and verb reader intact.
+DefMacro('\opt Undigested', sub {
+  return T_CS(_optional_matches($_[1]) ? '\@firstofone' : '\@gobble');
+});
+DefMacro('\optv Undigested', sub {
+  return _optional_matches($_[1]) ? Tokens() : T_CS('\@gobble');
+});
+1;

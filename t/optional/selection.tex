@@ -1,0 +1,14 @@
+\documentclass{article}
+\def\UseOption{base}
+\usepackage[showWADSdel]{optional}
+\begin{document}
+Before.
+\opt{showWADSdel}{Selected $x+1$ with \textbf{formatting}.}
+\opt{absent,base}{Either label selects this.}
+\opt{absent}{\undefinedInRejectedBranch}
+\opt{}{\alsoNeverDigested}
+\opt{base}{\opt{showWADSdel}{Nested $y=2$.}}
+\optv{base}{Literal \verb|\notACommand{kept}|.}
+\optv{absent}{\notACommand{discarded}}
+After.
+\end{document}
