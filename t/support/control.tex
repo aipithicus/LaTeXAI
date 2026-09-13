@@ -1,0 +1,11 @@
+\documentclass{article}
+\usepackage{xifthen,forloop}
+\newcounter{affil}
+\begin{document}
+\ifthenelse{\isempty{}}{Empty.}{Wrong.}
+\ifthenelse{\isin{alpha}{alphabet}}{Contains.}{Wrong.}
+\forloop{affil}{1}{\value{affil}<4}{Affiliation \arabic{affil}. }
+\forloop[-1]{affil}{3}{\value{affil}>0}{Reverse \arabic{affil}. }
+\forloop{affil}{1}{\value{affil}<1}{Wrong.}
+After.
+\end{document}

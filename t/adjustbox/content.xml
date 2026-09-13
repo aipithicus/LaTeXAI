@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="xcolor,adjustbox"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para class="ltx_noindent" xml:id="p1">
+    <p><text width="345.0pt"><inline-block depth="9.5pt" height="14.5pt" width="78.9pt" xscale="1" xtranslate="0.0pt" yscale="1" ytranslate="0.0pt">
+          <p><tabular vattach="middle">
+              <tbody>
+                <tr>
+                  <td align="center">First</td>
+                  <td align="center">Second</td>
+                </tr>
+                <tr>
+                  <td align="center"><Math mode="inline" tex="a" text="a" xml:id="p1.m1">
+                      <XMath>
+                        <XMTok font="italic" role="UNKNOWN">a</XMTok>
+                      </XMath>
+                    </Math></td>
+                  <td align="center"><Math mode="inline" tex="b" text="b" xml:id="p1.m2">
+                      <XMath>
+                        <XMTok font="italic" role="UNKNOWN">b</XMTok>
+                      </XMath>
+                    </Math></td>
+                </tr>
+              </tbody>
+            </tabular></p>
+        </inline-block></text>
+<inline-block depth="0.8pt" framed="rectangle" height="6.9pt" width="57.0pt" xscale="1" xtranslate="0.0pt" yscale="1" ytranslate="0.0pt">
+        <p>Framed <Math mode="inline" tex="x+1" text="x + 1" xml:id="p1.m3">
+            <XMath>
+              <XMApp>
+                <XMTok meaning="plus" role="ADDOP">+</XMTok>
+                <XMTok font="italic" role="UNKNOWN">x</XMTok>
+                <XMTok meaning="1" role="NUMBER">1</XMTok>
+              </XMApp>
+            </XMath>
+          </Math></p>
+      </inline-block>
+<inline-block depth="0.0pt" height="6.9pt" width="69.5pt" xscale="1" xtranslate="0.0pt" yscale="1" ytranslate="0.0pt">
+        <p><text backgroundcolor="#FFFF00">Colored content</text></p>
+      </inline-block>
+After.</p>
+  </para>
+</document>

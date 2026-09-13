@@ -1,0 +1,13 @@
+use strict;
+use warnings;
+use Test::More;
+use LaTeXML::Core;
+my $core=LaTeXML::Core->new(includestyles=>1,includecomments=>0,includepathpis=>0,verbosity=>-2);
+my $doc=$core->convertFile('t/support/control.tex');
+ok($doc,'raw support converts');
+is($core->getStatusCode,0,'raw support has no diagnostics') or diag($core->getStatusMessage);
+my $text=$doc ? $doc->documentElement->textContent : '';
+$text =~ s/\s+/ /g;
+like($text,qr/Empty\. Contains\. Affiliation 1\. Affiliation 2\. Affiliation 3\. Reverse 3\. Reverse 2\. Reverse 1\./,'conditional branches and loop order');
+unlike($text,qr/Wrong/,'false branches and zero-iteration body remain unexecuted');
+done_testing;

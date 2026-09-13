@@ -1,0 +1,14 @@
+\documentclass{article}
+\usepackage[english]{babel}
+\usepackage{csquotes}
+\MakeOuterQuote{"}
+\begin{document}
+\selectlanguage{english}
+\enquote{Outer \enquote{inner} outer}.
+\textquote[Source]{holes and $x+1$}.
+"Active quote".
+\blockquote[Source]{A block quote with $y$ and preserved attribution.}
+\begin{displayquote}[Source]Displayed quotation.\end{displayquote}
+\foreignquote{english}{Hello}. {\setquotestyle{french}\enquote{Bonjour}.}
+After.
+\end{document}
