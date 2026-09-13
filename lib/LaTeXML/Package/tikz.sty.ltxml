@@ -14,8 +14,14 @@
 # binding. Node text, quoted labels, and $...$ are harvested into
 # <ltx:picture class="ltx_tikz">/<ltx:g>. The picture body is not digested,
 # so unknown drawing macros and missing libraries cannot hit MAX_ERRORS.
-# Does not expand user macros or \foreach inside the picture; loop
-# variables therefore stay as tokens. Path geometry is out of scope.
+# Inside pictures, finite literal foreach lists (up to 128 items and eight
+# complete slash fields) bind local variables only in harvested labels/math.
+# Braced and semicolon bodies follow PGF 3.1.12; a per-picture 32768-token
+# budget covers local definitions and direct replacement occurrences. Options,
+# macro lists, ellipses, nesting,
+# coordinate lists/math, dependent values, assignments and structural lifting retain the prior
+# once-only harvest with a warning. User/drawing macros are not expanded by
+# the loop reader. Path geometry is out of scope. The raw picture is unchanged.
 # Harvested math is digested from the captured picture token list, so
 # capture:source is the picture body (the harvest callsite); \(...\)
 # inside a node can be unlocated. Suite is t/tikz-contain (t/tikz keeps

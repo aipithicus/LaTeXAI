@@ -1,0 +1,17 @@
+\documentclass{article}
+\usepackage{tikz}
+\def\x{outer}\def\y{outer-y}\def\items{A,B}
+\begin{document}
+% Unsupported forms preserve their previous once-only harvest and raw source.
+\tikz{\foreach \x[count=\j] in {A,B}{\node {Options: \x};}}
+\tikz{\foreach \x in \items {\node {Macro list: \x};}}
+\tikz{\foreach \x in {1,...,3}{\node {Range: \x};}}
+\tikz{\foreach \x in {(0,0),(1,1)}{\node {Coordinate: \x};}}
+\tikz{\foreach \x/\y in {A/B,C}{\node {Incomplete: \x};}}
+\tikz{\foreach \x/\y in {A/B/C}{\node {Extra: \x};}}
+\tikz{\foreach \x in {A,B}{\foreach \y in {C,D}{\node {Nested: \x/\y};}}}
+\tikz{\foreach \x in {A,B}{\def\x{changed}\node {Assignment: \x};}}
+\tikz{\foreach \x in {A,B}{\draw (0,0) -- ($(0,0)!0.5!(\x)$);}}
+\tikz{\foreach \x/\x in {A/B}{\node {Duplicate: \x};}}
+After: \x/\y.
+\end{document}

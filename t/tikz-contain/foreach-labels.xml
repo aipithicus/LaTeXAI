@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="tikz,amsmath"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <picture class="ltx_tikz" height="0" tex="\begin{tikzpicture}\foreach\x/\xtext in {-5.9/0, -4.59/0.3, -3.28/0.6, -1.97/0%&#10;.9, -0.65/1.2, 0.65/1.5, 1.97/1.8, 3.28/2.1, 4.59/2.4, 5.9/2.7}&#10;\node at (\x,1.5) {\xtext};&#10;\node{After: \x};&#10;\end{tikzpicture}" width="0" xml:id="p1.pic1">
+      <g class="ltx_tikz_node">
+        <text>0</text>
+      </g>
+      <g class="ltx_tikz_node">
+        <text>0.3</text>
+      </g>
+      <g class="ltx_tikz_node">
+        <text>0.6</text>
+      </g>
+      <g class="ltx_tikz_node">
+        <text>0.9</text>
+      </g>
+      <g class="ltx_tikz_node">
+        <text>1.2</text>
+      </g>
+      <g class="ltx_tikz_node">
+        <text>1.5</text>
+      </g>
+      <g class="ltx_tikz_node">
+        <text>1.8</text>
+      </g>
+      <g class="ltx_tikz_node">
+        <text>2.1</text>
+      </g>
+      <g class="ltx_tikz_node">
+        <text>2.4</text>
+      </g>
+      <g class="ltx_tikz_node">
+        <text>2.7</text>
+      </g>
+      <g class="ltx_tikz_node">
+        <text>After: outside</text>
+      </g>
+    </picture>
+    <picture class="ltx_tikz" height="0" tex="\begin{tikzpicture}\foreach\p/\i/\name in {P1/8/{P1 Found.},P2/7/{P2 Substr.}}%&#10;{&#10;\unknownDrawingCommand{\mustNotExecute}&#10;\node at (-0.1,\i+0.5) {\name};}&#10;\foreach\lab/\j in {{Authority\\monotonicity}/0,{Scope\\non-expansion}/1}{&#10;\node at (\j,0) {\lab};}&#10;\foreach\x/\lab/\n in {0/2023/25,1/2024/63}{&#10;\node at (\x,-1) {\lab}; \node at (\x,-5) {n=\n};}&#10;\end{tikzpicture}" width="0" xml:id="p1.pic2">
+      <g class="ltx_tikz_node">
+        <text>P1 Found.</text>
+      </g>
+      <g class="ltx_tikz_node">
+        <text>P2 Substr.</text>
+      </g>
+      <g class="ltx_tikz_node">
+        <text>Authority<break/>monotonicity</text>
+      </g>
+      <g class="ltx_tikz_node">
+        <text>Scope<break/>non-expansion</text>
+      </g>
+      <g class="ltx_tikz_node">
+        <text>2023</text>
+      </g>
+      <g class="ltx_tikz_node">
+        <text>n=25</text>
+      </g>
+      <g class="ltx_tikz_node">
+        <text>2024</text>
+      </g>
+      <g class="ltx_tikz_node">
+        <text>n=63</text>
+      </g>
+    </picture>
+    <picture class="ltx_tikz" height="0" tex="\tikz{\foreach\x/\y in {{a,b}/{c/d},{{e/f}}/{\alpha}}{&#10;\node{\textbf{\x}: $\y+1$};}}" width="0" xml:id="p1.pic3">
+      <g class="ltx_tikz_node">
+        <text font="bold">a,b</text>
+        <text>: <Math mode="inline" tex="c/d+1" text="c / d + 1" xml:id="p1.pic3.m1">
+            <XMath>
+              <XMApp>
+                <XMTok meaning="plus" role="ADDOP">+</XMTok>
+                <XMApp>
+                  <XMTok meaning="divide" role="MULOP">/</XMTok>
+                  <XMTok font="italic" role="UNKNOWN">c</XMTok>
+                  <XMTok font="italic" role="UNKNOWN">d</XMTok>
+                </XMApp>
+                <XMTok meaning="1" role="NUMBER">1</XMTok>
+              </XMApp>
+            </XMath>
+          </Math></text>
+      </g>
+      <g class="ltx_tikz_node">
+        <text font="bold">e/f</text>
+        <text>: <Math mode="inline" tex="\alpha+1" text="alpha + 1" xml:id="p1.pic3.m2">
+            <XMath>
+              <XMApp>
+                <XMTok meaning="plus" role="ADDOP">+</XMTok>
+                <XMTok font="italic" name="alpha" role="UNKNOWN">α</XMTok>
+                <XMTok meaning="1" role="NUMBER">1</XMTok>
+              </XMApp>
+            </XMath>
+          </Math></text>
+      </g>
+    </picture>
+    <picture class="ltx_tikz" height="0" tex="\tikz{\foreach\x in {2,3}{\node{$\frac{\x}{2}$};&#10;\draw(0,0) edge[&quot;value \x&quot;] (1,0);}}" width="0" xml:id="p1.pic4">
+      <g class="ltx_tikz_node">
+        <Math mode="inline" tex="\frac{2}{2}" text="2 / 2" xml:id="p1.pic4.m1">
+          <XMath>
+            <XMApp>
+              <XMTok mathstyle="text" meaning="divide" role="FRACOP"/>
+              <XMTok fontsize="70%" meaning="2" role="NUMBER">2</XMTok>
+              <XMTok fontsize="70%" meaning="2" role="NUMBER">2</XMTok>
+            </XMApp>
+          </XMath>
+        </Math>
+      </g>
+      <g class="ltx_tikz_label">
+        <text>value 2</text>
+      </g>
+      <g class="ltx_tikz_node">
+        <Math mode="inline" tex="\frac{3}{2}" text="3 / 2" xml:id="p1.pic4.m2">
+          <XMath>
+            <XMApp>
+              <XMTok mathstyle="text" meaning="divide" role="FRACOP"/>
+              <XMTok fontsize="70%" meaning="3" role="NUMBER">3</XMTok>
+              <XMTok fontsize="70%" meaning="2" role="NUMBER">2</XMTok>
+            </XMApp>
+          </XMath>
+        </Math>
+      </g>
+      <g class="ltx_tikz_label">
+        <text>value 3</text>
+      </g>
+    </picture>
+    <picture class="ltx_tikz" height="0" tex="\tikz{\foreach\x in {}{\node{must not appear};}\node{Empty list ends};}" width="0" xml:id="p1.pic5">
+      <g class="ltx_tikz_node">
+        <text>Empty list ends</text>
+      </g>
+    </picture>
+    <p>After all pictures: outside.</p>
+  </para>
+</document>

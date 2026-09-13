@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="tikz"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <picture class="ltx_tikz" height="0" tex="\tikz{\foreach\x[count=\j] in {A,B}{\node{Options: \x};}}" width="0" xml:id="p1.pic1">
+      <g class="ltx_tikz_node">
+        <text>Options: outer</text>
+      </g>
+    </picture>
+    <picture class="ltx_tikz" height="0" tex="\tikz{\foreach\x in \items{\node{Macro list: \x};}}" width="0" xml:id="p1.pic2">
+      <g class="ltx_tikz_node">
+        <text>Macro list: outer</text>
+      </g>
+    </picture>
+    <picture class="ltx_tikz" height="0" tex="\tikz{\foreach\x in {1,...,3}{\node{Range: \x};}}" width="0" xml:id="p1.pic3">
+      <g class="ltx_tikz_node">
+        <text>Range: outer</text>
+      </g>
+    </picture>
+    <picture class="ltx_tikz" height="0" tex="\tikz{\foreach\x in {(0,0),(1,1)}{\node{Coordinate: \x};}}" width="0" xml:id="p1.pic4">
+      <g class="ltx_tikz_node">
+        <text>Coordinate: outer</text>
+      </g>
+    </picture>
+    <picture class="ltx_tikz" height="0" tex="\tikz{\foreach\x/\y in {A/B,C}{\node{Incomplete: \x};}}" width="0" xml:id="p1.pic5">
+      <g class="ltx_tikz_node">
+        <text>Incomplete: outer</text>
+      </g>
+    </picture>
+    <picture class="ltx_tikz" height="0" tex="\tikz{\foreach\x/\y in {A/B/C}{\node{Extra: \x};}}" width="0" xml:id="p1.pic6">
+      <g class="ltx_tikz_node">
+        <text>Extra: outer</text>
+      </g>
+    </picture>
+    <picture class="ltx_tikz" height="0" tex="\tikz{\foreach\x in {A,B}{\foreach\y in {C,D}{\node{Nested: \x/\y};}}}" width="0" xml:id="p1.pic7">
+      <g class="ltx_tikz_node">
+        <text>Nested: outer/outer-y</text>
+      </g>
+    </picture>
+    <picture class="ltx_tikz" height="0" tex="\tikz{\foreach\x in {A,B}{\def\x{changed}\node{Assignment: \x};}}" width="0" xml:id="p1.pic8">
+      <g class="ltx_tikz_node">
+        <text>Assignment: outer</text>
+      </g>
+    </picture>
+    <picture class="ltx_tikz" height="0" tex="\tikz{\foreach\x in {A,B}{\draw(0,0) -- ($(0,0)!0.5!(\x)$);}}" width="0" xml:id="p1.pic9">
+      <g class="ltx_tikz_math">
+        <Math mode="inline" tex="(0,0)!0.5!(outer)" text="(open-interval@(0, 0))factorial * 0.5factorial * o * u * t * e * r" xml:id="p1.pic9.m1">
+          <XMath>
+            <XMApp>
+              <XMTok meaning="times" role="MULOP">⁢</XMTok>
+              <XMApp>
+                <XMTok meaning="factorial" role="POSTFIX">!</XMTok>
+                <XMDual>
+                  <XMApp>
+                    <XMTok meaning="open-interval"/>
+                    <XMRef idref="p1.pic9.m1.1"/>
+                    <XMRef idref="p1.pic9.m1.2"/>
+                  </XMApp>
+                  <XMWrap>
+                    <XMTok role="OPEN" stretchy="false">(</XMTok>
+                    <XMTok meaning="0" role="NUMBER" xml:id="p1.pic9.m1.1">0</XMTok>
+                    <XMTok role="PUNCT">,</XMTok>
+                    <XMTok meaning="0" role="NUMBER" xml:id="p1.pic9.m1.2">0</XMTok>
+                    <XMTok role="CLOSE" stretchy="false">)</XMTok>
+                  </XMWrap>
+                </XMDual>
+              </XMApp>
+              <XMApp>
+                <XMTok meaning="factorial" role="POSTFIX">!</XMTok>
+                <XMTok meaning="0.5" role="NUMBER">0.5</XMTok>
+              </XMApp>
+              <XMDual>
+                <XMRef idref="p1.pic9.m1.3"/>
+                <XMWrap>
+                  <XMTok role="OPEN" stretchy="false">(</XMTok>
+                  <XMApp xml:id="p1.pic9.m1.3">
+                    <XMTok meaning="times" role="MULOP">⁢</XMTok>
+                    <XMTok font="italic" role="UNKNOWN">o</XMTok>
+                    <XMTok font="italic" role="UNKNOWN">u</XMTok>
+                    <XMTok font="italic" role="UNKNOWN">t</XMTok>
+                    <XMTok font="italic" role="UNKNOWN">e</XMTok>
+                    <XMTok font="italic" role="UNKNOWN">r</XMTok>
+                  </XMApp>
+                  <XMTok role="CLOSE" stretchy="false">)</XMTok>
+                </XMWrap>
+              </XMDual>
+            </XMApp>
+          </XMath>
+        </Math>
+      </g>
+    </picture>
+    <picture class="ltx_tikz" height="0" tex="\tikz{\foreach\x/\x in {A/B}{\node{Duplicate: \x};}}" width="0" xml:id="p1.pic10">
+      <g class="ltx_tikz_node">
+        <text>Duplicate: outer</text>
+      </g>
+    </picture>
+    <p>After: outer/outer-y.</p>
+  </para>
+</document>

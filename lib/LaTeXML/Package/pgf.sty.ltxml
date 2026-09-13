@@ -14,6 +14,8 @@
 # so unknown library commands cannot hit the 100-error cap. Model:
 # listings/comment env capture plus the latex picture constructors.
 # Coordinate geometry, layers, and shadings are out of scope.
+# B3 admits bounded literal foreach lists for harvested labels only; see the
+# token reader below. Unsupported loops retain their original once-only harvest.
 # A picture reverts to its own source form (\begin{env}...\end{env}, or the
 # \tikz / \pgfpicture call), and a harvested group to its content, so tex=
 # and every other reversion show source syntax, never \lx@pgf@ internals.
@@ -211,8 +213,154 @@ sub tikz_contain_nonempty {
   $s =~ s/\s+//g;
   return length($s) ? $tokens : undef; }
 
+# PGF 3.1.12 pgffor.code.tex:64-143,159-193,209-268. This is a
+# label-harvest contract, not a pgffor interpreter. The reader runs no drawing
+# code, list expansion, assignment or nested iteration. The picture body remains
+# the reversion authority. Limits apply before any part of a loop is emitted.
+sub tikz_contain_loop_group {
+  my ($arr, $i) = @_;
+  return unless $i < @$arr && $arr->[$i]->getCatcode == CC_BEGIN;
+  my $end = tikz_contain_skip_brace($arr, $i);
+  return unless $end > $i + 1 && $arr->[$end - 1]->getCatcode == CC_END;
+  return ([ @$arr[$i + 1 .. $end - 2] ], $end); }
+
+sub tikz_contain_loop_trim {
+  my (@toks) = @_;
+  shift @toks while @toks && ($toks[0]->getCatcode == CC_SPACE || $toks[0]->getCatcode == CC_EOL);
+  pop @toks while @toks && ($toks[-1]->getCatcode == CC_SPACE || $toks[-1]->getCatcode == CC_EOL);
+  return \@toks; }
+
+sub tikz_contain_loop_unbrace {
+  my ($arr) = @_;
+  my ($inner, $end) = tikz_contain_loop_group($arr, 0);
+  return $inner && $end == @$arr ? $inner : $arr; }
+
+sub tikz_contain_loop_split {
+  my ($arr, $separator) = @_;
+  my (@parts, @part);
+  my $depth = 0;
+  foreach my $tok (@$arr) {
+    my $cc = $tok->getCatcode;
+    $depth++ if $cc == CC_BEGIN;
+    $depth-- if $cc == CC_END;
+    if (!$depth && $tok->equals(T_OTHER($separator))) {
+      push @parts, tikz_contain_loop_trim(@part);
+      @part = (); }
+    else { push @part, $tok; } }
+  push @parts, tikz_contain_loop_trim(@part);
+  return @parts; }
+
+sub tikz_contain_loop_read {
+  my ($arr, $start) = @_;
+  my $n = @$arr;
+  my $i = tikz_contain_skip_spaces($arr, $start + 1);
+  my (@spec, $reason);
+  while ($i < $n && !tikz_contain_match_word($arr, $i, 'in')) {
+    my $tok = $arr->[$i];
+    if ($tok->equals(T_OTHER('['))) {
+      $reason ||= 'options';
+      $i = tikz_contain_skip_balanced($arr, $i, T_OTHER('['), T_OTHER(']')); }
+    elsif ($tok->getCatcode == CC_BEGIN || $tok->equals(T_OTHER(';'))) {
+      return { end => $n, reason => 'malformed header' }; }
+    else { push @spec, $tok; $i++; }
+    $i = tikz_contain_skip_spaces($arr, $i); }
+  return { end => $n, reason => 'missing in' } if $i >= $n;
+  $i = tikz_contain_skip_spaces($arr, $i + 2);
+  my ($list, $end) = tikz_contain_loop_group($arr, $i);
+  if ($list) { $i = $end; }
+  else {
+    $reason ||= 'nonliteral list';
+    return { end => $n, reason => $reason } if $i >= $n || $arr->[$i]->getCatcode != CC_CS;
+    $i++; }
+  $i = tikz_contain_skip_spaces($arr, $i);
+  my ($body, $bodyend) = tikz_contain_loop_group($arr, $i);
+  unless ($body) {
+    my $j = $i;
+    while ($j < $n && !$arr->[$j]->equals(T_OTHER(';'))) {
+      if ($arr->[$j]->getCatcode == CC_BEGIN) {
+        my ($unused, $next) = tikz_contain_loop_group($arr, $j);
+        return { end => $n, reason => 'unclosed body' } unless $unused;
+        $j = $next; }
+      else { $j++; } }
+    return { end => $n, reason => 'unterminated body' } if $j >= $n;
+    $bodyend = $j + 1;
+    $body = [ @$arr[$i .. $j] ]; }
+  my $loop = { end => $bodyend, body => Tokens(@$body) };
+  my (@vars, %seen);
+  foreach my $var (tikz_contain_loop_split(\@spec, '/')) {
+    if (@$var != 1 || $var->[0]->getCatcode != CC_CS || $seen{$var->[0]->getString}++) {
+      $reason ||= 'variable declaration'; last; }
+    push @vars, $var->[0]->getString; }
+  $reason ||= 'variable limit' if @vars > 8;
+  foreach my $tok (@$body, ($list ? @$list : ())) {
+    next unless $tok->getCatcode == CC_CS;
+    my $name = $tok->getString;
+    $reason ||= 'nested loop' if $name eq '\\foreach';
+    $reason ||= 'assignment or loop control' if $name =~ /^\\(?:def|gdef|edef|xdef|let|futurelet|newcommand|renewcommand|providecommand|pgfmathsetmacro|pgfmathtruncatemacro|pgfmathparse|breakforeach)$/; }
+  my @items;
+  if ($list && @{tikz_contain_loop_trim(@$list)}) {
+    foreach my $item (tikz_contain_loop_split($list, ',')) {
+      $item = tikz_contain_loop_unbrace($item);
+      # Coordinate items and ellipses have their own PGF semantics, not CSV.
+      $reason ||= 'coordinate list' if grep { $_->equals(T_OTHER('(')) || $_->equals(T_OTHER(')')) } @$item;
+      for my $j (0 .. @$item - 3) {
+        $reason ||= 'ellipsis' if $item->[$j]->equals(T_OTHER('.'))
+          && $item->[$j + 1]->equals(T_OTHER('.')) && $item->[$j + 2]->equals(T_OTHER('.')); }
+      my @values = @vars == 1 ? ($item) : tikz_contain_loop_split($item, '/');
+      $reason ||= 'incomplete or extra tuple' if @values != @vars;
+      @values = map { tikz_contain_loop_unbrace($_) } @values if @vars > 1;
+      # Indirect/self-referential iteration values need expansion analysis;
+      # exclude them so the bound does not hide recursive local definitions.
+      $reason ||= 'dependent values' if grep {
+        $_->getCatcode == CC_CS && $seen{$_->getString}
+      } map { @$_ } @values;
+      push @items, \@values; }
+    $reason ||= 'item limit' if @items > 128; }
+  $loop->{reason} = $reason if $reason;
+  $loop->{vars} = \@vars;
+  $loop->{items} = \@items;
+  return $loop; }
+
+sub tikz_contain_loop_harvest {
+  my ($arr, $start, $budget) = @_;
+  my $loop = tikz_contain_loop_read($arr, $start);
+  my @chunks;
+  unless ($loop->{reason}) {
+    my @template = tikz_contain_harvest($loop->{body}, 1);
+    $loop->{reason} = 'structural lifting' if grep { $_->{emit} } @template;
+    $loop->{reason} = 'coordinate math' if grep { $_->{in_coordinate} } @template;
+    unless ($loop->{reason}) {
+      my $used = 0;
+      ITEM: foreach my $item (@{$loop->{items}}) {
+        my %values;
+        @values{@{$loop->{vars}}} = @$item;
+        # Digest each harvested label with ordinary local TeX definitions.
+        # Text substitution loses argument boundaries (\frac\x2); wrapping
+        # each occurrence instead changes declarations (\x = \bf). Let the
+        # existing gullet expand variables in the context that consumes them.
+        my @definitions = (T_BEGIN);
+        foreach my $var (@{$loop->{vars}}) {
+          push @definitions, T_CS('\\def'), T_CS($var), T_BEGIN, @{$values{$var}}, T_END; }
+        foreach my $c (@template) {
+          $used += @definitions + 1;
+          if ($used > $$budget) { $loop->{reason} = 'picture token limit'; last ITEM; }
+          foreach my $tok ($c->{tokens}->unlist) {
+            my $value = $tok->getCatcode == CC_CS ? $values{$tok->getString} : undef;
+            $used += $value ? @$value : 1;
+            if ($used > $$budget) { $loop->{reason} = 'picture token limit'; last ITEM; } }
+          push @chunks, { %$c, tokens => Tokens(@definitions, $c->{tokens}->unlist, T_END) }; }
+      }
+      $$budget -= $used unless $loop->{reason}; } }
+  if ($loop->{reason}) {
+    Warn('unsupported', 'tikz-foreach', undef,
+      'Foreach harvest retained once: ' . $loop->{reason});
+    @chunks = tikz_contain_harvest(Tokens(@$arr[$start .. $loop->{end} - 1]), 1); }
+  # Inner offsets are local to the body; keep iterations in their own order
+  # as one candidate in the surrounding containment overlap resolution.
+  return ({ start => $start, end => $loop->{end}, chunks => \@chunks }, $loop->{end}); }
+
 sub tikz_contain_harvest {
-  my ($tokens) = @_;
+  my ($tokens, $no_foreach) = @_;
   return () unless $tokens;
   my @arr = $tokens->unlist;
   return () unless @arr;
@@ -220,6 +368,7 @@ sub tikz_contain_harvest {
   my @cands;
   my $i = 0;
   my $paren = 0;
+  my $loop_budget = 32768;
   while ($i < $n) {
     my $tok = $arr[$i];
     my $cc  = $tok->getCatcode;
@@ -236,7 +385,7 @@ sub tikz_contain_harvest {
       $j++ while $j < $n && !($arr[$j]->getCatcode == CC_MATH || $arr[$j]->equals(T_MATH));
       if ($j < $n) {
         if (tikz_contain_nonempty(Tokens(@arr[$i + 1 .. $j - 1]))) {
-          push(@cands, { start => $i, end => $j + 1, class => 'ltx_tikz_math',
+          push(@cands, { start => $i, end => $j + 1, class => 'ltx_tikz_math', in_coordinate => $paren,
               tokens => Tokens(@arr[$i .. $j]) }); } }
       $i = ($j < $n ? $j + 1 : $n);
       next; }
@@ -260,6 +409,11 @@ sub tikz_contain_harvest {
       next; }
     if ($cc == CC_CS) {
       my $name = $tok->getString;
+      if (!$no_foreach && $name eq '\\foreach') {
+        my ($candidate, $next) = tikz_contain_loop_harvest(\@arr, $i, \$loop_budget);
+        push @cands, $candidate;
+        $i = $next;
+        next; }
       if ($name eq '\\Tree' && defined &latexai_qtree_from_array) {
         my ($emit, $ni) = latexai_qtree_from_array(\@arr, $i);
         if ($emit) {
@@ -307,7 +461,7 @@ CAND: foreach my $c (@sorted) {
       next CAND if $k->{start} <= $c->{start} && $c->{end} <= $k->{end}; }
     push(@kept, $c); }
   @kept = sort { $a->{start} <=> $b->{start} } @kept;
-  return @kept; }
+  return map { $_->{chunks} ? @{$_->{chunks}} : $_ } @kept; }
 
 sub tikz_contain_string_tokens {
   my ($s) = @_;

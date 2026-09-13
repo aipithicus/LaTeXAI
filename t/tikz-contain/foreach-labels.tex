@@ -1,0 +1,29 @@
+\documentclass{article}
+\usepackage{tikz,amsmath}
+\def\x{outside}
+\begin{document}
+% Deep Denoising 1805.08855v2, deep_denoising.tex:644-645.
+\begin{tikzpicture}
+\foreach \x/\xtext in {-5.9/0, -4.59/0.3, -3.28/0.6, -1.97/0.9, -0.65/1.2, 0.65/1.5, 1.97/1.8, 3.28/2.1, 4.59/2.4, 5.9/2.7}
+\node at (\x,1.5) {\xtext};
+\node {After: \x};
+\end{tikzpicture}
+% Always-On Agents: braced text fields, three-field tuples, line breaks.
+\begin{tikzpicture}
+\foreach \p/\i/\name in {P1/8/{P1 Found.},P2/7/{P2 Substr.}}{
+  \unknownDrawingCommand{\mustNotExecute}
+  \node at (-0.1,\i+0.5) {\name};}
+\foreach \lab/\j in {{Authority\\monotonicity}/0,{Scope\\non-expansion}/1}{
+  \node at (\j,0) {\lab};}
+\foreach \x/\lab/\n in {0/2023/25,1/2024/63}{
+  \node at (\x,-1) {\lab}; \node at (\x,-5) {n=\n};}
+\end{tikzpicture}
+% Token grouping: comma and slash are data inside braces. A single whole
+% field group is removed at the same argument boundary as pgffor.
+\tikz{\foreach \x/\y in {{a,b}/{c/d},{{e/f}}/{\alpha}}{
+  \node {\textbf{\x}: $\y+1$};}}
+\tikz{\foreach \x in {2,3}{\node {$\frac{\x}{2}$};
+  \draw (0,0) edge["value \x"] (1,0);}}
+\tikz{\foreach \x in {}{\node {must not appear};}\node {Empty list ends};}
+After all pictures: \x.
+\end{document}
