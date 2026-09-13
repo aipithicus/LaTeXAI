@@ -1,0 +1,11 @@
+\documentclass{article}
+\usepackage{amsthm}
+\makeatletter
+\newtheoremstyle{custom}{6pt}{6pt}{\itshape}{}{\itshape}{.}{.5em}
+  {\thmname{#1}\thmnumber{ \@upn{#2}}\thmnote{ (#3)}}
+\makeatother
+\theoremstyle{custom}\newtheorem{theorem}{Theorem}
+\begin{document}
+\begin{theorem}[A note]\label{thm:one}The theorem body $x=1$.\end{theorem}
+See Theorem~\ref{thm:one}.
+\end{document}

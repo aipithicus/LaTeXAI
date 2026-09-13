@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="amsthm"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <theorem class="ltx_theorem_theorem" inlist="thm theorem:theorem" labels="LABEL:thm:one" xml:id="Thmtheorem1">
+    <tags>
+      <tag>Theorem 1</tag>
+      <tag role="refnum">1</tag>
+      <tag role="typerefnum">Theorem 1</tag>
+    </tags>
+    <title class="ltx_runin" font="italic">Theorem <text font="upright">1</text> (A note).</title>
+    <para xml:id="Thmtheorem1.p1">
+      <p><text font="italic">The theorem body <Math mode="inline" tex="x=1" text="x = 1" xml:id="Thmtheorem1.p1.m1">
+            <XMath>
+              <XMApp>
+                <XMTok font="upright" meaning="equals" role="RELOP">=</XMTok>
+                <XMTok role="UNKNOWN">x</XMTok>
+                <XMTok font="upright" meaning="1" role="NUMBER">1</XMTok>
+              </XMApp>
+            </XMath>
+          </Math>.</text></p>
+    </para>
+  </theorem>
+  <para xml:id="p1">
+    <p>See Theorem <ref labelref="LABEL:thm:one"/>.</p>
+  </para>
+</document>

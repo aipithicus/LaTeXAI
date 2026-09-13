@@ -106,6 +106,7 @@ EoTeX
 
 DefMacro('\thmname{}',   '#1');
 DefMacro('\thmnumber{}', '#1');
+Let('\@upn', '\textup') unless IsDefined(T_CS('\@upn')); # amsthm.sty:153
 DefMacro('\thmnote{}',   '#1');
 
 DefMacro('\thmhead{}{}{}',     Tokens());
