@@ -1,0 +1,21 @@
+\documentclass{article}
+\usepackage[title]{appendix}
+% Source-consumer shape: sn-jnl.cls 1372-1410 replaces the public environment
+% and calls appendix's internal reset/save/restore contract.
+\makeatletter
+\renewenvironment{appendices}{%
+  \@resets@pp
+  \if@dotoc@pp
+    \if@chapter@pp\clear@ppage\fi
+    \addappheadtotoc
+  \fi
+  \if@dotitle@pp\def\sectionname{\appendixname}\fi
+}{\@ppsaveapp\@pprestoresec}
+\makeatother
+\begin{document}
+\section{Main}Ordinary text.
+\begin{appendices}
+\section{Proof}\label{app:proof}Proof text $x=1$.
+\end{appendices}
+\section{After}See \ref{app:proof}.
+\end{document}

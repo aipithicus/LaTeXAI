@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="appendix" options="title"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <section inlist="toc" xml:id="S1">
+    <tags>
+      <tag>1</tag>
+      <tag role="refnum">1</tag>
+      <tag role="typerefnum">§1</tag>
+    </tags>
+    <title><tag close=" ">1</tag>Main</title>
+    <para xml:id="S1.p1">
+      <p>Main text.</p>
+    </para>
+    <para xml:id="S1.p2">
+      <block class="ltx_appendix_heading">
+        <p><text font="bold" fontsize="207%">Appendices</text></p>
+      </block>
+    </para>
+  </section>
+  <appendix inlist="toc" labels="LABEL:app:first" xml:id="A1">
+    <tags>
+      <tag>Appendix A</tag>
+      <tag role="refnum">A</tag>
+      <tag role="typerefnum">Appendix A</tag>
+    </tags>
+    <title><tag close=" ">Appendix A</tag>First</title>
+    <toctitle><tag close=" ">A</tag>First</toctitle>
+    <para xml:id="A1.p1">
+      <p>First appendix <Math mode="inline" tex="a=1" text="a = 1" xml:id="A1.p1.m1">
+          <XMath>
+            <XMApp>
+              <XMTok meaning="equals" role="RELOP">=</XMTok>
+              <XMTok font="italic" role="UNKNOWN">a</XMTok>
+              <XMTok meaning="1" role="NUMBER">1</XMTok>
+            </XMApp>
+          </XMath>
+        </Math>.</p>
+    </para>
+  </appendix>
+  <section inlist="toc" xml:id="S2">
+    <tags>
+      <tag>2</tag>
+      <tag role="refnum">2</tag>
+      <tag role="typerefnum">§2</tag>
+    </tags>
+    <title><tag close=" ">2</tag>Main again</title>
+    <para xml:id="S2.p1">
+      <p>Main numbering resumes.</p>
+    </para>
+  </section>
+  <appendix inlist="toc" labels="LABEL:app:second" xml:id="A2">
+    <tags>
+      <tag>Appendix B</tag>
+      <tag role="refnum">B</tag>
+      <tag role="typerefnum">Appendix B</tag>
+    </tags>
+    <title><tag close=" ">Appendix B</tag>Second</title>
+    <toctitle><tag close=" ">B</tag>Second</toctitle>
+    <para xml:id="A2.p1">
+      <p>Appendix numbering continues.</p>
+    </para>
+  </appendix>
+  <section inlist="toc" xml:id="S3">
+    <tags>
+      <tag>3</tag>
+      <tag role="refnum">3</tag>
+      <tag role="typerefnum">§3</tag>
+    </tags>
+    <title><tag close=" ">3</tag>Last main</title>
+    <para xml:id="S3.p1">
+      <p>References <ref labelref="LABEL:app:first"/> and <ref labelref="LABEL:app:second"/>.</p>
+    </para>
+  </section>
+</document>

@@ -1,0 +1,14 @@
+\documentclass{article}
+\usepackage[title]{appendix}
+\begin{document}
+\section{Main}Main text.
+\begin{appendices}
+\appendixpage
+\section{First}\label{app:first}First appendix $a=1$.
+\end{appendices}
+\section{Main again}Main numbering resumes.
+\begin{appendices}
+\section{Second}\label{app:second}Appendix numbering continues.
+\end{appendices}
+\section{Last main}References \ref{app:first} and \ref{app:second}.
+\end{document}

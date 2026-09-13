@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="book"?>
+<?latexml package="appendix" options="page"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-book.css" type="text/css"/>
+  <chapter inlist="toc" xml:id="Ch1">
+    <tags>
+      <tag>Chapter 1</tag>
+      <tag role="refnum">1</tag>
+      <tag role="typerefnum">Chapter 1</tag>
+    </tags>
+    <title><tag close=" ">Chapter 1</tag>Main</title>
+    <toctitle><tag close=" ">1</tag>Main</toctitle>
+    <para xml:id="Ch1.p1">
+      <p>Main text.</p>
+    </para>
+    <para xml:id="Ch1.p2">
+      <block class="ltx_appendix_heading">
+        <p><text font="bold" fontsize="207%">Appendices</text></p>
+      </block>
+    </para>
+  </chapter>
+  <appendix inlist="toc" labels="LABEL:app:first" xml:id="A1">
+    <tags>
+      <tag>Appendix A</tag>
+      <tag role="refnum">A</tag>
+      <tag role="typerefnum">Appendix A</tag>
+    </tags>
+    <title><tag close=" ">Appendix A</tag>First</title>
+    <toctitle><tag close=" ">A</tag>First</toctitle>
+    <para xml:id="A1.p1">
+      <p>First chapter appendix.</p>
+    </para>
+  </appendix>
+  <chapter inlist="toc" xml:id="Ch2">
+    <tags>
+      <tag>Chapter 2</tag>
+      <tag role="refnum">2</tag>
+      <tag role="typerefnum">Chapter 2</tag>
+    </tags>
+    <title><tag close=" ">Chapter 2</tag>After</title>
+    <toctitle><tag close=" ">2</tag>After</toctitle>
+    <para xml:id="Ch2.p1">
+      <p>Main chapter numbering resumes. See <ref labelref="LABEL:app:first"/>.</p>
+    </para>
+  </chapter>
+</document>

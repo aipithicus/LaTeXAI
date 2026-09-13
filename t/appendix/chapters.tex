@@ -1,0 +1,9 @@
+\documentclass{book}
+\usepackage[page]{appendix}
+\begin{document}
+\chapter{Main}Main text.
+\begin{appendices}
+\chapter{First}\label{app:first}First chapter appendix.
+\end{appendices}
+\chapter{After}Main chapter numbering resumes. See \ref{app:first}.
+\end{document}

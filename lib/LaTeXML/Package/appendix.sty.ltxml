@@ -16,18 +16,23 @@ use warnings;
 use LaTeXML::Package;
 
 #======================================================================
-#  /--------------------------------------------------------------------\
-# | INCOMPLETE IMPLEMENTATION                                            |
-# | remove this comment, when done.                                      |
-# | Drafted by texscan --stub appendix.sty                               |
-#  \--------------------------------------------------------------------/
-# options:
-#  toc, page, title, titletoc, header
+# Chapter/section appendix structure and source reset/save/restore helpers,
+# checked against appendix 1.2c (2020/02/08). Contents entries use the native
+# addcontentsline contract; running heads and physical pages are layout only.
 
-# Something like a \part*{Appendices}
-# DefMacro('\appendixpage',Tokens());
-# And add it to the toc
-# DefMacro('\addappheadtotoc',Tokens());
+# Heading content follows appendix 1.2c's @sec@pppage/@chap@pppage;
+# physical page breaks are not part of the document object.
+DefConstructor('\lx@pp@heading{}',
+  "<ltx:block class='ltx_appendix_heading'><ltx:p>#1</ltx:p></ltx:block>",
+  bounded => 1,
+  beforeConstruct => sub { $_[0]->maybeCloseElement('ltx:p'); });
+DefMacro('\appendixpage', '\par\lx@pp@heading{\normalfont\huge\bfseries\appendixpagename}'
+  . '\if@dotoc@pp\addappheadtotoc\fi');
+# Use the kernel's contents-line contract, as the package source does.
+DefMacro('\addappheadtotoc', '\if@chapter@pp'
+  . '\addcontentsline{toc}{chapter}{\appendixtocname}\else'
+  . '\addcontentsline{toc}{section}{\appendixtocname}\fi');
+DefMacro('\clear@ppage', '\clearpage');
 
 DefMacro('\appendixname',     "Appendix");
 DefMacro('\appendixtocname',  "Appendices");
@@ -43,6 +48,12 @@ DefConditional('\if@dotitle@pp');
 DefConditional('\if@dotitletoc@pp');
 DefConditional('\if@dohead@pp');
 DefConditional('\if@dopage@pp');
+DefConditional('\if@chapter@pp', sub { IsDefined(T_CS('\chapter')); });
+foreach my $option (qw(toc title titletoc header page)) {
+  my $switch = $option eq 'header' ? 'dohead' : 'do' . $option;
+  DeclareOption($option, sub { Let('\\if@' . $switch . '@pp', T_CS('\iftrue')); return; });
+}
+ProcessOptions();
 
 DefMacro('\appendixtocon',       '\@dotoc@pptrue');
 DefMacro('\appendixtocoff',      '\@dotoc@ppfalse');
@@ -65,15 +76,29 @@ DefMacro('\appendixheaderoff',   '\@dohead@ppfalse');
 DefMacro('\setthesection',    '\Alph{section}');
 DefMacro('\setthesubsection', '\thesection.\Alph{subsection}');
 
-DefPrimitive('\lx@pp@appendix@begin', sub {
-    if (LookupDefinition(T_CS('\c@chapter'))) {
-      beginAppendices('chapter'); }
-    else {
-      beginAppendices('section'); } });
+sub _appendix_counter { return IsDefined(T_CS('\c@chapter')) ? 'chapter' : 'section'; }
+DefPrimitive('\@ppsavesec', sub {
+    AssignValue('appendix_saved_section' => CounterValue(_appendix_counter()), 'global');
+    return; });
+DefPrimitive('\@ppsaveapp', sub {
+    AssignValue('appendix_saved_appendix' => CounterValue(_appendix_counter()), 'global');
+    return; });
+DefPrimitive('\restoreapp', sub {
+    SetCounter(_appendix_counter(), LookupValue('appendix_saved_appendix') || Number(0));
+    return; });
+DefPrimitive('\@resets@pp', sub {
+    my $counter = _appendix_counter();
+    AssignValue('appendix_saved_section' => CounterValue($counter), 'global');
+    beginAppendices($counter);
+    SetCounter($counter, LookupValue('appendix_saved_appendix') || Number(0));
+    return; });
 
-DefConstructor('\lx@pp@appendix@end', sub {
+DefConstructor('\@pprestoresec', sub {
     $_[0]->maybeCloseElement('ltx:appendix'); },
-  beforeDigest => sub { endAppendices(); });
+  beforeDigest => sub {
+    endAppendices();
+    SetCounter(_appendix_counter(), LookupValue('appendix_saved_section') || Number(0));
+    return; });
 
 # Adjust numbering!!!
 DefPrimitive('\lx@pp@subappendix@begin', sub {
@@ -84,20 +109,20 @@ DefPrimitive('\lx@pp@subappendix@begin', sub {
 
 #DefEnvironment('{appendices}','#body');
 DefMacro('\appendices',
-  '\lx@pp@appendix@begin'
-    . '\if@dotoc@pp\addappheadtotoc\fi'
-    . '\if@dopage@pp\appendixpage\fi'
+  '\@resets@pp'
+    . '\if@dopage@pp\appendixpage\else\if@dotoc@pp\addappheadtotoc\fi\fi'
     . '\if@dotitle@pp\def\fnum@appendix{\lx@refnum@compose{\appendixname}{\lx@the@@{appendix}}}\fi'
-    . '\if@dotitle@pp\def\fnum@toc@appendix{\lx@refnum@compose{\appendixname}{\lx@the@@{appendix}}}\fi'
+    . '\if@dotitletoc@pp\def\fnum@toc@appendix{\lx@refnum@compose{\appendixname}{\lx@the@@{appendix}}}\fi'
 );
 
 # These must END appendices!!!!
 # AND CLOSE an open appendix!
-DefMacro(T_CS('\endappendices'), '\lx@pp@appendix@end');
+DefMacro(T_CS('\endappendices'), '\@ppsaveapp\@pprestoresec');
 
 # DefEnvironment('{subappendices}','#body');
 DefMacro(T_CS('\subappendices'),    '\lx@pp@subappendix@begin');
-DefMacro(T_CS('\endsubappendices'), '\lx@pp@appendix@end');
+DefConstructor('\endsubappendices', sub { $_[0]->maybeCloseElement('ltx:appendix'); },
+  beforeDigest => sub { endAppendices(); });
 
 #======================================================================
 1;
