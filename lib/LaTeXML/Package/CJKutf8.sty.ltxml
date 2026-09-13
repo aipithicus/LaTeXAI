@@ -1,0 +1,9 @@
+# CJKutf8 4.8.5. Native UTF-8 input needs no byte activation or font cmap.
+# CJK.sty.ltxml owns the bounded wrapper and its explicit residue.
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+RequirePackage('CJK');
+ProcessOptions();
+1;

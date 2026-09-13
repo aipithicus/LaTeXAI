@@ -1,0 +1,16 @@
+# CJK 4.8.5, CJK.sty:1049-1094; unstarred Unicode wrapper.
+# Class: structural. UTF8 content is native engine text; family remains a class.
+# Non-UTF8 byte encodings and CJK* space suppression remain unsupported.
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+DeclareOption('encapsulated',sub {}); # The native environment is always scoped.
+ProcessOptions();
+DefEnvironment('{CJK} [] {} {}',"<ltx:inline-logical-block class='#cjkclass'>#body</ltx:inline-logical-block>",
+ properties=>sub {
+  my ($stomach,$fontenc,$encoding,$family)=@_;
+  Error('unsupported','CJK-encoding',$stomach,'Only UTF8 CJK content is supported') unless ToString($encoding) eq 'UTF8';
+  return (cjkclass=>'ltx_CJK ltx_CJK_family_'.ToString($family));
+ });
+1;
