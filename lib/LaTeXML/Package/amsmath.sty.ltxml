@@ -51,11 +51,15 @@ foreach my $option (qw(
   DeclareOption($option, undef); }
 
 DefConditional('\if@fleqn');
+# amsmath.dtx, Flush-left equations: this is a skip, so assignments must
+# consume their complete glue value even when display placement is structural.
+DefRegister('\@mathmargin' => LookupRegister('\@centering'));
 
 DeclareOption('reqno', sub { AssignMapping('DOCUMENT_CLASSES', ltx_leqno => undef); });
 DeclareOption('leqno', sub { AssignMapping('DOCUMENT_CLASSES', ltx_leqno => 1); });
 DeclareOption('fleqn', sub {
     AssignMapping('DOCUMENT_CLASSES', ltx_fleqn => 1);
+    Let('\mathindent', '\@mathmargin');
     Let('\if@fleqn', T_CS('\iftrue')); });
 
 ProcessOptions();

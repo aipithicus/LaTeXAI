@@ -1,0 +1,15 @@
+\documentclass{article}
+\usepackage[fleqn]{amsmath}
+\makeatletter
+\@fleqnfalse
+\@mathmargin\@centering
+\makeatother
+\begin{document}
+\makeatletter
+Default: \the\@mathmargin.
+{\mathindent=12pt plus 3pt minus 2pt\relax
+Local: \the\@mathmargin.}
+Restored: \the\@mathmargin.
+\makeatother
+\begin{equation}a=b\end{equation}
+\end{document}

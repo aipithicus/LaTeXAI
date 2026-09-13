@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="amsmath" options="fleqn"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML" class="ltx_fleqn">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <p>Default: 0.0pt plus 1000.0pt.
+Local: 12.0pt plus 3.0pt minus 2.0pt.
+Restored: 0.0pt plus 1000.0pt.</p>
+    <equation xml:id="S0.E1">
+      <tags>
+        <tag>(1)</tag>
+        <tag role="refnum">1</tag>
+      </tags>
+      <Math mode="display" tex="a=b" text="a = b" xml:id="S0.E1.m1">
+        <XMath>
+          <XMApp>
+            <XMTok meaning="equals" role="RELOP">=</XMTok>
+            <XMTok font="italic" role="UNKNOWN">a</XMTok>
+            <XMTok font="italic" role="UNKNOWN">b</XMTok>
+          </XMApp>
+        </XMath>
+      </Math>
+    </equation>
+  </para>
+</document>
