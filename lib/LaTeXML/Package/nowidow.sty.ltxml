@@ -1,0 +1,15 @@
+# nowidow 1.0 (2011/09/20), nowidow.sty:33-82.
+# Class: ignored physical widow/club penalties, with the source's paragraph
+# boundary preserved. All four public commands take one optional line count.
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+DeclareOption('all',sub {});
+DeclareOption(undef,sub {
+ return if ToString(Expand(T_CS('\CurrentOption'))) =~ /^(?:defaultlines=\d+|all=(?:true|false))$/;
+ Error('unsupported','nowidow-option',undef,'Unsupported nowidow option '.ToString(Expand(T_CS('\CurrentOption'))));
+});
+ProcessOptions();
+DefMacro('\\'.$_.' []','\par') for qw(nowidow setnowidow noclub setnoclub);
+1;
