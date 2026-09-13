@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="pmboxdraw"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <p><text font="typewriter">├── README.md</text></p>
+  </para>
+  <para xml:id="p2">
+    <p>━│┃
+╔═╗
+╚║╝
+╪╫╬</p>
+  </para>
+  <para xml:id="p3">
+    <p>▀▄█
+░▒▓▟
+<text font="bold">╴</text> Outside <Math mode="inline" tex="x+1" text="x + 1" xml:id="p3.m1">
+        <XMath>
+          <XMApp>
+            <XMTok meaning="plus" role="ADDOP">+</XMTok>
+            <XMTok font="italic" role="UNKNOWN">x</XMTok>
+            <XMTok meaning="1" role="NUMBER">1</XMTok>
+          </XMApp>
+        </XMath>
+      </Math>.</p>
+  </para>
+</document>
