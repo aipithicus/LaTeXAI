@@ -1,0 +1,7 @@
+\documentclass{article}
+\usepackage{datetime}
+\newdateformat{isodate}{\THEYEAR-\twodigit{\THEMONTH}-\twodigit{\THEDAY}}
+\begin{document}
+\isodate\formatdate{2}{3}{2024}. {\newdateformat{localdate}{\THEDAY/\THEMONTH/\THEYEAR}\localdate\formatdate{9}{12}{2001}.}
+\formatdate{5}{6}{2025}. After.
+\end{document}
