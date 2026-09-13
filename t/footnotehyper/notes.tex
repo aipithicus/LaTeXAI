@@ -1,0 +1,11 @@
+\documentclass{article}
+\usepackage{footnotehyper,hyperref}
+\makesavenoteenv{figure}
+\makesavenoteenv[savedtable]{tabular}
+\begin{document}
+Text\footnote{First note.\label{note:first}}
+\begin{figure}Figure text\footnote{Figure note.}\caption{A figure.}\label{fig:a}\end{figure}
+\begin{savedtable}{ll}A\footnote{Cell note.}&B\\ C&D\end{savedtable}
+\begin{savenotes}Outer\footnote{Outer note with nested\footnote{Nested note.}}\end{savenotes}
+After\footnote{Last note.} References \ref{note:first} and \ref{fig:a}.
+\end{document}

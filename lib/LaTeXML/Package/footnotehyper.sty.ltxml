@@ -1,0 +1,11 @@
+# footnotehyper 1.1f, source footnotehyper.sty:348-384.
+# Class: shim. Saved-note boundaries delegate to the native footnote model:
+# logical notes remain at their source position, independent of page floats.
+# The separate footnote/footnotetext environment APIs are unsupported.
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+RequirePackage('footnote');
+ProcessOptions();
+1;

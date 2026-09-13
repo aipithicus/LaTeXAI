@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="footnotehyper,hyperref"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <p>Text<note labels="LABEL:note:first" mark="1" role="footnote" xml:id="footnote1"><tags>
+          <tag>1</tag>
+          <tag role="autoref">footnote 1</tag>
+          <tag role="refnum">1</tag>
+          <tag role="typerefnum">footnote 1</tag>
+        </tags>First note.</note></p>
+  </para>
+  <figure inlist="lof" labels="LABEL:fig:a" xml:id="S0.F1">
+    <tags>
+      <tag>Figure 1</tag>
+      <tag role="autoref">Figure 1</tag>
+      <tag role="refnum">1</tag>
+      <tag role="typerefnum">Figure 1</tag>
+    </tags>
+    <p>Figure text<note mark="2" role="footnote" xml:id="footnote2"><tags>
+          <tag>2</tag>
+          <tag role="autoref">footnote 2</tag>
+          <tag role="refnum">2</tag>
+          <tag role="typerefnum">footnote 2</tag>
+        </tags>Figure note.</note></p>
+    <toccaption><tag close=" ">1</tag>A figure.</toccaption>
+    <caption><tag close=": ">Figure 1</tag>A figure.</caption>
+  </figure>
+  <para xml:id="p2">
+    <tabular vattach="middle">
+      <tbody>
+        <tr>
+          <td align="left">A<note mark="3" role="footnote" xml:id="footnote3"><tags>
+                <tag>3</tag>
+                <tag role="autoref">footnote 3</tag>
+                <tag role="refnum">3</tag>
+                <tag role="typerefnum">footnote 3</tag>
+              </tags>Cell note.</note></td>
+          <td align="left">B</td>
+        </tr>
+        <tr>
+          <td align="left">C</td>
+          <td align="left">D</td>
+        </tr>
+      </tbody>
+    </tabular>
+    <p>Outer<note mark="5" role="footnote" xml:id="footnote5"><tags>
+          <tag>5</tag>
+          <tag role="autoref">footnote 5</tag>
+          <tag role="refnum">5</tag>
+          <tag role="typerefnum">footnote 5</tag>
+        </tags>Outer note with nested<note mark="4" role="footnote" xml:id="footnote4"><tags>
+            <tag>4</tag>
+            <tag role="autoref">footnote 4</tag>
+            <tag role="refnum">4</tag>
+            <tag role="typerefnum">footnote 4</tag>
+          </tags>Nested note.</note></note>
+After<note mark="6" role="footnote" xml:id="footnote6"><tags>
+          <tag>6</tag>
+          <tag role="autoref">footnote 6</tag>
+          <tag role="refnum">6</tag>
+          <tag role="typerefnum">footnote 6</tag>
+        </tags>Last note.</note> References <ref labelref="LABEL:note:first"/> and <ref labelref="LABEL:fig:a"/>.</p>
+  </para>
+</document>
