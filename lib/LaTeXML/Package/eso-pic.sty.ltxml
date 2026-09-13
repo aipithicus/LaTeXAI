@@ -1,0 +1,46 @@
+# eso-pic 3.0e (2026/05/31), eso-pic.sty:29-151.
+# Class: structural containment of page furniture in existing block carriers.
+# Preserve registered content, channel, next-page/repeated and clear boundaries.
+# Physical placement/pagination and per-page copies are not executed.
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+RequirePackage('xcolor');
+for my $opt (qw(texcoord pscoord)) {DeclareOption($opt,sub {});}
+ProcessOptions();
+AssignValue('eso_pending',[]);
+DefConstructor('\lx@eso@panel {} {} {}',
+ "<ltx:block class='ltx_eso_pic_#1 ltx_eso_pic_#2'>#3</ltx:block>",
+ mode=>'internal_vertical',beforeConstruct=>sub {$_[0]->maybeCloseElement('ltx:p');});
+sub _eso_panel {
+ my ($role,$kind,$body)=@_;
+ return Invocation(T_CS('\lx@eso@panel'),Tokens(Explode($role)),Tokens(Explode($kind)),$body);
+}
+for my $role ('BG','FG') {
+ DefPrimitive('\\AddToShipoutPicture'.$role.' OptionalMatch:* {}',sub {
+  my ($stomach,$star,$body)=@_;my $kind=$star?'nextpage':'repeated';
+  if (LookupValue('inPreamble')) {
+   AssignValue('eso_pending',[@{LookupValue('eso_pending')},[$role,$kind,$body]],'global');return;
+  }
+  return Digest(_eso_panel($role,$kind,$body));
+ });
+ DefPrimitive('\\ClearShipoutPicture'.$role,sub {
+  if (LookupValue('inPreamble')) {
+   AssignValue('eso_pending',[grep {$_->[0] ne $role || $_->[1] ne 'repeated'} @{LookupValue('eso_pending')}],'global');return;
+  }
+  return Digest(_eso_panel($role,'clear',Tokens()));
+ });
+}
+Let('\AddToShipoutPicture','\AddToShipoutPictureBG');
+Let('\ClearShipoutPicture','\ClearShipoutPictureBG');
+AtBeginDocument(sub {
+ my @panels=@{LookupValue('eso_pending')};AssignValue('eso_pending',[],'global');
+ return map {_eso_panel(@$_)} @panels;
+});
+DefMacro('\LenToUnit {}','#1');
+DefConstructor('\lx@eso@position {} {}',"<ltx:inline-logical-block class='ltx_eso_pic_#1'>#2</ltx:inline-logical-block>");
+for my $pos (qw(PageUpperLeft PageLowerLeft PageCenter StockLowerLeft StockUpperLeft StockCenter TextUpperLeft TextLowerLeft TextCenter)) {
+ DefMacro('\\At'.$pos.' {}',Tokens(Invocation(T_CS('\lx@eso@position'),Tokens(Explode($pos)),Tokens(T_PARAM,T_OTHER('1')))));
+}
+1;

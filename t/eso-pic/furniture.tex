@@ -1,0 +1,11 @@
+\documentclass{article}
+\usepackage{eso-pic}
+\AddToShipoutPictureBG{Cleared before the first page.}
+\AddToShipoutPictureBG*{\AtPageLowerLeft{\color{later}First page $x+1$.}}
+\ClearShipoutPictureBG
+\definecolor{later}{rgb}{0,0,1}
+\begin{document}
+Main text.
+\AddToShipoutPictureFG{\AtTextUpperLeft{Repeated foreground.}}
+After.\ClearShipoutPictureFG
+\end{document}
