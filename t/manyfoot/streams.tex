@@ -1,0 +1,8 @@
+\documentclass{article}
+\usepackage{manyfoot}
+\DeclareNewFootnote{A}[alph]
+\begin{document}
+Text\footnote{Main note.} Other\footnoteA{Letter note.\label{note:a}} Explicit\footnoteA[5]{Explicit fifth.}\footnoteA{Second letter.} Last\footnote{Second main.}
+Marked\footnotemarkA\footnotetextA{Third letter text.}
+\FootnoteA{*}{Literal mark.} Reference \ref{note:a}.
+\end{document}

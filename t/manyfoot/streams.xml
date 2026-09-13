@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="manyfoot"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <p>Text<note mark="1" role="footnote" xml:id="footnote1"><tags>
+          <tag>1</tag>
+          <tag role="refnum">1</tag>
+          <tag role="typerefnum">footnote 1</tag>
+        </tags>Main note.</note> Other<note labels="LABEL:note:a" mark="a" role="footnoteA" xml:id="noteA1"><tags>
+          <tag>a</tag>
+          <tag role="refnum">a</tag>
+          <tag role="typerefnum">footnote a</tag>
+        </tags>Letter note.</note> Explicit<note mark="e" role="footnoteA" xml:id="noteAx1"><tags>
+          <tag>e</tag>
+          <tag role="refnum">e</tag>
+          <tag role="typerefnum">footnote e</tag>
+        </tags>Explicit fifth.</note><note mark="b" role="footnoteA" xml:id="noteA2"><tags>
+          <tag>b</tag>
+          <tag role="refnum">b</tag>
+          <tag role="typerefnum">footnote b</tag>
+        </tags>Second letter.</note> Last<note mark="2" role="footnote" xml:id="footnote2"><tags>
+          <tag>2</tag>
+          <tag role="refnum">2</tag>
+          <tag role="typerefnum">footnote 2</tag>
+        </tags>Second main.</note>
+Marked<note mark="c" role="footnoteA" xml:id="noteA3"><tags>
+          <tag>c</tag>
+          <tag role="refnum">c</tag>
+          <tag role="typerefnum">footnote c</tag>
+        </tags>Third letter text.</note><note mark="*" role="footnoteA" xml:id="noteAx3"><tags>
+          <tag>*</tag>
+          <tag role="refnum">*</tag>
+          <tag role="typerefnum">footnote *</tag>
+        </tags>Literal mark.</note> Reference <ref labelref="LABEL:note:a"/>.</p>
+  </para>
+</document>
