@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="book"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-book.css" type="text/css"/>
+  <chapter xml:id="Chx1">
+    <title>Custom contents</title>
+    <TOC lists="toc" scope="global" select="ltx:part | ltx:chapter | ltx:section | ltx:appendix | ltx:index | ltx:bibliography"/>
+    <TOC lists="lof" scope="global"/>
+    <TOC lists="lot" scope="global"/>
+    <TOC lists="toc" scope="global" select="ltx:part | ltx:chapter | ltx:section | ltx:appendix | ltx:index | ltx:bibliography">
+      <title>Contents</title>
+    </TOC>
+  </chapter>
+  <chapter inlist="toc" xml:id="Ch1">
+    <tags>
+      <tag>Chapter 1</tag>
+      <tag role="refnum">1</tag>
+      <tag role="typerefnum">Chapter 1</tag>
+    </tags>
+    <title><tag close=" ">Chapter 1</tag>First</title>
+    <toctitle><tag close=" ">1</tag>First</toctitle>
+    <section inlist="toc" xml:id="Ch1.S1">
+      <tags>
+        <tag>1.1</tag>
+        <tag role="refnum">1.1</tag>
+        <tag role="typerefnum">§1.1</tag>
+      </tags>
+      <title><tag close=" ">1.1</tag>Included</title>
+      <subsection inlist="toc" xml:id="Ch1.S1.SS1">
+        <tags>
+          <tag>1.1.1</tag>
+          <tag role="refnum">1.1.1</tag>
+          <tag role="typerefnum">§1.1.1</tag>
+        </tags>
+        <title><tag close=" ">1.1.1</tag>Too deep</title>
+        <figure inlist="lof" xml:id="Ch1.F1">
+          <tags>
+            <tag>Figure 1.1</tag>
+            <tag role="refnum">1.1</tag>
+            <tag role="typerefnum">Figure 1.1</tag>
+          </tags>
+          <toccaption><tag close=" ">1.1</tag>Figure</toccaption>
+          <caption><tag close=": ">Figure 1.1</tag>Figure</caption>
+        </figure>
+        <table inlist="lot" xml:id="Ch1.T1">
+          <tags>
+            <tag>Table 1.1</tag>
+            <tag role="refnum">1.1</tag>
+            <tag role="typerefnum">Table 1.1</tag>
+          </tags>
+          <toccaption><tag close=" ">1.1</tag>Table</toccaption>
+          <caption><tag close=": ">Table 1.1</tag>Table</caption>
+        </table>
+      </subsection>
+    </section>
+  </chapter>
+</document>

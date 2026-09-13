@@ -1,0 +1,10 @@
+\documentclass{book}
+\setcounter{tocdepth}{1}
+\begin{document}
+\chapter*{Custom contents}
+\makeatletter\@starttoc{toc}\@starttoc{lof}\@starttoc{lot}\makeatother
+\tableofcontents
+\chapter{First}\section{Included}\subsection{Too deep}
+\begin{figure}\caption{Figure}\end{figure}
+\begin{table}\caption{Table}\end{table}
+\end{document}

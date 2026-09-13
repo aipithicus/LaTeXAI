@@ -744,6 +744,30 @@ DefConstructorI('\listoftables', undef,
   "<ltx:TOC lists='lot' scope='global'><ltx:title>#name</ltx:title></ltx:TOC>",
   properties => sub { (name => DigestText(T_CS('\listtablename'))); });
 
+# Kernel latex.ltx (TeX Live revision 79618), @starttoc: named list without
+# the class-owned heading. Keep the same global list object and tocdepth
+# selection as the public constructors above; do not execute auxiliary files.
+DefConstructor('\@starttoc {}',
+  "<ltx:TOC lists='#list' scope='global' select='#select'/>",
+  properties => sub {
+    my ($stomach, $list) = @_;
+    my $name = ToString($list);
+    if ($name !~ /^(?:toc|lof|lot)$/) {
+      Error('unexpected', 'starttoc', $stomach, "Unsupported contents list '$name'");
+    }
+    my $select;
+    if ($name eq 'toc') {
+      my $td = CounterValue('tocdepth')->valueOf + 1;
+      my @s = (qw(ltx:part ltx:chapter ltx:section ltx:subsection ltx:subsubsection
+          ltx:paragraph ltx:subparagraph));
+      $td = $#s if $#s < $td;
+      @s = map { $s[$_] } 0 .. $td;
+      push(@s, (qw(ltx:appendix ltx:index ltx:bibliography))) if @s;
+      $select = join(' | ', @s);
+    }
+    return (list => $name, select => $select);
+  });
+
 DefPrimitive('\numberline{}{}',    undef);
 DefPrimitive('\addtocontents{}{}', undef);
 
