@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="amsmath,MnSymbol"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <p><Math class="ltx_math_unparsed" mode="inline" tex="\lsem x\rsem=\powerset(X)" xml:id="p1.m1">
+        <XMath>
+          <XMWrap>
+            <XMTok name="llbracket" role="OPEN">⟦</XMTok>
+            <XMTok font="italic" role="UNKNOWN" xml:id="p1.m1.1">x</XMTok>
+            <XMTok name="rrbracket" role="CLOSE">⟧</XMTok>
+          </XMWrap>
+          <XMTok meaning="equals" role="RELOP">=</XMTok>
+          <XMTok meaning="powerset" role="UNKNOWN">℘</XMTok>
+          <XMWrap>
+            <XMTok role="OPEN" stretchy="false">(</XMTok>
+            <XMTok font="italic" role="UNKNOWN">X</XMTok>
+            <XMTok role="CLOSE" stretchy="false">)</XMTok>
+          </XMWrap>
+        </XMath>
+      </Math>.</p>
+    <equation xml:id="S0.Ex1">
+      <Math class="ltx_math_unparsed" mode="display" tex="\left\lsem\frac{x}{y}\right\rsem\subseteq\powerset(X)^{2}" xml:id="S0.Ex1.m1">
+        <XMath>
+          <XMWrap>
+            <XMTok name="llbracket" role="OPEN" stretchy="true">⟦</XMTok>
+            <XMApp xml:id="S0.Ex1.m1.1">
+              <XMTok mathstyle="display" meaning="divide" role="FRACOP"/>
+              <XMTok font="italic" role="UNKNOWN">x</XMTok>
+              <XMTok font="italic" role="UNKNOWN">y</XMTok>
+            </XMApp>
+            <XMTok name="rrbracket" role="CLOSE" stretchy="true">⟧</XMTok>
+          </XMWrap>
+          <XMTok meaning="subset-of-or-equals" name="subseteq" role="RELOP">⊆</XMTok>
+          <XMTok meaning="powerset" role="UNKNOWN">℘</XMTok>
+          <XMApp>
+            <XMTok role="SUPERSCRIPTOP" scriptpos="post1"/>
+            <XMWrap>
+              <XMTok role="OPEN" stretchy="false">(</XMTok>
+              <XMTok font="italic" role="UNKNOWN">X</XMTok>
+              <XMTok role="CLOSE" stretchy="false">)</XMTok>
+            </XMWrap>
+            <XMTok fontsize="70%" meaning="2" role="NUMBER">2</XMTok>
+          </XMApp>
+        </XMath>
+      </Math>
+    </equation>
+    <p><Math mode="inline" tex="\wp(z)" text="Weierstrass-p * z" xml:id="p1.m2">
+        <XMath>
+          <XMApp>
+            <XMTok meaning="times" role="MULOP">⁢</XMTok>
+            <XMTok meaning="Weierstrass-p" name="wp" role="UNKNOWN">℘</XMTok>
+            <XMDual>
+              <XMRef idref="p1.m2.1"/>
+              <XMWrap>
+                <XMTok role="OPEN" stretchy="false">(</XMTok>
+                <XMTok font="italic" role="UNKNOWN" xml:id="p1.m2.1">z</XMTok>
+                <XMTok role="CLOSE" stretchy="false">)</XMTok>
+              </XMWrap>
+            </XMDual>
+          </XMApp>
+        </XMath>
+      </Math>.</p>
+  </para>
+</document>

@@ -1,0 +1,4 @@
+command	kind	mode	codepoint	name	meaning	role	font	katex	source	note
+\lsem	symbol	math	U+27E6	llbracket		OPEN		\llbracket	lib-symb/MnSymbol/ctan/mnsymbol/tex/MnSymbol.dtx:3237	MnSymbol 1.4 open double-square delimiter; Sym-Delim.mf:153-189; native paired-delimiter name
+\powerset	symbol	math	U+2118	powerset	powerset	UNKNOWN			lib-symb/MnSymbol/ctan/mnsymbol/tex/MnSymbol.dtx:2633	MnSymbol 1.4 mathord; raised calligraphic p variant in Sym-Geometric.mf:1697-1754; distinct from wp meaning
+\rsem	symbol	math	U+27E7	rrbracket		CLOSE		\rrbracket	lib-symb/MnSymbol/ctan/mnsymbol/tex/MnSymbol.dtx:3238	MnSymbol 1.4 close double-square delimiter; Sym-Delim.mf:153-189; native paired-delimiter name
