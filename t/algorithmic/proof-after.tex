@@ -1,0 +1,18 @@
+\documentclass{article}
+\usepackage{amsthm,algorithm,algorithmic}
+\begin{document}
+\begin{proof}Proof before an algorithm.\end{proof}
+\begin{algorithm}
+\begin{algorithmic}[1]
+\REQUIRE An input $a$.
+\ENSURE An output $b$.
+\STATE $b\gets a+1$
+\end{algorithmic}
+\end{algorithm}
+\begin{proof}
+Proof after an algorithm.
+\[b=a+1\]
+\end{proof}
+\begin{itemize}\item Ordinary item.\end{itemize}
+\section{After}Ordinary section.
+\end{document}

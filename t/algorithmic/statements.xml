@@ -16,8 +16,7 @@
     <caption><tag close=" "><text font="bold">Algorithm 1</text></tag> Basic Statements</caption>
     <listing>
       <listingline xml:id="alg1.l0"><tags>
-          <tag><text fontsize="80%">0:</text></tag>
-          <tag role="refnum">0</tag>
+          <tag><text font="bold">Require:</text></tag>
         </tags> <Math mode="inline" tex="x\geq 0" text="x &gt;= 0" xml:id="alg1.l0.m1">
           <XMath>
             <XMApp>
@@ -29,8 +28,7 @@
         </Math>
 </listingline>
       <listingline xml:id="alg1.l0a"><tags>
-          <tag><text fontsize="80%">0:</text></tag>
-          <tag role="refnum">0</tag>
+          <tag><text font="bold">Ensure:</text></tag>
         </tags> <Math mode="inline" tex="y\geq 0" text="y &gt;= 0" xml:id="alg1.l0a.m1">
           <XMath>
             <XMApp>

@@ -171,6 +171,9 @@ DefMacro('\algorithmic OptionalUndigested', sub {
   }
   # Initial indentation matches \labelsep (0.5em):
   AssignRegister('\ALC@tlm' => Dimension('0.5em'));
+  # algorithmic.sty:126 changes the item implementation only inside this
+  # environment. A package-global override corrupts later proof/trivlist items.
+  Let('\item', '\lx@algorithmic@item');
   return T_CS('\lx@algorithmic@beginlist');
 });
 
@@ -181,7 +184,17 @@ DefMacro('\STATE', '\ALC@it');
 DefMacro('\STMT',  '\ALC@it');
 
 # Require and Ensure:
-DefMacro('\item OptionalUndigested', '\lx@algorithmic@item@@ [#1]\hskip\ALC@tlm\relax');
+DefConstructor('\lx@algorithmic@labeled{}',
+  "<ltx:listingline xml:id='#id'><ltx:tags><ltx:tag>#1</ltx:tag></ltx:tags>",
+  properties => sub { (id => Digest(T_CS('\theALC@line@ID'))); },
+  beforeConstruct => sub { $_[0]->maybeCloseElement('ltx:listingline'); });
+DefMacro('\lx@algorithmic@item OptionalUndigested', sub {
+  my ($gullet, $label) = @_;
+  return $label
+    ? Tokens(T_CS('\lx@algorithmic@labeled'), T_BEGIN, $label, T_END,
+      T_CS('\hskip'), T_CS('\ALC@tlm'), T_CS('\relax'))
+    : T_CS('\ALC@it');
+});
 DefMacro('\REQUIRE', '\item[\algorithmicrequire]');
 DefMacro('\ENSURE',  '\item[\algorithmicensure]');
 

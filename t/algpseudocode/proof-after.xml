@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="amsthm,algorithm,algpseudocode"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <float class="ltx_float_algorithm" framed="top" xml:id="tab1">
+    <listing framed="topbottom">
+      <listingline xml:id="alg0.l1"><tags>
+          <tag><text fontsize="80%">1:</text></tag>
+          <tag role="refnum">1</tag>
+        </tags><Math mode="inline" tex="a\leftarrow 1" text="a leftarrow 1" xml:id="alg0.l1.m1">
+          <XMath>
+            <XMApp>
+              <XMTok name="leftarrow" role="ARROW">←</XMTok>
+              <XMTok font="italic" role="UNKNOWN">a</XMTok>
+              <XMTok meaning="1" role="NUMBER">1</XMTok>
+            </XMApp>
+          </XMath>
+        </Math>
+</listingline>
+    </listing>
+  </float>
+  <proof>
+    <title class="ltx_runin" font="italic">Proof.</title>
+    <para xml:id="p1">
+      <p>Proof after an algorithm.</p>
+      <equation xml:id="S0.Ex1">
+        <Math mode="display" tex="a=1" text="a = 1" xml:id="S0.Ex1.m1">
+          <XMath>
+            <XMApp>
+              <XMTok meaning="equals" role="RELOP">=</XMTok>
+              <XMTok font="italic" role="UNKNOWN">a</XMTok>
+              <XMTok meaning="1" role="NUMBER">1</XMTok>
+            </XMApp>
+          </XMath>
+        </Math>
+      </equation>
+      <p>∎</p>
+    </para>
+  </proof>
+  <para xml:id="p2">
+    <itemize xml:id="S0.I1">
+      <item xml:id="S0.I1.i1">
+        <tags>
+          <tag>•</tag>
+          <tag role="typerefnum">1st item</tag>
+        </tags>
+        <para xml:id="S0.I1.i1.p1">
+          <p>Ordinary item.</p>
+        </para>
+      </item>
+    </itemize>
+  </para>
+  <section inlist="toc" xml:id="S1">
+    <tags>
+      <tag>1</tag>
+      <tag role="refnum">1</tag>
+      <tag role="typerefnum">§1</tag>
+    </tags>
+    <title><tag close=" ">1</tag>After</title>
+    <para xml:id="S1.p1">
+      <p>Ordinary section.</p>
+    </para>
+  </section>
+</document>
