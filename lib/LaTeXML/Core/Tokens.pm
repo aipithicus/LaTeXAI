@@ -272,9 +272,14 @@ sub stripBraces {
   if ($i0 == $i1) {
     return bless [], 'LaTeXML::Core::Tokens';
   }
-  return (($i0 < $i1) && (($i0 > 0) || ($i1 < $n))
-    ? bless [@$self[$i0 .. $i1 - 1]], 'LaTeXML::Core::Tokens'
-    : $self); }
+  if (($i0 < $i1) && (($i0 > 0) || ($i1 < $n))) {
+    my $trimmed = bless [@$self[$i0 .. $i1 - 1]], 'LaTeXML::Core::Tokens';
+    # The surviving tokens still belong to the same source occurrences.
+    # Key-value argument readers strip grouping before digesting title math.
+    if (my $occ = $CAPTURE_OCCURRENCES{$self}) {
+      $CAPTURE_OCCURRENCES{$trimmed} = [@$occ[$i0 .. $i1 - 1]]; }
+    return $trimmed; }
+  return $self; }
 
 #======================================================================
 
