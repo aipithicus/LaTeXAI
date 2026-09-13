@@ -1,0 +1,127 @@
+# -*- mode: Perl -*-
+# /=====================================================================\ #
+# | mdframed - structural native binding for LaTeXML                    | #
+# \=====================================================================/ #
+# Emulates mdframed 1.9b from lib-ctan/mdframed/provenance.json,
+# mdframed.sty:190-300 and 564-602. Model: tcolorbox theorem carriers and
+# ordinary LaTeX theorem definitions. No raw xparse or drawing backend runs.
+# Physical skips/margins/rule widths/corners do not change block content.
+# Colors, titles and partial-border choices retain traces. Drawing hooks,
+# framefoot/firstframetitle, subtitle/mdtheorem and unknown keys are unsupported.
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+RequirePackage('xcolor');
+RequirePackage('etoolbox');
+
+my %mdf_keys = map { $_ => 1 } qw(
+  style backgroundcolor linecolor fontcolor frametitle frametitlefont
+  skipabove skipbelow leftmargin rightmargin innerleftmargin innerrightmargin
+  innertopmargin innerbottommargin linewidth innerlinewidth middlelinewidth
+  outerlinewidth roundcorner userdefinedwidth framemethod nobreak
+  topline bottomline leftline rightline hidealllines
+);
+DefKeyVal('mdf', $_, 'Undigested') for keys %mdf_keys;
+DeclareOption(undef, sub {
+  my $option = Expand(T_CS('\CurrentOption'));
+  # The selected backend controls drawing only. Other options remain explicit.
+  return if ToString($option) =~ /^(?:framemethod=.*|default|tikz|TikZ|ps|pstricks|PSTricks)$/;
+  Error('unsupported', 'mdframed-option', undef, 'Unsupported mdframed package option: '.ToString($option));
+});
+ProcessOptions();
+AssignValue('mdf_defaults', {});
+
+sub _mdf_read {
+  my ($gullet, $tokens) = @_;
+  my $kv = LaTeXML::Core::KeyVals->new('KV', 'mdf');
+  $gullet->readingFromMouth(Tokens(T_BEGIN, $tokens, T_END),
+    sub { $kv->readFrom($_[0], T_END); });
+  return $kv;
+}
+sub _mdf_merge {
+  my ($gullet, $base, $kv, $seen) = @_;
+  my %values = %$base;
+  return \%values unless $kv;
+  my @pairs = $kv->getPairs;
+  while (@pairs) {
+    my ($key, $value) = splice(@pairs, 0, 2);
+    if ($key eq 'style') {
+      my $name = ToString(Expand($value));
+      if ($seen->{$name} || !LookupValue('mdf_style:'.$name)) {
+        Error('unsupported', 'mdframed-style', $gullet, "Unknown or recursive mdframed style '$name'");
+        next;
+      }
+      my %nested = (%$seen, $name => 1);
+      %values = %{_mdf_merge($gullet, \%values,
+        _mdf_read($gullet, LookupValue('mdf_style:'.$name)), \%nested)};
+    }
+    elsif (!$mdf_keys{$key}) {
+      Error('unsupported', 'mdframed-key', $gullet, "Unsupported mdframed key '$key'");
+    }
+    else { $values{$key} = $value; }
+  }
+  return \%values;
+}
+DefPrimitive('\mdfsetup RequiredKeyVals:mdf', sub {
+  AssignValue('mdf_defaults', _mdf_merge($_[0]->getGullet, LookupValue('mdf_defaults') || {}, $_[1], {}));
+});
+DefPrimitive('\mdfdefinestyle{}{}', sub {
+  AssignValue('mdf_style:'.ToString($_[1]), $_[2]);
+});
+DefPrimitive('\mdfapptodefinestyle{}{}', sub {
+  my ($stomach,$name,$options)=@_;
+  my $old=LookupValue('mdf_style:'.ToString($name));
+  if (!$old) { Error('undefined','mdframed-style',$stomach,'Unknown mdframed style '.ToString($name)); return; }
+  AssignValue('mdf_style:'.ToString($name),Tokens($old,T_OTHER(','),$options));
+});
+DefConstructor('\lx@mdf@title{}',
+  '<ltx:title>#1</ltx:title>');
+DefEnvironment('{mdframed} OptionalKeyVals:mdf',
+  "<ltx:theorem class='#mdclass' ?#framed(framed='#framed')"
+    . " ?#backgroundcolor(backgroundcolor='#backgroundcolor')"
+    . " ?#framecolor(framecolor='#framecolor')>#body</ltx:theorem>",
+  mode => 'internal_vertical',
+  beforeConstruct => sub { $_[0]->maybeCloseElement('ltx:p'); },
+  afterDigestBegin => sub {
+    my ($stomach,$whatsit)=@_;
+    my $v=_mdf_merge($stomach->getGullet,LookupValue('mdf_defaults')||{},$whatsit->getArg(1),{});
+    $whatsit->setProperty(mdf_values=>$v);
+    my @boxes;
+    if ($v->{frametitle}) {
+      my $title=Tokens(T_BEGIN, ($v->{frametitlefont} ? $v->{frametitlefont} : T_CS('\bfseries')), $v->{frametitle}, T_END);
+      push @boxes,Digest(Invocation(T_CS('\lx@mdf@title'),$title));
+    }
+    Digest(Invocation(T_CS('\color'),undef,$v->{fontcolor})) if $v->{fontcolor};
+    return @boxes;
+  },
+  properties => sub {
+    my ($stomach,$kv)=@_;
+    my $v=_mdf_merge($stomach->getGullet,LookupValue('mdf_defaults')||{},$kv,{});
+    my @class=('ltx_mdframed');
+    for my $key (qw(topline bottomline leftline rightline hidealllines)) {
+      push @class,'ltx_mdf_'.$key.'_'.ToString($v->{$key}) if defined $v->{$key};
+    }
+    my %props=(mdclass=>join(' ',@class),framed=>'rectangle');
+    $props{framed}=undef if $v->{hidealllines} && ToString($v->{hidealllines}) eq 'true';
+    $props{backgroundcolor}=DecodeColor(ToString($v->{backgroundcolor})) if $v->{backgroundcolor};
+    $props{framecolor}=DecodeColor(ToString($v->{linecolor})) if $v->{linecolor};
+    return %props;
+  });
+
+DefMacro('\newmdenv [] {}',
+  '\newenvironment{#2}{\mdfsetup{#1}\begin{mdframed}}{\end{mdframed}}');
+DefMacro('\renewmdenv [] {}',
+  '\renewenvironment{#2}{\mdfsetup{#1}\begin{mdframed}}{\end{mdframed}}');
+DefMacro('\surroundwithmdframed [] {}',
+  '\BeforeBeginEnvironment{#2}{\begin{mdframed}[#1]}\AfterEndEnvironment{#2}{\end{mdframed}}');
+DefMacro('\newmdtheoremenv [] {} [] {} []', sub {
+  my ($gullet,$options,$name,$shared,$title,$within)=@_;
+  my @tokens=(T_CS('\newtheorem'),T_BEGIN,$name->unlist,T_END);
+  push @tokens,T_OTHER('['),$shared->unlist,T_OTHER(']') if $shared;
+  push @tokens,T_BEGIN,$title->unlist,T_END;
+  push @tokens,T_OTHER('['),$within->unlist,T_OTHER(']') if $within;
+  push @tokens,Invocation(T_CS('\surroundwithmdframed'),$options,$name);
+  return @tokens;
+});
+1;

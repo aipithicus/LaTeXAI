@@ -1,0 +1,19 @@
+\documentclass{article}
+\usepackage{amsmath,amsthm,mdframed}
+\mdfdefinestyle{prompt}{backgroundcolor=yellow,linecolor=blue,skipabove=4pt}
+\newmdenv[style=prompt,linewidth=0.4pt]{promptbox}
+\newmdtheoremenv[linecolor=red]{claim}{Claim}[section]
+\newmdtheoremenv[backgroundcolor=yellow]{corollary}[claim]{Corollary}
+\begin{document}
+\section{Scope}
+\begin{mdframed}First paragraph with $x+1$.
+
+Second paragraph.\end{mdframed}
+\begin{promptbox}Prompt text and $\alpha$.\end{promptbox}
+\begin{mdframed}[frametitle={A title with $y$},backgroundcolor=green]
+Titled content.
+\end{mdframed}
+\begin{claim}[Named]\label{claim:a}A numbered claim $a=b$.\end{claim}
+\begin{corollary}\label{claim:b}A shared counter.\end{corollary}
+References \ref{claim:a} and \ref{claim:b}.
+\end{document}

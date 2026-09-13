@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="mdframed" options="framemethod=tikz"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <theorem backgroundcolor="#FF0000" class="ltx_mdframed" framecolor="#0000FF" framed="rectangle">
+    <para xml:id="p1">
+      <p>Explicit body option.</p>
+    </para>
+  </theorem>
+  <theorem backgroundcolor="#FFFF00" class="ltx_mdframed" framed="rectangle">
+    <para xml:id="p2">
+      <p>Local default.</p>
+    </para>
+  </theorem>
+  <theorem class="ltx_mdframed ltx_mdf_hidealllines_true">
+    <para xml:id="p3">
+      <p><text color="#FF0000">Restored default.</text></p>
+    </para>
+  </theorem>
+  <para xml:id="p4">
+    <p>After <Math mode="inline" tex="x" text="x" xml:id="p4.m1">
+        <XMath>
+          <XMTok font="italic" role="UNKNOWN">x</XMTok>
+        </XMath>
+      </Math>.</p>
+  </para>
+</document>

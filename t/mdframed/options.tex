@@ -1,0 +1,12 @@
+\documentclass{article}
+\usepackage[framemethod=tikz]{mdframed}
+\mdfdefinestyle{panel}{backgroundcolor=yellow}
+\mdfapptodefinestyle{panel}{linecolor=blue}
+\newmdenv[style=panel]{panelbox}
+\renewmdenv[style=panel,backgroundcolor=green]{panelbox}
+\begin{document}
+\begin{panelbox}[backgroundcolor=red]Explicit body option.\end{panelbox}
+{\mdfsetup{backgroundcolor=yellow}\begin{mdframed}Local default.\end{mdframed}}
+\begin{mdframed}[hidealllines=true,fontcolor=red]Restored default.\end{mdframed}
+After $x$.
+\end{document}
