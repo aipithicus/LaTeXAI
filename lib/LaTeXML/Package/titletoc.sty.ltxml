@@ -1,0 +1,67 @@
+# titletoc 2.17, titletoc.sty:193-249 and 448-528.
+# Class: structural. Named partial ranges, depth and source hierarchy/links.
+# Observed titlecontents font/indent/page-leader formatting is physical;
+# arbitrary format text, starred inline layouts and non-TOC lists unsupported.
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+use LaTeXML::Util::Contents qw(contents_select fill_partial_contents);
+ProcessOptions();
+AssignValue('ttl_ranges',{});AssignValue('ttl_serial',0);AssignValue('ttl_event',0);
+sub _ttl_boundary {
+ my ($gullet,$arg,$kind)=@_;my $name=defined($arg)?ToString($arg):'default';
+ my %ranges=%{LookupValue('ttl_ranges')};my @out;
+ if ($kind eq 'new') {
+  push @out,_ttl_boundary($gullet,$arg,'stop') if $ranges{$name};
+  my $id=LookupValue('ttl_serial')+1;AssignValue('ttl_serial',$id,'global');
+  $ranges{$name}=$id;AssignValue('ttl_ranges',\%ranges,'global');$kind='start';
+ }
+ my $range=$ranges{$name};
+ if (!$range) {Error('undefined','titletoc-range',$gullet,"No partial contents named '$name'");return ();}
+ my $event=LookupValue('ttl_event')+1;AssignValue('ttl_event',$event,'global');
+ push @out,Invocation(T_CS('\lx@ttl@boundary'),Tokens(Explode("ttl.$range.$kind.$event")));
+ return @out;
+}
+DefMacro('\startcontents []',sub {_ttl_boundary($_[0],$_[1],'new');});
+DefMacro('\stopcontents []',sub {_ttl_boundary($_[0],$_[1],'stop');});
+DefMacro('\resumecontents []',sub {_ttl_boundary($_[0],$_[1],'start');});
+DefConstructor('\lx@ttl@boundary {}',"<ltx:anchor xml:id='#1' class='ltx_titletoc_boundary'/>");
+DefMacro('\printcontents [] {} {} [] {}',sub {
+ my ($gullet,$name,$prefix,$min,$depth,$setup)=@_;
+ return (T_BEGIN,($depth?Invocation(T_CS('\setcounter'),Tokens(Explode('tocdepth')),$depth):()),
+  $setup->unlist,Invocation(T_CS('\lx@ttl@print'),$name,$min),T_END);
+});
+DefConstructor('\lx@ttl@print [] {}',"<ltx:TOC class='ltx_titletoc' lists='toc' scope='#scope' select='#select'/>",
+ properties=>sub {
+  my ($stomach,$arg,$min)=@_;my $name=defined($arg)?ToString($arg):'default';
+  my $range=LookupValue('ttl_ranges')->{$name};
+  Error('undefined','titletoc-range',$stomach,"No partial contents named '$name'") unless $range;
+  my $low=ToString($min);
+  if ($low!~/^-?\d+$/) {Error('unexpected','titletoc-level',$stomach,'Expected numeric start level');$low=1;}
+  return (scope=>'ttl.'.($range||0).'.start',select=>contents_select($low,CounterValue('tocdepth')->valueOf));
+ });
+sub _ttl_validate_format {
+ my ($gullet,$tokens)=@_;
+ $gullet->readingFromMouth($tokens,sub {
+  my ($g)=@_;
+  while (my $t=$g->readToken) {
+   next if $t->getCatcode==CC_SPACE || $t->getCatcode==CC_BEGIN || $t->getCatcode==CC_END;
+   my $s=ToString($t);
+   next if $s=~/^\\(?:bfseries|mdseries|itshape|upshape|sffamily|rmfamily|small|footnotesize|normalsize|large|quad|qquad|enspace|hfill|thecontentslabel|contentspage|relax)$/;
+   if ($s=~/^\\(?:color|addvspace|contentslabel)$/) {$g->readArg;next;}
+   if ($s eq '\hspace') {$g->readMatch(T_OTHER('*'));$g->readArg;next;}
+   if ($s eq '\titlerule') {$g->readMatch(T_OTHER('*'));$g->readOptional;$g->readArg;next;}
+   Error('unsupported','titletoc-format',$g,"Unsupported content in contents format: $s");
+  }
+  return;
+ });
+}
+DefPrimitive('\titlecontents OptionalMatch:* {} [] {} {} {} {} []',sub {
+ my ($stomach,$star,$type,$indent,@format)=@_;
+ Error('unsupported','titletoc-inline',$stomach,'Starred inline contents formatting is unsupported') if $star;
+ _ttl_validate_format($stomach->getGullet,$_) for grep {defined} @format;
+ return;
+});
+Tag('ltx:document',afterClose=>\&fill_partial_contents);
+1;

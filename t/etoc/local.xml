@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="etoc"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <part inlist="toc" xml:id="Pt1">
+    <tags>
+      <tag>Part I</tag>
+      <tag role="refnum">I</tag>
+      <tag role="typerefnum">Part I</tag>
+    </tags>
+    <title><tag close=" ">Part I</tag>First</title>
+    <toctitle><tag close=" ">I</tag>First</toctitle>
+    <section inlist="toc" xml:id="S1">
+      <tags>
+        <tag>1</tag>
+        <tag role="refnum">1</tag>
+        <tag role="typerefnum">§1</tag>
+      </tags>
+      <title><tag close=" ">1</tag>Outside</title>
+    </section>
+  </part>
+  <part inlist="toc" xml:id="Pt2">
+    <tags>
+      <tag>Part II</tag>
+      <tag role="refnum">II</tag>
+      <tag role="typerefnum">Part II</tag>
+    </tags>
+    <title><tag close=" ">Part II</tag>Appendix</title>
+    <toctitle><tag close=" ">II</tag>Appendix</toctitle>
+    <TOC class="ltx_etoc" lists="toc" scope="Pt2" select="ltx:part | ltx:chapter | ltx:section | ltx:appendix | ltx:subsection">
+      <title>Contents</title>
+      <toclist>
+        <tocentry class="ltx_tocentry_section">
+          <ref idref="S2" show="toctitle"/>
+          <toclist>
+            <tocentry class="ltx_tocentry_subsection">
+              <ref idref="S2.SS1" show="toctitle"/>
+            </tocentry>
+          </toclist>
+        </tocentry>
+      </toclist>
+    </TOC>
+    <section inlist="toc" xml:id="S2">
+      <tags>
+        <tag>2</tag>
+        <tag role="refnum">2</tag>
+        <tag role="typerefnum">§2</tag>
+      </tags>
+      <title><tag close=" ">2</tag>Included</title>
+      <subsection inlist="toc" xml:id="S2.SS1">
+        <tags>
+          <tag>2.1</tag>
+          <tag role="refnum">2.1</tag>
+          <tag role="typerefnum">§2.1</tag>
+        </tags>
+        <title><tag close=" ">2.1</tag>Child</title>
+        <subsubsection inlist="toc" xml:id="S2.SS1.SSS1">
+          <tags>
+            <tag>2.1.1</tag>
+            <tag role="refnum">2.1.1</tag>
+            <tag role="typerefnum">§2.1.1</tag>
+          </tags>
+          <title><tag close=" ">2.1.1</tag>Too deep</title>
+        </subsubsection>
+      </subsection>
+    </section>
+  </part>
+  <part inlist="toc" xml:id="Pt3">
+    <tags>
+      <tag>Part III</tag>
+      <tag role="refnum">III</tag>
+      <tag role="typerefnum">Part III</tag>
+    </tags>
+    <title><tag close=" ">Part III</tag>Last</title>
+    <toctitle><tag close=" ">III</tag>Last</toctitle>
+    <TOC class="ltx_etoc" lists="toc" scope="Pt3" select="ltx:part | ltx:chapter | ltx:section | ltx:appendix | ltx:subsection | ltx:subsubsection">
+      <title>Contents</title>
+      <toclist>
+        <tocentry class="ltx_tocentry_section">
+          <ref idref="S3" show="toctitle"/>
+        </tocentry>
+      </toclist>
+    </TOC>
+    <section inlist="toc" xml:id="S3">
+      <tags>
+        <tag>3</tag>
+        <tag role="refnum">3</tag>
+        <tag role="typerefnum">§3</tag>
+      </tags>
+      <title><tag close=" ">3</tag>Last section</title>
+    </section>
+  </part>
+</document>

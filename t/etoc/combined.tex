@@ -1,0 +1,11 @@
+\documentclass{article}
+\usepackage{etoc,titletoc}
+\begin{document}
+\section{Before}
+\startcontents[range]\printcontents[range]{l}{1}{\setcounter{tocdepth}{2}}
+\section{Selected}\localtableofcontents
+\subsection{Inside}
+\stopcontents[range]\section{Stopped}
+\resumecontents[range]\section{Resumed}
+\stopcontents[range]\section{After}
+\end{document}

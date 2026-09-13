@@ -1,0 +1,9 @@
+\documentclass{article}
+\usepackage{etoc}
+\begin{document}
+\part{First}\section{Outside}
+\part{Appendix}
+\etocsetnexttocdepth{subsection}\localtableofcontents
+\section{Included}\subsection{Child}\subsubsection{Too deep}
+\part{Last}\localtableofcontents\section{Last section}
+\end{document}

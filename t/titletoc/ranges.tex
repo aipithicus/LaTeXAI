@@ -1,0 +1,12 @@
+\documentclass{article}
+\usepackage{titletoc}
+\titlecontents{section}[0em]{\addvspace{5pt}\bfseries}{\thecontentslabel\quad}{}{\enspace\titlerule*[0.6pc]{.}\contentspage}
+\begin{document}
+\section{Before}
+\startcontents[apx]
+\printcontents[apx]{}{1}{\setcounter{tocdepth}{2}}
+\section{Included}\subsection{Included child}\subsubsection{Too deep}
+\stopcontents[apx]\section{Stopped}
+\resumecontents[apx]\section{Resumed}
+\stopcontents[apx]\section{After}
+\end{document}

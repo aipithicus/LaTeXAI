@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="titletoc"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <section inlist="toc" xml:id="S1">
+    <tags>
+      <tag>1</tag>
+      <tag role="refnum">1</tag>
+      <tag role="typerefnum">§1</tag>
+    </tags>
+    <title><tag close=" ">1</tag>Before</title>
+    <para xml:id="S1.p1">
+      <p><anchor class="ltx_titletoc_boundary" xml:id="ttl.1.start.1"/></p>
+    </para>
+    <TOC class="ltx_titletoc" lists="toc" scope="ttl.1.start.1" select="ltx:section | ltx:appendix | ltx:subsection">
+      <toclist>
+        <tocentry class="ltx_tocentry_section">
+          <ref idref="S2" show="toctitle"/>
+          <toclist>
+            <tocentry class="ltx_tocentry_subsection">
+              <ref idref="S2.SS1" show="toctitle"/>
+            </tocentry>
+          </toclist>
+        </tocentry>
+        <tocentry class="ltx_tocentry_section">
+          <ref idref="S4" show="toctitle"/>
+        </tocentry>
+      </toclist>
+    </TOC>
+  </section>
+  <section inlist="toc" xml:id="S2">
+    <tags>
+      <tag>2</tag>
+      <tag role="refnum">2</tag>
+      <tag role="typerefnum">§2</tag>
+    </tags>
+    <title><tag close=" ">2</tag>Included</title>
+    <subsection inlist="toc" xml:id="S2.SS1">
+      <tags>
+        <tag>2.1</tag>
+        <tag role="refnum">2.1</tag>
+        <tag role="typerefnum">§2.1</tag>
+      </tags>
+      <title><tag close=" ">2.1</tag>Included child</title>
+      <subsubsection inlist="toc" xml:id="S2.SS1.SSS1">
+        <tags>
+          <tag>2.1.1</tag>
+          <tag role="refnum">2.1.1</tag>
+          <tag role="typerefnum">§2.1.1</tag>
+        </tags>
+        <title><tag close=" ">2.1.1</tag>Too deep</title>
+        <para xml:id="S2.SS1.SSS1.p1">
+          <p><anchor class="ltx_titletoc_boundary" xml:id="ttl.1.stop.2"/></p>
+        </para>
+      </subsubsection>
+    </subsection>
+  </section>
+  <section inlist="toc" xml:id="S3">
+    <tags>
+      <tag>3</tag>
+      <tag role="refnum">3</tag>
+      <tag role="typerefnum">§3</tag>
+    </tags>
+    <title><tag close=" ">3</tag>Stopped</title>
+    <para xml:id="S3.p1">
+      <p><anchor class="ltx_titletoc_boundary" xml:id="ttl.1.start.3"/></p>
+    </para>
+  </section>
+  <section inlist="toc" xml:id="S4">
+    <tags>
+      <tag>4</tag>
+      <tag role="refnum">4</tag>
+      <tag role="typerefnum">§4</tag>
+    </tags>
+    <title><tag close=" ">4</tag>Resumed</title>
+    <para xml:id="S4.p1">
+      <p><anchor class="ltx_titletoc_boundary" xml:id="ttl.1.stop.4"/></p>
+    </para>
+  </section>
+  <section inlist="toc" xml:id="S5">
+    <tags>
+      <tag>5</tag>
+      <tag role="refnum">5</tag>
+      <tag role="typerefnum">§5</tag>
+    </tags>
+    <title><tag close=" ">5</tag>After</title>
+  </section>
+</document>
