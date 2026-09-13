@@ -1,0 +1,31 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/xifthen",
+      "date" : "",
+      "docs" : {
+         "kind" : "directory-zip",
+         "url" : "https://mirrors.ctan.org/macros/latex/contrib/xifthen.zip"
+      },
+      "license" : "lppl",
+      "path" : "/macros/latex/contrib/xifthen",
+      "version" : "1.4.0"
+   },
+   "fetched_at" : "2026-09-13T00:43:38Z",
+   "package" : "xifthen",
+   "runfiles" : [
+      "tex/latex/xifthen/xifthen.sty"
+   ],
+   "styles" : [
+      "tex/latex/xifthen/xifthen.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/xifthen.tar.xz",
+      "bundle" : false,
+      "bytes" : 2108,
+      "filtered" : false,
+      "package" : "xifthen",
+      "revision" : "77682",
+      "sha512" : "5196fe00f808e6a24454e204df61da56ccd21a7aa5cb0c34a81d1bc5d6c7decaa3fbe77eb0355fba0c385d919741e497d778130f644fc622375e33140e6ebaba",
+      "snapshot" : null
+   }
+}

@@ -1,0 +1,31 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/newunicodechar",
+      "date" : "2018-04-08",
+      "docs" : {
+         "kind" : "directory-zip",
+         "url" : "https://mirrors.ctan.org/macros/latex/contrib/newunicodechar.zip"
+      },
+      "license" : "lppl1.3c",
+      "path" : "/macros/latex/contrib/newunicodechar",
+      "version" : "1.2"
+   },
+   "fetched_at" : "2026-09-12T20:00:26Z",
+   "package" : "newunicodechar",
+   "runfiles" : [
+      "tex/latex/newunicodechar/newunicodechar.sty"
+   ],
+   "styles" : [
+      "tex/latex/newunicodechar/newunicodechar.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/newunicodechar.tar.xz",
+      "bundle" : false,
+      "bytes" : 2112,
+      "filtered" : false,
+      "package" : "newunicodechar",
+      "revision" : "77682",
+      "sha512" : "ff100306cbb53c21ca6e8cd4e90aeac224079474de59732f52e88d93a70facdca219ade483c75d25ec303d28bd19bdd375facdb5d596ce94f255a795bd038563",
+      "snapshot" : null
+   }
+}

@@ -1,0 +1,31 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/cprotect",
+      "date" : "2026-04-17",
+      "docs" : {
+         "kind" : "directory-zip",
+         "url" : "https://mirrors.ctan.org/macros/latex/contrib/cprotect.zip"
+      },
+      "license" : "lppl1.3c",
+      "path" : "/macros/latex/contrib/cprotect",
+      "version" : "1.0f"
+   },
+   "fetched_at" : "2026-09-12T20:00:17Z",
+   "package" : "cprotect",
+   "runfiles" : [
+      "tex/latex/cprotect/cprotect.sty"
+   ],
+   "styles" : [
+      "tex/latex/cprotect/cprotect.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/cprotect.tar.xz",
+      "bundle" : false,
+      "bytes" : 2872,
+      "filtered" : false,
+      "package" : "cprotect",
+      "revision" : "78728",
+      "sha512" : "faa7d54b0467f664942c8232977992a9e46097c1c4539ce7fbe873b55bd44d5306a8f30b2310e584afba1ec50496de59b5dd2593e2fa411f8670420a9c0054a1",
+      "snapshot" : null
+   }
+}

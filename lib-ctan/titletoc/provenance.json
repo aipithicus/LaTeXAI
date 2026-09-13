@@ -1,0 +1,28 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/titletoc",
+      "date" : "2025-01-04",
+      "docs" : null,
+      "license" : "mit",
+      "path" : "/macros/latex/contrib/titlesec",
+      "version" : "2.17"
+   },
+   "fetched_at" : "2026-09-12T16:28:14Z",
+   "package" : "titletoc",
+   "runfiles" : [
+      "tex/latex/titlesec/titletoc.sty"
+   ],
+   "styles" : [
+      "tex/latex/titlesec/titletoc.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/titlesec.tar.xz",
+      "bundle" : true,
+      "bytes" : 19916,
+      "filtered" : true,
+      "package" : "titlesec",
+      "revision" : "77682",
+      "sha512" : "28a8326efdce33ae5f957c19488db30c45d332be0c7f8912a3f98cf7025d5ec04eb52024ae18e825d98af7ddaffe985248f4974a0499e81be505945b262065b0",
+      "snapshot" : null
+   }
+}

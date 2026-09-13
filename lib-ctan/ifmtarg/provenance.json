@@ -1,0 +1,29 @@
+{
+   "ctan" : null,
+   "fetched_at" : "2026-09-13T07:18:26Z",
+   "from" : {
+      "members" : [
+         "ifmtarg.sty"
+      ]
+   },
+   "package" : "ifmtarg",
+   "runfiles" : [
+      {
+         "path" : "tex/latex/ifmtarg/ifmtarg.sty",
+         "role" : "own"
+      }
+   ],
+   "styles" : [
+      "tex/latex/ifmtarg/ifmtarg.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/ifmtarg.tar.xz",
+      "bundle" : false,
+      "bytes" : 704,
+      "filtered" : true,
+      "package" : "ifmtarg",
+      "revision" : "79618",
+      "sha512" : "1369983e8a782747d4ae3859cc1b8db0db6aca1781115c24a6149dff2efd7afab09d2ff4d92b7655d038d44ae97e1da44839dec55dddec0996e5dbd05fcee9f0",
+      "snapshot" : null
+   }
+}

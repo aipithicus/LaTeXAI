@@ -1,0 +1,31 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/nowidow",
+      "date" : "",
+      "docs" : {
+         "kind" : "directory-zip",
+         "url" : "https://mirrors.ctan.org/macros/latex/contrib/nowidow.zip"
+      },
+      "license" : "lppl1.3",
+      "path" : "/macros/latex/contrib/nowidow",
+      "version" : "1.0"
+   },
+   "fetched_at" : "2026-09-12T20:00:57Z",
+   "package" : "nowidow",
+   "runfiles" : [
+      "tex/latex/nowidow/nowidow.sty"
+   ],
+   "styles" : [
+      "tex/latex/nowidow/nowidow.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/nowidow.tar.xz",
+      "bundle" : false,
+      "bytes" : 1188,
+      "filtered" : false,
+      "package" : "nowidow",
+      "revision" : "77682",
+      "sha512" : "7a641fd7debfb5e828a29ec3547b5e058a3a1ee3a27120663e9ae043c9089e202b029be7667622671a6a14afec8db2e51a3f865a9d33958a1d2ba2ad70aabfe1",
+      "snapshot" : null
+   }
+}

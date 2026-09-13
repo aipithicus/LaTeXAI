@@ -1,0 +1,31 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/abstract",
+      "date" : "",
+      "docs" : {
+         "kind" : "directory-zip",
+         "url" : "https://mirrors.ctan.org/macros/latex/contrib/abstract.zip"
+      },
+      "license" : "lppl1.3c",
+      "path" : "/macros/latex/contrib/abstract",
+      "version" : "1.2a"
+   },
+   "fetched_at" : "2026-09-12T20:01:00Z",
+   "package" : "abstract",
+   "runfiles" : [
+      "tex/latex/abstract/abstract.sty"
+   ],
+   "styles" : [
+      "tex/latex/abstract/abstract.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/abstract.tar.xz",
+      "bundle" : false,
+      "bytes" : 2020,
+      "filtered" : false,
+      "package" : "abstract",
+      "revision" : "79618",
+      "sha512" : "ce0204c9ca71347f6b495b929adfb250d561336effef5069ee991a91c17e33012eabbac1924c466038097820c885fc89134124300cdf2b0bf3b63df4e9a71254",
+      "snapshot" : null
+   }
+}

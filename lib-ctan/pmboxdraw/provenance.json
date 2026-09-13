@@ -1,0 +1,29 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/pmboxdraw",
+      "date" : "2019-12-05",
+      "docs" : null,
+      "license" : "lppl1.3c",
+      "path" : "/macros/latex/contrib/pmboxdraw",
+      "version" : "1.4"
+   },
+   "fetched_at" : "2026-09-13T09:23:24Z",
+   "package" : "pmboxdraw",
+   "runfiles" : [
+      "tex/latex/pmboxdraw/pmboxdraw.sty",
+      "tex/latex/pmboxdraw/pmboxdrawenc.dfu"
+   ],
+   "styles" : [
+      "tex/latex/pmboxdraw/pmboxdraw.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/pmboxdraw.tar.xz",
+      "bundle" : false,
+      "bytes" : 7232,
+      "filtered" : false,
+      "package" : "pmboxdraw",
+      "revision" : "79461",
+      "sha512" : "a28663e83c30d8b1597148d13e313305c017e4696c3845c7cecb9414c99ec941340c5bef41b5bc29678e21706958a971d50ff19476fcd5fb3b555a47ed663edb",
+      "snapshot" : null
+   }
+}

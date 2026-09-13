@@ -1,0 +1,33 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/csquotes",
+      "date" : "2026-05-19",
+      "docs" : null,
+      "license" : "lppl1.3c",
+      "path" : "/macros/latex/contrib/csquotes",
+      "version" : "5.2p"
+   },
+   "fetched_at" : "2026-09-12T16:28:09Z",
+   "package" : "csquotes",
+   "runfiles" : [
+      "tex/latex/csquotes/csq-compat.def",
+      "tex/latex/csquotes/csquotes.cfg",
+      "tex/latex/csquotes/csquotes.def",
+      "tex/latex/csquotes/csquotes.sty"
+   ],
+   "styles" : [
+      "tex/latex/csquotes/csq-compat.def",
+      "tex/latex/csquotes/csquotes.def",
+      "tex/latex/csquotes/csquotes.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/csquotes.tar.xz",
+      "bundle" : false,
+      "bytes" : 18184,
+      "filtered" : false,
+      "package" : "csquotes",
+      "revision" : "79060",
+      "sha512" : "32cf529ec20fa94d1f2789881ce10106850e0aab2ebf055a2ffe060dabc9621cd138d2f293ab89955fe2a5fe138d7117a50144a975764bd78836b6b76a9e2db1",
+      "snapshot" : null
+   }
+}

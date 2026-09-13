@@ -1,0 +1,39 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/lineno",
+      "date" : "2026-03-08",
+      "docs" : {
+         "kind" : "directory-zip",
+         "url" : "https://mirrors.ctan.org/macros/latex/contrib/lineno.zip"
+      },
+      "license" : "lppl1.3c",
+      "path" : "/macros/latex/contrib/lineno",
+      "version" : "5.9"
+   },
+   "fetched_at" : "2026-09-13T00:43:22Z",
+   "package" : "lineno",
+   "runfiles" : [
+      "tex/latex/lineno/ednmath0.sty",
+      "tex/latex/lineno/edtable.sty",
+      "tex/latex/lineno/fnlineno.sty",
+      "tex/latex/lineno/lineno.sty",
+      "tex/latex/lineno/vplref.sty"
+   ],
+   "styles" : [
+      "tex/latex/lineno/ednmath0.sty",
+      "tex/latex/lineno/edtable.sty",
+      "tex/latex/lineno/fnlineno.sty",
+      "tex/latex/lineno/lineno.sty",
+      "tex/latex/lineno/vplref.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/lineno.tar.xz",
+      "bundle" : false,
+      "bytes" : 63100,
+      "filtered" : false,
+      "package" : "lineno",
+      "revision" : "79618",
+      "sha512" : "316f18f9c432690dd9d0d3cd6031f5d6efb244f878f02fa6b57113683207f669fa945d1df0f618b9f1e1efd26c7daf259687b692fa0342d8704ffaf608685573",
+      "snapshot" : null
+   }
+}

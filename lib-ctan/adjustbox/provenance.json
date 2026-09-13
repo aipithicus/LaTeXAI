@@ -1,0 +1,42 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/adjustbox",
+      "date" : "2025-02-26",
+      "docs" : null,
+      "license" : "lppl1.3",
+      "path" : "/macros/latex/contrib/adjustbox",
+      "version" : "1.3c"
+   },
+   "fetched_at" : "2026-09-12T16:28:04Z",
+   "package" : "adjustbox",
+   "runfiles" : [
+      "tex/latex/adjustbox/adjcalc.sty",
+      "tex/latex/adjustbox/adjustbox.sty",
+      "tex/latex/adjustbox/tc-dvips.def",
+      "tex/latex/adjustbox/tc-luatex.def",
+      "tex/latex/adjustbox/tc-pdftex.def",
+      "tex/latex/adjustbox/tc-pgf.def",
+      "tex/latex/adjustbox/tc-xetex.def",
+      "tex/latex/adjustbox/trimclip.sty"
+   ],
+   "styles" : [
+      "tex/latex/adjustbox/adjcalc.sty",
+      "tex/latex/adjustbox/adjustbox.sty",
+      "tex/latex/adjustbox/tc-dvips.def",
+      "tex/latex/adjustbox/tc-luatex.def",
+      "tex/latex/adjustbox/tc-pdftex.def",
+      "tex/latex/adjustbox/tc-pgf.def",
+      "tex/latex/adjustbox/tc-xetex.def",
+      "tex/latex/adjustbox/trimclip.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/adjustbox.tar.xz",
+      "bundle" : false,
+      "bytes" : 13776,
+      "filtered" : false,
+      "package" : "adjustbox",
+      "revision" : "78101",
+      "sha512" : "c8879736812d01363af2b64648b0a6dbcd745abbb5f05d3156bfbfcd5376b057b313df4ef33eea0af66a3a7537918cd384fbf60f5984431633981ec699841994",
+      "snapshot" : null
+   }
+}

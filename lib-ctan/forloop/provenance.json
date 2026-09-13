@@ -1,0 +1,31 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/forloop",
+      "date" : "2023-05-03",
+      "docs" : {
+         "kind" : "directory-zip",
+         "url" : "https://mirrors.ctan.org/macros/latex/contrib/forloop.zip"
+      },
+      "license" : "lgpl",
+      "path" : "/macros/latex/contrib/forloop",
+      "version" : "3.0"
+   },
+   "fetched_at" : "2026-09-12T20:00:20Z",
+   "package" : "forloop",
+   "runfiles" : [
+      "tex/latex/forloop/forloop.sty"
+   ],
+   "styles" : [
+      "tex/latex/forloop/forloop.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/forloop.tar.xz",
+      "bundle" : false,
+      "bytes" : 1264,
+      "filtered" : false,
+      "package" : "forloop",
+      "revision" : "77682",
+      "sha512" : "2ad233773a1f694914945dd9dd186d5b0a5058d41bea90154f2db05883503b06e1baffa0eff8a4c67cb4363316c76a7300535054d656231faad82830f0c1c358",
+      "snapshot" : null
+   }
+}

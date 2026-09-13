@@ -1,0 +1,31 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/collectbox",
+      "date" : "",
+      "docs" : {
+         "kind" : "directory-zip",
+         "url" : "https://mirrors.ctan.org/macros/latex/contrib/collectbox.zip"
+      },
+      "license" : "lppl1.3",
+      "path" : "/macros/latex/contrib/collectbox",
+      "version" : "0.4c"
+   },
+   "fetched_at" : "2026-09-12T20:04:43Z",
+   "package" : "collectbox",
+   "runfiles" : [
+      "tex/latex/collectbox/collectbox.sty"
+   ],
+   "styles" : [
+      "tex/latex/collectbox/collectbox.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/collectbox.tar.xz",
+      "bundle" : false,
+      "bytes" : 2888,
+      "filtered" : false,
+      "package" : "collectbox",
+      "revision" : "77682",
+      "sha512" : "275cce46e172bfd0084266aaf1b26d41ccde54696b54ddbcaf77b5b3e289ddc4e55cbab46297805562934d21b90c64f988ad1e39a13ee440234c63bf8615b1c9",
+      "snapshot" : null
+   }
+}

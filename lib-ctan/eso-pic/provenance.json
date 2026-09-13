@@ -1,0 +1,30 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/eso-pic",
+      "date" : "2026-05-31",
+      "docs" : null,
+      "license" : "lppl1.2",
+      "path" : "/macros/latex/contrib/eso-pic",
+      "version" : "3.0e"
+   },
+   "fetched_at" : "2026-09-12T16:28:11Z",
+   "package" : "eso-pic",
+   "runfiles" : [
+      "tex/latex/eso-pic/eso-pic.sty",
+      "tex/latex/eso-pic/showframe.sty"
+   ],
+   "styles" : [
+      "tex/latex/eso-pic/eso-pic.sty",
+      "tex/latex/eso-pic/showframe.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/eso-pic.tar.xz",
+      "bundle" : false,
+      "bytes" : 3884,
+      "filtered" : false,
+      "package" : "eso-pic",
+      "revision" : "79229",
+      "sha512" : "17e419b43677d0fb1994cab4a105067f509acb620251969796dbf81cbde09789174a3efb256fd5842811a233a664705c88da243918ae79d78885991ee738140a",
+      "snapshot" : null
+   }
+}

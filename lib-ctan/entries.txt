@@ -1,3 +1,12 @@
 # Allow-list for lib-ctan entries the static scan cannot classify.
 # One CTAN-id per line. lctan --check treats a name here as satisfying
 # the entry rule (data, requested, or native census source). Empty is fine.
+
+# Executed raw support: PaperBench affiliation loop; pinned forloop 3.0.
+forloop
+# Executed google/paper class dependency before newboolean/setboolean.
+xifthen
+# xifthen requires ifmtarg; emptiness/containment fixture exercises both branches.
+ifmtarg
+# Named members of ncctools provide the native manyfoot census source.
+ncctools

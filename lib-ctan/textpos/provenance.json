@@ -1,0 +1,29 @@
+{
+   "ctan" : null,
+   "fetched_at" : "2026-09-13T07:03:02Z",
+   "from" : {
+      "members" : [
+         "textpos.sty"
+      ]
+   },
+   "package" : "textpos",
+   "runfiles" : [
+      {
+         "path" : "tex/latex/textpos/textpos.sty",
+         "role" : "own"
+      }
+   ],
+   "styles" : [
+      "tex/latex/textpos/textpos.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/textpos.tar.xz",
+      "bundle" : false,
+      "bytes" : 4240,
+      "filtered" : true,
+      "package" : "textpos",
+      "revision" : "77682",
+      "sha512" : "07bfc24415dfab1921e2c00be30e1aa1130fc4f5ee2380f7eb8acc4fa5f1a228819464bed3da83f0170532bc33eec4bca3be43bab71e6cccaa46965700ba9404",
+      "snapshot" : null
+   }
+}

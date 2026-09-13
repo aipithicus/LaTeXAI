@@ -1,0 +1,31 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/etoc",
+      "date" : "2026-05-04",
+      "docs" : {
+         "kind" : "directory-zip",
+         "url" : "https://mirrors.ctan.org/macros/latex/contrib/etoc.zip"
+      },
+      "license" : "lppl1.3c",
+      "path" : "/macros/latex/contrib/etoc",
+      "version" : "1.2e"
+   },
+   "fetched_at" : "2026-09-12T20:00:39Z",
+   "package" : "etoc",
+   "runfiles" : [
+      "tex/latex/etoc/etoc.sty"
+   ],
+   "styles" : [
+      "tex/latex/etoc/etoc.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/etoc.tar.xz",
+      "bundle" : false,
+      "bytes" : 15240,
+      "filtered" : false,
+      "package" : "etoc",
+      "revision" : "78908",
+      "sha512" : "bd2a76fdbc5ba78b468633f2d32ebc835a9d9fa62d3b5144f8f86dc898e809603874e35acb2209f6b719134ac6729167d75ac4f331020bbd98ae2a5817500358",
+      "snapshot" : null
+   }
+}

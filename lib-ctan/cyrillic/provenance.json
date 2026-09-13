@@ -1,0 +1,35 @@
+{
+   "ctan" : null,
+   "fetched_at" : "2026-09-13T07:02:57Z",
+   "from" : {
+      "members" : [
+         "t2aenc.def",
+         "ot2enc.def"
+      ]
+   },
+   "package" : "cyrillic",
+   "runfiles" : [
+      {
+         "path" : "tex/latex/cyrillic/ot2enc.def",
+         "role" : "own"
+      },
+      {
+         "path" : "tex/latex/cyrillic/t2aenc.def",
+         "role" : "own"
+      }
+   ],
+   "styles" : [
+      "tex/latex/cyrillic/ot2enc.def",
+      "tex/latex/cyrillic/t2aenc.def"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/cyrillic.tar.xz",
+      "bundle" : false,
+      "bytes" : 15772,
+      "filtered" : true,
+      "package" : "cyrillic",
+      "revision" : "71408",
+      "sha512" : "07ec8db4403e29d8ea63c30c36611ccbbb2c8b4ac348a02307c37248fed43c9c2df5584583c73b48cf3b6df9de9509a75829aed97cd08fd908d084e06eac716f",
+      "snapshot" : null
+   }
+}

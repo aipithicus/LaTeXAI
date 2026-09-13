@@ -1,0 +1,31 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/fvextra",
+      "date" : "2026-02-25",
+      "docs" : {
+         "kind" : "directory-zip",
+         "url" : "https://mirrors.ctan.org/macros/latex/contrib/fvextra.zip"
+      },
+      "license" : "lppl1.3",
+      "path" : "/macros/latex/contrib/fvextra",
+      "version" : "1.14.0"
+   },
+   "fetched_at" : "2026-09-12T20:00:13Z",
+   "package" : "fvextra",
+   "runfiles" : [
+      "tex/latex/fvextra/fvextra.sty"
+   ],
+   "styles" : [
+      "tex/latex/fvextra/fvextra.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/fvextra.tar.xz",
+      "bundle" : false,
+      "bytes" : 16936,
+      "filtered" : false,
+      "package" : "fvextra",
+      "revision" : "78296",
+      "sha512" : "71b919cc6ec2d22e2093296fea01f14e412ba6ca3212af508034a1a5d4a592217124c14636e7d8794f3919935bae5f1239a8761ca57904bed6f30e3667b99dff",
+      "snapshot" : null
+   }
+}

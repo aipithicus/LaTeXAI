@@ -1,0 +1,31 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/footnotehyper",
+      "date" : "2025-11-15",
+      "docs" : {
+         "kind" : "directory-zip",
+         "url" : "https://mirrors.ctan.org/macros/latex/contrib/footnotehyper.zip"
+      },
+      "license" : "lppl1.3c",
+      "path" : "/macros/latex/contrib/footnotehyper",
+      "version" : "1.1f"
+   },
+   "fetched_at" : "2026-09-12T20:00:36Z",
+   "package" : "footnotehyper",
+   "runfiles" : [
+      "tex/latex/footnotehyper/footnotehyper.sty"
+   ],
+   "styles" : [
+      "tex/latex/footnotehyper/footnotehyper.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/footnotehyper.tar.xz",
+      "bundle" : false,
+      "bytes" : 3788,
+      "filtered" : false,
+      "package" : "footnotehyper",
+      "revision" : "77682",
+      "sha512" : "52d20538e9c79d8420a392c0e9efda10b60849db1e927d8dea55b117a9da3b00ef3f0f54c77bb5218ba6a42801bc5f12f3a48a83f22a03befe15b19d7b64459e",
+      "snapshot" : null
+   }
+}
