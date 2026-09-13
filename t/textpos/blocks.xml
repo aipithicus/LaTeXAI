@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="textpos" options="absolute,overlay"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <p>Before.</p>
+    <block backgroundcolor="#FFFF00" class="ltx_textblock" width="142.3pt">
+      <p>Positioned content <Math mode="inline" tex="x+1" text="x + 1" xml:id="p1.m1">
+          <XMath>
+            <XMApp>
+              <XMTok meaning="plus" role="ADDOP">+</XMTok>
+              <XMTok font="italic" role="UNKNOWN">x</XMTok>
+              <XMTok meaning="1" role="NUMBER">1</XMTok>
+            </XMApp>
+          </XMath>
+        </Math>.</p>
+    </block>
+    <block backgroundcolor="#FFFF00" class="ltx_textblock">
+      <p>Module-width content.</p>
+    </block>
+    <p>After.</p>
+  </para>
+</document>

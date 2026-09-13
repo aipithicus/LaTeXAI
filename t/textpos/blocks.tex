@@ -1,0 +1,10 @@
+\documentclass{article}
+\usepackage[absolute,overlay]{textpos}
+\textblockorigin{0pt}{0pt}\TPGrid{10}{10}\TPReferencePosition{0,0}\TPMargin*{1pt}
+\begin{document}
+Before.
+\textblockcolor{yellow}
+\begin{textblock*}{5cm}[0.5,0.5](1cm,2cm)Positioned content $x+1$.\end{textblock*}
+\begin{textblock}{4}(1,2)Module-width content.\end{textblock}
+After.
+\end{document}
