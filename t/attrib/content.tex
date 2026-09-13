@@ -1,0 +1,13 @@
+\documentclass{article}
+\usepackage{attrib}
+\begin{document}
+\begin{quote}
+Quoted text $x=1$.
+\attrib{Kepler-Mapper and NLP examples}
+\end{quote}
+{\renewcommand\PreTrib{[}\renewcommand\PostTrib{]}
+\renewcommand\AttribInit{\itshape}
+\attrib{An author\footnote{Attribution note with $y=2$.}}}
+\attrib{Default punctuation returns}
+Ordinary text after the attribution.
+\end{document}
