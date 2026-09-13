@@ -1,0 +1,13 @@
+\documentclass{article}
+\usepackage{tcolorbox,listings}
+\tcbset{panel/.style={colback=yellow,coltext=blue}}
+\newtcblisting{promptdefault}[1][Default]{panel,title={#1},listing only}
+\begin{document}
+\begin{promptdefault}
+{literal} #1 $x$ % \notacommand
+\end{promptdefault}
+{\tcbset{colback=green}\begin{tcolorbox}Local default.\end{tcolorbox}}
+\begin{tcolorbox}Restored default.\end{tcolorbox}
+\tcbinputlisting{panel,listing only,listing file=../fancyvrb/literal.txt,listing options={firstline=2,lastline=3},title={From file}}
+After $x+1$.
+\end{document}

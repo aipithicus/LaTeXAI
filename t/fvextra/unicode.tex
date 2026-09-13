@@ -1,0 +1,12 @@
+\documentclass{article}
+\usepackage{fvextra,newunicodechar}
+\newunicodechar{≤}{\ensuremath{\leq}}
+\newunicodechar{×}{\ensuremath{\times}}
+\newunicodechar{→}{\ensuremath{\rightarrow}}
+\begin{document}
+\begin{Verbatim}
+$x^2$ ~5 ≤ 10 × 2 → done.
+\end{Verbatim}
+\VerbatimInput{unicode.txt}
+Outside ≤ and × and →.
+\end{document}

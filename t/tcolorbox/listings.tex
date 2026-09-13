@@ -1,0 +1,15 @@
+\documentclass{article}
+\usepackage{amsmath,amsthm,tcolorbox,listings}
+\lstdefinestyle{example}{language=Python,upquote=true,basicstyle=\ttfamily}
+\tcbset{panel/.style={colback=yellow,colframe=blue,breakable}}
+\newtcblisting{prompt}[1]{panel,title={#1},listing only,listing options={style=example}}
+\newtheorem{claim}{Claim}
+\tcolorboxenvironment{claim}{colback=green!10}
+\begin{document}
+\begin{prompt}{A prompt with $x$}
+for x in [1, 2]:
+    print("\\nWrite {literal} #1 $x$ %", 'straight')
+\end{prompt}
+\begin{claim}[Named]\label{claim:wrapped}Wrapped $x+1$.\end{claim}
+After $y$. Reference \ref{claim:wrapped}.
+\end{document}

@@ -1,0 +1,11 @@
+\documentclass{article}
+\usepackage{fancyvrb}
+\DefineVerbatimEnvironment{cfgblock}{Verbatim}{fontsize=\small,frame=single}
+\begin{document}
+Before.
+\begin{cfgblock}
+{"pattern": "\nWrite {literal} #1 $x$ % keep", "path": "a_b"}
+\end{cfgblock}
+\VerbatimInput[firstline=2,lastline=3]{literal.txt}
+After $x+1$.
+\end{document}

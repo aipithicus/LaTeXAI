@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="amsmath,amsthm,tcolorbox,listings"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <resource src="ltx-listings.css" type="text/css"/>
+  <theorem backgroundcolor="#FFFF00" class="ltx_tcolorbox" framecolor="#0000FF" framed="rectangle">
+    <para xml:id="p1">
+      <block class="ltx_tcolorbox_title">
+        <p class="ltx_tcolorbox_title_text">A prompt with <Math mode="inline" tex="x" text="x" xml:id="p1.m1">
+            <XMath>
+              <XMTok font="italic" role="UNKNOWN">x</XMTok>
+            </XMath>
+          </Math></p>
+      </block>
+      <listing class="ltx_lst_language_Python ltx_lstlisting" data="Zm9yIHggaW4gWzEsIDJdOgogICAgcHJpbnQoIlxcbldyaXRlIHtsaXRlcmFsfSAjMSAkeCQgJSIsICdzdHJhaWdodCcp" dataencoding="base64" datamimetype="text/plain">
+        <listingline xml:id="lstnumberx1"><text class="ltx_lst_keyword" font="typewriter bold">for</text><text class="ltx_lst_space" font="typewriter"> </text><text class="ltx_lst_identifier" font="typewriter">x</text><text class="ltx_lst_space" font="typewriter"> </text><text class="ltx_lst_keyword" font="typewriter bold">in</text><text class="ltx_lst_space" font="typewriter"> </text><text font="typewriter">[1,</text><text class="ltx_lst_space" font="typewriter"> </text><text font="typewriter">2]:</text></listingline>
+        <listingline xml:id="lstnumberx2"><text class="ltx_lst_space" font="typewriter">    </text><text class="ltx_lst_keyword" font="typewriter bold">print</text><text font="typewriter">(</text><text class="ltx_lst_string" font="typewriter">"\\nWrite<text class="ltx_lst_space">␣</text>{literal}<text class="ltx_lst_space">␣</text>#1<text class="ltx_lst_space">␣</text>$x$<text class="ltx_lst_space">␣</text>%"</text><text font="typewriter">,</text><text class="ltx_lst_space" font="typewriter"> </text><text class="ltx_lst_string" font="typewriter">'straight'</text><text font="typewriter">)</text></listingline>
+      </listing>
+    </para>
+  </theorem>
+  <theorem backgroundcolor="#E6FFE6" class="ltx_tcolorbox" framed="rectangle">
+    <theorem class="ltx_theorem_claim" inlist="thm theorem:claim" labels="LABEL:claim:wrapped" xml:id="Thmclaim1">
+      <tags>
+        <tag>Claim 1</tag>
+        <tag role="refnum">1</tag>
+        <tag role="typerefnum">Claim 1</tag>
+      </tags>
+      <title class="ltx_runin"><tag><text font="bold">Claim 1</text></tag><text font="bold"> </text>(Named)<text font="bold">.</text></title>
+      <para xml:id="Thmclaim1.p1">
+        <p><text font="italic">Wrapped <Math mode="inline" tex="x+1" text="x + 1" xml:id="Thmclaim1.p1.m1">
+              <XMath>
+                <XMApp>
+                  <XMTok font="upright" meaning="plus" role="ADDOP">+</XMTok>
+                  <XMTok role="UNKNOWN">x</XMTok>
+                  <XMTok font="upright" meaning="1" role="NUMBER">1</XMTok>
+                </XMApp>
+              </XMath>
+            </Math>.</text></p>
+      </para>
+    </theorem>
+  </theorem>
+  <para xml:id="p2">
+    <p>After <Math mode="inline" tex="y" text="y" xml:id="p2.m1">
+        <XMath>
+          <XMTok font="italic" role="UNKNOWN">y</XMTok>
+        </XMath>
+      </Math>. Reference <ref labelref="LABEL:claim:wrapped"/>.</p>
+  </para>
+</document>

@@ -1,0 +1,9 @@
+\documentclass{article}
+\usepackage{fvextra}
+\DefineVerbatimEnvironment{sample}{Verbatim}{breaklines=true,breakanywhere=true}
+\begin{document}
+\begin{sample}
+{"x": "\nWrite {a} #1 $x$ % intact", "quote": 'straight'}
+\end{sample}
+\VerbatimInput[firstline=2,lastline=3,breaklines=true]{../fancyvrb/literal.txt}
+\end{document}

@@ -1,0 +1,4 @@
+EXCLUDED FIRST LINE
+second: \alpha {x} #2 $literal$ % intact
+third: a_b & 'single' "double"
+EXCLUDED LAST LINE

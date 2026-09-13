@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="tcolorbox,listings,cprotect"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <resource src="ltx-listings.css" type="text/css"/>
+  <figure inlist="lof" labels="LABEL:fig:prompt" xml:id="S0.F1">
+    <tags>
+      <tag>Figure 1</tag>
+      <tag role="refnum">1</tag>
+      <tag role="typerefnum">Figure 1</tag>
+    </tags>
+    <inline-logical-block class="ltx_tcolorbox_float">
+      <theorem backgroundcolor="#FFFF00" class="ltx_tcolorbox" framed="rectangle" labels="LABEL:box:prompt" xml:id="S0.F1.1">
+        <para xml:id="S0.F1.p1">
+          <block class="ltx_tcolorbox_title">
+            <p class="ltx_tcolorbox_title_text">Prompt</p>
+          </block>
+          <listing class="ltx_lstlisting" data="eyJ4IjogIlxuV3JpdGUge2xpdGVyYWx9ICMxICR4JCAlIGludGFjdCJ9" dataencoding="base64" datamimetype="text/plain">
+            <listingline xml:id="lstnumberx1">{”<text class="ltx_lst_identifier">x</text>”:<text class="ltx_lst_space"> </text>”\<text class="ltx_lst_identifier">nWrite</text><text class="ltx_lst_space"> </text>{<text class="ltx_lst_identifier">literal</text>}<text class="ltx_lst_space"> </text>#1<text class="ltx_lst_space"> </text><text class="ltx_lst_identifier">$x$</text><text class="ltx_lst_space"> </text>%<text class="ltx_lst_space"> </text><text class="ltx_lst_identifier">intact</text>”}</listingline>
+          </listing>
+        </para>
+      </theorem>
+    </inline-logical-block>
+    <toccaption><tag close=" ">1</tag>Protected <verbatim font="typewriter">a{b</verbatim> and <Math mode="inline" tex="x+1" text="x + 1" xml:id="S0.F1.m1">
+        <XMath>
+          <XMApp>
+            <XMTok meaning="plus" role="ADDOP">+</XMTok>
+            <XMTok font="italic" role="UNKNOWN">x</XMTok>
+            <XMTok meaning="1" role="NUMBER">1</XMTok>
+          </XMApp>
+        </XMath>
+      </Math>.</toccaption>
+    <caption><tag close=": ">Figure 1</tag>Protected <verbatim font="typewriter">a{b</verbatim> and <Math mode="inline" tex="x+1" text="x + 1" xml:id="S0.F1.m2">
+        <XMath>
+          <XMApp>
+            <XMTok meaning="plus" role="ADDOP">+</XMTok>
+            <XMTok font="italic" role="UNKNOWN">x</XMTok>
+            <XMTok meaning="1" role="NUMBER">1</XMTok>
+          </XMApp>
+        </XMath>
+      </Math>.</caption>
+  </figure>
+  <table inlist="lot" labels="LABEL:tab:frame" xml:id="S0.T1">
+    <tags>
+      <tag>Table 1</tag>
+      <tag role="refnum">1</tag>
+      <tag role="typerefnum">Table 1</tag>
+    </tags>
+    <inline-logical-block class="ltx_tcolorbox_float">
+      <theorem class="ltx_tcolorbox" framed="rectangle" labels="LABEL:box:table" xml:id="S0.T1.1">
+        <para xml:id="S0.T1.p1">
+          <p>Table-frame content <Math mode="inline" tex="y" text="y" xml:id="S0.T1.p1.m1">
+              <XMath>
+                <XMTok font="italic" role="UNKNOWN">y</XMTok>
+              </XMath>
+            </Math>.</p>
+        </para>
+      </theorem>
+    </inline-logical-block>
+    <toccaption><tag close=" ">1</tag>Table frame.</toccaption>
+    <caption><tag close=": ">Table 1</tag>Table frame.</caption>
+  </table>
+  <para xml:id="p1">
+    <p>References <ref labelref="LABEL:box:prompt"/>, <ref labelref="LABEL:fig:prompt"/>, <ref labelref="LABEL:box:table"/>, <ref labelref="LABEL:tab:frame"/>.</p>
+  </para>
+</document>

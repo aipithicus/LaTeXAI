@@ -1,0 +1,13 @@
+\documentclass{article}
+\usepackage{amsmath,newunicodechar}
+\newunicodechar{±}{\ensuremath{\pm}}
+\newunicodechar{×}{\ensuremath{\times}}
+\newunicodechar{–}{\textendash}
+\newunicodechar{—}{\textemdash}
+\newunicodechar{→}{\ensuremath{\rightarrow}}
+\newunicodechar{≤}{\ensuremath{\leq}}
+\newunicodechar{≥}{\ensuremath{\geq}}
+\begingroup\newunicodechar{→}{temporary}\endgroup
+\begin{document}
+Text–dash—dash. $a±b×c→d≤e≥f$. After.
+\end{document}

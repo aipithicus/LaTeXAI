@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="cprotect"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <figure inlist="lof" labels="LABEL:fig:literal" xml:id="S0.F1">
+    <tags>
+      <tag>Figure 1</tag>
+      <tag role="refnum">1</tag>
+      <tag role="typerefnum">Figure 1</tag>
+    </tags>
+    <toccaption><tag close=" ">1</tag>Short <verbatim font="typewriter">a_b</verbatim></toccaption>
+    <caption><tag close=": ">Figure 1</tag>Literal <verbatim font="typewriter">a_b {x} #1 % percent</verbatim> and <Math mode="inline" tex="x+1" text="x + 1" xml:id="S0.F1.m1">
+        <XMath>
+          <XMApp>
+            <XMTok meaning="plus" role="ADDOP">+</XMTok>
+            <XMTok font="italic" role="UNKNOWN">x</XMTok>
+            <XMTok meaning="1" role="NUMBER">1</XMTok>
+          </XMApp>
+        </XMath>
+      </Math>.</caption>
+  </figure>
+  <section inlist="toc" xml:id="S1">
+    <tags>
+      <tag>1</tag>
+      <tag role="refnum">1</tag>
+      <tag role="typerefnum">§1</tag>
+    </tags>
+    <title><tag close=" ">1</tag>Heading with <verbatim font="typewriter">two␣words</verbatim></title>
+    <para xml:id="S1.p1">
+      <p>After, reference <ref labelref="LABEL:fig:literal"/>.</p>
+    </para>
+  </section>
+</document>

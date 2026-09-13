@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="fvextra,newunicodechar"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <p><text font="typewriter" width="345.0pt"><text class="ltx_verbatim" width="345.0pt">$x^2$ ~5 ≤ 10 × 2 → done.</text></text></p>
+  </para>
+  <para xml:id="p2">
+    <p><text font="typewriter" width="345.0pt"><text class="ltx_verbatim" width="345.0pt">$x^2$ ~5 ≤ 10 × 2 → done. </text></text>Outside <Math mode="inline" tex="\leq" text="&lt;=" xml:id="p2.m1">
+        <XMath>
+          <XMTok meaning="less-than-or-equals" name="leq" role="RELOP">≤</XMTok>
+        </XMath>
+      </Math> and <Math mode="inline" tex="\times" text="*" xml:id="p2.m2">
+        <XMath>
+          <XMTok meaning="times" role="MULOP">×</XMTok>
+        </XMath>
+      </Math> and <Math mode="inline" tex="\rightarrow" text="rightarrow" xml:id="p2.m3">
+        <XMath>
+          <XMTok name="rightarrow" role="ARROW">→</XMTok>
+        </XMath>
+      </Math>.</p>
+  </para>
+</document>

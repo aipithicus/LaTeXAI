@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="fvextra"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <p><text font="typewriter" width="345.0pt"><text class="ltx_verbatim" width="345.0pt">{"x": "\nWrite {a} #1 $x$ % intact", "quote": 'straight'}</text></text></p>
+  </para>
+  <para xml:id="p2">
+    <p><text font="typewriter" width="345.0pt"><text class="ltx_verbatim" width="345.0pt">second: \alpha {x} #2 $literal$ % intact </text></text><text font="typewriter" width="345.0pt"><text class="ltx_verbatim" width="345.0pt">third: a_b &amp; 'single' "double"</text></text></p>
+  </para>
+</document>

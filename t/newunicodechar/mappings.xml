@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="amsmath,newunicodechar"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <p>Text–dash—dash. <Math mode="inline" tex="a\pm b\times c\rightarrow d\leq e\geq f" text="a plus-or-minus b * c rightarrow d &lt;= e &gt;= f" xml:id="p1.m1">
+        <XMath>
+          <XMApp>
+            <XMTok meaning="multirelation"/>
+            <XMApp>
+              <XMTok meaning="plus-or-minus" name="pm" role="ADDOP">±</XMTok>
+              <XMTok font="italic" role="UNKNOWN">a</XMTok>
+              <XMApp>
+                <XMTok meaning="times" role="MULOP">×</XMTok>
+                <XMTok font="italic" role="UNKNOWN">b</XMTok>
+                <XMTok font="italic" role="UNKNOWN">c</XMTok>
+              </XMApp>
+            </XMApp>
+            <XMTok name="rightarrow" role="ARROW">→</XMTok>
+            <XMTok font="italic" role="UNKNOWN">d</XMTok>
+            <XMTok meaning="less-than-or-equals" name="leq" role="RELOP">≤</XMTok>
+            <XMTok font="italic" role="UNKNOWN">e</XMTok>
+            <XMTok meaning="greater-than-or-equals" name="geq" role="RELOP">≥</XMTok>
+            <XMTok font="italic" role="UNKNOWN">f</XMTok>
+          </XMApp>
+        </XMath>
+      </Math>. After.</p>
+  </para>
+</document>

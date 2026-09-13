@@ -1,24 +1,35 @@
-# -*- CPERL -*-
-# /=====================================================================\ #
-# |  upquote.sty                                                           | #
-# | Implementation for LaTeXML                                          | #
-# |=====================================================================| #
-# | Part of LaTeXML:                                                    | #
-# |  Public domain software, produced as part of work done by the       | #
-# |  United States Government & not subject to copyright in the US.     | #
-# |---------------------------------------------------------------------| #
-# | Deyan Ginev <deyan.ginev@nist.gov>                          #_#     | #
-# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
-# \=========================================================ooo==U==ooo=/ #
+# upquote 1.3 (2012/04/19), upquote.sty:35-52.
+# Class: semantic. Straight quote/grave in the engine's verb/verbatim carriers.
+# Native readers bypass raw @noligs, so change the font map locally while those
+# readers digest. Preserve their raw reading, star spacing, reversion and shape.
+# Ordinary typewriter/prose font maps are restored after the existing group.
 package LaTeXML::Package::Pool;
 use strict;
 use warnings;
 use LaTeXML::Package;
-
-#**********************************************************************
-
-InputDefinitions('upquote', type => 'sty', noltxml => 1);
-
-#**********************************************************************
-
+ProcessOptions();
+sub _upquote_setup {
+ my $encoding=LookupValue('font')->getEncoding||'OT1';
+ for my $enc ('OT1',$encoding) {
+  my $base=LaTeXML::Package::LoadFontMap($enc);
+  my $map=LookupValue($enc.'_typewriter_fontmap')||$base;
+  next unless $map;
+  my @copy=@$map;$copy[39]="'";$copy[96]=chr(96);
+  AssignValue($enc.'_typewriter_fontmap',\@copy);
+ }
+ return;
+}
+DefPrimitive('\lx@upquote@setup',\&_upquote_setup);
+Let('\lx@upquote@verb','\verb');
+DefMacro('\verb',sub {
+ my $body=LookupDefinition(T_CS('\lx@upquote@verb'))->invoke($_[0]);
+ return (T_CS('\lx@hidden@bgroup'),T_CS('\lx@upquote@setup'),$body->unlist,T_CS('\lx@hidden@egroup'));
+});
+for my $star (0,1) {
+ DefConstructorI(T_CS('\begin{verbatim'.($star?'*':'').'}'),undef,
+  "<ltx:verbatim font='#font'>#body</ltx:verbatim>",
+  beforeDigest=>sub {my @before=beforeDigestVerbatim($star,@_);_upquote_setup();return @before;},
+  afterDigest=>sub {afterDigestVerbatim($star,@_);},
+  beforeConstruct=>sub {$_[0]->maybeCloseElement('ltx:p');});
+}
 1;

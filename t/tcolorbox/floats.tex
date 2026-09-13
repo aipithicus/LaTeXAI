@@ -1,0 +1,13 @@
+\documentclass{article}
+\usepackage{tcolorbox,listings,cprotect}
+\newtcblisting{prompt}{enhanced jigsaw,listing only,title={Prompt},colback=yellow,label=box:prompt}
+\begin{document}
+\begin{figure}
+\begin{prompt}
+{"x": "\nWrite {literal} #1 $x$ % intact"}
+\end{prompt}
+\cprotect\caption{Protected \verb|a{b| and $x+1$.}\label{fig:prompt}
+\end{figure}
+\begin{table}\begin{tcolorbox}[label=box:table]Table-frame content $y$.\end{tcolorbox}\caption{Table frame.}\label{tab:frame}\end{table}
+References \ref{box:prompt}, \ref{fig:prompt}, \ref{box:table}, \ref{tab:frame}.
+\end{document}

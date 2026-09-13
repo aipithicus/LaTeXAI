@@ -17,9 +17,10 @@ use LaTeXML::Package;
 
 # Emulates tcolorbox 6.10.0 (2026-05-28), TeX Live revision 79191.
 # Replaces earlier passthrough that loaded raw tcolorbox.sty and pulled in TikZ/PGF.
-# Severed dependencies: tikz, pgf, pgfkeys, environ, etoolbox.
+# Severed dependencies: tikz, pgf, pgfkeys, environ. Native etoolbox supplies environment hooks.
 
 RequirePackage('xcolor');
+RequirePackage('etoolbox');
 
 DeclareOption(undef, sub { });
 ProcessOptions();
@@ -49,37 +50,56 @@ my @tcb_keys = qw(
   before after before_upper after_upper before_lower after_lower
   opacityback opacityframe opacitytitle
   auto_counter no_counter use_counter number_within
+  listing_only listing_options listing_engine listing_file
+  before_skip after_skip enhanced_jigsaw
 );
 
 my %flag_keys = map { $_ => 1 } qw(
   sharp_corners rounded_corners enhanced standard blank empty
   breakable unbreakable
   center flush_left flush_right
-  auto_counter no_counter
+  auto_counter no_counter listing_only enhanced_jigsaw
 );
 
 foreach my $key (@tcb_keys) {
   my $k = $key;
   $k =~ s/_/ /g;
   my $default = $flag_keys{$key} ? 'true' : undef;
-  DefKeyVal('tcb', $k, '', $default);
+  DefKeyVal('tcb', $k, 'Undigested', $default);
 }
 
-AssignValue('tcb_defaults', {}, 'global');
+AssignValue('tcb_defaults', {});
 
-# \tcbset{key=val,...} takes a braced keyval list, not optional brackets.
-DefPrimitive('\tcbset RequiredKeyVals:tcb', sub {
-  my ($stomach, $kv) = @_;
-  return unless $kv;
-  my $defaults = LookupValue('tcb_defaults') || {};
-  my %new_defaults = %$defaults;
-  my $hash = $kv->getKeyVals || {};
-  %new_defaults = (%new_defaults, %$hash);
-  AssignValue('tcb_defaults', \%new_defaults, 'global');
-  return;
+sub _tcb_read_keys {
+  my ($gullet,$tokens,$family)=@_;
+  my $kv=LaTeXML::Core::KeyVals->new('KV',$family||'tcb');
+  $gullet->readingFromMouth(Tokens(T_BEGIN,$tokens,T_END),sub {$kv->readFrom($_[0],T_END);});
+  return $kv;
+}
+sub _tcb_options {
+  my ($gullet,$base,$kv,$seen)=@_;
+  my %values=%$base;
+  return \%values unless $kv;
+  my @pairs=$kv->getPairs;
+  while (@pairs) {
+    my ($key,$value)=splice(@pairs,0,2);
+    if ($key =~ m{^(.*)/\.style$}) {
+      AssignValue('tcb_style:'.$1,$value);
+      DefKeyVal('tcb',$1,'Undigested','');
+    }
+    elsif (my $style=LookupValue('tcb_style:'.$key)) {
+      if ($seen->{$key}) { Error('unsupported','tcolorbox-style',$gullet,"Recursive tcolorbox style '$key'");next; }
+      %values=%{_tcb_options($gullet,\%values,_tcb_read_keys($gullet,$style),{%$seen,$key=>1})};
+    }
+    else {$values{$key}=$value;}
+  }
+  return \%values;
+}
+DefPrimitive('\tcbset RequiredKeyVals:tcb',sub {
+  AssignValue('tcb_defaults',_tcb_options($_[0]->getGullet,LookupValue('tcb_defaults')||{},$_[1],{}));
 });
-DefPrimitive('\tcbsetforevery RequiredKeyVals:tcb', sub {
-  Digest(Invocation(T_CS('\tcbset'), $_[1]));
+DefPrimitive('\tcbsetforevery RequiredKeyVals:tcb',sub {
+  AssignValue('tcb_defaults',_tcb_options($_[0]->getGullet,LookupValue('tcb_defaults')||{},$_[1],{}),'global');
 });
 
 sub _tcb_color {
@@ -110,40 +130,52 @@ DefEnvironment('{tcolorbox} OptionalKeyVals:tcb',
     . " ?#labels(labels='#labels')>"
     . "#body"
     . "</ltx:theorem>",
-  beforeConstruct => sub { $_[0]->maybeCloseElement('ltx:p'); },
+  beforeConstruct => sub {
+    my ($document,$whatsit)=@_;
+    $document->maybeCloseElement('ltx:p');
+    $whatsit->setProperty(tcb_float_wrapper=>0);
+    # Figures/tables admit physical blocks, whereas this labelled box owns
+    # logical paragraphs. An existing inline-logical-block bridges the models
+    # without moving the box label to the float or changing the schema.
+    my $parent=$document->getNodeQName($document->getNode);
+    if ($parent =~ /^ltx:(?:figure|table|float)$/) {
+      $document->openElement('ltx:inline-logical-block',class=>'ltx_tcolorbox_float');
+      $whatsit->setProperty(tcb_float_wrapper=>1);
+    }
+  },
+  afterConstruct => sub {
+    my ($document,$whatsit)=@_;
+    $document->closeElement('ltx:inline-logical-block') if $whatsit->getProperty('tcb_float_wrapper');
+  },
   afterDigestBegin => sub {
     my ($stomach, $whatsit) = @_;
-    my $kv       = $whatsit->getArg(1);
-    my $defaults = LookupValue('tcb_defaults') || {};
-    my @boxes    = ();
-    if (($kv && $kv->getValue('auto counter')) || $defaults->{'auto counter'}) {
-      StepCounter('tcbcounter');
-    }
-    if ($kv) {
-      if (my $title = $kv->getValue('title')) {
-        push(@boxes, Digest(Invocation(T_CS('\lx@tcb@title'), $title)));
-      }
-    }
+    my $v=_tcb_options($stomach->getGullet,LookupValue('tcb_defaults')||{},$whatsit->getArg(1),{});
+    my @boxes;
+    StepCounter('tcbcounter') if $v->{'auto counter'};
+    push @boxes,Digest(Invocation(T_CS('\lx@tcb@title'),$v->{title})) if $v->{title};
+    Digest(Invocation(T_CS('\color'),undef,$v->{coltext})) if $v->{coltext};
+    push @boxes,Digest($v->{fontupper}) if $v->{fontupper};
+    push @boxes,Digest($v->{'before upper'}) if $v->{'before upper'};
     return @boxes;
   },
   properties => sub {
     my ($stomach, $kv) = @_;
-    my $defaults = LookupValue('tcb_defaults') || {};
+    my $defaults = _tcb_options($stomach->getGullet,LookupValue('tcb_defaults')||{},$kv,{});
     my %props = (class => 'ltx_tcolorbox', framed => 'rectangle');
 
-    my $cb = ($kv && $kv->getValue('colback')) || $defaults->{colback};
+    my $cb = $defaults->{colback};
     $props{backgroundcolor} = _tcb_color($cb) if $cb;
 
-    my $cf = ($kv && $kv->getValue('colframe')) || $defaults->{colframe};
+    my $cf = $defaults->{colframe};
     $props{framecolor} = _tcb_color($cf) if $cf;
 
-    my $w = ($kv && $kv->getValue('width')) || $defaults->{width};
+    my $w = $defaults->{width};
     $props{width} = $w if $w;
 
     # Attach the label on the box itself. Digesting \label floats to the
     # nearest labelled ancestor (the section), because logical-block has
     # no xml:id yet.
-    if (my $lbl = ($kv && $kv->getValue('label')) || $defaults->{label}) {
+    if (my $lbl = $defaults->{label}) {
       $props{labels} = CleanLabel(ToString($lbl));
       MaybeNoteLabel($lbl);
     }
@@ -157,13 +189,13 @@ DefConstructor('\tcbox OptionalKeyVals:tcb {}',
   "<ltx:text class='ltx_tcbox' ?#framed(framed='#framed') ?#framecolor(framecolor='#framecolor') ?#backgroundcolor(backgroundcolor='#backgroundcolor')>#2</ltx:text>",
   properties => sub {
     my ($stomach, $kv, $content) = @_;
-    my $defaults = LookupValue('tcb_defaults') || {};
+    my $defaults = _tcb_options($stomach->getGullet,LookupValue('tcb_defaults')||{},$kv,{});
     my %props = (framed => 'rectangle');
 
-    my $cb = ($kv && $kv->getValue('colback')) || $defaults->{colback};
+    my $cb = $defaults->{colback};
     $props{backgroundcolor} = _tcb_color($cb) if $cb;
 
-    my $cf = ($kv && $kv->getValue('colframe')) || $defaults->{colframe};
+    my $cf = $defaults->{colframe};
     $props{framecolor} = _tcb_color($cf) if $cf;
 
     return %props;
@@ -282,4 +314,55 @@ Let('\ProvideTcbTheorem', '\newtcbtheorem');
 Let('\DeclareTcbTheorem', '\newtcbtheorem');
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# tcolorbox 6.10.0 env/<name>/before and /after hooks. Existing theorem
+# constructors retain ownership of their counter, title, labels and references.
+DefMacro('\tcolorboxenvironment {} {}',
+  '\BeforeBeginEnvironment{#1}{\begin{tcolorbox}[#2]}\AfterEndEnvironment{#1}{\end{tcolorbox}}');
+
+sub _tcb_listing {
+  my ($gullet,$options,$environment)=@_;
+  RequirePackage('listings');
+  my $v=_tcb_options($gullet,LookupValue('tcb_defaults')||{},_tcb_read_keys($gullet,$options),{});
+  # Read even unsupported modes as literal residue; never execute listing text.
+  my $text=$environment ? listingsReadRawLines($gullet,$environment)
+    : listingsReadRawFile($gullet,$v->{'listing file'});
+  if (!exists($v->{'listing only'}) || ($v->{'listing engine'} && ToString($v->{'listing engine'}) ne 'listings')) {
+    Error('unsupported','tcolorbox-listing-mode',$gullet,'Only listing-only mode with the listings engine is supported');
+  }
+  $STATE->getStomach->bgroup;
+  my $lstkv=$v->{'listing options'} ? _tcb_read_keys($gullet,$v->{'listing options'},'LST') : undef;
+  lstActivate($lstkv);
+  for my $key (qw(caption title label)) {
+    Error('unsupported','tcolorbox-listing-caption',$gullet,'Use tcolorbox title/label outside listing options')
+      if $lstkv && $lstkv->getValue($key);
+  }
+  my ($body,$trailer)=lstProcessBlock(undef,$text);
+  pop @$trailer; # The group opened above must close AFTER the enclosing box.
+  return (T_CS('\begin{tcolorbox}'),T_OTHER('['),$options,T_OTHER(']'),
+    @$body,@$trailer,T_CS('\end{tcolorbox}'),T_END);
+}
+DefPrimitive('\newtcblisting [] {} [Number] [] DefPlain',sub {
+  my ($stomach,$init,$name,$nargs,$default,$options)=@_;
+  $name=ToString($name);
+  Error('unsupported','tcolorbox-listing-init',$stomach,'Listing initialization options are unsupported') if $init && !IsEmpty($init);
+  if (IsDefined(T_CS('\\begin{'.$name.'}')) || IsDefined(T_CS('\\'.$name))) {
+    Error('unexpected','tcolorbox-listing-environment',$stomach,"Environment '$name' already exists");return;
+  }
+  # Keep a same-line optional argument from peeking into the literal body.
+  # The listings reader discards the remainder of the begin line.
+  DefMacroI(T_CS('\\begin{'.$name.'}'),undef,sub {
+    my ($gullet)=@_;my @args;
+    my $count=$nargs?$nargs->valueOf:0;
+    for my $i (1..$count) {
+      if ($i==1 && defined $default) {
+        my $cat=$STATE->lookupCatcode("\r");AssignCatcode("\r",CC_OTHER);
+        push @args,$gullet->readOptional($default);AssignCatcode("\r",$cat);
+      }
+      else {push @args,$gullet->readArg;}
+    }
+    return _tcb_listing($gullet,$options->substituteParameters(@args),$name);
+  });
+});
+DefMacro('\tcbinputlisting {}',sub {return _tcb_listing($_[0],$_[1],undef);});
+
 1;

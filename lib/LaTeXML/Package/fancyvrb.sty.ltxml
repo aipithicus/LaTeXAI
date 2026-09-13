@@ -19,6 +19,32 @@ use LaTeXML::Package;
 
 InputDefinitions('fancyvrb', type => 'sty', noltxml => 1);
 
+# fancyvrb 4.7: FV@CatCodes (118-123), FV@SetupFont (468-481).
+# Neutralize document Unicode mappings before the raw scanner's explicit
+# codes/commandchars hooks, which may deliberately opt characters back in.
+Let('\lx@fv@catcodes','\FV@CatCodes');
+DefMacro('\FV@CatCodes','\lx@fv@unicode\lx@fv@catcodes');
+DefPrimitive('\lx@fv@unicode',sub {
+  AssignCatcode($_,CC_OTHER) for @{LookupValue('newunicodechar_active_chars')||[]};
+  return;
+});
+# The engine's OT1 text map uses spacing accent glyphs at ASCII ^ and ~.
+# In a typewriter verbatim run these are literal ASCII characters. The raw
+# environment's existing group restores the ordinary text map afterwards.
+Let('\lx@fv@setupfont','\FV@SetupFont');
+DefMacro('\FV@SetupFont','\lx@fv@setupfont\lx@fv@literalfont');
+DefPrimitive('\lx@fv@literalfont',sub {
+  my $encoding=LookupValue('font')->getEncoding||'OT1';
+  for my $enc ('OT1',$encoding) {
+    my $base=LaTeXML::Package::LoadFontMap($enc);
+    my $map=LookupValue($enc.'_typewriter_fontmap')||$base;
+    next unless $map;
+    my @copy=@$map;$copy[94]='^';$copy[126]='~';
+    AssignValue($enc.'_typewriter_fontmap',\@copy);
+  }
+  return;
+});
+
 # Hack internals to add css class ltx_nowrap
 Let('\lx@save@FancyVerbFormatLine', '\FancyVerbFormatLine');
 DefMacro('\FancyVerbFormatLine{}',

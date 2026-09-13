@@ -1,0 +1,10 @@
+\documentclass{article}
+\usepackage{cprotect}
+\begin{document}
+\begin{figure}
+\cprotect\caption[Short \verb|a_b|]{Literal \verb|a_b {x} #1 % percent| and $x+1$.}
+\label{fig:literal}
+\end{figure}
+\cprotect[m]\section{Heading with \verb*|two words|}
+After, reference \ref{fig:literal}.
+\end{document}

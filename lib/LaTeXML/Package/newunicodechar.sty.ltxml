@@ -1,0 +1,28 @@
+# Native newunicodechar 1.2 (2018/04/08), Unicode-engine branch in
+# lib-ctan/newunicodechar/tex/latex/newunicodechar/newunicodechar.sty.
+# Class: semantic. Character-to-token mapping; no raw encoding engine.
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+DeclareOption('verbose', sub {}); # Diagnostic verbosity has no document effect.
+ProcessOptions();
+DefPrimitive('\newunicodechar {} {}', sub {
+  my ($stomach,$input,$replacement)=@_;
+  my $char=ToString($input);
+  if (length($char)!=1 || ord($char)<=127 || (ord($char)>=0xD800 && ord($char)<=0xDFFF)) {
+    Error('unexpected','newunicodechar',$stomach,'Expected one non-ASCII Unicode character');
+    return;
+  }
+  AssignCatcode($char,CC_ACTIVE);
+  DefMacroI(T_ACTIVE($char),undef,$replacement,protected=>1);
+  # Raw verbatim readers must distinguish these document mappings from
+  # literal Unicode. Keep registration local, just like the definition.
+  my %chars=map {$_=>1} @{LookupValue('newunicodechar_active_chars')||[]};
+  $chars{$char}=1;
+  AssignValue('newunicodechar_active_chars',[sort keys %chars]);
+});
+AtBeginDocument(sub { DefPrimitive('\newunicodechar {} {}',sub {
+  Error('unexpected','newunicodechar',$_[0],'Unicode definitions belong in the preamble');
+}); });
+1;

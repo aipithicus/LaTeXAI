@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="upquote"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <p><verbatim font="typewriter">`single' "double"</verbatim>.</p>
+    <verbatim font="typewriter">
+`single' "double" {literal} #1 $x$ %
+</verbatim>
+    <p><verbatim font="typewriter">`space␣here'</verbatim>.</p>
+    <verbatim font="typewriter">
+`space␣here'
+</verbatim>
+    <p>Outside ‘single’ text and <text font="typewriter">‘typewriter’</text>.</p>
+  </para>
+</document>
