@@ -1,0 +1,51 @@
+\documentclass{article}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+% Corpus: 2405.12350v1, main.tex:206-208.
+\algrenewcommand\algorithmicindent{1em}%
+\algnewcommand\algorithmicforeach{\textbf{for each}}
+\algdef{S}[FOR]{ForEach}[1]{\algorithmicforeach\ #1\ \algorithmicdo}
+\newlength{\stepwidth}
+\setlength{\stepwidth}{2pt}
+\newcommand{\stepvalue}{\stepwidth}
+\makeatletter
+\newcommand{\IndentValue}{\the\ALG@tlm}
+\makeatother
+\begin{document}
+\begin{algorithm}
+\caption{Renewable indentation}\label{alg:indent}
+\begin{algorithmic}[1]
+\Procedure{Extract}{$D$}
+  \State Outer: \IndentValue.\label{line:outer}
+  \algrenewcommand\algorithmicindent{\stepvalue}
+  \ForEach{$x\in D$}
+    \State Inner: \IndentValue.
+    \setlength{\stepwidth}{7pt}
+  \EndFor
+  \State After inner: \IndentValue.
+\EndProcedure
+\State After outer: \IndentValue.
+\If{$D\ne 0$}
+  \State New value: \IndentValue.
+\EndIf
+\State After new value: \IndentValue.
+\end{algorithmic}
+\end{algorithm}
+\begingroup
+\algrenewcommand\algorithmicindent{3pt}
+\begin{algorithmic}[1]
+\If{$x>0$}
+  \State Local: \IndentValue.
+\EndIf
+\State After local: \IndentValue.
+\end{algorithmic}
+\endgroup
+\begin{algorithmic}[1]
+\If{$x>0$}
+  \State Restored: \IndentValue.
+  \State \hspace{\algorithmicindent}Explicit space.
+\EndIf
+\State After restored: \IndentValue.
+\end{algorithmic}
+Algorithm~\ref{alg:indent}, line~\ref{line:outer}.
+\end{document}

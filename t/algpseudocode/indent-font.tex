@@ -1,0 +1,29 @@
+\documentclass{article}
+\usepackage{algpseudocode}
+\makeatletter
+\newcommand{\IndentValue}{\the\ALG@tlm}
+\makeatother
+% algorithmicx 1.2:49-55 evaluates the default 1.5em at block entry.
+% Corpus: 2607.05391v2 uses small, 2608.26733v1 uses scriptsize.
+\begin{document}
+\begingroup
+\small
+\begin{algorithmic}[1]
+\If{$x>0$}
+  \State Small outer: \IndentValue.
+  \scriptsize
+  \If{$y>0$}
+    \State Script inner: \IndentValue.
+  \EndIf
+  \State After inner: \IndentValue.
+\EndIf
+\State Closed: \IndentValue.
+\end{algorithmic}
+\endgroup
+\begin{algorithmic}[1]
+\If{$z>0$}
+  \State Normal restored: \IndentValue.
+\EndIf
+\State Closed: \IndentValue.
+\end{algorithmic}
+\end{document}

@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="algpseudocode"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <listing>
+      <listingline xml:id="algx1.l1"><tags>
+          <tag><text fontsize="80%">1:</text></tag>
+          <tag role="refnum">1</tag>
+        </tags><text fontsize="90%"></text><text font="bold" fontsize="90%">if</text><text fontsize="90%"> </text><Math mode="inline" tex="x&gt;0" text="x &gt; 0" xml:id="algx1.l1.m1">
+          <XMath>
+            <XMApp>
+              <XMTok fontsize="90%" meaning="greater-than" role="RELOP">&gt;</XMTok>
+              <XMTok font="italic" fontsize="90%" role="UNKNOWN">x</XMTok>
+              <XMTok fontsize="90%" meaning="0" role="NUMBER">0</XMTok>
+            </XMApp>
+          </XMath>
+        </Math><text fontsize="90%"> </text><text font="bold" fontsize="90%">then</text><text fontsize="90%">
+</text></listingline>
+      <listingline xml:id="algx1.l2"><tags>
+          <tag><text fontsize="80%">2:</text></tag>
+          <tag role="refnum">2</tag>
+        </tags><text fontsize="90%">  Small outer: 13.87491pt.
+</text></listingline>
+      <listingline xml:id="algx1.l3"><tags>
+          <tag><text fontsize="80%">3:</text></tag>
+          <tag role="refnum">3</tag>
+        </tags><text fontsize="70%">  </text><text font="bold" fontsize="70%">if</text><text fontsize="70%"> </text><Math mode="inline" tex="y&gt;0" text="y &gt; 0" xml:id="algx1.l3.m1">
+          <XMath>
+            <XMApp>
+              <XMTok fontsize="70%" meaning="greater-than" role="RELOP">&gt;</XMTok>
+              <XMTok font="italic" fontsize="70%" role="UNKNOWN">y</XMTok>
+              <XMTok fontsize="70%" meaning="0" role="NUMBER">0</XMTok>
+            </XMApp>
+          </XMath>
+        </Math><text fontsize="70%"> </text><text font="bold" fontsize="70%">then</text><text fontsize="70%">
+</text></listingline>
+      <listingline xml:id="algx1.l4"><tags>
+          <tag><text fontsize="80%">4:</text></tag>
+          <tag role="refnum">4</tag>
+        </tags><text fontsize="70%">   Script inner: 25.83327pt.
+</text></listingline>
+      <listingline xml:id="algx1.l5"><tags>
+          <tag><text fontsize="80%">5:</text></tag>
+          <tag role="refnum">5</tag>
+        </tags><text fontsize="70%">  </text><text font="bold" fontsize="70%">end</text><text fontsize="70%"> </text><text font="bold" fontsize="70%">if</text></listingline>
+      <listingline xml:id="algx1.l6"><tags>
+          <tag><text fontsize="80%">6:</text></tag>
+          <tag role="refnum">6</tag>
+        </tags><text fontsize="70%">  After inner: 13.87491pt.
+</text></listingline>
+      <listingline xml:id="algx1.l7"><tags>
+          <tag><text fontsize="80%">7:</text></tag>
+          <tag role="refnum">7</tag>
+        </tags><text fontsize="70%"></text><text font="bold" fontsize="70%">end</text><text fontsize="70%"> </text><text font="bold" fontsize="70%">if</text></listingline>
+      <listingline xml:id="algx1.l8"><tags>
+          <tag><text fontsize="80%">8:</text></tag>
+          <tag role="refnum">8</tag>
+        </tags><text fontsize="70%">Closed: 0.0pt.
+</text></listingline>
+    </listing>
+    <listing>
+      <listingline xml:id="algx2.l1"><tags>
+          <tag><text fontsize="80%">1:</text></tag>
+          <tag role="refnum">1</tag>
+        </tags><text font="bold">if</text> <Math mode="inline" tex="z&gt;0" text="z &gt; 0" xml:id="algx2.l1.m1">
+          <XMath>
+            <XMApp>
+              <XMTok meaning="greater-than" role="RELOP">&gt;</XMTok>
+              <XMTok font="italic" role="UNKNOWN">z</XMTok>
+              <XMTok meaning="0" role="NUMBER">0</XMTok>
+            </XMApp>
+          </XMath>
+        </Math> <text font="bold">then</text>
+</listingline>
+      <listingline xml:id="algx2.l2"><tags>
+          <tag><text fontsize="80%">2:</text></tag>
+          <tag role="refnum">2</tag>
+        </tags>  Normal restored: 15.00002pt.
+</listingline>
+      <listingline xml:id="algx2.l3"><tags>
+          <tag><text fontsize="80%">3:</text></tag>
+          <tag role="refnum">3</tag>
+        </tags><text font="bold">end</text> <text font="bold">if</text></listingline>
+      <listingline xml:id="algx2.l4"><tags>
+          <tag><text fontsize="80%">4:</text></tag>
+          <tag role="refnum">4</tag>
+        </tags>Closed: 0.0pt.
+</listingline>
+    </listing>
+  </para>
+</document>

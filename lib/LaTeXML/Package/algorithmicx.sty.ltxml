@@ -30,8 +30,11 @@ DeclareOption('noend', sub { AssignValue('algorithmicx_noend', 1, 'global'); ret
 DeclareOption('end',   sub { AssignValue('algorithmicx_noend', 0, 'global'); return; });
 ProcessOptions();
 
+# The source defines this with \algnewcommand, so \algrenewcommand may
+# replace it with any expandable dimension expression (algorithmicx 1.2:580).
+DefMacro('\algorithmicindent', '1.5em');
+
 # Configuration registers:
-DefRegister('\algorithmicindent' => Dimension('1.5em'));
 DefRegister('\ALG@tlm'           => Dimension('0pt'));
 DefRegister('\ALG@thistlm'       => Dimension('0pt'));
 
@@ -120,14 +123,19 @@ DefMacro('\Statex OptionalUndigested', sub {
 
 # Indentation block management:
 DefPrimitive('\ALG@beginblock', sub {
+  my $indent = LookupDimension(Tokens(T_CS('\algorithmicindent'), T_CS('\relax')));
   AssignRegister('\ALG@thistlm' => LookupRegister('\ALG@tlm'));
-  AssignRegister('\ALG@tlm' => LookupRegister('\ALG@tlm')->add(LookupRegister('\algorithmicindent')));
+  AssignRegister('\ALG@tlm' => LookupRegister('\ALG@tlm')->add($indent));
   StepCounter('ALG@nested');
+  # Save the evaluated entry width, as ALG@ind@<level> does in the source
+  # (lines 49-61); later redefinitions must not change the matching close.
+  AssignValue('algorithmicx_indent_' . CounterValue('ALG@nested')->valueOf => $indent);
 });
 
 DefPrimitive('\ALG@endblock', sub {
-  AssignRegister('\ALG@tlm' => LookupRegister('\ALG@tlm')->subtract(LookupRegister('\algorithmicindent')));
-  StepCounter('ALG@nested', -1);
+  my $indent = LookupValue('algorithmicx_indent_' . CounterValue('ALG@nested')->valueOf);
+  AssignRegister('\ALG@tlm' => LookupRegister('\ALG@tlm')->subtract($indent));
+  AddToCounter('ALG@nested', Number(-1));
   AssignRegister('\ALG@thistlm' => LookupRegister('\ALG@tlm'));
 });
 

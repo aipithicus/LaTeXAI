@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="algorithm"?>
+<?latexml package="algpseudocode"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <float class="ltx_float_algorithm" framed="top" inlist="loa" labels="LABEL:alg:indent" xml:id="alg1">
+    <tags>
+      <tag><text font="bold">Algorithm 1</text></tag>
+      <tag role="refnum">1</tag>
+      <tag role="typerefnum">Algorithm 1</tag>
+    </tags>
+    <toccaption><tag close=" ">1</tag>Renewable indentation</toccaption>
+    <caption><tag close=" "><text font="bold">Algorithm 1</text></tag> Renewable indentation</caption>
+    <listing>
+      <listingline xml:id="alg1.l1"><tags>
+          <tag><text fontsize="80%">1:</text></tag>
+          <tag role="refnum">1</tag>
+        </tags><text font="bold">procedure</text> <text font="smallcaps">Extract</text>(<Math mode="inline" tex="D" text="D" xml:id="alg1.l1.m1">
+          <XMath>
+            <XMTok font="italic" role="UNKNOWN">D</XMTok>
+          </XMath>
+        </Math>)
+</listingline>
+      <listingline labels="LABEL:line:outer" xml:id="alg1.l2"><tags>
+          <tag><text fontsize="80%">2:</text></tag>
+          <tag role="refnum">2</tag>
+        </tags> Outer: 10.00002pt.
+
+</listingline>
+      <listingline xml:id="alg1.l3"><tags>
+          <tag><text fontsize="80%">3:</text></tag>
+          <tag role="refnum">3</tag>
+        </tags> <text font="bold">for each</text> <Math mode="inline" tex="x\in D" text="x element-of D" xml:id="alg1.l3.m1">
+          <XMath>
+            <XMApp>
+              <XMTok meaning="element-of" name="in" role="RELOP">∈</XMTok>
+              <XMTok font="italic" role="UNKNOWN">x</XMTok>
+              <XMTok font="italic" role="UNKNOWN">D</XMTok>
+            </XMApp>
+          </XMath>
+        </Math> <text font="bold">do</text>
+</listingline>
+      <listingline xml:id="alg1.l4"><tags>
+          <tag><text fontsize="80%">4:</text></tag>
+          <tag role="refnum">4</tag>
+        </tags>  Inner: 12.00002pt.
+
+</listingline>
+      <listingline xml:id="alg1.l5"><tags>
+          <tag><text fontsize="80%">5:</text></tag>
+          <tag role="refnum">5</tag>
+        </tags> <text font="bold">end</text> <text font="bold">for</text></listingline>
+      <listingline xml:id="alg1.l6"><tags>
+          <tag><text fontsize="80%">6:</text></tag>
+          <tag role="refnum">6</tag>
+        </tags> After inner: 10.00002pt.
+</listingline>
+      <listingline xml:id="alg1.l7"><tags>
+          <tag><text fontsize="80%">7:</text></tag>
+          <tag role="refnum">7</tag>
+        </tags><text font="bold">end</text> <text font="bold">procedure</text></listingline>
+      <listingline xml:id="alg1.l8"><tags>
+          <tag><text fontsize="80%">8:</text></tag>
+          <tag role="refnum">8</tag>
+        </tags>After outer: 0.0pt.
+</listingline>
+      <listingline xml:id="alg1.l9"><tags>
+          <tag><text fontsize="80%">9:</text></tag>
+          <tag role="refnum">9</tag>
+        </tags><text font="bold">if</text> <Math mode="inline" tex="D\neq 0" text="D not-equals 0" xml:id="alg1.l9.m1">
+          <XMath>
+            <XMApp>
+              <XMTok meaning="not-equals" name="neq" role="RELOP">≠</XMTok>
+              <XMTok font="italic" role="UNKNOWN">D</XMTok>
+              <XMTok meaning="0" role="NUMBER">0</XMTok>
+            </XMApp>
+          </XMath>
+        </Math> <text font="bold">then</text>
+</listingline>
+      <listingline xml:id="alg1.l10"><tags>
+          <tag><text fontsize="80%">10:</text></tag>
+          <tag role="refnum">10</tag>
+        </tags>  New value: 7.0pt.
+</listingline>
+      <listingline xml:id="alg1.l11"><tags>
+          <tag><text fontsize="80%">11:</text></tag>
+          <tag role="refnum">11</tag>
+        </tags><text font="bold">end</text> <text font="bold">if</text></listingline>
+      <listingline xml:id="alg1.l12"><tags>
+          <tag><text fontsize="80%">12:</text></tag>
+          <tag role="refnum">12</tag>
+        </tags>After new value: 0.0pt.
+</listingline>
+    </listing>
+  </float>
+  <para xml:id="p1">
+    <listing>
+      <listingline xml:id="algx1.l1"><tags>
+          <tag><text fontsize="80%">1:</text></tag>
+          <tag role="refnum">1</tag>
+        </tags><text font="bold">if</text> <Math mode="inline" tex="x&gt;0" text="x &gt; 0" xml:id="algx1.l1.m1">
+          <XMath>
+            <XMApp>
+              <XMTok meaning="greater-than" role="RELOP">&gt;</XMTok>
+              <XMTok font="italic" role="UNKNOWN">x</XMTok>
+              <XMTok meaning="0" role="NUMBER">0</XMTok>
+            </XMApp>
+          </XMath>
+        </Math> <text font="bold">then</text>
+</listingline>
+      <listingline xml:id="algx1.l2"><tags>
+          <tag><text fontsize="80%">2:</text></tag>
+          <tag role="refnum">2</tag>
+        </tags> Local: 3.0pt.
+</listingline>
+      <listingline xml:id="algx1.l3"><tags>
+          <tag><text fontsize="80%">3:</text></tag>
+          <tag role="refnum">3</tag>
+        </tags><text font="bold">end</text> <text font="bold">if</text></listingline>
+      <listingline xml:id="algx1.l4"><tags>
+          <tag><text fontsize="80%">4:</text></tag>
+          <tag role="refnum">4</tag>
+        </tags>After local: 0.0pt.
+</listingline>
+    </listing>
+    <listing>
+      <listingline xml:id="algx2.l1"><tags>
+          <tag><text fontsize="80%">1:</text></tag>
+          <tag role="refnum">1</tag>
+        </tags><text font="bold">if</text> <Math mode="inline" tex="x&gt;0" text="x &gt; 0" xml:id="algx2.l1.m1">
+          <XMath>
+            <XMApp>
+              <XMTok meaning="greater-than" role="RELOP">&gt;</XMTok>
+              <XMTok font="italic" role="UNKNOWN">x</XMTok>
+              <XMTok meaning="0" role="NUMBER">0</XMTok>
+            </XMApp>
+          </XMath>
+        </Math> <text font="bold">then</text>
+</listingline>
+      <listingline xml:id="algx2.l2"><tags>
+          <tag><text fontsize="80%">2:</text></tag>
+          <tag role="refnum">2</tag>
+        </tags> Restored: 10.00002pt.
+</listingline>
+      <listingline xml:id="algx2.l3"><tags>
+          <tag><text fontsize="80%">3:</text></tag>
+          <tag role="refnum">3</tag>
+        </tags>  Explicit space.
+</listingline>
+      <listingline xml:id="algx2.l4"><tags>
+          <tag><text fontsize="80%">4:</text></tag>
+          <tag role="refnum">4</tag>
+        </tags><text font="bold">end</text> <text font="bold">if</text></listingline>
+      <listingline xml:id="algx2.l5"><tags>
+          <tag><text fontsize="80%">5:</text></tag>
+          <tag role="refnum">5</tag>
+        </tags>After restored: 0.0pt.
+</listingline>
+    </listing>
+    <p>Algorithm <ref labelref="LABEL:alg:indent"/>, line <ref labelref="LABEL:line:outer"/>.</p>
+  </para>
+</document>
