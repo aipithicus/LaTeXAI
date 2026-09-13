@@ -84,6 +84,9 @@ DefConstructor('\lx@algorithmicx@@item',
 
 # Item stepping helper:
 DefPrimitive('\ALG@it', sub {
+  if (LookupValue('algorithmicx_stored')) {
+    Error('misplaced', '\\algstore', undef, 'The environment must be closed after store!');
+    return; }
   Digest(Tokens(T_CS('\lx@algorithmicx@@item'), T_CS('\hskip'), T_CS('\ALG@tlm'), T_CS('\relax')));
 });
 
@@ -123,6 +126,9 @@ DefMacro('\Statex OptionalUndigested', sub {
 
 # Indentation block management:
 DefPrimitive('\ALG@beginblock', sub {
+  if (LookupValue('algorithmicx_stored')) {
+    Error('misplaced', '\\algstore', undef, 'The environment must be closed after store!');
+    return; }
   my $indent = LookupDimension(Tokens(T_CS('\algorithmicindent'), T_CS('\relax')));
   AssignRegister('\ALG@thistlm' => LookupRegister('\ALG@tlm'));
   AssignRegister('\ALG@tlm' => LookupRegister('\ALG@tlm')->add($indent));
@@ -133,6 +139,9 @@ DefPrimitive('\ALG@beginblock', sub {
 });
 
 DefPrimitive('\ALG@endblock', sub {
+  if (CounterValue('ALG@nested')->valueOf <= 0) {
+    Error('misplaced', 'algorithmicx block', undef, 'No algorithmic block is open');
+    return; }
   my $indent = LookupValue('algorithmicx_indent_' . CounterValue('ALG@nested')->valueOf);
   AssignRegister('\ALG@tlm' => LookupRegister('\ALG@tlm')->subtract($indent));
   AddToCounter('ALG@nested', Number(-1));
@@ -152,9 +161,11 @@ DefMacro('\algorithmic OptionalUndigested', sub {
   $freq =~ s/^\[//;
   $freq =~ s/\]$//;
   $freq = int($freq || 0);
-  $STATE->assignValue('ALG@step_freq' => $freq, 'global');
+  AssignValue('ALG@step_freq' => $freq);
+  AssignValue('algorithmicx_stored' => 0);
   ResetCounter('ALG@line');
   ResetCounter('ALG@rem');
+  ResetCounter('ALG@nested');
   if (!grep { $_ eq 'algorithm'; } $STATE->lookupStackedValues('current_environment')) {
     RefStepID('algorithm');
   }
@@ -168,6 +179,70 @@ DefMacro('\algorithmic OptionalUndigested', sub {
 });
 
 DefMacro('\endalgorithmic', '\lx@algorithmicx@endlist');
+
+# Continuations (algorithmicx 1.2, lines 656-786). Snapshots live across
+# environment groups; the active indentation stack stays environment-local.
+# This native engine represents open blocks by their evaluated indentation,
+# rather than the source's language-specific block/lifetime dispatch tables.
+DefPrimitive('\algstore OptionalMatch:* Undigested', sub {
+  my ($stomach, $star, $arg) = @_;
+  my $name = ToString(Expand($arg));
+  my $key = 'algorithmicx_save_' . $name;
+  if (LookupValue($key)) {
+    Error('duplicate', '\\algstore', undef, "This save name '$name' is already used!");
+    return; }
+  my $depth = CounterValue('ALG@nested')->valueOf;
+  my @indents = map { LookupValue('algorithmicx_indent_' . $_); } 1 .. $depth;
+  AssignValue($key => {
+      line => CounterValue('ALG@line'), rem => CounterValue('ALG@rem'),
+      freq => LookupValue('ALG@step_freq'), indents => \@indents }, 'global');
+  my %pending = %{ LookupValue('algorithmicx_pending') || {} };
+  $pending{$name} = 1 unless $star;
+  AssignValue('algorithmicx_pending' => \%pending, 'global');
+  AssignValue('algorithmicx_stored' => 1);
+  ResetCounter('ALG@nested');
+  AssignRegister('\ALG@tlm' => Dimension('0pt'));
+  AssignRegister('\ALG@thistlm' => Dimension('0pt'));
+  return;
+});
+
+DefPrimitive('\algrestore OptionalMatch:* Undigested', sub {
+  my ($stomach, $star, $arg) = @_;
+  my $name = ToString(Expand($arg));
+  if (CounterValue('ALG@line')->valueOf != 0 || LookupValue('algorithmicx_stored')) {
+    Error('misplaced', '\\algrestore', undef,
+      'Restore might be used only at the beginning of the environment!');
+    return; }
+  my $key = 'algorithmicx_save_' . $name;
+  my $saved = LookupValue($key);
+  unless ($saved) {
+    Error('undefined', '\\algrestore', undef, "Save '$name' not defined!");
+    return; }
+  SetCounter('ALG@line', $saved->{line});
+  SetCounter('ALG@rem', $saved->{rem});
+  AssignValue('ALG@step_freq' => $saved->{freq});
+  ResetCounter('ALG@nested');
+  my $width = Dimension('0pt');
+  foreach my $indent (@{ $saved->{indents} }) {
+    AssignRegister('\ALG@thistlm' => $width);
+    $width = $width->add($indent);
+    StepCounter('ALG@nested');
+    AssignValue('algorithmicx_indent_' . CounterValue('ALG@nested')->valueOf => $indent); }
+  AssignRegister('\ALG@tlm' => $width);
+  my %pending = %{ LookupValue('algorithmicx_pending') || {} };
+  delete $pending{$name};
+  AssignValue('algorithmicx_pending' => \%pending, 'global');
+  AssignValue($key => undef, 'global') unless $star;
+  return;
+});
+
+DefPrimitive('\lx@algorithmicx@checkstores', sub {
+  my @pending = sort keys %{ LookupValue('algorithmicx_pending') || {} };
+  Error('unclosed', '\\algstore', undef,
+    'Some stored algorithms are not restored: ' . join(', ', @pending)) if @pending;
+  return;
+});
+RawTeX('\AtEndDocument{\lx@algorithmicx@checkstores}');
 
 # Standard primitives:
 DefMacro('\State', '\ALG@it');

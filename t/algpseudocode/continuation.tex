@@ -1,0 +1,44 @@
+\documentclass{article}
+\usepackage{algorithm,algpseudocode}
+\begin{document}
+% algorithmicx 1.2:681-700 saves line/frequency/remainder and open indents.
+% Line 3 leaves a nonzero remainder at frequency 2. Both open blocks must
+% survive the environment group, and later closes use their saved widths.
+\begin{algorithm}
+\begin{algorithmic}[2]
+\algrenewcommand\algorithmicindent{1em}
+\Procedure{Split}{$x$}
+\algrenewcommand\algorithmicindent{2em}
+\If{$x>0$}
+\State $x\gets x+1$\label{split:before}
+\algstore{split}
+\end{algorithmic}
+\begin{algorithmic}[1]
+\algrenewcommand\algorithmicindent{4em}
+\algrestore{split}
+\State $x\gets x+2$\label{split:after}
+\EndIf
+\State \Return $x$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+Lines \ref{split:before} and \ref{split:after}.
+% A consuming restore releases the name for reuse; starred restore keeps it.
+\begin{algorithmic}[1]
+\State $a\gets 1$
+\algstore{split}
+\end{algorithmic}
+\begin{algorithmic}
+\algrestore*{split}
+\State $b\gets 2$
+\end{algorithmic}
+\begin{algorithmic}
+\algrestore{split}
+\State $c\gets 3$
+\end{algorithmic}
+% A starred store has no end-document restore obligation.
+\begin{algorithmic}
+\State $d\gets 4$
+\algstore*{unused}
+\end{algorithmic}
+\end{document}
