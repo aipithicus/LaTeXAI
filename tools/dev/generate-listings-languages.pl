@@ -68,7 +68,12 @@ print(($check ? 'Verified' : 'Generated') . " $count language definitions in thr
 # Keep short token runs on one line so the generated artifact is reviewable.
 sub dump_data {
   my ($value, $level) = @_;
-  return Data::Dumper->new([$value])->Terse(1)->Indent(0)->Useqq(0)->Dump unless ref($value);
+  unless (ref($value)) {
+    # Keep control tokens in escaped Perl notation, not literal CR/binary
+    # bytes in this LF source file. Ordinary strings stay easy to read.
+    my $controls = defined($value) && $value =~ /[\x00-\x08\x0b-\x1f\x7f]/;
+    return Data::Dumper->new([$value])->Terse(1)->Indent(0)->Useqq($controls ? 1 : 0)->Dump;
+  }
   my $indent = '  ' x $level;
   if (ref($value) eq 'ARRAY') {
     return '[' . join(', ', map { dump_data($_, 0) } @$value) . ']' unless grep { ref($_) } @$value;
