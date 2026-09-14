@@ -88,6 +88,10 @@ DefMacro('\bothIfSecond{}{}', sub {
 
 DefMacro('\AtBeginCaption{}',       Tokens());
 DefMacro('\AtEndCaption{}',         Tokens());
+# caption3.sty: \caption@AtBeginDocument adds to a begin-document hook
+# (star form included). lipics-v2021.cls:725 uses the unstarred form to
+# reject subfig; observed consumer 2504.03865v3.
+DefMacro('\caption@AtBeginDocument OptionalMatch:* {}', '\AtBeginDocument{#2}');
 DefMacro('\ContinuedFloat',         Tokens());
 DefMacro('\ProcessOptionsWithKV{}', Tokens());
 
