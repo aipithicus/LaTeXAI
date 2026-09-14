@@ -856,6 +856,13 @@ DefConstructor('\LoadClass OptionalSemiverbatim Semiverbatim []',
 # Internals used in Packages
 DefMacro('\NeedsTeXFormat{}[]', Tokens());
 
+# latex.ltx: \def\two@digits#1{\ifnum#1<10 0\fi\number#1}
+# imsart.sty uses this at load for \jobstart@date@info.
+DefMacro('\two@digits{}', '\ifnum#1<10 0\fi\number#1');
+# latex.ltx \@setref; imsart \let\safe@setref\@setref. No \saferef
+# consumer in the pinned paper; this only makes the \let copy a defined token.
+DefMacro('\@setref{}{}{}', '\ref{#3}');
+
 DefPrimitive('\ProvidesClass{}[]', sub {
     my ($stomach, $class, $version) = @_;
     my $name = ToString($class);
