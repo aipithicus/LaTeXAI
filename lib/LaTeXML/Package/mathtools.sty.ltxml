@@ -44,6 +44,13 @@ RequirePackage('amsmath', withoptions => 1);
 AtBeginDocument(sub {
     RequirePackage('graphicx'); });
 
+# mathtools 1.28 (2022/01/01): \xlongrightarrow / \xlongleftarrow via
+# \ext@arrow and \MT_longrightarrow_fill: (\arrowfill@\relbar\relbar\longrightarrow).
+# Source: mathtools.dtx package section. Observed consumer: 2408.16741v2.
+# Reuse amsmath's \lx@long@arrow; do not load extarrows.
+DefMacro('\xlongrightarrow', '\lx@long@arrow{\xlongrightarrow}{\lx@stretchy@rightarrow}');
+DefMacro('\xlongleftarrow',  '\lx@long@arrow{\xlongleftarrow}{\lx@stretchy@leftarrow}');
+
 ##########
 # Macros #
 ##########
