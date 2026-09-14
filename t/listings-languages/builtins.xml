@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="listings"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <resource src="ltx-listings.css" type="text/css"/>
+  <para xml:id="p1">
+    <listing class="ltx_lst_language_C++_11 ltx_lstlisting" data="YXV0byB2YWx1ZSA9IG51bGxwdHI7IGNsYXNzIEV4YW1wbGUgeyByZXR1cm47IH0gLy8gY29tbWVudA==" dataencoding="base64" datamimetype="text/plain">
+      <listingline xml:id="lstnumberx1"><text class="ltx_lst_keyword" font="bold">auto</text><text class="ltx_lst_space"> </text><text class="ltx_lst_identifier">value</text><text class="ltx_lst_space"> </text>=<text class="ltx_lst_space"> </text><text class="ltx_lst_identifier">nullptr</text>;<text class="ltx_lst_space"> </text><text class="ltx_lst_identifier">class</text><text class="ltx_lst_space"> </text><text class="ltx_lst_identifier">Example</text><text class="ltx_lst_space"> </text>{<text class="ltx_lst_space"> </text><text class="ltx_lst_keyword" font="bold">return</text>;<text class="ltx_lst_space"> </text>}<text class="ltx_lst_space"> </text><text class="ltx_lst_comment" font="italic">//<text class="ltx_lst_space"> </text>comment</text></listingline>
+    </listing>
+    <listing class="ltx_lst_language_Python_3 ltx_lstlisting" data="ZGVmIGZ1bmN0aW9uKHgpOgogICAgcHJpbnQoImhlbGxvIikgIyBjb21tZW50CiAgICBleGVjKHgpCiAgICByZXR1cm4gVHJ1ZQ==" dataencoding="base64" datamimetype="text/plain">
+      <listingline xml:id="lstnumberx2"><text class="ltx_lst_keyword" font="bold">def</text><text class="ltx_lst_space"> </text><text class="ltx_lst_identifier">function</text>(<text class="ltx_lst_identifier">x</text>):</listingline>
+      <listingline xml:id="lstnumberx3"><text class="ltx_lst_space">    </text><text class="ltx_lst_keyword" font="bold">print</text>(<text class="ltx_lst_string">”hello”</text>)<text class="ltx_lst_space"> </text><text class="ltx_lst_comment" font="italic">#<text class="ltx_lst_space"> </text>comment</text></listingline>
+      <listingline xml:id="lstnumberx4"><text class="ltx_lst_space">    </text><text class="ltx_lst_keyword" font="bold">exec</text>(<text class="ltx_lst_identifier">x</text>)</listingline>
+      <listingline xml:id="lstnumberx5"><text class="ltx_lst_space">    </text><text class="ltx_lst_keyword" font="bold">return</text><text class="ltx_lst_space"> </text><text class="ltx_lst_identifier">True</text></listingline>
+    </listing>
+    <listing class="ltx_lst_language_Lua_5.3 ltx_lstlisting" data="bG9jYWwgZnVuY3Rpb24gZXhhbXBsZSh4KQogIHByaW50KCJoZWxsbyIpIC0tIGNvbW1lbnQKICByZXR1cm4gbWF0aC5hYnMoeCkKZW5k" dataencoding="base64" datamimetype="text/plain">
+      <listingline xml:id="lstnumberx6"><text class="ltx_lst_keyword" font="bold">local</text><text class="ltx_lst_space"> </text><text class="ltx_lst_keyword" font="bold">function</text><text class="ltx_lst_space"> </text><text class="ltx_lst_identifier">example</text>(<text class="ltx_lst_identifier">x</text>)</listingline>
+      <listingline xml:id="lstnumberx7"><text class="ltx_lst_space">  </text><text class="ltx_lst_keyword ltx_lst_keywords2" font="bold">print</text>(<text class="ltx_lst_string">”hello”</text>)<text class="ltx_lst_space"> </text><text class="ltx_lst_comment" font="italic">–<text class="ltx_lst_space"> </text>comment</text></listingline>
+      <listingline xml:id="lstnumberx8"><text class="ltx_lst_space">  </text><text class="ltx_lst_keyword" font="bold">return</text><text class="ltx_lst_space"> </text><text class="ltx_lst_keyword ltx_lst_keywords2" font="bold">math.abs</text>(<text class="ltx_lst_identifier">x</text>)</listingline>
+      <listingline xml:id="lstnumberx9"><text class="ltx_lst_keyword" font="bold">end</text></listingline>
+    </listing>
+    <listing class="ltx_lst_language_TeX_LaTeX ltx_lstlisting" data="XGRvY3VtZW50Y2xhc3N7YXJ0aWNsZX0KXGJlZ2lue2RvY3VtZW50fSBcZGVmXHdvcmR7SGVsbG99IFxzZWN0aW9ue1RpdGxlfSBcZW5ke2RvY3VtZW50fQ==" dataencoding="base64" datamimetype="text/plain">
+      <listingline xml:id="lstnumberx10">\<text class="ltx_lst_keyword ltx_lst_texcs" font="bold">documentclass</text>{<text class="ltx_lst_identifier">article</text>}</listingline>
+      <listingline xml:id="lstnumberx11">\<text class="ltx_lst_keyword ltx_lst_texcs" font="bold">begin</text>{<text class="ltx_lst_identifier">document</text>}<text class="ltx_lst_space"> </text>\<text class="ltx_lst_keyword ltx_lst_texcs" font="bold">def</text><text class="ltx_lst_identifier">\word</text>{<text class="ltx_lst_identifier">Hello</text>}<text class="ltx_lst_space"> </text>\<text class="ltx_lst_keyword ltx_lst_texcs" font="bold">section</text>{<text class="ltx_lst_identifier">Title</text>}<text class="ltx_lst_space"> </text>\<text class="ltx_lst_keyword ltx_lst_texcs" font="bold">end</text>{<text class="ltx_lst_identifier">document</text>}</listingline>
+    </listing>
+    <listing class="ltx_lst_language_XML ltx_lstlisting" data="PHJvb3QgYXR0cj0idmFsdWUiPjwhLS0gY29tbWVudCAtLT48Y2hpbGQ+dGV4dDwvY2hpbGQ+PC9yb290Pg==" dataencoding="base64" datamimetype="text/plain">
+      <listingline xml:id="lstnumberx12"><text class="ltx_lst_tag">&lt;root<text class="ltx_lst_space"> </text>attr=<text class="ltx_lst_string">”value”</text>&gt;</text><text class="ltx_lst_tag">&lt;!–<text class="ltx_lst_space"> </text>comment<text class="ltx_lst_space"> </text>–&gt;</text><text class="ltx_lst_tag">&lt;child&gt;</text><text class="ltx_lst_identifier">text</text><text class="ltx_lst_tag">&lt;/child&gt;</text><text class="ltx_lst_tag">&lt;/root&gt;</text></listingline>
+    </listing>
+  </para>
+</document>

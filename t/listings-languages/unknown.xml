@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="listings"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <resource src="ltx-listings.css" type="text/css"/>
+  <para xml:id="p1">
+    <listing class="ltx_lst_language_B5UnknownLanguage ltx_lstlisting" data="b3JkaW5hcnkgdGV4dCByZW1haW5z" dataencoding="base64" datamimetype="text/plain">
+      <listingline xml:id="lstnumberx1"><text class="ltx_lst_identifier">ordinary</text><text class="ltx_lst_space"> </text><text class="ltx_lst_identifier">text</text><text class="ltx_lst_space"> </text><text class="ltx_lst_identifier">remains</text></listingline>
+    </listing>
+  </para>
+</document>

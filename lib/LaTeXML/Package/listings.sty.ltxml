@@ -16,6 +16,10 @@ use warnings;
 use LaTeXML::Package;
 use MIME::Base64;
 use Encode qw(is_utf8 encode);
+use Digest::SHA qw(sha256_hex);
+use File::Basename qw(basename);
+use Scalar::Util qw(refaddr);
+use LaTeXML::Package::ListingsLanguages;
 
 #======================================================================
 # To the extent we succeed in doing all the pretty-printing...
@@ -716,7 +720,7 @@ sub lstActivateLanguage {
       last if $values = LookupValue($name);
       # try to load next configuration file; fail if no more configs.
       if (my $file = ShiftValue('LST_LANGUAGE_FILES')) {
-        InputDefinitions($file, noerror => 1); }    # Note: OK if some definition files missing!
+        lstInputLanguageFile($file); }    # Note: OK if some definition files missing!
       else { last; } }
     # Found a definition, activate it.
     if ($values) {
@@ -1606,6 +1610,62 @@ EoTeX
 # Finally, we want to load the definitions from the configurations...
 # Actually, we should just load .cfg
 # and the extra files should be loaded as needed, but...
+
+# The generated tables are a compiled form of the pinned source, including
+# highlighting and Mouth-minted capture coordinates. Custom tables, altered
+# readers and other encodings keep the normal InputDefinitions route.
+sub lstLanguageReaderSignature {
+  my %signature;
+  foreach my $cs ('\\lstdefinelanguage', '\\lst@definelanguage', '\\@lstdefinelanguage',
+    '\\lstalias', '\\ProvidesFile') {
+    $signature{$cs} = $STATE->lookupMeaning(T_CS($cs)); }
+  foreach my $key (grep { /^KEYVAL\@.*\@KV\@LST\@/ } keys %{$$STATE{value}}) {
+    $signature{$key} = LookupValue($key); }
+  foreach my $cs (grep { /^\\KV\@LST\@/ } keys %{$$STATE{meaning}}) {
+    $signature{$cs} = $STATE->lookupMeaning(T_CS($cs)); }
+  return \%signature;
+}
+
+sub lstInputLanguageFile {
+  my ($file) = @_;
+  my $original = sub { return InputDefinitions($file, noerror => 1); };
+  my $path = FindFile($file);
+  return $original->() unless $path && $path =~ /(?:^|[\\\/])lstlang[123]\.sty$/;
+  return $original->() if LookupValue($path . '_contents') || LookupValue($file . '_contents');
+  return $original->() unless (LookupValue('PERL_INPUT_ENCODING') || 'UTF-8') =~ /^utf-?8$/i;
+  my $signature = LookupValue('LST_LANGUAGE_READER');
+  my $current = lstLanguageReaderSignature();
+  return $original->() unless $signature && keys(%$signature) == keys(%$current);
+  foreach my $key (keys %$signature) {
+    my ($old, $new) = ($$signature{$key}, $$current{$key});
+    return $original->() unless ref($old) || ref($new)
+      ? (ref($old) && ref($new) && refaddr($old) == refaddr($new))
+      : (($old // '') eq ($new // '')); }
+  my $table = LaTeXML::Package::ListingsLanguages::data()->{basename($path)};
+  return $original->() unless $table;
+  foreach my $char (keys %{$$table{catcodes}}) {
+    next if $char eq '@';    # The definitions Mouth always makes @ a letter.
+    return $original->() unless ($STATE->lookupCatcode($char) // CC_OTHER) == ($$table{catcodes}{$char} // CC_OTHER); }
+  open(my $input, '<:raw', $path) or return $original->();
+  my $raw = do { local $/; <$input> }; close($input);
+  return $original->() unless sha256_hex($raw) eq $$table{sha256};
+  return $original->() if LookupValue($file . '_loaded');
+  $STATE->getStomach->leaveHorizontal_internal;
+  AssignValue($file . '_loaded' => 1, 'global');
+  LaTeXML::Package::ClearAutoLoad($file);
+  Note("(Loading generated listings language data $path)");
+  my ($source_id, $source);
+  if (LookupValue('CAPTURE_PROVENANCE') && (my $registry = LookupValue('SOURCE_REGISTRY'))) {
+    $source_id = $registry->registerSource(kind => 'file', display => $path, encoding => 'UTF-8', raw => $raw);
+    $source = $registry->getEntry($source_id)->{display}; }
+  foreach my $definition (@{$$table{definitions}}) {
+    AssignValue($$definition[0] => LaTeXML::Package::ListingsLanguages::thaw(
+        $$definition[1], $source_id, $source), 'global'); }
+  Let(T_CS('\\ver@' . $file), T_CS('\\fmtversion'), 'global');
+  return $path;
+}
+
+AssignValue(LST_LANGUAGE_READER => lstLanguageReaderSignature(), 'global');
 sub lstLoadConfiguration {
   InputDefinitions("listings", type => 'cfg');
   AssignValue(LST_LANGUAGE_FILES => [lstSplit(Digest(T_CS('\lstlanguagefiles')))], 'global');
@@ -1614,7 +1674,7 @@ sub lstLoadConfiguration {
   # otherwise, they'll be read in whenever missing languages are used.
   if (LookupValue('InitialPreloads')) {
     while (my $file = ShiftValue('LST_LANGUAGE_FILES')) {
-      InputDefinitions($file, noerror => 1); } }
+      lstInputLanguageFile($file); } }
   return; }
 
 lstLoadConfiguration();

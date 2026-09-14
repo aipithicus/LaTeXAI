@@ -613,6 +613,17 @@ lib/LaTeXML/Package/lgr.fontmap.ltxml
 lib/LaTeXML/Package/lineno.sty.ltxml
 lib/LaTeXML/Package/lipsum.sty.ltxml
 lib/LaTeXML/Package/listings.sty.ltxml
+lib/LaTeXML/Package/ListingsLanguages.pm
+lib/LaTeXML/Package/listings.languages.pl
+t/81_listings_languages.t
+t/82_listings_language_data.t
+t/listings-languages/builtins.tex
+t/listings-languages/builtins.xml
+t/listings-languages/unknown.tex
+t/listings-languages/unknown.xml
+t/listings-languages/user-language.tex
+t/listings-languages/user-language.xml
+tools/dev/generate-listings-languages.pl
 lib/LaTeXML/Package/listingsutf8.sty.ltxml
 lib/LaTeXML/Package/llncs.cls.ltxml
 lib/LaTeXML/Package/lmodern.sty.ltxml

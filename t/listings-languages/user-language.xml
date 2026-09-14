@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="listings"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <resource src="ltx-listings.css" type="text/css"/>
+  <para xml:id="p1">
+    <listing class="ltx_lst_language_Private ltx_lstlisting" data="QUxQSEEgYmV0YSBnYW1tYSBvdGhlciAiYWxwaGEiICEgYmV0YQ==" dataencoding="base64" datamimetype="text/plain">
+      <listingline xml:id="lstnumberx1"><text class="ltx_lst_keyword" font="bold">ALPHA</text><text class="ltx_lst_space"> </text><text class="ltx_lst_keyword" font="bold">beta</text><text class="ltx_lst_space"> </text><text class="ltx_lst_keyword ltx_lst_keywords2" font="bold">gamma</text><text class="ltx_lst_space"> </text><text class="ltx_lst_identifier">other</text><text class="ltx_lst_space"> </text><text class="ltx_lst_string">”alpha”</text><text class="ltx_lst_space"> </text><text class="ltx_lst_comment" font="italic">!<text class="ltx_lst_space"> </text>beta</text></listingline>
+    </listing>
+    <listing class="ltx_lst_language_C_Extended ltx_lstlisting" data="aW50IHZhbHVlOyBleHRyYVdvcmQgcmV0dXJuIG9yZGluYXJ5Ow==" dataencoding="base64" datamimetype="text/plain">
+      <listingline xml:id="lstnumberx2"><text class="ltx_lst_keyword" font="bold">int</text><text class="ltx_lst_space"> </text><text class="ltx_lst_identifier">value</text>;<text class="ltx_lst_space"> </text><text class="ltx_lst_identifier">extraWord</text><text class="ltx_lst_space"> </text><text class="ltx_lst_keyword" font="bold">return</text><text class="ltx_lst_space"> </text><text class="ltx_lst_identifier">ordinary</text>;</listingline>
+    </listing>
+    <listing class="ltx_lst_language_Python ltx_lstlisting" data="ZGVmIGZ1bmN0aW9uKCk6IGxvY2FsV29yZA==" dataencoding="base64" datamimetype="text/plain">
+      <listingline xml:id="lstnumberx3"><text class="ltx_lst_keyword" font="bold">def</text><text class="ltx_lst_space"> </text><text class="ltx_lst_identifier">function</text>():<text class="ltx_lst_space"> </text><text class="ltx_lst_keyword" font="bold">localWord</text></listingline>
+    </listing>
+    <listing class="ltx_lst_language_SQL ltx_lstlisting" data="U0VMRUNUIG9yZGluYXJ5IEZST00gdGFibGVfbmFtZSBXSEVSRSBjb25kaXRpb247" dataencoding="base64" datamimetype="text/plain">
+      <listingline xml:id="lstnumberx4"><text class="ltx_lst_keyword" font="bold">SELECT</text><text class="ltx_lst_space"> </text><text class="ltx_lst_identifier">ordinary</text><text class="ltx_lst_space"> </text><text class="ltx_lst_identifier">FROM</text><text class="ltx_lst_space"> </text><text class="ltx_lst_identifier">table_name</text><text class="ltx_lst_space"> </text><text class="ltx_lst_keyword" font="bold">WHERE</text><text class="ltx_lst_space"> </text><text class="ltx_lst_identifier">condition</text>;</listingline>
+    </listing>
+    <listing class="ltx_lst_language_Python ltx_lstlisting" data="ZGVmIGZ1bmN0aW9uKCk6IGxvY2FsV29yZA==" dataencoding="base64" datamimetype="text/plain">
+      <listingline xml:id="lstnumberx5"><text class="ltx_lst_keyword" font="bold">def</text><text class="ltx_lst_space"> </text><text class="ltx_lst_identifier">function</text>():<text class="ltx_lst_space"> </text><text class="ltx_lst_keyword" font="bold">localWord</text></listingline>
+    </listing>
+    <listing class="ltx_lst_language_Python ltx_lstlisting" data="ZGVmIGZ1bmN0aW9uKCk6IFNFTEVDVA==" dataencoding="base64" datamimetype="text/plain">
+      <listingline xml:id="lstnumberx6"><text class="ltx_lst_keyword" font="bold">def</text><text class="ltx_lst_space"> </text><text class="ltx_lst_identifier">function</text>():<text class="ltx_lst_space"> </text><text class="ltx_lst_keyword" font="bold">SELECT</text></listingline>
+    </listing>
+  </para>
+</document>

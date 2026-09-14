@@ -1,0 +1,28 @@
+\documentclass{article}
+\usepackage{listings}
+\lstdefinelanguage{Private}{keywords={alpha,beta},sensitive=false,
+  morekeywords=[2]{gamma},morecomment=[l]{!},morestring=[b]"}
+\lstdefinelanguage[Extended]{C}[ANSI]{C}{morekeywords={extraWord}}
+\begin{document}
+\begin{lstlisting}[language=Private]
+ALPHA beta gamma other "alpha" ! beta
+\end{lstlisting}
+\begin{lstlisting}[language={[Extended]C}]
+int value; extraWord return ordinary;
+\end{lstlisting}
+\lstset{language=Python,morekeywords={localWord}}
+\begin{lstlisting}
+def function(): localWord
+\end{lstlisting}
+{\lstset{language=SQL}
+\begin{lstlisting}
+SELECT ordinary FROM table_name WHERE condition;
+\end{lstlisting}
+}
+\begin{lstlisting}
+def function(): localWord
+\end{lstlisting}
+\begin{lstlisting}[language=Python,alsolanguage=SQL]
+def function(): SELECT
+\end{lstlisting}
+\end{document}

@@ -1,0 +1,29 @@
+\documentclass{article}
+\usepackage{listings}
+\begin{document}
+% lstlang1: C++11 -> ISO C++ -> ANSI C, and Python3 -> Python2.
+\begin{lstlisting}[language={[11]C++}]
+auto value = nullptr; class Example { return; } // comment
+\end{lstlisting}
+\begin{lstlisting}[language={[3]Python}]
+def function(x):
+    print("hello") # comment
+    exec(x)
+    return True
+\end{lstlisting}
+% lstlang2: Lua5.3 -> 5.2 -> 5.1 -> 5.0, with inherited keyword classes.
+\begin{lstlisting}[language={[5.3]Lua}]
+local function example(x)
+  print("hello") -- comment
+  return math.abs(x)
+end
+\end{lstlisting}
+% lstlang3: LaTeX -> common -> primitive TeX.
+\begin{lstlisting}[language={[LaTeX]TeX}]
+\documentclass{article}
+\begin{document} \def\word{Hello} \section{Title} \end{document}
+\end{lstlisting}
+\begin{lstlisting}[language=XML]
+<root attr="value"><!-- comment --><child>text</child></root>
+\end{lstlisting}
+\end{document}
