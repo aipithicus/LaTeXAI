@@ -858,7 +858,14 @@ DefMacro('\NeedsTeXFormat{}[]', Tokens());
 
 DefPrimitive('\ProvidesClass{}[]', sub {
     my ($stomach, $class, $version) = @_;
-    DefMacroI("\\ver@" . ToString($class) . ".cls", undef, $version || Tokens(), scope => 'global');
+    my $name = ToString($class);
+    $name =~ s/\s+//g;
+    DefMacroI("\\ver@" . $name . ".cls", undef, $version || Tokens(), scope => 'global');
+    # Snapshot the class name. \@currname is the file currently being read and
+    # is overwritten by later packages; stacs.cls ClassWarning{\@classname}
+    # (and AMS classes) need the class identity to survive that. Native class
+    # bindings that never call \ProvidesClass still leave \@classname unset.
+    DefMacroI('\@classname', undef, $name, scope => 'global');
     return; });
 
 # Note that these, like LaTeX, define macros like \var@mypkg.sty to give the version info.

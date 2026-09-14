@@ -1,0 +1,3 @@
+InputDefinitions('classname', type => 'cls', noltxml => 1, withoptions => 1);
+#======================================================================
+1;
