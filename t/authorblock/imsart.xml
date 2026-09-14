@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="imsart"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML" class="ltx_authors_1line">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <title>Density Evolution</title>
+  <creator role="author">
+    <personname>Kisung You</personname>
+  </creator>
+  <para xml:id="p1">
+    <p>Body.</p>
+  </para>
+</document>

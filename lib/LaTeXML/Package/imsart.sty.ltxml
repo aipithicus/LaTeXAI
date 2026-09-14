@@ -1,0 +1,11 @@
+# imsart. Source: paper-local imsart.sty \author@fmt (lines 2103-2120)
+# defines \fnms and \snm only while typesetting the author. Class: structural.
+# Identity wrappers so given/surname text survives \author digestion.
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+InputDefinitions('imsart', type => 'sty', noltxml => 1);
+DefMacro('\fnms{}', '#1');
+DefMacro('\snm{}',  '#1');
+1;

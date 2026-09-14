@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="jmlr2e"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML" class="ltx_authors_1line">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <title>Rdimtools</title>
+  <creator role="author">
+    <personname><text font="bold">Kisung You  <text font="smallcaps" fontsize="90%">kyou@nd.edu</text></text></personname>
+    <contact name="Affiliation: " role="affiliation"><text font="bold italic" fontsize="90%">University of Notre Dame</text></contact>
+  </creator>
+  <para xml:id="p1">
+    <p>Body.</p>
+  </para>
+</document>

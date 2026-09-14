@@ -1,0 +1,12 @@
+# aaai2027. Source: paper-local aaai2027.sty \@maketitle (lines 139-146)
+# defines \equalcontrib only inside the title box. Class: structural.
+# Shared footnote marker; not a delayed-\author kernel change.
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+InputDefinitions('aaai2027', type => 'sty', noltxml => 1);
+# Source uses a shared footnote; a superscript star keeps the equal-contribution
+# marker inside \author without fighting title-block grouping.
+DefMacro('\equalcontrib', '\textsuperscript{*}');
+1;

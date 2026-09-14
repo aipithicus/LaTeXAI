@@ -1,0 +1,13 @@
+# jmlr2e (JMLR style). Source: paper-local jmlr2e.sty \@maketitle
+# (lines 237-240) defines \name, \email, \addr only while expanding \@author.
+# Class: structural. Global font switches so \author{\name...\email...\addr...}
+# keeps that text; do not use this package from a TikZ-only document.
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+InputDefinitions('jmlr2e', type => 'sty', noltxml => 1);
+DefMacro('\name',  '\normalsize\bfseries');
+DefMacro('\email', '\hfill\small\scshape');
+DefMacro('\addr',  '\small\itshape');
+1;
