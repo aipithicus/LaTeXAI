@@ -24,7 +24,7 @@ One thing can carry several names when they name different facets. The rule is t
 | **coverage category** | native, hybrid, passthrough, ignored, raw-only, missing: what a request for a package resolves to ([`bindings.md`](specification/bindings.md) section 2) | when describing what the engine does with a package |
 | **class** | structural, containment, shim, ignored, semantic: what a binding is for ([`bindings.md`](specification/bindings.md) section 2.1) | when judging a binding against its criteria |
 | **status** | native, hybrid, passthrough, partial, deferred, none: where the work on a package stands | in provenance and the demand join; never in a directory name |
-| **data file** | a file the pool consumes through primitives it implements: encoding definitions, named-color tables, language definitions, config files, font definition files | when a request is for a table the engine reads raw by design |
+| **data file** | a file the pool consumes through primitives it implements: encoding definitions, named-color tables, language definitions, config files, font definition files | when a request is for a table, whether read raw or compiled into data owned by its consuming binding |
 | **raw package** | a macro package the engine interprets because a binding delegates to it (passthrough or hybrid) or because a raw file requires it | when a `.sty` is executed rather than bound |
 | **notation vocabulary** | a symbol or alphabet font package whose value is a set of commands with meanings and codepoints | for lib-symb material |
 | **table** | `symbols.tsv`: the curated rows a notation binding is generated from | never "table" for a data file |
@@ -87,6 +87,8 @@ From the engine outward:
 5. **Reference vocabularies**: KaTeX. Never read by the engine; read by the table checker and by post.
 
 Encoding definitions and named-color tables look like tables and are rows, but nobody curates them and the pool reads them by design. They are data files, layer 3, on the runtime path. Generating bindings for them re-implements file lookup one file at a time and is not done.
+
+The owning binding may compile pinned tables into Perl data: listings does this for its language tables, and xcolor for SVG/X11 names. Both preserve ordinary file lookup and retain raw interpretation when content or reader guards do not match. The original indexed files remain the source authority; no per-file binding is introduced. Regenerate xcolor's data with `perl tools/dev/generate-xcolor-names.pl` (`--check` verifies it).
 
 ## 7. The binding ontology
 

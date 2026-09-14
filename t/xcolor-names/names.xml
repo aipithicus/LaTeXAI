@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="xcolor" options="x11names,svgnames,dvipsnames"?>
+<?latexml package="amsmath"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <p><text color="#F0F8FF">SVG first</text>
+<text color="#9ACD32">SVG last</text>
+<text color="#008000">SVG overrides dvips</text>
+<text color="#808080">SVG gray</text>
+<text color="#808080">SVG grey alias</text>
+<text color="#800080">SVG purple</text>
+<text color="#FFEFDB">X11 first</text>
+<text color="#A020F0">X11 last</text>
+<text color="#BEBEBE">X11 gray alias</text>
+<text color="#BEBEBE">X11 grey alias</text>
+<text color="#00008B">X11 numbered shade</text>
+<text color="#FFAD7A">dvips retained</text>
+<text color="#787CC5">mixed tables</text>
+<text color="#FF0000">local override</text>
+<text color="#F0F8FF">scope restored</text>
+
+<text color="#FFEFDB">renamed color</text></p>
+    <equationgroup xml:id="S0.E1">
+      <tags>
+        <tag>(1)</tag>
+        <tag role="refnum">1</tag>
+      </tags>
+      <equation xml:id="S0.E1X">
+        <MathFork>
+          <Math tex="\displaystyle a={\color[rgb]{.94,.972,1}b}" text="a = b" xml:id="S0.E1X.m1">
+            <XMath>
+              <XMApp>
+                <XMTok meaning="equals" role="RELOP">=</XMTok>
+                <XMTok font="italic" role="UNKNOWN">a</XMTok>
+                <XMTok color="#F0F8FF" font="italic" role="UNKNOWN">b</XMTok>
+              </XMApp>
+            </XMath>
+          </Math>
+          <MathBranch>
+            <td align="right"><Math tex="\displaystyle a" text="a" xml:id="S0.E1X.m2">
+                <XMath>
+                  <XMTok font="italic" role="UNKNOWN">a</XMTok>
+                </XMath>
+              </Math></td>
+            <td align="left"><Math tex="\displaystyle={\color[rgb]{.94,.972,1}b}" text="absent = b" xml:id="S0.E1X.m3">
+                <XMath>
+                  <XMApp>
+                    <XMTok meaning="equals" role="RELOP">=</XMTok>
+                    <XMTok meaning="absent"/>
+                    <XMTok color="#F0F8FF" font="italic" role="UNKNOWN">b</XMTok>
+                  </XMApp>
+                </XMath>
+              </Math></td>
+          </MathBranch>
+        </MathFork>
+      </equation>
+      <equation xml:id="S0.E1Xa">
+        <MathFork>
+          <Math tex="\displaystyle c=d" text="c = d" xml:id="S0.E1Xa.m1">
+            <XMath>
+              <XMApp>
+                <XMTok meaning="equals" role="RELOP">=</XMTok>
+                <XMTok font="italic" role="UNKNOWN">c</XMTok>
+                <XMTok font="italic" role="UNKNOWN">d</XMTok>
+              </XMApp>
+            </XMath>
+          </Math>
+          <MathBranch>
+            <td align="right"><Math tex="\displaystyle c" text="c" xml:id="S0.E1Xa.m2">
+                <XMath>
+                  <XMTok font="italic" role="UNKNOWN">c</XMTok>
+                </XMath>
+              </Math></td>
+            <td align="left"><Math tex="\displaystyle=d" text="absent = d" xml:id="S0.E1Xa.m3">
+                <XMath>
+                  <XMApp>
+                    <XMTok meaning="equals" role="RELOP">=</XMTok>
+                    <XMTok meaning="absent"/>
+                    <XMTok font="italic" role="UNKNOWN">d</XMTok>
+                  </XMApp>
+                </XMath>
+              </Math></td>
+          </MathBranch>
+        </MathFork>
+      </equation>
+    </equationgroup>
+    <equation xml:id="S0.Ex1">
+      <Math mode="display" tex="{\color[rgb]{0,0,.545}x}+y" text="x + y" xml:id="S0.Ex1.m1">
+        <XMath>
+          <XMApp>
+            <XMTok meaning="plus" role="ADDOP">+</XMTok>
+            <XMTok color="#00008B" font="italic" role="UNKNOWN">x</XMTok>
+            <XMTok font="italic" role="UNKNOWN">y</XMTok>
+          </XMApp>
+        </XMath>
+      </Math>
+    </equation>
+  </para>
+</document>

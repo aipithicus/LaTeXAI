@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="xcolor" options="svgnames*,x11names*"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <p><text color="#F0F8FF">available before definecolors</text>
+<text color="#FFEFDB">X11 available before definecolors</text>
+
+<text color="#9ACD32">SVG alias</text>
+<text color="#A020F0">X11 alias</text>
+
+<text color="#9ACD32">existing alias retained</text></p>
+  </para>
+</document>

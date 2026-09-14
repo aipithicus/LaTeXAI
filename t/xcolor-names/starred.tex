@@ -1,0 +1,12 @@
+\documentclass{article}
+\usepackage[svgnames*,x11names*]{xcolor}
+\begin{document}
+% The resident binding intentionally prepares eagerly, including starred options.
+\textcolor{AliceBlue}{available before definecolors}
+\textcolor{AntiqueWhite1}{X11 available before definecolors}
+\definecolors{B6SVG=YellowGreen,B6X11=Purple0}
+\textcolor{B6SVG}{SVG alias}
+\textcolor{B6X11}{X11 alias}
+\providecolors{B6SVG=Blue4}
+\textcolor{B6SVG}{existing alias retained}
+\end{document}

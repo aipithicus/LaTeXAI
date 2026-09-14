@@ -21,6 +21,9 @@ use strict;
 use warnings;
 use LaTeXML::Package;
 use List::Util qw(min max);
+use Scalar::Util qw(refaddr);
+use Digest::SHA qw(sha256_hex);
+use File::Basename qw(basename);
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 # Options & Initializations.
@@ -51,10 +54,10 @@ foreach my $option (qw(showerrors hideerrors fixpdftex prologue
 # Loading sets of names
 DeclareOption('dvipsnames',  sub { InputDefinitions('dvipsnam', type => 'def'); return; });
 DeclareOption('dvipsnames*', sub { InputDefinitions('dvipsnam', type => 'def'); return; });
-DeclareOption('svgnames',    sub { InputDefinitions('svgnam',   type => 'def'); return; });
-DeclareOption('svgnames*',   sub { InputDefinitions('svgnam',   type => 'def'); return; });
-DeclareOption('x11names',    sub { InputDefinitions('x11nam',   type => 'def'); return; });
-DeclareOption('x11names*',   sub { InputDefinitions('x11nam',   type => 'def'); return; });
+DeclareOption('svgnames',    sub { xcInputNamedColors('svgnam'); return; });
+DeclareOption('svgnames*',   sub { xcInputNamedColors('svgnam'); return; });
+DeclareOption('x11names',    sub { xcInputNamedColors('x11nam'); return; });
+DeclareOption('x11names*',   sub { xcInputNamedColors('x11nam'); return; });
 
 # Load colortbl package;
 DeclareOption('table', sub { RequirePackage('colortbl'); return; });
@@ -1009,6 +1012,57 @@ RawTeX(<<'EOTeX');
   \def\@@arg{\textbf{color}& }\let\@@clr\@empty\@testc@lor}%
  {\endtabular\ignorespacesafterend}
 EOTeX
+
+# The two xcolor tables are data owned by this binding. Keep ordinary file
+# lookup and raw interpretation for custom content or a changed TeX reader.
+# Both option forms intentionally retain this binding's eager preparation.
+sub xcInputNamedColors {
+  my ($name) = @_;
+  my $file = "$name.def";
+  my $original = sub { return InputDefinitions($name, type => 'def'); };
+  my $path = FindFile($file, type => 'def');
+  return $original->() unless $path && $path =~ /(?:^|[\\\/])(?:svgnam|x11nam)\.def$/;
+  return $original->() if defined(LookupValue($path . '_contents'))
+    || defined(LookupValue($file . '_contents')) || LookupValue($file . '_loaded');
+  return $original->() unless (LookupValue('PERL_INPUT_ENCODING') || 'UTF-8') =~ /^utf-?8$/i;
+  my $endline = LookupDefinition(T_CS('\\endlinechar'));
+  return $original->() if ($endline && $endline->valueOf()->valueOf != 13)
+    || (LookupValue('PRESERVE_NEWLINES') || 0) > 1;
+  my $reader = LookupValue('XC_NAMED_COLOR_READER') || {};
+  foreach my $cs ('\\preparecolorset', '\\ProvidesFile', '\\def', '\\endinput') {
+    my $current = $STATE->lookupMeaning(T_CS($cs));
+    return $original->() unless ref($$reader{$cs}) && ref($current)
+      && refaddr($$reader{$cs}) == refaddr($current); }
+  # These are all characters used by the source's executable declarations.
+  # The definitions Mouth forces @ to letter independently of ambient catcodes.
+  foreach my $char ('A' .. 'Z', 'a' .. 'z', '0' .. '9', split(//, '\\{}% .,;[]'), "\r") {
+    my $expected = $char =~ /[A-Za-z]/ ? CC_LETTER
+      : $char eq '\\' ? CC_ESCAPE : $char eq '{' ? CC_BEGIN : $char eq '}' ? CC_END
+      : $char eq '%' ? CC_COMMENT : $char eq ' ' ? CC_SPACE : $char eq "\r" ? CC_EOL : CC_OTHER;
+    return $original->() unless ($STATE->lookupCatcode($char) // CC_OTHER) == $expected; }
+  require LaTeXML::Package::XColorNames;
+  my $table = LaTeXML::Package::XColorNames::data()->{basename($path)};
+  return $original->() unless $table;
+  open(my $in, '<:raw', $path) or return $original->();
+  my $raw = do { local $/; <$in> }; close($in);
+  return $original->() unless sha256_hex($raw) eq $$table{sha256};
+  $STATE->getStomach->leaveHorizontal_internal;
+  AssignValue($file . '_loaded' => 1, 'global');
+  LaTeXML::Package::ClearAutoLoad($file);
+  Note("(Loading generated xcolor name data $path)");
+  DefMacroI('\\colornameprefix', undef, 'XC@');
+  my $scope = LookupValue('xglobal@') ? 'global' : undef;
+  foreach my $row (@{$$table{colors}}) {
+    my ($color, @rgb) = @$row;
+    DefColor($color, Color('rgb', @rgb)->toCore, $scope); }
+  AssignValue('xglobal@' => 0);
+  Let(T_CS('\\ver@' . $file), T_CS('\\fmtversion'), 'global');
+  return $path;
+}
+
+AssignValue(XC_NAMED_COLOR_READER => {
+    map { $_ => $STATE->lookupMeaning(T_CS($_)) }
+      ('\\preparecolorset', '\\ProvidesFile', '\\def', '\\endinput') }, 'global');
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ProcessOptions();

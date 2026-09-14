@@ -1,0 +1,25 @@
+\documentclass{article}
+% Deliberately reverse the declaration order: SVG still overrides dvips names.
+\usepackage[x11names,svgnames,dvipsnames]{xcolor}
+\usepackage{amsmath}
+\begin{document}
+\textcolor{AliceBlue}{SVG first}
+\textcolor{YellowGreen}{SVG last}
+\textcolor{Green}{SVG overrides dvips}
+\textcolor{Gray}{SVG gray}
+\textcolor{Grey}{SVG grey alias}
+\textcolor{Purple}{SVG purple}
+\textcolor{AntiqueWhite1}{X11 first}
+\textcolor{Purple0}{X11 last}
+\textcolor{Gray0}{X11 gray alias}
+\textcolor{Grey0}{X11 grey alias}
+\textcolor{Blue4}{X11 numbered shade}
+\textcolor{Apricot}{dvips retained}
+\textcolor{AliceBlue!50!Blue4}{mixed tables}
+{\definecolor{AliceBlue}{rgb}{1,0,0}\textcolor{AliceBlue}{local override}}
+\textcolor{AliceBlue}{scope restored}
+\definecolors{B6Alias=AntiqueWhite1}
+\textcolor{B6Alias}{renamed color}
+\begin{equation}\begin{aligned}a&=\textcolor{AliceBlue}{b}\\c&=d\end{aligned}\end{equation}
+\[\textcolor{Blue4}{x}+y\]
+\end{document}

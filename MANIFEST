@@ -816,6 +816,14 @@ lib/LaTeXML/Package/wiki.sty.ltxml
 lib/LaTeXML/Package/wrapfig.sty.ltxml
 lib/LaTeXML/Package/xargs.sty.ltxml
 lib/LaTeXML/Package/xcolor.sty.ltxml
+lib/LaTeXML/Package/XColorNames.pm
+t/83_xcolor_names.t
+t/84_xcolor_name_data.t
+t/xcolor-names/names.tex
+t/xcolor-names/names.xml
+t/xcolor-names/starred.tex
+t/xcolor-names/starred.xml
+tools/dev/generate-xcolor-names.pl
 lib/LaTeXML/Package/xfrac.sty.ltxml
 lib/LaTeXML/Package/xkeyval.sty.ltxml
 lib/LaTeXML/Package/xkvview.sty.ltxml
