@@ -993,6 +993,17 @@ DefMathI('\lx@stretchy@leftarrow', undef, "\x{2190}",
   role => 'ARROW', stretchy => 'true', alias => '\leftarrow');
 DefMathI('\lx@stretchy@rightarrow', undef, "\x{2192}",
   role => 'ARROW', stretchy => 'true', alias => '\rightarrow');
+DefMathI('\lx@stretchy@leftrightarrow', undef, "\x{2194}",
+  role => 'ARROW', stretchy => 'true', alias => '\leftrightarrow');
+
+# amsmath.dtx: \def\rightarrowfill@#1{\arrowfill@\relbar\relbar\rightarrow{#1}}
+# (and the left/leftright siblings). \arrowfill@ wraps the leaders in $...$
+# so the fill is math even as a \varlim@ / paper-local \colim \halign row.
+# Style argument is TeX mathstyle. Not amscd's delimiter-taking form.
+# Consumer: 2504.03865v3.
+DefMacro('\leftarrowfill@{}',      '$\lx@stretchy@leftarrow$');
+DefMacro('\rightarrowfill@{}',     '$\lx@stretchy@rightarrow$');
+DefMacro('\leftrightarrowfill@{}', '$\lx@stretchy@leftrightarrow$');
 
 #======================================================================
 # Section 4.10 Affixing symbols to other symbols

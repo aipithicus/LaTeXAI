@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="amsmath"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <equation xml:id="S0.Ex1">
+      <Math mode="display" tex="\mathop{\mathchoice{\vtop{\halign{#\cr\hfil$\displaystyle\operator@font colim$%&#10;\hfil\cr\kern 1.5pt\cr$\rightarrow$\cr\kern-1.0pt\cr\cr}}}{\vtop{\halign{#\cr%&#10;\hfil$\textstyle\operator@font colim$\hfil\cr\kern 1.5pt\cr$\rightarrow$\cr%&#10;\kern-1.0pt\cr\cr}}}{\vtop{\halign{#\cr\hfil$\scriptstyle\operator@font colim$%&#10;\hfil\cr\kern 1.5pt\cr$\rightarrow$\cr\kern-1.0pt\cr\cr}}}{\vtop{\halign{#\cr%&#10;\hfil$\scriptscriptstyle\operator@font colim$\hfil\cr\kern 1.5pt\cr$%&#10;\rightarrow$\cr\kern-1.0pt\cr\cr}}}}\displaylimits_{I}F" text="(Array[[colim], [rightarrow]] _ I)@(F)" xml:id="S0.Ex1.m1">
+        <XMath>
+          <XMApp>
+            <XMApp>
+              <XMTok role="SUBSCRIPTOP" scriptpos="post1"/>
+              <XMArray role="BIGOP" scriptpos="post1" vattach="top">
+                <XMRow>
+                  <XMCell align="center" class="ltx_nopad_l ltx_nopad_r">
+                    <XMTok role="UNKNOWN">colim</XMTok>
+                  </XMCell>
+                </XMRow>
+                <XMRow>
+                  <XMCell align="left" class="ltx_nopad_l ltx_nopad_r">
+                    <XMTok name="rightarrow" role="ARROW" stretchy="true">→</XMTok>
+                  </XMCell>
+                </XMRow>
+              </XMArray>
+              <XMTok font="italic" fontsize="70%" role="UNKNOWN">I</XMTok>
+            </XMApp>
+            <XMTok font="italic" role="UNKNOWN">F</XMTok>
+          </XMApp>
+        </XMath>
+      </Math>
+    </equation>
+  </para>
+</document>
