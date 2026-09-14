@@ -13,9 +13,9 @@
 # plus the package documentation. Model: amscd's generic matrix bindings.
 # This replaces the upstream TikZ passthrough: raw tikz-cd requires tikz and
 # loads cd (matrix, quotes, arrows.meta); this binding requires no packages,
-# executes no raw TikZ, and defines tikzcdset (and tikzset only when TikZ has
-# not already provided it) for the bounded layout no-ops below. Loading it
-# does not expose TikZ's unrelated surface.
+# executes no raw TikZ, and defines tikzcdset (and tikzset / usetikzlibrary
+# only when TikZ has not already provided them) for the bounded layout
+# no-ops below. Loading it does not expose TikZ's unrelated surface.
 # Covers the tikzcd matrix, including standalone use outside math (wrapped in
 # ltx:Math, not a numbered equation), arrow/ar bracket syntax, nonempty
 # r/l/u/d direction strings (cd:dir is the source spelling; the twelve DIR_MAP
@@ -67,6 +67,20 @@ DefMacro('\tikzcdset{}', sub { check_tikzcd_layout_options($_[1]); return; });
 # ordinary TikZ keys.
 if (!LookupDefinition(T_CS('\tikzset'))) {
   DefMacro('\tikzset{}', sub { check_tikzcd_layout_options($_[1]); return; }); }
+# Raw tikz-cd.sty does \RequirePackage{tikz}\usetikzlibrary{cd}. This
+# binding does not load TikZ. Paper-local quiver.sty (2504.03865v3)
+# still calls \usetikzlibrary{calc} and decorations.pathmorphing.
+# Absorb the call; do not execute PGF libraries. TikZ's containment
+# loader keeps the cd special case when TikZ is already loaded.
+if (!LookupDefinition(T_CS('\usetikzlibrary'))) {
+  DefPrimitive('\usetikzlibrary[]{}', sub {
+      my ($stomach, $opt, $libs) = @_;
+      $libs = Expand($libs) if $libs;
+      foreach my $lib (split(/,/, ToString($libs))) {
+        $lib =~ s/^\s+//; $lib =~ s/\s+$//;
+        next unless length($lib);
+        Let(T_CS('\tikz@library@' . $lib . '@loaded'), T_CS('\relax')); }
+      return; }); }
 
 # Reader for optional [options] on \tikzcd or \arrow
 DefParameterType('OptionalTikzCdOptions', sub {
