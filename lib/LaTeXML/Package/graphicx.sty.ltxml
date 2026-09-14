@@ -20,16 +20,27 @@ use LaTeXML::Util::Image;
 # (See  LaTeXML::Post::Graphics for suggested postprocessing)
 # Provides alternative argument syntax.
 RequirePackage('graphics');
+RequirePackage('keyval');
 
 DefMacro('\Gin@ewidth',   '');
 DefMacro('\Gin@eheight',  '');
 DefMacro('\Gin@eresize',  '');
 DefMacro('\Gin@esetsize', '');
-#DefKeyVal('Gin', 'width',           'Dimension', '', code=>sub { DefMacro('\Gin@ewidth',$_[1]); });
-DefKeyVal('Gin', 'width',           'GraphixDimension');
-DefKeyVal('Gin', 'height',          'GraphixDimension');
-DefKeyVal('Gin', 'totalheight',     'GraphixDimension');
-DefKeyVal('Gin', 'keepaspectratio', '', 'true');
+# graphicx.dtx: \define@key{Gin}{width}{\def\Gin@ewidth{#1}} (tokens, not a
+# digested dimension). \setkeys{Gin}{width=\maxwidth} must survive until
+# \Gin@nat@width is assigned from the image.
+DefKeyVal('Gin', 'width', 'Undigested', undef, code => sub {
+    my ($gullet, $value) = @_;
+    AssignValue('GIN_DEFAULT_WIDTH' => $value);
+    return; });
+DefKeyVal('Gin', 'height', 'Undigested', undef, code => sub {
+    my ($gullet, $value) = @_;
+    AssignValue('GIN_DEFAULT_HEIGHT' => $value);
+    return; });
+DefKeyVal('Gin', 'totalheight', 'GraphixDimension');
+DefKeyVal('Gin', 'keepaspectratio', '', 'true', code => sub {
+    AssignValue('GIN_KEEPASPECT' => 1);
+    return; });
 DefKeyVal('Gin', 'clip',            '', 'true');
 DefKeyVal('Gin', 'scale',           '');
 DefKeyVal('Gin', 'angle',           '');
@@ -54,6 +65,8 @@ DefConstructor('\@includegraphicx OptionalMatch:* OptionalKeyVals:Gin Semiverbat
   alias          => '\includegraphics',
   sizer          => \&image_graphicx_sizer,
   scope          => 'global',
+  beforeDigest   => sub { $_[0]->bgroup; },
+  afterDigest    => sub { $_[0]->egroup; },
   afterConstruct => sub {
     my ($document, $whatsit) = @_;
     my $alt = $whatsit->getProperty('alt');
@@ -62,8 +75,9 @@ DefConstructor('\@includegraphicx OptionalMatch:* OptionalKeyVals:Gin Semiverbat
       $document->getNode->lastChild->setAttribute(description => ToString($alt)); } },
   properties => sub {
     my ($stomach, $starred, $kv, $graphic) = @_;
-    my $options = graphicX_options($starred, $kv);
     my ($path, @candidates) = image_candidates(ToString($graphic));
+    gin_assign_natural_size(@candidates);
+    my $options = graphicX_options($starred, $kv);
     my $alt = $kv && $kv->getValue('alt');
     (path => $path,
       candidates => join(',', @candidates),

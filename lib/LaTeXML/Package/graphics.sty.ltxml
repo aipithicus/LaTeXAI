@@ -272,22 +272,74 @@ sub graphicS_options {
   my $options = ($starred ? ($bb ? "viewport=$bb, clip" : "clip") : '');
   return $options; }
 
+# graphicx stores width/height as tokens (\def\Gin@ewidth{#1}) and assigns
+# \Gin@nat@width/height from the image bounding box before those tokens expand.
+# Digesting them as GraphixDimension at \setkeys / argument-read time would
+# expand \maxwidth while the natural size is still 0pt.
+sub gin_dimension_string {
+  my ($spec) = @_;
+  return unless defined $spec;
+  my @toks;
+  if (ref $spec && $spec->can('unlist')) {
+    @toks = $spec->unlist; }
+  else {
+    my $s = ToString($spec);
+    return unless $s ne '';
+    @toks = Explode($s); }
+  return unless @toks;
+  my $the = Digest(Tokens(T_CS('\the'), T_CS('\dimexpr'), @toks, T_CS('\relax')));
+  my $str = ToString($the);
+  return unless defined $str && $str ne '';
+  $str =~ s/,/\\,/g;
+  return $str; }
+
+sub gin_assign_natural_size {
+  my (@candidates) = @_;
+  my $dpi = LookupValue('DPI') || 100;
+  foreach my $source (@candidates) {
+    if (!pathname_is_absolute($source)) {
+      if (my $base = LookupValue('SOURCEDIRECTORY')) {
+        $source = pathname_concat($base, $source); } }
+    local $LaTeXML::IGNORE_ERRORS = 1;
+    my ($w, $h) = image_size($source);
+    next unless $w && $h;
+    AssignRegister('\Gin@nat@width',  Dimension($w * 72.27 / $dpi . 'pt'));
+    AssignRegister('\Gin@nat@height', Dimension($h * 72.27 / $dpi . 'pt'));
+    return; }
+  return; }
+
 # Combine keyval options into a single options attribute.
 sub graphicX_options {
   my ($starred, $kv) = @_;
   my @options = ();
   my @kv      = ($kv ? $kv->getPairs : ());
   push(@options, 'clip=true') if $starred;
-  #  my $keepaspect;
   my ($saw_w, $saw_h);
+  my %seen;
   while (@kv) {
     my ($key, $value) = (shift(@kv), shift(@kv));
-    $saw_w = 1 if $key =~ /width$/;
-    $saw_h = 1 if $key =~ /height$/;
-    $value = ToString($value);
-    $value =~ s/,/\\,/g;    # Slashify any "," within the value
-    push(@options, $key . '=' . $value); }
-  push(@options, 'keepaspectratio=true') if ($saw_w xor $saw_h) && !$kv->hasKey('keepaspectratio');
+    $seen{$key} = 1;
+    if ($key eq 'width' || $key eq 'height' || $key eq 'totalheight') {
+      my $dim = gin_dimension_string($value);
+      next unless $dim;
+      $saw_w = 1 if $key =~ /width$/;
+      $saw_h = 1 if $key =~ /height$/;
+      push(@options, $key . '=' . $dim); }
+    else {
+      my $v = ToString($value);
+      $v =~ s/,/\\,/g;
+      push(@options, $key . '=' . $v); } }
+  if (!$seen{width}) {
+    if (my $dim = gin_dimension_string(LookupValue('GIN_DEFAULT_WIDTH'))) {
+      $saw_w = 1;
+      push(@options, 'width=' . $dim); } }
+  if (!$seen{height}) {
+    if (my $dim = gin_dimension_string(LookupValue('GIN_DEFAULT_HEIGHT'))) {
+      $saw_h = 1;
+      push(@options, 'height=' . $dim); } }
+  my $keep = ($kv && $kv->hasKey('keepaspectratio')) || LookupValue('GIN_KEEPASPECT');
+  push(@options, 'keepaspectratio=true')
+    if $keep || (($saw_w xor $saw_h) && !($kv && $kv->hasKey('keepaspectratio')));
   return join(',', @options); }
 
 DefConstructor('\@includegraphics OptionalMatch:* [][] Semiverbatim',
@@ -305,7 +357,10 @@ DefConstructor('\@includegraphics OptionalMatch:* [][] Semiverbatim',
 # Also unimplemented... probably nothing useful to pass thru anyway?
 DefConstructor('\DeclareGraphicsExtensions{}',          '');
 DefConstructor('\DeclareGraphicsRule{}{}{} Undigested', '');
-# Nothing done about the keyval package...
+# graphicx 1.2d (and the pandoc maxwidth idiom) read these dimens after
+# the current image bounding box is known. They must exist as registers.
+DefRegister('\Gin@nat@width'  => Dimension(0));
+DefRegister('\Gin@nat@height' => Dimension(0));
 
 # Random other defns
 RawTeX(<<'EoTeX');

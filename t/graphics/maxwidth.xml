@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="graphicx"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <graphics candidates="none.png" graphic="none.png" options="width=72.27pt,height=72.27pt,keepaspectratio=true" xml:id="p1.g1"/>
+    <graphics candidates="none.png" graphic="none.png" options="width=172.5pt,height=72.27pt,keepaspectratio=true" xml:id="p1.g2"/>
+  </para>
+</document>
