@@ -1,0 +1,40 @@
+\documentclass{article}
+\usepackage[british,english]{babel}
+\useshorthands*{"}
+\useshorthands*{|}
+\defineshorthand{"a}{USER}
+\defineshorthand[english]{"b}{ENGLISH}
+\defineshorthand[british]{"b}{BRITISH}
+\defineshorthand[system]{"c}{SYSTEM}
+\defineshorthand[system]{"a}{SYSTEM-A}
+\defineshorthand[*english]{"d}{LOCAL-EN}
+\defineshorthand[*british]{"d}{LOCAL-GB}
+\defineshorthand{|}{SINGLE}
+\def\word{WORD}
+\begin{document}
+\selectlanguage{english}\languageshorthands{english}
+Priority: "a, "b, "c, "d, "z.
+Single: |z. Missing pair: "\word, "{a b}, "{}Z.
+{\defineshorthand{"a}{INNER}Local: "a.} Restored: "a.
+\shorthandoff{"}Inactive: "a.
+\shorthandon{"}Active: "a.
+\selectlanguage{british}
+\languageshorthands{british}
+British: "a, "b, "c, "d.
+{\languageshorthands{english}English shorthands: "b.} British again: "b.
+\selectlanguage{english}
+\languageshorthands{english}
+English again: "b, "d.
+Text and math: |z, $|z|$, $x+y$.
+\makeatletter
+{\expandafter\def\csname user@english@sh@\string"@sel\endcsname#1#2{CUSTOM}
+Custom selector: "q.}
+After custom: "d.
+{\expandafter\let\csname user@sh@\string"@a@\endcsname\relax
+Relaxed user entry: "a.}
+{\def\user@group{odd group}\declare@shorthand{odd group}{"a}{SPACED-GROUP}
+Group with space: "a.}
+{\defineshorthand{"\word}{CONTROL}Control argument: "\word.}
+{\escapechar=-1 Missing control argument: "\word.}
+\makeatother
+\end{document}

@@ -44,6 +44,71 @@ DefPrimitiveI('\guillemotright', undef, UTF(0xBB));
 # And just shutup about hyphenation patterns
 DefMacro('\@nopatterns{}', '');
 
+# Native shorthand dispatch, from Babel 26.11 (2026/08/21), babel.def
+# 1363-1375,1458-1464,1504-1505 (also embedded in babel.sty).
+# Keep Babel's activation/protection machinery and locale data. Only replace
+# the repeated conditional/CSName scaffolding; names and meanings stay live.
+sub babel_shorthand_csname {
+  my ($gullet, @tokens) = @_;
+  $gullet->unread(@tokens, T_CS('\endcsname'));
+  my $cs = $gullet->readCSName;
+  # Match the engine's \csname primitive, including local relax creation.
+  $STATE->assignMeaning($cs, LookupMeaning(T_CS('\relax'))) unless defined LookupMeaning($cs);
+  return $cs; }
+
+my @bbl_sh_tag = TokenizeInternal('@sh@')->unlist;
+my @bbl_sel_tag = TokenizeInternal('@sel')->unlist;
+my $bbl_at = T_OTHER('@');
+
+DefMacro('\bbl@firstcs{}{}', sub {
+    my ($gullet, $first, $second) = @_;
+    return babel_shorthand_csname($gullet, $first->unlist); }, locked => 0);
+DefMacro('\bbl@scndcs{}{}', sub {
+    my ($gullet, $first, $second) = @_;
+    return babel_shorthand_csname($gullet, $second->unlist); }, locked => 0);
+DefMacro('\bbl@sh@select{}{}', sub {
+    my ($gullet, $group, $char) = @_;
+    my @name = ($group->unlist, @bbl_sh_tag, $char->unlist, @bbl_sel_tag);
+    my $selector = babel_shorthand_csname($gullet, @name);
+    return XEquals($selector, T_CS('\relax')) ? T_CS('\bbl@scndcs')
+      : babel_shorthand_csname($gullet, @name); }, locked => 0);
+
+DefMacro('\lx@bbl@dispatch{}{}{}{}', sub {
+    my ($gullet, $group, $char, $argname, $fallback) = @_;
+    my @name = ($group->unlist, @bbl_sh_tag, $char->unlist, $bbl_at);
+    my $direct = babel_shorthand_csname($gullet, @name);
+    return babel_shorthand_csname($gullet, @name) unless XEquals($direct, T_CS('\relax'));
+    # Invoke the actual selector: a user may redefine it or either branch.
+    return (T_CS('\bbl@sh@select'), T_BEGIN, $group->unlist, T_END,
+      T_BEGIN, $char->unlist, T_END, T_BEGIN, $argname->unlist, T_END,
+      T_BEGIN, $fallback->unlist, T_END); });
+DefMacro('\lx@bbl@dispatcharg{}{}{}{}', sub {
+    my ($gullet, $group, $char, $fallback, $arg) = @_;
+    # \string affects only the first token; the rest still expands in CSName.
+    # On a miss, Babel passes the original argument on without its braces.
+    my @name = ($group->unlist, @bbl_sh_tag, $char->unlist, $bbl_at,
+      T_CS('\string'), $arg->unlist, $bbl_at);
+    my $pair = babel_shorthand_csname($gullet, @name);
+    return XEquals($pair, T_CS('\relax'))
+      ? (babel_shorthand_csname($gullet, $fallback->unlist), $arg->unlist)
+      : babel_shorthand_csname($gullet, @name); }, long => 1);
+
+# Retain an expandable factory: assignments must still execute in the Stomach,
+# not as side effects of expanding a native callback (notably inside \edef).
+RawTeX(<<'EoTeX');
+\def\bbl@active@def#1#2#3#4{%
+  \@namedef{#3#1}{\lx@bbl@dispatch{#2}{#1}{#3@arg#1}{#4#1}}%
+  \long\@namedef{#3@arg#1}##1{\lx@bbl@dispatcharg{#2}{#1}{#4#1}{##1}}}
+EoTeX
+
+# Babel initializes ~ before loading txtbabel.def/support. Rebuild its three
+# dispatch levels with the same non-active character token used by Babel.
+foreach my $level (['user', 'user@active', 'language@active'],
+  ['language', 'language@active', 'system@active'], ['system', 'system@active', 'normal@char']) {
+  Digest(Tokens(T_CS('\bbl@active@def'), T_OTHER('~'), T_CS('\\' . $$level[0] . '@group'),
+      T_BEGIN, TokenizeInternal($$level[1])->unlist, T_END,
+      T_BEGIN, TokenizeInternal($$level[2])->unlist, T_END)); }
+
 # This is a guess of the languages (and sometimes dialects)
 # represented in the various *.ldf found on my system at this time.
 our $bbl_language_map = {

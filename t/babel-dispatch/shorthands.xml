@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="babel" options="british,english"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML" xml:lang="en-GB">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <p><text xml:lang="en">Priority: USER, ENGLISH, SYSTEM, LOCAL-EN, ”z.
+Single: SINGLEz. Missing pair: ”WORD, USER b, ”Z.
+Local: INNER. Restored: USER.
+Inactive: ”a.
+Active: USER.
+</text>
+
+British: USER, BRITISH, SYSTEM, LOCAL-GB.
+English shorthands: ENGLISH. British again: BRITISH.
+<text xml:lang="en">
+
+English again: ENGLISH, LOCAL-EN.
+Text and math: SINGLEz, <Math mode="inline" tex="SINGLEzSINGLE" text="S * I * N * G * L * E * z * S * I * N * G * L * E" xml:id="p1.m1">
+          <XMath>
+            <XMApp>
+              <XMTok meaning="times" role="MULOP">⁢</XMTok>
+              <XMTok font="italic" role="UNKNOWN">S</XMTok>
+              <XMTok font="italic" role="UNKNOWN">I</XMTok>
+              <XMTok font="italic" role="UNKNOWN">N</XMTok>
+              <XMTok font="italic" role="UNKNOWN">G</XMTok>
+              <XMTok font="italic" role="UNKNOWN">L</XMTok>
+              <XMTok font="italic" role="UNKNOWN">E</XMTok>
+              <XMTok font="italic" role="UNKNOWN">z</XMTok>
+              <XMTok font="italic" role="UNKNOWN">S</XMTok>
+              <XMTok font="italic" role="UNKNOWN">I</XMTok>
+              <XMTok font="italic" role="UNKNOWN">N</XMTok>
+              <XMTok font="italic" role="UNKNOWN">G</XMTok>
+              <XMTok font="italic" role="UNKNOWN">L</XMTok>
+              <XMTok font="italic" role="UNKNOWN">E</XMTok>
+            </XMApp>
+          </XMath>
+        </Math>, <Math mode="inline" tex="x+y" text="x + y" xml:id="p1.m2">
+          <XMath>
+            <XMApp>
+              <XMTok meaning="plus" role="ADDOP">+</XMTok>
+              <XMTok font="italic" role="UNKNOWN">x</XMTok>
+              <XMTok font="italic" role="UNKNOWN">y</XMTok>
+            </XMApp>
+          </XMath>
+        </Math>.
+
+Custom selector: CUSTOMq.
+After custom: LOCAL-EN.
+Relaxed user entry: SYSTEM-A.
+
+Group with space: SPACED-GROUP.
+Control argument: CONTROL.
+Missing control argument: ”WORD.</text></p>
+  </para>
+</document>

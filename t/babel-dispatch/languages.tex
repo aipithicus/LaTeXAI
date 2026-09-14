@@ -1,0 +1,19 @@
+\documentclass{article}
+\usepackage[british,english]{babel}
+\begin{document}
+English: A~B. \refname.
+\selectlanguage{british}
+British: A~B. \refname.
+\foreignlanguage{english}{English phrase: C~D.} British again.
+\begin{otherlanguage}{english}
+English block: E~F. \refname.
+\end{otherlanguage}
+British restored: G~H.
+\selectlanguage{english}
+English restored: I~J. Accent: \~{n}.
+Text and math: A~B, $x~y$, $x+y$.
+\makeatletter
+\protected@edef\saved{Protected~space}
+\makeatother
+\saved.
+\end{document}

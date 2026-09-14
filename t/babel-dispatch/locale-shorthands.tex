@@ -1,0 +1,25 @@
+\documentclass{article}
+\usepackage[english]{babel}
+% Dispatch data from babel-german 3.3, babel-german.def:904-909,919-922.
+% Exercise the locale's actual definitions without its newer kernel loader.
+\useshorthands{"}
+\makeatletter
+\declare@shorthand{german}{"a}{\textormath{\"{a}}{\ddot a}}
+\declare@shorthand{german}{"o}{\textormath{\"{o}}{\ddot o}}
+\declare@shorthand{german}{"u}{\textormath{\"{u}}{\ddot u}}
+\declare@shorthand{german}{"A}{\textormath{\"{A}}{\ddot A}}
+\declare@shorthand{german}{"O}{\textormath{\"{O}}{\ddot O}}
+\declare@shorthand{german}{"U}{\textormath{\"{U}}{\ddot U}}
+\declare@shorthand{german}{"`}{\glqq}
+\declare@shorthand{german}{"'}{\grqq}
+\declare@shorthand{german}{"<}{\flqq}
+\declare@shorthand{german}{">}{\frqq}
+\makeatother
+\begin{document}
+\languageshorthands{german}
+Umlauts: "a "o "u "A "O "U.
+Quotes: "`Deutsch"' and "<Fran\c cais">.
+Math: $"a+"o+"u$, $"A+"O+"U$.
+{\shorthandoff{"}Inactive: "a.} Restored: "a.
+{\languageshorthands{none}No locale: "a.} Restored: "a.
+\end{document}

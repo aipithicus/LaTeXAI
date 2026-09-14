@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?latexml class="article"?>
+<?latexml package="babel" options="english"?>
+<?latexml RelaxNGSchema="LaTeXML"?>
+<document xmlns="http://dlmf.nist.gov/LaTeXML" xml:lang="en">
+  <resource src="LaTeXML.css" type="text/css"/>
+  <resource src="ltx-article.css" type="text/css"/>
+  <para xml:id="p1">
+    <p>Umlauts: ä ö ü Ä Ö Ü.
+Quotes: „Deutsch“ and «Français».
+Math: <Math mode="inline" tex="\ddot{a}+\ddot{o}+\ddot{u}" text="ddot@(a) + ddot@(o) + ddot@(u)" xml:id="p1.m1">
+        <XMath>
+          <XMApp>
+            <XMTok meaning="plus" role="ADDOP">+</XMTok>
+            <XMApp>
+              <XMTok name="ddot" role="OVERACCENT">¨</XMTok>
+              <XMTok font="italic" role="UNKNOWN">a</XMTok>
+            </XMApp>
+            <XMApp>
+              <XMTok name="ddot" role="OVERACCENT">¨</XMTok>
+              <XMTok font="italic" role="UNKNOWN">o</XMTok>
+            </XMApp>
+            <XMApp>
+              <XMTok name="ddot" role="OVERACCENT">¨</XMTok>
+              <XMTok font="italic" role="UNKNOWN">u</XMTok>
+            </XMApp>
+          </XMApp>
+        </XMath>
+      </Math>, <Math mode="inline" tex="\ddot{A}+\ddot{O}+\ddot{U}" text="ddot@(A) + ddot@(O) + ddot@(U)" xml:id="p1.m2">
+        <XMath>
+          <XMApp>
+            <XMTok meaning="plus" role="ADDOP">+</XMTok>
+            <XMApp>
+              <XMTok name="ddot" role="OVERACCENT">¨</XMTok>
+              <XMTok font="italic" role="UNKNOWN">A</XMTok>
+            </XMApp>
+            <XMApp>
+              <XMTok name="ddot" role="OVERACCENT">¨</XMTok>
+              <XMTok font="italic" role="UNKNOWN">O</XMTok>
+            </XMApp>
+            <XMApp>
+              <XMTok name="ddot" role="OVERACCENT">¨</XMTok>
+              <XMTok font="italic" role="UNKNOWN">U</XMTok>
+            </XMApp>
+          </XMApp>
+        </XMath>
+      </Math>.
+Inactive: ”a. Restored: ä.
+No locale: ”a. Restored: ä.</p>
+  </para>
+</document>
