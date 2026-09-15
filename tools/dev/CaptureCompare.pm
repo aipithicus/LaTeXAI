@@ -4,7 +4,7 @@ use warnings;
 use Exporter 'import';
 use CaptureAudit qw(read_raw file_hash object_hash);
 use CaptureStrip qw(without_capture);
-use CaptureRuntime qw(project_searchpaths);
+use CaptureRuntime qw(project_searchpaths canonical_path);
 use XML::LibXML;
 use XML::LibXML::XPathContext;
 use File::Spec;
@@ -22,6 +22,29 @@ sub identity_without_capture {
   return unless $identity;
   my @options = grep { ref($_) || $_ ne '--capture' } @{ $identity->{options} || [] };
   return { %$identity, options => \@options };
+}
+sub comparison_identity {
+  my ($runtime, $receipt) = @_;
+  my $conversion = $receipt->{conversion_identity} or return $runtime;
+  my $engine = canonical_path($receipt->{engine_root});
+  my $source = canonical_path($receipt->{sourceTree});
+  my $perl = canonical_path($receipt->{details}{perl});
+  die "Conversion roots disagree with recorded invocation\n"
+    unless $runtime->{engine} eq $engine && $runtime->{source} eq $source && $runtime->{perl} eq $perl;
+  my $relocate;
+  $relocate = sub {
+    my ($value) = @_;
+    return {map {$_=>$relocate->($value->{$_})} keys %$value} if ref($value) eq 'HASH';
+    return [map {$relocate->($_)} @$value] if ref($value) eq 'ARRAY';
+    return $value if ref($value) || !defined($value);
+    for my $root ([$engine,'engine'], [$source,'source'], [$perl,'perl']) {
+      return '<'.$root->[1].'>'.substr($value,length($root->[0]))
+        if $value eq $root->[0] || index($value,$root->[0].'/') == 0;
+    }
+    return $value;
+  };
+  return {%{$relocate->($runtime)}, conversion_inputs=>{
+    map {$_=>$conversion->{$_}} qw(engine source entrypoint environment environmentPolicy powershell hostRuntime memoryMethod)}};
 }
 sub inspect_condition {
   my ($context, $path, $receipt, $job_directory, $stem, $require_ledger) = @_;
@@ -118,8 +141,10 @@ sub compare_paper {
   else {
     push @issues, "$slug:missing-capture" unless $off_capture && $on_capture;
   }
-  my $before = inspect_condition($context, "$old_job/$slug.xml", $old_receipt, $old_job, "$output/$slug.baseline", $parity ? 0 : 1);
-  my $after = inspect_condition($context, "$job/$slug.xml", $new_receipt, $job, "$output/$slug.candidate", 1);
+  my $before = inspect_condition($context, $options{old_xml} || "$old_job/$slug.xml", $old_receipt,
+    $old_receipt->{conversion_job} || $old_job, "$output/$slug.baseline", $parity ? 0 : 1);
+  my $after = inspect_condition($context, $options{new_xml} || "$job/$slug.xml", $new_receipt,
+    $new_receipt->{conversion_job} || $job, "$output/$slug.candidate", 1);
   my @counts = @{$options{counts} || [{%{$old_receipt->{counts}}}, {%{$new_receipt->{counts}}}]};
   my @derived_counts = @{$options{derived_counts} || []};
   my %count_keys = map { $_ => 1 } (keys %{ $counts[0] }, keys %{ $counts[1] });
@@ -146,6 +171,8 @@ sub compare_paper {
       : $before->{runtime_projection}{identity};
     my $right = $parity ? identity_without_capture($after->{runtime_projection}{identity})
       : $after->{runtime_projection}{identity};
+    $left = comparison_identity($left, $old_receipt);
+    $right = comparison_identity($right, $new_receipt);
     push @issues, "$slug:runtime-invocation" unless object_hash($left) eq object_hash($right);
   }
   if ($parity) {

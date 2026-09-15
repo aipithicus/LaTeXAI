@@ -151,6 +151,169 @@
             ],
             "additionalProperties": false,
             "type": "object"
+          },
+          "conversion": {
+            "required": [
+              "action",
+              "identity",
+              "sha256",
+              "reason",
+              "nativeDurationMs"
+            ],
+            "properties": {
+              "reason": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "origin": {
+                "required": [
+                  "record",
+                  "condition",
+                  "experiment",
+                  "freeze",
+                  "nativeDurationMs",
+                  "memory"
+                ],
+                "properties": {
+                  "memory": {
+                    "properties": {
+                      "method": {
+                        "type": "string"
+                      },
+                      "bytes": {
+                        "minimum": 0,
+                        "type": [
+                          "integer",
+                          "null"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "method",
+                      "bytes"
+                    ],
+                    "additionalProperties": false,
+                    "type": "object"
+                  },
+                  "experiment": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "path",
+                      "sha256"
+                    ],
+                    "properties": {
+                      "path": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "sha256": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{64}$"
+                      }
+                    }
+                  },
+                  "nativeDurationMs": {
+                    "minimum": 0,
+                    "type": "number"
+                  },
+                  "record": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "path",
+                      "sha256"
+                    ],
+                    "properties": {
+                      "path": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "sha256": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{64}$"
+                      }
+                    }
+                  },
+                  "freeze": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "path",
+                      "sha256"
+                    ],
+                    "properties": {
+                      "path": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "sha256": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{64}$"
+                      }
+                    }
+                  },
+                  "condition": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false,
+                "type": "object"
+              },
+              "nativeDurationMs": {
+                "minimum": 0,
+                "type": "number"
+              },
+              "action": {
+                "enum": [
+                  "executed",
+                  "reused",
+                  "rejected"
+                ]
+              },
+              "identity": {
+                "required": [
+                  "schema",
+                  "engine",
+                  "source",
+                  "entrypoint",
+                  "options",
+                  "environment",
+                  "environmentPolicy",
+                  "powershell",
+                  "hostRuntime",
+                  "memoryMethod"
+                ],
+                "properties": {
+                  "schema": {
+                    "const": "latexai/conversion-identity/1"
+                  }
+                },
+                "type": "object"
+              },
+              "sha256": {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string"
+              }
+            },
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "action": {
+                      "const": "reused"
+                    }
+                  }
+                },
+                "then": {
+                  "required": [
+                    "origin"
+                  ]
+                }
+              }
+            ],
+            "additionalProperties": false,
+            "type": "object"
           }
         }
       }
@@ -251,6 +414,63 @@
         "type": "string"
       },
       "type": "array"
+    },
+    "reuse": {
+      "required": [
+        "schema",
+        "mode",
+        "batch",
+        "experiment"
+      ],
+      "properties": {
+        "schema": {
+          "const": "latexai/reuse-plan/1"
+        },
+        "batch": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        },
+        "experiment": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        },
+        "mode": {
+          "enum": [
+            "analysis-only",
+            "selective"
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "type": "object"
     }
   }
 }

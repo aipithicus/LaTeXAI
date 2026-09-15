@@ -76,6 +76,15 @@ sub runtime_contract {
     evidence => \%evidence, execution => { workers => $workers } };
 }
 
+sub _path_role {
+  my ($path, $source, $engine) = @_;
+  return 'article-source' if $path eq $source;
+  return 'engine-preloads' if $path eq "$engine/private/scripts" || $path eq "$engine/scripts/preloads";
+  return 'article-source/' . substr($path, length($source) + 1) if index($path, "$source/") == 0;
+  return 'engine-input/' . substr($path, length($engine) + 1) if index($path, "$engine/") == 0;
+  return $path;
+}
+
 sub _invocation {
   my ($receipt, $job_directory) = @_;
   my @args = @{$receipt->{details}{arguments} || []};
@@ -100,8 +109,7 @@ sub _invocation {
       push @paths, $path;
       # Versioned interpretation of the repository's former and current preload
       # directory roles. Only an explicit historical projection invokes this.
-      my $role = $path eq $source ? 'article-source'
-        : ($path eq "$engine/private/scripts" || $path eq "$engine/scripts/preloads") ? 'engine-preloads' : $path;
+      my $role = _path_role($path, $source, $engine);
       push @roles, $role;
       push @options, { searchpath => $role };
     }
@@ -131,7 +139,7 @@ sub _invocation {
     my $entry_dir = canonical_path(dirname($entry));
     unless (grep { $_ eq $entry_dir } @paths) {
       unshift @paths, $entry_dir;
-      unshift @roles, $entry_dir eq $source ? 'article-source' : $entry_dir;
+      unshift @roles, _path_role($entry_dir, $source, $engine);
     }
   }
   my (%seen, @ordered, @ordered_roles);

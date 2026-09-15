@@ -128,6 +128,14 @@ sub load_inventory {
       engine=>$record->{producer}{engine}, engineVersion=>$c->{engine}{version}, engineCommit=>$c->{engine}{commit},
       status=>($ok ? 'ok' : 'failed'), counts=>$c->{counts}, details=>$c->{details}
     };
+    if ($c->{conversion}) {
+      $evidence->{conversion_identity} = $c->{conversion}{identity};
+      $evidence->{engine_root} = $c->{engine}{root};
+      if ($c->{conversion}{action} eq 'reused') {
+        $check->($_, $_->{path}) for @{$c->{conversion}{origin}}{qw(record experiment freeze)};
+        $evidence->{conversion_job} = $c->{details}{conversionWorkingDirectory};
+      }
+    }
     $register->($slug, { receipt=>$evidence, directory=>dirname($xml || $path), record=>$path, condition=>$condition, legacy=>0 });
   }
   for my $state (qw(complete failed nonterminal missing invalid)) {

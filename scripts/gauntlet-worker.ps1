@@ -26,6 +26,7 @@ $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'latexai-common.ps1')
 . (Join-Path $PSScriptRoot 'gauntlet-convert.ps1')
 . (Join-Path $PSScriptRoot 'gauntlet-freeze.ps1')
+. (Join-Path $PSScriptRoot 'gauntlet-reuse.ps1')
 Import-Module $RunContext.recordsModule -Force
 $assignment=Get-PaperRunAssignment -Context $RunContext
 foreach($entry in @{directory=$Article;sourceTree=$SourceTree;entrypoint=$Entrypoint;treeSha256=$TreeSha256}.GetEnumerator()){
@@ -42,7 +43,7 @@ if(-not $paired -and $spec.schema -cne 'latexai/acquisition-plan/1'){throw 'Unsu
 $payloadSchema=Join-Path $PSScriptRoot 'schemas/paper-experiment.schema.json'
 if((Get-InventoryFileReference $payloadSchema).sha256 -cne $spec.payloadSchema.sha256){throw 'Payload schema differs from frozen experiment'}
 $measurement=if($spec.Contains('measurement')){$spec.measurement}else{$assignment.Plan.worker}
-if($spec.Contains('measurement') -and (Get-InventoryFileReference (Join-Path $PSScriptRoot 'gauntlet-convert.ps1')).sha256 -cne $measurement.sha256){throw 'Changed measurement implementation'}
+if($spec.Contains('measurement') -and (Get-InventoryFileReference (Join-Path $PSScriptRoot 'gauntlet-measure.ps1')).sha256 -cne $measurement.sha256){throw 'Changed measurement implementation'}
 if($paired){
     if(@($spec.conditions).Count -ne 2 -or @($spec.comparisons).Count -ne 1 -or
         ($spec.conditions.id -join ',') -notin @('off,on','on,off') -or $spec.comparisons[0].left -cne 'off' -or
@@ -65,6 +66,7 @@ $problems=[Collections.Generic.List[string]]::new()
 $validationMs=0.0
 $terminalWritten=$false
 $frozen=$null
+$retained=[Collections.Generic.List[object]]::new()
 foreach($requested in $spec.conditions){
     $conditions.Add(@{id=$requested.id;status='pending';engine=@{root=$EngineRoot;version=$EngineVersion;commit=$EngineCommit}
         execution=@{outcome='not-started';exitCode=$null;timedOut=$null;cleanupComplete=$null};outputs=@{};counts=@{};details=@{}})
@@ -86,8 +88,14 @@ function Publish-Paper {
     $summary=@{}
     foreach($condition in $conditions){foreach($key in $condition.counts.Keys){if(-not $summary.ContainsKey($key)){$summary[$key]=0.0};$summary[$key]+=$condition.counts[$key]}}
     if($paired){$summary.inputValidationMs=$validationMs;$summary.comparisonMs=0.0;foreach($comparison in $comparisons){$summary.comparisonMs+=$comparison.durationMs}}
+    if($paired){
+        $summary.conversionsExecuted=@($conditions|Where-Object {$_.Contains('conversion') -and $_.conversion.action -ceq 'executed'}).Count
+        $summary.conversionsReused=@($conditions|Where-Object {$_.Contains('conversion') -and $_.conversion.action -ceq 'reused'}).Count
+        $summary.conversionsRejected=@($conditions|Where-Object {$_.Contains('conversion') -and $_.conversion.action -ceq 'rejected'}).Count
+    }
     $payload=@{schema='latexai/paper-experiment/1';measurement=$measurement;conditions=$conditions.ToArray();comparisons=$comparisons.ToArray()}
     if($paired){$payload.freeze=$spec.freeze;$payload.order=@($spec.conditions.id);$payload.integrityIssues=$problems.ToArray()}
+    if($spec.Contains('reuse')){$payload.reuse=$spec.reuse}
     if(-not (Test-Json -Json ($payload|ConvertTo-Json -Depth 100) -SchemaFile $payloadSchema -ErrorAction Stop)){throw 'Invalid LaTeXAI paper payload'}
     $qualificationIssues=@($problems.ToArray())+@($comparisons|Where-Object {$_.status -ne 'pass'}|ForEach-Object {$_.issues})
     $record=@{schema='codex-scientiae/paper-run/1';jobId=$assignment.Assignment.jobId;attemptId=$assignment.Assignment.attemptId
@@ -127,7 +135,33 @@ try{
             Preload=$Preload;SearchPath=$SearchPath;IncludeStyles=$IncludeStyles;LatexmlArgument=$nativeArgs;Kpsewhich=$Kpsewhich
             TimeoutSeconds=$TimeoutSeconds;ConversionWorkingDirectory=$ConversionWorkingDirectory;ConditionId=$requested.id
             SamplePeakWorkingSet=$paired}
-        $converted=Invoke-LaTeXAICondition @invoke
+        $reused=$null;$reason='Fresh conversion requested';$identity=$null
+        if($paired){
+            $watch=[Diagnostics.Stopwatch]::StartNew()
+            try{$identity=Get-LaTeXAIConversionIdentity $frozen.Freeze $assignment.Assignment.article $assignment.Plan.workerParameters $requested}
+            finally{$validationMs+=$watch.Elapsed.TotalMilliseconds}
+            if($spec.Contains('reuse')){
+                $watch=[Diagnostics.Stopwatch]::StartNew()
+                try{$reused=Get-LaTeXAIRetainedCondition $spec.reuse $assignment.Assignment.article $requested $identity;$reason='Verified retained conversion identity and raw artifacts'}
+                catch{$reason=$_.Exception.Message}
+                finally{$validationMs+=$watch.Elapsed.TotalMilliseconds}
+            }
+        }
+        if($null -ne $reused){
+            $converted=Measure-LaTeXAIRetainedCondition $reused $assignment.Assignment.article $invoke.OutDirectory
+            $retained.Add($reused)
+        }elseif($spec.Contains('reuse') -and $spec.reuse.mode -ceq 'analysis-only'){
+            $conditions[$index].status='failed'
+            $conditions[$index].execution.outcome='not-started'
+            $conditions[$index].conversion=@{action='rejected';identity=$identity.Identity;sha256=$identity.Sha256;reason=$reason;nativeDurationMs=0}
+            Publish-Paper
+            continue
+        }else{$converted=Invoke-LaTeXAICondition @invoke}
+        if($paired){
+            $converted.Condition.conversion=@{action=($reused ? 'reused' : 'executed');identity=$identity.Identity;sha256=$identity.Sha256;reason=$reason
+                nativeDurationMs=($reused ? $reused.Origin.nativeDurationMs : ($converted.Condition.counts.Contains('latexmlMs') ? $converted.Condition.counts.latexmlMs : 0))}
+            if($reused){$converted.Condition.conversion.origin=$reused.Origin}
+        }
         $conditions[$index]=$converted.Condition
         foreach($artifact in $converted.Artifacts){$artifacts.Add($artifact)}
         Publish-Paper
@@ -170,6 +204,17 @@ try{
             Publish-Paper
         }
         $null=Test-FrozenInputs
+        foreach($input in $retained){
+            $watch=[Diagnostics.Stopwatch]::StartNew()
+            try{
+                $null=Read-LaTeXAIPinnedJson $input.Origin.record
+                $null=Read-LaTeXAIPinnedJson $input.Origin.freeze
+                $verified=Get-LaTeXAIConversionIdentity $input.Freeze $input.Article $input.Parameters $input.Declaration
+                if($verified.Sha256 -cne $input.Identity.Sha256){throw 'Retained conversion implementation changed during analysis'}
+                Assert-LaTeXAIRetainedConversionInputs $input.Freeze $input.Identity.Source
+                foreach($file in $input.Raw){if((Get-InventoryFileReference $file.path).sha256 -cne $file.sha256){throw 'Retained artifact changed during analysis'}}
+            }finally{$validationMs+=$watch.Elapsed.TotalMilliseconds}
+        }
     }
     Publish-Paper -Terminal
 }catch{

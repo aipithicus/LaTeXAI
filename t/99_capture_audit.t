@@ -15,6 +15,7 @@ use CaptureAudit qw(read_json write_json read_raw write_raw run_conversion
   review_case_issues file_hash);
 use CaptureStrip qw(without_capture);
 use CaptureRuntime qw(canonical_path runtime_contract project_searchpaths);
+use CaptureCompare ();
 use MIME::Base64 qw(encode_base64);
 
 chdir File::Spec->catdir($FindBin::Bin, '..') or die $!;
@@ -188,6 +189,27 @@ isnt(without_capture($off), without_capture($no_space), 'another parser cannot s
   my $recorded_projection = project_searchpaths($recorded_doc, $recorded, "$temp/new-job");
   is($recorded_projection->{after}, 'searchpaths="article-source,engine-preloads,conversion-output"',
     'paper records use the assigned source directory and native output cwd');
+  my (@relocated, @identities);
+  for my $root ($engine, "$temp/other-engine") {
+    my $receipt = read_json_after_clone($recorded);
+    $receipt->{engine_root} = $root;
+    $receipt->{details}{arguments}[1] = "$root/lib";
+    $receipt->{details}{arguments}[2] = "$root/bin/latexml";
+    $receipt->{details}{arguments}[5] = "--path=$root/lib/LaTeXML";
+    $receipt->{conversion_identity} = {engine=>{lib=>'a' x 64}, source=>'b' x 64};
+    my $doc = xml(qq{<?latexml searchpaths="$article/tex,$root/lib/LaTeXML,$temp/new-job"?><document/>});
+    my $projection = project_searchpaths($doc, $receipt, "$temp/new-job");
+    push @relocated, $projection;
+    push @identities, read_json_after_clone(CaptureCompare::comparison_identity($projection->{identity}, $receipt));
+    if ($root ne $engine) {
+      $receipt->{conversion_identity}{engine}{lib} = 'c' x 64;
+      isnt(object_hash(CaptureCompare::comparison_identity($projection->{identity}, $receipt)),
+        object_hash($identities[0]), 'different engine bytes survive conversion-root relocation');
+    }
+  }
+  is($relocated[0]{after}, $relocated[1]{after}, 'engine-contained searchpaths use stable roles across frozen copies');
+  isnt(object_hash($relocated[0]{identity}), object_hash($relocated[1]{identity}), 'unverified runtime identities still distinguish engine addresses');
+  is(object_hash($identities[0]), object_hash($identities[1]), 'matching conversion inputs permit address relocation');
   my $wrong_order = xml(qq{<?latexml searchpaths="$engine/scripts/preloads,$article/tex,$temp/new-job"?><document/>});
   ok(!eval { project_searchpaths($wrong_order, $recorded, "$temp/new-job"); 1 },
     'an incorrect searchpath order is not accepted as a relocation');

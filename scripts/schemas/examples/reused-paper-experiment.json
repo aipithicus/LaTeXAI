@@ -1,0 +1,215 @@
+{
+  "schema": "latexai/paper-experiment/1",
+  "measurement": {
+    "path": "D:/engine/scripts/gauntlet-measure.ps1",
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "conditions": [
+    {
+      "id": "off",
+      "status": "ok",
+      "engine": {
+        "root": "D:/example/batch/inputs/engine",
+        "version": "example",
+        "commit": "example"
+      },
+      "execution": {
+        "outcome": "exited",
+        "exitCode": 0,
+        "timedOut": false,
+        "cleanupComplete": true
+      },
+      "outputs": {
+        "xml": "conditions/off/paper.xml"
+      },
+      "counts": {
+        "exitCode": 0,
+        "timedOut": 0,
+        "mathElements": 1,
+        "latexmlMs": 0
+      },
+      "details": {
+        "arguments": [],
+        "packages": [],
+        "taxonomy": [],
+        "missingFiles": [],
+        "undefinedMacros": [],
+        "errorNodes": [],
+        "internalLeaks": [],
+        "danglingRefs": []
+      },
+      "durationMs": 520.5,
+      "memory": {
+        "method": "sampled-process-PeakWorkingSet64",
+        "bytes": 42000000
+      },
+      "conversion": {
+        "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "reason": "Verified retained conversion identity and raw artifacts",
+        "nativeDurationMs": 10,
+        "action": "reused",
+        "origin": {
+          "record": {
+            "path": "D:/retained/jobs/paper/run.json",
+            "sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+          },
+          "nativeDurationMs": 10,
+          "memory": {
+            "bytes": 1024,
+            "method": "sampled-process-PeakWorkingSet64"
+          },
+          "freeze": {
+            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "path": "D:/example/batch/inputs/freeze.json"
+          },
+          "condition": "off",
+          "experiment": {
+            "path": "D:/retained/experiment.json",
+            "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+          }
+        },
+        "identity": {
+          "hostRuntime": {
+            "dotnet": ".NET",
+            "os": "Windows"
+          },
+          "environmentPolicy": "frozen",
+          "schema": "latexai/conversion-identity/1",
+          "entrypoint": "main.tex",
+          "powershell": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "memoryMethod": "sampled-process-PeakWorkingSet64",
+          "source": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "engine": {},
+          "environment": {},
+          "options": {
+            "arguments": []
+          }
+        }
+      }
+    },
+    {
+      "id": "on",
+      "status": "ok",
+      "engine": {
+        "root": "D:/example/batch/inputs/engine",
+        "version": "example",
+        "commit": "example"
+      },
+      "execution": {
+        "outcome": "exited",
+        "exitCode": 0,
+        "timedOut": false,
+        "cleanupComplete": true
+      },
+      "outputs": {
+        "xml": "conditions/on/paper.xml"
+      },
+      "counts": {
+        "exitCode": 0,
+        "timedOut": 0,
+        "mathElements": 1,
+        "latexmlMs": 0
+      },
+      "details": {
+        "arguments": [
+          "--capture"
+        ],
+        "packages": [],
+        "taxonomy": [],
+        "missingFiles": [],
+        "undefinedMacros": [],
+        "errorNodes": [],
+        "internalLeaks": [],
+        "danglingRefs": []
+      },
+      "durationMs": 520.5,
+      "memory": {
+        "method": "sampled-process-PeakWorkingSet64",
+        "bytes": 42000000
+      },
+      "conversion": {
+        "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "reason": "Verified retained conversion identity and raw artifacts",
+        "nativeDurationMs": 10,
+        "action": "reused",
+        "origin": {
+          "record": {
+            "path": "D:/retained/jobs/paper/run.json",
+            "sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+          },
+          "nativeDurationMs": 10,
+          "memory": {
+            "bytes": 1024,
+            "method": "sampled-process-PeakWorkingSet64"
+          },
+          "freeze": {
+            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "path": "D:/example/batch/inputs/freeze.json"
+          },
+          "condition": "on",
+          "experiment": {
+            "path": "D:/retained/experiment.json",
+            "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+          }
+        },
+        "identity": {
+          "hostRuntime": {
+            "dotnet": ".NET",
+            "os": "Windows"
+          },
+          "environmentPolicy": "frozen",
+          "schema": "latexai/conversion-identity/1",
+          "entrypoint": "main.tex",
+          "powershell": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "memoryMethod": "sampled-process-PeakWorkingSet64",
+          "source": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "engine": {},
+          "environment": {},
+          "options": {
+            "arguments": []
+          }
+        }
+      }
+    }
+  ],
+  "comparisons": [
+    {
+      "mode": "parity",
+      "right": "on",
+      "issues": [],
+      "left": "off",
+      "durationMs": 200.5,
+      "required": true,
+      "report": "comparisons/parity/comparison.json",
+      "process": {
+        "exitCode": 0,
+        "cleanupComplete": true,
+        "outcome": "exited",
+        "timedOut": false
+      },
+      "id": "parity",
+      "status": "pass"
+    }
+  ],
+  "freeze": {
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "path": "D:/example/batch/inputs/freeze.json"
+  },
+  "order": [
+    "off",
+    "on"
+  ],
+  "integrityIssues": [],
+  "reuse": {
+    "batch": {
+      "path": "D:/retained/batch.json",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "experiment": {
+      "path": "D:/retained/experiment.json",
+      "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    "schema": "latexai/reuse-plan/1",
+    "mode": "analysis-only"
+  }
+}

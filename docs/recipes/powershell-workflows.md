@@ -74,6 +74,30 @@ source bytes. Read `batch.json` and its worker `run.json`, including qualificati
 and cleanup; native completion alone does not establish parity. See the
 [record contract](../specification/gauntlet-records.md) for freeze boundaries.
 
+## Analysis and selective retry
+
+```powershell
+# Reinspect and compare a frozen paired batch; start no engine conversions.
+lgauntlet -ReuseBatch <prior-artifact-directory> -AnalysisOnly -FailOnArticleFailure
+
+# Reuse eligible conditions and execute missing, failed or invalidated conditions.
+lgauntlet -ReuseBatch <prior-artifact-directory> -FailOnArticleFailure
+```
+
+Both commands mint a new experiment and preserve the prior batch. Selection and
+conversion options default to that batch; `-Path` narrows the selection and
+explicit conversion options override the defaults. For example, `-OnArgument @()`
+clears a deliberate on-side failure flag. `-Preview` shows mode, inputs and budgets.
+Analysis-only workers default to comparison + 600 seconds for measurement and
+validation; selective retry retains the paired native-budget formula. Input
+copying still occurs before dispatch and belongs in the outer MCP budget.
+
+Read `conversionsExecuted`, `conversionsReused` and `conversionsRejected` in the
+worker summary. Reused native timing/memory are historical observations in the
+condition's conversion origin; current measurement, comparison and total attempt
+times remain separate. A changed comparator or extractor reruns analysis; a
+changed conversion identity requires conversion or an analysis-only rejection.
+
 Native supervision uses Windows Job Objects and streams full output to requested files,
 retaining at most 1 MiB per stream in memory. Its helper cache is ignored under
 `temp/native/`. Aliases fail on nonzero exit, timeout or incomplete cleanup. See

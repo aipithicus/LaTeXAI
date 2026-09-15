@@ -34,7 +34,7 @@ my $complete = eval {
     die "Changed comparison input\n" unless file_hash($pin->{path}) eq $pin->{sha256};
     $context->{inputs}{$pin->{path}} = $pin->{sha256};
   }
-  my @evidence;
+  my (@evidence, @jobs, @xml);
   for my $side (qw(left right)) {
     my $input = $request->{$side};
     my $c = $input->{condition};
@@ -49,15 +49,35 @@ my $complete = eval {
       $context->{inputs}{$path} = $artifact->{sha256};
     }
     die "Missing recorded XML\n" unless $seen{$c->{outputs}{xml}};
-    my $source = $request->{source};
+    my $source = $c->{details}{sourceTree} || $request->{source};
+    my $job = File::Spec->catdir($request->{paperDirectory}, 'conditions', $c->{id});
+    if ($c->{conversion}) {
+      my $conversion = $c->{conversion};
+      my $pin = $conversion->{action} eq 'reused' ? $conversion->{origin}{freeze} : $request->{freeze};
+      die "Changed conversion freeze\n" unless file_hash($pin->{path}) eq $pin->{sha256};
+      $context->{inputs}{$pin->{path}} = $pin->{sha256};
+      my $freeze = read_json($pin->{path});
+      my @sources = grep {$_->{article}{directory} eq $request->{article}{directory}} @{$freeze->{sources}};
+      die "Conversion evidence roots disagree\n" unless @sources == 1
+        && $source eq $sources[0]{tree}{root} && $c->{engine}{root} eq $freeze->{engine}
+        && $c->{details}{perl} eq $freeze->{perl} && $conversion->{identity}{source} eq $sources[0]{tree}{sha256};
+      if ($conversion->{action} eq 'reused') {
+        my $origin = $conversion->{origin}{record};
+        die "Changed conversion origin\n" unless file_hash($origin->{path}) eq $origin->{sha256};
+        $context->{inputs}{$origin->{path}} = $origin->{sha256};
+        $job = $c->{details}{conversionWorkingDirectory};
+      }
+    }
+    push @jobs, $job;
+    push @xml, CaptureInventory::owned_path($request->{paperDirectory}, $c->{outputs}{xml});
     push @evidence, {
       article=>{map {$_=>$request->{article}{$_}} qw(slug directory treeSha256)}, sourceTree=>$source,
-      status=>'ok', counts=>$c->{counts}, details=>$c->{details}
+      status=>'ok', counts=>$c->{counts}, details=>$c->{details}, engine_root=>$c->{engine}{root},
+      ($c->{conversion} ? (conversion_identity=>$c->{conversion}{identity}) : ())
     };
   }
   $paper = compare_paper($context, $request->{article}{slug}, @evidence,
-    map({File::Spec->catdir($request->{paperDirectory}, 'conditions', $request->{$_}{condition}{id})} qw(left right)),
-    $output, mode=>$request->{mode});
+    @jobs, $output, mode=>$request->{mode}, old_xml=>$xml[0], new_xml=>$xml[1]);
   push @issues, @{$paper->{issues}};
   1;
 };

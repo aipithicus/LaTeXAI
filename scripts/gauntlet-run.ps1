@@ -53,6 +53,8 @@ param(
     [switch] $LegacyInventory,
     [switch] $SelectOnly,
     [switch] $CaptureParity,
+    [string] $ReuseBatch = '',
+    [switch] $AnalysisOnly,
     [string[]] $OffArgument = @(),
     [string[]] $OnArgument = @(),
     [switch] $OnFirst,
@@ -70,11 +72,30 @@ $runtime = Resolve-LaTeXAIRuntime -PerlRoot $PerlRoot -CdxsciRoot $CdxsciRoot `
     -PowerShellExecutable $PowerShellExecutable -RequirePerl -RequireCdxsci
 Set-LaTeXAIRuntimeEnvironment -Runtime $runtime -IncludeCdxsci
 $policy = $runtime.Policy.Gauntlet
+$reuse=$null
+if($AnalysisOnly -and -not $ReuseBatch){throw '-AnalysisOnly requires -ReuseBatch with frozen paper records'}
+if($ReuseBatch){
+    Import-Module (Join-Path $runtime.CdxsciRoot 'src/inventory-records/inventory-records.psm1') -Force
+    . (Join-Path $PSScriptRoot 'gauntlet-reuse.ps1')
+    $reuse=New-LaTeXAIReusePlan -Directory $ReuseBatch -AnalysisOnly:$AnalysisOnly
+    $CaptureParity=$true
+    if(-not $Path.Count){$Path=@($reuse.Plan.assignments.article.directory)}
+    foreach($name in @('IncludeStyles','Kpsewhich','Preload','ConversionWorkingDirectory')){
+        if(-not $PSBoundParameters.ContainsKey($name)){
+            $value=if($reuse.Plan.workerParameters.Contains($name)){$reuse.Plan.workerParameters[$name]}else{@()}
+            Set-Variable -Name $name -Value $value
+            $PSBoundParameters[$name]=$value
+        }
+    }
+    if($null -eq $NativeTimeoutSeconds){$NativeTimeoutSeconds=[int]$reuse.Plan.workerParameters.TimeoutSeconds}
+    if(-not $PSBoundParameters.ContainsKey('OffArgument')){$OffArgument=@(($reuse.Plan.specification.conditions|Where-Object {$_.id -ceq 'off'}).arguments)}
+    if(-not $PSBoundParameters.ContainsKey('OnArgument')){$OnArgument=@(($reuse.Plan.specification.conditions|Where-Object {$_.id -ceq 'on'}).arguments|Where-Object {$_ -cne '--capture'})}
+}
 if ($null -eq $MaxWorkers) { $MaxWorkers = [int]$policy.MaxWorkers }
 if ($null -eq $ReservedCores) { $ReservedCores = [int]$policy.ReservedCores }
 if ($null -eq $NativeTimeoutSeconds) { $NativeTimeoutSeconds = [int]$policy.NativeTimeoutSeconds }
 if ($null -eq $ProcessTimeoutSeconds) {
-    $ProcessTimeoutSeconds = if ($CaptureParity) { 2 * ($NativeTimeoutSeconds + 60) + $ComparisonTimeoutSeconds + 300 }
+    $ProcessTimeoutSeconds = if($AnalysisOnly){$ComparisonTimeoutSeconds+600} elseif ($CaptureParity) { 2 * ($NativeTimeoutSeconds + 60) + $ComparisonTimeoutSeconds + 300 }
         elseif ($NativeTimeoutSeconds -eq 0) { 0 }
         else { $NativeTimeoutSeconds + [int]$policy.WorkerGraceSeconds }
 }
@@ -87,7 +108,8 @@ if (-not $PSBoundParameters.ContainsKey('ConversionWorkingDirectory')) {
 }
 $nativeTimeout = [int]$NativeTimeoutSeconds
 if ($CaptureParity) {
-    if ($nativeTimeout -le 0 -or $ProcessTimeoutSeconds -lt (2*$nativeTimeout+$ComparisonTimeoutSeconds+60)) { throw 'Paired workers require finite budgets covering both conversions, comparison and cleanup' }
+    $minimum=($AnalysisOnly ? ($ComparisonTimeoutSeconds+60) : (2*$nativeTimeout+$ComparisonTimeoutSeconds+60))
+    if ($nativeTimeout -le 0 -or $ProcessTimeoutSeconds -lt $minimum) { throw 'Paired workers require finite budgets covering requested stages and cleanup' }
     if ($PSBoundParameters.ContainsKey('ConversionWorkingDirectory') -and $ConversionWorkingDirectory -ne 'output') { throw 'Paired conditions require isolated output working directories' }
     $ConversionWorkingDirectory='output'
     foreach($argument in @($LatexmlArgument)+@($OffArgument)+@($OnArgument)){
@@ -143,6 +165,7 @@ if ($Preview) {
         order = ($CaptureParity ? ($OnFirst ? @('on','off') : @('off','on')) : @('conversion'))
         comparisonTimeoutSeconds = ($CaptureParity ? $ComparisonTimeoutSeconds : $null)
         frozenInputCopies = [bool]$CaptureParity
+        reuse = ($reuse ? $reuse.Specification : $null)
         packageSelection = $packageSelection
         budgets = [ordered]@{
             requested = [ordered]@{
@@ -259,7 +282,7 @@ $invoke = @{
 if (@($Path).Count -gt 0) { $invoke.Path = $Path }
 if ($RunDirectory) { $invoke.RunDirectory=$RunDirectory }
 Import-Module (Join-Path $runtime.CdxsciRoot 'src/inventory-records/inventory-records.psm1') -Force
-$invoke.ExperimentSpecification.measurement=Get-InventoryFileReference (Join-Path $PSScriptRoot 'gauntlet-convert.ps1')
+$invoke.ExperimentSpecification.measurement=Get-InventoryFileReference (Join-Path $PSScriptRoot 'gauntlet-measure.ps1')
 if($CaptureParity){
     . (Join-Path $runtime.CdxsciRoot 'src/infrastructure/containment.ps1')
     . (Join-Path $PSScriptRoot 'gauntlet-freeze.ps1')
@@ -287,12 +310,13 @@ if($CaptureParity){
         conditions=@($order|ForEach-Object {$declared[$_]})
         comparisons=@(@{id='parity';left='off';right='on';mode='parity';required=$true})
         payloadSchema=(Get-InventoryFileReference (Join-Path $freeze.Record.engine 'scripts/schemas/paper-experiment.schema.json'))
-        measurement=(Get-InventoryFileReference (Join-Path $freeze.Record.engine 'scripts/gauntlet-convert.ps1'))
+        measurement=(Get-InventoryFileReference (Join-Path $freeze.Record.engine 'scripts/gauntlet-measure.ps1'))
         model=(Get-InventoryFileReference (Join-Path $freeze.Record.engine 'lib/LaTeXML/resources/RelaxNG/LaTeXML.model'))
         comparisonTimeoutSeconds=$ComparisonTimeoutSeconds
         stages=@{nativeTimeoutSeconds=$nativeTimeout;comparisonTimeoutSeconds=$ComparisonTimeoutSeconds;validationAllowanceSeconds=300;paperTimeoutSeconds=$ProcessTimeoutSeconds}
         orderPolicy=($OnFirst ? 'on-then-off' : 'off-then-on');maxPaperWorkers=$MaxWorkers
     }
+    if($reuse){$invoke.ExperimentSpecification.reuse=$reuse.Specification}
     Write-Information -InformationAction Continue "Frozen paired experiment: $runRoot; papers=$($jobs.Count)"
 }
 
