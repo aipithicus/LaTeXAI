@@ -157,6 +157,23 @@ Read `run.json` and the per-driver reports before explaining a change or deliber
 
 New acquisitions use worker-owned `jobs/<attempt>/run.json` and coordinator-owned `batch.json`, under a frozen `experiment.json`. See [record ownership and migration](specification/gauntlet-records.md). The corpus auditor defaults to these records and selects condition `conversion`; `--baseline-condition` and `--candidate-condition` select named conditions explicitly. `--project-baseline` pins the baseline `batch.json` in this format. Acquisition completion alone has `not-requested` qualification.
 
+`lgauntlet -CaptureParity` runs frozen off/on conditions and their comparison
+inside each paper job. The worker and corpus CLI share `CaptureCompare.pm`;
+the worker calls `compare-paper.pl` with direct, hash-verified condition evidence
+in a fresh Perl process. No completed batch summary is needed to compare a paper.
+Both paths retain the same whitespace, source-byte, diagnostic and tree gates.
+The paired worker reports conversion/inspection, comparison and input-validation
+costs separately; its input freeze has a separate preparation duration.
+
+With a prepared checkout supplied as `LATEXAI_ROOT`, CDXSCI's public
+`tests/batch.ps1 -Framework Pester -PesterPath tests/inventory-records/paired.Tests.ps1`
+exercises the paired launcher, nonempty nested/bracket source checks, failed
+native condition, changed frozen source/generated module, altered/malformed XML,
+model pins and a true comparison difference. `latexai.Tests.ps1` retains the
+single-condition consumer checks; `records.Tests.ps1` and the inventory-adapter
+driver cover missing/nonterminal records, executor disagreement and qualification
+aggregation. Full Core/Common tests remain mandatory for engine changes.
+
 Historical inputs require `--baseline-format legacy` and/or `--candidate-format legacy` for the corresponding side. A legacy side retains its batch-level `run.json` and worker receipts; the baseline pin then names that original `run.json`. `CaptureInventory.pm` verifies new record/artifact identities and provides the existing comparator with condition evidence. Both formats and condition selections are recorded in the result. No legacy files are rewritten, and the completed-batch timeout inference below applies only to explicitly selected legacy inputs.
 
 For retained formatted XML, explicitly pass `--whitespace-model FILE --whitespace-model-sha256 SHA256` alongside `--project-baseline RUN_SHA256`. `CaptureWhitespace.pm` loads that pinned compiled model through the engine's `Common::Model` and reuses its `#PCDATA` decision. On cloned DOMs it removes only XML whitespace text in declared element-only LaTeXML regions whose child elements the model admits (excluding the root capture ledger that stripping removes). Mixed-content/literal, unknown and foreign subtrees remain opaque; non-whitespace text, CDATA or unmodeled children make a region opaque too. Inherited `xml:space="preserve"` prevents removal, and explicit `default` resumes the model rule. Attributes, comments, processing instructions and non-XML spaces are preserved. Ledger adjacency is never a criterion. This is comparison normalization; it changes no source, raw conversion, serializer or default strip behavior.

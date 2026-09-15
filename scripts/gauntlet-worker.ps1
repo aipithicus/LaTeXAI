@@ -1,25 +1,5 @@
 #requires -Version 7.5
-<#
-  scripts/gauntlet-worker.ps1 — codex-scientiae inventory worker for
-  the LaTeXAI engine.
-
-  One deposit per invocation. codex-scientiae's inventory planner hands over
-  everything the inventory row resolved (Article, SourceTree, Entrypoint,
-  TreeSha256) plus the job container (OutDirectory, not yet created) and this
-  repository (EngineRoot). The worker runs bin/latexml over the entrypoint,
-  keeps every byte it writes inside OutDirectory (log, stdout, stderr, the
-  ltx XML), and publishes worker-owned run.json with schema
-  codex-scientiae/paper-run/1. It exits non-zero when the
-  conversion failed. It opens neither article.json nor the inventory.
-
-  Contract: the inventory worker contract under CDXSCI_ROOT
-  src/batch-adapters/README.md. Launcher: scripts/gauntlet-run.ps1.
-
-  Native stderr is routed to a file, never into the PowerShell error stream:
-  the child bootstrap treats any error record as failure, and LaTeXML writes
-  its progress to stderr.
-#>
-
+# One assigned paper owns all its condition execution, comparison and publication.
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)] [string] $Article,
@@ -42,569 +22,167 @@ param(
 )
 
 Set-StrictMode -Version Latest
-$ErrorActionPreference = 'Stop'
+$ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'latexai-common.ps1')
-$startedUtc = [datetime]::UtcNow
-$utf8 = [System.Text.UTF8Encoding]::new($false)
-$engineName = 'latexai'
-$slug = [System.IO.Path]::GetFileName($Article.TrimEnd('\', '/'))
-$paperDirectory = [IO.Path]::GetFullPath($OutDirectory)
+. (Join-Path $PSScriptRoot 'gauntlet-convert.ps1')
+. (Join-Path $PSScriptRoot 'gauntlet-freeze.ps1')
 Import-Module $RunContext.recordsModule -Force
-$assignment = Get-PaperRunAssignment -Context $RunContext
-foreach ($entry in @{directory=$Article;sourceTree=$SourceTree;entrypoint=$Entrypoint;treeSha256=$TreeSha256}.GetEnumerator()) {
-    if ($assignment.Assignment.article[$entry.Key] -cne $entry.Value) { throw "Worker arguments disagree with assignment: $($entry.Key)" }
+$assignment=Get-PaperRunAssignment -Context $RunContext
+foreach($entry in @{directory=$Article;sourceTree=$SourceTree;entrypoint=$Entrypoint;treeSha256=$TreeSha256}.GetEnumerator()){
+    if($assignment.Assignment.article[$entry.Key] -cne $entry.Value){throw "Worker arguments disagree with assignment: $($entry.Key)"}
 }
-foreach ($key in $assignment.Plan.workerParameters.Keys) {
-    if (-not $PSBoundParameters.ContainsKey($key) -or
+foreach($key in $assignment.Plan.workerParameters.Keys){
+    if(-not $PSBoundParameters.ContainsKey($key) -or
         (ConvertTo-Json -InputObject $PSBoundParameters[$key] -Depth 30 -Compress) -cne
-        (ConvertTo-Json -InputObject $assignment.Plan.workerParameters[$key] -Depth 30 -Compress)) { throw "Worker parameter differs from frozen experiment: $key" }
+        (ConvertTo-Json -InputObject $assignment.Plan.workerParameters[$key] -Depth 30 -Compress)){throw "Worker parameter differs from frozen experiment: $key"}
 }
-if ($assignment.Plan.specification.schema -ne 'latexai/acquisition-plan/1') { throw 'Unsupported LaTeXAI experiment plan' }
-if ($assignment.Plan.specification.conditions.Count -ne 1 -or $assignment.Plan.specification.conditions[0].id -cne 'conversion' -or
-    $assignment.Plan.specification.comparisons.Count -ne 0 -or
-    $assignment.Plan.specification.conditions[0].capture -ne ('--capture' -cin $LatexmlArgument)) { throw 'Unsupported or inconsistent acquisition conditions' }
-$OutDirectory = Join-Path $paperDirectory 'conditions/conversion'
-$payloadSchema = Join-Path $PSScriptRoot 'schemas/paper-experiment.schema.json'
-if ((Get-InventoryFileReference $payloadSchema).sha256 -cne $assignment.Plan.specification.payloadSchema.sha256) { throw 'Payload schema differs from frozen experiment' }
-$terminalWritten = $false
-$nativeResult = $null
-
-function Write-LaTeXAIPaperRecord {
-    param(
-        [Parameter(Mandatory)] [string] $Status,
-        [hashtable] $Counts = @{},
-        [hashtable] $Details = @{},
-        [string[]] $Stores = @()
-    )
-    $endedUtc = [datetime]::UtcNow
-    $artifacts = @(
-        foreach ($store in @(@($Stores) + @("$slug.xml",'latexml.log','latexml.stdout.txt','latexml.stderr.txt') | Sort-Object -Unique)) {
-            $path = Join-Path $OutDirectory $store
-            if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { continue }
-            [ordered]@{path="conditions/conversion/$store";sha256=(Get-InventoryFileReference $path).sha256;bytes=(Get-Item -LiteralPath $path).Length}
-        }
-    )
-    $outputs = @{}
-    if (Test-Path -LiteralPath (Join-Path $OutDirectory "$slug.xml") -PathType Leaf) { $outputs.xml="conditions/conversion/$slug.xml" }
-    $payload = [ordered]@{
-        schema='latexai/paper-experiment/1';measurement=(Get-InventoryFileReference $PSCommandPath)
-        conditions=@([ordered]@{
-            id='conversion';status=$Status;engine=@{root=$EngineRoot;version=$script:EngineVersion;commit=$script:EngineCommit}
-            execution=@{
-                outcome=($Details.ContainsKey('nativeOutcome') ? $Details.nativeOutcome : 'not-started')
-                exitCode=($Details.ContainsKey('nativeExitCode') ? $Details.nativeExitCode : $null)
-                timedOut=($Counts.ContainsKey('timedOut') ? [bool]$Counts.timedOut : $null)
-                cleanupComplete=($Details.ContainsKey('nativeCleanupComplete') ? $Details.nativeCleanupComplete : $null)
-            }
-            outputs=$outputs;counts=$Counts;details=$Details
-        });comparisons=@()
+$spec=$assignment.Plan.specification
+$paired=$spec.schema -ceq 'latexai/paired-plan/1'
+if(-not $paired -and $spec.schema -cne 'latexai/acquisition-plan/1'){throw 'Unsupported LaTeXAI experiment plan'}
+$payloadSchema=Join-Path $PSScriptRoot 'schemas/paper-experiment.schema.json'
+if((Get-InventoryFileReference $payloadSchema).sha256 -cne $spec.payloadSchema.sha256){throw 'Payload schema differs from frozen experiment'}
+$measurement=if($spec.Contains('measurement')){$spec.measurement}else{$assignment.Plan.worker}
+if($spec.Contains('measurement') -and (Get-InventoryFileReference (Join-Path $PSScriptRoot 'gauntlet-convert.ps1')).sha256 -cne $measurement.sha256){throw 'Changed measurement implementation'}
+if($paired){
+    if(@($spec.conditions).Count -ne 2 -or @($spec.comparisons).Count -ne 1 -or
+        ($spec.conditions.id -join ',') -notin @('off,on','on,off') -or $spec.comparisons[0].left -cne 'off' -or
+        $spec.comparisons[0].right -cne 'on' -or $spec.comparisons[0].mode -cne 'parity' -or
+        -not $spec.comparisons[0].required -or $ConversionWorkingDirectory -cne 'output'){throw 'Invalid paired experiment specification'}
+    foreach($condition in $spec.conditions){
+        if($condition.capture -ne ($condition.id -ceq 'on') -or
+            @($condition.arguments|Where-Object {$_ -ceq '--capture'}).Count -ne [int]$condition.capture){throw 'Paired capture arguments disagree with condition roles'}
     }
-    if (-not (Test-Json -Json ($payload | ConvertTo-Json -Depth 100) -SchemaFile $payloadSchema -ErrorAction Stop)) { throw 'Invalid LaTeXAI paper payload' }
-    $record = [ordered]@{
-        schema = 'codex-scientiae/paper-run/1'
-        jobId=$assignment.Assignment.jobId;attemptId=$assignment.Assignment.attemptId;experiment=$assignment.Experiment
-        article=$assignment.Assignment.article
-        producer=@{engine=$engineName;version=$script:EngineVersion;commit=$script:EngineCommit;worker=$assignment.Plan.worker}
-        status = ($Status -eq 'running' ? 'running' : ($Status -eq 'ok' ? 'complete' : 'failed'))
-        startedUtc = $startedUtc.ToString('o')
-        endedUtc = ($Status -eq 'running' ? $null : $endedUtc.ToString('o'))
-        durationMs = [math]::Round(($endedUtc - $startedUtc).TotalMilliseconds, 2)
-        summary=$Counts;artifacts=$artifacts;payload=$payload
-        qualification=@{status=($Status -eq 'ok' ? 'not-requested' : 'incomplete');issues=@()}
+}else{
+    if($spec.conditions.Count -ne 1 -or $spec.conditions[0].id -cne 'conversion' -or $spec.comparisons.Count -ne 0 -or
+        $spec.conditions[0].capture -ne ('--capture' -cin $LatexmlArgument)){throw 'Unsupported or inconsistent acquisition conditions'}
+}
+$paperDirectory=[IO.Path]::GetFullPath($OutDirectory)
+$startedUtc=[datetime]::UtcNow
+$conditions=[Collections.Generic.List[object]]::new()
+$comparisons=[Collections.Generic.List[object]]::new()
+$artifacts=[Collections.Generic.List[object]]::new()
+$problems=[Collections.Generic.List[string]]::new()
+$validationMs=0.0
+$terminalWritten=$false
+$frozen=$null
+foreach($requested in $spec.conditions){
+    $conditions.Add(@{id=$requested.id;status='pending';engine=@{root=$EngineRoot;version=$EngineVersion;commit=$EngineCommit}
+        execution=@{outcome='not-started';exitCode=$null;timedOut=$null;cleanupComplete=$null};outputs=@{};counts=@{};details=@{}})
+}
+function Add-PaperArtifact {
+    param([string]$Path)
+    if(Test-Path -LiteralPath $Path -PathType Leaf){
+        $relative=[IO.Path]::GetRelativePath($paperDirectory,$Path).Replace('\','/')
+        if(@($artifacts|Where-Object {$_.path -ceq $relative}).Count){return}
+        $artifacts.Add(@{path=$relative;sha256=(Get-InventoryFileReference $Path).sha256;bytes=(Get-Item -LiteralPath $Path).Length})
+    }
+}
+function Publish-Paper {
+    param([switch]$Terminal)
+    $conditionComplete=@($conditions|Where-Object {$_.status -ne 'ok'}).Count -eq 0
+    $comparisonComplete=$comparisons.Count -eq $spec.comparisons.Count -and @($comparisons|Where-Object {$_.status -eq 'incomplete'}).Count -eq 0
+    $complete=$conditionComplete -and $comparisonComplete -and $problems.Count -eq 0
+    $qualification=if(-not $Terminal -or -not $complete){'incomplete'}elseif(-not $paired){'not-requested'}elseif(@($comparisons|Where-Object {$_.status -ne 'pass'}).Count){'fail'}else{'pass'}
+    $summary=@{}
+    foreach($condition in $conditions){foreach($key in $condition.counts.Keys){if(-not $summary.ContainsKey($key)){$summary[$key]=0.0};$summary[$key]+=$condition.counts[$key]}}
+    if($paired){$summary.inputValidationMs=$validationMs;$summary.comparisonMs=0.0;foreach($comparison in $comparisons){$summary.comparisonMs+=$comparison.durationMs}}
+    $payload=@{schema='latexai/paper-experiment/1';measurement=$measurement;conditions=$conditions.ToArray();comparisons=$comparisons.ToArray()}
+    if($paired){$payload.freeze=$spec.freeze;$payload.order=@($spec.conditions.id);$payload.integrityIssues=$problems.ToArray()}
+    if(-not (Test-Json -Json ($payload|ConvertTo-Json -Depth 100) -SchemaFile $payloadSchema -ErrorAction Stop)){throw 'Invalid LaTeXAI paper payload'}
+    $qualificationIssues=@($problems.ToArray())+@($comparisons|Where-Object {$_.status -ne 'pass'}|ForEach-Object {$_.issues})
+    $record=@{schema='codex-scientiae/paper-run/1';jobId=$assignment.Assignment.jobId;attemptId=$assignment.Assignment.attemptId
+        experiment=$assignment.Experiment;article=$assignment.Assignment.article
+        producer=@{engine='latexai';version=$EngineVersion;commit=$EngineCommit;worker=$assignment.Plan.worker}
+        status=($Terminal ? ($complete ? 'complete' : 'failed') : 'running')
+        startedUtc=$startedUtc.ToString('o');endedUtc=($Terminal ? [datetime]::UtcNow.ToString('o') : $null)
+        durationMs=([datetime]::UtcNow-$startedUtc).TotalMilliseconds;summary=$summary;artifacts=$artifacts.ToArray();payload=$payload
+        qualification=@{status=$qualification;issues=@($qualificationIssues)}
     }
     Write-PaperRun -OutDirectory $paperDirectory -Record $record
-    if ($Status -ne 'running') { $script:terminalWritten=$true }
+    if($Terminal){$script:terminalWritten=$true}
 }
-
-function Resolve-Perl {
-    param([string] $Candidate)
-    if (-not [string]::IsNullOrWhiteSpace($Candidate)) {
-        if (-not (Test-Path -LiteralPath $Candidate -PathType Leaf)) { throw "PerlPath not found: '$Candidate'" }
-        return (Resolve-Path -LiteralPath $Candidate).Path
-    }
-    $root = [System.Environment]::GetEnvironmentVariable('PERL_ROOT')
-    if ([string]::IsNullOrWhiteSpace($root)) {
-        throw 'no perl: the launcher must pass -PerlPath or set PERL_ROOT before starting the worker'
-    }
-    $fromRoot = Join-Path $root 'perl/bin/perl.exe'
-    if (-not (Test-Path -LiteralPath $fromRoot -PathType Leaf)) {
-        throw "PERL_ROOT does not contain Strawberry perl: '$fromRoot'"
-    }
-    return (Resolve-Path -LiteralPath $fromRoot).Path
+function Test-FrozenInputs {
+    $watch=[Diagnostics.Stopwatch]::StartNew()
+    try{return (Assert-LaTeXAIExperimentFreeze -Reference $spec.freeze -Article $assignment.Assignment.article)}
+    finally{$watch.Stop();$script:validationMs+=$watch.Elapsed.TotalMilliseconds}
 }
-
-function Invoke-Native {
-    param(
-        [Parameter(Mandatory)] [string] $FilePath,
-        [string[]] $Arguments = @(),
-        [string] $WorkingDirectory = '',
-        [int] $TimeoutSeconds = 0,
-        [string] $StdOutPath = '',
-        [string] $StdErrPath = ''
-    )
-    $run = Invoke-LaTeXAINative -FilePath $FilePath -Arguments $Arguments `
-        -WorkingDirectory $WorkingDirectory -TimeoutSeconds $TimeoutSeconds `
-        -StdOutPath $StdOutPath -StdErrPath $StdErrPath
-    return [pscustomobject]@{
-        ExitCode = $run.ExitCode
-        StdOut = [string]$run.StdOut
-        StdErr = [string]$run.StdErr
-        TimedOut = [bool]$run.TimedOut
-        Outcome = [string]$run.Outcome
-        DurationMs = $run.DurationMs
-        CleanupComplete = [bool]$run.CleanupComplete
+[void][IO.Directory]::CreateDirectory($paperDirectory)
+Publish-Paper
+try{
+    if($paired){
+        $frozen=Test-FrozenInputs
+        if($frozen.Freeze.engine -cne $EngineRoot -or $frozen.Freeze.perl -cne $PerlPath){throw 'Runtime differs from frozen plan'}
+        Set-LaTeXAIFrozenEnvironment $frozen.Freeze
     }
-}
-
-$script:DefinitionTextCache = @{}
-$script:DefinitionCandidates = $null
-function Get-LsRLookup {
-    <# Bare file name -> lib-ctan entry from ls-R. Used when the route stem
-       is not the CTAN-id directory (t1enc.def lives under latex). #>
-    param([string] $LsRPath)
-    $map = @{}
-    if (-not (Test-Path -LiteralPath $LsRPath -PathType Leaf)) { return $map }
-    $subdir = ''
-    foreach ($line in [System.IO.File]::ReadAllLines($LsRPath)) {
-        if ($line.Length -eq 0 -or $line[0] -eq '%') { continue }
-        if ($line.EndsWith(':')) {
-            $subdir = $line.Substring(0, $line.Length - 1)
-            if ($subdir.StartsWith('./')) { $subdir = $subdir.Substring(2) }
-            continue
-        }
-        $rel = if ($subdir -eq '' -or $subdir -eq '.') { $line } else { "$subdir/$line" }
-        $map[$line] = ($rel -split '/')[0]
+    for($index=0;$index -lt $spec.conditions.Count;$index++){
+        $requested=$spec.conditions[$index]
+        $conditions[$index].status='running'
+        $conditions[$index].execution.outcome='running'
+        Publish-Paper
+        $nativeArgs=@($LatexmlArgument)
+        if($paired){$nativeArgs=@($requested.arguments)}
+        $invoke=@{Article=$Article;OutDirectory=(Join-Path $paperDirectory "conditions/$($requested.id)")
+            EngineRoot=$EngineRoot;SourceTree=($paired ? $frozen.Source.tree.root : $SourceTree);Entrypoint=$Entrypoint
+            TreeSha256=$TreeSha256;PerlPath=$PerlPath;EngineVersion=$EngineVersion;EngineCommit=$EngineCommit
+            Preload=$Preload;SearchPath=$SearchPath;IncludeStyles=$IncludeStyles;LatexmlArgument=$nativeArgs;Kpsewhich=$Kpsewhich
+            TimeoutSeconds=$TimeoutSeconds;ConversionWorkingDirectory=$ConversionWorkingDirectory;ConditionId=$requested.id
+            SamplePeakWorkingSet=$paired}
+        $converted=Invoke-LaTeXAICondition @invoke
+        $conditions[$index]=$converted.Condition
+        foreach($artifact in $converted.Artifacts){$artifacts.Add($artifact)}
+        Publish-Paper
+        if($paired){$null=Test-FrozenInputs}
+        if($converted.Condition.execution.cleanupComplete -eq $false){$problems.Add('Native cleanup incomplete; remaining conditions were not started');break}
     }
-    return $map
-}
-
-function Get-DefinitionCandidateFiles {
-    <# Files that could define a macro: the paper's own tree, then the vendored CTAN
-       source (lib-ctan/<pkg>/tex/**) of every package the paper routed through. #>
-    param([string] $SourceTree, [string] $EngineRoot, [object[]] $Packages)
-    $files = [System.Collections.Generic.List[object]]::new()
-    $extensions = @('.tex', '.sty', '.cls', '.def', '.clo', '.ldf', '.cfg')
-    foreach ($f in Get-ChildItem -LiteralPath $SourceTree -File -Recurse -ErrorAction SilentlyContinue) {
-        if ($extensions -contains $f.Extension.ToLowerInvariant() -and $f.Length -lt 4MB) {
-            $files.Add([pscustomobject]@{ Path = $f.FullName; Label = 'paper:' + $f.FullName.Substring($SourceTree.Length).TrimStart('\', '/') })
-        }
-    }
-    $ctanRoot = Join-Path $EngineRoot 'lib-ctan'
-    $lsrMap = Get-LsRLookup -LsRPath (Join-Path $ctanRoot 'ls-R')
-    $seen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
-    foreach ($package in $Packages) {
-        $name = [string]$package.name
-        $stem = [System.IO.Path]::GetFileNameWithoutExtension($name)
-        $entry = $stem
-        $texRoot = Join-Path (Join-Path $ctanRoot $stem) 'tex'
-        if (-not (Test-Path -LiteralPath $texRoot -PathType Container)) {
-            foreach ($key in @($name, "$stem.sty", "$stem.cls", "$stem.def", "$stem.tex")) {
-                if ($lsrMap.ContainsKey($key)) { $entry = $lsrMap[$key]; break }
-            }
-            $texRoot = Join-Path (Join-Path $ctanRoot $entry) 'tex'
-        }
-        if (-not $entry -or -not $seen.Add($entry)) { continue }
-        if (-not (Test-Path -LiteralPath $texRoot -PathType Container)) { continue }
-        foreach ($f in Get-ChildItem -LiteralPath $texRoot -File -Recurse -ErrorAction SilentlyContinue) {
-            if ($extensions -contains $f.Extension.ToLowerInvariant() -and $f.Length -lt 4MB) {
-                $files.Add([pscustomobject]@{ Path = $f.FullName; Label = 'ctan:' + $entry + '/' + $f.Name })
-            }
-        }
-    }
-    return $files.ToArray()
-}
-
-function Find-DefinitionSource {
-    <# Where a macro or environment the engine reported as undefined is defined, if any
-       source in reach defines it. Returns 'paper:<file>', 'ctan:<pkg>/<file>', or 'none'. #>
-    param([string] $Macro, [string] $SourceTree, [string] $EngineRoot, [object[]] $Packages)
-    if (-not $script:DefinitionCandidates) {
-        $script:DefinitionCandidates = Get-DefinitionCandidateFiles -SourceTree $SourceTree -EngineRoot $EngineRoot -Packages $Packages
-    }
-    $pattern = $null
-    if ($Macro -match '^\{(.+)\}$') {
-        $name = [regex]::Escape($matches[1])
-        $pattern = '\\(?:[A-Za-z]*(?:environment|theorem|tcolorbox|tcbtheorem|mdenv|mdtheoremenv|TColorBox|DocumentEnvironment))\*?\s*(?:\[[^\]]*\])?\s*\{\s*' + $name + '\s*\}'
-    }
-    elseif ($Macro -match '^\\(.+)$') {
-        $name = [regex]::Escape($matches[1])
-        $pattern = '\\(?:(?:new|renew|provide)command\*?|(?:New|Renew|Provide|Declare)(?:Document|Expandable)?Command|DeclareRobustCommand\*?|DeclareMathOperator\*?|newcommandx\*?|[gex]?def|let|futurelet|DeclareTextCommand|DeclareTextSymbol|newif|newlength|newbox|newdimen|newcount|newtoks)\s*\{?\s*\\' + $name + '(?![A-Za-z@])'
-    }
-    if (-not $pattern) { return 'none' }
-    $regex = [regex]::new($pattern)
-    foreach ($candidate in $script:DefinitionCandidates) {
-        if (-not $script:DefinitionTextCache.ContainsKey($candidate.Path)) {
-            try { $script:DefinitionTextCache[$candidate.Path] = [System.IO.File]::ReadAllText($candidate.Path) }
-            catch { $script:DefinitionTextCache[$candidate.Path] = '' }
-        }
-        if ($regex.IsMatch($script:DefinitionTextCache[$candidate.Path])) { return $candidate.Label }
-    }
-    return 'none'
-}
-
-function Get-CountFromStatus {
-    param([string] $Line, [string] $Pattern)
-    $match = [regex]::Match($Line, $Pattern)
-    if ($match.Success) { return [int]$match.Groups[1].Value }
-    return 0
-}
-
-function Get-ListFromStatus {
-    param([string] $Line, [string] $Pattern)
-    $match = [regex]::Match($Line, $Pattern)
-    if (-not $match.Success) { return @() }
-    return @($match.Groups[1].Value -split ',\s*' | Where-Object { $_ -ne '' })
-}
-
-$stores = [System.Collections.Generic.List[string]]::new()
-try {
-    [void][System.IO.Directory]::CreateDirectory($OutDirectory)
-    Write-LaTeXAIPaperRecord -Status 'running'
-    $jobTemp = [System.Environment]::GetEnvironmentVariable('CDXSCI_TEMP')
-    if (-not [string]::IsNullOrWhiteSpace($jobTemp)) { [void][System.IO.Directory]::CreateDirectory($jobTemp) }
-
-    $engineRoot = (Resolve-Path -LiteralPath $EngineRoot).Path
-    $sourceTree = (Resolve-Path -LiteralPath $SourceTree).Path
-    $entryFile = Join-Path $sourceTree $Entrypoint
-    if (-not (Test-Path -LiteralPath $entryFile -PathType Leaf)) {
-        throw "entrypoint not found in source tree: '$entryFile'"
-    }
-    $libDirectory = Join-Path $engineRoot 'lib'
-    $latexml = Join-Path $engineRoot 'bin/latexml'
-    foreach ($required in @($libDirectory, $latexml, (Join-Path $libDirectory 'LaTeXML/Version.pm'))) {
-        if (-not (Test-Path -LiteralPath $required)) {
-            throw "engine incomplete: '$required' (run lgen after a fresh clone)"
-        }
-    }
-    $perl = Resolve-Perl -Candidate $PerlPath
-    if ([string]::IsNullOrWhiteSpace([System.Environment]::GetEnvironmentVariable('PERL_ROOT'))) {
-        $perlFile = Get-Item -LiteralPath $perl
-        [System.Environment]::SetEnvironmentVariable('PERL_ROOT', $perlFile.Directory.Parent.Parent.FullName)
-    }
-    if ($Kpsewhich) {
-        $kpseCmd = Join-Path $engineRoot 'scripts/kpsewhich.cmd'
-        if (Test-Path -LiteralPath $kpseCmd -PathType Leaf) {
-            $env:LATEXML_KPSEWHICH = (Resolve-Path -LiteralPath $kpseCmd).Path
-            $env:LATEXML_KPSEWHICH_CACHE_ONLY = '1'
-        }
-    }
-    else {
-        Remove-Item -LiteralPath Env:LATEXML_KPSEWHICH -ErrorAction SilentlyContinue
-        Remove-Item -LiteralPath Env:LATEXML_KPSEWHICH_CACHE_ONLY -ErrorAction SilentlyContinue
-    }
-
-    $nativeTimeout = $TimeoutSeconds
-    if ($nativeTimeout -lt 0) { $nativeTimeout = Get-LaTeXAINativeTimeoutSeconds -Family Gauntlet }
-
-    if ([string]::IsNullOrWhiteSpace($EngineVersion)) {
-        $probe = Invoke-Native -FilePath $perl -WorkingDirectory $engineRoot -TimeoutSeconds 30 `
-            -Arguments @('-I', $libDirectory, '-MLaTeXML', '-e', 'print $LaTeXML::VERSION')
-        $script:EngineVersion = if ($probe.ExitCode -eq 0) { $probe.StdOut.Trim() } else { 'unknown' }
-    }
-    if ([string]::IsNullOrWhiteSpace($EngineCommit)) {
-        $git = (Get-Command git -CommandType Application -ErrorAction Stop | Select-Object -First 1).Source
-        $probe = Invoke-Native -FilePath $git -WorkingDirectory $engineRoot -TimeoutSeconds 30 `
-            -Arguments @('rev-parse', '--short', 'HEAD')
-        if ($probe.ExitCode -ne 0 -or -not $probe.CleanupComplete) { throw "git identity probe failed: $($probe.StdErr)" }
-        $script:EngineCommit = $probe.StdOut.Trim()
-        $dirty = Invoke-Native -FilePath $git -WorkingDirectory $engineRoot -TimeoutSeconds 30 `
-            -Arguments @('status', '--porcelain')
-        if ($dirty.ExitCode -ne 0 -or -not $dirty.CleanupComplete) { throw "git status probe failed: $($dirty.StdErr)" }
-        if ($dirty.StdOut.Trim()) { $script:EngineCommit += '+dirty' }
-    }
-
-    $logPath = Join-Path $OutDirectory 'latexml.log'
-    $xmlPath = Join-Path $OutDirectory "$slug.xml"
-    $stdoutPath = Join-Path $OutDirectory 'latexml.stdout.txt'
-    $stderrPath = Join-Path $OutDirectory 'latexml.stderr.txt'
-
-    $arguments = [System.Collections.Generic.List[string]]::new()
-    $arguments.Add('-I'); $arguments.Add($libDirectory)
-    $arguments.Add($latexml)
-    if ($IncludeStyles) { $arguments.Add('--includestyles') }
-    $arguments.Add("--path=$sourceTree")
-    foreach ($entry in @($SearchPath)) {
-        if ([string]::IsNullOrWhiteSpace($entry)) { continue }
-        $resolved = if ([System.IO.Path]::IsPathFullyQualified($entry)) { $entry } else { Join-Path $engineRoot $entry }
-        $arguments.Add("--path=$resolved")
-    }
-    foreach ($module in @($Preload)) {
-        if (-not [string]::IsNullOrWhiteSpace($module)) { $arguments.Add("--preload=$module") }
-    }
-    foreach ($extra in @($LatexmlArgument)) {
-        if (-not [string]::IsNullOrWhiteSpace($extra)) { $arguments.Add($extra) }
-    }
-    $arguments.Add("--log=$logPath")
-    $arguments.Add("--destination=$xmlPath")
-    $conversionCwd = $sourceTree
-    $sourceArgument = $Entrypoint
-    if ($ConversionWorkingDirectory -eq 'output') {
-        $conversionCwd = $OutDirectory
-        $sourceArgument = $entryFile
-    }
-    $arguments.Add($sourceArgument)
-
-    $run = Invoke-Native -FilePath $perl -Arguments $arguments.ToArray() `
-        -WorkingDirectory $conversionCwd -TimeoutSeconds $nativeTimeout `
-        -StdOutPath $stdoutPath -StdErrPath $stderrPath
-    $nativeResult = $run
-    $latexmlMs = [double]$run.DurationMs
-    $logParseStarted = [datetime]::UtcNow
-
-    # The log's last "Conversion complete|failed: ..." line carries the engine's own tally.
-    # The rest of the log carries what that tally summarizes: every file the engine read
-    # and how (a binding from lib/, or raw TeX definitions), and every diagnostic with
-    # its severity, category, and object.
-    $statusLine = ''
-    $bindingLoads = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
-    $rawLoads = [System.Collections.Generic.List[string]]::new()
-    $taxonomy = @{}
-    # With the lxprofile.sty preload (gauntlet-run.ps1 -Profile) the engine's macro
-    # profiler prints "Profiling results:" followed by "Total calls: N; Maximum depth: D"
-    # and four titled lists, each on the line after its title:
-    #   Most frequent / Deepest   ->  \cs:count, ...
-    #   Most expensive inclusive / exclusive  ->  \cs:1.23s/count, ...
-    $profileTotals = $null
-    $profileLists = @{}
-    $profileTitle = ''
-    if (Test-Path -LiteralPath $logPath -PathType Leaf) {
-        foreach ($line in [System.IO.File]::ReadLines($logPath)) {
-            if ($profileTitle) {
-                $entries = [System.Collections.Generic.List[object]]::new()
-                foreach ($item in ($line.Trim() -split ',\s+')) {
-                    if ($item -match '^(.+):(\d+(?:\.\d+)?)s/(\d+)$') {
-                        $entries.Add([ordered]@{ cs = $matches[1]; seconds = [double]$matches[2]; calls = [int]$matches[3] })
-                    }
-                    elseif ($item -match '^(.+):(\d+)$') {
-                        $entries.Add([ordered]@{ cs = $matches[1]; count = [int]$matches[2] })
-                    }
+    if($paired){
+        foreach($edge in $spec.comparisons){
+            $directory=Join-Path $paperDirectory "comparisons/$($edge.id)"
+            $requestPath=Join-Path $paperDirectory "comparisons/$($edge.id).request.json"
+            $left=@($conditions|Where-Object {$_.id -ceq $edge.left})[0]
+            $right=@($conditions|Where-Object {$_.id -ceq $edge.right})[0]
+            $request=@{schema='latexai/paper-comparison-request/1';mode=$edge.mode;article=$assignment.Assignment.article
+                source=$frozen.Source.tree.root;paperDirectory=$paperDirectory;experiment=$assignment.Experiment;freeze=$spec.freeze;model=$spec.model
+                left=@{condition=$left;artifacts=@($artifacts|Where-Object {$_.path.StartsWith("conditions/$($edge.left)/")})}
+                right=@{condition=$right;artifacts=@($artifacts|Where-Object {$_.path.StartsWith("conditions/$($edge.right)/")})}}
+            $null=Write-LaTeXAIFrozenJson $requestPath $request
+            $stdout=Join-Path $paperDirectory "comparisons/$($edge.id).stdout.txt"
+            $stderr=Join-Path $paperDirectory "comparisons/$($edge.id).stderr.txt"
+            $run=Invoke-LaTeXAINative -FilePath $PerlPath -WorkingDirectory $EngineRoot -TimeoutSeconds $spec.comparisonTimeoutSeconds `
+                -Arguments @('-I',(Join-Path $EngineRoot 'lib'),(Join-Path $EngineRoot 'tools/dev/compare-paper.pl'),$requestPath,$directory) `
+                -StdOutPath $stdout -StdErrPath $stderr -SamplePeakWorkingSet
+            $verdict='incomplete';$edgeIssues=@("Comparison process $($run.Outcome), exit $($run.ExitCode)")
+            $reportPath=Join-Path $directory 'comparison.json'
+            if($run.Outcome -eq 'exited' -and $run.CleanupComplete -and (Test-Path -LiteralPath $reportPath)){
+                $report=Get-Content -LiteralPath $reportPath -Raw|ConvertFrom-Json -AsHashtable
+                $expectedExit=@{pass=0;fail=1;incomplete=2}
+                if($report.schema -ceq 'latexai/paper-comparison/1' -and $report.left -ceq $edge.left -and $report.right -ceq $edge.right -and
+                    $expectedExit.ContainsKey($report.status) -and $run.ExitCode -eq $expectedExit[$report.status]){
+                    $verdict=$report.status;$edgeIssues=@($report.issues)
                 }
-                $profileLists[$profileTitle] = $entries.ToArray()
-                $profileTitle = ''
-                continue
             }
-            if ($line -match '^Total calls: (\d+); Maximum depth: (\d+)') {
-                $profileTotals = [ordered]@{ calls = [int]$matches[1]; maxDepth = [int]$matches[2] }
-                continue
-            }
-            if ($line -match '^(Most frequent|Deepest|Most expensive inclusive|Most expensive exclusive)\s*:\s*$') {
-                $profileTitle = switch ($matches[1]) {
-                    'Most frequent' { 'frequent' }
-                    'Deepest' { 'deepest' }
-                    'Most expensive inclusive' { 'inclusive' }
-                    'Most expensive exclusive' { 'exclusive' }
-                }
-                continue
-            }
-            if ($line -match '^(?:recursive )?Conversion (?:complete|failed):') { $statusLine = $line; continue }
-            if ($line -match '^\(Loading (.+?)\.\.\.') {
-                if ($matches[1] -match '[\\/]Package[\\/]([^\\/]+)\.ltxml$') { [void]$bindingLoads.Add($matches[1]) }
-                continue
-            }
-            if ($line -match '^\(Processing definitions (.+?)\.\.\.') { $rawLoads.Add($matches[1]); continue }
-            if ($line -match '^(Fatal|Error|Warning|Info):([A-Za-z_]+):(\S{0,80})') {
-                $key = '{0}:{1}:{2}' -f $matches[1], $matches[2], $matches[3]
-                $taxonomy[$key] = 1 + ($taxonomy.ContainsKey($key) ? [int]$taxonomy[$key] : 0)
-            }
+            foreach($file in @($requestPath,$stdout,$stderr)){Add-PaperArtifact $file}
+            if(Test-Path -LiteralPath $directory){foreach($file in Get-ChildItem -LiteralPath $directory -File -Recurse){Add-PaperArtifact $file.FullName}}
+            $comparisons.Add(@{id=$edge.id;left=$edge.left;right=$edge.right;mode=$edge.mode;required=$edge.required;status=$verdict
+                report=($(if(Test-Path -LiteralPath $reportPath){[IO.Path]::GetRelativePath($paperDirectory,$reportPath).Replace('\','/')}else{$null}))
+                process=@{outcome=$run.Outcome;exitCode=$run.ExitCode;timedOut=$run.TimedOut;cleanupComplete=$run.CleanupComplete
+                    peakWorkingSetBytes=$run.PeakWorkingSetBytes;memoryMethod='sampled-process-PeakWorkingSet64'}
+                durationMs=$run.DurationMs;issues=$edgeIssues})
+            Publish-Paper
         }
+        $null=Test-FrozenInputs
     }
-    # Phase timings from stderr. The engine prints "(Digesting TeX main..." then nested
-    # "(Loading ...  0.01 sec)" groups, then its own "  6.70 sec)"; likewise "(Building",
-    # "(Rewriting", "(Math Parsing N formulae", "(Finalizing". A stack pairs each close
-    # with its open, so a phase's seconds include the loads it triggered.
-    $phases = [ordered]@{}
-    $phaseStack = [System.Collections.Generic.Stack[string]]::new()
-    $phaseTokens = [regex]::Matches($run.StdErr,
-        '\((Digesting TeX|Building|Rewriting|Math Parsing (\d+) formulae|Finalizing|Loading|Processing (?:definitions|content))\b|(?<![\w.])(\d+\.\d+) sec\)')
-    foreach ($token in $phaseTokens) {
-        if ($token.Groups[3].Success) {
-            if ($phaseStack.Count -eq 0) { continue }
-            $label = $phaseStack.Pop()
-            if ($label -eq '') { continue }
-            if ($label -like 'Math Parsing *') {
-                $phases['formulae'] = [int]($label -split ' ')[2]
-                $label = 'mathParse'
-            }
-            $key = switch ($label) {
-                'Digesting TeX' { 'digest' }
-                'Building' { 'build' }
-                'Rewriting' { 'rewrite' }
-                'Finalizing' { 'finalize' }
-                default { $label }
-            }
-            $phases[$key] = [double]$token.Groups[3].Value + ($phases.Contains($key) ? [double]$phases[$key] : 0.0)
-        }
-        else {
-            $name = $token.Groups[1].Value
-            $phaseStack.Push(($name -like 'Loading*' -or $name -like 'Processing *') ? '' : $name)
-        }
+    Publish-Paper -Terminal
+}catch{
+    $problems.Add($_.Exception.Message)
+    foreach($edge in $spec.comparisons){
+        if(@($comparisons|Where-Object {$_.id -ceq $edge.id}).Count){continue}
+        $comparisons.Add(@{id=$edge.id;left=$edge.left;right=$edge.right;mode=$edge.mode;required=$edge.required;status='incomplete'
+            report=$null;process=@{outcome='not-started';exitCode=$null;timedOut=$null;cleanupComplete=$null}
+            durationMs=0;issues=@('Paper execution stopped before this comparison completed')})
     }
-    $fatals = Get-CountFromStatus -Line $statusLine -Pattern '(\d+) fatal errors?'
-    $errors = Get-CountFromStatus -Line $statusLine -Pattern '(\d+) errors?'
-    $warnings = Get-CountFromStatus -Line $statusLine -Pattern '(\d+) warnings?'
-    $undefined = @(Get-ListFromStatus -Line $statusLine -Pattern '\d+ undefined macros?\[([^\]]*)\]')
-    $missing = @(Get-ListFromStatus -Line $statusLine -Pattern '\d+ missing files?\[([^\]]*)\]')
-
-    # Package routes: one row per file the engine resolved, and how.
-    #   binding    a lib/LaTeXML/Package/*.ltxml file
-    #   raw-local  raw TeX definitions read from the paper's own tree (--includestyles)
-    #   raw        raw TeX definitions read from anywhere else on the search path
-    #   missing    requested and not found (from the engine's tally)
-    $packages = [System.Collections.Generic.List[object]]::new()
-    foreach ($name in @($bindingLoads | Sort-Object)) {
-        $packages.Add([ordered]@{ name = $name; route = 'binding' })
-    }
-    foreach ($rawPath in @($rawLoads | Sort-Object -Unique)) {
-        $isLocal = $rawPath.StartsWith($sourceTree, [System.StringComparison]::OrdinalIgnoreCase)
-        $shown = if ($isLocal) { $rawPath.Substring($sourceTree.Length).TrimStart('\', '/') } else { $rawPath }
-        $packages.Add([ordered]@{
-            name = [System.IO.Path]::GetFileName($rawPath)
-            route = ($isLocal ? 'raw-local' : 'raw')
-            path = $shown
-        })
-    }
-    foreach ($name in @($missing | Sort-Object -Unique)) {
-        $packages.Add([ordered]@{ name = $name; route = 'missing' })
-    }
-    $packagesRaw = @($packages | Where-Object { $_.route -like 'raw*' }).Count
-    $logParseMs = [math]::Round(([datetime]::UtcNow - $logParseStarted).TotalMilliseconds, 2)
-
-    # Undefined macros attributed to a definition site. A macro the engine reports as
-    # undefined is looked up in the paper's own tree and in the vendored CTAN source of
-    # every package the paper routed through. 'ctan:<pkg>/<file>' against a 'binding'
-    # route is binding residue; against 'raw-local' it means raw execution did not
-    # define it; 'paper:<file>' means the paper's own definition never ran; 'none'
-    # means no source in reach defines it.
-    $attributionStarted = [datetime]::UtcNow
-    $attribution = @($undefined | ForEach-Object {
-            $macro = $_
-            $where = Find-DefinitionSource -Macro $macro -SourceTree $sourceTree `
-                -EngineRoot $engineRoot -Packages $packages
-            [ordered]@{ macro = $macro; source = $where }
-        })
-    $unattributed = @($attribution | Where-Object { $_.source -eq 'none' }).Count
-    $attributionMs = [math]::Round(([datetime]::UtcNow - $attributionStarted).TotalMilliseconds, 2)
-
-    $xmlBytes = 0L
-    $ltxErrors = 0
-    $mathElements = 0
-    $danglingRefs = 0
-    $internalLeaks = 0
-    $errorNodes = @()
-    $danglingList = @()
-    $leakList = @()
-    $xmlInspectStarted = [datetime]::UtcNow
-    if (Test-Path -LiteralPath $xmlPath -PathType Leaf) {
-        $census = Get-LaTeXAIXmlCensus -XmlPath $xmlPath
-        $xmlBytes = $census.Bytes
-        $ltxErrors = $census.LtxErrors
-        $mathElements = $census.MathElements
-        $danglingRefs = $census.DanglingRefs
-        $internalLeaks = $census.InternalLeaks
-        $errorNodes = @($census.ErrorNodes)
-        $danglingList = @($census.DanglingList)
-        $leakList = @($census.LeakList)
-    }
-    $xmlInspectMs = [math]::Round(([datetime]::UtcNow - $xmlInspectStarted).TotalMilliseconds, 2)
-
-    foreach ($candidate in @($xmlPath, $logPath, $stdoutPath, $stderrPath)) {
-        if (Test-Path -LiteralPath $candidate -PathType Leaf) {
-            $stores.Add([System.IO.Path]::GetFileName($candidate))
-        }
-    }
-    $ok = (-not $run.TimedOut) -and $run.CleanupComplete -and ($run.ExitCode -eq 0) -and ($fatals -eq 0) -and ($xmlBytes -gt 0)
-    $workerMs = [math]::Round(([datetime]::UtcNow - $startedUtc).TotalMilliseconds, 2)
-    $residualMs = [math]::Round($workerMs - $latexmlMs - $logParseMs - $attributionMs - $xmlInspectMs, 2)
-    $counts = @{
-        exitCode = if ($null -eq $run.ExitCode) { -1 } else { $run.ExitCode }
-        timedOut = [int][bool]$run.TimedOut
-        fatals = $fatals
-        errors = $errors
-        warnings = $warnings
-        undefinedMacros = $undefined.Count
-        undefinedUnattributed = $unattributed
-        missingFiles = $missing.Count
-        packagesBinding = $bindingLoads.Count
-        packagesRaw = $packagesRaw
-        packagesMissing = $missing.Count
-        ltxErrors = $ltxErrors
-        danglingRefs = $danglingRefs
-        internalLeaks = $internalLeaks
-        mathElements = $mathElements
-        outputBytes = $xmlBytes
-        latexmlMs = $latexmlMs
-        logParseMs = $logParseMs
-        attributionMs = $attributionMs
-        xmlInspectMs = $xmlInspectMs
-        workerMs = $workerMs
-        residualMs = $residualMs
-    }
-    $taxonomyRows = @($taxonomy.GetEnumerator() | Sort-Object -Property @{ Expression = 'Value'; Descending = $true }, Name |
-        ForEach-Object {
-            $severity, $category, $object = $_.Name -split ':', 3
-            [ordered]@{ severity = $severity; category = $category; object = $object; count = [int]$_.Value }
-        })
-    $details = @{
-        statusLine = $statusLine
-        undefinedMacros = @($undefined)
-        undefinedAttribution = @($attribution)
-        missingFiles = @($missing)
-        packages = @($packages)
-        taxonomy = @($taxonomyRows)
-        errorNodes = @($errorNodes)
-        danglingRefs = @($danglingList)
-        internalLeaks = @($leakList)
-        perl = $perl
-        arguments = @($arguments.ToArray())
-        conversionWorkingDirectory = $conversionCwd
-        nativeOutcome = $run.Outcome
-        nativeExitCode = $run.ExitCode
-        nativeCleanupComplete = [bool]$run.CleanupComplete
-        xmlInspectMethod = 'xml-reader'
-    }
-    if ($phases.Count -gt 0) { $details.phases = $phases }
-    if ($null -ne $profileTotals) {
-        $counts.profileCalls = $profileTotals.calls
-        $details.profile = [ordered]@{
-            calls = $profileTotals.calls
-            maxDepth = $profileTotals.maxDepth
-            frequent = @($profileLists['frequent'])
-            deepest = @($profileLists['deepest'])
-            inclusive = @($profileLists['inclusive'])
-            exclusive = @($profileLists['exclusive'])
-        }
-    }
-    $lsrPath = Join-Path $engineRoot 'lib-ctan/ls-R'
-    if (Test-Path -LiteralPath $lsrPath -PathType Leaf) {
-        $details.libCtanLsR = (Get-FileHash -LiteralPath $lsrPath -Algorithm SHA256).Hash.ToLowerInvariant()
-    }
-    if (-not $ok -and -not $statusLine) {
-        $details.stderrTail = @(($run.StdErr -split "`r?`n") | Where-Object { $_ -ne '' } | Select-Object -Last 20)
-    }
-    Write-LaTeXAIPaperRecord -Status ($ok ? 'ok' : 'failed') -Counts $counts -Details $details -Stores $stores.ToArray()
-    if (-not $ok) {
-        # The executor's child bootstrap observes error records, not exit codes:
-        # the entrypoint is invoked with & inside its pipeline. Throw to fail the job.
-        throw "conversion failed for ${slug}: exit=$($run.ExitCode) fatals=$fatals bytes=$xmlBytes $statusLine"
-    }
+    if(-not $terminalWritten){Publish-Paper -Terminal}
+    throw
 }
-catch {
-    $message = $_.Exception.Message
-    if (-not $terminalWritten) {
-        try {
-            $failureCounts=@{}
-            $failureDetails=@{workerError=$message}
-            if($null -ne $nativeResult){
-                $failureCounts.timedOut=[int]$nativeResult.TimedOut
-                if($null -ne $nativeResult.ExitCode){$failureCounts.exitCode=$nativeResult.ExitCode}
-                $failureDetails.nativeOutcome=$nativeResult.Outcome
-                $failureDetails.nativeExitCode=$nativeResult.ExitCode
-                $failureDetails.nativeCleanupComplete=$nativeResult.CleanupComplete
-            }
-            Write-LaTeXAIPaperRecord -Status 'failed' -Counts $failureCounts -Details $failureDetails `
-                -Stores $stores.ToArray()
-        }
-        catch { $message += "; failed to publish worker record: $($_.Exception.Message)" }
-    }
-    throw "gauntlet-worker: $message"
+if(@($conditions|Where-Object {$_.status -ne 'ok'}).Count -or $problems.Count -or @($comparisons|Where-Object {$_.status -eq 'incomplete'}).Count){
+    throw "Paper experiment failed: conditions=$($conditions.status -join ','); comparisons=$($comparisons.status -join ','); $($problems -join '; ')"
 }

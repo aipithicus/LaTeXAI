@@ -41,7 +41,7 @@ These are MCP tool calls, not PowerShell commands. Keep dependent shell commands
 one invocation: each start/run gets a fresh process.
 
 Both batch callers accept a native limit and a separate `-ProcessTimeoutSeconds`;
-the worker default is native + 60 seconds. `-ExecutionTimeoutSeconds` and
+the single-condition worker default is native + 60 seconds. `-ExecutionTimeoutSeconds` and
 `-WaitTimeoutSeconds` bound the batch; `-CleanupTimeoutSeconds` bounds executor cleanup.
 Choose the outer MCP budget to include preflight, execution, cleanup and record publication.
 Defaults live in [`scripts/policy.psd1`](../../scripts/policy.psd1).
@@ -50,6 +50,29 @@ Defaults live in [`scripts/policy.psd1`](../../scripts/policy.psd1).
 Polling does not reset a job's budget. MCP cleanup has its own 30-second allowance.
 Native `0` disables the native and default worker limits; batch limits still apply.
 An unbounded MCP run requires explicit `unbounded: true`.
+
+## Paired paper experiments
+
+```powershell
+lgauntlet -CaptureParity -Path supellex/gauntlet/<collection>/<paper> `
+  -NativeTimeoutSeconds 300 -ComparisonTimeoutSeconds 180 `
+  -ProcessTimeoutSeconds 1200 -WaitTimeoutSeconds 1500 `
+  -ExecutionTimeoutSeconds 1500 -FailOnArticleFailure
+```
+
+Use `-Preview` first for the resolved conditions, order and budgets. The paired
+worker deadline defaults to twice (native + 60), plus comparison + 300 seconds
+for validation/publication. Native and comparison deadlines must be finite;
+the outer MCP budget must also cover input copying before dispatch. The launcher
+mints a new artifact run; an explicit `-RunDirectory` must already exist under
+CDXSCI artifacts. Existing plans, freezes and terminal records cannot be replaced.
+
+`-OnFirst` records the opposite condition order. `-OffArgument` and `-OnArgument`
+add standalone flags; `--capture` is owned by the plan. A deliberate unknown flag
+on one side exercises native failure and incomplete comparison without changing
+source bytes. Read `batch.json` and its worker `run.json`, including qualification
+and cleanup; native completion alone does not establish parity. See the
+[record contract](../specification/gauntlet-records.md) for freeze boundaries.
 
 Native supervision uses Windows Job Objects and streams full output to requested files,
 retaining at most 1 MiB per stream in memory. Its helper cache is ignored under

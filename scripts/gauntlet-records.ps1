@@ -17,9 +17,10 @@ function Get-LaTeXAIPaperCondition {
     $read=Read-PaperRun -Path $path -Assignment $assignments[0] -Experiment $record.experiment
     if($record.producer.engine -ne 'latexai' -or $plan.engine -ne 'latexai' -or
         $record.producer.worker.path -cne $plan.worker.path -or $record.producer.worker.sha256 -cne $plan.worker.sha256){throw 'Wrong paper producer'}
-    if($plan.specification.schema -ne 'latexai/acquisition-plan/1' -or
-        $record.payload.measurement.path -cne $plan.worker.path -or
-        $record.payload.measurement.sha256 -cne $plan.worker.sha256){throw 'Wrong measurement implementation'}
+    $measurement=if($plan.specification.Contains('measurement')){$plan.specification.measurement}else{$plan.worker}
+    if($plan.specification.schema -notin @('latexai/acquisition-plan/1','latexai/paired-plan/1') -or
+        $record.payload.measurement.path -cne $measurement.path -or
+        $record.payload.measurement.sha256 -cne $measurement.sha256){throw 'Wrong measurement implementation'}
     if(-not (Test-Json -Json ($record.payload | ConvertTo-Json -Depth 100) -SchemaFile (Join-Path $PSScriptRoot 'schemas/paper-experiment.schema.json') -ErrorAction Stop)){throw 'Invalid LaTeXAI payload'}
     if($record.status -eq 'running'){throw 'Paper record is nonterminal'}
     $conditions=@($record.payload.conditions | Where-Object {$_.id -ceq $Condition})

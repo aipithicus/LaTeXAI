@@ -52,6 +52,12 @@ param(
     [string] $EvidenceDirectory = '',
     [switch] $LegacyInventory,
     [switch] $SelectOnly,
+    [switch] $CaptureParity,
+    [string[]] $OffArgument = @(),
+    [string[]] $OnArgument = @(),
+    [switch] $OnFirst,
+    [ValidateRange(1, 86400)] [int] $ComparisonTimeoutSeconds = 900,
+    [string] $RunDirectory = '',
     [ValidateSet('source', 'output')] [string] $ConversionWorkingDirectory
 )
 
@@ -68,7 +74,8 @@ if ($null -eq $MaxWorkers) { $MaxWorkers = [int]$policy.MaxWorkers }
 if ($null -eq $ReservedCores) { $ReservedCores = [int]$policy.ReservedCores }
 if ($null -eq $NativeTimeoutSeconds) { $NativeTimeoutSeconds = [int]$policy.NativeTimeoutSeconds }
 if ($null -eq $ProcessTimeoutSeconds) {
-    $ProcessTimeoutSeconds = if ($NativeTimeoutSeconds -eq 0) { 0 }
+    $ProcessTimeoutSeconds = if ($CaptureParity) { 2 * ($NativeTimeoutSeconds + 60) + $ComparisonTimeoutSeconds + 300 }
+        elseif ($NativeTimeoutSeconds -eq 0) { 0 }
         else { $NativeTimeoutSeconds + [int]$policy.WorkerGraceSeconds }
 }
 if ($null -eq $WaitTimeoutSeconds) { $WaitTimeoutSeconds = [int]$policy.WaitTimeoutSeconds }
@@ -79,6 +86,25 @@ if (-not $PSBoundParameters.ContainsKey('ConversionWorkingDirectory')) {
     $ConversionWorkingDirectory = [string]$policy.ConversionWorkingDirectory
 }
 $nativeTimeout = [int]$NativeTimeoutSeconds
+if ($CaptureParity) {
+    if ($nativeTimeout -le 0 -or $ProcessTimeoutSeconds -lt (2*$nativeTimeout+$ComparisonTimeoutSeconds+60)) { throw 'Paired workers require finite budgets covering both conversions, comparison and cleanup' }
+    if ($PSBoundParameters.ContainsKey('ConversionWorkingDirectory') -and $ConversionWorkingDirectory -ne 'output') { throw 'Paired conditions require isolated output working directories' }
+    $ConversionWorkingDirectory='output'
+    foreach($argument in @($LatexmlArgument)+@($OffArgument)+@($OnArgument)){
+        # No positional values or file-taking options: these could read outside
+        # the frozen trees. Getopt::Long accepts abbreviated option names.
+        if($argument -notmatch '^--([a-z][a-z0-9-]*)$'){throw 'Paired extra arguments must be standalone flags'}
+        $option=$Matches[1]
+        if(@('capture','nocapture','no-capture','path','log','destination','output','preload','preamble','postamble','init','inputencoding','debug','documentid') |
+                Where-Object {$_.StartsWith($option,[StringComparison]::OrdinalIgnoreCase)}){throw 'Paired capture and file-taking arguments are owned by the experiment'}
+    }
+    if(@($Preload|Where-Object {$_ -match '[\\/:]' -or $_ -match '\.\.'}).Count){throw 'Paired preloads must be module names resolved within frozen trees'}
+    foreach($search in $policy.SearchPath){
+        if([IO.Path]::IsPathRooted($search) -or $search -match '(^|[\\/])\.\.([\\/]|$)' -or $search -notmatch '^(lib|lib-ctan|scripts|tools/dev)([\\/]|$)'){
+            throw 'Paired search paths must be inside copied engine input trees'
+        }
+    }
+} elseif ($OffArgument.Count -or $OnArgument.Count -or $OnFirst) { throw 'Condition arguments/order require -CaptureParity' }
 
 $engineRoot = $runtime.CheckoutRoot
 $worker = Join-Path $PSScriptRoot 'gauntlet-worker.ps1'
@@ -113,6 +139,10 @@ if ($Preview) {
         worker = $worker
         path = @($Path)
         conversionWorkingDirectory = $ConversionWorkingDirectory
+        conditions = ($CaptureParity ? @('off','on') : @('conversion'))
+        order = ($CaptureParity ? ($OnFirst ? @('on','off') : @('off','on')) : @('conversion'))
+        comparisonTimeoutSeconds = ($CaptureParity ? $ComparisonTimeoutSeconds : $null)
+        frozenInputCopies = [bool]$CaptureParity
         packageSelection = $packageSelection
         budgets = [ordered]@{
             requested = [ordered]@{
@@ -227,6 +257,44 @@ $invoke = @{
     FailOnArticleFailure = $FailOnArticleFailure
 }
 if (@($Path).Count -gt 0) { $invoke.Path = $Path }
+if ($RunDirectory) { $invoke.RunDirectory=$RunDirectory }
+Import-Module (Join-Path $runtime.CdxsciRoot 'src/inventory-records/inventory-records.psm1') -Force
+$invoke.ExperimentSpecification.measurement=Get-InventoryFileReference (Join-Path $PSScriptRoot 'gauntlet-convert.ps1')
+if($CaptureParity){
+    . (Join-Path $runtime.CdxsciRoot 'src/infrastructure/containment.ps1')
+    . (Join-Path $PSScriptRoot 'gauntlet-freeze.ps1')
+    Import-Module (Join-Path $runtime.CdxsciRoot 'src/batch-adapters/adapters.psd1') -Force
+    $runRoot=if($RunDirectory){Resolve-ArtifactRunDirectory -RunDirectory $RunDirectory -RepositoryRoot $runtime.CdxsciRoot}else{New-ModuleRunDir -Module latexai -RepositoryRoot $runtime.CdxsciRoot}
+    $selection=if($Path.Count){$Path}else{@('supellex/gauntlet')}
+    $jobs=@(Get-InventoryBatchJob -Path $selection -RunDirectory $runRoot -RepositoryRoot $runtime.CdxsciRoot `
+        -Engine latexai -EngineRoot $engineRoot -Worker $worker -WorkerParameter $workerParameter)
+    if($jobs.Count -eq 0){throw 'Paired experiment selected no papers'}
+    $freeze=New-LaTeXAIExperimentFreeze -Directory (Join-Path $runRoot 'inputs') -EngineRoot $engineRoot -PerlRoot $runtime.PerlRoot `
+        -CdxsciRoot $runtime.CdxsciRoot -Jobs $jobs -PowerShellExecutable $runtime.ChildPowerShell.Executable
+    $invoke.RunDirectory=$runRoot
+    $invoke.EngineRoot=$freeze.Record.engine
+    $invoke.Worker=Join-Path $freeze.Record.engine 'scripts/gauntlet-worker.ps1'
+    $invoke.WorkerParameter.PerlPath=$freeze.Record.perl
+    $invoke.WorkerParameter.EngineCommit=$freeze.Record.engineCommit+($freeze.Record.engineDirty.Count ? '+dirty' : '')
+    $invoke.RequireQualification=$true
+    $declared=@{
+        off=@{id='off';capture=$false;arguments=@($LatexmlArgument)+@($OffArgument)}
+        on=@{id='on';capture=$true;arguments=@($LatexmlArgument)+@($OnArgument)+@('--capture')}
+    }
+    $order=($OnFirst ? @('on','off') : @('off','on'))
+    $invoke.ExperimentSpecification=@{
+        schema='latexai/paired-plan/1';freeze=$freeze.Reference
+        conditions=@($order|ForEach-Object {$declared[$_]})
+        comparisons=@(@{id='parity';left='off';right='on';mode='parity';required=$true})
+        payloadSchema=(Get-InventoryFileReference (Join-Path $freeze.Record.engine 'scripts/schemas/paper-experiment.schema.json'))
+        measurement=(Get-InventoryFileReference (Join-Path $freeze.Record.engine 'scripts/gauntlet-convert.ps1'))
+        model=(Get-InventoryFileReference (Join-Path $freeze.Record.engine 'lib/LaTeXML/resources/RelaxNG/LaTeXML.model'))
+        comparisonTimeoutSeconds=$ComparisonTimeoutSeconds
+        stages=@{nativeTimeoutSeconds=$nativeTimeout;comparisonTimeoutSeconds=$ComparisonTimeoutSeconds;validationAllowanceSeconds=300;paperTimeoutSeconds=$ProcessTimeoutSeconds}
+        orderPolicy=($OnFirst ? 'on-then-off' : 'off-then-on');maxPaperWorkers=$MaxWorkers
+    }
+    Write-Information -InformationAction Continue "Frozen paired experiment: $runRoot; papers=$($jobs.Count)"
+}
 
 & $runtime.BatchRunner @invoke
 $runnerExit = if (Get-Variable -Name LASTEXITCODE -ErrorAction SilentlyContinue) { [int]$LASTEXITCODE } else { 0 }

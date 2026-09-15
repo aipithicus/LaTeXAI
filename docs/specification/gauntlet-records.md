@@ -14,7 +14,7 @@ implementation and checked again after migration. It covers the currently suppor
 | CDXSCI | `src/batch-adapters/public/Get-InventoryBatchJob.ps1`, inventory dependency helpers | Plan the worker record address and pass its immutable assignment. Keep the adapter free of execution and publication. |
 | CDXSCI | `src/batch-runner.ps1` | Freeze the experiment before dispatch; validate and aggregate worker records into `batch.json`. |
 | CDXSCI | `tests/batch-adapters/inventory-batch.Tests.ps1` | Migrate the generic external test worker and exercise the public runner boundary. |
-| LaTeXAI | `scripts/gauntlet-run.ps1`, `scripts/gauntlet-worker.ps1` | Declare the acquisition condition; publish a worker record with direct native outcomes, measurements and hashed artifacts. |
+| LaTeXAI | `scripts/gauntlet-run.ps1`, `gauntlet-worker.ps1`, `gauntlet-convert.ps1`, `gauntlet-freeze.ps1` | Freeze inputs; execute declared conditions and comparisons; publish direct native outcomes, measurements and hashed artifacts. |
 | LaTeXAI | `scripts/gauntlet-select.ps1` | Select observed package routes from validated worker conditions; historical receipts require an explicit legacy option. |
 | LaTeXAI | `tools/dev/capture-corpus-audit.pl`, `CaptureRuntime.pm`, audit tests | Read condition evidence from worker records. Preserve the qualified comparator and explicit historical-input support. |
 | LaTeXAI | `tools/dev/fetch-ctan.pl --check` | Read missing-file observations from worker conditions; keep historical receipt reading explicit. |
@@ -33,26 +33,62 @@ archived receipts are separate contracts and are not renamed.
 
 ## Checkpoint scope
 
-The first migration checkpoint covers schema-validated record ownership and
-today's single-condition acquisition. A completed conversion is not a parity
-qualification: acquisition records have `not-requested` qualification until an
-actual comparison is requested and executed. Off/on orchestration, worker-side
-pair comparison, historical analysis-only attempts, selective reuse and the live
-deliberate-failure experiment remain subsequent checkpoints.
+Single-condition acquisition has `not-requested` qualification. `-CaptureParity`
+declares two fresh native conditions and one required off/on comparison inside
+each paper worker. `-OnFirst` reverses execution order without reversing the
+comparison roles. Conditions run sequentially; the default pool has ten paper
+slots. The worker invokes the shared `CaptureCompare.pm` implementation through
+`compare-paper.pl` in a fresh Perl process. The corpus auditor calls the same
+implementation. Comparison needs direct condition evidence, not `batch.json`.
+
+Each comparison reports `pass`, `fail` or `incomplete`. Both successful
+conversions plus a completed comparison can produce execution `complete` with
+qualification `fail`. A failed conversion, missing/malformed evidence, timeout,
+incomplete cleanup or changed input produces an incomplete qualification. Every
+declared condition and edge stays in the plan and worker record. The coordinator
+accounts for absent/nonterminal worker records without completing them.
+`-FailOnArticleFailure` also fails a requested qualification gate.
+
+Historical analysis-only paper attempts, selective reuse, other condition
+contrasts and the full-population refactored benchmark remain later checkpoints.
 
 The generic envelope and batch schemas belong to CDXSCI's `inventory-records`
 module. LaTeXAI owns the `latexai/paper-experiment/1` payload schema. Both have
 serialized examples and validate at publication and consumption boundaries.
 
 LaTeXAI's [payload schema](../../scripts/schemas/paper-experiment.schema.json) and
-[example](../../scripts/schemas/examples/paper-experiment.json) accompany the
+[acquisition example](../../scripts/schemas/examples/paper-experiment.json) and
+[paired example](../../scripts/schemas/examples/paired-paper-experiment.json) accompany the
 shared module's `inventory-records.schema.json` and three envelope examples.
 The experiment pins assignments, declared source-tree fingerprints, worker
 parameters, the worker and record-module bytes, schema and execution policy.
-It does not yet snapshot the full engine/runtime or independently recompute the
-deposit's tree fingerprint. That broader experiment freeze belongs with the
-off/on worker checkpoint. `measurement` identifies the worker implementation
-that obtained the condition's counts and details.
+For paired plans, `inputs/freeze.json` (`latexai/experiment-freeze/1`) additionally
+pins copied engine `lib/`, `bin/`, `scripts/`, `tools/dev/` and `lib-ctan/` trees,
+including generated modules and dirty/untracked input bytes. It copies the
+Strawberry `perl/` and `c/bin/` runtime trees and each source tree. Tree identity
+is SHA-256 over ordinally sorted relative paths, file lengths and hashes; the
+copied source must match the deposited fingerprint. File manifests retain the
+exact membership. `engine.patch`, Git identity and generated version are distinct
+evidence. Copying and hashing time is recorded separately from the batch.
+
+The PowerShell executable, shared orchestration files/trees and observed host
+runtime are pinned at their configured locations. This is a local experiment
+freeze, not an operating-system image. Workers rehash these pins and their own
+source before conversion, after each condition and after comparison. Mutations
+fail qualification. Relevant Perl/TeX, locale and BLAS overrides are cleared;
+the effective runtime path and inherited values are retained. Output cwd is
+isolated per condition. Extra arguments are standalone flags; file-taking and
+capture options are experiment-owned, and preloads resolve by module name within
+the copied trees. Shared code must remain fixed for the experiment duration.
+
+The paired specification (`latexai/paired-plan/1`) pins this freeze, condition
+order/arguments, required comparison edge, model, measurement implementation and
+stage deadlines. `measurement` identifies `gauntlet-convert.ps1`, which obtains
+counts/details for both acquisition and paired execution. Worker records retain
+raw native streams, XML/log hashes, stripped/projected/normalized XML, comparison
+requests/reports and comparator identities. Conversion, XML inspection,
+comparison and input validation timings remain distinct. Native memory is the
+sampled process `PeakWorkingSet64`; it is not aggregate host or process-tree RSS.
 
 Both record readers check worker/artifact hashes, assignments, coverage, totals
 and executor agreement. The PowerShell boundary applies the envelope schema;

@@ -124,7 +124,7 @@ sub load_inventory {
     # Internal view for the existing comparator; no legacy receipt is written.
     my $evidence = {
       article=>{map { $_=>$record->{article}{$_} } qw(slug directory treeSha256)}, entrypoint=>$record->{article}{entrypoint},
-      sourceTree=>$record->{article}{sourceTree},
+      sourceTree=>($c->{details}{sourceTree} || $record->{article}{sourceTree}),
       engine=>$record->{producer}{engine}, engineVersion=>$c->{engine}{version}, engineCommit=>$c->{engine}{commit},
       status=>($ok ? 'ok' : 'failed'), counts=>$c->{counts}, details=>$c->{details}
     };
