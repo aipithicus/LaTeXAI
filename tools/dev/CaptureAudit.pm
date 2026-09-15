@@ -149,6 +149,9 @@ sub review_case_issues {
   push @errors, 'transition-prior-residual'
     unless $baseline && object_hash($entry->{prior_residual}) eq object_hash($baseline->{residual});
   my $expected = $entry->{expected} || '';
+  # A matching signature does not prove that a transition occurred. Leave a
+  # no-op entry unused so both the observer and the run-level gate reject it.
+  push @errors, 'transition-not-observed' unless grep { $_ eq $expected } @$raw;
   if ($expected eq 'removed-residual') {
     if ($current->{different}) {
       return ([@$raw, @errors, 'transition-unsatisfied'], undef); }

@@ -34,19 +34,8 @@ sub without_capture {
   my $copy = $dom->cloneNode(1);
   my $xc   = _xpath($copy);
   foreach my $node ($xc->findnodes('/*/capture:ledger')) {
-    my $prev = $node->previousSibling;
-    my $next = $node->nextSibling;
-    $node->unbindNode;
-    # Pretty-printed capture-on XML keeps whitespace around the ledger.
-    # That is not manuscript text. A following newline after a comment
-    # has no counterpart: off XML glues the comment to </document>.
-    if ($prev && $prev->nodeType == XML_TEXT_NODE && $prev->data =~ /\A\s*\z/) {
-      my $before = $prev->previousSibling;
-      $prev->unbindNode;
-      $prev = $before; }
-    if ($next && $next->nodeType == XML_TEXT_NODE && $next->data =~ /\A\s*\z/
-        && $prev && $prev->nodeType == XML_COMMENT_NODE) {
-      $next->unbindNode; } }
+    # Ledger adjacency does not identify serializer-owned whitespace.
+    $node->unbindNode; }
   foreach my $attr ($xc->findnodes('//@capture:*')) {
     $attr->ownerElement->removeAttributeNS($CAPTURE_NS, $attr->localname); }
   # Canonicalize the clone directly. Re-parsing a serialization here would

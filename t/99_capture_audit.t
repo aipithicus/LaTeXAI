@@ -72,11 +72,27 @@ for my $root ('ltx:custom', 'foreign:document', 'document') {
 {
   my $plain = xml(qq{<document xmlns="$ns" xmlns:c="$capture"><bibliography/>\n</document>});
   my $pretty = xml(qq{<document xmlns="$ns" xmlns:c="$capture"><bibliography/>\n  <c:ledger><c:math total="0"/></c:ledger>\n</document>});
-  is(without_capture($pretty), without_capture($plain), 'pretty-printed ledger indent is not manuscript text');
+  isnt(without_capture($pretty), without_capture($plain), 'unproven ledger indentation remains an observable difference');
   my $comment_plain = xml(qq{<document xmlns="$ns" xmlns:c="$capture"><bibliography/>\n<!-- x --></document>});
   my $comment_pretty = xml(qq{<document xmlns="$ns" xmlns:c="$capture"><bibliography/>\n<!-- x -->\n  <c:ledger><c:math total="0"/></c:ledger>\n</document>});
-  is(without_capture($comment_pretty), without_capture($comment_plain),
-    'pretty-printed ledger newline after a trailing comment is not manuscript text');
+  isnt(without_capture($comment_pretty), without_capture($comment_plain),
+    'a trailing comment does not prove neighboring whitespace is formatting');
+  for my $case (
+    ['trailing space', '<text>word</text>', ' ', ''],
+    ['mixed content', '<text>word</text>', "\n\t ", ' next'],
+    ['after comment', '<!--keep-->', ' ', "\n"],
+    ['nonbreaking space', '<text>word</text>', '&#160;', ''],
+    ['whitespace-only root', '', " \n", "\t "]) {
+    my ($label, $body, $before, $after) = @$case;
+    my $prefix = qq{<document xmlns="$ns" xmlns:c="$capture" xml:space="preserve">};
+    my $captured = xml($prefix . $body . $before . '<c:ledger/>' . $after . '</document>');
+    my $expected = xml($prefix . $body . $before . $after . '</document>');
+    my $deleted = xml($prefix . $body . $after . '</document>');
+    my $original = $captured->toString;
+    is(without_capture($captured), without_capture($expected), "$label beside ledger survives exactly");
+    isnt(without_capture($captured), without_capture($deleted), "$label deletion cannot qualify as parity");
+    is($captured->toString, $original, "$label control preserves input DOM");
+  }
 }
 XML::LibXML->new(no_blanks => 1)->load_xml(string => '<root><child/></root>');
 isnt(without_capture($off), without_capture($no_space), 'another parser cannot silently disable audit whitespace');
@@ -271,6 +287,64 @@ isnt(without_capture($off), without_capture($no_space), 'another parser cannot s
   write_raw("$parity[1]/jobs/p-one/p.xml", $drift);
   my ($swapped) = $compare->('corpus-parity-swapped', file_hash("$parity[1]/run.json"), 'parity', $parity[1], $parity[0]);
   isnt($swapped, 0, 'parity mode requires capture-off baseline and capture-on candidate');
+
+  # Nonempty file-based controls exercise the public comparator, including both
+  # kinds of byte-addressed evidence. Hand-authored XML avoids blessing a golden.
+  my $source_bytes = 'source + callsite';
+  make_path($source);
+  write_raw("$source/p.tex", $source_bytes);
+  for my $i (0, 1) {
+    my $job = "$parity[$i]/jobs/p-one";
+    my $receipt = read_json("$job/receipt.json");
+    $receipt->{counts}{mathElements} = 2;
+    write_json("$job/receipt.json", $receipt);
+    my $doc = $documents[$i]->cloneNode(1);
+    if ($i) { $doc->documentElement->setAttributeNS($capture, 'capture:base', $source); }
+    for my $kind (qw(source callsite-only)) {
+      my $math = $doc->createElementNS($ns, 'Math');
+      $math->setAttribute('xml:id', $kind);
+      $math->setAttribute('tex', $kind);
+      if ($i) {
+        my %attrs = (provenance => $kind);
+        if ($kind eq 'source') { @attrs{qw(file byteStart byteEnd source)} = ('p.tex', 0, 6, 'source'); }
+        else { @attrs{qw(callsiteFile callsiteStart callsiteEnd callsite)} = ('p.tex', 9, 17, 'callsite'); }
+        $math->setAttributeNS($capture, "capture:$_", $attrs{$_}) for keys %attrs;
+      }
+      $doc->documentElement->appendChild($math);
+    }
+    if ($i) {
+      my $ledger = $doc->createElementNS($capture, 'capture:ledger');
+      my $math = $doc->createElementNS($capture, 'capture:math');
+      $math->setAttribute($_, 0) for qw(crossSource unlocated);
+      $math->setAttribute($_, 1) for qw(source callsiteOnly);
+      $math->setAttribute('total', 2);
+      $ledger->appendChild($math); $doc->documentElement->appendChild($ledger);
+    }
+    write_raw("$job/p.xml", $doc->toString(0));
+  }
+  my $pair_identity = object_hash(tree_hashes(@parity));
+  my ($nonempty_status, $nonempty_report) = $compare->('corpus-nonempty', $off_pin, 'parity', @parity);
+  is($nonempty_status, 0, 'compact parity with source and callsite evidence qualifies') or diag(read_raw("$temp/corpus-nonempty.log"));
+  my $nonempty = read_json($nonempty_report);
+  is_deeply($nonempty->{papers}[0]{after}{classes}, { source => 1, 'callsite-only' => 1 }, 'both carrier kinds are inspected');
+  is($nonempty->{papers}[0]{after}{source_ranges_checked}, 1, 'nonempty source range is checked');
+  my $on_file = "$parity[1]/jobs/p-one/p.xml";
+  my $on_bytes = read_raw($on_file);
+  for my $control (
+    ['ledger-space', sub { $_[0] =~ s/<capture:ledger/ <capture:ledger/ }, 'non-capture-tree'],
+    ['ledger-comment-space', sub { $_[0] =~ s/<capture:ledger/<!--keep--> \n<capture:ledger/ }, 'non-capture-tree'],
+    ['source-bytes', sub { $_[0] =~ s/capture:source="source"/capture:source="wrong"/ }, 'bytes:source'],
+    ['callsite-bytes', sub { $_[0] =~ s/capture:callsite="callsite"/capture:callsite="wrong"/ }, 'bytes:callsite-only']) {
+    my ($name, $mutate, $issue) = @$control;
+    my $changed = $on_bytes;
+    ok($mutate->($changed), "$name mutation applies");
+    write_raw($on_file, $changed);
+    my ($status, $report) = $compare->("corpus-$name", $off_pin, 'parity', @parity);
+    isnt($status, 0, "$name fails the corpus CLI");
+    like(join(' ', @{ read_json($report)->{issues} }), qr/\Q$issue\E/, "$name has the expected gate issue");
+  }
+  write_raw($on_file, $on_bytes);
+  is(object_hash(tree_hashes(@parity)), $pair_identity, 'nonempty comparisons preserve restored input bytes');
 }
 
 sub read_json_after_clone { return JSON::PP->new->utf8->decode(json_bytes($_[0])); }
@@ -377,6 +451,40 @@ like(join(' ', @$unsat), qr/transition-unsatisfied/, 'a remaining difference can
 }
 my ($clean_status, $clean_report, $clean_dir) = prove_driver('clean', undef, 'stable');
 is($clean_status, 0, 'equal pair can establish a baseline');
+my @noop_runs;
+for my $control (
+  ['remove-clean', $clean_dir, $clean_report->{cases}{$keys[0]}, 'stable', 'removed-residual'],
+  ['change-known', $base_dir, $base_case, 'known', 'changed-residual'],
+  ['change-clean', $clean_dir, $clean_report->{cases}{$keys[0]}, 'stable', 'changed-residual']) {
+  my ($name, $prior_dir, $prior, $residual, $expected) = @$control;
+  my $noop = { %$accept, entries => [{ %{ $accept->{entries}[0] },
+        prior_residual => $prior->{residual}, expected => $expected, expected_residual => $prior->{residual} }] };
+  my $raw = compare_case($prior, $prior);
+  is_deeply($raw, [], "$name has no actual transition");
+  my ($issues, $reviewed) = review_case_issues($noop, 'v1-driver.t', $keys[0], $prior, $prior, $raw);
+  like(join(' ', @$issues), qr/transition-not-observed/, "$name review is rejected");
+  ok(!defined $reviewed, "$name is not recorded as applied");
+  local $ENV{LATEXAI_AUDIT_TRANSITIONS} = "$temp/$name.json";
+  write_json($ENV{LATEXAI_AUDIT_TRANSITIONS}, $noop);
+  my ($status, $report, $out) = prove_driver($name, $prior_dir, $residual);
+  isnt($status, 0, "$name fails through the real observer");
+  like(join(' ', @{ $report->{issues} }), qr/transition-not-observed/, "$name reports the absent transition");
+  is_deeply($report->{reviewed_transitions} || [], [], "$name observer consumes no review");
+  push @noop_runs, [$prior_dir, $out, $ENV{LATEXAI_AUDIT_TRANSITIONS}, $noop];
+}
+{
+  my $changed_case = $changed_report->{cases}{$keys[0]};
+  my $accept_change = { %$accept, entries => [{ %{ $accept->{entries}[0] },
+        expected => 'changed-residual', expected_residual => $changed_case->{residual} }] };
+  my ($issues, $reviewed) = review_case_issues($accept_change, 'v1-driver.t', $keys[0],
+    $base_case, $changed_case, compare_case($base_case, $changed_case));
+  is_deeply($issues, [], 'a real hash-pinned changed residual can be reviewed');
+  is_deeply($reviewed->{raw}, ['changed-residual'], 'changed review records the actual raw transition');
+  my ($drift_issues, $drift_review) = review_case_issues($accept_change, 'v1-driver.t', $keys[0],
+    $base_case, $changed_case, ['changed-residual', 'changed-driver-diagnostics']);
+  is_deeply($drift_issues, ['changed-driver-diagnostics'], 'review does not clear unrelated diagnostic drift');
+  ok(!defined $drift_review, 'diagnostic drift prevents recording an applied review');
+}
 my ($new_status, $new_report) = prove_driver('new-difference', $clean_dir, 'known');
 isnt($new_status, 0, 'new capture difference fails');
 like(join(' ', @{ $new_report->{issues} }), qr/new-residual/, 'new residual is identified');
@@ -437,6 +545,16 @@ is(object_hash(tree_hashes($base_dir)), $baseline_hash, 'all successful and fail
 my $state = { root => 'test', perl => {}, environment => {}, files => {} };
 my $run = finish_run($base_dir, ['v1-driver.t'], undef, 0, $state, $state);
 ok($run->{qualified}, 'completed ordinary and audit observations qualify a record');
+finish_run($clean_dir, ['v1-driver.t'], undef, 0, $state, $state);
+for my $noop (@noop_runs) {
+  my ($prior_dir, $out, $path, $entry) = @$noop;
+  $entry->{baseline_run_sha256} = file_hash("$prior_dir/run.json");
+  write_json($path, $entry);
+  local $ENV{LATEXAI_AUDIT_TRANSITIONS} = $path;
+  my $verdict = finish_run($out, ['v1-driver.t'], $prior_dir, 0, $state, $state);
+  ok(!$verdict->{qualified}, 'a no-op transition cannot qualify the complete run');
+  like(join(' ', @{ $verdict->{issues} }), qr/unused-transition/, 'unconsumed no-op review fails the aggregate gate');
+}
 {
   # A legacy canonical pair retains the ledger under a foreign root. Re-strip
   # both sides without recreating the engine run or adopting candidate output.
