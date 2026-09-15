@@ -15,12 +15,13 @@ use Getopt::Long qw(GetOptions);
 use CaptureRuntime qw(project_searchpaths);
 use Encode qw(decode encode FB_DEFAULT);
 use JSON::PP;
-my ($baseline_root, $current_root, $output, $projection_pin, $mode);
+my ($baseline_root, $current_root, $output, $projection_pin, $mode, $model_path, $model_pin);
 GetOptions('baseline=s' => \$baseline_root, 'candidate=s' => \$current_root,
-  'output=s' => \$output, 'project-baseline=s' => \$projection_pin, 'mode=s' => \$mode)
+  'output=s' => \$output, 'project-baseline=s' => \$projection_pin, 'mode=s' => \$mode,
+  'whitespace-model=s' => \$model_path, 'whitespace-model-sha256=s' => \$model_pin)
   or die "Invalid arguments\n";
 $mode = 'replay' unless defined $mode;
-die "usage: capture-corpus-audit.pl --baseline RUN --candidate RUN --output NEW_DIR [--mode replay|parity] [--project-baseline RUN_SHA256]\n"
+die "usage: capture-corpus-audit.pl --baseline RUN --candidate RUN --output NEW_DIR [--mode replay|parity] [--project-baseline RUN_SHA256] [--whitespace-model FILE --whitespace-model-sha256 SHA256]\n"
   unless $baseline_root && $current_root && $output && !@ARGV;
 die "Unknown mode\n" unless $mode eq 'replay' || $mode eq 'parity';
 $baseline_root = abs_path($baseline_root) or die "Baseline missing\n";
@@ -33,6 +34,15 @@ for my $input ($baseline_root, $current_root) {
 my $source_pin = file_hash("$baseline_root/run.json");
 die "Wrong baseline pin\n" if defined($projection_pin) && $projection_pin ne $source_pin;
 my %input_hashes;
+my $whitespace;
+if (defined($model_path) || defined($model_pin)) {
+  die "Whitespace normalization requires model, model pin and baseline pin\n"
+    unless defined($model_path) && defined($model_pin) && defined($projection_pin);
+  require CaptureWhitespace;
+  $whitespace = CaptureWhitespace::load_whitespace_model($model_path, $model_pin);
+  $input_hashes{$whitespace->{contract}{model_path}} = $model_pin;
+  @input_hashes{keys %{$whitespace->{contract}{implementation}}} = values %{$whitespace->{contract}{implementation}};
+}
 sub retained_json {
   my ($path) = @_;
   $input_hashes{$path} = file_hash($path);
@@ -124,10 +134,18 @@ sub inspect {
   CaptureAudit::write_raw("$stem.stripped.xml", encode('UTF-8', $stripped));
   my $projected = $projection ? without_capture($projection->{document}) : $stripped;
   CaptureAudit::write_raw("$stem.projected.xml", encode('UTF-8', $projected));
+  my ($normalization, $normalized);
+  if ($whitespace) {
+    $normalization = CaptureWhitespace::normalize_formatting($projection ? $projection->{document} : $doc, $whitespace);
+    $normalized = without_capture($normalization->{document});
+    CaptureAudit::write_raw("$stem.normalized.xml", encode('UTF-8', $normalized));
+  }
   return { path => $path, xml_sha256 => file_hash($path), carriers => \%carriers,
     classes => \%classes, groups => \%groups, source_hashes => \%source_hashes,
     math_tex => \%math_tex, processing_instructions => \@instructions,
     projected_sha256 => object_hash($projected),
+    comparison_sha256 => object_hash(defined($normalized) ? $normalized : $projected),
+    normalization => $normalization ? $normalization->{record} : undef,
     runtime_projection => $projection ? { map { $_ => $projection->{$_} } qw(identity before after) } : undef,
     source_ranges_checked => $checked, stripped_sha256 => object_hash($stripped), issues => \@issues };
 }
@@ -194,7 +212,7 @@ for my $slug (sort keys %{ $inventories[0] }) {
   $after->{receipt_counts} = $new_receipt->{counts};
   my @changes;
   push @issues, "$slug:$_" for @{ $before->{issues} }, @{ $after->{issues} };
-  push @issues, "$slug:non-capture-tree" unless $before->{projected_sha256} eq $after->{projected_sha256};
+  push @issues, "$slug:non-capture-tree" unless $before->{comparison_sha256} eq $after->{comparison_sha256};
   if (defined($projection_pin) && $before->{runtime_projection} && $after->{runtime_projection}) {
     my $left = $parity ? identity_without_capture($before->{runtime_projection}{identity})
       : $before->{runtime_projection}{identity};
@@ -222,15 +240,17 @@ for my $slug (sort keys %{ $inventories[0] }) {
   }
   push @papers, { paper => $slug, before => $before, after => $after, changes => \@changes, derived_counts => \@derived_counts,
     exact_document_equal => $before->{stripped_sha256} eq $after->{stripped_sha256} ? JSON::PP::true : JSON::PP::false,
-    projected_document_equal => $before->{projected_sha256} eq $after->{projected_sha256} ? JSON::PP::true : JSON::PP::false };
+    projected_document_equal => $before->{projected_sha256} eq $after->{projected_sha256} ? JSON::PP::true : JSON::PP::false,
+    comparison_document_equal => $before->{comparison_sha256} eq $after->{comparison_sha256} ? JSON::PP::true : JSON::PP::false };
 }
 for my $path (sort keys %input_hashes) {
   push @issues, "input-changed:$path" unless file_hash($path) eq $input_hashes{$path};
 }
 my $exact_differences = scalar(grep { !$_->{exact_document_equal} } @papers);
-write_json("$output/comparison.json", { schema => 'latexai/corpus-comparison/2',
+write_json("$output/comparison.json", { schema => 'latexai/corpus-comparison/3',
   mode => $mode, baseline => $baseline_root, candidate => $current_root,
   baseline_projection => defined($projection_pin) ? { source_run_sha256 => $source_pin } : undef,
+  normalization => $whitespace ? $whitespace->{contract} : undef,
   inputs => \%input_hashes, comparator => CaptureAudit::tree_hashes(qw(tools/dev/capture-corpus-audit.pl tools/dev/CaptureRuntime.pm tools/dev/CaptureStrip.pm tools/dev/CaptureAudit.pm)),
   papers => \@papers, exact_document_differences => $exact_differences,
   issues => \@issues, qualified => @issues ? JSON::PP::false : JSON::PP::true });
@@ -238,7 +258,7 @@ for my $paper (@papers) {
   if ($parity) {
     printf "%s: %d math, tree=%s\n", $paper->{paper},
       scalar(keys %{ $paper->{after}{math_tex} }),
-      $paper->{projected_document_equal} ? 'equal' : 'differ';
+      $paper->{comparison_document_equal} ? 'equal' : 'differ';
   }
   else {
     printf "%s: %d carriers, %d changed capture records, %d source ranges checked\n", $paper->{paper},

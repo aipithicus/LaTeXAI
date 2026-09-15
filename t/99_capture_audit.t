@@ -201,12 +201,13 @@ isnt(without_capture($off), without_capture($no_space), 'another parser cannot s
   }
   my $retained = object_hash(tree_hashes($roots[0]));
   my $compare = sub {
-    my ($name, $pin, $mode, $left, $right) = @_;
+    my ($name, $pin, $mode, $left, $right, $normalization) = @_;
     my @args = ($^X, '-I', 'lib', 'tools/dev/capture-corpus-audit.pl',
       '--baseline', $left || $roots[0], '--candidate', $right || $roots[1],
       '--output', "$temp/$name");
     push @args, '--project-baseline', $pin if defined $pin;
     push @args, '--mode', $mode if defined $mode;
+    push @args, @$normalization if $normalization;
     my ($stdout, $stderr);
     run3(\@args, undef, \$stdout, \$stderr);
     my $status = $?;
@@ -345,6 +346,62 @@ isnt(without_capture($off), without_capture($no_space), 'another parser cannot s
   }
   write_raw($on_file, $on_bytes);
   is(object_hash(tree_hashes(@parity)), $pair_identity, 'nonempty comparisons preserve restored input bytes');
+
+  my $model_file = 'lib/LaTeXML/resources/RelaxNG/LaTeXML.model';
+  my @normalization = ('--whitespace-model', $model_file, '--whitespace-model-sha256', file_hash($model_file));
+  # The normalization contract requires admitted children. Give these
+  # deliberately minimal earlier fixtures their declared structural wrappers.
+  my @before_normalization = map { read_raw("$_/jobs/p-one/p.xml") } @parity;
+  for my $i (0, 1) {
+    my $doc = xml($before_normalization[$i]);
+    my $root = $doc->documentElement;
+    my @children = $root->childNodes;
+    my $para = $doc->createElementNS($ns, 'para');
+    $root->insertBefore($para, $children[0]);
+    for my $child (@children) {
+      next unless $child->nodeType == XML_ELEMENT_NODE && ($child->namespaceURI || '') eq $ns;
+      if ($child->localname eq 'Math') {
+        my $equation = $doc->createElementNS($ns, 'equation');
+        $para->appendChild($equation); $equation->appendChild($child);
+      }
+      else { $para->appendChild($child); }
+    }
+    write_raw("$parity[$i]/jobs/p-one/p.xml", $doc->toString(0));
+  }
+  my $formatted = read_raw($on_file) =~ s/<capture:ledger/ \n<capture:ledger/r;
+  write_raw($on_file, $formatted);
+  my $formatted_pin = object_hash(tree_hashes(@parity));
+  my ($normalized_status, $normalized_report) = $compare->('corpus-normalized', $off_pin, 'parity', @parity, \@normalization);
+  is($normalized_status, 0, 'explicit model formatting qualifies the nonempty off/on pair') or diag(read_raw("$temp/corpus-normalized.log"));
+  my $normalized = read_json($normalized_report);
+  is($normalized->{schema}, 'latexai/corpus-comparison/3', 'new comparison contract is versioned');
+  is($normalized->{normalization}{model_sha256}, file_hash($model_file), 'comparison pins its selected model');
+  ok(!$normalized->{papers}[0]{projected_document_equal}, 'unnormalized path projection difference remains visible');
+  ok($normalized->{papers}[0]{comparison_document_equal}, 'normalized equality is a separate observation');
+  ok(-f "$temp/corpus-normalized/p.candidate.normalized.xml", 'compared normalized XML is retained');
+  is(object_hash(tree_hashes(@parity)), $formatted_pin, 'normalization preserves every input artifact');
+  for my $control (
+    ['prose', sub { $_[0] =~ s/a b/ab/ }, 'non-capture-tree'],
+    ['preserve', sub { $_[0] =~ s/<document /<document xml:space="preserve" / }, 'non-capture-tree'],
+    ['comment', sub { $_[0] =~ s/<capture:ledger/<!--keep--><capture:ledger/ }, 'non-capture-tree'],
+    ['source', sub { $_[0] =~ s/capture:source="source"/capture:source="wrong"/ }, 'bytes:source'],
+    ['callsite', sub { $_[0] =~ s/capture:callsite="callsite"/capture:callsite="wrong"/ }, 'bytes:callsite-only']) {
+    my ($name, $mutate, $issue) = @$control;
+    my $changed = $formatted;
+    ok($mutate->($changed), "normalized $name mutation applies");
+    write_raw($on_file, $changed);
+    my ($status, $report) = $compare->("normalized-$name", $off_pin, 'parity', @parity, \@normalization);
+    isnt($status, 0, "normalized $name drift fails the public comparator");
+    like(join(' ', @{read_json($report)->{issues}}), qr/\Q$issue\E/, "normalized $name has its expected gate issue");
+  }
+  write_raw($on_file, $formatted);
+  my @wrong_model = (@normalization[0..2], '0' x 64);
+  my ($wrong_model_status) = $compare->('normalized-wrong-model', $off_pin, 'parity', @parity, \@wrong_model);
+  isnt($wrong_model_status, 0, 'public comparator rejects a wrong model hash');
+  my ($missing_baseline_pin) = $compare->('normalized-no-baseline-pin', undef, 'parity', @parity, \@normalization);
+  isnt($missing_baseline_pin, 0, 'normalization requires explicit pinned baseline interpretation');
+  write_raw("$parity[$_]/jobs/p-one/p.xml", $before_normalization[$_]) for 0, 1;
+  is(object_hash(tree_hashes(@parity)), $pair_identity, 'normalization controls restore all fixture inputs');
 }
 
 sub read_json_after_clone { return JSON::PP->new->utf8->decode(json_bytes($_[0])); }
