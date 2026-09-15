@@ -10,7 +10,7 @@
 package LaTeXML::Core::SourceRegistry;
 use strict;
 use warnings;
-use Encode qw(decode encode FB_CROAK FB_DEFAULT);
+use LaTeXML::Core::Mouth ();
 use File::Basename qw(dirname);
 use File::Spec;
 use LaTeXML::Util::Pathname;
@@ -49,7 +49,8 @@ sub registerSource {
     id       => $id,
     kind     => $kind,
     display  => $display,
-    encoding => $options{encoding} || 'UTF-8',
+    encoding => (exists $options{encoding} ? $options{encoding} : 'UTF-8'),
+    substitute => (exists $options{substitute} ? $options{substitute} : 1),
     raw      => '',
     lines    => [],
   };
@@ -81,132 +82,58 @@ sub appendRaw {
     my $content_end  = $record_start + length($content);
     my $record_end   = $chunk_start + $match_end;
     push(@records, $self->_makeLineRecord($entry, $content, $terminator,
-        $record_start, $content_end, $record_end));
+        $record_start, $content_end, $record_end, $options{defer_decode}));
     $cursor = $match_end; }
   my $remainder = substr($chunk, $cursor);
   if (length($remainder)) {
     my $record_start = $chunk_start + $cursor;
     my $record_end   = $record_start + length($remainder);
     push(@records, $self->_makeLineRecord($entry, $remainder, '',
-        $record_start, $record_end, $record_end)); }
+        $record_start, $record_end, $record_end, $options{defer_decode})); }
   push(@{ $$entry{lines} }, @records);
   return @records; }
 
 sub _makeLineRecord {
-  my ($self, $entry, $raw, $terminator, $raw_start, $content_end, $raw_end) = @_;
-  my ($decoded, $units) = $self->_decodeWithMap($entry, $raw, $raw_start, 1);
+  my ($self, $entry, $raw, $terminator, $raw_start, $content_end, $raw_end, $defer) = @_;
+  my $record = {
+    rawStart => $raw_start, rawContentEnd => $content_end,
+    rawEnd => $raw_end, terminator => $terminator,
+  };
+  $self->decodeLine($$entry{id}, $record, $$entry{encoding}) unless $defer;
+  return $record; }
+
+# File input can change encoding between logical lines, even within a single
+# CR-delimited read. Record bytes when read, but decode only when consumed.
+sub decodeLine {
+  my ($self, $id, $record, $encoding) = @_;
+  my $entry = $$self{entries}{$id};
+  my $raw_start = $$record{rawStart};
+  my $raw = substr($$entry{raw}, $raw_start, $$record{rawContentEnd} - $raw_start);
+  my ($decoded, $units, $count) = $self->_decodeWithMap(
+    { %$entry, encoding => $encoding }, $raw, $raw_start, 1);
   my @graphemes = ($decoded =~ /\X/g);
-  my @spans = ();
+  my @spans;
   my $unit_index = 0;
   foreach my $grapheme (@graphemes) {
-    my @characters = ($grapheme =~ /./sg);
-    my $count = scalar(@characters);
-    if ($count && defined $$units[$unit_index]) {
-      push(@spans, {
-          byteStart => $$units[$unit_index]{byteStart},
-          byteEnd   => $$units[$unit_index + $count - 1]{byteEnd},
-        }); }
-    else {
-      push(@spans, { byteStart => $raw_start, byteEnd => $raw_start }); }
+    my $count = length($grapheme);
+    push(@spans, {
+        byteStart => $$units[$unit_index]{byteStart},
+        byteEnd => $$units[$unit_index + $count - 1]{byteEnd},
+      });
     $unit_index += $count; }
-  return {
-    decoded       => $decoded,
-    graphemes     => \@graphemes,
-    spans         => \@spans,
-    rawStart      => $raw_start,
-    rawContentEnd => $content_end,
-    rawEnd        => $raw_end,
-    terminator    => $terminator,
-  }; }
+  @{$record}{qw(decoded graphemes spans substitutions)} = ($decoded, \@graphemes, \@spans, $count);
+  return $record; }
 
 sub _decodeWithMap {
   my ($self, $entry, $raw, $absolute_start, $record_events) = @_;
-  my $encoding = $$entry{encoding} || 'UTF-8';
-  return $self->_decodeUTF8WithMap($entry, $raw, $absolute_start, $record_events)
-    if $encoding =~ /^utf-?8$/i;
-
-  my $decode_input = $raw;
-  my $decoded = decode($encoding, $decode_input, FB_DEFAULT);
-  my @characters = ($decoded =~ /./sg);
-  my @units = ();
-  my $cursor = 0;
-  my $result = '';
-  for (my $i = 0 ; $i < scalar(@characters) ; $i++) {
-    my $character = $characters[$i];
-    my ($start, $end) = ($cursor, $cursor);
-    if ($character eq "\x{FFFD}") {
-      $end = $cursor + 1;
-      # Find the next reversible character when possible; this groups the
-      # exact offending byte run consumed into this replacement.
-      if ($i + 1 < scalar(@characters) && $characters[$i + 1] ne "\x{FFFD}") {
-        my $next_character = $characters[$i + 1];
-        my $next = eval { encode($encoding, $next_character, FB_CROAK) };
-        if (defined $next) {
-          my $found = index($raw, $next, $cursor + 1);
-          $end = $found if $found >= 0; } }
-      $end = length($raw) if $end > length($raw);
-      $character = ' ';
-      $self->_recordSubstitution($entry, $absolute_start + $start, $absolute_start + $end)
-        if $record_events; }
-    else {
-      my $encode_input = $character;
-      my $encoded = eval { encode($encoding, $encode_input, FB_CROAK) };
-      $encoded = '' unless defined $encoded;
-      $end = $cursor + length($encoded);
-      $end = length($raw) if $end > length($raw); }
-    push(@units, { byteStart => $absolute_start + $start, byteEnd => $absolute_start + $end });
-    $cursor = $end;
-    $result .= $character; }
-  return ($result, \@units); }
-
-sub _decodeUTF8WithMap {
-  my ($self, $entry, $raw, $absolute_start, $record_events) = @_;
-  my @units = ();
-  my $decoded = '';
-  my $length = length($raw);
-  my $cursor = 0;
-  while ($cursor < $length) {
-    my $b0 = ord(substr($raw, $cursor, 1));
-    my $width = 0;
-    if ($b0 <= 0x7F) { $width = 1; }
-    elsif ($b0 >= 0xC2 && $b0 <= 0xDF && $cursor + 1 < $length) {
-      my $b1 = ord(substr($raw, $cursor + 1, 1));
-      $width = 2 if $b1 >= 0x80 && $b1 <= 0xBF; }
-    elsif ($b0 >= 0xE0 && $b0 <= 0xEF && $cursor + 2 < $length) {
-      my $b1 = ord(substr($raw, $cursor + 1, 1));
-      my $b2 = ord(substr($raw, $cursor + 2, 1));
-      my $valid_b1 = ($b0 == 0xE0 ? ($b1 >= 0xA0 && $b1 <= 0xBF)
-        : ($b0 == 0xED ? ($b1 >= 0x80 && $b1 <= 0x9F)
-          : ($b1 >= 0x80 && $b1 <= 0xBF)));
-      $width = 3 if $valid_b1 && $b2 >= 0x80 && $b2 <= 0xBF; }
-    elsif ($b0 >= 0xF0 && $b0 <= 0xF4 && $cursor + 3 < $length) {
-      my $b1 = ord(substr($raw, $cursor + 1, 1));
-      my $b2 = ord(substr($raw, $cursor + 2, 1));
-      my $b3 = ord(substr($raw, $cursor + 3, 1));
-      my $valid_b1 = ($b0 == 0xF0 ? ($b1 >= 0x90 && $b1 <= 0xBF)
-        : ($b0 == 0xF4 ? ($b1 >= 0x80 && $b1 <= 0x8F)
-          : ($b1 >= 0x80 && $b1 <= 0xBF)));
-      $width = 4 if $valid_b1
-        && $b2 >= 0x80 && $b2 <= 0xBF && $b3 >= 0x80 && $b3 <= 0xBF; }
-
-    my ($character, $end);
-    if ($width) {
-      $end = $cursor + $width;
-      my $bytes = substr($raw, $cursor, $width);
-      $character = decode('UTF-8', $bytes, FB_CROAK); }
-    else {
-      # Encode's UTF-8 decoder replaces each malformed leading byte.  Keeping
-      # that one-byte interval is what makes the substitution event auditable.
-      $end = $cursor + 1;
-      $character = "\x{FFFD}"; }
-    if ($character eq "\x{FFFD}") {
-      $character = ' ';
-      $self->_recordSubstitution($entry, $absolute_start + $cursor, $absolute_start + $end)
-        if $record_events; }
-    $decoded .= $character;
-    push(@units, { byteStart => $absolute_start + $cursor, byteEnd => $absolute_start + $end });
-    $cursor = $end; }
-  return ($decoded, \@units); }
+  my ($decoded, $count, $units, $substitutions) = LaTeXML::Core::Mouth::decodeInput(
+    $raw, $$entry{encoding}, map => 1, substitute => $$entry{substitute});
+  foreach my $unit (@$units) {
+    $$unit{byteStart} += $absolute_start;
+    $$unit{byteEnd} += $absolute_start; }
+  if ($record_events) {
+    $self->_recordSubstitution($entry, $$_{byteStart}, $$_{byteEnd}) foreach @$substitutions; }
+  return ($decoded, $units, $count); }
 
 sub _recordSubstitution {
   my ($self, $entry, $start, $end) = @_;

@@ -78,6 +78,8 @@ A binding that replaces an existing passthrough or hybrid keeps the same case na
 
 `t/45_capture.t` is a bespoke driver, not a `latexml_tests` suite. Its fixtures under `t/capture/` exist to exercise provenance, byte custody, the ledger, and the schema, and its goldens are normalized only for the portable base path and build revision. Cases that need a binding load one from `lib/`; they do not duplicate the binding's structural assertions.
 
+`t/46_source_fidelity.t` checks the ordinary and capture readers against the same active encoding, including changes within an open file, malformed UTF-8 groups, and already-decoded strings. It checks byte spans and diagnostic counts independently. Fresh conversions then serialize and reparse LF, CRLF and CR sources and compare every captured formula or callsite with its recorded byte range, including nested `equation`/`aligned` and bracket displays. These assertions cover the actual Core serializer, not a LibXML substitute.
+
 `tools/dev/capture-fixture.pl --golden <source.tex> <golden.xml>` writes a capture golden with this driver's configuration and normalization. Run it with the repository Perl and `-I lib`, in a fresh process: package definitions can produce redefinition warnings across repeated engine states. The helper refuses any engine warning or error. Without `--golden` it writes the unnormalized capture document for assertions and schema validation.
 
 Use `--compact` for tree-comparison inputs and load them with `keep_blanks => 1`. This prevents serializer indentation and parser defaults from being confused with manuscript whitespace. Goldens retain their existing formatting and normalization.

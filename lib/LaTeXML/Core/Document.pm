@@ -847,6 +847,7 @@ sub serialize_attr {
   $string = serialize_string($string);
   # And escape any remaining special code points
   $string =~ s/"/&quot;/g;
+  $string =~ s/\r/&#13;/gs;
   $string =~ s/\n/&#10;/gs;
   $string =~ s/\t/&#9;/gs;
   return $string; }

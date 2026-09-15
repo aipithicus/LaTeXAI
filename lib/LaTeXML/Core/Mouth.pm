@@ -72,39 +72,67 @@ sub new {
 
 sub openString {
   my ($self, $string) = @_;
+  my $encoding = $STATE->lookupValue('PERL_INPUT_ENCODING');
+  my $already_decoded = defined($string) && utf8::is_utf8($string);
+  my $raw = $already_decoded ? encode('UTF-8', $string) : $string;
+  if (defined $string && !$already_decoded) {
+    my $substitutions;
+    ($string, $substitutions) = decodeInput($string, $encoding);
+    Info('misdefined', $encoding, $self, "input isn't valid under encoding $encoding")
+      if $substitutions; }
   my $registry = ($STATE && $STATE->lookupValue('CAPTURE_PROVENANCE'))
     ? $STATE->lookupValue('SOURCE_REGISTRY') : undef;
   if ($registry && defined $string
     && (defined $$self{source} || $$self{source_kind} || length($string))) {
-    my $encoding = $STATE->lookupValue('PERL_INPUT_ENCODING') || 'UTF-8';
-    my $raw;
-    if (utf8::is_utf8($string)) {
-      $raw = encode('UTF-8', $string);
-      $encoding = 'UTF-8'; }
-    else {
-      $raw = $string; }
     my $kind = $$self{source_kind}
       || (defined $$self{source} && length($$self{source}) ? 'virtual' : 'literal');
     $$self{source_id} = $registry->registerSource(
-      kind => $kind, display => $$self{source}, encoding => $encoding, raw => $raw);
+      kind => $kind, display => $$self{source}, raw => $raw,
+      encoding => ($already_decoded ? 'UTF-8' : $encoding),
+      substitute => !$already_decoded);
     my @records = $registry->getLines($$self{source_id});
     $$self{buffer}       = [map { $$_{decoded} } @records];
     $$self{line_records} = [@records];
-    $$self{string}       = join('', map { $$_{decoded} . $$_{terminator} } @records);
+    $$self{string}       = $string;
     return; }
-  #  if (0){
-  if (defined $string) {
-    if    (utf8::is_utf8($string)) { }                                    # If already utf7
-    elsif (my $encoding = $STATE->lookupValue('PERL_INPUT_ENCODING')) {
-     # Note that if chars in the input cannot be decoded, they are replaced by \x{FFFD}
-     # I _think_ that for TeX's behaviour we actually should turn such un-decodeable chars in to space(?).
-      $string = decode($encoding, $string, Encode::FB_DEFAULT);
-      if ($string =~ s/\x{FFFD}/ /g) {    # Just remove the replacement chars, and warn (or Info?)
-        Info('misdefined', $encoding, $self, "input isn't valid under encoding $encoding"); } } }
 
   $$self{string} = $string;
   $$self{buffer} = [(defined $string ? splitLines($string) : ())];
   return; }
+
+# Both readers use Encode's replacement policy. Capture additionally records
+# the actual byte groups consumed by its decoder, rather than guessing how
+# many malformed octets produced a replacement character.
+sub decodeInput {
+  my ($raw, $encoding, %options) = @_;
+  my @bad_groups;
+  my $decoded = $raw;
+  if ($encoding) {
+    my $decode_input = $raw;
+    $decoded = $options{map}
+      ? decode($encoding, $decode_input, sub { push(@bad_groups, pack('C*', @_)); return "\x{FFFD}"; })
+      : decode($encoding, $decode_input, Encode::FB_DEFAULT); }
+  my $substitute = $encoding && (!exists $options{substitute} || $options{substitute});
+  my (@units, @substitutions);
+  my $cursor = 0;
+  if ($options{map}) {
+    foreach my $character (split(//, $decoded)) {
+      my $width = 1;
+      if ($encoding) {
+        my $copy = $character;
+        my $encoded = eval { encode($encoding, $copy, Encode::FB_CROAK) };
+        if ($character eq "\x{FFFD}" && @bad_groups
+          && (!defined($encoded) || substr($raw, $cursor, length($encoded)) ne $encoded)) {
+          $width = length(shift(@bad_groups)); }
+        else {
+          die "Cannot map decoded character under $encoding" unless defined $encoded;
+          $width = length($encoded); } }
+      my $span = { byteStart => $cursor, byteEnd => $cursor + $width };
+      push(@units, $span);
+      push(@substitutions, $span) if $substitute && $character eq "\x{FFFD}";
+      $cursor += $width; } }
+  my $count = $substitute ? ($decoded =~ s/\x{FFFD}/ /g) : 0;
+  return ($decoded, $count, \@units, \@substitutions); }
 
 sub initialize {
   my ($self) = @_;

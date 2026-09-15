@@ -46,7 +46,7 @@ sub openFile {
     if (my $registry = $STATE->lookupValue('SOURCE_REGISTRY')) {
       $$self{source_id} = $registry->registerSource(
         kind => 'file', display => $pathname,
-        encoding => ($STATE->lookupValue('PERL_INPUT_ENCODING') || 'UTF-8')); } }
+        encoding => $STATE->lookupValue('PERL_INPUT_ENCODING')); } }
   return; }
 
 sub finish {
@@ -72,24 +72,24 @@ sub getNextLine {
       return; }
     else {
       if ($$self{source_id} && (my $registry = $STATE->lookupValue('SOURCE_REGISTRY'))) {
-        my @records = $registry->appendRaw($$self{source_id}, $line);
-        push(@{ $$self{buffer} }, map { $$_{decoded} } @records);
+        my @records = $registry->appendRaw($$self{source_id}, $line, defer_decode => 1);
         push(@{ $$self{line_records} }, @records); }
-      else {
-        push(@{ $$self{buffer} }, LaTeXML::Core::Mouth::splitLines($line)); } } }
+      push(@{ $$self{buffer} }, LaTeXML::Core::Mouth::splitLines($line)); } }
 
   my $line = shift(@{ $$self{buffer} });
+  my $encoding = $STATE->lookupValue('PERL_INPUT_ENCODING');
+  my $substitutions;
   if ($$self{source_id}) {
-    $$self{current_line_record} = shift(@{ $$self{line_records} }); }
+    my $registry = $STATE->lookupValue('SOURCE_REGISTRY');
+    my $record = shift(@{ $$self{line_records} });
+    $$self{current_line_record} = $registry->decodeLine($$self{source_id}, $record, $encoding);
+    ($line, $substitutions) = @{$record}{qw(decoded substitutions)}; }
   elsif (defined $line) {
-    if (my $encoding = $STATE->lookupValue('PERL_INPUT_ENCODING')) {
-     # Note that if chars in the input cannot be decoded, they are replaced by \x{FFFD}
-     # I _think_ that for TeX's behaviour we actually should turn such un-decodeable chars in to space(?).
-      $line = decode($encoding, $line, Encode::FB_DEFAULT);
-      if ($line =~ s/\x{FFFD}/ /g) {    # Just remove the replacement chars, and warn (or Info?)
-        Info('misdefined', $encoding, $self, "input isn't valid under encoding $encoding"); } } }
+    ($line, $substitutions) = LaTeXML::Core::Mouth::decodeInput($line, $encoding); }
   else {
     $line = ''; }
+  Info('misdefined', $encoding, $self, "input isn't valid under encoding $encoding")
+    if $substitutions;
   return $line; }
 
 sub stringify {
