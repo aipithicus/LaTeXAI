@@ -8,8 +8,8 @@
   TreeSha256) plus the job container (OutDirectory, not yet created) and this
   repository (EngineRoot). The worker runs bin/latexml over the entrypoint,
   keeps every byte it writes inside OutDirectory (log, stdout, stderr, the
-  ltx XML), and leaves receipt.json at the top of OutDirectory with schema
-  codex-scientiae/inventory-receipt/0.1. It exits non-zero when the
+  ltx XML), and publishes worker-owned run.json with schema
+  codex-scientiae/paper-run/1. It exits non-zero when the
   conversion failed. It opens neither article.json nor the inventory.
 
   Contract: the inventory worker contract under CDXSCI_ROOT
@@ -28,6 +28,7 @@ param(
     [Parameter(Mandatory)] [string] $SourceTree,
     [Parameter(Mandatory)] [string] $Entrypoint,
     [Parameter(Mandatory)] [string] $TreeSha256,
+    [Parameter(Mandatory)] [System.Collections.IDictionary] $RunContext,
     [string] $PerlPath = '',
     [string] $EngineVersion = '',
     [string] $EngineCommit = '',
@@ -47,9 +48,28 @@ $startedUtc = [datetime]::UtcNow
 $utf8 = [System.Text.UTF8Encoding]::new($false)
 $engineName = 'latexai'
 $slug = [System.IO.Path]::GetFileName($Article.TrimEnd('\', '/'))
-$receiptPath = Join-Path $OutDirectory 'receipt.json'
+$paperDirectory = [IO.Path]::GetFullPath($OutDirectory)
+Import-Module $RunContext.recordsModule -Force
+$assignment = Get-PaperRunAssignment -Context $RunContext
+foreach ($entry in @{directory=$Article;sourceTree=$SourceTree;entrypoint=$Entrypoint;treeSha256=$TreeSha256}.GetEnumerator()) {
+    if ($assignment.Assignment.article[$entry.Key] -cne $entry.Value) { throw "Worker arguments disagree with assignment: $($entry.Key)" }
+}
+foreach ($key in $assignment.Plan.workerParameters.Keys) {
+    if (-not $PSBoundParameters.ContainsKey($key) -or
+        (ConvertTo-Json -InputObject $PSBoundParameters[$key] -Depth 30 -Compress) -cne
+        (ConvertTo-Json -InputObject $assignment.Plan.workerParameters[$key] -Depth 30 -Compress)) { throw "Worker parameter differs from frozen experiment: $key" }
+}
+if ($assignment.Plan.specification.schema -ne 'latexai/acquisition-plan/1') { throw 'Unsupported LaTeXAI experiment plan' }
+if ($assignment.Plan.specification.conditions.Count -ne 1 -or $assignment.Plan.specification.conditions[0].id -cne 'conversion' -or
+    $assignment.Plan.specification.comparisons.Count -ne 0 -or
+    $assignment.Plan.specification.conditions[0].capture -ne ('--capture' -cin $LatexmlArgument)) { throw 'Unsupported or inconsistent acquisition conditions' }
+$OutDirectory = Join-Path $paperDirectory 'conditions/conversion'
+$payloadSchema = Join-Path $PSScriptRoot 'schemas/paper-experiment.schema.json'
+if ((Get-InventoryFileReference $payloadSchema).sha256 -cne $assignment.Plan.specification.payloadSchema.sha256) { throw 'Payload schema differs from frozen experiment' }
+$terminalWritten = $false
+$nativeResult = $null
 
-function Write-Receipt {
+function Write-LaTeXAIPaperRecord {
     param(
         [Parameter(Mandatory)] [string] $Status,
         [hashtable] $Counts = @{},
@@ -57,28 +77,43 @@ function Write-Receipt {
         [string[]] $Stores = @()
     )
     $endedUtc = [datetime]::UtcNow
-    $receipt = [ordered]@{
-        schema = 'codex-scientiae/inventory-receipt/0.1'
-        engine = $engineName
-        engineVersion = $script:EngineVersion
-        engineCommit = $script:EngineCommit
-        article = [ordered]@{
-            slug = $slug
-            treeSha256 = $TreeSha256
-            directory = $Article
+    $artifacts = @(
+        foreach ($store in @(@($Stores) + @("$slug.xml",'latexml.log','latexml.stdout.txt','latexml.stderr.txt') | Sort-Object -Unique)) {
+            $path = Join-Path $OutDirectory $store
+            if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { continue }
+            [ordered]@{path="conditions/conversion/$store";sha256=(Get-InventoryFileReference $path).sha256;bytes=(Get-Item -LiteralPath $path).Length}
         }
-        entrypoint = $Entrypoint
-        status = $Status
-        startedUtc = $startedUtc.ToString('o')
-        endedUtc = $endedUtc.ToString('o')
-        durationMs = [math]::Round(($endedUtc - $startedUtc).TotalMilliseconds, 2)
-        stores = @($Stores)
-        counts = [ordered]@{}
-        details = [ordered]@{}
+    )
+    $outputs = @{}
+    if (Test-Path -LiteralPath (Join-Path $OutDirectory "$slug.xml") -PathType Leaf) { $outputs.xml="conditions/conversion/$slug.xml" }
+    $payload = [ordered]@{
+        schema='latexai/paper-experiment/1';measurement=(Get-InventoryFileReference $PSCommandPath)
+        conditions=@([ordered]@{
+            id='conversion';status=$Status;engine=@{root=$EngineRoot;version=$script:EngineVersion;commit=$script:EngineCommit}
+            execution=@{
+                outcome=($Details.ContainsKey('nativeOutcome') ? $Details.nativeOutcome : 'not-started')
+                exitCode=($Details.ContainsKey('nativeExitCode') ? $Details.nativeExitCode : $null)
+                timedOut=($Counts.ContainsKey('timedOut') ? [bool]$Counts.timedOut : $null)
+                cleanupComplete=($Details.ContainsKey('nativeCleanupComplete') ? $Details.nativeCleanupComplete : $null)
+            }
+            outputs=$outputs;counts=$Counts;details=$Details
+        });comparisons=@()
     }
-    foreach ($key in ($Counts.Keys | Sort-Object)) { $receipt.counts[$key] = $Counts[$key] }
-    foreach ($key in ($Details.Keys | Sort-Object)) { $receipt.details[$key] = $Details[$key] }
-    [System.IO.File]::WriteAllText($receiptPath, (($receipt | ConvertTo-Json -Depth 8) + "`n"), $utf8)
+    if (-not (Test-Json -Json ($payload | ConvertTo-Json -Depth 100) -SchemaFile $payloadSchema -ErrorAction Stop)) { throw 'Invalid LaTeXAI paper payload' }
+    $record = [ordered]@{
+        schema = 'codex-scientiae/paper-run/1'
+        jobId=$assignment.Assignment.jobId;attemptId=$assignment.Assignment.attemptId;experiment=$assignment.Experiment
+        article=$assignment.Assignment.article
+        producer=@{engine=$engineName;version=$script:EngineVersion;commit=$script:EngineCommit;worker=$assignment.Plan.worker}
+        status = ($Status -eq 'running' ? 'running' : ($Status -eq 'ok' ? 'complete' : 'failed'))
+        startedUtc = $startedUtc.ToString('o')
+        endedUtc = ($Status -eq 'running' ? $null : $endedUtc.ToString('o'))
+        durationMs = [math]::Round(($endedUtc - $startedUtc).TotalMilliseconds, 2)
+        summary=$Counts;artifacts=$artifacts;payload=$payload
+        qualification=@{status=($Status -eq 'ok' ? 'not-requested' : 'incomplete');issues=@()}
+    }
+    Write-PaperRun -OutDirectory $paperDirectory -Record $record
+    if ($Status -ne 'running') { $script:terminalWritten=$true }
 }
 
 function Resolve-Perl {
@@ -224,6 +259,7 @@ function Get-ListFromStatus {
 $stores = [System.Collections.Generic.List[string]]::new()
 try {
     [void][System.IO.Directory]::CreateDirectory($OutDirectory)
+    Write-LaTeXAIPaperRecord -Status 'running'
     $jobTemp = [System.Environment]::GetEnvironmentVariable('CDXSCI_TEMP')
     if (-not [string]::IsNullOrWhiteSpace($jobTemp)) { [void][System.IO.Directory]::CreateDirectory($jobTemp) }
 
@@ -311,6 +347,7 @@ try {
     $run = Invoke-Native -FilePath $perl -Arguments $arguments.ToArray() `
         -WorkingDirectory $conversionCwd -TimeoutSeconds $nativeTimeout `
         -StdOutPath $stdoutPath -StdErrPath $stderrPath
+    $nativeResult = $run
     $latexmlMs = [double]$run.DurationMs
     $logParseStarted = [datetime]::UtcNow
 
@@ -475,9 +512,7 @@ try {
             $stores.Add([System.IO.Path]::GetFileName($candidate))
         }
     }
-    $stores.Add('receipt.json')
-
-    $ok = (-not $run.TimedOut) -and ($run.ExitCode -eq 0) -and ($fatals -eq 0) -and ($xmlBytes -gt 0)
+    $ok = (-not $run.TimedOut) -and $run.CleanupComplete -and ($run.ExitCode -eq 0) -and ($fatals -eq 0) -and ($xmlBytes -gt 0)
     $workerMs = [math]::Round(([datetime]::UtcNow - $startedUtc).TotalMilliseconds, 2)
     $residualMs = [math]::Round($workerMs - $latexmlMs - $logParseMs - $attributionMs - $xmlInspectMs, 2)
     $counts = @{
@@ -523,6 +558,7 @@ try {
         arguments = @($arguments.ToArray())
         conversionWorkingDirectory = $conversionCwd
         nativeOutcome = $run.Outcome
+        nativeExitCode = $run.ExitCode
         nativeCleanupComplete = [bool]$run.CleanupComplete
         xmlInspectMethod = 'xml-reader'
     }
@@ -545,7 +581,7 @@ try {
     if (-not $ok -and -not $statusLine) {
         $details.stderrTail = @(($run.StdErr -split "`r?`n") | Where-Object { $_ -ne '' } | Select-Object -Last 20)
     }
-    Write-Receipt -Status ($ok ? 'ok' : 'failed') -Counts $counts -Details $details -Stores $stores.ToArray()
+    Write-LaTeXAIPaperRecord -Status ($ok ? 'ok' : 'failed') -Counts $counts -Details $details -Stores $stores.ToArray()
     if (-not $ok) {
         # The executor's child bootstrap observes error records, not exit codes:
         # the entrypoint is invoked with & inside its pipeline. Throw to fail the job.
@@ -554,13 +590,21 @@ try {
 }
 catch {
     $message = $_.Exception.Message
-    if ($message -notlike 'conversion failed for *') {
+    if (-not $terminalWritten) {
         try {
-            if (-not $stores.Contains('receipt.json')) { $stores.Add('receipt.json') }
-            Write-Receipt -Status 'failed' -Counts @{ exitCode = -1 } -Details @{ workerError = $message } `
+            $failureCounts=@{}
+            $failureDetails=@{workerError=$message}
+            if($null -ne $nativeResult){
+                $failureCounts.timedOut=[int]$nativeResult.TimedOut
+                if($null -ne $nativeResult.ExitCode){$failureCounts.exitCode=$nativeResult.ExitCode}
+                $failureDetails.nativeOutcome=$nativeResult.Outcome
+                $failureDetails.nativeExitCode=$nativeResult.ExitCode
+                $failureDetails.nativeCleanupComplete=$nativeResult.CleanupComplete
+            }
+            Write-LaTeXAIPaperRecord -Status 'failed' -Counts $failureCounts -Details $failureDetails `
                 -Stores $stores.ToArray()
         }
-        catch { }
+        catch { $message += "; failed to publish worker record: $($_.Exception.Message)" }
     }
     throw "gauntlet-worker: $message"
 }

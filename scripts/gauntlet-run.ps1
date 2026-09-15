@@ -9,18 +9,18 @@
   -EngineRoot <this repo> -Worker gauntlet-worker.ps1.
   The runner mints artifacts/latexai/<stamp>/ under the codex root, plans
   one job per inventory row, runs them through the batch executor, and
-  folds receipts into inventory-summary.jsonl and run.json.
+  freezes experiment.json and aggregates worker run.json records into batch.json.
 
   Examples (from the LaTeXAI root):
     scripts/gauntlet-run.ps1                       # whole gauntlet
     scripts/gauntlet-run.ps1 -Path supellex/gauntlet/interval-algebra
     scripts/gauntlet-run.ps1 -Path supellex/gauntlet/interval-algebra/1001.3251v2 -MaxWorkers 1
-    scripts/gauntlet-run.ps1 -Profile               # per-macro profile in every receipt
+    scripts/gauntlet-run.ps1 -Profile               # per-macro profile in every condition
     scripts/gauntlet-run.ps1 -Preview               # runtime/selection only; no conversion
 
   -Path entries are resolved by the runner against the codex root.
   -Profile adds the lxprofile.sty preload (LaTeXML's TRACE_PROFILE bit); the
-  worker folds the log's "Profiling results" block into receipt details.profile.
+  worker folds the log's "Profiling results" block into condition details.profile.
   Routine batches use ten workers, a 60-minute per-process timeout and an
   8-hour batch wait. Pass -WaitTimeoutSeconds 0 only as an explicit unbounded
   diagnostic. -Package with -EvidenceDirectory is observed-route selection;
@@ -50,6 +50,7 @@ param(
     [string[]] $Package = @(),
     [ValidateSet('binding', 'raw', 'raw-local', 'missing', 'union')] [string] $PackageRoute = 'union',
     [string] $EvidenceDirectory = '',
+    [switch] $LegacyInventory,
     [switch] $SelectOnly,
     [ValidateSet('source', 'output')] [string] $ConversionWorkingDirectory
 )
@@ -87,10 +88,10 @@ $perl = $runtime.PerlPath
 $packageSelection = $null
 if (@($Package).Count -gt 0) {
     if ([string]::IsNullOrWhiteSpace($EvidenceDirectory)) {
-        throw 'LaTeXAI: -Package requires -EvidenceDirectory naming a retained gauntlet run with receipt.json files.'
+        throw 'LaTeXAI: -Package requires -EvidenceDirectory naming a retained inventory batch; old receipts require -LegacyInventory.'
     }
     $packageSelection = Select-LaTeXAIGauntletPackage -CdxsciRoot $runtime.CdxsciRoot `
-        -EvidenceDirectory $EvidenceDirectory -Package $Package -Route $PackageRoute
+        -EvidenceDirectory $EvidenceDirectory -Package $Package -Route $PackageRoute -LegacyInventory:$LegacyInventory
     $Path = @($packageSelection.selected | ForEach-Object { $_.path })
     if ($SelectOnly) {
         $packageSelection | ConvertTo-Json -Depth 8
@@ -210,6 +211,12 @@ $invoke = @{
     EngineRoot = $engineRoot
     Worker = $worker
     WorkerParameter = $workerParameter
+    ExperimentSpecification = @{
+        schema='latexai/acquisition-plan/1'
+        conditions=@(@{id='conversion';capture=('--capture' -in $LatexmlArgument)})
+        comparisons=@()
+        payloadSchema=@{path=(Join-Path $PSScriptRoot 'schemas/paper-experiment.schema.json');sha256=(Get-LaTeXAIFileSha256 (Join-Path $PSScriptRoot 'schemas/paper-experiment.schema.json'))}
+    }
     PowerShellPath = $runtime.ChildPowerShell.Executable
     MaxWorkers = $MaxWorkers
     ReservedCores = $ReservedCores

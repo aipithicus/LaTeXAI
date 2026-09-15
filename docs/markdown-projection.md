@@ -73,7 +73,7 @@ ltst t/98_markdown.t
   -Repetitions 15
 ```
 
-Manifest schema: `latexai/markdown-projection-inputs/0.1`. Each input supplies `slug`, `xml`, `xmlSha256`, `receipt`, `receiptSha256`, original engine `arguments` (including source `--path`), and `counts`. Keep engine commit, source-tree hash, entrypoint, and texmf index hash as provenance.
+Manifest schema: `latexai/markdown-projection-inputs/0.2`. Each input supplies `slug`, `xml`, `xmlSha256`, `run`, `runSha256`, and `condition` (currently `conversion`). The launcher verifies the worker's assignment and artifacts, then reads original engine arguments and counts from that condition. Supply `-CdxsciRoot` if the shared record module is not configured locally. Retained `0.1` manifests with `receipt`, `receiptSha256`, `arguments`, and `counts` require explicit `-LegacyInventory`; their historical files are not rewritten.
 
 The launcher refuses an existing output directory and verifies input hashes. Preparation runs once per input. Each strategy gets a fresh Perl process, parses the same prepared XML, warms up once, then repeatedly projects the same DOM. Execution is sequential, alternating the first strategy across papers. The worker rejects warning-contaminated measurements, nondeterministic Markdown, and DOM mutation. The launcher requires byte-identical Markdown and equivalent diagnostic multisets.
 

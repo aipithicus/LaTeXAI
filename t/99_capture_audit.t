@@ -178,6 +178,20 @@ isnt(without_capture($off), without_capture($no_space), 'another parser cannot s
   $changed->{details}{arguments}[8] = "--destination=$temp/new-job/wrong.xml";
   ok(!eval { project_searchpaths($documents[1], $changed, "$temp/new-job"); 1 }, 'destination must identify the actual compared XML');
 
+  my $recorded = read_json_after_clone($receipts[1]);
+  $recorded->{sourceTree} = "$article/tex";
+  $recorded->{details}{conversionWorkingDirectory} = "$temp/new-job";
+  $recorded->{details}{arguments}[4] = "--path=$article/tex";
+  my $recorded_doc = xml(qq{<?latexml searchpaths="$engine/scripts/preloads,$article/tex,$temp/new-job"?><document/>});
+  my $recorded_projection = project_searchpaths($recorded_doc, $recorded, "$temp/new-job");
+  is($recorded_projection->{after}, 'searchpaths="engine-preloads,article-source,conversion-output"',
+    'paper records use the assigned source directory and native output cwd');
+  $recorded->{details}{conversionWorkingDirectory} = "$temp/elsewhere";
+  ok(!eval { project_searchpaths($recorded_doc, $recorded, "$temp/new-job"); 1 }, 'unassigned recorded cwd fails');
+  $recorded->{details}{conversionWorkingDirectory} = "$temp/new-job";
+  $recorded->{details}{arguments}[-1] = '../outside.tex';
+  ok(!eval { project_searchpaths($recorded_doc, $recorded, "$temp/new-job"); 1 }, 'entrypoint traversal still fails for paper records');
+
   my @roots = ("$temp/corpus old", "$temp/corpus new");
   for my $i (0, 1) {
     my $job = "$roots[$i]/jobs/p-one";
@@ -203,6 +217,7 @@ isnt(without_capture($off), without_capture($no_space), 'another parser cannot s
   my $compare = sub {
     my ($name, $pin, $mode, $left, $right, $normalization) = @_;
     my @args = ($^X, '-I', 'lib', 'tools/dev/capture-corpus-audit.pl',
+      '--baseline-format', 'legacy', '--candidate-format', 'legacy',
       '--baseline', $left || $roots[0], '--candidate', $right || $roots[1],
       '--output', "$temp/$name");
     push @args, '--project-baseline', $pin if defined $pin;

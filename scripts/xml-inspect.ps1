@@ -1,17 +1,20 @@
 #requires -Version 7.5
 <# Namespace-aware XmlReader prototype over retained ltx XML.
    External resolution disabled. Compares ERROR/Math/dangling/leak counts
-   against a receipt when one is supplied. Does not replace worker regex
-   until differences are classified. #>
+   against a recorded condition when supplied. #>
 [CmdletBinding()]
 param(
     [Parameter(Mandatory)] [string] $XmlPath,
-    [string] $ReceiptPath = '',
+    [string] $RunPath = '',
+    [string] $Condition = 'conversion',
+    [string] $LegacyReceiptPath = '',
+    [string] $CdxsciRoot = '',
     [int] $ExampleLimit = 40
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+if($RunPath -and $LegacyReceiptPath){throw 'Choose a paper record or an explicit legacy receipt'}
 $ltxNs = 'http://dlmf.nist.gov/LaTeXML'
 $settings = [System.Xml.XmlReaderSettings]::new()
 $settings.DtdProcessing = [System.Xml.DtdProcessing]::Prohibit
@@ -75,7 +78,7 @@ foreach ($token in $labelRefs) {
 }
 
 $report = [ordered]@{
-    schema = 'latexai/xml-inspect/0.1'
+    schema = 'latexai/xml-inspect/0.2'
     xml = (Resolve-Path -LiteralPath $XmlPath).Path
     completed = $completed
     durationMs = [math]::Round($started.Elapsed.TotalMilliseconds, 2)
@@ -91,14 +94,25 @@ $report = [ordered]@{
     internalLeaks = @($leaks | Sort-Object -Unique | Select-Object -First $ExampleLimit)
 }
 
-if ($ReceiptPath) {
-    $receipt = Get-Content -LiteralPath $ReceiptPath -Raw | ConvertFrom-Json -DateKind String
-    $report.receipt = $ReceiptPath
+if ($RunPath -or $LegacyReceiptPath) {
+    if($RunPath){
+        . (Join-Path $PSScriptRoot 'latexai-common.ps1')
+        . (Join-Path $PSScriptRoot 'gauntlet-records.ps1')
+        $evidence=Get-LaTeXAIPaperCondition -RunPath $RunPath -Condition $Condition -CdxsciRoot $CdxsciRoot
+        if($evidence.XmlPath -cne (Resolve-Path -LiteralPath $XmlPath).Path){throw 'XML does not belong to the selected condition'}
+        $counts=$evidence.Condition.counts
+        $report.evidence=@{format='paper-run';record=$evidence.Reference;condition=$Condition;xmlSha256=$evidence.XmlSha256}
+    }else{
+        $receipt=Get-Content -LiteralPath $LegacyReceiptPath -Raw | ConvertFrom-Json -DateKind String
+        if($receipt.schema -ne 'codex-scientiae/inventory-receipt/0.1'){throw 'Unexpected legacy receipt'}
+        $counts=$receipt.counts
+        $report.evidence=@{format='legacy';path=$LegacyReceiptPath;sha256=(Get-FileHash -LiteralPath $LegacyReceiptPath).Hash.ToLowerInvariant()}
+    }
     $report.differences = [ordered]@{
-        ltxErrors = [int]$receipt.counts.ltxErrors - $ltxErrors
-        mathElements = [int]$receipt.counts.mathElements - $mathElements
-        danglingRefs = [int]$receipt.counts.danglingRefs - $dangling.Count
-        internalLeaks = [int]$receipt.counts.internalLeaks - $leaks.Count
+        ltxErrors = [int]$counts.ltxErrors - $ltxErrors
+        mathElements = [int]$counts.mathElements - $mathElements
+        danglingRefs = [int]$counts.danglingRefs - $dangling.Count
+        internalLeaks = [int]$counts.internalLeaks - $leaks.Count
     }
 }
 

@@ -8,18 +8,21 @@ param(
     [Parameter(Mandatory)][string] $OutputDirectory,
     [ValidateRange(3, 99)][int] $Repetitions = 9,
     [string] $PerlRoot = '',
+    [string] $CdxsciRoot = '',
+    [switch] $LegacyInventory,
     [nullable[int]] $TimeoutSeconds = $null
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'latexai-common.ps1')
+. (Join-Path $PSScriptRoot 'gauntlet-records.ps1')
 $runtime = Resolve-LaTeXAIRuntime -PerlRoot $PerlRoot -RequirePerl
 Set-LaTeXAIRuntimeEnvironment -Runtime $runtime
 $repo = $runtime.CheckoutRoot
 $perl = $runtime.PerlPath
 $manifestPath = (Resolve-Path -LiteralPath $Manifest).Path
 $source = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json -DateKind String
-if ($source.schema -ne 'latexai/markdown-projection-inputs/0.1') { throw 'Unsupported input manifest' }
+if ($source.schema -ne ($LegacyInventory ? 'latexai/markdown-projection-inputs/0.1' : 'latexai/markdown-projection-inputs/0.2')) { throw 'Unsupported input manifest; historical receipts require -LegacyInventory' }
 $outRoot = [IO.Path]::GetFullPath($OutputDirectory)
 if (Test-Path -LiteralPath $outRoot) { throw "Choose a new output directory; refusing to overwrite $outRoot" }
 [IO.Directory]::CreateDirectory($outRoot) | Out-Null
@@ -51,15 +54,22 @@ function Invoke-Perl {
 $rows = [Collections.Generic.List[object]]::new()
 $index = 0
 foreach ($item in $source.inputs) {
-    foreach ($pair in @(@{Path = $item.xml; Hash = $item.xmlSha256 }, @{Path = $item.receipt; Hash = $item.receiptSha256 })) {
+    $recordPath=($LegacyInventory ? $item.receipt : $item.run)
+    $recordHash=($LegacyInventory ? $item.receiptSha256 : $item.runSha256)
+    foreach ($pair in @(@{Path = $item.xml; Hash = $item.xmlSha256 }, @{Path = $recordPath; Hash = $recordHash })) {
         if ((Get-FileHash -LiteralPath $pair.Path -Algorithm SHA256).Hash.ToLowerInvariant() -ne $pair.Hash) {
             throw "Input drift: $($pair.Path)"
         }
     }
+    if(-not $LegacyInventory){
+        $evidence=Get-LaTeXAIPaperCondition -RunPath $recordPath -Condition $item.condition -CdxsciRoot $CdxsciRoot
+        if($evidence.Record.article.slug -cne $item.slug -or $evidence.XmlPath -cne (Resolve-Path -LiteralPath $item.xml).Path -or $evidence.XmlSha256 -cne $item.xmlSha256){throw 'Projection input differs from recorded condition'}
+        $item=[pscustomobject]@{slug=$item.slug;xml=$item.xml;xmlSha256=$item.xmlSha256;arguments=$evidence.Condition.details.arguments;counts=$evidence.Condition.counts}
+    }
     $dir = Join-Path $outRoot $item.slug
     [IO.Directory]::CreateDirectory($dir) | Out-Null
     $paths = @($item.arguments | Where-Object { $_ -like '--path=*' } | ForEach-Object { $_.Substring(7) })
-    if ($paths.Count -eq 0) { throw "No source path in receipt for $($item.slug)" }
+    if ($paths.Count -eq 0) { throw "No source path in condition for $($item.slug)" }
     $assetRoot = $paths[0]
     $prepared = Join-Path $dir 'prepared.xml'
     $prepReport = Join-Path $dir 'preparation.json'
@@ -108,6 +118,7 @@ $code = @(Get-Item -LiteralPath (Join-Path $repo 'lib/LaTeXAI/Post.pm'), (Join-P
 $report = [ordered]@{
     schema = 'latexai/markdown-traversal-comparison/0.1'; created_utc = [datetime]::UtcNow.ToString('o')
     manifest = $manifestPath; manifest_sha256 = (Get-FileHash -LiteralPath $manifestPath -Algorithm SHA256).Hash.ToLowerInvariant()
+    inventory_format = ($LegacyInventory ? 'legacy' : 'paper-run')
     checkout_commit = (& git -C $repo rev-parse HEAD); code = $code; repetitions = $Repetitions
     method = 'Sequential isolated process per input/strategy; alternating strategy order across papers; one untimed warmup, then repeated projections of one parsed DOM. Native waits use scripts/latexai-common.ps1 Invoke-LaTeXAINative. Preparation, parse, projection phases and process peak working set (sampled on the wait slice while alive; metric still sampled_peak_working_set_bytes) reported separately. Stdout and stderr are retained as sibling .stdout.txt/.stderr.txt files, not concatenated into the only log.'
     limits = 'Both implementations buffer Markdown fragments. This compares traversal organization, not streaming-memory behavior or LaTeXML HTML speed. Sampled peak working set includes runtime, parser and warmup, may miss the final 20 ms, and is not incremental projector allocation. Input diagnostics remain independent.'

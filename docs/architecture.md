@@ -29,32 +29,32 @@ One thing can carry several names when they name different facets. The rule is t
 | **notation vocabulary** | a symbol or alphabet font package whose value is a set of commands with meanings and codepoints | for lib-symb material |
 | **table** | `symbols.tsv`: the curated rows a notation binding is generated from | never "table" for a data file |
 | **census** | what a package defines, read from its source by `tools/texscan` | for the declared side |
-| **demand** | which papers request a package, and what it costs them, read from receipts | for the measured side |
+| **demand** | which papers request a package, and what it costs them, read from paper conditions | for the measured side |
 | **deposit** | one paper as codex-scientiae holds it: source tree, manifest, provenance | when naming corpus input |
-| **receipt** | the per-paper record the gauntlet worker writes: counts, routes, attributions | when naming corpus output |
-| **golden** | the `.xml` a fixture must reproduce ([`testing.md`](testing.md)) | for fixtures only; receipts are not goldens |
+| **paper record** | worker-owned `run.json`: condition outcomes, counts, routes, attributions and hashed artifacts | when naming current corpus output; `receipt.json` names historical output |
+| **golden** | the `.xml` a fixture must reproduce ([`testing.md`](testing.md)) | for fixtures only; paper records are not goldens |
 
 ## 3. Repositories and ownership
 
 | repository | owns | does not own |
 | :--- | :--- | :--- |
 | **LaTeXAI** (this one) | the engine, the bindings, the vendoring roots, the tools, the fixtures and goldens, the Markdown projector, these documents | the corpus, batch execution |
-| **codex-scientiae** | the deposits and their inventories (`supellex/`), the batch executor and its inventory adapter, the runs under `artifacts/latexai/<stamp>/`, the receipt contract | anything about TeX |
+| **codex-scientiae** | the deposits and their inventories (`supellex/`), the batch executor and its inventory adapter, the runs under `artifacts/latexai/<stamp>/`, generic experiment/paper/batch envelopes | anything about TeX |
 | a local KaTeX clone | the KaTeX source at a tag, from which `lib-katex/` is vendored | nothing else; it is an input |
 
-The gauntlet worker and its launcher, the LaTeXAI side of the batch contract, are engine glue and live outside tracked files by codex-scientiae's convention. Their contract is codex-scientiae's `src/batch-adapters/README.md`, "Worker contract". Nothing tracked here links to them.
+The tracked `scripts/gauntlet-worker.ps1` and `scripts/gauntlet-run.ps1` own the LaTeXAI side of the batch contract. LaTeXAI owns the condition payload and its measurements; codex-scientiae owns dispatch and aggregation. See [gauntlet records](specification/gauntlet-records.md) for schemas, consumers and migration limits.
 
 ## 4. Pipeline
 
 Each stage names its owner and what crosses the boundary.
 
 1. **Deposit** (codex-scientiae). A paper's source tree is ingested, validated, and described by a manifest; catalog inventories (`inventory.jsonl`, first-order or folded) are the trusted view of the population.
-2. **Plan** (codex-scientiae). The inventory adapter reads rows, one job per deposit, and hands the worker the source tree, the entrypoint, and the tree hash. Nothing else is opened.
+2. **Plan** (codex-scientiae). The inventory adapter reads rows, one job per deposit, and hands the worker the source tree, entrypoint, tree hash and record address. The coordinator freezes assignments, worker parameters and declared experiment policy in `experiment.json` before dispatch.
 3. **Run** (LaTeXAI worker, per deposit). `bin/latexml` over the entrypoint with the corpus preload, log and streams contained in the job directory; the IR is written beside them.
-4. **Receipt** (LaTeXAI worker). Counts from the engine's own tally (warnings, errors, fatals, undefined macros, missing files), element counts from the IR, package routes (`binding`, `raw-local`, `raw`, `missing`), and undefined-macro attribution to the source that should have defined it.
-5. **Fold** (codex-scientiae). Receipts into `inventory-summary.jsonl` and `run.json` per run. The run directory is the unit of comparison.
-6. **Demand** (LaTeXAI tools). The demand join reads binding state from the Package tree and demand from receipts; it orders binding work. Counts from any static census are seeds; receipts are the authority.
-7. **Bind** (LaTeXAI). A package is vendored, censused, bound, fixtured, and its golden read, per [`recipes/package-bindings.md`](recipes/package-bindings.md). The corpus is rerun and the receipts move.
+4. **Record** (LaTeXAI worker). Publish `jobs/<attempt>/run.json` with direct native outcomes, hashes and measurements: engine tallies, IR element counts, package routes and undefined-macro attribution. Current acquisition has one `conversion` condition.
+5. **Aggregate** (codex-scientiae). Validate records and executor outcomes into `batch.json`, including missing, invalid, nonterminal and failed attempts. The coordinator does not parse XML. Completion alone does not qualify parity.
+6. **Demand** (LaTeXAI tools). The demand join reads binding state from the Package tree and measurements from recorded conditions; it orders binding work. Static censuses are seeds; recorded measurements are the authority.
+7. **Bind** (LaTeXAI). A package is vendored, censused, bound, fixtured, and its golden read, per [`recipes/package-bindings.md`](recipes/package-bindings.md). The corpus is rerun into a new experiment directory.
 8. **Project** (LaTeXAI, downstream of digestion). `bin/latexai-markdown` projects the IR into one manuscript with a TOC and bibliography. Math currently uses the IR's TeX carrier; symbol-table mapping remains planned (section 9).
 
 ## 5. Roots
@@ -128,11 +128,11 @@ Every symbol binding maps to a real codepoint: no private-use characters, no fon
 
 ## 10. The evidence loop
 
-Bindings are prioritised by measured demand, and their effect is measured the same way. The corpus is codex-scientiae's gauntlet inventory (90 deposits at the time of writing). A run writes one receipt per paper, and the run directory is compared as a whole: totals of missing files, undefined macros, and `ERROR` nodes, and the route of every package. A paired run, with and without a change, is the form of an experiment.
+Bindings are prioritised by measured demand, and their effect is measured the same way. The corpus is codex-scientiae's gauntlet inventory; the frozen G1 parity population contains 120 papers. An acquisition writes one worker record per paper, and batch records summarize missing files, undefined macros, `ERROR` nodes and package routes. Paired comparisons use declared conditions and comparison policy. Worker-owned off/on orchestration remains the next record-migration checkpoint.
 
-Three sources of counts exist: static censuses of `\usepackage`, the demand join, and receipts. The first two are seeds. Receipts are the authority, and any table of paper counts elsewhere is regenerated from a full run rather than defended.
+Three sources of counts exist: static censuses of `\usepackage`, the demand join, and recorded conditions. The first two are seeds. Recorded measurements are the authority, and any table of paper counts elsewhere is regenerated from a full run rather than defended.
 
-Goldens and receipts answer different questions. A golden says a binding does what its fixture claims. A receipt says what the corpus paid. A binding can have a passing golden and still be the package the corpus is failing on; that is what the demand join is for.
+Goldens and paper records answer different questions. A golden says a binding does what its fixture claims. A paper record says what the corpus paid. A binding can have a passing golden and still be the package the corpus is failing on; that is what the demand join is for.
 
 ## 11. Workflows
 
@@ -156,7 +156,7 @@ Each of these has been the wrong shortcut at least once.
 - A data file gets a path, not a binding. An encoding or color definition is not a table to curate.
 - Status is never a directory. A package moves between roots only because what the engine may read of it changed.
 - A binding never names a renderer. The mapping to KaTeX lives in the table and is read by post.
-- Counts from a static census are seeds. A receipt is the measurement.
+- Counts from a static census are seeds. Recorded conditions hold the measurements.
 - A vendored file is either data, requested by a binding, or the source of a native binding. Otherwise it is parked, not indexed.
 - A kernel file CTAN does not catalogue is a member of an entry named for its archive (`latex`, `graphics`), never an entry of its own. A kernel file CTAN does catalogue keeps its CTAN-id entry.
 - `--log` is always passed. A `.latexml.log` at the repository root means something bypassed the aliases.

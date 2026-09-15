@@ -13,15 +13,19 @@ use File::Glob qw(bsd_glob);
 use Cwd qw(abs_path);
 use Getopt::Long qw(GetOptions);
 use CaptureRuntime qw(project_searchpaths);
+use CaptureInventory qw(load_inventory);
 use Encode qw(decode encode FB_DEFAULT);
 use JSON::PP;
 my ($baseline_root, $current_root, $output, $projection_pin, $mode, $model_path, $model_pin);
+my ($baseline_format, $candidate_format, $baseline_condition, $candidate_condition) = ('paper-run', 'paper-run', 'conversion', 'conversion');
 GetOptions('baseline=s' => \$baseline_root, 'candidate=s' => \$current_root,
   'output=s' => \$output, 'project-baseline=s' => \$projection_pin, 'mode=s' => \$mode,
-  'whitespace-model=s' => \$model_path, 'whitespace-model-sha256=s' => \$model_pin)
+  'whitespace-model=s' => \$model_path, 'whitespace-model-sha256=s' => \$model_pin,
+  'baseline-format=s' => \$baseline_format, 'candidate-format=s' => \$candidate_format,
+  'baseline-condition=s' => \$baseline_condition, 'candidate-condition=s' => \$candidate_condition)
   or die "Invalid arguments\n";
 $mode = 'replay' unless defined $mode;
-die "usage: capture-corpus-audit.pl --baseline RUN --candidate RUN --output NEW_DIR [--mode replay|parity] [--project-baseline RUN_SHA256] [--whitespace-model FILE --whitespace-model-sha256 SHA256]\n"
+die "usage: capture-corpus-audit.pl --baseline RUN --candidate RUN --output NEW_DIR [--mode replay|parity] [--baseline-format paper-run|legacy] [--candidate-format paper-run|legacy] [--baseline-condition ID] [--candidate-condition ID] [--project-baseline RECORD_SHA256] [--whitespace-model FILE --whitespace-model-sha256 SHA256]\n"
   unless $baseline_root && $current_root && $output && !@ARGV;
 die "Unknown mode\n" unless $mode eq 'replay' || $mode eq 'parity';
 $baseline_root = abs_path($baseline_root) or die "Baseline missing\n";
@@ -31,7 +35,8 @@ my $proposed = File::Spec->rel2abs($output); $proposed =~ s{\\}{/}g;
 for my $input ($baseline_root, $current_root) {
   die "Output must be outside input runs\n" if index(lc($proposed) . '/', lc($input) . '/') == 0;
 }
-my $source_pin = file_hash("$baseline_root/run.json");
+die "Unknown inventory format\n" if grep { $_ ne 'paper-run' && $_ ne 'legacy' } ($baseline_format, $candidate_format);
+my $source_pin = file_hash("$baseline_root/" . ($baseline_format eq 'legacy' ? 'run.json' : 'batch.json'));
 die "Wrong baseline pin\n" if defined($projection_pin) && $projection_pin ne $source_pin;
 my %input_hashes;
 my $whitespace;
@@ -48,6 +53,7 @@ sub retained_json {
   $input_hashes{$path} = file_hash($path);
   return read_json($path);
 }
+sub retained_hash { my ($path) = @_; return $input_hashes{$path} = file_hash($path); }
 sub invocation_capture {
   my ($receipt) = @_;
   return 0 + grep { $_ eq '--capture' } @{ $receipt->{details}{arguments} || [] };
@@ -59,13 +65,12 @@ sub identity_without_capture {
   return { %$identity, options => \@options };
 }
 my @issues;
-my @runs = map { retained_json("$_/run.json") } ($baseline_root, $current_root);
+my @loaded = (
+  load_inventory($baseline_root, format=>$baseline_format, condition=>$baseline_condition, read_json=>\&retained_json, file_hash=>\&retained_hash),
+  load_inventory($current_root, format=>$candidate_format, condition=>$candidate_condition, read_json=>\&retained_json, file_hash=>\&retained_hash));
+my @runs = map { $_->{run} } @loaded;
 for my $i (0, 1) {
-  my $r = $runs[$i];
-  push @issues, "run-$i:incomplete" unless ($r->{schema} || '') eq 'codex-scientiae/inventory-run/0.1'
-    && $r->{jobs} && $r->{receipts}{ok} == $r->{jobs}
-    && !$r->{receipts}{failed} && !$r->{receipts}{missing}
-    && $r->{executor}{summary}{Succeeded} == $r->{jobs} && !@{ $r->{executor}{errors} };
+  push @issues, map { "run-$i:$_" } @{$loaded[$i]{issues}};
 }
 make_path($output);
 my $ltx = 'http://dlmf.nist.gov/LaTeXML';
@@ -150,20 +155,9 @@ sub inspect {
     source_ranges_checked => $checked, stripped_sha256 => object_hash($stripped), issues => \@issues };
 }
 my @papers;
-my @inventories;
-for my $root ($baseline_root, $current_root) {
-  my %inventory;
-  for my $path (bsd_glob("$root/jobs/*/receipt.json")) {
-    my $receipt = retained_json($path);
-    my $slug = $receipt->{article}{slug};
-    die "Invalid or duplicate paper identity\n" unless $slug && $slug =~ /^[\w.-]+$/ && !$inventory{$slug};
-    $inventory{$slug} = { receipt => $receipt, directory => dirname($path) };
-  }
-  push @inventories, \%inventory;
-}
+my @inventories = map { $_->{papers} } @loaded;
 push @issues, 'changed-paper-selection' unless object_hash([sort keys %{ $inventories[0] }])
   eq object_hash([sort keys %{ $inventories[1] }]);
-for my $i (0, 1) { push @issues, "run-$i:receipt-coverage" unless keys(%{ $inventories[$i] }) == $runs[$i]{jobs}; }
 for my $slug (sort keys %{ $inventories[0] }) {
   next unless $inventories[1]{$slug};
   my ($old_job, $job) = map { $_->{$slug}{directory} } @inventories;
@@ -185,6 +179,7 @@ for my $slug (sort keys %{ $inventories[0] }) {
   my @derived_counts;
   if (defined $projection_pin) {
     for my $i (0, 1) {
+      next unless $loaded[$i]{format} eq 'legacy';
       my $summary = $runs[$i]{executor}{summary};
       if (!exists($counts[$i]{timedOut}) && exists($summary->{TimedOut}) && $summary->{TimedOut} == 0
           && $summary->{Succeeded} == $runs[$i]{jobs} && $summary->{Total} == $runs[$i]{jobs}) {
@@ -249,9 +244,10 @@ for my $path (sort keys %input_hashes) {
 my $exact_differences = scalar(grep { !$_->{exact_document_equal} } @papers);
 write_json("$output/comparison.json", { schema => 'latexai/corpus-comparison/3',
   mode => $mode, baseline => $baseline_root, candidate => $current_root,
+  inventory_formats => [$baseline_format, $candidate_format], conditions => [$baseline_condition, $candidate_condition],
   baseline_projection => defined($projection_pin) ? { source_run_sha256 => $source_pin } : undef,
   normalization => $whitespace ? $whitespace->{contract} : undef,
-  inputs => \%input_hashes, comparator => CaptureAudit::tree_hashes(qw(tools/dev/capture-corpus-audit.pl tools/dev/CaptureRuntime.pm tools/dev/CaptureStrip.pm tools/dev/CaptureAudit.pm)),
+  inputs => \%input_hashes, comparator => CaptureAudit::tree_hashes(qw(tools/dev/capture-corpus-audit.pl tools/dev/CaptureInventory.pm tools/dev/CaptureRuntime.pm tools/dev/CaptureStrip.pm tools/dev/CaptureAudit.pm)),
   papers => \@papers, exact_document_differences => $exact_differences,
   issues => \@issues, qualified => @issues ? JSON::PP::false : JSON::PP::true });
 for my $paper (@papers) {

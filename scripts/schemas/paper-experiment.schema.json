@@ -1,0 +1,24 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "type":"object","additionalProperties":false,
+  "required":["schema","conditions","comparisons","measurement"],
+  "properties":{
+    "schema":{"const":"latexai/paper-experiment/1"},
+    "measurement":{"type":"object","additionalProperties":false,"required":["path","sha256"],"properties":{
+      "path":{"type":"string","minLength":1},"sha256":{"type":"string","pattern":"^[0-9a-f]{64}$"}}},
+    "conditions":{"type":"array","minItems":1,"items":{
+      "type":"object","additionalProperties":false,
+      "required":["id","status","engine","execution","outputs","counts","details"],
+      "properties":{
+        "id":{"type":"string","pattern":"^[a-z][a-z0-9-]*$"},"status":{"enum":["running","ok","failed"]},
+        "engine":{"type":"object","additionalProperties":false,"required":["root","version","commit"],"properties":{
+          "root":{"type":"string","minLength":1},"version":{"type":"string"},"commit":{"type":"string"}}},
+        "execution":{"type":"object","additionalProperties":false,"required":["outcome","exitCode","timedOut","cleanupComplete"],"properties":{
+          "outcome":{"type":"string"},"exitCode":{"type":["integer","null"]},"timedOut":{"type":["boolean","null"]},"cleanupComplete":{"type":["boolean","null"]}}},
+        "outputs":{"type":"object","additionalProperties":{"type":"string","minLength":1}},
+        "counts":{"type":"object","additionalProperties":{"type":"number"}},"details":{"type":"object"}
+      }
+    }},
+    "comparisons":{"type":"array","maxItems":0}
+  }
+}

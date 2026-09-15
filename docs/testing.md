@@ -155,6 +155,10 @@ Read `run.json` and the per-driver reports before explaining a change or deliber
 
 ### Manuscript corpus comparison
 
+New acquisitions use worker-owned `jobs/<attempt>/run.json` and coordinator-owned `batch.json`, under a frozen `experiment.json`. See [record ownership and migration](specification/gauntlet-records.md). The corpus auditor defaults to these records and selects condition `conversion`; `--baseline-condition` and `--candidate-condition` select named conditions explicitly. `--project-baseline` pins the baseline `batch.json` in this format. Acquisition completion alone has `not-requested` qualification.
+
+Historical inputs require `--baseline-format legacy` and/or `--candidate-format legacy` for the corresponding side. A legacy side retains its batch-level `run.json` and worker receipts; the baseline pin then names that original `run.json`. `CaptureInventory.pm` verifies new record/artifact identities and provides the existing comparator with condition evidence. Both formats and condition selections are recorded in the result. No legacy files are rewritten, and the completed-batch timeout inference below applies only to explicitly selected legacy inputs.
+
 For retained formatted XML, explicitly pass `--whitespace-model FILE --whitespace-model-sha256 SHA256` alongside `--project-baseline RUN_SHA256`. `CaptureWhitespace.pm` loads that pinned compiled model through the engine's `Common::Model` and reuses its `#PCDATA` decision. On cloned DOMs it removes only XML whitespace text in declared element-only LaTeXML regions whose child elements the model admits (excluding the root capture ledger that stripping removes). Mixed-content/literal, unknown and foreign subtrees remain opaque; non-whitespace text, CDATA or unmodeled children make a region opaque too. Inherited `xml:space="preserve"` prevents removal, and explicit `default` resumes the model rule. Attributes, comments, processing instructions and non-XML spaces are preserved. Ledger adjacency is never a criterion. This is comparison normalization; it changes no source, raw conversion, serializer or default strip behavior.
 
 Corpus reports use `latexai/corpus-comparison/3`: `normalization` names `latexai/model-whitespace/1`, pins the model and loaded implementation, and records operation order. Per-side records count removed nodes/bytes by element. Original stripped and runtime-projected XML/hashes remain distinct from `*.normalized.xml`, `comparison_sha256` and `comparison_document_equal`, which determine the tree gate. Exact and unnormalized projected differences stay visible even when normalized parity qualifies. Without the option, the comparison hash is the unnormalized projected hash. No diagnostic, Math, source-byte or coverage gate is relaxed.
@@ -166,10 +170,10 @@ Corpus reports use `latexai/corpus-comparison/3`: `normalization` names `latexai
 ```powershell
 & $auditPerl -I lib tools/dev/capture-corpus-audit.pl `
   --baseline <retained-inventory-run> --candidate <fresh-inventory-run> `
-  --output <new-comparison-directory> --project-baseline <retained-run.json-SHA256>
+  --output <new-comparison-directory> --project-baseline <retained-batch.json-SHA256>
 & $auditPerl -I lib tools/dev/capture-corpus-audit.pl `
   --mode parity --baseline <capture-off-run> --candidate <capture-on-run> `
-  --output <new-comparison-directory> --project-baseline <off-run.json-SHA256>
+  --output <new-comparison-directory> --project-baseline <off-batch.json-SHA256>
 ```
 
 Without projection, any stripped-document difference fails. An explicit hash-pinned projection verifies the top-level search-path processing instruction against each receipt's actual CLI arguments. It interprets the repository's former preload directory and current `scripts/preloads` as the same logical role, and resolves the recorded absolute/relative entrypoint and job-local output addresses. Search order, other paths, preloads and compiler options must still agree. Missing, duplicate, malformed or inconsistent instructions fail. Other PIs, comments, whitespace and manuscript nodes are untouched. This is an audit interpretation of historical execution metadata; runtime paths and the engine serializer are unchanged.

@@ -1,5 +1,5 @@
 #requires -Version 7.5
-# Observed-route package selection over retained gauntlet receipts.
+# Observed-route package selection over retained paper conditions.
 # Does not reconstruct membership from demand-join aggregates.
 
 function Get-LaTeXAIInventoryRows {
@@ -63,14 +63,41 @@ function Select-LaTeXAIGauntletPackage {
         [Parameter(Mandatory)] [string] $CdxsciRoot,
         [Parameter(Mandatory)] [string] $EvidenceDirectory,
         [Parameter(Mandatory)] [string[]] $Package,
-        [ValidateSet('binding', 'raw', 'raw-local', 'missing', 'union')] [string] $Route = 'union'
+        [ValidateSet('binding', 'raw', 'raw-local', 'missing', 'union')] [string] $Route = 'union',
+        [switch] $LegacyInventory
     )
     $evidenceRoot = (Resolve-Path -LiteralPath $EvidenceDirectory).Path
     $inventory = Get-LaTeXAIInventoryRows -CdxsciRoot $CdxsciRoot
     $bySlug = @{}
     foreach ($row in $inventory.Rows) { $bySlug[$row.Slug] = $row }
 
-    $receipts = @(Get-ChildItem -LiteralPath $evidenceRoot -Filter receipt.json -Recurse -File)
+    $receipts = [Collections.Generic.List[object]]::new()
+    $inputs = [ordered]@{}
+    if ($LegacyInventory) {
+        foreach ($file in Get-ChildItem -LiteralPath $evidenceRoot -Filter receipt.json -Recurse -File) {
+            $record = Get-Content -LiteralPath $file.FullName -Raw | ConvertFrom-Json -DateKind String
+            if ($record.schema -ne 'codex-scientiae/inventory-receipt/0.1') { throw "Unexpected legacy receipt: $($file.FullName)" }
+            $inputs[$file.FullName] = Get-LaTeXAIFileSha256 $file.FullName
+            $receipts.Add([pscustomobject]@{FullName=$file.FullName;Receipt=$record;Condition='legacy'})
+        }
+    } else {
+        Import-Module (Join-Path $CdxsciRoot 'src/inventory-records/inventory-records.psm1') -Force
+        $batch=Read-InventoryBatch -RunDirectory $evidenceRoot
+        foreach($reference in @($batch.Reference,$batch.Record.experiment,$batch.Record.executor)){$inputs[$reference.path]=$reference.sha256}
+        foreach($paper in $batch.Papers) {
+            $record=$paper.Record
+            if($record.payload.schema -ne 'latexai/paper-experiment/1'){throw 'Expected LaTeXAI paper experiment'}
+            if(-not (Test-Json -Json ($record.payload | ConvertTo-Json -Depth 100) -SchemaFile (Join-Path $PSScriptRoot 'schemas/paper-experiment.schema.json') -ErrorAction Stop)){throw 'Invalid LaTeXAI paper payload'}
+            $inputs[$paper.Reference.path]=$paper.Reference.sha256
+            foreach($condition in $record.payload.conditions) {
+                if(-not $condition.details.Contains('packages')){continue}
+                $receipts.Add([pscustomobject]@{
+                    FullName=$paper.Reference.path;Condition=$condition.id
+                    Receipt=[pscustomobject]@{article=[pscustomobject]$record.article;entrypoint=$record.article.entrypoint;details=[pscustomobject]$condition.details}
+                })
+            }
+        }
+    }
     $selected = [System.Collections.Generic.List[object]]::new()
     $excluded = [System.Collections.Generic.List[object]]::new()
     $unmatched = [System.Collections.Generic.List[string]]::new()
@@ -78,8 +105,7 @@ function Select-LaTeXAIGauntletPackage {
     $selectedSlugs = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
 
     foreach ($file in $receipts) {
-        $receipt = Get-Content -LiteralPath $file.FullName -Raw | ConvertFrom-Json -DateKind String
-        if ($receipt.schema -ne 'codex-scientiae/inventory-receipt/0.1') { continue }
+        $receipt = $file.Receipt
         $slug = [string]$receipt.article.slug
         [void]$observed.Add($slug)
         $packages = @($receipt.details.packages)
@@ -94,7 +120,7 @@ function Select-LaTeXAIGauntletPackage {
         if (-not $selectedSlugs.Add($slug)) { continue }
         $row = $bySlug[$slug]
         if (-not $row) {
-            $excluded.Add([ordered]@{ slug = $slug; reason = 'not-in-canonical-inventory'; receipt = $file.FullName })
+            $excluded.Add([ordered]@{ slug = $slug; reason = 'not-in-canonical-inventory'; record = $file.FullName })
             continue
         }
         if ($row.TreeSha256 -and $receipt.article.treeSha256 -and
@@ -123,7 +149,8 @@ function Select-LaTeXAIGauntletPackage {
             entrypoint = [string]$receipt.entrypoint
             treeSha256 = [string]$receipt.article.treeSha256
             routes = @($hits | ForEach-Object { [ordered]@{ name = $_.name; route = $_.route } })
-            receipt = $file.FullName
+            record = $file.FullName
+            condition = $file.Condition
         })
     }
 
@@ -131,10 +158,11 @@ function Select-LaTeXAIGauntletPackage {
     $missingEvidence = @($inventorySlugs | Where-Object { -not $observed.Contains($_) })
 
     return [ordered]@{
-        schema = 'latexai/gauntlet-package-selection/0.1'
-        basis = 'observed-route-receipts'
+        schema = 'latexai/gauntlet-package-selection/0.2'
+        basis = ($LegacyInventory ? 'legacy-receipts' : 'paper-conditions')
+        inputs = $inputs
         incomplete = $true
-        incompleteness = 'Selection uses retained route receipts only. Articles without evidence are not negative package-use observations. Subset results support iteration only.'
+        incompleteness = 'Selection uses retained route observations only. Articles without evidence are not negative package-use observations. Subset results support iteration only.'
         packages = @($Package)
         route = $Route
         evidenceDirectory = $evidenceRoot

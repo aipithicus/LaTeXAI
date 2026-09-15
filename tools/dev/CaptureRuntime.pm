@@ -84,7 +84,9 @@ sub _invocation {
   die "Unrecognized engine library\n" unless $lib =~ s{/lib$}{};
   my $engine = $lib;
   die "Unrecognized engine entrypoint\n" unless canonical_path(shift @args) eq "$engine/bin/latexml";
-  my $source = canonical_path("$receipt->{article}{directory}/$receipt->{article}{slug}-tex");
+  # New paper records carry the resolved source directory. The old receipt
+  # contract used the deposit's slug-tex convention.
+  my $source = canonical_path($receipt->{sourceTree} // "$receipt->{article}{directory}/$receipt->{article}{slug}-tex");
   my $job = canonical_path($job_directory);
   my (@options, @paths, @roles);
   my %outputs;
@@ -114,12 +116,29 @@ sub _invocation {
     else { push @options, $arg; }
   }
   die "Missing recorded output option\n" unless $outputs{log} && $outputs{destination};
+  # New records also retain the process cwd. Core seeds SEARCHPATHS with '.',
+  # then adds the entrypoint directory if absent, before reversing unique paths
+  # for the PI. An output-directory conversion therefore has an extra path.
+  my $cwd_role;
+  if (exists $receipt->{sourceTree}) {
+    my $cwd = canonical_path($receipt->{details}{conversionWorkingDirectory});
+    die "Missing or unsupported recorded working directory\n" unless defined($cwd) && ($cwd eq $source || $cwd eq $job);
+    $cwd_role = $cwd eq $source ? 'article-source' : 'conversion-output';
+    unshift @paths, $cwd; unshift @roles, $cwd_role;
+    my $entry_dir = canonical_path(dirname($entry));
+    unless (grep { $_ eq $entry_dir } @paths) {
+      unshift @paths, $entry_dir;
+      unshift @roles, $entry_dir eq $source ? 'article-source' : $entry_dir;
+    }
+  }
   my (%seen, @ordered, @ordered_roles);
-  for my $i (reverse 0 .. $#paths) {
+  for my $i (exists($receipt->{sourceTree}) ? (0 .. $#paths) : (reverse 0 .. $#paths)) {
     next if $seen{$paths[$i]}++;
-    push @ordered, $paths[$i]; push @ordered_roles, $roles[$i];
+    if (exists $receipt->{sourceTree}) { unshift @ordered, $paths[$i]; unshift @ordered_roles, $roles[$i]; }
+    else { push @ordered, $paths[$i]; push @ordered_roles, $roles[$i]; }
   }
   return { identity => { engine => $engine, source => $source, entry => $entry, options => \@options,
+      (defined($cwd_role) ? (working_directory => $cwd_role) : ()),
       perl => canonical_path($receipt->{details}{perl}) }, paths => \@ordered, roles => \@ordered_roles };
 }
 
@@ -132,7 +151,8 @@ sub project_searchpaths {
   my $data = $pis[0]->getData;
   die "Malformed searchpaths instruction\n" unless $data =~ /^searchpaths="([^"<>]*)"$/;
   my @paths = map { canonical_path($_) } split /,/, $1;
-  die "Searchpaths instruction disagrees with recorded invocation\n"
+  die "Searchpaths instruction disagrees with recorded invocation: XML=[" . join(',', @paths)
+    . "]; invocation=[" . join(',', @{$invocation->{paths}}) . "]\n"
     unless CaptureAudit::object_hash(\@paths) eq CaptureAudit::object_hash($invocation->{paths});
   $pis[0]->setData('searchpaths="' . join(',', @{$invocation->{roles}}) . '"');
   return { document => $copy, identity => $invocation->{identity}, before => $data, after => $pis[0]->getData };

@@ -34,11 +34,11 @@
 #   perl tools/dev/fetch-ctan.pl --index
 #                         write lib-ctan/ls-R from lib-ctan/*/tex/** (also runs after every
 #                         fetch into lib-ctan, like mktexlsr after tlmgr)
-#   perl tools/dev/fetch-ctan.pl --check [--receipts=DIR]
+#   perl tools/dev/fetch-ctan.pl --check [--evidence=DIR] [--legacy-inventory]
 #                         regenerate the index in memory; diff against the committed ls-R
 #                         and the tree; enforce the entry rule, one revision per archive,
-#                         and provenance vs files. Local: no receipts required.
-#                         --receipts proposes allow-list rows from missingFiles.
+#                         and provenance vs files. Local: no evidence required.
+#                         --evidence proposes allow-list rows from missingFiles.
 #   perl tools/dev/fetch-ctan.pl --from=<texlive-package> <member>...
 #                         fetch named members of a TeX Live archive with no CTAN
 #                         catalogue lookup (kernel files: t1enc.def, shortvrb.sty, …)
@@ -48,6 +48,8 @@
 use strict;
 use warnings;
 use FindBin;
+use lib $FindBin::Bin;
+use CaptureInventory qw(load_inventory);
 use Getopt::Long;
 use File::Spec;
 use File::Path qw(make_path remove_tree);
@@ -75,10 +77,10 @@ my %opt = (
   check          => 0,
   from           => undef,
   restore        => 0,
-  receipts       => undef,
+  evidence       => undef,
 );
 GetOptions(\%opt, 'outdir=s', 'force', 'docs', 'whole-bundle', 'snapshot=s', 'mirror=s', 'quiet',
-  'index', 'check', 'from=s', 'restore', 'receipts=s')
+  'index', 'check', 'from=s', 'restore', 'evidence=s', 'legacy-inventory')
   or die usage();
 
 sub usage {
@@ -86,7 +88,7 @@ sub usage {
     . "       $0 --from=<texlive-package> <member>...\n"
     . "       $0 --restore [--outdir=DIR]\n"
     . "       $0 --index\n"
-    . "       $0 --check [--receipts=DIR]\n"; }
+    . "       $0 --check [--evidence=DIR] [--legacy-inventory]\n"; }
 sub say_ { print STDERR "fetch-ctan: @_\n" unless $opt{quiet}; }
 
 my $ctan_root = File::Spec->catdir($root, 'lib-ctan');
@@ -765,32 +767,24 @@ sub check_lib_ctan {
       $report->("$entry: fails the entry rule (not data, not requested, not a native source, not on the allow-list); park it"); }
     else {
       say_("$entry: $why->{$entry} (binding $state->{$entry})"); } }
-  if ($opt{receipts}) {
-    propose_from_receipts($ctan_root, $opt{receipts}, $why); }
+  if ($opt{evidence}) {
+    propose_from_evidence($ctan_root, $opt{evidence}, $why); }
   if ($ok) {
     $report->("ok"); }
   return $ok; }
 
-# Receipts never fail --check. They propose allow-list rows for entries the
+# Evidence never fail --check. They propose allow-list rows for entries the
 # static scan cannot classify, and name missing stems that are not vendored.
-sub propose_from_receipts {
+sub propose_from_evidence {
   my ($ctan_root, $dir, $why) = @_;
   my $report = sub { print STDERR "fetch-ctan: check: @_\n"; };
   unless (-d $dir) {
-    $report->("receipts: $dir is not a directory");
+    $report->("evidence: $dir is not a directory");
     return; }
-  my @receipts;
-  find({
-    wanted => sub {
-      return unless -f $_;
-      push @receipts, $File::Find::name if basename($File::Find::name) eq 'receipt.json';
-    },
-    no_chdir => 1,
-  }, $dir);
-  $report->("receipts: " . scalar(@receipts) . " receipt.json under $dir");
-  unless (@receipts) {
-    $report->("receipts: nothing to propose");
-    return; }
+  my $inventory = eval { load_inventory($dir, format => $opt{'legacy-inventory'} ? 'legacy' : 'paper-run', require_xml => 0) };
+  unless ($inventory) { $report->("evidence unavailable: $@"); return; }
+  my @evidence = values %{$inventory->{papers}};
+  $report->("evidence: " . scalar(@evidence) . " paper conditions under $dir");
   my %entry_ok = map { $_ => 1 } ctan_entries($ctan_root);
   my %file_to_entry;
   foreach my $entry (keys %entry_ok) {
@@ -802,10 +796,8 @@ sub propose_from_receipts {
       $file_to_entry{$base} = $entry; } }
   my %missing;        # file basename -> count
   my %pkg_missing;    # package name from route=missing -> count
-  foreach my $path (@receipts) {
-    my $raw = eval { slurp_raw($path) } or next;
-    my $rec = eval { decode_json($raw) } or next;
-    my $det = $rec->{details} || {};
+  foreach my $paper (@evidence) {
+    my $det = $paper->{receipt}{details} || {};
     if (ref $det->{missingFiles} eq 'ARRAY') {
       foreach my $f (@{ $det->{missingFiles} }) {
         next unless defined $f && $f ne '';
@@ -838,11 +830,11 @@ sub propose_from_receipts {
   if (%allow_propose) {
     $report->("allow-list proposals (entries present but the static scan cannot classify):");
     foreach my $e (sort keys %allow_propose) {
-      $report->("  $e  ($allow_propose{$e} receipt mention(s))"); } }
+      $report->("  $e  ($allow_propose{$e} condition mention(s))"); } }
   else {
     $report->("allow-list proposals: none"); }
   if (%not_vendored) {
     $report->("missing stems not vendored (not allow-list rows):");
     foreach my $f (sort { $not_vendored{$b} <=> $not_vendored{$a} || $a cmp $b } keys %not_vendored) {
-      $report->("  $f  ($not_vendored{$f} receipt mention(s))"); } }
+      $report->("  $f  ($not_vendored{$f} condition mention(s))"); } }
   return; }

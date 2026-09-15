@@ -5,7 +5,7 @@
 # (Core/Definition.pm startProfiling/stopProfiling) records every
 # expansion, digestion, and absorption and prints "Profiling results:"
 # at the end of the log. gauntlet-worker.ps1 folds that block into
-# receipt.json as details.profile. Overhead is a few percent; the
+# run.json as condition details.profile. Overhead is a few percent; the
 # Expandable "trivial macro" shortcut is disabled while profiling, so
 # durations are comparable between articles but not with unprofiled runs.
 #

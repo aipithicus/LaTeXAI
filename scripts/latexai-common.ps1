@@ -215,6 +215,9 @@ function Resolve-LaTeXAICdxsciRoot {
     if (-not (Test-Path -LiteralPath $runner -PathType Leaf)) {
         throw "LaTeXAI: CDXSCI_ROOT from $Source has no inventory runner: '$runner'"
     }
+    if (-not (Test-Path -LiteralPath (Join-Path $resolved 'src/inventory-records/inventory-records.psm1') -PathType Leaf)) {
+        throw "LaTeXAI: CDXSCI_ROOT from $Source has no inventory record contract module"
+    }
     return [ordered]@{
         CdxsciRoot = $resolved
         ExecutorManifest = (Resolve-Path -LiteralPath $executor).Path

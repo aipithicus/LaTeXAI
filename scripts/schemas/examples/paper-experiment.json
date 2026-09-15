@@ -1,0 +1,46 @@
+{
+  "schema": "latexai/paper-experiment/1",
+  "measurement": {
+    "path": "D:/example/LaTeXAI/scripts/gauntlet-worker.ps1",
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "conditions": [
+    {
+      "id": "conversion",
+      "status": "ok",
+      "engine": {
+        "root": "D:/example/LaTeXAI",
+        "version": "example",
+        "commit": "example"
+      },
+      "execution": {
+        "outcome": "exited",
+        "exitCode": 0,
+        "timedOut": false,
+        "cleanupComplete": true
+      },
+      "outputs": {
+        "xml": "conditions/conversion/paper.xml"
+      },
+      "counts": {
+        "exitCode": 0,
+        "timedOut": 0,
+        "mathElements": 1,
+        "latexmlMs": 500.25
+      },
+      "details": {
+        "arguments": [
+          "--capture"
+        ],
+        "packages": [],
+        "taxonomy": [],
+        "missingFiles": [],
+        "undefinedMacros": [],
+        "errorNodes": [],
+        "internalLeaks": [],
+        "danglingRefs": []
+      }
+    }
+  ],
+  "comparisons": []
+}

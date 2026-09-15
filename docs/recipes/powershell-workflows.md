@@ -43,7 +43,7 @@ one invocation: each start/run gets a fresh process.
 Both batch callers accept a native limit and a separate `-ProcessTimeoutSeconds`;
 the worker default is native + 60 seconds. `-ExecutionTimeoutSeconds` and
 `-WaitTimeoutSeconds` bound the batch; `-CleanupTimeoutSeconds` bounds executor cleanup.
-Choose the outer MCP budget to include preflight, execution, cleanup and receipt writing.
+Choose the outer MCP budget to include preflight, execution, cleanup and record publication.
 Defaults live in [`scripts/policy.psd1`](../../scripts/policy.psd1).
 
 `run_powershell` defaults to 30 seconds; TOML templates allow 90 seconds per request.

@@ -3,7 +3,7 @@
 #
 # Real papers hit the default MAX_ERRORS (100) long before the document ends,
 # which turns an error count into a fatal stop. Raise it so every paper runs
-# to completion and the receipt counts what actually happened. Lexeme
+# to completion and the worker records what actually happened. Lexeme
 # serialization of math is on so the IR carries the lexemes downstream.
 #
 # Loaded by scripts/gauntlet-worker.ps1 through
