@@ -106,7 +106,7 @@ function New-LaTeXAIReusePlan {
     if($batch.schema -cne 'codex-scientiae/inventory-batch/1' -or $batch.engine -cne 'latexai'){throw 'Reuse requires an explicit LaTeXAI paper-record batch'}
     $plan=Read-LaTeXAIPinnedJson $batch.experiment
     Assert-InventoryRecord $plan
-    if($plan.specification.schema -cne 'latexai/paired-plan/1'){throw 'Reuse requires frozen paired-plan/1 evidence'}
+    if($plan.specification.schema -cnotin @('latexai/paired-plan/1','latexai/contrast-plan/1')){throw 'Reuse requires frozen paired-plan/1 or contrast-plan/1 evidence'}
     $null=Read-LaTeXAIPinnedJson $batch.executor
     $seen=[Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
     foreach($assignment in $plan.assignments){if(-not $seen.Add($assignment.article.directory)){throw 'Duplicate retained paper assignment'}}
@@ -137,9 +137,12 @@ function Get-LaTeXAIRetainedCondition {
     if($condition.status -cne 'ok' -or $condition.execution.outcome -cne 'exited' -or $condition.execution.exitCode -ne 0 -or
         $condition.execution.timedOut -ne $false -or $condition.execution.cleanupComplete -ne $true){throw 'Retained conversion did not complete successfully'}
     # A reused condition keeps the original conversion's freeze and invocation.
-    $originFreeze=if($condition.Contains('conversion') -and $condition.conversion.action -eq 'reused'){$condition.conversion.origin.freeze}else{$paper.payload.freeze}
+    $originFreeze=if($condition.Contains('conversion') -and $condition.conversion.action -eq 'reused'){$condition.conversion.origin.freeze}
+        elseif($condition.Contains('conversion') -and $condition.conversion.Contains('freeze')){$condition.conversion.freeze}else{$paper.payload.freeze}
     $freeze=Read-LaTeXAIPinnedJson $originFreeze
-    $identity=Get-LaTeXAIConversionIdentity $freeze $assignment.article $plan.workerParameters $declarations[0]
+    $parameters=@{};foreach($key in $plan.workerParameters.Keys){$parameters[$key]=$plan.workerParameters[$key]}
+    if($declarations[0].Contains('includeStyles')){$parameters.IncludeStyles=$declarations[0].includeStyles}
+    $identity=Get-LaTeXAIConversionIdentity $freeze $assignment.article $parameters $declarations[0]
     if($identity.Sha256 -cne $Expected.Sha256){throw 'Conversion identity changed (source, engine, runtime, options or native instrumentation)'}
     Assert-LaTeXAIRetainedConversionInputs $freeze $identity.Source
     $directory=Split-Path $recordPath
@@ -157,14 +160,14 @@ function Get-LaTeXAIRetainedCondition {
         $condition.details.sourceTree -cne $identity.Source.tree.root){throw 'Retained conversion addresses disagree with frozen evidence'}
     $job=$condition.details.conversionWorkingDirectory
     $args=@('-I',(Join-Path $freeze.engine 'lib'),(Join-Path $freeze.engine 'bin/latexml'))
-    if($plan.workerParameters.IncludeStyles){$args+='--includestyles'}
+    if($parameters.IncludeStyles){$args+='--includestyles'}
     $args+="--path=$($identity.Source.tree.root)"
     foreach($path in $plan.workerParameters.SearchPath){$args+='--path='+(Join-Path $freeze.engine $path)}
     foreach($preload in @($identity.Identity.options.Preload)){$args+="--preload=$preload"}
     $args+=@($declarations[0].arguments)
     $args+=@("--log=$(Join-Path $job 'latexml.log')","--destination=$(Join-Path $job ($Article.slug+'.xml'))",(Join-Path $identity.Source.tree.root $Article.entrypoint))
     if((Get-LaTeXAIIdentityHash $args) -cne (Get-LaTeXAIIdentityHash @($condition.details.arguments))){throw 'Retained invocation disagrees with declared options'}
-    return [pscustomobject]@{Condition=$condition;Identity=$identity;Freeze=$freeze;Raw=$raw.ToArray();Parameters=$plan.workerParameters;Declaration=$declarations[0];Article=$assignment.article
+    return [pscustomobject]@{Condition=$condition;Identity=$identity;Freeze=$freeze;Raw=$raw.ToArray();Parameters=$parameters;Declaration=$declarations[0];Article=$assignment.article
         Origin=@{record=$recordRef;condition=$Requested.id;experiment=$Reuse.experiment;freeze=$originFreeze
             nativeDurationMs=($condition.Contains('conversion') ? $condition.conversion.nativeDurationMs : $condition.counts.latexmlMs)
             memory=($condition.Contains('conversion') -and $condition.conversion.action -eq 'reused' ? $condition.conversion.origin.memory : $condition.memory)}}

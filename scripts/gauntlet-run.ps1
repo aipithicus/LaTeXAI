@@ -53,6 +53,7 @@ param(
     [switch] $LegacyInventory,
     [switch] $SelectOnly,
     [switch] $CaptureParity,
+    [string] $ExperimentFile = '',
     [string] $ReuseBatch = '',
     [switch] $AnalysisOnly,
     [string[]] $OffArgument = @(),
@@ -73,11 +74,25 @@ $runtime = Resolve-LaTeXAIRuntime -PerlRoot $PerlRoot -CdxsciRoot $CdxsciRoot `
 Set-LaTeXAIRuntimeEnvironment -Runtime $runtime -IncludeCdxsci
 $policy = $runtime.Policy.Gauntlet
 $reuse=$null
+$contrast=$null
+if($ExperimentFile){
+    if($CaptureParity -or $OffArgument.Count -or $OnArgument.Count -or $OnFirst -or $LatexmlArgument.Count){throw '-ExperimentFile owns its condition graph; paired switches and extra condition flags cannot be combined'}
+    Import-Module (Join-Path $runtime.CdxsciRoot 'src/inventory-records/inventory-records.psm1') -Force
+    . (Join-Path $PSScriptRoot 'gauntlet-reuse.ps1')
+    . (Join-Path $PSScriptRoot 'gauntlet-contrasts.ps1')
+    . (Join-Path $PSScriptRoot 'gauntlet-legacy.ps1')
+    $contrast=Read-LaTeXAIContrastInput $ExperimentFile
+    if(@($contrast.Input.conditions|Where-Object {$_.Contains('legacy')}).Count -and -not $Path.Count){throw 'Legacy import requires explicit -Path population selection'}
+    $CaptureParity=$true
+}
+$conditionCount=if($contrast){@($contrast.Input.conditions|Where-Object {-not $_.Contains('legacy')}).Count}else{2}
+$edgeCount=if($contrast){$contrast.Input.comparisons.Count}else{1}
 if($AnalysisOnly -and -not $ReuseBatch){throw '-AnalysisOnly requires -ReuseBatch with frozen paper records'}
 if($ReuseBatch){
     Import-Module (Join-Path $runtime.CdxsciRoot 'src/inventory-records/inventory-records.psm1') -Force
     . (Join-Path $PSScriptRoot 'gauntlet-reuse.ps1')
     $reuse=New-LaTeXAIReusePlan -Directory $ReuseBatch -AnalysisOnly:$AnalysisOnly
+    if($reuse.Plan.specification.schema -ceq 'latexai/contrast-plan/1' -and -not $contrast){throw 'Reusing a contrast batch requires -ExperimentFile declaring the requested conditions'}
     $CaptureParity=$true
     if(-not $Path.Count){$Path=@($reuse.Plan.assignments.article.directory)}
     foreach($name in @('IncludeStyles','Kpsewhich','Preload','ConversionWorkingDirectory')){
@@ -88,14 +103,16 @@ if($ReuseBatch){
         }
     }
     if($null -eq $NativeTimeoutSeconds){$NativeTimeoutSeconds=[int]$reuse.Plan.workerParameters.TimeoutSeconds}
-    if(-not $PSBoundParameters.ContainsKey('OffArgument')){$OffArgument=@(($reuse.Plan.specification.conditions|Where-Object {$_.id -ceq 'off'}).arguments)}
-    if(-not $PSBoundParameters.ContainsKey('OnArgument')){$OnArgument=@(($reuse.Plan.specification.conditions|Where-Object {$_.id -ceq 'on'}).arguments|Where-Object {$_ -cne '--capture'})}
+    if(-not $contrast){
+        if(-not $PSBoundParameters.ContainsKey('OffArgument')){$OffArgument=@(($reuse.Plan.specification.conditions|Where-Object {$_.id -ceq 'off'}).arguments)}
+        if(-not $PSBoundParameters.ContainsKey('OnArgument')){$OnArgument=@(($reuse.Plan.specification.conditions|Where-Object {$_.id -ceq 'on'}).arguments|Where-Object {$_ -cne '--capture'})}
+    }
 }
 if ($null -eq $MaxWorkers) { $MaxWorkers = [int]$policy.MaxWorkers }
 if ($null -eq $ReservedCores) { $ReservedCores = [int]$policy.ReservedCores }
 if ($null -eq $NativeTimeoutSeconds) { $NativeTimeoutSeconds = [int]$policy.NativeTimeoutSeconds }
 if ($null -eq $ProcessTimeoutSeconds) {
-    $ProcessTimeoutSeconds = if($AnalysisOnly){$ComparisonTimeoutSeconds+600} elseif ($CaptureParity) { 2 * ($NativeTimeoutSeconds + 60) + $ComparisonTimeoutSeconds + 300 }
+    $ProcessTimeoutSeconds = if($AnalysisOnly){$edgeCount*$ComparisonTimeoutSeconds+600} elseif ($CaptureParity) { $conditionCount * ($NativeTimeoutSeconds + 60) + $edgeCount * $ComparisonTimeoutSeconds + 600 }
         elseif ($NativeTimeoutSeconds -eq 0) { 0 }
         else { $NativeTimeoutSeconds + [int]$policy.WorkerGraceSeconds }
 }
@@ -108,7 +125,7 @@ if (-not $PSBoundParameters.ContainsKey('ConversionWorkingDirectory')) {
 }
 $nativeTimeout = [int]$NativeTimeoutSeconds
 if ($CaptureParity) {
-    $minimum=($AnalysisOnly ? ($ComparisonTimeoutSeconds+60) : (2*$nativeTimeout+$ComparisonTimeoutSeconds+60))
+    $minimum=($AnalysisOnly ? ($edgeCount*$ComparisonTimeoutSeconds+60) : ($conditionCount*$nativeTimeout+$edgeCount*$ComparisonTimeoutSeconds+60))
     if ($nativeTimeout -le 0 -or $ProcessTimeoutSeconds -lt $minimum) { throw 'Paired workers require finite budgets covering requested stages and cleanup' }
     if ($PSBoundParameters.ContainsKey('ConversionWorkingDirectory') -and $ConversionWorkingDirectory -ne 'output') { throw 'Paired conditions require isolated output working directories' }
     $ConversionWorkingDirectory='output'
@@ -161,8 +178,9 @@ if ($Preview) {
         worker = $worker
         path = @($Path)
         conversionWorkingDirectory = $ConversionWorkingDirectory
-        conditions = ($CaptureParity ? @('off','on') : @('conversion'))
-        order = ($CaptureParity ? ($OnFirst ? @('on','off') : @('off','on')) : @('conversion'))
+        conditions = ($contrast ? $contrast.Input.conditions : ($CaptureParity ? @('off','on') : @('conversion')))
+        comparisons = ($contrast ? $contrast.Input.comparisons : @())
+        order = ($contrast ? @($contrast.Input.conditions.id) : ($CaptureParity ? ($OnFirst ? @('on','off') : @('off','on')) : @('conversion')))
         comparisonTimeoutSeconds = ($CaptureParity ? $ComparisonTimeoutSeconds : $null)
         frozenInputCopies = [bool]$CaptureParity
         reuse = ($reuse ? $reuse.Specification : $null)
@@ -317,6 +335,16 @@ if($CaptureParity){
         orderPolicy=($OnFirst ? 'on-then-off' : 'off-then-on');maxPaperWorkers=$MaxWorkers
     }
     if($reuse){$invoke.ExperimentSpecification.reuse=$reuse.Specification}
+    if($contrast){
+        $graph=Complete-LaTeXAIContrastPlan $contrast $freeze $jobs (Join-Path $runRoot 'condition-inputs') $workerParameter
+        $invoke.ExperimentSpecification.schema='latexai/contrast-plan/1'
+        $invoke.ExperimentSpecification.declaration=$contrast.Reference
+        $invoke.ExperimentSpecification.conditions=$graph.Conditions
+        $invoke.ExperimentSpecification.comparisons=$graph.Comparisons
+        $invoke.ExperimentSpecification.orderPolicy='declared'
+        $invoke.ExperimentSpecification.stages.validationAllowanceSeconds=600
+        $invoke.RequireQualification=$graph.Comparisons.Count -gt 0
+    }
     Write-Information -InformationAction Continue "Frozen paired experiment: $runRoot; papers=$($jobs.Count)"
 }
 

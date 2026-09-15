@@ -18,7 +18,7 @@ die "Output already exists\n" if -e $output;
 my $started = time;
 my $request = read_json($request_path);
 die "Invalid paper comparison request\n" unless ($request->{schema} || '') eq 'latexai/paper-comparison-request/1'
-  && ($request->{mode} || '') =~ /^(?:parity|replay)$/ && $request->{article}{slug}
+  && ($request->{mode} || '') =~ /^(?:parity|replay|regression|styles)$/ && $request->{article}{slug}
   && ($request->{left}{condition}{id} || '') =~ /^[a-z][a-z0-9-]*$/
   && ($request->{right}{condition}{id} || '') =~ /^[a-z][a-z0-9-]*$/;
 make_path($output);
@@ -53,7 +53,7 @@ my $complete = eval {
     my $job = File::Spec->catdir($request->{paperDirectory}, 'conditions', $c->{id});
     if ($c->{conversion}) {
       my $conversion = $c->{conversion};
-      my $pin = $conversion->{action} eq 'reused' ? $conversion->{origin}{freeze} : $request->{freeze};
+      my $pin = $conversion->{action} eq 'reused' ? $conversion->{origin}{freeze} : ($conversion->{freeze} || $request->{freeze});
       die "Changed conversion freeze\n" unless file_hash($pin->{path}) eq $pin->{sha256};
       $context->{inputs}{$pin->{path}} = $pin->{sha256};
       my $freeze = read_json($pin->{path});
@@ -68,13 +68,27 @@ my $complete = eval {
         $job = $c->{details}{conversionWorkingDirectory};
       }
     }
+    if ($c->{legacy}) {
+      my $legacy=$c->{legacy};
+      die "Unknown legacy import rule\n" unless $legacy->{rule} eq 'receipt-native-fields/1';
+      for my $pin ($legacy->{batch}, $legacy->{receipt}, @{$legacy->{raw}}) {
+        die "Changed legacy input\n" unless file_hash($pin->{path}) eq $pin->{sha256};
+        $context->{inputs}{$pin->{path}}=$pin->{sha256};
+      }
+      my $receipt=read_json($legacy->{receipt}{path});
+      die "Legacy article mismatch\n" unless $receipt->{article}{treeSha256} eq $request->{article}{treeSha256};
+      require File::Basename;
+      $job=File::Basename::dirname($legacy->{receipt}{path});
+    }
     push @jobs, $job;
     push @xml, CaptureInventory::owned_path($request->{paperDirectory}, $c->{outputs}{xml});
-    push @evidence, {
+    my $evidence = {
       article=>{map {$_=>$request->{article}{$_}} qw(slug directory treeSha256)}, sourceTree=>$source,
       status=>'ok', counts=>$c->{counts}, details=>$c->{details}, engine_root=>$c->{engine}{root},
       ($c->{conversion} ? (conversion_identity=>$c->{conversion}{identity}) : ())
     };
+    delete $evidence->{sourceTree} if $c->{legacy} && $c->{legacy}{invocationContract} eq 'receipt-source-cwd';
+    push @evidence, $evidence;
   }
   $paper = compare_paper($context, $request->{article}{slug}, @evidence,
     @jobs, $output, mode=>$request->{mode}, old_xml=>$xml[0], new_xml=>$xml[1]);
@@ -90,6 +104,9 @@ write_json("$output/comparison.json", {
   schema=>'latexai/paper-comparison/1', mode=>$request->{mode}, left=>$request->{left}{condition}{id}, right=>$request->{right}{condition}{id},
   status=>$status, qualified=>$status eq 'pass' ? JSON::PP::true : JSON::PP::false, issues=>\@issues, paper=>$paper,
   normalization=>$normalization, inputs=>$context->{inputs}, durationMs=>1000*(time-$started),
+  policy=>{configuration_difference=>{parity=>'capture',replay=>'none',regression=>'engine lib/bin/lib-ctan',styles=>'includestyles'}->{$request->{mode}},
+    output_differences=>($request->{mode} eq 'styles' ? 'observations' : 'fail'),
+    required_invariants=>[qw(complete-native-execution raw-artifact-integrity recorded-invocation source-byte-fidelity)]},
   comparator=>tree_hashes(qw(tools/dev/compare-paper.pl tools/dev/CaptureCompare.pm tools/dev/CaptureAudit.pm tools/dev/CaptureRuntime.pm tools/dev/CaptureStrip.pm tools/dev/CaptureWhitespace.pm tools/dev/CaptureInventory.pm))
 });
 print "Paper comparison: $request->{article}{slug}, $request->{mode}, $status, ",scalar(@issues)," issues\n";

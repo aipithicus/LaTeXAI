@@ -61,7 +61,7 @@ lgauntlet -CaptureParity -Path supellex/gauntlet/<collection>/<paper> `
 ```
 
 Use `-Preview` first for the resolved conditions, order and budgets. The paired
-worker deadline defaults to twice (native + 60), plus comparison + 300 seconds
+worker deadline defaults to twice (native + 60), plus comparison + 600 seconds
 for validation/publication. Native and comparison deadlines must be finite;
 the outer MCP budget must also cover input copying before dispatch. The launcher
 mints a new artifact run; an explicit `-RunDirectory` must already exist under
@@ -91,6 +91,35 @@ clears a deliberate on-side failure flag. `-Preview` shows mode, inputs and budg
 Analysis-only workers default to comparison + 600 seconds for measurement and
 validation; selective retry retains the paired native-budget formula. Input
 copying still occurs before dispatch and belongs in the outer MCP budget.
+
+## Declared condition graphs
+
+Pass a JSON file matching [contrast-input/1](../../scripts/schemas/contrast-input.schema.json):
+the [style example](../../scripts/schemas/examples/style-contrast.json) runs as-is;
+set the baseline checkout path in the [engine example](../../scripts/schemas/examples/engine-contrast.json).
+Relative engine paths resolve from the launch directory.
+
+```powershell
+lgauntlet -ExperimentFile <conditions.json> -Path <inventory-or-paper> -Preview
+lgauntlet -ExperimentFile <conditions.json> -Path <inventory-or-paper> -FailOnArticleFailure
+lgauntlet -ExperimentFile <conditions.json> -ReuseBatch <prior-batch> -AnalysisOnly
+```
+
+Conditions explicitly set `capture` and `includeStyles`; optional `engineRoot`
+selects a prepared checkout. Edges name endpoints and a `parity`, `regression`
+or `styles` policy. A four-condition engine experiment declares baseline OFF/ON,
+candidate OFF/ON, two parity edges and two regression edges. A style experiment
+declares just its requested OFF/ON endpoints. Array order is execution order.
+
+For historical data, replace `engineRoot` with
+`"legacy": {"directory": "<old-run>", "rule": "receipt-native-fields/1"}`.
+Legacy conditions are always analysis-only and require explicit `-Path` selection.
+Their original files remain untouched. Unknown historical execution fields stay
+unknown and prevent a passing qualification. See the [record contract](../specification/gauntlet-records.md#declared-contrasts-and-historical-import).
+
+The default paper deadline sums native + 60 seconds for each fresh condition,
+all edge deadlines and a 600-second measurement/validation allowance. Analysis-only
+omits native deadlines. The outer MCP budget must also cover freeze preparation.
 
 Read `conversionsExecuted`, `conversionsReused` and `conversionsRejected` in the
 worker summary. Reused native timing/memory are historical observations in the

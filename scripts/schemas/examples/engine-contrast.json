@@ -1,0 +1,15 @@
+{
+  "schema": "latexai/contrast-input/1",
+  "conditions": [
+    {"id": "baseline-off", "engineRoot": "../LaTeXAI-baseline", "capture": false, "includeStyles": true},
+    {"id": "baseline-on", "engineRoot": "../LaTeXAI-baseline", "capture": true, "includeStyles": true},
+    {"id": "candidate-off", "capture": false, "includeStyles": true},
+    {"id": "candidate-on", "capture": true, "includeStyles": true}
+  ],
+  "comparisons": [
+    {"id": "baseline-parity", "left": "baseline-off", "right": "baseline-on", "mode": "parity", "required": true},
+    {"id": "candidate-parity", "left": "candidate-off", "right": "candidate-on", "mode": "parity", "required": true},
+    {"id": "off-regression", "left": "baseline-off", "right": "candidate-off", "mode": "regression", "required": true},
+    {"id": "on-regression", "left": "baseline-on", "right": "candidate-on", "mode": "regression", "required": true}
+  ]
+}

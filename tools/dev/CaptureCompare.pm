@@ -24,10 +24,11 @@ sub identity_without_capture {
   return { %$identity, options => \@options };
 }
 sub comparison_identity {
-  my ($runtime, $receipt) = @_;
-  my $conversion = $receipt->{conversion_identity} or return $runtime;
-  my $engine = canonical_path($receipt->{engine_root});
-  my $source = canonical_path($receipt->{sourceTree});
+  my ($runtime, $receipt, $mode) = @_;
+  my $conversion = $receipt->{conversion_identity};
+  return $runtime unless $conversion || ($mode || '') eq 'regression';
+  my $engine = canonical_path($receipt->{engine_root} || $runtime->{engine});
+  my $source = canonical_path($receipt->{sourceTree} || $runtime->{source});
   my $perl = canonical_path($receipt->{details}{perl});
   die "Conversion roots disagree with recorded invocation\n"
     unless $runtime->{engine} eq $engine && $runtime->{source} eq $source && $runtime->{perl} eq $perl;
@@ -43,8 +44,15 @@ sub comparison_identity {
     }
     return $value;
   };
-  return {%{$relocate->($runtime)}, conversion_inputs=>{
-    map {$_=>$conversion->{$_}} qw(engine source entrypoint environment environmentPolicy powershell hostRuntime memoryMethod)}};
+  my $identity = $relocate->($runtime);
+  if ($conversion) {
+    $identity->{conversion_inputs} = {map {$_=>$conversion->{$_}} qw(engine source entrypoint environment environmentPolicy powershell hostRuntime memoryMethod)};
+    if (($mode || '') eq 'regression') {
+      $identity->{conversion_inputs}{engine} = {%{$conversion->{engine}}};
+      delete @{$identity->{conversion_inputs}{engine}}{qw(lib bin lib-ctan)};
+    }
+  }
+  return $identity;
 }
 sub inspect_condition {
   my ($context, $path, $receipt, $job_directory, $stem, $require_ledger) = @_;
@@ -129,7 +137,10 @@ sub inspect_condition {
 sub compare_paper {
   my ($context, $slug, $old_receipt, $new_receipt, $old_job, $job, $output, %options) = @_;
   my $parity = ($options{mode} || 'replay') eq 'parity';
+  my $mode = $options{mode} || 'replay';
+  my $styles = $mode eq 'styles';
   my @issues;
+  my @differences;
   push @issues, "$slug:receipt-failed" unless ($old_receipt->{status} || '') eq 'ok' && ($new_receipt->{status} || '') eq 'ok';
   push @issues, "$slug:article-input" unless object_hash($old_receipt->{article}) eq object_hash($new_receipt->{article});
   my $off_capture = invocation_capture($old_receipt);
@@ -138,62 +149,103 @@ sub compare_paper {
     push @issues, "$slug:off-has-capture" if $off_capture;
     push @issues, "$slug:on-missing-capture" unless $on_capture;
   }
-  else {
+  elsif ($mode eq 'replay') {
     push @issues, "$slug:missing-capture" unless $off_capture && $on_capture;
   }
+  else { push @issues, "$slug:capture-setting" unless !!$off_capture == !!$on_capture; }
+  if ($styles) {
+    push @issues, "$slug:styles-endpoints" if grep {$_ eq '--includestyles'} @{$old_receipt->{details}{arguments}};
+    push @issues, "$slug:styles-endpoints" unless grep {$_ eq '--includestyles'} @{$new_receipt->{details}{arguments}};
+  }
   my $before = inspect_condition($context, $options{old_xml} || "$old_job/$slug.xml", $old_receipt,
-    $old_receipt->{conversion_job} || $old_job, "$output/$slug.baseline", $parity ? 0 : 1);
+    $old_receipt->{conversion_job} || $old_job, "$output/$slug.baseline", $off_capture ? 1 : 0);
   my $after = inspect_condition($context, $options{new_xml} || "$job/$slug.xml", $new_receipt,
-    $new_receipt->{conversion_job} || $job, "$output/$slug.candidate", 1);
+    $new_receipt->{conversion_job} || $job, "$output/$slug.candidate", $on_capture ? 1 : 0);
   my @counts = @{$options{counts} || [{%{$old_receipt->{counts}}}, {%{$new_receipt->{counts}}}]};
   my @derived_counts = @{$options{derived_counts} || []};
   my %count_keys = map { $_ => 1 } (keys %{ $counts[0] }, keys %{ $counts[1] });
   my %measurements = map { $_ => 1 } qw(latexmlMs attributionMs logParseMs xmlInspectMs residualMs workerMs outputBytes);
   for my $key (sort keys %count_keys) {
     next if $measurements{$key};
-    push @issues, "$slug:diagnostic-count:$key" unless
+    push @differences, "$slug:diagnostic-count:$key" unless
       object_hash($counts[0]{$key}) eq object_hash($counts[1]{$key});
   }
   for my $key (qw(taxonomy missingFiles undefinedMacros errorNodes internalLeaks danglingRefs)) {
     my ($old_detail, $new_detail) = ($old_receipt->{details}{$key}, $new_receipt->{details}{$key});
     if ($key eq 'undefinedMacros' || $key eq 'missingFiles') {
       $old_detail = [sort @$old_detail]; $new_detail = [sort @$new_detail]; }
-    push @issues, "$slug:diagnostic-detail:$key" unless
+    push @differences, "$slug:diagnostic-detail:$key" unless
       object_hash($old_detail) eq object_hash($new_detail);
   }
+  my @routes;
+  for my $receipt ($old_receipt, $new_receipt) {
+    my $engine=canonical_path($receipt->{engine_root} || $receipt->{details}{arguments}[1] || '');
+    $engine =~ s{/lib$}{};
+    my $source=canonical_path($receipt->{sourceTree} || "$receipt->{article}{directory}/$slug-tex");
+    my @packages;
+    for my $package (@{$receipt->{details}{packages} || []}) {
+      my %row=%$package;
+      if (defined $row{path}) {
+        $row{path}=canonical_path($row{path});
+        for my $root ([$source,'<source>'],[$engine,'<engine>']) {
+          $row{path}=$root->[1].substr($row{path},length($root->[0])) if index($row{path},$root->[0].'/')==0;
+        }
+      }
+      push @packages, \%row;
+    }
+    push @routes, [sort {object_hash($a) cmp object_hash($b)} @packages];
+  }
+  push @differences, "$slug:package-routes" unless object_hash($routes[0]) eq object_hash($routes[1]);
   $before->{receipt_counts} = $old_receipt->{counts};
   $after->{receipt_counts} = $new_receipt->{counts};
   my @changes;
   push @issues, "$slug:$_" for @{ $before->{issues} }, @{ $after->{issues} };
-  push @issues, "$slug:non-capture-tree" unless $before->{comparison_sha256} eq $after->{comparison_sha256};
+  push @differences, "$slug:non-capture-tree" unless $before->{comparison_sha256} eq $after->{comparison_sha256};
   if ($context->{project} && $before->{runtime_projection} && $after->{runtime_projection}) {
     my $left = $parity ? identity_without_capture($before->{runtime_projection}{identity})
       : $before->{runtime_projection}{identity};
     my $right = $parity ? identity_without_capture($after->{runtime_projection}{identity})
       : $after->{runtime_projection}{identity};
-    $left = comparison_identity($left, $old_receipt);
-    $right = comparison_identity($right, $new_receipt);
+    if ($styles) {
+      $left = {%$left, options=>[grep {ref($_) || $_ ne '--includestyles'} @{$left->{options}}]};
+      $right = {%$right, options=>[grep {ref($_) || $_ ne '--includestyles'} @{$right->{options}}]};
+    }
+    $left = comparison_identity($left, $old_receipt, $mode);
+    $right = comparison_identity($right, $new_receipt, $mode);
     push @issues, "$slug:runtime-invocation" unless object_hash($left) eq object_hash($right);
   }
-  if ($parity) {
-    push @issues, "$slug:math-tex" unless object_hash($before->{math_tex}) eq object_hash($after->{math_tex});
+  if ($parity || !$off_capture || !$on_capture) {
+    push @differences, "$slug:math-tex" unless object_hash($before->{math_tex}) eq object_hash($after->{math_tex});
   }
   else {
-    push @issues, "$slug:source-hashes" unless object_hash($before->{source_hashes}) eq object_hash($after->{source_hashes});
-    push @issues, "$slug:carrier-identities" unless object_hash([sort keys %{ $before->{carriers} }])
+    my @sources;
+    for my $pair ([$before,$old_receipt],[$after,$new_receipt]) {
+      my $root = canonical_path($pair->[1]{sourceTree} || "$pair->[1]{article}{directory}/$slug-tex");
+      my %hashes;
+      for my $path (keys %{$pair->[0]{source_hashes}}) {
+        my $key=canonical_path($path);
+        $key='<source>/'.substr($key,length($root)+1) if index($key,"$root/")==0;
+        $hashes{$key}=$pair->[0]{source_hashes}{$path};
+      }
+      push @sources, \%hashes;
+    }
+    push @differences, "$slug:source-hashes" unless object_hash($sources[0]) eq object_hash($sources[1]);
+    push @differences, "$slug:carrier-identities" unless object_hash([sort keys %{ $before->{carriers} }])
       eq object_hash([sort keys %{ $after->{carriers} }]);
     for my $id (sort keys %{ $before->{carriers} }) {
       my ($old, $new) = ($before->{carriers}{$id}, $after->{carriers}{$id});
       next unless $new;
-      push @issues, "$slug:tex:$id" unless $old->{tex} eq $new->{tex};
+      push @differences, "$slug:tex:$id" unless $old->{tex} eq $new->{tex};
       if (object_hash($old->{capture}) ne object_hash($new->{capture})) {
         push @changes, { id => $id, before => $old, after => $new };
-        push @issues, "$slug:changed-capture:$id";
+        push @differences, "$slug:changed-capture:$id";
       }
     }
-    push @issues, "$slug:classes" unless object_hash($before->{classes}) eq object_hash($after->{classes});
+    push @differences, "$slug:classes" unless object_hash($before->{classes}) eq object_hash($after->{classes});
   }
+  push @issues, @differences unless $styles;
   return { paper => $slug, before => $before, after => $after, issues => \@issues, changes => \@changes, derived_counts => \@derived_counts,
+    observations=>($styles ? \@differences : []),
     exact_document_equal => $before->{stripped_sha256} eq $after->{stripped_sha256} ? JSON::PP::true : JSON::PP::false,
     projected_document_equal => $before->{projected_sha256} eq $after->{projected_sha256} ? JSON::PP::true : JSON::PP::false,
     comparison_document_equal => $before->{comparison_sha256} eq $after->{comparison_sha256} ? JSON::PP::true : JSON::PP::false };

@@ -26,9 +26,9 @@ GetOptions('baseline=s' => \$baseline_root, 'candidate=s' => \$current_root,
   'baseline-condition=s' => \$baseline_condition, 'candidate-condition=s' => \$candidate_condition)
   or die "Invalid arguments\n";
 $mode = 'replay' unless defined $mode;
-die "usage: capture-corpus-audit.pl --baseline RUN --candidate RUN --output NEW_DIR [--mode replay|parity] [--baseline-format paper-run|legacy] [--candidate-format paper-run|legacy] [--baseline-condition ID] [--candidate-condition ID] [--project-baseline RECORD_SHA256] [--whitespace-model FILE --whitespace-model-sha256 SHA256]\n"
+die "usage: capture-corpus-audit.pl --baseline RUN --candidate RUN --output NEW_DIR [--mode replay|parity|regression|styles] [--baseline-format paper-run|legacy] [--candidate-format paper-run|legacy] [--baseline-condition ID] [--candidate-condition ID] [--project-baseline RECORD_SHA256] [--whitespace-model FILE --whitespace-model-sha256 SHA256]\n"
   unless $baseline_root && $current_root && $output && !@ARGV;
-die "Unknown mode\n" unless $mode eq 'replay' || $mode eq 'parity';
+die "Unknown mode\n" unless $mode =~ /^(?:replay|parity|regression|styles)$/;
 $baseline_root = abs_path($baseline_root) or die "Baseline missing\n";
 $current_root = abs_path($current_root) or die "Candidate missing\n";
 die "Output already exists\n" if -e $output;

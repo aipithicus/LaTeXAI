@@ -1,0 +1,107 @@
+{
+  "schema": "latexai/paper-experiment/1",
+  "measurement": {
+    "path": "D:/engine/scripts/gauntlet-measure.ps1",
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "conditions": [
+    {
+      "id": "off",
+      "status": "ok",
+      "engine": {
+        "commit": "historical",
+        "version": "0.8.8",
+        "root": "D:/legacy/engine"
+      },
+      "execution": {
+        "outcome": "exited",
+        "exitCode": 0,
+        "timedOut": false,
+        "cleanupComplete": true
+      },
+      "outputs": {
+        "xml": "conditions/off/paper.xml"
+      },
+      "counts": {
+        "exitCode": 0,
+        "timedOut": 0,
+        "mathElements": 1,
+        "latexmlMs": 0
+      },
+      "details": {
+        "arguments": [],
+        "packages": [],
+        "taxonomy": [],
+        "missingFiles": [],
+        "undefinedMacros": [],
+        "errorNodes": [],
+        "internalLeaks": [],
+        "danglingRefs": [],
+        "sourceTree": "D:/source/paper-tex",
+        "conversionWorkingDirectory": "D:/source/paper-tex",
+        "attributionStatus": "unavailable-historical-engine"
+      },
+      "durationMs": 520.5,
+      "memory": {
+        "method": "unavailable",
+        "bytes": null
+      },
+      "legacy": {
+        "appliedRules": [],
+        "batch": {
+          "path": "D:/legacy/run.json",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "raw": [
+          {
+            "name": "paper.xml",
+            "bytes": 0,
+            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "path": "D:/legacy/jobs/paper/paper.xml"
+          },
+          {
+            "name": "latexml.log",
+            "bytes": 0,
+            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "path": "D:/legacy/jobs/paper/latexml.log"
+          },
+          {
+            "name": "latexml.stdout.txt",
+            "bytes": 0,
+            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "path": "D:/legacy/jobs/paper/latexml.stdout.txt"
+          },
+          {
+            "name": "latexml.stderr.txt",
+            "bytes": 0,
+            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "path": "D:/legacy/jobs/paper/latexml.stderr.txt"
+          }
+        ],
+        "memory": {
+          "method": "unavailable",
+          "bytes": null
+        },
+        "receipt": {
+          "path": "D:/legacy/jobs/paper/receipt.json",
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "limitations": [
+          "Historical engine/runtime bytes and peak memory are unavailable."
+        ],
+        "invocationContract": "recorded-cwd",
+        "nativeDurationMs": 1200,
+        "rule": "receipt-native-fields/1"
+      }
+    }
+  ],
+  "comparisons": [],
+  "freeze": {
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "path": "D:/example/batch/inputs/freeze.json"
+  },
+  "order": [
+    "off"
+  ],
+  "integrityIssues": []
+}

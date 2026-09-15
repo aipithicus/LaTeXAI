@@ -4,7 +4,7 @@ function Measure-LaTeXAICondition {
 param(
     [string]$Article, [string]$OutDirectory, [string]$EngineRoot, [string]$SourceTree,
     [string]$Perl, [string[]]$Arguments, [string]$ConversionCwd, [object]$Run,
-    [datetime]$StartedUtc
+    [datetime]$StartedUtc, [switch]$HistoricalEvidence
 )
 $slug=[IO.Path]::GetFileName($Article.TrimEnd('\','/'))
 $logPath=Join-Path $OutDirectory 'latexml.log'
@@ -244,8 +244,8 @@ function Get-ListFromStatus {
     $attributionStarted = [datetime]::UtcNow
     $attribution = @($undefined | ForEach-Object {
             $macro = $_
-            $where = Find-DefinitionSource -Macro $macro -SourceTree $sourceTree `
-                -EngineRoot $engineRoot -Packages $packages
+            $where = if($HistoricalEvidence){'unavailable-historical-engine'}else{Find-DefinitionSource -Macro $macro -SourceTree $sourceTree `
+                -EngineRoot $engineRoot -Packages $packages}
             [ordered]@{ macro = $macro; source = $where }
         })
     $unattributed = @($attribution | Where-Object { $_.source -eq 'none' }).Count
@@ -341,9 +341,10 @@ function Get-ListFromStatus {
         }
     }
     $lsrPath = Join-Path $engineRoot 'lib-ctan/ls-R'
-    if (Test-Path -LiteralPath $lsrPath -PathType Leaf) {
+    if (-not $HistoricalEvidence -and (Test-Path -LiteralPath $lsrPath -PathType Leaf)) {
         $details.libCtanLsR = (Get-FileHash -LiteralPath $lsrPath -Algorithm SHA256).Hash.ToLowerInvariant()
     }
+    if($HistoricalEvidence){$counts.Remove('undefinedUnattributed');$details.attributionStatus='unavailable-historical-engine'}
     if (-not $ok -and -not $statusLine) {
         $details.stderrTail = @(($nativeStderr -split "`r?`n") | Where-Object { $_ -ne '' } | Select-Object -Last 20)
     }

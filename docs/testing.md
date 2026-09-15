@@ -182,6 +182,15 @@ for reused conversions. The record reader's explicit `-MetadataOnly` option
 defers artifact-byte checks to the stage consumer; ordinary reads and aggregation
 continue to verify every declared artifact.
 
+`tests/inventory-records/contrasts.Tests.ps1` exercises explicit engine and style
+contrasts plus receipt import through the same public runner. Its engine fixture
+changes pinned input bytes without changing semantics; negative controls retain
+strict output/option gates. Legacy controls cover preserved raw hashes, zero
+current conversion time, unknown cleanup and changed artifact rejection. Engine
+performance claims still require a separate unprofiled population experiment.
+`contrast-revisions.Tests.ps1` checks that engine commit metadata comes from an
+actual checkout root and that nested snapshots are labeled `unversioned`.
+
 Historical inputs require `--baseline-format legacy` and/or `--candidate-format legacy` for the corresponding side. A legacy side retains its batch-level `run.json` and worker receipts; the baseline pin then names that original `run.json`. `CaptureInventory.pm` verifies new record/artifact identities and provides the existing comparator with condition evidence. Both formats and condition selections are recorded in the result. No legacy files are rewritten, and the completed-batch timeout inference below applies only to explicitly selected legacy inputs.
 
 For retained formatted XML, explicitly pass `--whitespace-model FILE --whitespace-model-sha256 SHA256` alongside `--project-baseline RUN_SHA256`. `CaptureWhitespace.pm` loads that pinned compiled model through the engine's `Common::Model` and reuses its `#PCDATA` decision. On cloned DOMs it removes only XML whitespace text in declared element-only LaTeXML regions whose child elements the model admits (excluding the root capture ledger that stripping removes). Mixed-content/literal, unknown and foreign subtrees remain opaque; non-whitespace text, CDATA or unmodeled children make a region opaque too. Inherited `xml:space="preserve"` prevents removal, and explicit `default` resumes the model rule. Attributes, comments, processing instructions and non-XML spaces are preserved. Ledger adjacency is never a criterion. This is comparison normalization; it changes no source, raw conversion, serializer or default strip behavior.

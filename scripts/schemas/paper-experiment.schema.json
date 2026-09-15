@@ -294,6 +294,24 @@
               "sha256": {
                 "pattern": "^[0-9a-f]{64}$",
                 "type": "string"
+              },
+              "freeze": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "path",
+                  "sha256"
+                ],
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  }
+                }
               }
             },
             "allOf": [
@@ -314,6 +332,136 @@
             ],
             "additionalProperties": false,
             "type": "object"
+          },
+          "legacy": {
+            "properties": {
+              "batch": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "path",
+                  "sha256"
+                ],
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  }
+                }
+              },
+              "receipt": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "path",
+                  "sha256"
+                ],
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  }
+                }
+              },
+              "limitations": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "memory": {
+                "properties": {
+                  "method": {
+                    "type": "string"
+                  },
+                  "bytes": {
+                    "minimum": 0,
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "method",
+                  "bytes"
+                ],
+                "additionalProperties": false,
+                "type": "object"
+              },
+              "appliedRules": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "invocationContract": {
+                "enum": [
+                  "recorded-cwd",
+                  "receipt-source-cwd"
+                ]
+              },
+              "nativeDurationMs": {
+                "minimum": 0,
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "raw": {
+                "items": {
+                  "properties": {
+                    "bytes": {
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "path": {
+                      "type": "string"
+                    },
+                    "sha256": {
+                      "pattern": "^[0-9a-f]{64}$",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "path",
+                    "sha256",
+                    "bytes",
+                    "name"
+                  ],
+                  "additionalProperties": false,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "rule": {
+                "const": "receipt-native-fields/1"
+              }
+            },
+            "required": [
+              "rule",
+              "batch",
+              "receipt",
+              "raw",
+              "appliedRules",
+              "limitations",
+              "nativeDurationMs",
+              "memory",
+              "invocationContract"
+            ],
+            "additionalProperties": false,
+            "type": "object"
           }
         }
       }
@@ -330,7 +478,9 @@
           "mode": {
             "enum": [
               "parity",
-              "replay"
+              "replay",
+              "regression",
+              "styles"
             ]
           },
           "status": {

@@ -10,6 +10,8 @@
         'scripts/gauntlet-convert.ps1'
         'scripts/gauntlet-measure.ps1'
         'scripts/gauntlet-reuse.ps1'
+        'scripts/gauntlet-contrasts.ps1'
+        'scripts/gauntlet-legacy.ps1'
         'scripts/gauntlet-freeze.ps1'
         'scripts/gauntlet-records.ps1'
         'scripts/markdown-compare.ps1'

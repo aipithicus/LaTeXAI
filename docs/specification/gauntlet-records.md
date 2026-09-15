@@ -14,7 +14,7 @@ implementation and checked again after migration. It covers the currently suppor
 | CDXSCI | `src/batch-adapters/public/Get-InventoryBatchJob.ps1`, inventory dependency helpers | Plan the worker record address and pass its immutable assignment. Keep the adapter free of execution and publication. |
 | CDXSCI | `src/batch-runner.ps1` | Freeze the experiment before dispatch; validate and aggregate worker records into `batch.json`. |
 | CDXSCI | `tests/batch-adapters/inventory-batch.Tests.ps1` | Migrate the generic external test worker and exercise the public runner boundary. |
-| LaTeXAI | `scripts/gauntlet-run.ps1`, `gauntlet-worker.ps1`, `gauntlet-convert.ps1`, `gauntlet-measure.ps1`, `gauntlet-reuse.ps1`, `gauntlet-freeze.ps1` | Freeze inputs; execute or reuse conditions; measure and compare inside the paper job; publish native outcomes and hashed artifacts. |
+| LaTeXAI | `scripts/gauntlet-run.ps1`, `gauntlet-worker.ps1`, `gauntlet-convert.ps1`, `gauntlet-measure.ps1`, `gauntlet-reuse.ps1`, `gauntlet-freeze.ps1`, `gauntlet-contrasts.ps1`, `gauntlet-legacy.ps1` | Freeze inputs; execute, reuse or import conditions; measure and compare inside the paper job; publish native outcomes and hashed artifacts. |
 | LaTeXAI | `scripts/gauntlet-select.ps1` | Select observed package routes from validated worker conditions; historical receipts require an explicit legacy option. |
 | LaTeXAI | `tools/dev/capture-corpus-audit.pl`, `CaptureRuntime.pm`, audit tests | Read condition evidence from worker records. Preserve the qualified comparator and explicit historical-input support. |
 | LaTeXAI | `tools/dev/fetch-ctan.pl --check` | Read missing-file observations from worker conditions; keep historical receipt reading explicit. |
@@ -73,9 +73,61 @@ to describe the original conversion. Runtime comparison validates those original
 addresses before comparing root roles and pinned conversion inputs. Raw XML,
 capture ranges and original records are unchanged.
 
-Receipt-backed legacy import into paper attempts, other condition contrasts and
-the full-population refactored benchmark remain later checkpoints. The existing
-explicit legacy corpus reader remains available for historical comparisons.
+## Declared contrasts and historical import
+
+`-ExperimentFile <json>` accepts `latexai/contrast-input/1` and produces a frozen
+`latexai/contrast-plan/1`. The input lists ordered conditions (`id`, `capture`,
+`includeStyles`, optional standalone `arguments`) and explicit comparison edges
+(`id`, `left`, `right`, `mode`, `required`). Only those conditions and edges run.
+The [input schema](../../scripts/schemas/contrast-input.schema.json) and graph
+validation reject unknown fields, duplicate identities and inconsistent endpoints
+before dispatch.
+
+| Mode | Permitted configuration difference | Output policy |
+| :--- | :--- | :--- |
+| `parity` | Capture OFF to ON | Strict normalized tree, diagnostics, package routes and math fidelity |
+| `regression` | Engine `lib`, `bin`, `lib-ctan` bytes; capture/style settings stay fixed | Strict output, diagnostics, package routes and capture provenance |
+| `styles` | Includestyles OFF to ON; capture stays fixed | Differences are retained observations; native completion, runtime declaration, artifact integrity and source fidelity remain required |
+
+An optional condition `engineRoot` selects a prepared engine checkout, including
+its generated modules. All revisions use the current frozen worker, measurement,
+comparison, preloads and native supervision. Each distinct engine's three input
+trees are copied and hashed; runtime and source copies are shared. The conditions
+retain their own conversion freeze. An engine label or commit alone is never an
+input identity. Prepared copies outside a checkout root are labeled `unversioned`;
+they never inherit a containing repository's commit. Their byte identities are
+still pinned. Change array order to counterbalance a separate experiment.
+
+`-ExperimentFile` can be combined with `-ReuseBatch` and `-AnalysisOnly`. The
+declaration remains explicit; each matching condition must pass the same source,
+engine, runtime, option and artifact checks as a paired replay. Changed conditions
+execute only in selective mode. Legacy conditions always import without conversion.
+
+A condition can instead declare `legacy: {directory: ..., rule:
+"receipt-native-fields/1"}`. An explicit `-Path` selects the paper population.
+The launcher pins the historical batch, selected receipts and XML/log/streams.
+Workers verify them, copy available artifacts, remeasure them and retain original
+references under `condition.legacy`. Missing receipts/files and changed source
+identities remain failed conditions; no replacement conversion is started.
+Selected source directories must still exist at their recorded addresses. A
+missing directory stops population planning; this import rule does not relocate
+sources. An explicitly reduced selection must retain its exclusions.
+
+The import rule reads exit code, timeout, outcome and cleanup from that paper's
+receipt. An absent timeout is false only when the same receipt records native
+`exited`; this derivation is recorded. Other absent execution fields stay unknown
+and prevent qualification. A missing cwd uses the documented historical
+source-directory invocation contract. No success is inferred from batch totals.
+Unavailable historical engine/runtime bytes and peak memory are recorded as
+limitations. Definition attribution against today's library is disabled; raw
+profile, diagnostic, route and XML measurements remain available. Current native
+time is zero; original timing stays in `legacy.nativeDurationMs`.
+
+Summary counters include `conversionsImported`. Optional failed comparisons are
+observations; any incomplete edge or condition keeps overall qualification
+incomplete. Required failures fail qualification. All planned edges remain in
+the paper record. The full-population refactored performance benchmark remains
+separate from correctness reanalysis of historical outputs.
 
 The generic envelope and batch schemas belong to CDXSCI's `inventory-records`
 module. LaTeXAI owns the `latexai/paper-experiment/1` payload schema. Both have
@@ -84,7 +136,8 @@ serialized examples and validate at publication and consumption boundaries.
 LaTeXAI's [payload schema](../../scripts/schemas/paper-experiment.schema.json) and
 [acquisition example](../../scripts/schemas/examples/paper-experiment.json) and
 [paired example](../../scripts/schemas/examples/paired-paper-experiment.json) and
-[reuse example](../../scripts/schemas/examples/reused-paper-experiment.json) accompany the
+[reuse example](../../scripts/schemas/examples/reused-paper-experiment.json) and
+[import example](../../scripts/schemas/examples/imported-paper-experiment.json) accompany the
 shared module's `inventory-records.schema.json` and three envelope examples.
 The experiment pins assignments, declared source-tree fingerprints, worker
 parameters, the worker and record-module bytes, schema and execution policy.

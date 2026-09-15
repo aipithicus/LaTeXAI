@@ -1,0 +1,10 @@
+{
+  "schema": "latexai/contrast-input/1",
+  "conditions": [
+    {"id": "styles-off", "capture": true, "includeStyles": false},
+    {"id": "styles-on", "capture": true, "includeStyles": true}
+  ],
+  "comparisons": [
+    {"id": "styles", "left": "styles-off", "right": "styles-on", "mode": "styles", "required": true}
+  ]
+}

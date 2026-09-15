@@ -136,6 +136,11 @@ sub load_inventory {
         $evidence->{conversion_job} = $c->{details}{conversionWorkingDirectory};
       }
     }
+    if ($c->{legacy}) {
+      $check->($_, $_->{path}) for ($c->{legacy}{batch}, $c->{legacy}{receipt}, @{$c->{legacy}{raw}});
+      $evidence->{conversion_job}=dirname($c->{legacy}{receipt}{path});
+      delete $evidence->{sourceTree} if $c->{legacy}{invocationContract} eq 'receipt-source-cwd';
+    }
     $register->($slug, { receipt=>$evidence, directory=>dirname($xml || $path), record=>$path, condition=>$condition, legacy=>0 });
   }
   for my $state (qw(complete failed nonterminal missing invalid)) {
