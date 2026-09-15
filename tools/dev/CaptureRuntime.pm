@@ -121,6 +121,9 @@ sub _invocation {
   # for the PI. An output-directory conversion therefore has an extra path.
   my $cwd_role;
   if (exists $receipt->{sourceTree}) {
+    # bin/latexml reverses explicit --path values before Core seeds SEARCHPATHS.
+    # A one-path invocation hid this ordering step in the initial migration.
+    @paths = reverse @paths; @roles = reverse @roles;
     my $cwd = canonical_path($receipt->{details}{conversionWorkingDirectory});
     die "Missing or unsupported recorded working directory\n" unless defined($cwd) && ($cwd eq $source || $cwd eq $job);
     $cwd_role = $cwd eq $source ? 'article-source' : 'conversion-output';

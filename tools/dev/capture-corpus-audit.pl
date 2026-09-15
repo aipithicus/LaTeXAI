@@ -14,6 +14,7 @@ use Cwd qw(abs_path);
 use Getopt::Long qw(GetOptions);
 use CaptureRuntime qw(project_searchpaths);
 use CaptureInventory qw(load_inventory);
+use CaptureCompare qw(compare_paper);
 use Encode qw(decode encode FB_DEFAULT);
 use JSON::PP;
 my ($baseline_root, $current_root, $output, $projection_pin, $mode, $model_path, $model_pin);
@@ -54,16 +55,6 @@ sub retained_json {
   return read_json($path);
 }
 sub retained_hash { my ($path) = @_; return $input_hashes{$path} = file_hash($path); }
-sub invocation_capture {
-  my ($receipt) = @_;
-  return 0 + grep { $_ eq '--capture' } @{ $receipt->{details}{arguments} || [] };
-}
-sub identity_without_capture {
-  my ($identity) = @_;
-  return unless $identity;
-  my @options = grep { ref($_) || $_ ne '--capture' } @{ $identity->{options} || [] };
-  return { %$identity, options => \@options };
-}
 my @issues;
 my @loaded = (
   load_inventory($baseline_root, format=>$baseline_format, condition=>$baseline_condition, read_json=>\&retained_json, file_hash=>\&retained_hash),
@@ -73,87 +64,8 @@ for my $i (0, 1) {
   push @issues, map { "run-$i:$_" } @{$loaded[$i]{issues}};
 }
 make_path($output);
-my $ltx = 'http://dlmf.nist.gov/LaTeXML';
-my $cap = "$ltx/capture";
 my $parity = $mode eq 'parity';
-sub inspect {
-  my ($path, $receipt, $job_directory, $stem, $require_ledger) = @_;
-  $input_hashes{$path} = file_hash($path);
-  my $doc = XML::LibXML->load_xml(location => $path, keep_blanks => 1);
-  my $xc = XML::LibXML::XPathContext->new($doc);
-  $xc->registerNs(ltx => $ltx); $xc->registerNs(capture => $cap);
-  my $base = $doc->documentElement->getAttributeNS($cap, 'base');
-  my (%carriers, %classes, %groups, %raw, %source_hashes, %math_tex, @issues);
-  my $checked = 0;
-  for my $math ($xc->findnodes('//ltx:Math')) {
-    my $id = $math->getAttribute('xml:id');
-    push @issues, 'missing-id' unless $id;
-    $math_tex{$id} = $math->getAttribute('tex') // '' if $id;
-    my %attrs = map { $_->localname => $_->getValue }
-      grep { ($_->namespaceURI || '') eq $cap } $math->attributes;
-    my $kind = $attrs{provenance} || '';
-    $classes{$kind}++;
-    my $group = $kind eq 'unlocated' ? ($attrs{unlocatedReason} || 'unlocated')
-      : $kind eq 'callsite-only' ? (($attrs{callsite} || '') =~ /^\\subfloat/ ? 'subfloat'
-        : ($attrs{callsite} || '') =~ /^\\tag/ ? 'tag' : 'whole-formula-callsite') : $kind;
-    $groups{$group}++;
-    push @issues, "duplicate-id:$id" if $id && $carriers{$id};
-    $carriers{$id} = { tex => $math->getAttribute('tex'), capture => \%attrs, group => $group,
-      ancestors => [map { $_->localname } $math->findnodes('ancestor::*')] } if $id;
-    if ($kind eq 'source' || $kind eq 'callsite-only') {
-      my ($file_key, $start_key, $end_key, $slice_key) = $kind eq 'source'
-        ? qw(file byteStart byteEnd source) : qw(callsiteFile callsiteStart callsiteEnd callsite);
-      my $file = File::Spec->rel2abs($attrs{$file_key}, $base);
-      $raw{$file} = read_raw($file) unless exists $raw{$file};
-      $source_hashes{$file} ||= file_hash($file);
-      $input_hashes{$file} ||= $source_hashes{$file};
-      my ($start, $end) = @attrs{$start_key, $end_key};
-      if (!defined($start) || !defined($end) || $start !~ /^\d+$/ || $end !~ /^\d+$/
-        || $end < $start || $end > length($raw{$file})) { push @issues, "range:$id"; next; }
-      my $bytes = substr($raw{$file}, $start, $end - $start);
-      my $slice = decode('UTF-8', $bytes, FB_DEFAULT); $slice =~ s/\x{FFFD}/ /g;
-      push @issues, "bytes:$id" unless $slice eq ($attrs{$slice_key} || '');
-      $checked++ if $kind eq 'source';
-    }
-  }
-  my ($ledger) = $xc->findnodes('/ltx:document/capture:ledger/capture:math');
-  if ($require_ledger) {
-    if ($ledger) {
-      for my $pair ([source => 'source'], ['callsite-only' => 'callsiteOnly'],
-        ['cross-source' => 'crossSource'], [unlocated => 'unlocated']) {
-        push @issues, "ledger:$pair->[0]" unless ($classes{$pair->[0]} || 0) == $ledger->getAttribute($pair->[1]);
-      }
-      push @issues, 'ledger:total' unless scalar(keys %carriers) == $ledger->getAttribute('total');
-    }
-    else {
-      push @issues, 'missing-ledger';
-    }
-  }
-  my $stripped = without_capture($doc);
-  my @instructions = map { $_->toString } $doc->findnodes('/processing-instruction()');
-  my $projection;
-  if (defined $projection_pin) {
-    $projection = eval { project_searchpaths($doc, $receipt, $job_directory) };
-    push @issues, "runtime-projection:$@" unless $projection;
-  }
-  CaptureAudit::write_raw("$stem.stripped.xml", encode('UTF-8', $stripped));
-  my $projected = $projection ? without_capture($projection->{document}) : $stripped;
-  CaptureAudit::write_raw("$stem.projected.xml", encode('UTF-8', $projected));
-  my ($normalization, $normalized);
-  if ($whitespace) {
-    $normalization = CaptureWhitespace::normalize_formatting($projection ? $projection->{document} : $doc, $whitespace);
-    $normalized = without_capture($normalization->{document});
-    CaptureAudit::write_raw("$stem.normalized.xml", encode('UTF-8', $normalized));
-  }
-  return { path => $path, xml_sha256 => file_hash($path), carriers => \%carriers,
-    classes => \%classes, groups => \%groups, source_hashes => \%source_hashes,
-    math_tex => \%math_tex, processing_instructions => \@instructions,
-    projected_sha256 => object_hash($projected),
-    comparison_sha256 => object_hash(defined($normalized) ? $normalized : $projected),
-    normalization => $normalization ? $normalization->{record} : undef,
-    runtime_projection => $projection ? { map { $_ => $projection->{$_} } qw(identity before after) } : undef,
-    source_ranges_checked => $checked, stripped_sha256 => object_hash($stripped), issues => \@issues };
-}
+my $context = {project=>defined($projection_pin), whitespace=>$whitespace, inputs=>\%input_hashes};
 my @papers;
 my @inventories = map { $_->{papers} } @loaded;
 push @issues, 'changed-paper-selection' unless object_hash([sort keys %{ $inventories[0] }])
@@ -162,19 +74,6 @@ for my $slug (sort keys %{ $inventories[0] }) {
   next unless $inventories[1]{$slug};
   my ($old_job, $job) = map { $_->{$slug}{directory} } @inventories;
   my ($old_receipt, $new_receipt) = map { $_->{$slug}{receipt} } @inventories;
-  push @issues, "$slug:receipt-failed" unless ($old_receipt->{status} || '') eq 'ok' && ($new_receipt->{status} || '') eq 'ok';
-  push @issues, "$slug:article-input" unless object_hash($old_receipt->{article}) eq object_hash($new_receipt->{article});
-  my $off_capture = invocation_capture($old_receipt);
-  my $on_capture = invocation_capture($new_receipt);
-  if ($parity) {
-    push @issues, "$slug:off-has-capture" if $off_capture;
-    push @issues, "$slug:on-missing-capture" unless $on_capture;
-  }
-  else {
-    push @issues, "$slug:missing-capture" unless $off_capture && $on_capture;
-  }
-  my $before = inspect("$old_job/$slug.xml", $old_receipt, $old_job, "$output/$slug.baseline", $parity ? 0 : 1);
-  my $after = inspect("$job/$slug.xml", $new_receipt, $job, "$output/$slug.candidate", 1);
   my @counts = ({ %{ $old_receipt->{counts} } }, { %{ $new_receipt->{counts} } });
   my @derived_counts;
   if (defined $projection_pin) {
@@ -189,54 +88,10 @@ for my $slug (sort keys %{ $inventories[0] }) {
       }
     }
   }
-  my %count_keys = map { $_ => 1 } (keys %{ $counts[0] }, keys %{ $counts[1] });
-  my %measurements = map { $_ => 1 } qw(latexmlMs attributionMs logParseMs xmlInspectMs residualMs workerMs outputBytes);
-  for my $key (sort keys %count_keys) {
-    next if $measurements{$key};
-    push @issues, "$slug:diagnostic-count:$key" unless
-      object_hash($counts[0]{$key}) eq object_hash($counts[1]{$key});
-  }
-  for my $key (qw(taxonomy missingFiles undefinedMacros errorNodes internalLeaks danglingRefs)) {
-    my ($old_detail, $new_detail) = ($old_receipt->{details}{$key}, $new_receipt->{details}{$key});
-    if ($key eq 'undefinedMacros' || $key eq 'missingFiles') {
-      $old_detail = [sort @$old_detail]; $new_detail = [sort @$new_detail]; }
-    push @issues, "$slug:diagnostic-detail:$key" unless
-      object_hash($old_detail) eq object_hash($new_detail);
-  }
-  $before->{receipt_counts} = $old_receipt->{counts};
-  $after->{receipt_counts} = $new_receipt->{counts};
-  my @changes;
-  push @issues, "$slug:$_" for @{ $before->{issues} }, @{ $after->{issues} };
-  push @issues, "$slug:non-capture-tree" unless $before->{comparison_sha256} eq $after->{comparison_sha256};
-  if (defined($projection_pin) && $before->{runtime_projection} && $after->{runtime_projection}) {
-    my $left = $parity ? identity_without_capture($before->{runtime_projection}{identity})
-      : $before->{runtime_projection}{identity};
-    my $right = $parity ? identity_without_capture($after->{runtime_projection}{identity})
-      : $after->{runtime_projection}{identity};
-    push @issues, "$slug:runtime-invocation" unless object_hash($left) eq object_hash($right);
-  }
-  if ($parity) {
-    push @issues, "$slug:math-tex" unless object_hash($before->{math_tex}) eq object_hash($after->{math_tex});
-  }
-  else {
-    push @issues, "$slug:source-hashes" unless object_hash($before->{source_hashes}) eq object_hash($after->{source_hashes});
-    push @issues, "$slug:carrier-identities" unless object_hash([sort keys %{ $before->{carriers} }])
-      eq object_hash([sort keys %{ $after->{carriers} }]);
-    for my $id (sort keys %{ $before->{carriers} }) {
-      my ($old, $new) = ($before->{carriers}{$id}, $after->{carriers}{$id});
-      next unless $new;
-      push @issues, "$slug:tex:$id" unless $old->{tex} eq $new->{tex};
-      if (object_hash($old->{capture}) ne object_hash($new->{capture})) {
-        push @changes, { id => $id, before => $old, after => $new };
-        push @issues, "$slug:changed-capture:$id";
-      }
-    }
-    push @issues, "$slug:classes" unless object_hash($before->{classes}) eq object_hash($after->{classes});
-  }
-  push @papers, { paper => $slug, before => $before, after => $after, changes => \@changes, derived_counts => \@derived_counts,
-    exact_document_equal => $before->{stripped_sha256} eq $after->{stripped_sha256} ? JSON::PP::true : JSON::PP::false,
-    projected_document_equal => $before->{projected_sha256} eq $after->{projected_sha256} ? JSON::PP::true : JSON::PP::false,
-    comparison_document_equal => $before->{comparison_sha256} eq $after->{comparison_sha256} ? JSON::PP::true : JSON::PP::false };
+  my $paper = compare_paper($context, $slug, $old_receipt, $new_receipt, $old_job, $job, $output,
+    mode=>$mode, counts=>\@counts, derived_counts=>\@derived_counts);
+  push @issues, @{$paper->{issues}};
+  push @papers, $paper;
 }
 for my $path (sort keys %input_hashes) {
   push @issues, "input-changed:$path" unless file_hash($path) eq $input_hashes{$path};
@@ -247,7 +102,7 @@ write_json("$output/comparison.json", { schema => 'latexai/corpus-comparison/3',
   inventory_formats => [$baseline_format, $candidate_format], conditions => [$baseline_condition, $candidate_condition],
   baseline_projection => defined($projection_pin) ? { source_run_sha256 => $source_pin } : undef,
   normalization => $whitespace ? $whitespace->{contract} : undef,
-  inputs => \%input_hashes, comparator => CaptureAudit::tree_hashes(qw(tools/dev/capture-corpus-audit.pl tools/dev/CaptureInventory.pm tools/dev/CaptureRuntime.pm tools/dev/CaptureStrip.pm tools/dev/CaptureAudit.pm)),
+  inputs => \%input_hashes, comparator => CaptureAudit::tree_hashes(qw(tools/dev/CaptureCompare.pm tools/dev/capture-corpus-audit.pl tools/dev/CaptureInventory.pm tools/dev/CaptureRuntime.pm tools/dev/CaptureStrip.pm tools/dev/CaptureAudit.pm)),
   papers => \@papers, exact_document_differences => $exact_differences,
   issues => \@issues, qualified => @issues ? JSON::PP::false : JSON::PP::true });
 for my $paper (@papers) {

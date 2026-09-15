@@ -182,10 +182,15 @@ isnt(without_capture($off), without_capture($no_space), 'another parser cannot s
   $recorded->{sourceTree} = "$article/tex";
   $recorded->{details}{conversionWorkingDirectory} = "$temp/new-job";
   $recorded->{details}{arguments}[4] = "--path=$article/tex";
-  my $recorded_doc = xml(qq{<?latexml searchpaths="$engine/scripts/preloads,$article/tex,$temp/new-job"?><document/>});
+  # The CLI reverses its two --path arguments, then Core prepends cwd and
+  # emits reversed unique SEARCHPATHS. This order matches a real paired run.
+  my $recorded_doc = xml(qq{<?latexml searchpaths="$article/tex,$engine/scripts/preloads,$temp/new-job"?><document/>});
   my $recorded_projection = project_searchpaths($recorded_doc, $recorded, "$temp/new-job");
-  is($recorded_projection->{after}, 'searchpaths="engine-preloads,article-source,conversion-output"',
+  is($recorded_projection->{after}, 'searchpaths="article-source,engine-preloads,conversion-output"',
     'paper records use the assigned source directory and native output cwd');
+  my $wrong_order = xml(qq{<?latexml searchpaths="$engine/scripts/preloads,$article/tex,$temp/new-job"?><document/>});
+  ok(!eval { project_searchpaths($wrong_order, $recorded, "$temp/new-job"); 1 },
+    'an incorrect searchpath order is not accepted as a relocation');
   $recorded->{details}{conversionWorkingDirectory} = "$temp/elsewhere";
   ok(!eval { project_searchpaths($recorded_doc, $recorded, "$temp/new-job"); 1 }, 'unassigned recorded cwd fails');
   $recorded->{details}{conversionWorkingDirectory} = "$temp/new-job";
