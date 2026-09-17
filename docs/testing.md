@@ -165,6 +165,11 @@ Both paths retain the same whitespace, source-byte, diagnostic and tree gates.
 The paired worker reports conversion/inspection, comparison and input-validation
 costs separately; its input freeze has a separate preparation duration.
 
+`scripts/tests/gauntlet-measure-regressions.ps1` checks inclusive phase timing
+extraction from nested progress logs, untimed xcolor/listings load notices,
+CRLF, repeated phases, truncated digestion and absent math parsing. It runs
+without conversions; only completed timed groups contribute phase values.
+
 With a prepared checkout supplied as `LATEXAI_ROOT`, CDXSCI's public
 `tests/batch.ps1 -Framework Pester -PesterPath tests/inventory-records/paired.Tests.ps1`
 exercises the paired launcher, nonempty nested/bracket source checks, failed

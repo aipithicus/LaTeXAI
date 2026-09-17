@@ -178,10 +178,12 @@ function Get-ListFromStatus {
     # "(Loading ...  0.01 sec)" groups, then its own "  6.70 sec)"; likewise "(Building",
     # "(Rewriting", "(Math Parsing N formulae", "(Finalizing". A stack pairs each close
     # with its open, so a phase's seconds include the loads it triggered.
+    # ProgressSpinup starts a fresh line and appends "...". Ordinary Note messages
+    # such as "(Loading generated xcolor name data <path>)" are not timed opens.
     $phases = [ordered]@{}
     $phaseStack = [System.Collections.Generic.Stack[string]]::new()
     $phaseTokens = [regex]::Matches($nativeStderr,
-        '\((Digesting TeX|Building|Rewriting|Math Parsing (\d+) formulae|Finalizing|Loading|Processing (?:definitions|content))\b|(?<![\w.])(\d+\.\d+) sec\)')
+        '(?m)^\((Digesting TeX|Building|Rewriting|Math Parsing (\d+) formulae|Finalizing|Loading|Processing (?:definitions|content))\b[^\r\n]*?\.{3}|(?<![\w.])(\d+\.\d+) sec\)')
     foreach ($token in $phaseTokens) {
         if ($token.Groups[3].Success) {
             if ($phaseStack.Count -eq 0) { continue }
