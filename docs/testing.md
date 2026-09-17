@@ -84,6 +84,8 @@ The byte-map controls also check strict UTF-8 width boundaries against independe
 
 `t/47_occurrence_ownership.t` checks Gullet pushback ownership: separate hashes for replayed tokens, shallow origin/callsite identity, generated and absent occurrence slots, nested token order, and brace alignment. It also checks that capture OFF performs no occurrence cloning or carrier scan. The capture fixtures cover the resulting source ranges and XML.
 
+`t/48_source_names.t` checks repeated source-name lookup, reopened files, registry isolation, descriptor/base changes, and cwd-dependent relative descriptors. Cached names must preserve the existing path spelling and source identities.
+
 `tools/dev/capture-fixture.pl --golden <source.tex> <golden.xml>` writes a capture golden with this driver's configuration and normalization. Run it with the repository Perl and `-I lib`, in a fresh process: package definitions can produce redefinition warnings across repeated engine states. The helper refuses any engine warning or error. Without `--golden` it writes the unnormalized capture document for assertions and schema validation.
 
 Use `--compact` for tree-comparison inputs and load them with `keep_blanks => 1`. This prevents serializer indentation and parser defaults from being confused with manuscript whitespace. Goldens retain their existing formatting and normalization.

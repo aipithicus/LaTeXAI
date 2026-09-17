@@ -25,6 +25,7 @@ sub new {
     serial           => 0,
     frame_serial     => 0,
     entries          => {},
+    source_names     => {},
     order            => [],
     encoding_events  => [],
     package_requests => [],
@@ -167,8 +168,21 @@ sub sourceName {
   return 'literal' if $$entry{kind} eq 'literal';
   my $display = $$entry{display};
   if ($$entry{kind} eq 'file' && $$self{base} && length($display)) {
-    $display = File::Spec->abs2rel(
-      File::Spec->canonpath($display), File::Spec->canonpath($$self{base})); }
+    my $base = $$self{base};
+    my $cached = $$self{source_names}{$id};
+    return $$cached[2] if $cached && $$cached[0] eq $display && $$cached[1] eq $base;
+    my $relative = File::Spec->abs2rel(
+      File::Spec->canonpath($display), File::Spec->canonpath($base));
+    $relative =~ s!\\!/!g;
+    # A name is reused on many elements. Keep the cache local to this registry
+    # and check its inputs: getEntry exposes the descriptor. Relative inputs
+    # also depend on cwd, so leave those uncommon lookups uncached. On Windows,
+    # File::Spec returns 1 for a rooted path whose drive still comes from cwd.
+    my $absolute = $^O eq 'MSWin32' ? 2 : 1;
+    $$self{source_names}{$id} = [$display, $base, $relative]
+      if File::Spec->file_name_is_absolute($display) >= $absolute
+      && File::Spec->file_name_is_absolute($base) >= $absolute;
+    return $relative; }
   $display =~ s!\\!/!g if defined $display;
   return $display; }
 
