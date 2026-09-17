@@ -18,6 +18,71 @@ my $capture_ns = 'http://dlmf.nist.gov/LaTeXML/capture';
 my $ltx_ns = 'http://dlmf.nist.gov/LaTeXML';
 my $serial = 0;
 
+# Mapping must agree with encoded byte lengths, independently of the fast
+# path's width calculation. Include every width boundary and all ASCII octets.
+{
+  my @points = (0 .. 127, 0x80, 0x7ff, 0x800, 0xd7ff, 0xe000, 0xfffd,
+    0x10000, 0x10fffd, map { $_ * 257 } 1 .. 210);
+  my $text = join('', map { chr($_) } @points);
+  my $raw = encode('UTF-8', $text);
+  my (@expected, @replacements);
+  my $cursor = 0;
+  for my $point (@points) {
+    my $end = $cursor + length(encode('UTF-8', chr($point)));
+    my $span = { byteStart => $cursor, byteEnd => $end };
+    push @expected, $span;
+    push @replacements, $span if $point == 0xfffd;
+    $cursor = $end;
+  }
+  for my $encoding ('utf-8', 'UTF-8', 'utf-8-strict', 'utf8') {
+    for my $substitute (0, 1) {
+      my ($decoded, $count, $units, $events) = LaTeXML::Core::Mouth::decodeInput(
+        $raw, $encoding, map => 1, substitute => $substitute);
+      my $expected_text = $text;
+      $expected_text =~ s/\x{fffd}/ /g if $substitute;
+      is($decoded, $expected_text, "$encoding substitute=$substitute preserves decoded scalars");
+      is($count, $substitute, "$encoding substitute=$substitute counts the genuine replacement scalar");
+      is_deeply($units, \@expected, "$encoding substitute=$substitute maps exact encoded widths");
+      is_deeply($events, $substitute ? \@replacements : [], "$encoding substitute=$substitute retains event spans");
+    }
+  }
+  my @empty = LaTeXML::Core::Mouth::decodeInput('', 'utf-8', map => 1);
+  is($empty[0], '', 'empty UTF-8 remains empty');
+  ok(!$empty[1], 'empty UTF-8 has no substitutions');
+  is_deeply([@empty[2, 3]], [[], []], 'empty UTF-8 has no phantom span');
+}
+
+# A genuine U+FFFD beside malformed octets must not consume the malformed
+# decoder group. Keeping the general fallback preserves both owners.
+for my $hex ('efbfbde28241c3efbfbd', 'e282efbfbd41efbfbdc3') {
+  my $raw = pack('H*', $hex);
+  my @widths = $hex =~ /^ef/ ? (3, 2, 1, 1, 3) : (2, 3, 1, 3, 1);
+  my ($cursor, @spans) = (0);
+  for my $width (@widths) {
+    push @spans, { byteStart => $cursor, byteEnd => $cursor + $width };
+    $cursor += $width;
+  }
+  for my $substitute (0, 1) {
+    my ($decoded, $count, $units, $events) = LaTeXML::Core::Mouth::decodeInput(
+      $raw, 'utf-8', map => 1, substitute => $substitute);
+    is($decoded, $substitute ? '  A  ' : "\x{fffd}\x{fffd}A\x{fffd}\x{fffd}",
+      'mixed valid replacement and malformed groups preserve decoded order');
+    is($count, $substitute ? 4 : 0, 'mixed groups preserve substitution count');
+    is_deeply($units, \@spans, 'mixed groups retain exact byte ownership');
+    is_deeply($events, $substitute ? [@spans[0, 1, 3, 4]] : [], 'mixed groups retain event ownership');
+  }
+}
+
+# Perl's relaxed utf8 encoding admits non-Unicode scalars. It must not use
+# the strict UTF-8 path, whose decoded scalars have at most four bytes.
+{
+  my $raw = pack('H*', 'f888808080');
+  my ($decoded, $count, $units) = LaTeXML::Core::Mouth::decodeInput($raw, 'utf8', map => 1);
+  is(ord($decoded), 0x200000, 'relaxed utf8 retains its extended scalar contract');
+  ok(!$count, 'relaxed utf8 extended scalar is not substituted');
+  is_deeply($units, [{ byteStart => 0, byteEnd => 5 }], 'relaxed utf8 retains five-byte mapping');
+}
+
 sub read_lines {
   my ($capture, $raw, $encodings) = @_;
   my $path = "$temp/reader-" . ++$serial . '.tex';
@@ -61,6 +126,7 @@ for my $newline ("\n", "\r\n", "\r") {
 for my $case (
   ['isolated', 'c3', 1], ['truncated', 'e282', 2], ['surrogate', 'eda080', 3],
   ['overlong', 'f0808080', 4], ['out-of-range', 'f4908080', 4],
+  ['noncharacter-bmp', 'efbfbf', 3], ['noncharacter-high', 'f48fbfbf', 4],
   ['literal-replacement', 'efbfbd', 3]) {
   my ($name, $hex, $width) = @$case;
   my $raw = 'a' . pack('H*', $hex) . "b\n";

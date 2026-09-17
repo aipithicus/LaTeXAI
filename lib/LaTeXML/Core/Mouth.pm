@@ -116,9 +116,18 @@ sub decodeInput {
   my (@units, @substitutions);
   my $cursor = 0;
   if ($options{map}) {
+    # Encode has already validated these Unicode scalars. Their canonical
+    # UTF-8 widths need no per-character encoder call. The relaxed utf8 codec
+    # admits wider values; malformed groups and other codecs keep the general
+    # mapping below, including its distinction between literal and bad U+FFFD.
+    my $strict_utf8 = $encoding && !@bad_groups
+      && Encode::find_encoding($encoding)->name eq 'utf-8-strict';
     foreach my $character (split(//, $decoded)) {
       my $width = 1;
-      if ($encoding) {
+      if ($strict_utf8) {
+        my $ordinal = ord($character);
+        $width = $ordinal < 0x80 ? 1 : $ordinal < 0x800 ? 2 : $ordinal < 0x10000 ? 3 : 4; }
+      elsif ($encoding) {
         my $copy = $character;
         my $encoded = eval { encode($encoding, $copy, Encode::FB_CROAK) };
         if ($character eq "\x{FFFD}" && @bad_groups
