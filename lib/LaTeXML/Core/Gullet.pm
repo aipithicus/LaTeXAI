@@ -304,7 +304,8 @@ sub unreadExpansion {
       if ($own && (defined $$own{sourceId} || $$own{origin} || $$own{authorCallsite})) {
         push(@occs, $own); }
       else {
-        push(@occs, _cloneOccurrence($occurrence, $flat[$i])); } }
+        # Pushback takes the per-token copy; this temporary list only borrows.
+        push(@occs, $occurrence); } }
     return $self->unreadWithOccurrences(\@occs, @flat); }
   return $self->unreadWithOccurrence($occurrence, $tokens); }
 
@@ -609,7 +610,9 @@ sub _flattenUnreadWithOccurrences {
 sub unreadWithOccurrence {
   my ($self, $occurrence, @tokens) = @_;
   my @flat = _flattenUnreadTokens(@tokens);
-  my @occurrences = map { _cloneOccurrence($occurrence, $_) } @flat;
+  # _unshiftPushback snapshots the template and assigns each token. Preserve
+  # undefined slots here without allocating a hash that it would copy again.
+  my @occurrences = ($occurrence) x scalar(@flat);
   return $self->unreadWithOccurrences(\@occurrences, @flat); }
 
 sub unreadWithOccurrences {
