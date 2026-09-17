@@ -113,16 +113,21 @@ sub decodeLine {
   my ($decoded, $units, $count) = $self->_decodeWithMap(
     { %$entry, encoding => $encoding }, $raw, $raw_start, 1);
   my @graphemes = ($decoded =~ /\X/g);
-  my @spans;
-  my $unit_index = 0;
-  foreach my $grapheme (@graphemes) {
-    my $count = length($grapheme);
-    push(@spans, {
-        byteStart => $$units[$unit_index]{byteStart},
-        byteEnd => $$units[$unit_index + $count - 1]{byteEnd},
-      });
-    $unit_index += $count; }
-  @{$record}{qw(decoded graphemes spans substitutions)} = ($decoded, \@graphemes, \@spans, $count);
+  # The decoder's fresh spans already describe single-character graphemes.
+  # Transfer them to this record; substitution events have copied their byte
+  # bounds, and Mouth still makes its own copies before trimming or splicing.
+  my $spans = $units;
+  if (@graphemes != @$units) {
+    $spans = [];
+    my $unit_index = 0;
+    foreach my $grapheme (@graphemes) {
+      my $count = length($grapheme);
+      push(@$spans, {
+          byteStart => $$units[$unit_index]{byteStart},
+          byteEnd => $$units[$unit_index + $count - 1]{byteEnd},
+        });
+      $unit_index += $count; } }
+  @{$record}{qw(decoded graphemes spans substitutions)} = ($decoded, \@graphemes, $spans, $count);
   return $record; }
 
 sub _decodeWithMap {
