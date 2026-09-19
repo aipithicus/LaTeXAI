@@ -48,6 +48,14 @@ sub _issue {
   push @{$self->{issues}}, { kind => $kind, id => _id($node), element => $node->nodeName, detail => $detail };
 }
 
+sub _new_run {
+  my ($self, $strategy) = @_;
+  return bless { %$self, strategy => $strategy, records => {}, record_order => [], targets => {},
+    headings => [], slugs => {}, notes => [], bibliography => [], bibkeys => {},
+    issues => [], math => [], counters => { index_visits => 0, emit_visits => 0,
+      label_visits => 0, references => 0, deferred_references => 0, metadata_records => 0 } }, ref $self;
+}
+
 # No Post::Document construction, global XPath query, or DOM mutation here.
 # The index strategy discovers metadata first and resolves refs on encounter.
 # The deferred strategy discovers the same metadata during emission and stores
@@ -59,10 +67,7 @@ sub project {
     && ($root->namespaceURI || '') eq $LTX;
   my $strategy = $options{strategy} || 'deferred';
   die "Unknown traversal '$strategy'\n" unless $strategy =~ /^(deferred|indexed)$/;
-  my $run = bless { %$self, strategy => $strategy, records => {}, record_order => [], targets => {},
-    headings => [], slugs => {}, notes => [], bibliography => [], bibkeys => {},
-    issues => [], math => [], counters => { index_visits => 0, emit_visits => 0,
-      label_visits => 0, references => 0, deferred_references => 0, metadata_records => 0 } }, ref $self;
+  my $run = $self->_new_run($strategy);
   my $start = time;
   if ($strategy eq 'indexed') {
     $run->_walk($root, [], {}, 'index');
@@ -102,6 +107,40 @@ sub project {
         finalize => 1000 * ($ended - $walked), total => 1000 * ($ended - $start) },
       headings => [map { +{ label => $_->{label}, slug => $_->{slug}, level => $_->{level} } } @{$run->{headings}}],
       math => $run->{math}, issues => $run->{issues}, bibliography_entries => $run->{bibcount} || 0 } };
+}
+
+# Reader prototype: select units from XML, while retaining document-wide labels
+# and bibliography identity. A fragment uses the same emitter as a manuscript.
+# The caller retains the DOM; neither indexing nor emission mutates it.
+sub project_nodes {
+  my ($self, $dom, $nodes) = @_;
+  my $root = $dom->documentElement;
+  die "Expected ltx:document\n" unless $root && $root->localname eq 'document'
+    && ($root->namespaceURI || '') eq $LTX;
+  my $run = $self->_new_run('indexed');
+  $run->_walk($root, [], {}, 'index');
+  $run->_finalize_labels;
+  $run->_heading_slugs;
+  my @index_issues = @{$run->{issues}};
+  my @results;
+  for my $node (@$nodes) {
+    $run->{notes} = []; $run->{bibliography} = []; $run->{front} = [];
+    $run->{issues} = []; $run->{math} = [];
+    my @parts;
+    $run->_walk($node, \@parts, {}, 'emit');
+    my @final = (@{$run->{front}}, @parts);
+    for my $note (@{$run->{notes}}) {
+      push @final, [gap => 2], '[^' . $note->{number} . ']: '
+        . $run->_serialize($note->{parts}, 1), [gap => 2];
+    }
+    push @final, @{$run->{bibliography}};
+    my $text = $run->_serialize(\@final);
+    my $record = $run->{records}{$node->unique_key};
+    push @results, { markdown => $text . (length($text) ? "\n" : ''),
+      label => $record ? ($record->{label} || $record->{tags}{refnum} || '') : '',
+      issues => [@index_issues, @{$run->{issues}}], math => [@{$run->{math}}] };
+  }
+  return \@results;
 }
 
 # Allocate renderer-style anchors in final manuscript order, including synthetic
