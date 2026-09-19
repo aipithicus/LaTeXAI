@@ -175,8 +175,11 @@ costs separately; its input freeze has a separate preparation duration.
 
 `scripts/tests/gauntlet-measure-regressions.ps1` checks inclusive phase timing
 extraction from nested progress logs, untimed xcolor/listings load notices,
-CRLF, repeated phases, truncated digestion and absent math parsing. It runs
-without conversions; only completed timed groups contribute phase values.
+CRLF, repeated phases, truncated digestion and absent math parsing. It also
+checks raw package paths with Mouth's optional `w/@ other` catcode note,
+including local routes across Windows separators, sibling-directory boundaries,
+and annotation-like text inside paths. It runs without
+conversions; only completed timed groups contribute phase values.
 
 With a prepared checkout supplied as `LATEXAI_ROOT`, CDXSCI's public
 `tests/batch.ps1 -Framework Pester -PesterPath tests/inventory-records/paired.Tests.ps1`

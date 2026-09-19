@@ -167,7 +167,8 @@ function Get-ListFromStatus {
                 if ($matches[1] -match '[\\/]Package[\\/]([^\\/]+)\.ltxml$') { [void]$bindingLoads.Add($matches[1]) }
                 continue
             }
-            if ($line -match '^\(Processing definitions (.+?)\.\.\.') { $rawLoads.Add($matches[1]); continue }
+            # Mouth prefixes the source with its optional @-catcode note.
+            if ($line -match '^\(Processing definitions(?: w/@ other)? (.+?)\.\.\.') { $rawLoads.Add($matches[1]); continue }
             if ($line -match '^(Fatal|Error|Warning|Info):([A-Za-z_]+):(\S{0,80})') {
                 $key = '{0}:{1}:{2}' -f $matches[1], $matches[2], $matches[3]
                 $taxonomy[$key] = 1 + ($taxonomy.ContainsKey($key) ? [int]$taxonomy[$key] : 0)
@@ -222,9 +223,12 @@ function Get-ListFromStatus {
     foreach ($name in @($bindingLoads | Sort-Object)) {
         $packages.Add([ordered]@{ name = $name; route = 'binding' })
     }
-    foreach ($rawPath in @($rawLoads | Sort-Object -Unique)) {
-        $isLocal = $rawPath.StartsWith($sourceTree, [System.StringComparison]::OrdinalIgnoreCase)
-        $shown = if ($isLocal) { $rawPath.Substring($sourceTree.Length).TrimStart('\', '/') } else { $rawPath }
+    # Engine logs use forward slashes even when the worker has a native Windows
+    # source path. Require a directory boundary when recognizing local files.
+    $sourcePrefix = $sourceTree.Replace('\', '/').TrimEnd('/') + '/'
+    foreach ($rawPath in @($rawLoads | ForEach-Object { $_.Replace('\', '/') } | Sort-Object -Unique)) {
+        $isLocal = $rawPath.StartsWith($sourcePrefix, [System.StringComparison]::OrdinalIgnoreCase)
+        $shown = if ($isLocal) { $rawPath.Substring($sourcePrefix.Length) } else { $rawPath }
         $packages.Add([ordered]@{
             name = [System.IO.Path]::GetFileName($rawPath)
             route = ($isLocal ? 'raw-local' : 'raw')
