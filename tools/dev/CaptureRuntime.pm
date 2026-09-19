@@ -166,7 +166,23 @@ sub project_searchpaths {
     . "]; invocation=[" . join(',', @{$invocation->{paths}}) . "]\n"
     unless CaptureAudit::object_hash(\@paths) eq CaptureAudit::object_hash($invocation->{paths});
   $pis[0]->setData('searchpaths="' . join(',', @{$invocation->{roles}}) . '"');
-  return { document => $copy, identity => $invocation->{identity}, before => $data, after => $pis[0]->getData };
+  # graphics.sty resolves each declared graphics directory against SOURCEDIRECTORY.
+  # Only that verified root is an address: suffixes, order, duplicates and paths
+  # outside it remain observable. Do not rewrite manuscript nodes or other PIs.
+  my $source = $invocation->{identity}{source};
+  my @graphics;
+  for my $pi (grep { $_->getData =~ /^graphicspath=/ } $copy->findnodes('/processing-instruction("latexml")')) {
+    my $before = $pi->getData;
+    die "Malformed graphicspath instruction\n" unless $before =~ /^graphicspath="([^"<>]*)"$/;
+    my $path = canonical_path($1);
+    die "Expected absolute graphicspath instruction\n" unless $path =~ m{^(?:[A-Za-z]:/|/)};
+    if ($path eq $source || index($path, "$source/") == 0) {
+      $pi->setData('graphicspath="article-source' . substr($path, length($source)) . '"');
+    }
+    push @graphics, { before => $before, after => $pi->getData };
+  }
+  return { schema => 'latexai/runtime-path-projection/2', document => $copy,
+    identity => $invocation->{identity}, before => $data, after => $pis[0]->getData, graphics => \@graphics };
 }
 
 1;

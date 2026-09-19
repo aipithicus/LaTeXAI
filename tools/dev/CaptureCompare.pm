@@ -130,7 +130,7 @@ sub inspect_condition {
     projected_sha256 => object_hash($projected),
     comparison_sha256 => object_hash(defined($normalized) ? $normalized : $projected),
     normalization => $normalization ? $normalization->{record} : undef,
-    runtime_projection => $projection ? { map { $_ => $projection->{$_} } qw(identity before after) } : undef,
+    runtime_projection => $projection ? { map { $_ => $projection->{$_} } qw(schema identity before after graphics) } : undef,
     source_ranges_checked => $checked, stripped_sha256 => object_hash($stripped), issues => \@issues };
 }
 
