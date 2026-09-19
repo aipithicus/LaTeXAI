@@ -3,25 +3,12 @@
 function Get-LaTeXAITreeRecord {
     param([Parameter(Mandatory)][string]$Root)
     $rootPath=(Resolve-Path -LiteralPath $Root).Path
-    $rows=[Collections.Generic.Dictionary[string,object]]::new([StringComparer]::Ordinal)
-    $pending=[Collections.Generic.Stack[string]]::new()
-    $pending.Push($rootPath)
-    while($pending.Count){
-        $directory=Get-Item -LiteralPath $pending.Pop() -Force
-        if($directory.Attributes -band [IO.FileAttributes]::ReparsePoint){throw "Linked frozen input: $($directory.FullName)"}
-        foreach($item in Get-ChildItem -LiteralPath $directory.FullName -Force){
-            if($item.Attributes -band [IO.FileAttributes]::ReparsePoint){throw "Linked frozen input: $($item.FullName)"}
-            if($item.PSIsContainer){$pending.Push($item.FullName);continue}
-            $name=[IO.Path]::GetRelativePath($rootPath,$item.FullName).Replace('\','/')
-            $rows.Add($name,@{path=$name;bytes=$item.Length;sha256=(Get-InventoryFileReference $item.FullName).sha256})
-        }
+    if(-not ('LaTeXAI.TreeFingerprint' -as [type])){
+        Add-Type -Path (Join-Path $PSScriptRoot 'native/TreeFingerprint.cs') -ErrorAction Stop
     }
-    $names=[string[]]@($rows.Keys)
-    [Array]::Sort($names,[StringComparer]::Ordinal)
-    $text=[Text.StringBuilder]::new()
-    foreach($name in $names){$row=$rows[$name];[void]$text.Append($name).Append([char]0).Append($row.bytes).Append([char]0).Append($row.sha256).Append("`n")}
-    $sha=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($text.ToString()))).ToLowerInvariant()
-    return [ordered]@{root=$rootPath;sha256=$sha;count=$names.Count;files=@($names|ForEach-Object {$rows[$_]})}
+    $tree=[LaTeXAI.TreeFingerprint]::Read($rootPath)
+    $files=@($tree.Files|ForEach-Object {@{path=$_.Path;bytes=$_.Bytes;sha256=$_.Sha256}})
+    return [ordered]@{root=$rootPath;sha256=$tree.Sha256;count=$files.Count;files=$files}
 }
 
 function Write-LaTeXAIFrozenJson {

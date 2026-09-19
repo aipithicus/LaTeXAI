@@ -173,6 +173,13 @@ Both paths retain the same whitespace, source-byte, diagnostic and tree gates.
 The paired worker reports conversion/inspection, comparison and input-validation
 costs separately; its input freeze has a separate preparation duration.
 
+`scripts/tests/gauntlet-freeze-regressions.ps1` checks the frozen-tree fingerprint
+against literal byte fixtures, including hidden/empty/binary files, ordinal paths,
+content changes with restored timestamps, additions, renames and linked-directory
+rejection. The compiled fingerprint reader uses at most four file readers per
+verification pass. Every pass rereads every file; there is no timestamp or hash
+cache, and the existing canonical manifest and verification boundaries are unchanged.
+
 `scripts/tests/gauntlet-measure-regressions.ps1` checks inclusive phase timing
 extraction from nested progress logs, untimed xcolor/listings load notices,
 CRLF, repeated phases, truncated digestion and absent math parsing. It also
