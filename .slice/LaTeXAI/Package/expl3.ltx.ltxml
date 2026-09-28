@@ -1,0 +1,28 @@
+# -*- CPERL -*-
+# /=====================================================================\ #
+# |  expl3.ltx                                                          | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+# | Part of LaTeXML:                                                    | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# |---------------------------------------------------------------------| #
+# | Deyan Ginev <deyan.ginev@nist.gov>                          #_#     | #
+# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
+# \=========================================================ooo==U==ooo=/ #
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+#**********************************************************************
+# This really should only be read when processing latex.ltx (for dumping)
+InputDefinitions('expl3', type => 'ltx', noltxml => 1);
+# AND, pretend that we've already loaded expl3.sty; and the lua binding, too, fwiw.
+AssignValue('expl3.sty_loaded'       => 1, 'global');
+AssignValue('expl3.sty.ltxml_loaded' => 1, 'global');
+AssignValue('expl3.lua_loaded'       => 1, 'global');
+AssignValue('expl3.lua.ltxml_loaded' => 1, 'global');
+#**********************************************************************
+
+1;

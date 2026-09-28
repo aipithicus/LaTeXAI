@@ -1,0 +1,27 @@
+# -*- mode: Perl -*-
+# /=====================================================================\ #
+# |  tikz-qtree-compat.sty                                              | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+# | Part of LaTeXAI / LaTeXML:                                           | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# \=========================================================ooo==U==ooo=/ #
+# Native stub of tikz-qtree-compat 1.1, from
+# lib-ctan/tikz-qtree/tex/latex/tikz-qtree/tikz-qtree-compat.sty.
+# Loads tikz-qtree; \qroof is defined there. \qsetw, \faketreewidth,
+# \qbalance, \qframesubtree are layout no-ops (qtree compatibility
+# furniture that does not change tree structure).
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+RequirePackage('tikz-qtree');
+
+DefMacro('\qsetw{}',          '');
+DefMacro('\faketreewidth{}',  '');
+DefMacro('\qbalance',         '');
+DefMacro('\qframesubtree',    '');
+
+1;

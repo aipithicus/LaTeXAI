@@ -1,0 +1,66 @@
+# cprotect 1.0f, cprotect.sty:147-226. Native bounded om argument reader.
+# Class: shim. Protect core verb/verb* before forwarding to the original command.
+# Read directly from the original Mouth; never stringify/reparse semantic text.
+# Arbitrary ReadVerbatimUntil machinery and other signature letters unsupported.
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+ProcessOptions();
+sub _cpt_read {
+  my ($gullet,$kind)=@_;
+  # readArg yields an intact token list. Neutralizing only grouping and spaces
+  # makes it a one-token reader, while control words and all math stay normal.
+  # Literal verb bodies use the kernel reader before they can affect grouping.
+  $STATE->pushFrame;
+  AssignCatcode($_,CC_OTHER) for ('{','}',' ',"\r");
+  my $chunk;
+  while ($chunk=$gullet->readArg) {
+    last unless ToString($chunk)=~/^[ \r\n]$/;
+  }
+  unless ($chunk) {$STATE->popFrame;return;}
+  my $first=ToString($chunk);
+  if ($kind eq 'o' && $first ne '[') {
+    $gullet->unread($chunk);$STATE->popFrame;return;
+  }
+  if ($kind eq 'm' && $first ne '{') {
+    $STATE->popFrame;return $chunk;
+  }
+  my @out;my $depth=0;my $closed=0;
+  while ($chunk=$gullet->readArg) {
+    my $t=$chunk->[0];my $s=$t->getString;
+    if (Equals($t,T_CS('\verb'))) {
+      push @out,LookupDefinition($t)->invoke($gullet);
+      next;
+    }
+    if ($s eq '{') {$depth++;$chunk->[0]=T_BEGIN;}
+    elsif ($s eq '}') {
+      if ($kind eq 'm' && !$depth) {$closed=1;last;}
+      $depth--;$chunk->[0]=T_END;
+    }
+    elsif ($kind eq 'o' && $s eq ']' && !$depth) {$closed=1;last;}
+    elsif ($s eq ' ' || $s eq "\r" || $s eq "\n") {$chunk->[0]=T_SPACE;}
+    push @out,$chunk;
+  }
+  $STATE->popFrame;
+  Error('expected','cprotect-argument',$gullet,'Unclosed protected argument') unless $closed;
+  return Tokens(@out);
+}
+DefMacro('\cprotect [] DefToken',sub {
+  my ($gullet,$sig,$command)=@_;
+  my $signature=defined($sig)?ToString($sig):'om';
+  if ($signature!~/^[om]+$/) {
+    Error('unsupported','cprotect-signature',$gullet,"Unsupported cprotect signature '$signature'");
+    return $command;
+  }
+  my @result=($command);
+  for my $kind (split //,$signature) {
+    my $safe=_cpt_read($gullet,$kind);
+    next unless defined $safe;
+    push @result,($kind eq 'o'?T_OTHER('['):T_BEGIN),$safe,
+      ($kind eq 'o'?T_OTHER(']'):T_END);
+  }
+  return @result;
+});
+Let('\icprotect','\cprotect');
+1;

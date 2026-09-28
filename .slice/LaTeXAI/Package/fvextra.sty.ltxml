@@ -1,0 +1,27 @@
+# fvextra 1.14.0, source lib-ctan/fvextra/tex/latex/fvextra/fvextra.sty.
+# Class: shim. Inherit fancyvrb content/file/range parsing. Only physical
+# wrapping keys below are omitted; unsupported fvextra APIs remain undefined.
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+RequirePackage('fancyvrb');
+RequirePackage('textcomp');
+ProcessOptions();
+for my $key (qw(breaklines breakanywhere breakautoindent breakindent breakindentnchars
+  breakbefore breakafter breakbeforesymbolpre breakbeforesymbolpost
+  breakaftersymbolpre breakaftersymbolpost breaksymbolleft breaksymbolright
+  breaksymbolindentleft breaksymbolindentright breaksymbolsepleft breaksymbolsepright)) {
+  DefKeyVal('FV',$key,'','true',code=>sub {});
+}
+AssignValue('FV_curlyquotes',0);
+DefKeyVal('FV','curlyquotes','','true',code=>sub {AssignValue('FV_curlyquotes',ToString($_[1]) eq 'true');});
+Let('\lx@fvextra@setupfont','\FV@SetupFont');
+DefMacro('\FV@SetupFont','\lx@fvextra@setupfont\lx@fvextra@quotes');
+DefPrimitive('\lx@fvextra@quotes',sub {
+  unless (LookupValue('FV_curlyquotes')) {
+    AssignCatcode("'",CC_ACTIVE); Let(T_ACTIVE("'"),T_CS('\textquotesingle'));
+    AssignCatcode(chr(96),CC_ACTIVE); Let(T_ACTIVE(chr(96)),T_CS('\textasciigrave'));
+  }
+});
+1;

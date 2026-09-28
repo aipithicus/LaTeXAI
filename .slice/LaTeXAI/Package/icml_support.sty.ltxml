@@ -1,0 +1,68 @@
+# -*- mode: Perl -*-
+# /=====================================================================\ #
+# |  icml_support.sty.ltxml                                             | #
+# | Support for various LCML styles/classes for LaTeXML                 | #
+# |=====================================================================| #
+# | Part of LaTeXML:                                                    | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# |---------------------------------------------------------------------| #
+# | Bruce Miller <bruce.miller@nist.gov>                        #_#     | #
+# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
+# \=========================================================ooo==U==ooo=/ #
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+RequirePackage('times');
+RequirePackage('fancyhdr');
+RequirePackage('color');
+RequirePackage('algorithm');
+RequirePackage('algorithmic');
+RequirePackage('natbib');
+# RequirePackage('eso-pic');
+# RequirePackage('forloop');
+#======================================================================
+# Citations
+DefMacro('\yrcite Semiverbatim', '\citeyearpar{#1}');
+DefMacro('\cite Semiverbatim',   '\citep{#1}');
+
+#======================================================================
+# Frontmatter
+Let('\icmltitle', '\title');
+DefMacro('\icmltitlerunning{}', '');
+
+DefMacro('\icmlsetsymbol{}{}', '');
+
+DefEnvironment('{icmlauthorlist}', '#body');
+
+# \icmlauthor{author}{labels}   One per author; labels used to connect to affiliation
+DefMacro('\icmlauthor{} Semiverbatim', '\lx@add@creator[role=author,annotations={#2}]{#1}');
+# \icmlaffiliation{label}{address}  provides affiliation for author with same label
+DefMacro('\icmlaffiliation Semiverbatim {}', '\lx@add@contact[role=affiliation,label={#1}]{#2}');
+DefMacro('\icmladdress OptionalSemiverbatim {}', '\lx@add@contact[role=address,label={#1}]{#2}'); # deprecated
+
+# \icmlcorrespondingauthor{author}{email}
+# Attempt to use author name as a matching label to connect to author
+# (should be a fuzzy match?)
+DefMacro('\icmlcorrespondingauthor{}{}', '\lx@add@contact[label={\ifx.#1.\else fuzzy:#1\fi},role=email,name={Correspondence to: }]{#2}');
+
+DefMacro('\printAffiliationsAndNotice{}', '');
+DefMacro('\icmlEqualContribution',        'Equal contribution');
+
+DefMacro('\icmlkeywords{}', '\lx@add@keywords{#1}');
+
+#======================================================================
+# Random extra bits
+
+DefMacro('\abovestrut{}', '');
+DefMacro('\belowstrut{}', '');
+DefMacro('\abovespace',   '');
+DefMacro('\aroundspace',  '');
+DefMacro('\belowspace',   '');
+DefMacro('\icmlruler{}',  '');
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+1;

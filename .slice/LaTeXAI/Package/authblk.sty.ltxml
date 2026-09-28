@@ -1,0 +1,66 @@
+# -*- mode: Perl -*-
+# /=====================================================================\ #
+# |  authblk.sty.ltxml                                                  | #
+# |=====================================================================| #
+# | Part of LaTeXML:                                                    | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# |---------------------------------------------------------------------| #
+# | Bruce Miller <bruce.miller@nist.gov>                        #_#     | #
+# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
+# \=========================================================ooo==U==ooo=/ #
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+# NOTE: preliminary implementation focusing on the logic;
+# We currently don't layout the author/afflition block quite the way authblk does:
+#  * don't combine authors with same affiliation,
+#  * don't use marks to associate the author/affiliation
+
+DefMacro('\Affilfont', '\normalfont');
+DefMacro('\Authfont',  '\normalfont');
+DefMacro('\Authsep',   ',');
+DefMacro('\Authand',   ' and ');
+DefMacro('\Authands',  ', and ');
+DefMacro('\authorcr',  '\\\\');
+
+# package bookkeeping
+DefConditional('\ifnewaffil');
+DefRegister('\affilsep'  => Dimension('1em'));
+DefRegister('\@affilsep' => Dimension('1em'));
+NewCounter('Maxaffil');
+SetCounter('Maxaffil', Number(2));
+NewCounter('authors');
+NewCounter('affil');
+NewCounter('@affil');
+
+# authblk supports 3 distinct styles of markup for authors & affiliations
+# LaTeX style:
+#  \author{name\\ affil \and name and name\\ affil}
+# Individually: \author for each author, followed by \affil for affiliation
+#  \author{name} : REPEATED
+#  \affil{affil} : REPEATED, attaches to ALL previous authors which don't have affil!
+# Connected via marks, one \author for each author; one \affil for each affiliation
+#  \author[mark]{name} : REPEATED
+#  \affil[mark]{affil} : REPEATED, attaches to author with same mark
+DefMacro('\author[]{}', sub {
+    my ($gullet, $label, $author) = @_;
+    if ($label) {    # Use label attachment
+      Invocation('\lx@add@creator[role=author,annotations={#1}]{#2}', $label, $author); }
+    elsif (grep { $_->defined_as(T_CS('\and')) || $_->defined_as(T_CS('\And')); } $author->unlist) {
+      Invocation(T_CS('\lx@add@authors'), $author); }
+    else {
+      Invocation(T_CS('\lx@add@creator'), undef, $author); } });
+
+DefMacro('\affil OptionalSemiverbatim {}',
+  '\lx@add@contact[role=affiliation,annotate={\ifx.#1.new\else 1\fi},label={#1}]{#2}');
+
+# we shouldn't need these, but if someone is using them low-level
+# might as well provide them
+DefMacro('\AB@authnote{}',  '\textsuperscript{\normalfont#1}');
+DefMacro('\AB@affilnote{}', '\textsuperscript{\normalfont#1}');
+
+#======================================================================
+1;

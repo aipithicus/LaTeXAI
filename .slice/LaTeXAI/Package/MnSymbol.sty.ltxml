@@ -1,0 +1,26 @@
+# -*- mode: Perl -*-
+# /=====================================================================\ #
+# |  MnSymbol.sty                                                     | #
+# | Generated from lib-symb/MnSymbol/symbols.tsv                            | #
+# |=====================================================================| #
+# | Part of LaTeXAI / LaTeXML:                                          | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# \=========================================================ooo==U==ooo=/ #
+# Class: semantic
+# Generated from lib-symb/MnSymbol/symbols.tsv by tools/dev/symbind.pl
+# Do not edit; regenerate with lsymb --generate MnSymbol
+# Written from lib-symb/MnSymbol/provenance.json
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+DefMathI('\lsem', undef, "\x{27E6}",
+  role => 'OPEN', name => 'llbracket');
+DefMathI('\powerset', undef, "\x{2118}",
+  role => 'UNKNOWN', meaning => 'powerset');
+DefMathI('\rsem', undef, "\x{27E7}",
+  role => 'CLOSE', name => 'rrbracket');
+
+1;

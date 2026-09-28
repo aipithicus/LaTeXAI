@@ -1,0 +1,171 @@
+# -*- mode: Perl -*-
+# /=====================================================================\ #
+# |  tipa.sty                                                         | #
+# | Generated from lib-symb/tipa/symbols.tsv                            | #
+# |=====================================================================| #
+# | Part of LaTeXAI / LaTeXML:                                          | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# \=========================================================ooo==U==ooo=/ #
+# Class: semantic
+# Generated from lib-symb/tipa/symbols.tsv by tools/dev/symbind.pl
+# Do not edit; regenerate with lsymb --generate tipa
+# Written from lib-symb/tipa/provenance.json
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+DeclareOption(undef, undef);
+ProcessOptions();
+DefMacro('\textipa{}', '#1');
+
+DefPrimitiveI('\OE', undef, "\x{0152}");
+DefPrimitiveI('\ae', undef, UTF(0xE6));
+DefPrimitiveI('\dh', undef, UTF(0xF0));
+DefPrimitiveI('\i', undef, "\x{0131}");
+DefPrimitiveI('\j', undef, "\x{0237}");
+DefPrimitiveI('\ng', undef, "\x{014B}");
+DefPrimitiveI('\o', undef, UTF(0xF8));
+DefPrimitiveI('\oe', undef, "\x{0153}");
+DefPrimitiveI('\textacutemacron', undef, "\x{1DC4}");
+DefPrimitiveI('\textacutewedge', undef, "\x{1DC7}");
+DefPrimitiveI('\textadvancing', undef, "\x{031F}");
+DefPrimitiveI('\textbabygamma', undef, "\x{0264}");
+DefPrimitiveI('\textbardotlessj', undef, "\x{025F}");
+DefPrimitiveI('\textbarglotstop', undef, "\x{02A1}");
+DefPrimitiveI('\textbari', undef, "\x{0268}");
+DefPrimitiveI('\textbaro', undef, "\x{0275}");
+DefPrimitiveI('\textbarrevglotstop', undef, "\x{02A2}");
+DefPrimitiveI('\textbaru', undef, "\x{0289}");
+DefPrimitiveI('\textbeltl', undef, "\x{026C}");
+DefPrimitiveI('\textbeta', undef, "\x{03B2}");
+DefPrimitiveI('\textbottomtiebar', undef, "\x{203F}");
+DefPrimitiveI('\textbrevemacron', undef, "\x{1DCB}");
+DefPrimitiveI('\textbullseye', undef, "\x{0298}");
+DefPrimitiveI('\textceltpal', undef, "\x{02B9}");
+DefPrimitiveI('\textchi', undef, "\x{03C7}");
+DefPrimitiveI('\textcloseepsilon', undef, "\x{029A}");
+DefPrimitiveI('\textcloserevepsilon', undef, "\x{025E}");
+DefPrimitiveI('\textcorner', undef, "\x{02FA}");
+DefPrimitiveI('\textcrh', undef, "\x{0127}");
+DefPrimitiveI('\textctc', undef, "\x{0255}");
+DefPrimitiveI('\textctj', undef, "\x{029D}");
+DefPrimitiveI('\textctz', undef, "\x{0291}");
+DefPrimitiveI('\textdotbreve', undef, "\x{0310}");
+DefPrimitiveI('\textdoublebarpipe', undef, "\x{01C2}");
+DefPrimitiveI('\textdoublepipe', undef, "\x{01C1}");
+DefPrimitiveI('\textdoublevbaraccent', undef, "\x{030E}");
+DefPrimitiveI('\textdoublevertline', undef, "\x{2016}");
+DefPrimitiveI('\textdownstep', undef, "\x{2193}");
+DefPrimitiveI('\textdyoghlig', undef, "\x{02A4}");
+DefPrimitiveI('\textepsilon', undef, "\x{025B}");
+DefPrimitiveI('\textesh', undef, "\x{0283}");
+DefPrimitiveI('\textfallrise', undef, "\x{02E9}");
+DefPrimitiveI('\textfishhookr', undef, "\x{027E}");
+DefPrimitiveI('\textgamma', undef, "\x{0263}");
+DefPrimitiveI('\textglotstop', undef, "\x{0294}");
+DefPrimitiveI('\textgravedot', undef, "\x{0340}");
+DefPrimitiveI('\textgravemacron', undef, "\x{1DC5}");
+DefPrimitiveI('\texthalflength', undef, "\x{02D1}");
+DefPrimitiveI('\texthardsign', undef, "\x{02E1}");
+DefPrimitiveI('\texthighrise', undef, "\x{02E6}");
+DefPrimitiveI('\texthtb', undef, "\x{0253}");
+DefPrimitiveI('\texthtbardotlessj', undef, "\x{0284}");
+DefPrimitiveI('\texthtc', undef, "\x{0188}");
+DefPrimitiveI('\texthtd', undef, "\x{0257}");
+DefPrimitiveI('\texthtg', undef, "\x{0260}");
+DefPrimitiveI('\texthth', undef, "\x{0266}");
+DefPrimitiveI('\texththeng', undef, "\x{0267}");
+DefPrimitiveI('\texthtscg', undef, "\x{029B}");
+DefPrimitiveI('\texthvlig', undef, "\x{0195}");
+DefPrimitiveI('\textinvscr', undef, "\x{0281}");
+DefPrimitiveI('\textinvsubbridge', undef, "\x{033A}");
+DefPrimitiveI('\textlengthmark', undef, "\x{02D0}");
+DefPrimitiveI('\textlhookt', undef, "\x{01AB}");
+DefPrimitiveI('\textlowering', undef, "\x{031E}");
+DefPrimitiveI('\textlowrise', undef, "\x{02E8}");
+DefPrimitiveI('\textltailm', undef, "\x{0271}");
+DefPrimitiveI('\textltailn', undef, "\x{0272}");
+DefPrimitiveI('\textltilde', undef, "\x{026B}");
+DefPrimitiveI('\textlyoghlig', undef, "\x{026E}");
+DefPrimitiveI('\textopeno', undef, "\x{0254}");
+DefPrimitiveI('\textovercross', undef, "\x{033D}");
+DefPrimitiveI('\textoverw', undef, "\x{030B}");
+DefPrimitiveI('\textphi', undef, "\x{0278}");
+DefPrimitiveI('\textpipe', undef, "\x{01C0}");
+DefPrimitiveI('\textpolhook', undef, "\x{0328}");
+DefPrimitiveI('\textprimstress', undef, "\x{02C8}");
+DefPrimitiveI('\textraising', undef, "\x{031D}");
+DefPrimitiveI('\textramshorns', undef, "\x{0264}");
+DefPrimitiveI('\textretracting', undef, "\x{031E}");
+DefPrimitiveI('\textreve', undef, "\x{0258}");
+DefPrimitiveI('\textrevepsilon', undef, "\x{025C}");
+DefPrimitiveI('\textrevglotstop', undef, "\x{0295}");
+DefPrimitiveI('\textrhookrevepsilon', undef, "\x{025D}");
+DefPrimitiveI('\textrhookschwa', undef, "\x{025A}");
+DefPrimitiveI('\textrhoticity', undef, "\x{02DE}");
+DefPrimitiveI('\textrisefall', undef, "\x{02E5}");
+DefPrimitiveI('\textroundcap', undef, "\x{0311}");
+DefPrimitiveI('\textrtaild', undef, "\x{0256}");
+DefPrimitiveI('\textrtaill', undef, "\x{026D}");
+DefPrimitiveI('\textrtailn', undef, "\x{0273}");
+DefPrimitiveI('\textrtailr', undef, "\x{027D}");
+DefPrimitiveI('\textrtails', undef, "\x{0282}");
+DefPrimitiveI('\textrtailt', undef, "\x{0288}");
+DefPrimitiveI('\textrtailz', undef, "\x{0290}");
+DefPrimitiveI('\textsca', undef, "\x{1D00}");
+DefPrimitiveI('\textscb', undef, "\x{0253}");
+DefPrimitiveI('\textscg', undef, "\x{0262}");
+DefPrimitiveI('\textsch', undef, "\x{0286}");
+DefPrimitiveI('\textschwa', undef, "\x{0259}");
+DefPrimitiveI('\textsci', undef, "\x{026A}");
+DefPrimitiveI('\textscn', undef, "\x{0274}");
+DefPrimitiveI('\textscoelig', undef, "\x{0276}");
+DefPrimitiveI('\textscr', undef, "\x{0280}");
+DefPrimitiveI('\textscripta', undef, "\x{0251}");
+DefPrimitiveI('\textscriptg', undef, "\x{0261}");
+DefPrimitiveI('\textscriptv', undef, "\x{028B}");
+DefPrimitiveI('\textscy', undef, "\x{028F}");
+DefPrimitiveI('\textseagull', undef, "\x{033C}");
+DefPrimitiveI('\textsecstress', undef, "\x{02CC}");
+DefPrimitiveI('\textsoftsign', undef, "\x{02B2}");
+DefPrimitiveI('\textstretchc', undef, "\x{0297}");
+DefPrimitiveI('\textsubacute', undef, "\x{0317}");
+DefPrimitiveI('\textsubarch', undef, "\x{032F}");
+DefPrimitiveI('\textsubbar', undef, "\x{0320}");
+DefPrimitiveI('\textsubbridge', undef, "\x{032A}");
+DefPrimitiveI('\textsubcircum', undef, "\x{032D}");
+DefPrimitiveI('\textsubdot', undef, "\x{0323}");
+DefPrimitiveI('\textsubgrave', undef, "\x{0316}");
+DefPrimitiveI('\textsublhalfring', undef, "\x{0319}");
+DefPrimitiveI('\textsubrhalfring', undef, "\x{031C}");
+DefPrimitiveI('\textsubring', undef, "\x{0325}");
+DefPrimitiveI('\textsubsquare', undef, "\x{033B}");
+DefPrimitiveI('\textsubtilde', undef, "\x{0330}");
+DefPrimitiveI('\textsubumlaut', undef, "\x{0324}");
+DefPrimitiveI('\textsubwedge', undef, "\x{032C}");
+DefPrimitiveI('\textsuperimposetilde', undef, "\x{0334}");
+DefPrimitiveI('\textsyllabic', undef, "\x{0329}");
+DefPrimitiveI('\texttheta', undef, "\x{03B8}");
+DefPrimitiveI('\textthorn', undef, UTF(0xFE));
+DefPrimitiveI('\texttildedot', undef, "\x{1DC0}");
+DefPrimitiveI('\textturna', undef, "\x{0250}");
+DefPrimitiveI('\textturnh', undef, "\x{0265}");
+DefPrimitiveI('\textturnk', undef, "\x{029E}");
+DefPrimitiveI('\textturnm', undef, "\x{026F}");
+DefPrimitiveI('\textturnmrleg', undef, "\x{0270}");
+DefPrimitiveI('\textturnr', undef, "\x{0279}");
+DefPrimitiveI('\textturnrrtail', undef, "\x{027B}");
+DefPrimitiveI('\textturnscripta', undef, "\x{0252}");
+DefPrimitiveI('\textturnv', undef, "\x{028C}");
+DefPrimitiveI('\textturnw', undef, "\x{028D}");
+DefPrimitiveI('\textturny', undef, "\x{028E}");
+DefPrimitiveI('\textupsilon', undef, "\x{028A}");
+DefPrimitiveI('\textupstep', undef, "\x{2191}");
+DefPrimitiveI('\textvbaraccent', undef, "\x{030D}");
+DefPrimitiveI('\textvertline', undef, UTF(0x7C));
+DefPrimitiveI('\textyogh', undef, "\x{0292}");
+DefPrimitiveI('\th', undef, UTF(0xFE));
+
+1;

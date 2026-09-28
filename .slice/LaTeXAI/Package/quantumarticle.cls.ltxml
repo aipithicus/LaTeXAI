@@ -1,0 +1,61 @@
+# -*- mode: Perl -*-
+# /=====================================================================\ #
+# |  quantumarticle                                                     | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+# | Part of LaTeXML:                                                    | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# |---------------------------------------------------------------------| #
+# | Bruce Miller <bruce.miller@nist.gov>                        #_#     | #
+# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
+# \=========================================================ooo==U==ooo=/ #
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+# Quantum Journal
+# See https://github.com/quantum-journal/quantum-journal
+
+LoadClass('article');
+ProcessOptions();
+
+RequirePackage('bbm');
+RequirePackage('xcolor');
+
+# Note: This seems similar to revtex4; should we just require revtex4_support ?
+# \author[labels]{name}   One \author per author
+# If label given, the corresponding affiliation from \affil is attached
+# otherwise, \author should be followed by \affiliation
+DefMacro('\author[]{}',    '\lx@add@creator[role=author,annotations={#1}]{#2}');
+DefMacro('\affiliation{}', '\lx@add@contact[annotate=new,role=affiliation]{#1}');
+DefMacro('\affil OptionalSemiverbatim {}',
+  '\lx@add@contact[role=affiliation,annotate={\ifx.#1.new\else 1\fi},label={#1}]{#2}');
+# \address provides address for previous \author
+DefMacro('\address{}', '\lx@add@contact[annotate=new,role=address]{#1}');
+# These add contacts to most recent author
+# The optional arguments here are a sort of prefix to the footnote (NOT label!)
+DefMacro('\email[] Semiverbatim',    '\lx@add@contact[role=email,name={#1}]{#2}');
+DefMacro('\homepage[] Semiverbatim', '\lx@add@contact[role=url,name={#1}]{#2}');
+DefMacro('\thanks[]{}',              '\lx@add@contact[role=thanks,name={#1}]{#2}');
+DefMacro('\orcid[]{}',               '\lx@add@contact[role=orcid,name={#1}]{#2}');
+
+DefMacro('\collaboration{}',    '\author{#1}');
+DefMacro('\altaffiliation[]{}', '\lx@add@contact[annotate=new,role=affiliation,name={#1}]{#2}');
+# some elsearticle style commands?
+DefMacro('\ead[]{}', '\email{#1}');    # Strictly if #1=url, should be homepage.
+
+RawTeX(<<'EoTeX');
+\DeclareRobustCommand\openone{\mathbbm{1}}
+\definecolor{quantumviolet}{HTML}{53257F} %Quantum violet
+\definecolor{quantumgray}{HTML}{555555} %Quantum gray
+\DeclareRobustCommand{\Quantum}{Quantum}
+
+\newenvironment{acknowledgements}{\section*{Acknowledgements}}{}
+\newenvironment{widetext}{}{}
+EoTeX
+
+DefEnvironment('{acknowledgments}', "<ltx:acknowledgements>#body</ltx:acknowledgements>");
+#**********************************************************************
+1;

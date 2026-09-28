@@ -1,0 +1,224 @@
+# -*- mode: Perl -*-
+# /=====================================================================\ #
+# |  elsart_support_core                                                | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+# | Part of LaTeXML:                                                    | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# |---------------------------------------------------------------------| #
+# | Thanks to the arXMLiv group for initial implementation              | #
+# |    http://arxmliv.kwarc.info/                                       | #
+# | Released to the Public Domain                                       | #
+# | enhancements by Lee Worden                                          | #
+# |---------------------------------------------------------------------| #
+# | Bruce Miller <bruce.miller@nist.gov>                        #_#     | #
+# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
+# \=========================================================ooo==U==ooo=/ #
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+#======================================================================
+# Support for both elsart.cls and elsarticle.cls
+#======================================================================
+# 4. Frontmatter
+
+DefPrimitiveI('\begin{frontmatter}', undef, undef);
+DefPrimitiveI('\end{frontmatter}',   undef, undef);
+# \title{}
+# \author[mark]{name}
+# One \author per authorsingle author! possibly with a mark to connect to affiliation
+# It either should be followed by \affiliation,
+# or both should get matching marks
+DefMacro('\author OptionalSemiverbatim {}',
+  '\lx@add@creator[role=author,annotations={#1}]{#2}');
+
+DefMacro('\address OptionalSemiverbatim {}',
+  '\lx@add@contact[label={#1},role=address]{#2}');
+# \affiliation[label]{text-OR-keyvals} !!
+DefMacro('\affiliation OptionalSemiverbatim {}',
+  '\lx@add@contact[label={#1},role=affiliation]{\lx@els@parse@affiliation{#2}{#2}}');
+
+my %els_affil_keys = map { $_ => 1; } (qw(
+    o or organization
+    a ad addressline
+    c ci city
+    p pc postcode
+    s st state
+    country));
+# Detect if affiliation is just text, or keyvals; if latter, format into text.
+DefMacro('\lx@els@parse@affiliation {} RequiredKeyVals', sub {
+    my ($gullet, $raw, $data) = @_;
+    my @pairs = $data->getPairs;
+    # Note: keys is ALREADY ToString
+    if ((scalar(@pairs) <= 2) && !$pairs[1]) {    # 1 key, novalue:: No Keyvals at all!
+      return $raw; }
+    else {
+      my @affil = ();
+      while (@pairs) {
+        my ($key, $value) = (shift(@pairs), shift(@pairs));
+        if ($els_affil_keys{$key}) {
+          push(@affil, T_OTHER(','), T_SPACE) if @affil;
+          push(@affil, $value); } }
+      return Tokens(@affil); } });
+
+# Redefine to account for the label, which we ignore for now!
+DefConstructor('\thanks[]{}', "<ltx:note role='thanks'>#2</ltx:note>");
+
+# Is this significantly different?
+DefMacro('\collab OptionalMatch:* {}', '\author{#1}');
+Let('\collaboration', '\collab');
+
+# These pairs add various contact information to authors.
+# The \<XXX>ref forms are used within the \author text to anchor the connection
+# the \<XXX>text forms supply the text (& and role) for the contact that will be attached.
+DefMacro('\thanksref{}',  '\lx@request@frontmatter@annotation[thanks]{#1}');
+DefMacro('\corref{}',     '\lx@request@frontmatter@annotation[cor]{#1}');
+DefMacro('\corauthref{}', '\lx@request@frontmatter@annotation[corauth]{#1}');
+DefMacro('\fnref{}',      '\lx@request@frontmatter@annotation[fn]{#1}');
+DefMacro('\tnoteref{}', '\lx@request@frontmatter@annotation[tnote]{#1}'); # Possibly for title, not author?
+DefMacro('\thanks OptionalSemiverbatim {}',
+  '\lx@add@contact[label={thanks:#1},role=thanks]{#2}');
+DefMacro('\cortext OptionalSemiverbatim {}',
+  '\lx@add@contact[label={cor:#1},role=correspondent]{#2}');
+DefMacro('\corauth OptionalSemiverbatim {}',
+  '\lx@add@contact[label={corauth:#1},role=correspondent]{#2}');
+DefMacro('\fntext OptionalSemiverbatim {}',
+  '\lx@add@contact[label={fn:#1},role=note]{#2}');
+DefMacro('\tnotetext OptionalSemiverbatim {}',
+  '\lx@add@contact[label={tnote:#1},role=note]{#2}');    # title note?
+
+DefMacro('\runauthor{}', Tokens());
+DefMacro('\runtitle{}',  Tokens());
+
+DefMacro('\subtitle{}', '\lx@add@subtitle{#1}');
+
+# \ead[label]{email} provides email address for the preceding \author (no marks used)
+DefMacro('\ead Optional:email Semiverbatim',
+  '\lx@add@contact[role=#1]{#2}');
+
+DefMacro('\sep', '\unskip,\space');
+
+DefMacro('\received{}',     '\lx@add@date[role=received]{#1}');
+DefMacro('\revised{}',      '\lx@add@date[role=revised]{#1}');
+DefMacro('\accepted{}',     '\lx@add@date[role=accepted]{#1}');
+DefMacro('\communicated{}', '\lx@add@date[role=communicated]{#1}');
+DefMacro('\dedicated{}',    '\lx@add@pubnote[role=dedication]{#1}');
+DefMacro('\presented{}',    '\lx@add@date[role=presented]{#1}');
+DefMacro('\articletype{}',  '\lx@add@pubnote[role=type]{#1}');
+DefMacro('\issue{}',        '\lx@add@pubnote[role=issue]{#1}');
+DefMacro('\journal{}',      '\lx@add@pubnote[role=journal]{#1}');
+DefMacro('\volume{}',       '\lx@add@pubnote[role=volume]{#1}');
+DefMacro('\pubyear{}',      '\lx@add@date[role=publication]{#1}');
+
+DefMacro('\FullCopyrightText', Tokens());
+DefMacro('\copyear{}',         '\lx@add@copyrightyear{#1}');
+DefMacro('\copyrightholder{}', '\lx@add@copyrightholder{#1}');
+Let('\copyrightyear', '\copyear');
+
+DefMacro('\RUNART',    Tokens());
+DefMacro('\RUNDATE',   Tokens());
+DefMacro('\RUNJNL',    Tokens());
+DefMacro('\company{}', Tokens());
+
+# Apparently some sort of identifier?
+DefMacro('\aid{}',    Tokens());
+DefMacro('\ssdi{}{}', Tokens());
+
+# Parses version control of the class file
+DefMacro('\readRCS Until:$ Until:$', Tokens());
+DefMacro('\RCSdate',                 Tokens());
+DefMacro('\RCSfile',                 Tokens());
+DefMacro('\RCSversion',              Tokens());
+
+DefMacro('\firstpage{}', Tokens());
+DefMacro('\lastpage{}',  Tokens());
+
+DefMacro('\preface', Tokens());
+
+DefMacro('\theHaddress', Tokens());
+DefMacro('\theaddress',  Tokens());
+
+Let('\ESpagenumber', '\arabic');
+
+#======================================================================
+# 5. Abstract
+#  as an environment!
+
+# Normally, we'd define the acknowledgements environment simply as:
+# DefEnvironment('{ack}',
+# However, people seem to insist on "misusing" it, by just saying
+# \ack... which actually "works".
+# So, we just open it, and let it autoclose.
+
+DefConstructor('\ack',    "<ltx:acknowledgements>");
+DefConstructor('\endack', "</ltx:acknowledgements>");
+Tag("ltx:acknowledgements", autoClose => 1);
+
+#======================================================================
+# 6 Keywords
+
+# \PACS & \MSC should appear inside a keyword environment;
+# apparently, they implicitly get whatever there is until next thing or end of environment.
+# elsart.sty apparently defines \JEL and \UK as well.
+# But of course, Somebody has to use the non-environment form!
+# Worse, apparently if you do that, you've got to end with an unbalanced }
+#DefMacro('\keyword',   '\@keyword');
+DefMacroI('\begin{keyword}', undef, '\begingroup\@keyword');
+DefMacroI('\end{keyword}',   undef, '\@keyword@cut\endgroup');
+DefMacro('\keyword', sub {
+    my ($gullet) = @_;
+    my $arg = $gullet->readBalanced;
+    (T_CS('\@keyword'), $arg->unlist, T_CS('\@keyword@cut')); });
+DefMacro('\endkeyword', '\@keyword@cut');
+DefMacro('\PACS',       '\@keyword@cut\@PACS');
+DefMacro('\MSC []',     '\@keyword@cut\@MSC{#1}');
+DefMacro('\JEL',        '\@keyword@cut\@JEL');
+DefMacro('\UK',         '\@keyword@cut\@UK');
+
+DefMacro('\@keyword XUntil:\@keyword@cut', '\lx@add@keywords{#1}');
+DefMacro('\@PACS    XUntil:\@keyword@cut', '\lx@add@classification[scheme=PACS,name={PACS:~}]{#1}');
+DefMacro('\@MSC {} XUntil:\@keyword@cut', '\lx@add@classification[scheme={#1 MSC},name={MSC:~}]{#2}');
+DefMacro('\@JEL     XUntil:\@keyword@cut', '\lx@add@classification[scheme=JEL,name={JEL:~}]{#1}');
+DefMacro('\@UK      XUntil:\@keyword@cut', '\lx@add@classification[scheme=UK,name={UK:~}]{#1}');
+DefConstructor('\@keyword@cut', '');
+
+#======================================================================
+# Document Structure
+
+DefMacro('\theparagraph',    '\thesubsubsection.\arabic{paragraph}');
+DefMacro('\thesubparagraph', '\theparagraph.\arabic{subparagraph}');
+
+if (LookupValue('@seceqn')) {
+  RawTeX('\@addtoreset{equation}{section}');
+  DefMacro('\theequation', '\thesection.\arabic{equation}'); }
+
+#======================================================================
+# Tables, Figures & Theorems
+
+if (LookupValue('@seceqn')) {
+  RawTeX('\newtheorem{thm}{Theorem}[section] \@addtoreset{thm}{section}'); }
+else {
+  RawTeX('\newtheorem{thm}{Theorem}'); }
+
+# Section 7, https://www.elsevier.com/__data/assets/pdf_file/0008/56843/elsdoc-1.pdf
+Let(T_CS('\newdefinition'), T_CS('\newtheorem'));
+Let(T_CS('\newproof'),      T_CS('\newtheorem'));
+
+#======================================================================
+# Random spaces, dimensions
+
+DefRegister('\eqnarraycolsep'  => Dimension('1pt'));
+DefRegister('\eqnbaselineskip' => Glue('14pt'));
+DefRegister('\eqnlineskip'     => Glue('2pt'));
+DefRegister('\eqntopsep'       => Glue('12pt'));
+
+#======================================================================
+# random stuff
+DefMacro('\mpfootnotemark', Tokens());
+
+DefMacro('\note{}', "<ltx:note>#1</ltx:note>");    # ?
+
+1;

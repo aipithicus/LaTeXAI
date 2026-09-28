@@ -1,0 +1,45 @@
+# manyfoot 1.11, manyfoot.sty:192-279. Bounded independent plain-note streams.
+# Class: structural. Uses the engine's existing generalized note carriers.
+# Per-page resets, paragraph composition and note hooks remain unsupported.
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+DeclareOption('ruled',sub {}); # Physical inter-stream rule only.
+ProcessOptions();
+sub _mfl_define {
+ my ($stomach,$style,$suffix,$numbering,$declared)=@_;
+ $suffix=ToString($suffix);$style=defined($style)?ToString($style):'plain';
+ if ($style ne 'plain') {Error('unsupported','manyfoot-style',$stomach,"Unsupported manyfoot style '$style'");return;}
+ my $counter='footnote'.$suffix;
+ if (IsDefined(T_CS('\\Footnotetext'.$suffix))) {Error('unexpected','manyfoot-stream',$stomach,"Footnote stream '$suffix' already exists");return;}
+ NewCounter($counter,undef,idprefix=>'note'.$suffix);
+ my $format=defined($numbering)?ToString($numbering):'arabic';
+ if ($format!~/^(?:arabic|alph|Alph|roman|Roman|fnsymbol)$/) {Error('unsupported','manyfoot-numbering',$stomach,"Unsupported note numbering '$format'");$format='arabic';}
+ DefMacro('\\the'.$counter,'\\'.$format.'{'.$counter.'}');
+ DefMacro('\\'.$counter.'typerefname','footnote');
+ DefMacro('\\ext@'.$counter,'');
+ my $type=Tokens(Explode($counter));
+ for my $pair (['Footnote','\lx@note',1],['Footnotetext','\lx@notetext',1],['Footnotemark','\lx@notemark',0]) {
+  my ($prefix,$command,$body)=@$pair;
+  DefMacroI(T_CS('\\'.$prefix.$suffix),$body?'{}{}':'{}',sub {
+   my ($g,$mark,$text)=@_;return Invocation(T_CS($command),$mark,$type,$mark,($body?$text:()));
+  });
+ }
+ if ($declared) {
+  for my $pair (['footnote','\lx@note',1],['footnotetext','\lx@notetext',1],['footnotemark','\lx@notemark',0]) {
+   my ($prefix,$command,$body)=@$pair;
+   DefMacroI(T_CS('\\'.$prefix.$suffix),$body?'[]{}':'[]',sub {
+    my ($g,$index,$text)=@_;
+    return Invocation(T_CS($command),undef,$type,undef,($body?$text:())) unless defined $index;
+    my $mark=Tokens(T_CS('\\the'.$counter));
+    return (T_BEGIN,T_CS('\\c@'.$counter),T_OTHER('='),$index->unlist,T_CS('\relax'),
+     Invocation(T_CS($command),$mark,$type,$mark,($body?$text:())),T_END);
+   });
+  }
+ }
+ return;
+}
+DefPrimitive('\DeclareNewFootnote [] {} []',sub {_mfl_define(@_,1);return;});
+DefPrimitive('\newfootnote [] {}',sub {_mfl_define(@_,undef,0);return;});
+1;

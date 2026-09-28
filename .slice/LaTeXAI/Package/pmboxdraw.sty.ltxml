@@ -1,0 +1,24 @@
+# pmboxdraw 1.4 (2019/12/05), exact single-codepoint Unicode interface.
+# Written from lib-ctan/pmboxdraw/provenance.json and pmboxdraw.sty:272-299,
+# with the 141 explicit pmbd@U+ definitions. Class: semantic.
+# Named aliases, fallback lists and physical setup/box hooks remain unsupported.
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+ProcessOptions();
+DefPrimitive('\pmboxdrawuni {}', sub {
+  my ($stomach, $arg) = @_;
+  my $code = ToString($arg);
+  my $value = $code =~ /^[0-9A-F]{4}$/ ? hex($code) : -1;
+  my $invocation = Invocation(T_CS('\pmboxdrawuni'), $arg);
+  if (!(($value >= 0x2500 && $value <= 0x2503)
+      || ($value >= 0x250C && $value <= 0x254B)
+      || ($value >= 0x2550 && $value <= 0x256C)
+      || ($value >= 0x2574 && $value <= 0x259F))) {
+    Error('unexpected', 'pmboxdrawuni', $stomach, "Unsupported pmboxdraw code '$code'");
+    return Box(ToString($invocation), undef, undef, $invocation);
+  }
+  return Box(chr($value), undef, undef, $invocation);
+}, enterHorizontal => 1);
+1;

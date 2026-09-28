@@ -1,0 +1,30 @@
+# -*- mode: Perl -*-
+# /=====================================================================\ #
+# |  pgfplotstable.sty                                                  | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+# | Part of LaTeXAI / LaTeXML:                                           | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# \=========================================================ooo==U==ooo=/ #
+# Native stub replacing InputDefinitions('pgfplotstable'). Table I/O is
+# furniture for the IR; \pgfplotstabletypeset does not emit a tabular.
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+RequirePackage('pgfplots');
+
+DeclareOption(undef, sub { });
+ProcessOptions();
+
+DefMacro('\pgfplotstableset{}', '');
+DefMacro('\pgfplotstableread[]{}{}', '');
+DefMacro('\pgfplotstabletypeset[]{}', '');
+DefMacro('\pgfplotstableeach{}{}{}{}', '');
+DefMacro('\pgfplotstablegetelem{}{}{}', '\def\pgfplotsretval{}');
+DefMacro('\pgfplotstablevertcat{}{}', '');
+DefMacro('\pgfplotstableclear{}', '');
+
+1;

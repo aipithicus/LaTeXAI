@@ -1,0 +1,90 @@
+# -*- mode: Perl -*-
+# /=====================================================================\ #
+# |  aliascnt                                                           | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+# | Part of LaTeXML:                                                    | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# |---------------------------------------------------------------------| #
+# | Bruce Miller <bruce.miller@nist.gov>                        #_#     | #
+# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
+# \=========================================================ooo==U==ooo=/ #
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+# Emulates aliascnt 1.7 (2026-03-08), TeX Live revision 79461.
+# Written from CTAN aliascnt.sty.
+
+# \newaliascnt{<alias>}{<source>}
+DefPrimitive('\newaliascnt{}{}', sub {
+    my ($stomach, $alias, $source) = @_;
+    $alias  = ToString($alias);
+    $source = ToString($source);
+
+    if (!LookupDefinition(T_CS('\c@' . $source))) {
+      Error('undefined', $source, $stomach, "No counter '$source' defined for \\newaliascnt");
+      return;
+    }
+
+    if (LookupDefinition(T_CS('\c@' . $alias))) {
+      Warn('unexpected', $alias, $stomach, "Counter '$alias' already defined");
+    }
+
+    # Alias register \c@<alias> -> \c@<source>
+    Let(T_CS('\c@' . $alias), T_CS('\c@' . $source));
+
+    # Alias representation and prefix macros
+    Let(T_CS('\the' . $alias),  T_CS('\the' . $source));
+    Let(T_CS('\theH' . $alias), T_CS('\theH' . $source));
+    Let(T_CS('\p@' . $alias),   T_CS('\p@' . $source));
+    Let(T_CS('\cl@' . $alias),  T_CS('\cl@' . $source));
+
+    # Alias LaTeXML-specific counter tracking macros
+    if (LookupDefinition(T_CS('\the' . $source . '@ID'))) {
+      Let(T_CS('\the' . $alias . '@ID'), T_CS('\the' . $source . '@ID'));
+    }
+    if (LookupDefinition(T_CS('\@' . $source . '@ID'))) {
+      Let(T_CS('\@' . $alias . '@ID'), T_CS('\@' . $source . '@ID'));
+    }
+
+    # Map counter for type so RefStepCounter resolves alias to root
+    AssignMapping('counter_for_type', $alias => $source);
+
+    # Record alias metadata
+    AssignValue('AC@cnt@' . $alias => $source, 'global');
+    return;
+});
+
+# \aliascntresetthe{<alias>}
+DefPrimitive('\aliascntresetthe{}', sub {
+    my ($stomach, $alias) = @_;
+    $alias = ToString($alias);
+    my $source = LookupValue('AC@cnt@' . $alias);
+    if (!defined $source) {
+      Error('undefined', $alias, $stomach, "'$alias' is not an alias counter");
+      return;
+    }
+    Let(T_CS('\the' . $alias), T_CS('\the' . $source));
+    return;
+});
+
+# Modern LaTeX 2026+ alias command
+DefMacro('\newcounteralias{}{}', '\newaliascnt{#1}{#2}');
+
+# Helper to find root counter across chains of aliases
+sub findRootCounter {
+  my ($ctr) = @_;
+  my $parent = LookupValue('AC@cnt@' . $ctr);
+  return defined($parent) ? findRootCounter($parent) : $ctr;
+}
+
+DefMacro('\AC@findrootcnt{}', sub {
+    my ($gullet, $ctr) = @_;
+    return Explode(findRootCounter(ToString($ctr)));
+});
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+1;

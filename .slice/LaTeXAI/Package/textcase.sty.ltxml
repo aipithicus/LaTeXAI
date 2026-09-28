@@ -1,0 +1,26 @@
+# -*- mode: Perl -*-
+# /=====================================================================\ #
+# |  textcase                                                           | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+# | Part of LaTeXML:                                                    | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# |---------------------------------------------------------------------| #
+# | Bruce Miller <bruce.miller@nist.gov>                        #_#     | #
+# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
+# \=========================================================ooo==U==ooo=/ #
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+#======================================================================
+# This functionality is now included in base LaTeX
+#InputDefinitions('textcase', type => 'sty', noltxml => 1);
+# We only need to bind the old textcase names.
+Let('\MakeTextUppercase', '\MakeUppercase');
+Let('\MakeTextLowercase', '\MakeLowercase');
+Let('\MakeTextTitlecase', '\MakeTitlecase');
+#======================================================================
+1;

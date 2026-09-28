@@ -1,0 +1,167 @@
+# -*- mode: Perl -*-
+# /=====================================================================\ #
+# | TeX_Glue                                                            | #
+# | Core TeX Implementation for LaTeXML                                 | #
+# |=====================================================================| #
+# | Part of LaTeXML:                                                    | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# |---------------------------------------------------------------------| #
+# | Bruce Miller <bruce.miller@nist.gov>                        #_#     | #
+# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
+# \=========================================================ooo==U==ooo=/ #
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Glue Family of primitive control sequences
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+DefRegister('\lx@default@jot' => Dimension('3pt'));
+
+#======================================================================
+# Inserting, removing glue
+#----------------------------------------------------------------------
+# \hskip            c  inserts horizontal glue in a horizontal or math list.
+# \vskip            c  inserts vertical glue in a vertical list.
+# \unskip           c  removes a glue item from the current list.
+
+# These aren't distringuishing \kern's from \skip's (should they?)
+our @spaces = (    # Spaces to fake spacing, with width in ems, along with the common command
+  [0.100, "\x{200A}"],                                # Hair space (thinner than thin space)
+  [0.167, "\x{2006}"],                                # six-per-em
+  [0.200, "\x{2009}",         T_CS('\thinspace')],    # five-per-em, thin space
+  [0.250, "\x{2005}",         T_CS('\>')],            # four-per-em, mid space
+  [0.333, "\x{2004}",         T_CS('\;')],            # three-per-em, thick space
+  [0.500, "\x{2002}",         T_CS('\enskip')],       # en-quad, "nut"
+  [1.000, "\x{2003}",         T_CS('\quad')],         # em-quad, "mutton"
+  [2.000, "\x{2003}\x{2003}", T_CS('\qquad')],
+);
+
+# String of spacing chars with width roughly equivalent to $dimen
+sub DimensionToSpaces {
+  my ($dimen) = @_;
+  my $fs      = LookupValue('font')->getSize;         # 1 em
+  my $ems     = $dimen->ptValue / $fs;
+  my $s       = '';
+  for (my $i = $#spaces ; ($i >= 0) && ($ems > 0) ; $i--) {
+    my $w = $spaces[$i][0];
+    if ($ems + 0.01 > $w) {
+      my $n = int(($ems + 0.01) / $w);
+      $ems -= $n * $w; $s .= $spaces[$i][1] x $n; } }
+  return $s; }
+
+# Revert a skip to it's (common) command, falling back to a generic \hskip <dim>
+sub revertSkip {
+  my ($command, $dimen) = @_;
+  my $fs  = LookupValue('font')->getSize;    # 1 em
+  my $ems = $dimen->ptValue / $fs;
+  for (my $i = 0 ; ($i <= $#spaces) ; $i++) {
+    next if ($ems > $spaces[$i][0] + 0.01) || !$spaces[$i][2];
+    return $spaces[$i][2] if $ems < $spaces[$i][0] + 0.01; }
+  return Invocation($command, $dimen); }
+
+# \hskip handled similarly to \kern
+# \hskip can be ignored in certain situations...
+DefConstructor('\hskip Glue', sub {
+    my ($document, $length, %props) = @_;
+    my $parent = $document->getNode;
+    #    Debug("HSKIP ".ToString($length)." at ".$document->getNodeQName($parent));
+    if ($document->getNodeQName($parent) eq 'svg:g') {
+      if (my $x = $length->pxValue) {
+        # HACK HACK HACK
+        my $transform = $parent->getAttribute('transform');
+        $parent->setAttribute(transform => ($transform ? $transform . ' ' : '') . "translate($x,0)");
+    } }
+    elsif (inSVG()) {
+      Warn('unexpected', 'kern', $_[0], "Lost hskip in SVG " . ToString($length)); }
+    elsif ($props{isMath}) {
+      $document->insertElement('ltx:XMHint', undef, width => $length); }
+    else {
+      #      $document->openText(DimensionToSpaces($length), $props{font}); } },
+      $document->absorb(DimensionToSpaces($length)); } },
+  reversion       => sub { revertSkip(T_CS('\hskip'), $_[1]); },
+  attributeForm   => sub { DimensionToSpaces($_[1]); },
+  enterHorizontal => 1,
+  properties      => sub { (width => $_[1], isSpace => 1, isSkip => 1); });
+
+# We should be combining adjacent vskips (?)
+# And then add appropriate class/css for spacing to preceding element.
+DefConstructor('\vskip Glue', sub {
+    my ($document, $length, %props) = @_;
+    $length = $length->ptValue;
+    if    ($length <= 0) { }                                     # Or what!?!?!?!
+    elsif (($length < 4) && $document->isCloseable('ltx:p')) {
+      $document->closeElement('ltx:p'); }
+    elsif ($document->isCloseable('ltx:para')) {
+      $document->closeElement('ltx:para'); }
+    return; },
+  leaveHorizontal => 1,
+  properties      => sub { (height => $_[1], width => Dimension(0), depth => Dimension(0),
+      isSpace => 1, isSkip => 1, isVerticalSpace => 1); });
+
+# Remove skip, if last on LIST
+DefPrimitiveI('\unskip', undef, sub {
+    my ($stomach) = @_;
+    my @c = ();
+    my $box;
+    # Scan past any Comment boxes
+    while (($box = $LaTeXML::LIST[-1]) && (ref $box eq 'LaTeXML::Core::Comment')) {
+      push(@c, pop(@LaTeXML::LIST)); }
+    if ($box && $box->getProperty('isSkip')) {
+      pop(@LaTeXML::LIST); }
+    push(@LaTeXML::LIST, @c);
+    return; });
+
+#======================================================================
+# Horizontal skips
+#----------------------------------------------------------------------
+# \hfil             d  inserts first order infinitely stretchable horizontal glue in a horizontal or math list.
+# \hfill            d  inserts second order infinitely stretchable horizontal glue in a horizontal or math list.
+# \hfilneg          d  cancels the stretchability of \hfil.
+# \hss              d  inserts infinitely stretchable and shrinkable horizontal glue in a horizontal or math list.
+
+DefPrimitiveI('\hss',     undef, undef, enterHorizontal => 1,);
+DefPrimitiveI('\hfilneg', undef, undef, enterHorizontal => 1);
+
+DefPrimitiveI('\hfil', undef, sub {
+    Box(' ', undef, undef, T_CS('\hfil'), isSpace => 1, isFill => 1); },
+  enterHorizontal => 1);
+###    Box("\x{200B}", undef, undef, T_CS('\hfil'), isSpace => 1, isFill => 1); });
+###    Box("\x{200A}", undef, undef, T_CS('\hfil'), isSpace => 1, isFill => 1); });
+DefPrimitiveI('\hfill', undef, sub {
+    Box(' ', undef, undef, T_CS('\hfill'), isSpace => 1, isFill => 1); },
+  enterHorizontal => 1);
+####    Box("\x{200B}", undef, undef, T_CS('\hfill'), isSpace => 1, isFill => 1); });
+###    Box("\x{200A}", undef, undef, T_CS('\hfill'), isSpace => 1, isFill => 1); });
+
+#======================================================================
+# Vertical skips
+#----------------------------------------------------------------------
+# \vfil             d  inserts first order infinitely stretchable vertical glue in a vertical list.
+# \vfill            d  inserts second order infinitely stretchable vertical glue in a vertical list.
+# \vfilneg          d  cancels the stretchability of \vfil.
+# \vss              d  insert infinitely stretchable and shrinkable vertical glue in a vertical list.
+
+# Stuff to ignore for now...
+DefPrimitiveI('\vfil',    undef, undef, leaveHorizontal => 1);
+DefPrimitiveI('\vfill',   undef, undef, leaveHorizontal => 1);
+DefPrimitiveI('\vss',     undef, undef, leaveHorizontal => 1);
+DefPrimitiveI('\vfilneg', undef, undef, leaveHorizontal => 1);
+
+#======================================================================
+# Lastskip
+#----------------------------------------------------------------------
+# \lastskip         iq is 0.0 pt or the last glue or muglue on the current list.
+DefRegister('\lastskip' => Dimension(0), readonly => 1, getter => sub {
+    for (my $i = $#LaTeXML::LIST ; $i > 0 ; $i--) {
+      my $box = $LaTeXML::LIST[$i];
+      last if !$box;
+      next if ref $box eq 'LaTeXML::Core::Comment';
+      last if !$box->getProperty('isSkip');
+      return $box->getProperty('width'); }
+    return Dimension(0); });
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+1;

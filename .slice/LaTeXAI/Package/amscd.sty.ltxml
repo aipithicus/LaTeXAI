@@ -1,0 +1,137 @@
+# -*- mode: Perl -*-
+# /=====================================================================\ #
+# |  amscd                                                              | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+# | Part of LaTeXML:                                                    | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# |---------------------------------------------------------------------| #
+# | Thanks to the arXMLiv group for initial implementation              | #
+# |    http://arxmliv.kwarc.info/                                       | #
+# | Released to the Public Domain                                       | #
+# |---------------------------------------------------------------------| #
+# | Bruce Miller <bruce.miller@nist.gov>                        #_#     | #
+# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
+# \=========================================================ooo==U==ooo=/ #
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Note that the amscd authors themselves point out that amcsd is limited,
+# only covering array-like commutative diagrams, and they suggest
+# diagram, xypic or kuvio as alternatives.
+#
+# However, it is just that simplicity that mkes it possible to represent
+# the commutative diagram in straight latexml math, w/o resorting to
+# the more general svg(-like) problems.
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+RequirePackage('amsgen');
+
+DefMacro('\CD', '\lx@ams@CD{name=CD,datameaning=commutative-diagram}');
+DefMacro('\lx@ams@CD RequiredKeyVals:lx@GEN',
+  '\lx@gen@matrix@bindings{#1}\lx@ams@CD@bindings\lx@ams@matrix@{#1}\lx@begin@alignment');
+DefMacro('\endCD', '\lx@end@alignment\lx@end@gen@matrix');
+DefPrimitive('\lx@ams@CD@bindings', sub {
+    Let("\\\\", '\lx@alignment@newline@noskip');
+    $STATE->assignMathcode('@' => 0x8000);
+    Let('@', '\cd@'); });
+
+DefMacro('\cd@ Token', sub {
+    my ($gullet, $token) = @_;
+    (T_CS('@' . ToString($token))); });
+
+# Horizontal connectors
+DefMacroI(T_CS('@>'), 'Until:> Until:>',
+  '\lx@hidden@align\lx@amscd@stack{>}{\lx@amscd@rightarrow}{#1}{#2}\lx@hidden@align');
+DefMacroI(T_CS('@)'), 'Until:) Until:)',
+  '\lx@hidden@align\lx@amscd@stack{)}{\lx@amscd@rightarrow}{#1}{#2}\lx@hidden@align');
+DefMacroI(T_CS('@<'), 'Until:< Until:<',
+  '\lx@hidden@align\lx@amscd@stack{<}{\lx@amscd@leftarrow}{#1}{#2}\lx@hidden@align');
+DefMacroI(T_CS('@('), 'Until:( Until:(',
+  '\lx@hidden@align\lx@amscd@stack{(}{\lx@amscd@leftarrow}{#1}{#2}\lx@hidden@align');
+DefMacroI(T_CS('@='), undef,
+  '\lx@hidden@align\lx@amscd@equals\lx@hidden@align');
+
+# Vertical connectors
+DefMacroI(T_CS('@A'), 'Until:A Until:A',
+  '\lx@amscd@adjacent{A}{\Big\uparrow}{#1}{#2}\lx@hidden@align\lx@hidden@align');
+DefMacroI(T_CS('@V'), 'Until:V Until:V',
+  '\lx@amscd@adjacent{V}{\Big\downarrow}{#1}{#2}\lx@hidden@align\lx@hidden@align');
+
+DefMacroI(T_CS('@|'), undef,
+  '\Big\Vert\lx@hidden@align\lx@hidden@align');
+DefMacroI(T_CS('@\vert'), undef,
+  '\Big\Vert\lx@hidden@align\lx@hidden@align');
+DefMacroI(T_CS('@.'), undef,
+  '\lx@hidden@align\lx@hidden@align');
+
+DefRegister('\minaw@' => Dimension('11.111pt'));
+
+DefConstructor('\lx@amscd@stack Undigested {} ScriptStyle ScriptStyle', sub {
+    my ($document, $reversion, $op, $over, $under, %props) = @_;
+    my $scriptpos = $props{scriptpos};
+    if (!IsEmpty($under)) {
+      $document->openElement('ltx:XMApp', role => 'ARROW');    # Role?
+      $document->insertElement('ltx:XMTok', undef, role => 'SUBSCRIPTOP', scriptpos => $scriptpos);
+      if (!IsEmpty($over)) {
+        $document->openElement('ltx:XMApp');                   # Role?
+        $document->insertElement('ltx:XMTok', undef, role => 'SUPERSCRIPTOP', scriptpos => $scriptpos);
+        $document->insertElement('ltx:XMArg', $op);
+        $document->insertElement('ltx:XMArg', $over);
+        $document->closeElement('ltx:XMApp'); }
+      else {
+        $document->insertElement('ltx:XMArg', $op); }
+      $document->insertElement('ltx:XMArg', $under);
+      $document->closeElement('ltx:XMApp'); }
+    elsif (!IsEmpty($over)) {
+      $document->openElement('ltx:XMApp');    # Role?
+      $document->insertElement('ltx:XMTok', undef, role => 'SUPERSCRIPTOP', scriptpos => $scriptpos);
+      $document->insertElement('ltx:XMArg', $op);
+      $document->insertElement('ltx:XMArg', $over);
+      $document->closeElement('ltx:XMApp'); }
+    else {
+      $document->insertElement('ltx:XMArg', $op); } },
+  properties => { scriptpos => sub { "mid" . $_[0]->getScriptLevel; } },
+  reversion  => '@#1{#3}#1{#4}#1');
+
+DefConstructor('\lx@amscd@adjacent Undigested {} ScriptStyle ScriptStyle', sub {
+    my ($document, $reversion, $op, $left, $right, %props) = @_;
+    # Make the left & right parts width=0, so they don't affect centering
+    $document->openElement('ltx:XMWrap', role => 'ARROW');    # Role?
+    $document->insertElement('ltx:XMArg', $left, width => Dimension(0)) unless IsEmpty($left);
+    $document->insertElement('ltx:XMArg', $op);
+    $document->insertElement('ltx:XMArg', $right, width => Dimension(0)) unless IsEmpty($right);
+    $document->closeElement('ltx:XMWrap'); },
+  reversion => '@#1{#3}#1{#4}#1');
+
+# These, in case used...
+DefMacro('\leftarrowfill@ {}',      '\lx@amscd@leftarrow');
+DefMacro('\rightarrowfill@ {}',     '\lx@amscd@rightarrow');
+DefMacro('\leftrightarrowfill@ {}', '\lx@amscd@leftrightarrow');
+
+# These are stretchy, widenned version; should be \minCDarrowsidth or \minaw@ wide
+DefPrimitive('\lx@amscd@leftarrow', sub {
+    Box("\x{2190}", undef, undef, T_CS('\leftarrow'),
+      role => 'ARROW', stretchy => 'true', meaning => 'leftarrow',
+      class=>'ltx_horizontally_stretchy',  width => Dimension('30pt')); });
+DefPrimitive('\lx@amscd@rightarrow', sub {
+    Box("\x{2192}", undef, undef, T_CS('\rightarrow'),
+      role => 'ARROW', stretchy => 'true', meaning => 'rightarrow',
+      class=>'ltx_horizontally_stretchy',  width => Dimension('30pt')); });
+DefPrimitive('\lx@amscd@leftrightarrow', sub {
+    Box("\x{2194}", undef, undef, T_CS('\leftrightarrow'),
+      role => 'ARROW', stretchy => 'true', meaning => 'leftrightarrow',
+      class=>'ltx_horizontally_stretchy',  width => Dimension('30pt')); });
+DefPrimitive('\lx@amscd@equals', sub {
+    Box("=", undef, undef, T_OTHER('='),
+      role => 'ARROW', stretchy => 'true', meaning => 'equals',
+      class=>'ltx_horizontally_stretchy',  width => Dimension('30pt')); });
+
+DefRegister('\minCDarrowwidth' => Dimension('2.5pc'));
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+1;

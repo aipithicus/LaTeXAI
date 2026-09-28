@@ -1,0 +1,13 @@
+# abstract 1.2a (2009/06/08), abstract.sty:46-54 and 117-173.
+# Class: shim for observed abstract indent/spacing registers. The class binding
+# keeps its existing abstract carrier, title and body. These lengths control
+# physical layout only. Number/addtotoc/runin/style and thanks replay unsupported.
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+DeclareOption('original',sub {});
+DeclareOption(undef,sub {Error('unsupported','abstract-option',undef,'Unsupported abstract option '.ToString(Expand(T_CS('\CurrentOption'))));});
+ProcessOptions();
+DefRegister('\\'.$_,Dimension(0)) for qw(abstitleskip absleftindent absrightindent absparindent absparsep);
+1;

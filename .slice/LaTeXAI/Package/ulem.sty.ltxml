@@ -1,0 +1,47 @@
+# -*- mode: Perl -*-
+# /=====================================================================\ #
+# |  ulem                                                               | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+# | Part of LaTeXML:                                                    | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# |---------------------------------------------------------------------| #
+# | Bruce Miller <bruce.miller@nist.gov>                        #_#     | #
+# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
+# \=========================================================ooo==U==ooo=/ #
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+
+RequireResource('ltx-ulem.css');
+
+#======================================================================
+# TODO: We still need to propagate the XMWrap class to the inner argument,
+#       not yet implemented in MathParser?
+DefConstructor('\uline{}', "?#isMath(<ltx:XMWrap class='ltx_ulem_uline'>#1</ltx:XMWrap>)"
+    . "(<ltx:text class='ltx_ulem_uline'>#1</ltx:text>)",
+  enterHorizontal => 1);
+DefConstructor('\uuline{}', "?#isMath(<ltx:XMWrap class='ltx_ulem_uuline'>#1</ltx:XMWrap>)"
+    . "(<ltx:text class='ltx_ulem_uuline'>#1</ltx:text>)",
+  enterHorizontal => 1);
+DefConstructor('\uwave{}', "?#isMath(<ltx:XMWrap class='ltx_ulem_uwave'>#1</ltx:XMWrap>)"
+    . "(<ltx:text class='ltx_ulem_uwave'>#1</ltx:text>)",
+  enterHorizontal => 1);
+DefConstructor('\sout{}', "?#isMath(<ltx:XMWrap class='ltx_ulem_sout'>#1</ltx:XMWrap>)"
+    . "(<ltx:text class='ltx_ulem_sout'>#1</ltx:text>)",
+  enterHorizontal => 1);
+DefConstructor('\xout{}', "?#isMath(<ltx:XMWrap class='ltx_ulem_xout'>#1</ltx:XMWrap>)"
+    . "(<ltx:text class='ltx_ulem_xout'>#1</ltx:text>)",
+  enterHorizontal => 1);
+DefConstructor('\dashuline{}', "?#isMath(<ltx:XMWrap class='ltx_ulem_dashuline'>#1</ltx:XMWrap>)"
+    . "(<ltx:text class='ltx_ulem_dashuline'>#1</ltx:text>)",
+  enterHorizontal => 1);
+DefConstructor('\dotuline{}', "?#isMath(<ltx:XMWrap class='ltx_ulem_dotuline'>#1</ltx:XMWrap>)"
+    . "(<ltx:text class='ltx_ulem_dotuline'>#1</ltx:text>)",
+  enterHorizontal => 1);
+
+DefMacro('\normalem', '');
+#======================================================================
+1;

@@ -1,0 +1,27 @@
+# -*- mode: Perl -*-
+# /=====================================================================\ #
+# | pstricks.tex                                                        | #
+# | Implementation for LaTeXML                                          | #
+# |=====================================================================| #
+# | Part of LaTeXML                                                     | #
+# |  Public domain software, produced as part of work done by the       | #
+# |  United States Government & not subject to copyright in the US.     | #
+# |---------------------------------------------------------------------| #
+# | Bruce Miller <bruce.miller@nist.gov>                        #_#     | #
+# | http://dlmf.nist.gov/LaTeXML/                              (o o)    | #
+# \=========================================================ooo==U==ooo=/ #
+package LaTeXML::Package::Pool;
+use LaTeXML::Package;
+use strict;
+use warnings;
+
+# Load raw pstricks.tex so its internal registers (\pst@dima, etc.),
+# utility macros (\pstheader, \pst@number, etc.), and key-value handlers
+# are available for downstream raw packages.
+InputDefinitions('pstricks', type => 'tex', noltxml => 1);
+
+# We then provide nominal SVG support via pstricks_support,
+# for cases where pstricks.tex was used directly.
+RequirePackage('pstricks_support');
+
+1;

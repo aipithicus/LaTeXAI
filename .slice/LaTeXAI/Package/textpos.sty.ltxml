@@ -1,0 +1,34 @@
+# textpos 1.10.1, textpos.sty:35-71,108-180,186-208,224-267.
+# Class: structural. Preserve positioned block contents in source order.
+# Absolute coordinates/grid/overlay/margins are physical layout; not executed.
+# noshowtext/discardcontent and textblocklabel are unsupported.
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+RequirePackage('xcolor');
+for my $name (qw(absolute relative overlay quiet verbose showboxes)) {DeclareOption($name,sub {});}
+ProcessOptions();
+DefRegister('\TPHorizModule',Dimension('1pt'));
+DefRegister('\TPVertModule',Dimension('1pt'));
+DefRegister('\TPboxrulesize',Dimension('0.4pt'));
+DefMacro('\textblockorigin {} {}','');
+DefMacro('\TPReferencePosition {}','');
+DefMacro('\TPMargin OptionalMatch:* {}','');
+DefMacro('\TPGrid [] {} {}','');
+DefPrimitive('\textblockcolour {}',sub {AssignValue('textpos_background',$_[1]);return;});
+Let('\textblockcolor','\textblockcolour');
+DefPrimitive('\textblockrulecolour {}',sub {AssignValue('textpos_frame',$_[1]);return;});
+Let('\textblockrulecolor','\textblockrulecolour');
+for my $star ('','*') {
+ DefEnvironment('{textblock'.$star.'} '.($star?'{Dimension}':'{}').' [] SkipMatch:( Until:)',
+  "<ltx:block class='ltx_textblock' ?#width(width='#width') ?#backgroundcolor(backgroundcolor='#backgroundcolor')>#body</ltx:block>",
+  mode=>'internal_vertical',beforeConstruct=>sub {$_[0]->maybeCloseElement('ltx:p');},
+  properties=>sub {
+   my ($stomach,$width)=@_;my %p;
+   $p{width}=$width if $star;
+   $p{backgroundcolor}=DecodeColor(ToString(LookupValue('textpos_background'))) if LookupValue('textpos_background');
+   return %p;
+  });
+}
+1;

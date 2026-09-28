@@ -1,0 +1,28 @@
+# etoc 1.2e (2026/05/04), bounded local contents/depth API.
+# Class: structural. Advanced styles, tags and depth tags remain unsupported.
+package LaTeXML::Package::Pool;
+use strict;
+use warnings;
+use LaTeXML::Package;
+use LaTeXML::Util::Contents qw(contents_level contents_select fill_local_contents);
+ProcessOptions();
+sub _etoc_depth {
+ my ($arg,$context)=@_;my $name=ToString($arg);
+ my $value=$name=~/^-?\d+$/?0+$name:contents_level($name);
+ if (!defined $value) {Error('unexpected','etoc-depth',$context,"Unknown contents depth '$name'");return;}
+ return $value;
+}
+DefPrimitive('\etocsetnexttocdepth {}',sub {AssignValue('etoc_next_depth',_etoc_depth($_[1],$_[0]));});
+DefPrimitive('\etocsettocdepth {}',sub {
+ my $value=_etoc_depth($_[1],$_[0]);AssignValue('etoc_depth',$value) if defined $value;
+});
+DefConstructor('\localtableofcontents',
+ "<ltx:TOC class='ltx_etoc' lists='toc' select='#select'><ltx:title>#title</ltx:title></ltx:TOC>",
+ properties=>sub {
+  my $depth=LookupValue('etoc_next_depth');AssignValue('etoc_next_depth',undef);
+  $depth=LookupValue('etoc_depth') unless defined $depth;
+  $depth=CounterValue('tocdepth')->valueOf unless defined $depth;
+  return (select=>contents_select(-1,$depth),title=>DigestText(T_CS('\contentsname')));
+ });
+Tag('ltx:document',afterClose=>\&fill_local_contents);
+1;
