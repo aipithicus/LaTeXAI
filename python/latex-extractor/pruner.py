@@ -10,7 +10,7 @@ Capabilities:
 from __future__ import annotations
 
 import re
-from typing import List, Optional, Tuple
+from typing import Any, List, Optional, Tuple
 
 
 def simplify_conditionals(text: str) -> str:
@@ -55,8 +55,15 @@ def simplify_conditionals(text: str) -> str:
                     else:
                         deletions.append((s_start, fi_end))
 
-    # Apply deletions in reverse offset order to maintain index integrity
-    for start, end in sorted(deletions, key=lambda x: x[0], reverse=True):
+    # Nested dead branches produce overlapping original-source intervals.
+    # Merge them before slicing so inner edits cannot shift an outer endpoint.
+    merged: List[Tuple[int, int]] = []
+    for start, end in sorted(deletions):
+        if merged and start <= merged[-1][1]:
+            merged[-1] = (merged[-1][0], max(end, merged[-1][1]))
+        else:
+            merged.append((start, end))
+    for start, end in reversed(merged):
         text = text[:start] + text[end:]
 
     return text
@@ -226,4 +233,3 @@ def prune_latex_provenance(
                 out_lines.append(SourceLine(pruned_line_texts[jdx], ref_line.src_file, ref_line.src_line, "PRUNED_SEMANTIC"))
 
     return out_lines, tombstones
-

@@ -24,6 +24,11 @@ import shutil
 import subprocess
 from typing import Any, Dict, List, Optional, Set, Tuple
 
+try:
+    from .source_io import SourceDecodingError, open_source, project_files, excluded_path
+except ImportError:
+    from source_io import SourceDecodingError, open_source, project_files, excluded_path
+
 IMAGE_EXTENSIONS = {
     ".png", ".jpg", ".jpeg", ".pdf", ".eps", ".svg", ".tif", ".tiff", ".bmp", ".webp"
 }
@@ -50,6 +55,7 @@ class ImageAssetInfo:
     dpi: Optional[Tuple[float, float]] = None
     color_mode: Optional[str] = None
     converted_from_eps: bool = False
+    dimension_error: Optional[str] = None
 
     def to_dict(self) -> Dict[str, Any]:
         return dataclasses.asdict(self)
@@ -65,6 +71,10 @@ class BibliographyInfo:
     bib_files: List[str] = field(default_factory=list)
     missing_bib_files: List[str] = field(default_factory=list)
     citations_count: int = 0
+    prepared_bbl: Optional[str] = None
+    canonical_bib: Optional[str] = None
+    preparation_backend: Optional[str] = None
+    preparation_warnings: List[str] = field(default_factory=list)
 
     def to_dict(self) -> Dict[str, Any]:
         return dataclasses.asdict(self)
@@ -137,6 +147,9 @@ class PreflightManifest:
     # Bibliography
     bibliography: BibliographyInfo
 
+    # Canonical package entrypoint; root_file above records source discovery.
+    entrypoint: Optional[str] = None
+
     # Assets
     active_images: List[ImageAssetInfo] = field(default_factory=list)
     dormant_images: List[str] = field(default_factory=list)
@@ -175,7 +188,7 @@ class PreflightManifest:
 # Dynamic Root Document Discovery
 # -----------------------------------------------------------------------------
 
-def find_root_tex(project_dir: str) -> str:
+def find_root_tex(project_dir: str, excluded_dirs: Optional[List[Path]] = None) -> str:
     """
     Discovers the true root .tex file in a repository without assuming 'main.tex'.
     
@@ -186,7 +199,8 @@ def find_root_tex(project_dir: str) -> str:
       4. Disambiguation via matching `.bbl` basename or common filenames
     """
     p_dir = Path(project_dir).resolve()
-    tex_files = [p for p in p_dir.rglob("*.tex") if p.is_file()]
+    excluded_dirs = excluded_dirs or []
+    tex_files = [p for p in project_files(p_dir, excluded_dirs) if p.suffix.lower() == ".tex"]
 
     if not tex_files:
         raise FileNotFoundError(f"No .tex files found in {project_dir}")
@@ -194,15 +208,18 @@ def find_root_tex(project_dir: str) -> str:
     # 1. Check for Magic Comments (% !TEX root = ...)
     for tex in tex_files:
         try:
-            with open(tex, "r", encoding="utf-8", errors="ignore") as f:
+            with open_source(tex) as f:
                 head = [next(f, "") for _ in range(15)]
             for line in head:
                 m = re.search(r"%\s*!TEX\s+root\s*=\s*([^\s]+)", line, re.IGNORECASE)
                 if m:
                     target = m.group(1).strip()
                     resolved = (tex.parent / target).resolve()
-                    if resolved.exists():
-                        return resolved.name
+                    if (resolved.is_file() and resolved.is_relative_to(p_dir)
+                            and not excluded_path(resolved, p_dir, excluded_dirs)):
+                        return resolved.relative_to(p_dir).as_posix()
+        except SourceDecodingError:
+            raise
         except Exception:
             continue
 
@@ -212,7 +229,7 @@ def find_root_tex(project_dir: str) -> str:
 
     for tex in tex_files:
         try:
-            with open(tex, "r", encoding="utf-8", errors="ignore") as f:
+            with open_source(tex) as f:
                 content = f.read()
 
             # Ignore files flagged by arXiv or template as auto-ignore
@@ -224,7 +241,7 @@ def find_root_tex(project_dir: str) -> str:
                 inc_name = inc.strip()
                 if not inc_name.endswith(".tex"):
                     inc_name += ".tex"
-                includes_found.add(Path(inc_name).name)
+                includes_found.add((p_dir / inc_name).resolve())
 
             # A root document must declare \documentclass and have \begin{document}
             has_docclass = bool(re.search(r"\\documentclass(\[[^\]]*\])?\{[^}]+\}", content))
@@ -234,43 +251,44 @@ def find_root_tex(project_dir: str) -> str:
                 # Exclude subfiles package children if marked
                 if not re.search(r"\\documentclass(\[[^\]]*\])?\{subfiles\}", content):
                     candidates.append(tex)
+        except SourceDecodingError:
+            raise
         except Exception:
             continue
 
     # 3. If candidates were included by another file, they are sub-documents
-    unincluded_candidates = [c for c in candidates if c.name not in includes_found]
+    unincluded_candidates = [c for c in candidates if c.resolve() not in includes_found]
     if unincluded_candidates:
         candidates = unincluded_candidates
 
     # If exactly 1 candidate, we're done
     if len(candidates) == 1:
-        return candidates[0].name
+        return candidates[0].relative_to(p_dir).as_posix()
 
     # 4. Disambiguation: Check for matching .bbl file
-    bbl_files = [p.stem for p in p_dir.glob("*.bbl")]
     for c in candidates:
-        if c.stem in bbl_files:
-            return c.name
+        if c.with_suffix(".bbl").is_file():
+            return c.relative_to(p_dir).as_posix()
 
     # 5. Check common conventional names
     for c in candidates:
         if c.stem.lower() in ("main", "paper", "ms", "article", "index"):
-            return c.name
+            return c.relative_to(p_dir).as_posix()
 
     # 6. Prefer candidate located in root directory over nested subdirectories
     root_level_candidates = [c for c in candidates if c.parent == p_dir]
     if len(root_level_candidates) == 1:
-        return root_level_candidates[0].name
+        return root_level_candidates[0].relative_to(p_dir).as_posix()
 
     if candidates:
-        return candidates[0].name
+        return candidates[0].relative_to(p_dir).as_posix()
 
     # Fallback to the first .tex file found in the root dir
-    root_tex = [p for p in p_dir.glob("*.tex")]
+    root_tex = [p for p in tex_files if p.parent == p_dir]
     if root_tex:
-        return root_tex[0].name
+        return root_tex[0].relative_to(p_dir).as_posix()
 
-    return tex_files[0].name
+    return tex_files[0].relative_to(p_dir).as_posix()
 
 
 # -----------------------------------------------------------------------------
@@ -316,7 +334,7 @@ def _probe_eps_dimensions(path: str) -> Dict[str, Any]:
     """Inspects EPS BoundingBox in points."""
     info: Dict[str, Any] = {"width": None, "height": None, "unit": "pt"}
     try:
-        with open(path, "r", encoding="latin1", errors="ignore") as f:
+        with open(path, "r", encoding="latin1") as f:
             for line in f:
                 if line.startswith("%%BoundingBox:"):
                     parts = line.split()[1:]
@@ -370,6 +388,8 @@ def characterize_image(rel_path: str, abs_path: str) -> ImageAssetInfo:
         dpi=dpi,
         color_mode=color_mode,
         converted_from_eps=is_converted_eps,
+        dimension_error=(None if width is not None and height is not None else
+                         f"Dimensions unavailable for {rel_path}"),
     )
 
 
@@ -395,6 +415,9 @@ def run_draftmode_probe(
         "-interaction=nonstopmode",
         f"{base_name}.tex"
     ]
+    input_parent = Path(base_name).parent
+    if input_parent != Path("."):
+        cmd.insert(1, f"-output-directory={input_parent.as_posix()}")
     try:
         res = subprocess.run(
             cmd,
@@ -420,7 +443,7 @@ def parse_fls_records(fls_path: str, project_dir: Path) -> Set[Path]:
 
     proj_dir_resolved = project_dir.resolve()
 
-    with open(fls_path, "r", encoding="utf-8", errors="ignore") as f:
+    with open_source(fls_path) as f:
         for line in f:
             if not line.startswith("INPUT "):
                 continue
@@ -477,7 +500,7 @@ def _resolve_asset_file(raw_target: str, search_dirs: List[Path]) -> Optional[Pa
     return None
 
 
-def _static_scan_active_paths(p_dir: Path, root_name: str) -> Set[Path]:
+def _static_scan_active_paths(p_dir: Path, root_name: str, excluded_dirs: Optional[List[Path]] = None) -> Set[Path]:
     """
     Robust multi-stage scanner for headless environments:
       Stage 1: Preamble directory extraction (\\graphicspath).
@@ -485,6 +508,7 @@ def _static_scan_active_paths(p_dir: Path, root_name: str) -> Set[Path]:
       Stage 3: Secondary check via reverse correlation probe.
     """
     visited_tex: Set[Path] = set()
+    excluded_dirs = excluded_dirs or []
     found_paths: Set[Path] = set()
     collected_text_fragments: List[str] = []
     graphic_search_dirs: List[Path] = [p_dir]
@@ -501,14 +525,17 @@ def _static_scan_active_paths(p_dir: Path, root_name: str) -> Set[Path]:
     ]
 
     def walk_tex(tex_file: Path):
-        if tex_file in visited_tex or not tex_file.exists():
+        if (tex_file in visited_tex or not tex_file.exists()
+                or excluded_path(tex_file, p_dir, excluded_dirs)):
             return
         visited_tex.add(tex_file)
         found_paths.add(tex_file)
 
         try:
-            with open(tex_file, "r", encoding="utf-8", errors="ignore") as f:
+            with open_source(tex_file) as f:
                 content = f.read()
+        except SourceDecodingError:
+            raise
         except Exception:
             return
 
@@ -536,7 +563,7 @@ def _static_scan_active_paths(p_dir: Path, root_name: str) -> Set[Path]:
             for m in pat.finditer(content):
                 target_raw = m.group(1).strip()
                 resolved = _resolve_asset_file(target_raw, graphic_search_dirs)
-                if resolved:
+                if resolved and not excluded_path(resolved, p_dir, excluded_dirs):
                     found_paths.add(resolved)
 
     root_p = (p_dir / root_name).resolve()
@@ -548,13 +575,13 @@ def _static_scan_active_paths(p_dir: Path, root_name: str) -> Set[Path]:
             for p in pkg.split(","):
                 p = p.strip()
                 cand = (p_dir / f"{p}.sty").resolve()
-                if cand.exists() and cand.is_file():
+                if cand.is_file() and not excluded_path(cand, p_dir, excluded_dirs):
                     found_paths.add(cand)
 
     # Stage 3: Secondary Check - Reverse Correlation Probe
     # Cross-references unclassified disk files with tokens in the source text
     full_source_text = "\n".join(collected_text_fragments)
-    all_disk_files = [p for p in p_dir.rglob("*") if p.is_file()]
+    all_disk_files = list(project_files(p_dir, excluded_dirs))
 
     for f in all_disk_files:
         if f in found_paths:
@@ -604,7 +631,7 @@ def probe_style_file(rel_path: str, abs_path: str, is_active: bool) -> StyleFile
     environments: List[str] = []
 
     try:
-        with open(abs_path, "r", encoding="utf-8", errors="ignore") as f:
+        with open_source(abs_path) as f:
             content = f.read()
 
         for m in re.finditer(r"\\(?:re)?newcommand\*?\s*\{?\\([a-zA-Z]+)\}?", content):
@@ -623,6 +650,8 @@ def probe_style_file(rel_path: str, abs_path: str, is_active: bool) -> StyleFile
             env = m.group(1).strip()
             if env not in environments:
                 environments.append(env)
+    except SourceDecodingError:
+        raise
     except Exception:
         pass
 
@@ -643,8 +672,10 @@ def extract_package_declarations(p_dir: Path, active_tex_paths: List[Path]) -> L
 
     for tex_path in active_tex_paths:
         try:
-            with open(tex_path, "r", encoding="utf-8", errors="ignore") as f:
+            with open_source(tex_path) as f:
                 content = f.read()
+        except SourceDecodingError:
+            raise
         except Exception:
             continue
 
@@ -736,8 +767,10 @@ def detect_implicit_graphics(p_dir: Path, active_tex_files: List[str]) -> List[I
             continue
 
         try:
-            with open(tex_path, "r", encoding="utf-8", errors="ignore") as f:
+            with open_source(tex_path) as f:
                 lines = f.readlines()
+        except SourceDecodingError:
+            raise
         except Exception:
             continue
 
@@ -929,7 +962,8 @@ def preflight_inventory(
     project_dir: str,
     root_tex: Optional[str] = None,
     engine: str = "pdflatex",
-    execute_probe: bool = True
+    execute_probe: bool = False,
+    excluded_dirs: Optional[List[Path]] = None,
 ) -> PreflightManifest:
     """
     Full project characterization:
@@ -938,6 +972,7 @@ def preflight_inventory(
       - Gathers image assets, bibliography, source topology, and package/style bindings.
     """
     p_dir = Path(project_dir).resolve()
+    excluded_dirs = excluded_dirs or []
     if not p_dir.exists():
         raise FileNotFoundError(f"Project directory does not exist: {project_dir}")
 
@@ -946,29 +981,36 @@ def preflight_inventory(
 
     # 2. Resolve root .tex file dynamically
     if root_tex is None:
-        resolved_root_name = find_root_tex(str(p_dir))
+        resolved_root_name = find_root_tex(str(p_dir), excluded_dirs)
     else:
-        resolved_root_name = Path(root_tex).name
+        root_path = (p_dir / root_tex).resolve()
+        if not root_path.is_relative_to(p_dir) or excluded_path(root_path, p_dir, excluded_dirs):
+            raise ValueError(f"Root must be a source file within the project: {root_tex}")
+        if not root_path.is_file():
+            raise FileNotFoundError(f"Root TeX file not found: {root_path}")
+        resolved_root_name = root_path.relative_to(p_dir).as_posix()
 
     base_name = Path(resolved_root_name).stem
 
     # 3. Run compiler dry-run probe only if requested AND pdflatex is installed
     if execute_probe and toolchain.pdflatex_available:
-        run_draftmode_probe(str(p_dir), base_name, engine=engine)
+        run_draftmode_probe(str(p_dir), str(Path(resolved_root_name).with_suffix("")), engine=engine)
 
-    fls_path = p_dir / f"{base_name}.fls"
-    aux_path = p_dir / f"{base_name}.aux"
-    bcf_path = p_dir / f"{base_name}.bcf"
-    bbl_path = p_dir / f"{base_name}.bbl"
+    root_path = p_dir / resolved_root_name
+    fls_path = root_path.with_suffix(".fls")
+    aux_path = root_path.with_suffix(".aux")
+    bcf_path = root_path.with_suffix(".bcf")
+    bbl_path = root_path.with_suffix(".bbl")
 
     # 4. Parse active inputs recorded by engine (with static fallback)
-    active_paths = parse_fls_records(str(fls_path), p_dir)
+    active_paths = {p for p in parse_fls_records(str(fls_path), p_dir)
+                    if not excluded_path(p, p_dir, excluded_dirs)}
     root_resolved = (p_dir / resolved_root_name).resolve()
     active_paths.add(root_resolved)
 
-    # If compiler probe didn't run or .fls was absent, fall back to static AST scanner
+    # If compiler probe didn't run or .fls was absent, use the static scanner.
     if len(active_paths) == 1:
-        static_found = _static_scan_active_paths(p_dir, resolved_root_name)
+        static_found = _static_scan_active_paths(p_dir, resolved_root_name, excluded_dirs)
         active_paths.update(static_found)
 
     # 5. Classify Bibliography
@@ -999,7 +1041,7 @@ def preflight_inventory(
     local_styles_info: List[StyleFileInfo] = []
     dormant_styles: List[str] = []
 
-    all_disk_files = [p for p in p_dir.rglob("*") if p.is_file()]
+    all_disk_files = list(project_files(p_dir, excluded_dirs))
     for p in all_disk_files:
         ext = p.suffix.lower()
         if ext in (".sty", ".cls", ".bst", ".clo"):
@@ -1039,7 +1081,7 @@ def preflight_inventory(
     has_tikz_external = False
 
     if os.path.exists(fls_path):
-        with open(fls_path, "r", encoding="utf-8", errors="ignore") as f:
+        with open_source(fls_path) as f:
             fls_content = f.read()
             if "tikz.sty" in fls_content:
                 has_tikz = True
@@ -1098,11 +1140,11 @@ def _characterize_bibliography(
     bbl_exists = bbl_path.exists()
     bib_files: List[str] = []
     citations_count = 0
-    root_tex = p_dir / f"{base_name}.tex"
+    root_tex = bbl_path.with_suffix(".tex")
 
     # 1. BibLaTeX detection via .bcf
     if bcf_path.exists():
-        with open(bcf_path, "r", encoding="utf-8", errors="ignore") as f:
+        with open_source(bcf_path) as f:
             bcf_text = f.read()
             citations_count = len(re.findall(r"<bcf:citekey", bcf_text))
             bib_matches = re.findall(r"<bcf:datasource[^>]*>([^<]+)</bcf:datasource>", bcf_text)
@@ -1126,7 +1168,7 @@ def _characterize_bibliography(
 
     # 2. Classic BibTeX / Natbib detection via .aux
     if aux_path.exists():
-        with open(aux_path, "r", encoding="utf-8", errors="ignore") as f:
+        with open_source(aux_path) as f:
             for line in f:
                 if line.startswith(r"\citation{"):
                     citations_count += 1
@@ -1139,7 +1181,7 @@ def _characterize_bibliography(
 
     # 3. Static fallback: scan root .tex source if .aux was missing or didn't find bibdata
     if not bib_files and root_tex.exists():
-        with open(root_tex, "r", encoding="utf-8", errors="ignore") as f:
+        with open_source(root_tex) as f:
             tex_content = f.read()
 
         # Check for multi-bib \bibliography{chaos, ref, sub/more}
@@ -1189,7 +1231,7 @@ def _characterize_bibliography(
 
     # 4. Check for hardcoded thebibliography in root source
     if root_tex.exists():
-        with open(root_tex, "r", encoding="utf-8", errors="ignore") as f:
+        with open_source(root_tex) as f:
             content = f.read()
             if r"\begin{thebibliography}" in content:
                 cites = len(re.findall(r"\\bibitem", content))

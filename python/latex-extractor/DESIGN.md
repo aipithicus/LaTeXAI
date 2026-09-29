@@ -1,159 +1,187 @@
-# LaTeX Extractor: Architecture & Design Specification
+# LaTeX Extractor: preparation contract
 
-## 1. Overview & Objective
+## Purpose
 
-`latex-extractor` is a headless, deterministic preprocessing, normalization, and replication engine for LaTeX document trees. Its mission is to transform arbitrary multi-file LaTeX projects into self-contained, minimalist replication packages situated in an `extracted/` subdirectory relative to the source project.
+Preparation turns a source project into a compact extraction package. After a
+successful preparation, `extracted/master.tex` is the authoritative manuscript
+for subsequent stages. Raw-source paths in diagnostics are bookkeeping, not
+runtime dependencies. The package does not duplicate original image assets.
 
-The output package guarantees:
-- A single canonical `master.tex` root, fully flattened and stripped of dead markup.
-- All image assets converted to standard, web-renderable vector SVGs with rewritten `\includegraphics` paths.
-- Local style dependencies (`.sty`, `.cls`, `.clo`, `.def`, `.bbx`, `.cbx`) cleaned of comments and excess whitespace.
-- An upfront inventory of programmatic/implicit graphics (commutative diagrams, assetless floats, drawings) without compiling.
-- A compact, run-length encoded (RLE) source provenance ledger (`master.provenance.json`) providing bidirectional $O(\log N)$ source-to-master tracing.
+The target is a canonical XML substrate for model consumption, retrieval, and
+later projections. Content and metadata take priority over the source layout.
+An optional future presentation sidecar may retain style choices and formatting
+intent for more faithful visual projections. It is not implemented or required
+by preparation, and does not imply copying original assets.
 
----
+The target is an extraction-ready representation. Compilation, layout equality,
+complete dependency discovery, and byte-exact provenance are separate properties;
+this prototype has not established those properties for arbitrary TeX projects.
 
-## 2. Design Invariants & Rationale
+The emitted manifest's `entrypoint` is `master.tex`. Its `root_file` and absolute
+source paths record the discovery inputs for diagnostics.
 
-| Requirement | Traditional Flaw | Extractor Solution |
-| :--- | :--- | :--- |
-| **Preamble & Tree Flattening** | `latexpand` leaves unhandled conditional branches, duplicate packages, and fails on complex directory trees. | Top-down recursive inliner resolves relative path stacks, replaces `\input`/`\include`, strips redundant preambles, and splices `.bbl` bibliographies directly into `master.tex`. |
-| **Executable Preservation** | Crude regex strippers break macros ending in `\foo%` by concatenating tokens into `\foobar`, or strip comments inside `\verb\|%\|`. | Knuth TeX Reader State Machine (TeXbook Ch. 8) emulates States N, M, and S. Trailing comments ending on control words (`\\[a-zA-Z@]+$`) preserve a trailing delimiter; verbatim lines are partitioned and untouched. |
-| **Verbatim Safety** | AST-based parsers corrupt custom code environments; sentinel placeholders (`@@VERBATIM_1@@`) mutate line length and fail on nested blocks. | **Non-mutating Line Partitioning**: Document lines are segmented into protected blocks (`verbatim`, `lstlisting`, `minted`, `filecontents`) and complementary lines. Protected lines pass through with 100% byte fidelity. |
-| **Asset Standardization** | Diverse formats (`.pdf`, `.png`, `.jpg`, `.eps`) require heterogeneous renderers downstream. | Dual vector/raster SVG conversion: Vector PDFs are parsed into native vector SVGs via PyMuPDF (`fitz`); raster images are converted into standalone base64 SVG wrappers preserving intrinsic `viewBox`. |
-| **Implicit Graphics Discovery** | Programmatic drawings (`tikz-cd`, `amscd`, `xy`, assetless floats) are invisible to file-based asset scanners. | **Structural Invariant Probing**: Discovers assetless floats (figures lacking file inclusions), morphism grids (math-mode 2D tables containing arrows), and drawing canvases before compilation without hardcoding package checks. |
-| **Source Provenance** | Flattening and stripping destroys line numbers, making it impossible to trace downstream parser errors back to original source files. | **Compact RLE Provenance Ledger**: String-pooled source filenames and integer-matrix contiguous run compression deliver 6x–8x space reduction while guaranteeing $O(\log N)$ bidirectional tracing. |
+## Package
 
----
+| File | Role |
+| --- | --- |
+| `master.tex` | Flattened manuscript, including the prepared bibliography |
+| `bibliography.bbl` | Prepared classic `thebibliography`, also embedded in the master |
+| `bibliography.bib` | One package-local database for optional metadata enrichment, when source databases are available |
+| `*.svg` | Converted file-backed assets, preserving relative subdirectories |
+| Local styles/code | Discovered local dependencies needed by the master |
+| `manifest.json` | Discovery results, bibliography preparation fields, image dimensions/diagnostics, implicit graphics candidates |
+| `master.provenance.json` | Current line-based diagnostic map; accuracy limitations below |
+| `preparation.log` | `STARTED`, `SUCCESS`, or `FAILED`, with explicit errors/warnings |
 
-## 3. Pipeline Architecture
+Successful preparation uses SVG derivatives only. A missing active image, unsupported
+conversion, or unavailable raster dimensions is an error, not permission to
+fabricate dimensions, leave an unresolved image reference, or copy all originals.
+The current converter supports raster wrapping and PDF/SVG conversion. EPS needs
+a functioning converter; raw EPS bytes must not be mislabeled as PNG.
 
-The extraction process executes across 9 sequential phases:
+Preparation writes the master only after its preceding phases succeed. A failed
+rerun leaves any previous master in place; `preparation.log` records the failed
+attempt. Callers must check the exception/exit status. Atomic replacement of an
+entire existing output package remains future work.
 
+## Current stages
+
+1. **Preflight:** discover a root, classify files, probe dimensions, identify
+   bibliography declarations, and inventory implicit graphics candidates.
+2. **Inline:** expand supported inclusion forms, preserving repeated occurrences
+   and using the active recursion stack to detect cycles.
+3. **Prune:** apply the existing bounded conditional/draft transformations.
+4. **Prepare bibliography:** reuse or natively generate a BBL, check literal
+   citation keys, emit it, and replace the bibliography command with its contents.
+5. **Normalize:** apply the current whitespace/comment transformations.
+6. **Convert:** create SVG assets and rewrite supported image references.
+7. **Package:** emit the master, discovered dependencies, manifest and diagnostics.
+
+Root paths remain project-relative, including roots below the project directory.
+Discovery excludes `extracted/`, the caller's actual output directory, and the
+existing `.git/`, `artifacts/`, and `build/` exclusions. An output directory cannot
+equal or contain the source project.
+
+Preparation and standalone preflight default to static traversal. The existing
+compiler probe requires `execute_probe=True`; normal preparation has no compiler
+dependency. Optional engine validation is a separate observation, not a fallback
+for missing native bibliography support.
+
+Source text is decoded as UTF-8 strictly. A decoding failure identifies the file
+and every malformed byte span (original offset and hex bytes), aborts preparation,
+and is recorded in `preparation.log`. Automatic encoding detection/transcoding is
+not implemented. Generated text is written with explicit LF line endings.
+
+Valid Unicode is preserved, including combining sequences and invisible format
+characters. Decoding, TeX interpretation, and projection policy are separate:
+invisibility is not evidence of catcode 9 (ignored), and a layout-only effect may
+be deliberately omitted by the canonical projection once interpreted. A valid
+U+FFFD replacement character can also indicate earlier data loss, which cannot
+be recovered by transcoding. Future lint should distinguish these cases. Any
+repair needs context and a recorded edit, rather than blanket character deletion.
+
+## Bibliography contract
+
+The normal downstream interface is an inline `thebibliography` with its original
+citation keys. Later extraction does not need to find raw `.bib` or `.bbl` paths.
+
+- A supplied classic BBL is validated and reused. Its source databases are not
+  required; if available, they provide optional enrichment data.
+- When a BBL is missing, `bibtex.py` parses the declared databases without an
+  engine or additional dependency. It handles balanced braced/quoted values,
+  concatenation, string definitions, month abbreviations, preambles, and both
+  entry delimiters. TeX field contents and unfamiliar fields are retained.
+- Generated entries use a consistent extraction representation: keyed `bibitem`
+  records with labelled type and fields. No publisher style or name formatting
+  is emulated. Citation keys select entries; `nocite{*}` selects all. Explicit
+  `crossref` and `xdata` parents are included as separate keyed records. Their
+  fields are not silently inherited or renamed. A later interpreter can resolve
+  those relationships with package-specific rules.
+- Repeated fields and keys retain all occurrences and produce diagnostics.
+  Conflicting records fail when their key is selected for inline output; uncited
+  conflicts remain in the enrichment database with warnings. Exactly identical
+  duplicates produce one inline item. Undefined strings are diagnosed during
+  parsing and block emission only when a selected field or preamble uses them.
+  Missing referenced entries, malformed syntax, and cyclic parent references
+  fail explicitly. No
+  first/last-value policy silently chooses between conflicting records.
+- `bibliography.bib` combines declared databases in declaration order without
+  dropping fields that the formatted bibliography omits. It is a canonical
+  package resource name, not a newly invented parsed bibliography schema. It can
+  contain uncited entries; safe database subsetting is deferred.
+- Preparation checks that every recognized literal citation key has a prepared
+  `bibitem`. Missing entries and missing databases needed for generation are
+  explicit errors. A bibliography that failed to prepare is never deleted.
+- Biblatex metadata BBLs, multiple bibliography sites, and dynamically constructed
+  citation keys require additional support and currently fail explicitly.
+  Rich-format formatting and metadata adapters belong in a later expansion of
+  this contract.
+
+This is a bounded data reader and serializer, not the future Python binding
+framework. The local `Pre/BibTeX.pm`, `Engine/BibTeX.pool.ltxml`, and
+`Post/MakeBibliography.pm` illustrate separate parsing, field interpretation, and
+formatting responsibilities. Harvesting/adapting those responsibilities must not
+require executing the Perl engine or interpreting BST programs during normal
+preparation. The eventual XML fields, rather than visual labels, own semantics.
+
+## Implicit graphics
+
+This stage discovers candidate drawings/diagrams that exist as latent source,
+including assetless floats, recognized drawing environments and possible
+morphism grids. It does not render them. These are heuristic observations, not a
+claim of complete recognition or a reason to delete source.
+
+The main extraction pipeline is expected to render them through an adaptation of
+LaTeXML/LaTeXAI bindings, eventually represented in YAML or TOML. That rendering
+contract is separate from the current file-backed asset conversion.
+
+## Known limits and next design work
+
+The TeX traversal uses regular expressions and limited state tracking; it does
+not implement a TeX AST or the complete Knuth reader algorithm. The separate
+BibTeX reader assembles nested data values, not arbitrary TeX execution.
+
+- Inlining still needs shared lexical context for comments, literal regions,
+  command spans, definitions and conditionals. The repeated-input fix does not
+  establish correctness for every inclusion form.
+- Conditional deletion intervals are now merged before applying edits. Unknown
+  conditional nesting and pruning inside literal/definition contexts remain
+  unresolved. Default command-name-based pruning still needs redesign.
+- A blank paragraph after a swallowed comment newline is preserved. This local
+  repair does not qualify general whitespace normalization or style-file
+  cleanup under arbitrary catcodes.
+- Discovery remains heuristic. Local transitive dependencies, stale recorder
+  files and dynamic paths need explicit resolution evidence.
+- The provenance ledger counts tagged fragments as output lines even when edits
+  join or split physical lines. Sequence alignment also guesses some origins.
+  It must be replaced by emission-time span bookkeeping before exact diagnostic
+  mapping can be claimed. RLE compression can follow that representation.
+- Graphics options, search-path resolution, multiple PDF pages and naming
+  collisions need further qualification.
+
+A shared token reader should precede a larger AST. It should implement control
+sequence boundaries, comments, literal contexts and TeX's N/M/S reader states
+within an explicit supported catcode model. Tokenization depends on catcodes;
+unsupported changes must be observable. AST structure can then be built on those
+tokens for the constructs the extractor actually needs.
+
+Linting should first produce diagnostics. Repair should be a separate explicit
+operation with a recognized precondition, recorded edit and postcondition check.
+Compilation, lint, rendered output and source-map checks provide different
+evidence; a clean lint run cannot establish semantic equivalence. General
+automatic lint/repair is not implemented in this patch.
+
+## Verification
+
+The focused Python driver is `t/latex-extractor/test_preprocessing.py`:
+
+```powershell
+& python/.venv/Scripts/python.exe -B -m unittest discover -s t/latex-extractor -p 'test_*.py' -v
 ```
-[Input Project Directory]
-          │
-          ├── Phase 1: Static Preflight & Asset Characterization (preflight.py)
-          │     ├── Root document discovery & toolchain probe
-          │     ├── Active/dormant image asset inventory
-          │     └── Structural implicit graphics detection (floats, CD, canvas)
-          │
-          ├── Phase 2: Recursive Inlining & Provenance Seeding (inliner.py)
-          │     ├── Path-stack tracking (\input, \include, \subimport)
-          │     └── Bibliography splicing (.bbl -> thebibliography)
-          │
-          ├── Phase 3: Dead Code & Conditional Branch Pruning (pruner.py)
-          │     ├── \iffalse ... \fi elimination
-          │     ├── Draft macro dropping (\todo, \missingfigure)
-          │     └── Tombstone registration
-          │
-          ├── Phase 4: Knuth Reader Normalization (normalizer.py)
-          │     ├── Line partitioning (Protected vs. Complementary)
-          │     ├── Universal LF, Unicode NFC, invisible gremlin scrubbing
-          │     ├── Knuth State N leading space swallowing
-          │     ├── Inline span protection (\verb, \url)
-          │     ├── Macro boundary safety (\\[a-zA-Z@]+$ preservation)
-          │     └── Paragraph break capping (max-blank-1: \n{2,} -> \n)
-          │
-          ├── Phase 5: Image Conversion & Path Rewriting (converter.py)
-          │     ├── Vector PDF -> native SVG (PyMuPDF)
-          │     ├── Raster PNG/JPG -> SVG wrapper
-          │     └── Rewrite \includegraphics paths across SourceLine objects
-          │
-          ├── Phase 6: Compact Provenance Ledger Construction (provenance.py)
-          │     ├── RLE integer-run compression
-          │     └── master.provenance.json emission
-          │
-          ├── Phase 7: Local Dependency Sanitization (pipeline.py)
-          │     ├── Copy active local .sty, .cls, .clo, .def, .bbx, .cbx
-          │     └── Apply knuth_normalize to copies (strip comments & dead spacing)
-          │
-          ├── Phase 8: Standard master.tex Emission (pipeline.py)
-          │     └── Write cleaned, flattened master.tex to extracted/
-          │
-          └── Phase 9: Metadata & Inventory Sidecar Emission (pipeline.py)
-                └── Write manifest.json to extracted/
-```
 
----
-
-## 4. Component Details
-
-### 4.1. `preflight.py` — Static Preflight & Structural Probing
-- **Root Document Discovery**: Scores candidacy via `\documentclass` and `\begin{document}` occurrences; breaks ties via reverse correlation probing across disk files.
-- **Implicit Graphics Detection**: Employs structural invariants rather than package whitelists:
-  - *Assetless Floats*: `figure` environments lacking `\includegraphics` or input directives. Ignores `\newenvironment` definition templates.
-  - *Morphism Grids*: Math environments containing 2D alignment matrices (`&`, `\\`) paired with directional morphism arrows (`\to`, `\rightarrow`, `\dar`, `\arrow`).
-  - *Specialized Canvases*: Recognized drawing environments (`tikzpicture`, `picture`, `pgfpicture`, `circuitikz`, `forest`, `bytefield`).
-
-### 4.2. `inliner.py` — AST-Free Recursive Inliner
-- Maintains a working directory stack to resolve nested `\input`, `\include`, `\import`, and `\subimport` paths.
-- Strips redundant nested preambles (`\documentclass`, `\begin{document}`, `\end{document}`).
-- Slices and splices precompiled `.bbl` files directly in place of `\bibliography{...}`, converting external bibliography lookups into self-contained `\begin{thebibliography}` blocks.
-- Emits each line as a `SourceLine` containing `(text, src_file, src_line, op)`.
-
-### 4.3. `pruner.py` — Dead Code Pruning
-- Evaluates static conditional branches (dropping `\iffalse ... \fi` blocks while preserving `\iftrue`).
-- Drops configurable draft/annotation commands (`\todo`, `\annot`, `\missingfigure`).
-- Records every dropped line in a `Tombstone` record tracking original file, line number, operation, and reason.
-
-### 4.4. `normalizer.py` — Knuth Reader State Machine
-- **Protected Line Partitioning**: Identifies boundary lines for verbatim/code environments (`verbatim`, `lstlisting`, `minted`, `alltt`, `filecontents`). These lines bypass normalization completely.
-- **Complementary Line Normalization**:
-  - Normalizes line endings to LF (`\r\n|\r|\x0B|\x0C|\x85|\u2028|\u2029 -> \n`).
-  - Cleans zero-width spaces, BOM, and word-joiners (`[\ufeff\u200b\u2060]`).
-  - Emulates Knuth State N: following a comment-only line or stripped trailing comment, leading indentation on subsequent lines is swallowed.
-  - Inline span preservation: Protected regex patterns (`\verb|...|`, `\url{...}`) prevent comment parsing or space compaction on inline verbs.
-  - Trailing comment removal: Inspects preceding characters for odd counts of `\`. If the preceding token is a control sequence ending in letters or `@` (`r"\\[a-zA-Z@]+$"`), a space is preserved to prevent token collision.
-  - **`max-blank-1` Paragraph Capping**: Enforces reposnapshot semantics (`consecutive_blanks <= 1`), collapsing multi-line blank gaps to a single `\n\n` paragraph break outside protected blocks.
-
-### 4.5. `converter.py` — Vector & Raster SVG Normalization
-- Standardizes all active graphics assets into standalone `.svg` files inside `extracted/`:
-  - Vector PDFs: Extracted via PyMuPDF (`page.get_svg_image()`).
-  - Raster Images (PNG, JPG, TIFF, WebP): Wrapped inside a standalone SVG document using `<image href="data:image/...;base64,..."/>` with an exact pixel `viewBox`.
-- Rewrites `\includegraphics[...]{filename}` targets in `SourceLine` objects to reference the newly generated `.svg` assets.
-
-### 4.6. `provenance.py` — Compact RLE Provenance Ledger
-Serializes document provenance to `master.provenance.json`.
-
-- **Schema**:
-  ```json
-  {
-    "sources": ["main.tex", "sections/intro.tex", "refs.bbl"],
-    "runs": [
-      [1, 0, 1, 15, 0],
-      [16, 1, 1, 42, 1]
-    ],
-    "tombstones": [
-      {"src_file": "main.tex", "start_line": 16, "end_line": 20, "op": "PRUNE_IF_FALSE", "reason": "Dead conditional"}
-    ]
-  }
-  ```
-- **Run Tuple**: `[master_start, file_id, src_start, length, op_id]`
-  - Encodes continuous blocks of unmodified or transformed lines as a single integer vector.
-  - Reduces provenance metadata size by 6x to 8x compared to raw line arrays.
-- **Lookup Performance**:
-  - `resolve_master_line(master_line)`: $O(\log N)$ binary search over runs returning exact source file and original line.
-  - `resolve_source_line(file, line)`: Forward lookup returning target `master_line` or the corresponding `Tombstone` reason explaining why the line was pruned.
-
----
-
-## 5. Output Replication Package Layout
-
-```
-<project_dir>/extracted/
-├── master.tex                 # Self-contained, Knuth-normalized LaTeX entrypoint
-├── master.provenance.json     # Bidirectional RLE source provenance map
-├── manifest.json              # Preflight discovery manifest & implicit graphics inventory
-├── neurips_2024.sty           # Cleaned local style dependency (comments & excess blanks stripped)
-├── fig1.svg                   # Converted vector/raster image assets
-└── fig2.svg
-```
-
----
-
-## 6. Verification & Invariants
-
-1. **Compilation Preservation**: Validated against reference oracles (Tectonic / PDF engine). Layout, page count, and font geometries remain invariant under normalization.
-2. **Replication Self-Sufficiency**: The `extracted/` directory contains all active styles, images, and bibliography items required to compile independently of external parent directories.
-3. **Cleaned Local Packages**: Local style files (`.sty`, `.cls`) have author comments, license blocks, and blank line runs stripped while retaining 100% of macro signatures and catcode conventions.
+The generate/emit/embed test rejects any attempted subprocess invocation. Other
+tests cover native bibliography syntax and parent relationships, repeated
+input/cycles, nested roots, output exclusion on reruns, bibliography failures,
+strict decoding, valid Unicode preservation, dimension/conversion errors,
+overlapping deletions and paragraph preservation. Runtime files live under
+`temp/t/latex-extractor/`; temporary fixture directories are cleaned up.

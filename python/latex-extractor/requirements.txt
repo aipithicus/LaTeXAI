@@ -3,6 +3,7 @@
 # =============================================================================
 # Core library for raster image introspection (dimensions, DPI, color modes)
 pillow>=9.0.0
+pymupdf
 pyyaml
 # =============================================================================
 # External System Toolchains (Optional / Non-PIP)
@@ -14,6 +15,6 @@ pyyaml
 #   - biber   (biblatex bibliography engine)
 #   - tectonic (self-contained XeTeX/BibTeX engine)
 #
-# NOTE: If these system binaries are NOT on PATH (such as in headless or minimal
-# environments), the preprocessor automatically and gracefully uses its built-in
-# static AST / regex scanner for 100% offline discovery.
+# Discovery and bibliography preparation do not need a compiler.
+# Compiler probes are optional and disabled by default.
+# Discovery uses bounded lexical/regex heuristics, not a complete TeX AST.

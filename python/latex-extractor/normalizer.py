@@ -9,7 +9,7 @@ Architecture:
   - Inline Protection: Within complementary lines, inline \verb|...| and \url{...} spans are
     protected from comment stripping and inner space compaction.
   - Escaped \%: Recognized directly via backslash parity without sentinel injection.
-  - Reposnapshot normalization: Universal LF, Unicode NFC, invisible gremlin removal,
+  - Text normalization: Universal LF, preservation of decoded Unicode,
     trailing space trimming, and canonical paragraph break capping (\n{3,} -> \n\n).
   - Provenance Tracking: Supports line-level tracking via SourceLine and Tombstone.
 """
@@ -18,7 +18,6 @@ from __future__ import annotations
 
 import re
 from typing import List, Optional, Tuple
-import unicodedata
 
 try:
     from .provenance import SourceLine, Tombstone
@@ -71,14 +70,19 @@ def knuth_normalize_provenance(
             comment_pending_state_n = False
             continue
 
-        # 2. Complementary lines: clean Unicode NFC and invisible gremlins
-        line = re.sub(r"[\ufeff\u200b\u2060]", "", l.text)
-        line = unicodedata.normalize("NFC", line)
+        # Encoding and character repair require separate diagnostics and policy.
+        # Valid Unicode, including invisible characters and literal spelling,
+        # must not disappear as a side effect of whitespace normalization.
+        line = l.text
 
         # Knuth State N: eat leading whitespace if following a swallowed comment
         if comment_pending_state_n:
             stripped = line.lstrip(" \t")
             if stripped in ("\n", ""):
+                # The preceding comment swallowed its newline. Terminate that
+                # physical line before emitting the empty line that means \par.
+                if output_lines and not output_lines[-1].text.endswith("\n"):
+                    output_lines[-1].text += "\n"
                 l.text = "\n"
                 output_lines.append(l)
                 comment_pending_state_n = False

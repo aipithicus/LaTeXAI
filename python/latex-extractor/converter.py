@@ -13,7 +13,7 @@ import base64
 import os
 from pathlib import Path
 import re
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 try:
     from PIL import Image
@@ -60,8 +60,7 @@ def pdf_to_svg(pdf_path: Path, svg_path: Path, page_index: int = 0) -> bool:
             f.write(svg_text)
         return True
     except Exception as e:
-        print(f"[converter] Warning: Failed to convert PDF {pdf_path.name} to SVG: {e}")
-        return False
+        raise RuntimeError(f"Failed to convert PDF {pdf_path} to SVG: {e}") from e
 
 
 def raster_to_svg_wrapper(img_path: Path, svg_path: Path) -> bool:
@@ -73,10 +72,12 @@ def raster_to_svg_wrapper(img_path: Path, svg_path: Path) -> bool:
     mime = MIME_MAP.get(ext, "image/png")
 
     try:
-        width, height = 800, 600
-        if Image:
-            with Image.open(str(img_path)) as img:
-                width, height = img.size
+        if Image is None:
+            raise RuntimeError("Pillow is required to determine raster image dimensions")
+        with Image.open(str(img_path)) as img:
+            width, height = img.size
+        if width <= 0 or height <= 0:
+            raise ValueError(f"Unavailable image dimensions: {width} x {height}")
 
         with open(img_path, "rb") as f:
             b64_data = base64.b64encode(f.read()).decode("ascii")
@@ -94,8 +95,7 @@ def raster_to_svg_wrapper(img_path: Path, svg_path: Path) -> bool:
             f.write(svg_content)
         return True
     except Exception as e:
-        print(f"[converter] Warning: Failed to wrap raster {img_path.name} in SVG: {e}")
-        return False
+        raise RuntimeError(f"Failed to wrap raster {img_path} in SVG: {e}") from e
 
 
 def convert_asset_to_svg(src_path: Path, dst_svg_path: Path) -> bool:
@@ -122,9 +122,8 @@ def convert_asset_to_svg(src_path: Path, dst_svg_path: Path) -> bool:
                 return pdf_to_svg(src_path, dst_svg_path)
             except Exception:
                 pass
-        # Fallback to raster wrapper if Pillow can open EPS
-        if Image:
-            return raster_to_svg_wrapper(src_path, dst_svg_path)
+        # EPS bytes cannot be embedded as image/png. Report an unsupported
+        # conversion until a real EPS conversion backend is provided.
 
     return False
 
@@ -142,7 +141,7 @@ def batch_convert_assets_to_svg(
 
     for src_path in active_image_paths:
         if not src_path.exists():
-            continue
+            raise FileNotFoundError(f"Active image not found: {src_path}")
 
         try:
             rel = src_path.relative_to(project_dir).as_posix()
@@ -154,6 +153,8 @@ def batch_convert_assets_to_svg(
         dest_svg_path = (output_dir / rel_svg).resolve()
 
         success = convert_asset_to_svg(src_path, dest_svg_path)
+        if not success:
+            raise RuntimeError(f"SVG conversion failed for {src_path}; package preparation is incomplete")
         if success:
             path_mapping[rel] = rel_svg
             # Also map without extension for extension-less \includegraphics calls
@@ -206,5 +207,3 @@ def rewrite_lines_image_references(
             l.text = new_text
             l.op = "REWRITE_IMAGE"
     return lines
-
-
