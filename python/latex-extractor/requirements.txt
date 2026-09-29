@@ -1,0 +1,19 @@
+# =============================================================================
+# Python Package Dependencies (installed in d:\aipithicus\LaTeXAI\python\.venv)
+# =============================================================================
+# Core library for raster image introspection (dimensions, DPI, color modes)
+pillow>=9.0.0
+pyyaml
+# =============================================================================
+# External System Toolchains (Optional / Non-PIP)
+# =============================================================================
+# The preflight module automatically probes system PATH for these binaries:
+#   - pdflatex (pdfTeX engine for -draftmode single-pass dry runs)
+#   - latexmk (multi-pass build runner & dependency recorder)
+#   - bibtex  (classic bibliography engine)
+#   - biber   (biblatex bibliography engine)
+#   - tectonic (self-contained XeTeX/BibTeX engine)
+#
+# NOTE: If these system binaries are NOT on PATH (such as in headless or minimal
+# environments), the preprocessor automatically and gracefully uses its built-in
+# static AST / regex scanner for 100% offline discovery.
