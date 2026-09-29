@@ -13,6 +13,14 @@ An optional future presentation sidecar may retain style choices and formatting
 intent for more faithful visual projections. It is not implemented or required
 by preparation, and does not imply copying original assets.
 
+Filesystem I/O and persistent footprint are both design constraints. Repeated
+preparation passes should share source buffers and derived records in memory.
+Only designed outputs and intentional diagnostic/publication checkpoints belong
+on disk. The prototype combines source-assembly ideas from latexpand,
+dependency-selected packaging from arxiv_collector, source/asset cleanup from
+arxiv_latex_cleaner, and the author's whitespace-normalization work. Their original
+submission workflows do not define this project's output or engine requirements.
+
 The target is an extraction-ready representation. Compilation, layout equality,
 complete dependency discovery, and byte-exact provenance are separate properties;
 this prototype has not established those properties for arbitrary TeX projects.
@@ -72,8 +80,11 @@ and every malformed byte span (original offset and hex bytes), aborts preparatio
 and is recorded in `preparation.log`. Automatic encoding detection/transcoding is
 not implemented. Generated text is written with explicit LF line endings.
 
-Valid Unicode is preserved, including combining sequences and invisible format
-characters. Decoding, TeX interpretation, and projection policy are separate:
+Blanket Unicode normalization and invisible-character deletion were removed.
+However, the inliner and string normalizer still convert additional Unicode
+line separators to LF; full valid-Unicode preservation is not established.
+This remaining unconditional conversion is a cleanup item. Decoding, TeX
+interpretation, and projection policy are separate:
 invisibility is not evidence of catcode 9 (ignored), and a layout-only effect may
 be deliberately omitted by the canonical projection once interpreted. A valid
 U+FFFD replacement character can also indicate earlier data loss, which cannot
@@ -135,11 +146,56 @@ The main extraction pipeline is expected to render them through an adaptation of
 LaTeXML/LaTeXAI bindings, eventually represented in YAML or TOML. That rendering
 contract is separate from the current file-backed asset conversion.
 
+## Planned I/O, discovery and logging ownership
+
+These are implementation targets, not descriptions of completed behavior:
+
+- A run-scoped source repository owns one reusable output-aware file index and
+  lazy immutable text buffers with original-byte correspondence. Reading passes
+  share those buffers. Repeated inclusion keeps separate occurrence/state data;
+  caching a file does not make one tokenization or execution valid everywhere.
+- Discovery and inlining share reference records and a resolver. A cheap scan
+  may identify candidates; the reader establishes their context, bindings supply
+  package dependency rules, and author code is handled dynamically. Worklists
+  revisit unresolved requests when relevant facts become available. Unknown
+  activation must not be called dormant or complete closure.
+- Asset requests are gathered early; conversion follows resolved demand,
+  identity, page/options and collision-free destination allocation. Equivalent
+  required conversions share a result. Metadata is obtained on demand and reused.
+  Large binary inputs/derivatives use bounded buffers or controlled streaming.
+- Analysis stages return content, edits, resource requests and diagnostics.
+  Bibliography generation shares one in-memory BBL between inline emission and
+  its requested sidecar. Intermediate sources and pass-state dumps are not
+  default artifacts. Publication owns final writes and managed temporary files;
+  preserving a previous complete output must not require copying the raw corpus.
+- A small reusable Python logger receives caller-owned run/sink configuration
+  and structured diagnostic events. A buffered append-only JSONL sink records
+  start, phase, warning/error and final outcome events, with explicit flush and
+  durability policy. Logging must not hide the original error. Provenance is a
+  separately emitted mapping, not inferred from the log.
+
+Currently, discovery enumerates/reopens files across several passes, native
+bibliography generation rereads databases, stages write before final publication,
+and preparation.log is overwritten rather than appended. Those shortcomings
+remain open. The cleanup checkpoint specifies the shared-storage/logger-first
+sequence, static discovery algorithm, asset planning and measurable I/O checks.
+
 ## Known limits and next design work
 
 The TeX traversal uses regular expressions and limited state tracking; it does
 not implement a TeX AST or the complete Knuth reader algorithm. The separate
 BibTeX reader assembles nested data values, not arbitrary TeX execution.
+
+The 2026-09-29 cleanup review reran all 38 focused tests successfully and
+reproduced additional gaps outside that coverage: same-line inclusion loses
+neighboring text or subsequent inputs; a commented end marker can truncate
+content; missing inputs can become comments that disappear before a SUCCESS
+result; stale recorder files can suppress static asset discovery; and distinct
+assets with the same stem can overwrite one SVG destination. SUCCESS therefore
+does not yet establish source/payload closure. These are actionable prototype
+defects, not reasons to wait for bulk binding migration. The
+[cleanup checkpoint](../../../aipithicus-issues/LaTeXAI/reports/compiler-research/prototype-cleanup-20260929.md)
+records witnesses, immediate patch order and structural follow-up.
 
 - Inlining still needs shared lexical context for comments, literal regions,
   command spans, definitions and conditionals. The repeated-input fix does not
@@ -164,6 +220,31 @@ sequence boundaries, comments, literal contexts and TeX's N/M/S reader states
 within an explicit supported catcode model. Tokenization depends on catcodes;
 unsupported changes must be observable. AST structure can then be built on those
 tokens for the constructs the extractor actually needs.
+
+The architectural direction is source assembly plus resolution of reading
+behavior, followed by emission of a compact master that may retain unexpanded
+macros. General expansion and XML interpretation remain downstream. The shared
+binding interface owns package knowledge and dependency declarations/rules;
+author styles and definitions are handled dynamically. The required knowledge
+stores include core-operation contracts, a default catcode profile used to
+initialize mutable document-local state, and reusable literal-reading profiles.
+Their interfaces and pass interactions are investigated in the
+[source-preparation survey](../../../aipithicus-issues/LaTeXAI/briefs/source-preparation-survey/README.md).
+That design work does not block the bounded cleanup above.
+
+It also does not block foundational engineering: source spans, an incremental
+N/M/S token reader, character/token input frames, scoped assignments, definition
+and argument scanning, and the core control operations needed for reading effects
+can be implemented and tested before the complete Python binding library exists.
+Preparation evaluates only what is needed to establish reading effects and
+apply their justified source rewrites; ordinary macro expansion and deep
+interpretation remain downstream. Internal evaluation does not automatically
+replace the corresponding call in the emitted master, and an effect must not
+be unintentionally duplicated by both its replacement and a retained call.
+A small in-process
+binding protocol can expose concrete missing capabilities as the implementation
+reaches them; fixture providers can exercise that boundary before YAML migration.
+The cleanup checkpoint specifies this implementation sequence and its invariants.
 
 Linting should first produce diagnostics. Repair should be a separate explicit
 operation with a recognized precondition, recorded edit and postcondition check.
