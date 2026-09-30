@@ -54,7 +54,21 @@ from .policy_loader import (
     ProvenancePolicy,
     load_policy,
 )
+from .binding_resolver import (
+    BindingResolver,
+    ReaderContext,
+    ExecutionMode,
+    EffectiveReadingProfile,
+    UnresolvedBindingResult,
+    UnresolvedReason,
+    TerminatorRule,
+    StateManagementRule,
+    SpanClassification,
+    InterpolationRule,
+)
 from .pipeline import preprocess_paper
+from .character_rules import CharacterRule, CatcodeLayer, ProfileError
+from .mouth_profiles import MouthProfiles, MouthBaseline
 
 __all__ = [
     "preflight_inventory",
@@ -94,5 +108,20 @@ __all__ = [
     "StructuralNormalizationPolicy",
     "ProvenancePolicy",
     "load_policy",
+    "BindingResolver",
+    "ReaderContext",
+    "ExecutionMode",
+    "EffectiveReadingProfile",
+    "UnresolvedBindingResult",
+    "UnresolvedReason",
+    "TerminatorRule",
+    "StateManagementRule",
+    "SpanClassification",
+    "InterpolationRule",
     "preprocess_paper",
+    "CharacterRule",
+    "CatcodeLayer",
+    "ProfileError",
+    "MouthProfiles",
+    "MouthBaseline",
 ]

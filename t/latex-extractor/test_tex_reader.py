@@ -14,8 +14,11 @@ sys.path.insert(0, str(REPO / "python" / "latex-extractor"))
 
 from tex_reader import (
     CatCode, CatcodeTable, EventKind, InvalidCharacterError, ReaderState,
-    TexReader, TokenKind,
+    TokenKind,
 )
+
+
+from reader_support import new_reader, new_catcodes
 
 
 def signature(token):
@@ -29,7 +32,7 @@ def signature(token):
 
 
 def values(text, **kwargs):
-    return [token.value for token in TexReader(text, **kwargs)]
+    return [token.value for token in new_reader(text, **kwargs)]
 
 
 class ReaderTransitionTests(unittest.TestCase):
@@ -53,10 +56,10 @@ class ReaderTransitionTests(unittest.TestCase):
         for state_index, (prefix, initial) in enumerate([('', N), ('A', M), ('A ', S)]):
             for category in CatCode:
                 with self.subTest(state=initial, category=category):
-                    codes = CatcodeTable.latex_ascii()
+                    codes = new_catcodes()
                     codes['!'] = category
                     suffix = '!q' if category == CatCode.ESCAPE else '!'
-                    reader = TexReader(prefix + suffix, catcodes=codes, endline_char=-1)
+                    reader = new_reader(prefix + suffix, catcodes=codes, endline_char=-1)
                     for _ in prefix:
                         reader.next_event()
                     if category == CatCode.INVALID:
@@ -85,7 +88,7 @@ class ReaderTransitionTests(unittest.TestCase):
                 self.assertEqual(values(source), expected)
 
     def test_control_words_do_not_expand_and_spaces_are_read_later(self):
-        reader = TexReader('\\foo % ignored\nbar')
+        reader = new_reader('\\foo % ignored\nbar')
         first = reader.next_token()
         self.assertEqual(signature(first), ('cs', 'foo'))
         self.assertEqual(reader.state, ReaderState.SKIP_BLANKS)
@@ -94,14 +97,14 @@ class ReaderTransitionTests(unittest.TestCase):
         self.assertEqual([t.value for t in reader], list('bar '))
 
     def test_control_symbols_control_space_and_active_identity(self):
-        reader = TexReader('\\% \\~ ~ \\  x')
+        reader = new_reader('\\% \\~ ~ \\  x')
         self.assertEqual([signature(t) for t in reader], [
             ('cs', '%'), (' ', 10), ('cs', '~'), (' ', 10),
             ('active', '~'), (' ', 10), ('cs', ' '), ('x', 11), (' ', 10),
         ])
 
     def test_double_backslash_does_not_escape_a_following_comment(self):
-        self.assertEqual([signature(t) for t in TexReader('a\\\\% hidden\nb')], [
+        self.assertEqual([signature(t) for t in new_reader('a\\\\% hidden\nb')], [
             ('a', 11), ('cs', '\\'), ('b', 11), (' ', 10),
         ])
 
@@ -109,7 +112,7 @@ class ReaderTransitionTests(unittest.TestCase):
         self.assertEqual(values('\\foo\x00  x'), ['foo', 'x', ' '])
 
     def test_invalid_character_is_a_sticky_explicit_failure(self):
-        reader = TexReader('a\x7fb', source_id='source.tex', occurrence_id=9)
+        reader = new_reader('a\x7fb', source_id='source.tex', occurrence_id=9)
         reader.next_token()
         for _ in range(2):
             with self.assertRaises(InvalidCharacterError) as caught:
@@ -133,7 +136,7 @@ class PhysicalInputTests(unittest.TestCase):
 
     def test_only_cr_lf_crlf_are_physical_line_endings(self):
         source = 'a\r\nb\rc\n'
-        tokens = list(TexReader(source, source_id='mixed', occurrence_id=2))
+        tokens = list(new_reader(source, source_id='mixed', occurrence_id=2))
         self.assertEqual([t.value for t in tokens], list('a b c '))
         self.assertEqual([(t.span.start, t.span.end) for t in tokens],
                          [(0, 1), (1, 3), (3, 4), (4, 5), (5, 6), (6, 7)])
@@ -149,53 +152,53 @@ class PhysicalInputTests(unittest.TestCase):
             self.assertEqual(values('\\foo\nbar', endline_char=endline_char), ['foo', 'b', 'a', 'r'])
 
     def test_endline_character_is_captured_per_line(self):
-        reader = TexReader('a\nb\n')
+        reader = new_reader('a\nb\n')
         self.assertEqual(reader.next_token().value, 'a')
         reader.endline_char = -1
         self.assertEqual([t.value for t in reader], [' ', 'b'])
 
     def test_endline_catcode_is_looked_up_at_consumption(self):
-        reader = TexReader('a\n')
+        reader = new_reader('a\n')
         reader.next_token()
         reader.catcodes['\r'] = CatCode.OTHER
         self.assertEqual(signature(reader.next_token()), ('\r', 12))
         self.assertIsNone(reader.next_token())
 
     def test_endline_character_can_extend_control_word_or_start_comment(self):
-        token = TexReader('\\foo', endline_char=ord('x')).next_token()
+        token = new_reader('\\foo', endline_char=ord('x')).next_token()
         self.assertEqual(signature(token), ('cs', 'foox'))
         self.assertTrue(token.transformed)
         self.assertEqual(values('a', endline_char=ord('%')), ['a'])
 
     def test_trailing_ascii_spaces_removed_before_catcode_lookup(self):
-        codes = CatcodeTable.latex_ascii()
+        codes = new_catcodes()
         codes[' '] = CatCode.OTHER
         codes['\t'] = CatCode.OTHER
         self.assertEqual(values('a  ', catcodes=codes, endline_char=-1), ['a'])
         self.assertEqual(values('a \t', catcodes=codes, endline_char=-1), ['a', ' ', '\t'])
 
     def test_endline_and_null_control_symbols(self):
-        self.assertEqual(signature(TexReader('\\').next_token()), ('cs', '\r'))
-        self.assertEqual(signature(TexReader('\\', endline_char=-1).next_token()), ('cs', ''))
+        self.assertEqual(signature(new_reader('\\').next_token()), ('cs', '\r'))
+        self.assertEqual(signature(new_reader('\\', endline_char=-1).next_token()), ('cs', ''))
 
     def test_advancing_to_eof_resets_line_state_without_an_extra_token(self):
-        reader = TexReader('a')
+        reader = new_reader('a')
         self.assertEqual([t.value for t in reader], ['a', ' '])
         self.assertEqual(reader.state, ReaderState.NEW_LINE)
         self.assertIsNone(reader.next_token())
 
     def test_paragraph_from_empty_line_has_ordinary_control_sequence_identity(self):
-        self.assertEqual(signature(TexReader('\n').next_token()),
-                         signature(TexReader('\\par').next_token()))
+        self.assertEqual(signature(new_reader('\n').next_token()),
+                         signature(new_reader('\\par').next_token()))
 
     def test_control_space_identity_keeps_the_actual_escape_argument(self):
-        self.assertEqual([signature(t) for t in TexReader('\\\t  x')],
+        self.assertEqual([signature(t) for t in new_reader('\\\t  x')],
                          [('cs', '\t'), ('x', 11), (' ', 10)])
 
     def test_custom_endline_category_discards_remaining_physical_line(self):
-        codes = CatcodeTable.latex_ascii()
+        codes = new_catcodes()
         codes['!'] = CatCode.END_OF_LINE
-        reader = TexReader('a!discard\nb', catcodes=codes)
+        reader = new_reader('a!discard\nb', catcodes=codes)
         reader.next_token()
         event = reader.next_event()
         self.assertEqual(signature(event.token), (' ', 10))
@@ -220,13 +223,13 @@ class CharacterPreprocessingTests(unittest.TestCase):
     def test_expanded_escape_and_control_word_characters(self):
         for source in (r'^^5cfoo', r'\f^^6fo'):
             with self.subTest(source=source):
-                token = TexReader(source).next_token()
+                token = new_reader(source).next_token()
                 self.assertEqual(signature(token), ('cs', 'foo'))
                 self.assertEqual((token.span.start, token.span.end), (0, len(source)))
                 self.assertTrue(token.transformed)
 
     def test_superscript_character_is_selected_by_catcode(self):
-        codes = CatcodeTable.latex_ascii()
+        codes = new_catcodes()
         codes['!'] = CatCode.SUPERSCRIPT
         codes['^'] = CatCode.OTHER
         self.assertEqual(values('!!41 ^^41', catcodes=codes), ['A', ' ', '^', '^', '4', '1', ' '])
@@ -235,7 +238,7 @@ class CharacterPreprocessingTests(unittest.TestCase):
         self.assertEqual(values('^^é'), ['^', '^', 'é', ' '])
 
     def test_control_word_lookahead_conversion_survives_a_catcode_change(self):
-        reader = TexReader(r'\foo^^25tail')
+        reader = new_reader(r'\foo^^25tail')
         self.assertEqual(signature(reader.next_token()), ('cs', 'foo'))
         reader.catcodes['^'] = CatCode.OTHER
         reader.catcodes['%'] = CatCode.OTHER
@@ -247,7 +250,7 @@ class CharacterPreprocessingTests(unittest.TestCase):
 
 class ContextAndSourceTests(unittest.TestCase):
     def test_consumption_uses_current_categories_without_reclassifying_tokens(self):
-        reader = TexReader(r'\foo@bar')
+        reader = new_reader(r'\foo@bar')
         first = reader.next_token()
         reader.catcodes['@'] = CatCode.LETTER
         self.assertEqual(signature(first), ('cs', 'foo'))
@@ -260,21 +263,21 @@ class ContextAndSourceTests(unittest.TestCase):
             stored.catcode = CatCode.LETTER
 
     def test_control_word_character_set_is_not_hardcoded(self):
-        codes = CatcodeTable.latex_ascii()
+        codes = new_catcodes()
         codes['@'] = CatCode.LETTER
         codes['é'] = CatCode.LETTER
-        self.assertEqual(signature(TexReader('\\a@é', catcodes=codes).next_token()), ('cs', 'a@é'))
-        self.assertEqual(signature(TexReader('\\a@é').next_token()), ('cs', 'a'))
+        self.assertEqual(signature(new_reader('\\a@é', catcodes=codes).next_token()), ('cs', 'a@é'))
+        self.assertEqual(signature(new_reader('\\a@é').next_token()), ('cs', 'a'))
 
     def test_escape_character_is_not_hardcoded(self):
-        codes = CatcodeTable.latex_ascii()
+        codes = new_catcodes()
         codes['!'] = CatCode.ESCAPE
         codes['\\'] = CatCode.OTHER
-        self.assertEqual([signature(t) for t in TexReader('!foo\\', catcodes=codes)],
+        self.assertEqual([signature(t) for t in new_reader('!foo\\', catcodes=codes)],
                          [('cs', 'foo'), ('\\', 12), (' ', 10)])
 
     def test_default_profiles_and_copies_do_not_leak(self):
-        first, second = TexReader('x'), TexReader('x')
+        first, second = new_reader('x'), new_reader('x')
         first.catcodes['x'] = CatCode.OTHER
         self.assertEqual(signature(second.next_token()), ('x', 11))
         copied = first.catcodes.copy()
@@ -287,7 +290,7 @@ class ContextAndSourceTests(unittest.TestCase):
 
     def test_comment_event_preserves_original_extent_and_occurrence(self):
         source = 'é % note\r\nx'
-        reader = TexReader(source, source_id='part.tex', occurrence_id=4)
+        reader = new_reader(source, source_id='part.tex', occurrence_id=4)
         events = []
         while (event := reader.next_event()) is not None:
             events.append(event)
@@ -298,21 +301,21 @@ class ContextAndSourceTests(unittest.TestCase):
         self.assertEqual(reader.text, source)
 
     def test_disabled_endline_event_accounts_for_removed_tail(self):
-        reader = TexReader('a  \r\nb', endline_char=-1)
+        reader = new_reader('a  \r\nb', endline_char=-1)
         reader.next_event()
         event = reader.next_event()
         self.assertEqual(event.kind, EventKind.DISABLED_ENDLINE)
         self.assertEqual(reader.text[event.span.start:event.span.end], '  \r\n')
 
     def test_normalized_space_has_its_original_source_span(self):
-        reader = TexReader('a\tb')
+        reader = new_reader('a\tb')
         reader.next_token()
         token = reader.next_token()
         self.assertEqual(signature(token), (' ', 10))
         self.assertEqual(reader.text[token.span.start:token.span.end], '\t')
 
     def test_commands_are_not_executed_and_names_have_no_builtin_meaning(self):
-        reader = TexReader('\\makeatletter\\foo@bar')
+        reader = new_reader('\\makeatletter\\foo@bar')
         self.assertEqual([signature(t) for t in reader], [
             ('cs', 'makeatletter'), ('cs', 'foo'), ('@', 12),
             ('b', 11), ('a', 11), ('r', 11), (' ', 10),

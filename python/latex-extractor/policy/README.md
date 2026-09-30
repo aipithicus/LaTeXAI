@@ -12,20 +12,34 @@ A policy does not maintain hardcoded lists of command names (`\todo`, `\note`, `
    - `author_notes`: Environment blocks intended as notes (`comment.sty`, `\excludecomment`).
    - `editorial_annotation`: Authorial draft annotations (`\todo`, `\note`, `\fxnote`).
    - `dead_conditional`: Inactive conditional branches (`\iftrue` / `\iffalse`).
-   - `opaque_literal`: Verbatim code listings (`verbatim`, `lstlisting`).
+   - `code_listing`: Verbatim code listings (`verbatim`, `lstlisting`).
    - `code_inline`: Inline code snippets (`\verb`, `\lstinline`).
-   - `semi_verbatim`: Semi-verbatim blocks (`alltt`).
+   - `formatted_code_listing`: Semi-verbatim blocks (`alltt`).
    - `transparent_container`: Non-semantic environment wrappers (`\includecomment`).
+   - `wrapped_container`: Environments with boundary hooks (`\specialcomment`);
+     preserve until those hooks have been handled.
    - `formatting_container`: Font and styling wrappers (`\textbf`, `\emph`).
    - `external_verbatim`: External verbatim file transclusions (`\verbatiminput`).
 
-2. **Lexical Events** emitted by the reader (`tex_reader.py`):
+2. **Lexical classifications** to be derived from reader events and source context:
    - `comment_line`: Lines containing only `CatCode.COMMENT` (14) and optional leading whitespace.
    - `comment_inline`: Code or prose followed by `%` on the same physical line.
    - `line_continuation`: A trailing `%` suppressing the physical newline whitespace.
    - `magic_directive`: Editor/compiler hints (`% !TeX root = ...`).
 
 The policy provides a clean, minimal mapping from these inputs to **Pipeline Actions** (`eliminate`, `preserve`, `route_to_sidecar`, `unwrap`, `inline`, `coalesce`).
+
+Lexical categories (`opaque_literal`, `semi_verbatim_block`, etc.) describe how a
+span is read. Policy lookup uses its separate `semantic_role`. The reader currently
+emits token/skip events; it does not directly emit the four classifications above.
+The policy loader selects actions but does not perform edits. These policies are
+not yet connected to the preparation pipeline.
+
+An action expresses intent, not proof that a rewrite is valid. The future emitter
+must preserve established reading behavior, including comment-suppressed newlines,
+token boundaries and paragraph tokens. In particular, `coalesce` and `strip` do
+not authorize unconditional blank-line or whitespace removal. Literal content,
+stored definitions and unresolved effects require their own context checks.
 
 ---
 

@@ -191,9 +191,10 @@ new foundation, not yet the normalizer used by the preparation pipeline.
 - It implements file-like physical-line handling (CRLF/CR/LF, trailing ASCII
   spaces, final and empty lines), configurable TeX82 `endlinechar`, and classic
   `^^` character preprocessing, including control-sequence lookahead.
-- Catcodes are supplied through a document-owned mutable table. The default is
-  an explicit ASCII LaTeX profile, with other Unicode characters classified as
-  OTHER unless assigned. Unicode is not normalized or classified with isalpha.
+- Catcodes are supplied through a document-owned mutable table. The caller selects
+  a YAML mouth baseline; `latex_ascii` declares ASCII letters and TeX specials,
+  with other Unicode characters defaulting to OTHER. Unicode is not normalized
+  or classified with isalpha. There is no Python copy of the baseline assignments.
 - `next_token()` returns one token at a time; callers can apply known reading
   effects before requesting another. `next_event()` additionally exposes skipped
   source and state transitions. The methods share a cursor. No token list or log
@@ -212,9 +213,56 @@ This module does not execute catcode assignments, expand macros, recognize
 literal environments or serialize cleaned source. Those are consumers of the
 reader. A binding/profile dispatcher must establish literal modes; a later
 execution layer supplies scoped meanings and input/token stacks. Calling
-`list(TexReader(source))` does not automatically interpret commands in that source.
+Iterating a configured `TexReader` does not automatically interpret commands in
+that source. Its category table and `endline_char` are required constructor inputs.
 The existing `normalizer.py` remains the heuristic pipeline path until those
 consumers and the source-preserving emitter are connected.
+
+## Independent binding resolver
+
+`binding_resolver.py` loads the YAML registries once, then resolves occurrences
+without filesystem I/O. Active package declarations take precedence over engine
+defaults; repeated activation preserves the original load order. Effective
+profiles retain literal defaults, binding overrides, argument grammar, boundary
+rules and separate lexical-category/policy-role classifications.
+
+`mouth_profiles.py` loads only `profiles/mouth/`; removed profile files have no
+fallback path. `operations.yaml` is retained as a separate provisional registry,
+not a literal profile or a claim that its future handlers execute today. Regex
+character classes compile once into immutable layers. `character_rules.py`
+provides full-span membership and maximal-run coverage queries on a supplied
+character view. The reader's table memoizes individual character classifications;
+it does not expand regexes into an enumerated Unicode table.
+
+Bootstrap with `resolver.new_context("latex_ascii")`, then pass its `catcodes`
+and `endlinechar` to `TexReader`. Baseline and literal configuration share the
+same regex-rule contract, described in [the mouth profile reference](profiles/mouth/README.md).
+Inheritance and later effects overlay earlier layers in execution order; explicit
+assignments override regex rules within a layer. Unknown fields, invalid patterns,
+duplicate keys/identities and invalid numeric assignments produce configuration
+errors. ASCII rule conflicts are checked during loading; conflicts involving other
+characters are reported when queried. Unfamiliar manuscript constructs remain a
+separate dispatcher concern.
+
+Coverage queries supply offsets into their input view. Attaching source/occurrence
+and reading-context identities, mapping transformed characters back to source,
+and constructing the structural span engine are still downstream work. A raw
+profile's regex coverage alone does not establish effective runtime catcodes or
+the structural meaning of a region.
+
+`ReaderContext` applies immediate local reading effects, with scoped catcode and
+`endlinechar` restoration and expl3 guard/snapshot handling. A live reader can share
+its category table; the caller must synchronize `endline_char` before subsequent
+physical lines load. Argument scanning, stored definitions and skipped branches
+suppress execution of these effects.
+
+Supported literal options yield category assignments or explicit interpolation
+plans. Unclassified options and unsupported operations return unresolved results.
+Dynamic `\catcode` arguments, package configuration commands, definition factories,
+literal-body dispatch and interpolation execution still need the source dispatcher.
+The resolver does not expand macros, scan environments, or perform rewrites. Its
+source-capture metadata preserves reading evidence without committing to an XML
+schema. Neither it nor the policy loader is wired into preparation yet.
 
 ## Known limits and next design work
 

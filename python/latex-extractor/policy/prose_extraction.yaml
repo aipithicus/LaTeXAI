@@ -19,10 +19,11 @@ role_actions:
   author_notes: eliminate             # Strip comment blocks completely
   editorial_annotation: eliminate     # Strip \todo, \note annotations
   dead_conditional: eliminate         # Prune inactive branches
-  opaque_literal: convert_to_markdown # Format verbatim listings as markdown code fences
+  code_listing: convert_to_markdown   # Format verbatim listings as markdown code fences
   code_inline: convert_to_markdown    # Format inline code as backticks
-  semi_verbatim: convert_to_markdown  # Format semi-verbatim listings as code fences
+  formatted_code_listing: convert_to_markdown # Format semi-verbatim listings as code fences
   transparent_container: unwrap       # Unwrap container delimiters
+  wrapped_container: preserve         # Do not discard unexecuted boundary hooks
   formatting_container: unwrap        # Unwrap \textbf, \emph, \textcolor to raw prose
   external_verbatim: convert_to_markdown
 

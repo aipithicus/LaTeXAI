@@ -32,7 +32,8 @@ reading:
       visible_spaces: false
       terminator:
         exact_string: "\\end{verbatim}"
-        regex_pattern: "\\\\end\\s*\\{verbatim\\}"       # Package allows whitespace in \end {verbatim}
+        matching_domain: "physical_line"
+        regex_pattern: "\\\\end[ \\t]*\\{verbatim\\}"     # Package allows horizontal space in \end {verbatim}, no newlines
         trailing_line_behavior: "discard_with_warning"   # Package discards remainder of line after \end{verbatim}
       span_classification:
         category: "opaque_literal"
@@ -47,7 +48,8 @@ reading:
       visible_spaces: true
       terminator:
         exact_string: "\\end{verbatim*}"
-        regex_pattern: "\\\\end\\s*\\{verbatim\\*\\}"
+        matching_domain: "physical_line"
+        regex_pattern: "\\\\end[ \\t]*\\{verbatim\\*\\}"
         trailing_line_behavior: "discard_with_warning"
       span_classification:
         category: "opaque_literal"
@@ -62,7 +64,8 @@ reading:
       profile: discard_block
       terminator:
         exact_string: "\\end{comment}"
-        regex_pattern: "\\\\end\\s*\\{comment\\}"        # verbatim.sty accepts whitespace inside \end {comment}
+        matching_domain: "physical_line"
+        regex_pattern: "\\\\end[ \\t]*\\{comment\\}"      # verbatim.sty accepts horizontal space inside \end {comment}
         trailing_line_behavior: "discard_with_warning"
       span_classification:
         category: "editorial_comment_block"
@@ -74,20 +77,25 @@ reading:
   commands:
     - name: "\\verbatiminput"
       family: external_verbatim_file
+      profile: raw_block
+      grammar:
+        control_sequence: "verbatiminput"
+        star_token_allowed: true
       syntax: "{file_path}"
       starred_variant: false
       span_classification:
         category: "external_verbatim_resource"
-        semantic_role: "code_listing"
+        semantic_role: "external_verbatim"
 
     - name: "\\verbatiminput*"
       family: external_verbatim_file
+      profile: raw_block
       syntax: "{file_path}"
       starred_variant: true
       visible_spaces: true
       span_classification:
         category: "external_verbatim_resource"
-        semantic_role: "code_listing"
+        semantic_role: "external_verbatim"
 
   # ---------------------------------------------------------------------------
   # Token Registers & Hooks

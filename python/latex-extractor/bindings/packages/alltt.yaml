@@ -15,19 +15,12 @@ identity:
 reading:
   lexical_mode:
     # Retains \ as CatCode 0 (ESCAPE) and { } as CatCodes 1, 2 (BEGIN/END GROUP)
-    catcode_overrides:
-      "$": 12   # CatCode.OTHER
-      "&": 12   # CatCode.OTHER
-      "#": 12   # CatCode.OTHER
-      "^": 12   # CatCode.OTHER
-      "_": 12   # CatCode.OTHER
-      "~": 12   # CatCode.OTHER
-      "%": 12   # CatCode.OTHER (literal character code 37; not a comment)
+    # Character categories are supplied by the selected mouth profile.
 
     tex_mechanics:
       obey_lines: true
       active_space: true
-      swallow_first_newline: true
+      first_paragraph_suppressed: true
 
     source_capture:
       preserve_raw_slice: true
@@ -40,8 +33,12 @@ reading:
       arity: 0
       terminator:
         exact_string: "\\end{alltt}"
-        regex_pattern: "\\\\end\\s*\\{alltt\\}"
-        trailing_line_behavior: "discard_with_warning"
+        # In alltt.dtx, \ and {} retain CatCodes 0, 1, 2.
+        # The closing boundary is recognized as command \end with argument {alltt}.
+        # Trailing text on the same physical line is preserved as ordinary document content.
+        regex_pattern: "\\\\end[ \\t]*\\{alltt\\}"
+        boundary_mode: "command_boundary"
+        trailing_line_behavior: "preserve_trailing_content"
       span_classification:
         category: "semi_verbatim_block"
         semantic_role: "formatted_code_listing"

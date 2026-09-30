@@ -18,10 +18,11 @@ role_actions:
   author_notes: eliminate             # \begin{comment} and \excludecomment blocks
   editorial_annotation: eliminate     # \todo, \note, \annotation (identified by binding role)
   dead_conditional: eliminate         # Inactive \iftrue / \iffalse branches
-  opaque_literal: preserve            # verbatim, lstlisting (raw source preserved immutable)
+  code_listing: preserve              # verbatim, lstlisting; lexical category remains separate
   code_inline: preserve               # \verb, \lstinline (inline code preserved immutable)
-  semi_verbatim: preserve             # alltt (layout preserved, macros expand)
+  formatted_code_listing: preserve    # alltt; preparation preserves ordinary macro calls
   transparent_container: unwrap       # \includecomment blocks (delimiters stripped, content kept)
+  wrapped_container: preserve         # Boundary hooks remain for the execution dispatcher
   formatting_container: preserve      # \textbf, \emph, etc. (styling preserved in master.tex)
   external_verbatim: inline           # \verbatiminput transcluded as immutable literal
 

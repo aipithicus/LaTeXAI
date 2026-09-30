@@ -38,8 +38,8 @@ class PolicyLoaderTests(unittest.TestCase):
         self.assertTrue(policy.should_eliminate_role("author_notes"))
         self.assertTrue(policy.should_eliminate_role("editorial_annotation"))
         self.assertTrue(policy.should_eliminate_role("dead_conditional"))
-        self.assertFalse(policy.should_eliminate_role("opaque_literal"))
-        self.assertEqual(policy.get_role_action("opaque_literal"), "preserve")
+        self.assertFalse(policy.should_eliminate_role("code_listing"))
+        self.assertEqual(policy.get_role_action("code_listing"), "preserve")
         self.assertEqual(policy.get_role_action("code_inline"), "preserve")
         self.assertEqual(policy.get_role_action("transparent_container"), "unwrap")
         self.assertTrue(policy.should_unwrap_role("transparent_container"))
@@ -88,7 +88,7 @@ class PolicyLoaderTests(unittest.TestCase):
         self.assertTrue(policy.should_eliminate_role("editorial_annotation"))
 
         # Opaque literal markdown conversion
-        self.assertEqual(policy.get_role_action("opaque_literal"), "convert_to_markdown")
+        self.assertEqual(policy.get_role_action("code_listing"), "convert_to_markdown")
         self.assertEqual(policy.get_role_action("code_inline"), "convert_to_markdown")
 
     def test_unknown_role_fallback(self):
@@ -161,26 +161,43 @@ class BindingConformanceTests(unittest.TestCase):
         self.assertIn("environment_overrides", data["reading"])
         overrides = {e["name"]: e for e in data["reading"]["environment_overrides"]}
         self.assertIn("verbatim", overrides)
-        self.assertEqual(overrides["verbatim"]["terminator"]["regex_pattern"], r"\\end\s*\{verbatim\}")
-        self.assertEqual(overrides["verbatim"]["terminator"]["trailing_line_behavior"], "discard_with_warning")
+        v = overrides["verbatim"]
+        self.assertEqual(v["terminator"]["matching_domain"], "physical_line")
+        self.assertEqual(v["terminator"]["regex_pattern"], r"\\end[ \t]*\{verbatim\}")
+        self.assertEqual(v["terminator"]["trailing_line_behavior"], "discard_with_warning")
 
         # Package comment environment
         envs = {e["name"]: e for e in data["reading"]["environments"]}
         self.assertIn("comment", envs)
 
-    def test_comment_package_strict_column_zero(self):
+    def test_comment_package_strict_whole_line(self):
         data = self.load_binding("packages/comment.yaml")
         c = data["reading"]["environments"][0]
         self.assertTrue(c["terminator"]["requires_column_zero"])
-        self.assertEqual(c["terminator"]["regex_pattern"], r"^\\end\{comment\}")
+        self.assertFalse(c["terminator"]["trailing_content_allowed"])
+        self.assertEqual(c["terminator"]["matching_domain"], "physical_line")
+        self.assertEqual(c["terminator"]["regex_pattern"], r"^\\end\{comment\}$")
+
+    def test_alltt_preserves_trailing_line_content(self):
+        data = self.load_binding("packages/alltt.yaml")
+        a = data["reading"]["environments"][0]
+        self.assertEqual(a["terminator"]["trailing_line_behavior"], "preserve_trailing_content")
+        self.assertEqual(a["terminator"]["regex_pattern"], r"\\end[ \t]*\{alltt\}")
 
     def test_expl3_catcodes_and_parameters(self):
         data = self.load_binding("engine/core_latex.yaml")
         mutators = {m["name"]: m for m in data["reading"]["catcode_mutators"]}
         expl = mutators[r"\ExplSyntaxOn"]
-        self.assertEqual(expl["overrides"]["@"], 12)  # @ is OTHER in expl3
-        self.assertEqual(expl["overrides"]["_"], 11)  # LETTER
-        self.assertEqual(expl["overrides"][":"], 11)  # LETTER
+        # @ is intentionally NOT modified by \ExplSyntaxOn
+        self.assertNotIn("@", expl["overrides"])
+        self.assertEqual(expl["overrides"]["_"], 11)   # LETTER
+        self.assertEqual(expl["overrides"][":"], 11)   # LETTER
+        self.assertEqual(expl["overrides"]['"'], 12)   # OTHER
+        self.assertEqual(expl["overrides"]["|"], 12)   # OTHER
+        self.assertEqual(expl["overrides"]["^"], 7)    # SUPERSCRIPT
+        self.assertEqual(expl["overrides"][" "], 9)    # IGNORED
+        self.assertEqual(expl["overrides"]["\t"], 9)   # IGNORED
+        self.assertEqual(expl["overrides"]["~"], 10)   # SPACE
         self.assertEqual(expl["reader_parameters"]["endlinechar"], 32)
 
     def test_configurable_literals_declare_option_resolution(self):
@@ -193,6 +210,12 @@ class BindingConformanceTests(unittest.TestCase):
         self.assertEqual(listings["identity"]["version"], "1.11b")
         self.assertTrue((REPO / listings["identity"]["source_reference"]).is_file())
         self.assertIn("escapeinside", listings["reading"]["option_resolution"]["reading_affecting_keys"])
+
+    def test_generic_discard_block_profile_does_not_force_column_zero(self):
+        mouth_file = REPO / "python" / "latex-extractor" / "profiles" / "mouth" / "discard_block.yaml"
+        with mouth_file.open(encoding="utf-8") as f:
+            profile = yaml.safe_load(f)
+        self.assertNotIn("requires_column_zero", profile)
 
 
 if __name__ == "__main__":

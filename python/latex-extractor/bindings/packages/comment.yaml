@@ -20,13 +20,21 @@ reading:
     - name: comment
       family: delimited_raw_block
       profile: discard_block
+      lexical_mode:
+        catcode_overrides:
+          " ": 12
+          "\r": 12
+        reader_parameters:
+          endlinechar: 13
       terminator:
         exact_string: "\\end{comment}"
-        # In comment.sty, \end{comment} MUST start at column 0 without leading spaces.
-        # Indented '  \end{comment}' is treated as comment text, NOT the delimiter!
-        regex_pattern: "^\\\\end\\{comment\\}"
+        # In comment.sty, \end{comment} MUST occupy the entire physical line at column 0.
+        # Indented '  \end{comment}' or trailing content like '\end{comment}%...' or '\end{comment}TEXT'
+        # causes string comparison to fail; the line is treated as continuing comment text!
+        matching_domain: "physical_line"
+        regex_pattern: "^\\\\end\\{comment\\}$"
         requires_column_zero: true
-        trailing_line_behavior: "ignore"
+        trailing_content_allowed: false
       span_classification:
         category: "editorial_comment_block"
         semantic_role: "author_notes"
@@ -40,6 +48,7 @@ reading:
       profile: discard_block
       span_classification:
         category: "editorial_comment_block"
+        semantic_role: "author_notes"
       description: "Registers \\begin{env_name}...\\end{env_name} as an editorial comment block with column 0 termination"
 
     - command: "\\includecomment"
@@ -48,6 +57,7 @@ reading:
       family: unwrap_block
       span_classification:
         category: "transparent_block"
+        semantic_role: "transparent_container"
       description: "Registers \\begin{env_name}...\\end{env_name} as transparent content"
 
     - command: "\\specialcomment"
@@ -56,4 +66,5 @@ reading:
       family: wrapped_block
       span_classification:
         category: "wrapped_block"
+        semantic_role: "wrapped_container"
       description: "Registers environment with boundary code hooks"

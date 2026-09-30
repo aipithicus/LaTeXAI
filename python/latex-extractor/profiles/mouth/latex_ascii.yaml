@@ -1,0 +1,30 @@
+# profiles/mouth/latex_ascii.yaml
+# =============================================================================
+# Nominal ASCII Catcode Baseline Profile for LaTeX 2e Mouth
+# =============================================================================
+
+identity:
+  name: latex_ascii
+  category: baseline_catcodes
+  description: "Standard LaTeX2e ASCII baseline; @ is OTHER (12), non-ASCII defaults to OTHER"
+
+lexical_mode:
+  default: 12  # Unassigned characters, including non-ASCII, are OTHER.
+  reader_parameters:
+    endlinechar: 13
+  character_classes:
+    - {id: letters, kind: catcode_run, domain: mouth_characters, pattern: '[A-Za-z]+', catcode: 11}
+    - {id: escape, kind: catcode_run, domain: mouth_characters, pattern: '[\\]+', catcode: 0}
+    - {id: begin_group, kind: catcode_run, domain: mouth_characters, pattern: '[{]+', catcode: 1}
+    - {id: end_group, kind: catcode_run, domain: mouth_characters, pattern: '[}]+', catcode: 2}
+    - {id: math_shift, kind: catcode_run, domain: mouth_characters, pattern: '[$]+', catcode: 3}
+    - {id: alignment, kind: catcode_run, domain: mouth_characters, pattern: '[&]+', catcode: 4}
+    - {id: endline, kind: catcode_run, domain: mouth_characters, pattern: '[\r]+', catcode: 5}
+    - {id: parameter, kind: catcode_run, domain: mouth_characters, pattern: '[#]+', catcode: 6}
+    - {id: superscript, kind: catcode_run, domain: mouth_characters, pattern: '[\^]+', catcode: 7}
+    - {id: subscript, kind: catcode_run, domain: mouth_characters, pattern: '[_]+', catcode: 8}
+    - {id: ignored, kind: catcode_run, domain: mouth_characters, pattern: '[\x00]+', catcode: 9}
+    - {id: space, kind: catcode_run, domain: mouth_characters, pattern: '[ \t]+', catcode: 10}
+    - {id: active, kind: catcode_run, domain: mouth_characters, pattern: '[~\x0c]+', catcode: 13}
+    - {id: comment, kind: catcode_run, domain: mouth_characters, pattern: '[%]+', catcode: 14}
+    - {id: invalid, kind: catcode_run, domain: mouth_characters, pattern: '[\x7f]+', catcode: 15}

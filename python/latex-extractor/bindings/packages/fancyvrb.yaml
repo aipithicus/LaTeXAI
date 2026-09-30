@@ -33,6 +33,11 @@ reading:
       codes:
         effect: "dynamic_catcode_mutations"
         unsupported_action: "report_unresolved"
+      codes*:
+        effect: "dynamic_catcode_mutations"
+        unsupported_action: "report_unresolved"
+    # Retained for later formatting; all other keys need a binding decision.
+    non_reading_options: [numbers, frame, fontfamily, fontsize, fontshape, fontseries]
     unsupported_options_behavior: "report_unresolved"
 
   # ---------------------------------------------------------------------------
@@ -46,7 +51,8 @@ reading:
       options_syntax: "key_val"         # \begin{Verbatim}[numbers=left,commandchars=\\\{\}]
       terminator:
         exact_string: "\\end{Verbatim}"
-        regex_pattern: "\\\\end\\s*\\{Verbatim\\}"
+        matching_domain: "physical_line"
+        regex_pattern: "\\\\end[ \\t]*\\{Verbatim\\}"
         trailing_line_behavior: "discard_with_warning"
       span_classification:
         category: "configurable_literal"
@@ -60,7 +66,8 @@ reading:
       options_syntax: "key_val"         # Boxed verbatim (aligned horizontally)
       terminator:
         exact_string: "\\end{BVerbatim}"
-        regex_pattern: "\\\\end\\s*\\{BVerbatim\\}"
+        matching_domain: "physical_line"
+        regex_pattern: "\\\\end[ \\t]*\\{BVerbatim\\}"
         trailing_line_behavior: "discard_with_warning"
       span_classification:
         category: "configurable_literal"
@@ -74,7 +81,8 @@ reading:
       options_syntax: "key_val"         # Line-mode verbatim
       terminator:
         exact_string: "\\end{LVerbatim}"
-        regex_pattern: "\\\\end\\s*\\{LVerbatim\\}"
+        matching_domain: "physical_line"
+        regex_pattern: "\\\\end[ \\t]*\\{LVerbatim\\}"
         trailing_line_behavior: "discard_with_warning"
       span_classification:
         category: "configurable_literal"
@@ -97,12 +105,13 @@ reading:
 
     - name: "\\VerbatimInput"
       family: external_verbatim_file
+      profile: raw_block
       has_optional_arguments: true
       options_syntax: "key_val"
       syntax: "{file_path}"
       span_classification:
         category: "external_verbatim_resource"
-        semantic_role: "code_listing"
+        semantic_role: "external_verbatim"
 
   # ---------------------------------------------------------------------------
   # Definition Factories

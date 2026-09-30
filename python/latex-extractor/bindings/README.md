@@ -1,6 +1,8 @@
 # Bindings Taxonomy & Organization
 
-This directory provides the authoritative declarative specifications for LaTeX constructs, environments, and packages consumed by the preprocessor and downstream IR generators.
+This directory holds declarative reading contracts for the Python binding resolver.
+The preparation pipeline does not yet dispatch through these contracts. Downstream
+interpretation and XML capture remain separate consumers under development.
 
 ## 1. Architectural Taxonomy
 
@@ -31,7 +33,10 @@ Constructs defined by the base TeX engine (`tex.web`) or the LaTeX 2e format (`l
 
 ### `packages/` (CTAN Extensions)
 Constructs contributed by specific `.sty` packages or `.cls` document classes.
-* **Active status:** Dormant by default; registered dynamically when `\usepackage{<name>}` or `\RequirePackage{<name>}` is traversed.
+* **Active status:** Dormant by default; the caller activates a known binding with
+  `BindingResolver.load_package()`. Recognizing package declarations in source is
+  the future dispatcher's responsibility. Later first-time activations take
+  precedence; requesting an already active package does not reorder it.
 * **Separation of concerns:** 
   * `comment.sty` owns `\begin{comment}` and `\excludecomment`.
   * `verbatim.sty` extends the engine with `\verbatiminput`.
@@ -50,7 +55,9 @@ Bindings intentionally contain:
 Every binding file defines:
 * How characters are converted into tokens (catcodes and reader state transitions).
 * Lexical overrides (e.g. `%` as `CatCode.OTHER` vs `CatCode.COMMENT`).
-* Whitespace and newline behavior (verbatim spaces, `obey_lines`, `swallow_first_newline`).
+* Whitespace and newline behavior (verbatim spaces, active line endings, and
+  paragraph handling). Suppressing the first paragraph is not permission to
+  delete a source newline during lexical reading.
 * Delimiters, argument arities, and termination conditions.
 * Declarative **span classification** tags:
   * `opaque_literal` (e.g. `verbatim`, `lstlisting`): immutable code listings where no TeX syntax applies.
@@ -61,3 +68,34 @@ Every binding file defines:
   * `external_verbatim_resource` (e.g. `\verbatiminput`): external file transclusions in literal mode.
 
 Downstream XML IR projections for these bindings live under mirror paths in `capture/` (e.g. `capture/engine/verbatim.yaml`, `capture/packages/listings.yaml`).
+
+## 4. Resolver contract
+
+`binding_resolver.py` loads YAML once per resolver and resolves occurrences in
+memory. [Mouth profiles](../profiles/mouth/README.md) contain the authoritative
+regex character classes and baseline reading parameters. There is no legacy
+profile-file fallback. Resolution composes inherited profile layers, the owning
+binding's lexical settings, construct settings, and supported option effects, in
+that order. It returns data containing immutable compiled catcode layers,
+reader parameters, argument grammar, termination rules, source-capture mechanics,
+and classification. Lexical categories such as `opaque_literal` are distinct from
+policy roles such as `code_listing` and `external_verbatim`.
+
+Supported `commandchars` and `commentchar` values produce concrete category
+assignments. Listings escape options produce explicit delimiter plans; they are
+not global category changes. Unknown options, unsupported code hooks, and combined
+interpolation modes return `UnresolvedBindingResult`. Only options explicitly
+classified by the owning binding can pass through as non-reading metadata.
+
+Command lookup includes active package bindings. Dynamic `\catcode` needs scanned
+arguments; configuration commands and definition factories need execution support.
+These return explicit unresolved results rather than successful empty profiles.
+There is no macro expansion or native-engine fallback here.
+
+`resolver.new_context("latex_ascii")` constructs a context from the loaded YAML
+baseline. `ReaderContext` applies immediate local effects and restores scoped catcodes,
+`endlinechar`, and expl3 saved state. Repeated `\ExplSyntaxOn` reapplies its
+assignments while preserving the saved baseline. The caller owns execution mode,
+literal scope, argument/body scanning, and synchronization of a live reader's
+`endline_char`. Interpolation plans require a literal dispatcher and cannot be
+applied as ordinary context mutations. Terminator metadata is not a scanner.

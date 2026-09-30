@@ -17,24 +17,14 @@ reading:
   # ---------------------------------------------------------------------------
   lexical_mode:
     # All TeX specials shift to CatCode 12 (OTHER). No macro expansion or grouping occurs.
-    catcode_overrides:
-      "\\": 12   # CatCode.OTHER (No escape sequence)
-      "{": 12    # CatCode.OTHER (No group begin)
-      "}": 12    # CatCode.OTHER (No group end)
-      "$": 12    # CatCode.OTHER (No math toggle)
-      "&": 12    # CatCode.OTHER (No alignment tab)
-      "#": 12    # CatCode.OTHER (No macro parameter)
-      "^": 12    # CatCode.OTHER (No superscript / no ^^ notation expansion)
-      "_": 12    # CatCode.OTHER (No subscript)
-      "~": 12    # CatCode.OTHER (No active tie / non-breaking space)
-      "%": 12    # CatCode.OTHER (NO COMMENT: % is literal character code 37)
+    # Character categories are supplied by the selected mouth profile.
 
     # TeX lexical mechanics vs. source capture policy
     tex_mechanics:
       trailing_spaces_stripped_by_input_ln: true # TeX input_ln strips trailing spaces before tokenization
       active_endlinechar_obeylines: true         # Newlines become active ^^M executing \par or line break
       active_space_obeyspaces: true              # Space character produces explicit space tokens
-      swallow_first_newline: true                # The newline immediately following \begin{verbatim} is discarded by kernel \@xverbatim
+      first_paragraph_suppressed: true           # Later paragraph handling; never remove the source newline here
 
     # Source capture contract for preparation stage
     source_capture:

@@ -18,10 +18,11 @@ role_actions:
   author_notes: route_to_sidecar      # Route \begin{comment} to sidecar, retain in source
   editorial_annotation: preserve     # Keep \todo, \note intact
   dead_conditional: preserve         # Keep inactive \iftrue / \iffalse branches intact
-  opaque_literal: preserve           # Keep verbatim, lstlisting intact
+  code_listing: preserve             # Keep verbatim, lstlisting intact
   code_inline: preserve              # Keep \verb, \lstinline intact
-  semi_verbatim: preserve            # Keep alltt intact
+  formatted_code_listing: preserve   # Keep alltt intact
   transparent_container: preserve    # Retain environment boundaries
+  wrapped_container: preserve
   formatting_container: preserve     # Retain styling macros
   external_verbatim: preserve        # Retain external file references without forced inlining
 

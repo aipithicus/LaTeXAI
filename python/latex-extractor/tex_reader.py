@@ -10,8 +10,8 @@ N/M/S transitions and all 16 category codes are supported. Classic ^^ notation
 is supported (ASCII toggle and two lowercase hexadecimal digits), including
 control-sequence lookahead. XeTeX/LuaTeX extended ^^^^/^^^^^^ notation, input
 encoding conversion and engine-specific Unicode category initialization are
-not implied. The default profile explicitly assigns conventional ASCII LaTeX
-categories; other Unicode characters default to OTHER, never str.isalpha().
+not implied. The caller supplies a compiled category table and endlinechar;
+this module contains no format-specific initialization or profile loading.
 
 The caller owns catcode assignments, scoping, meanings, literal-mode dispatch
 and file/token input stacks. This reader does not execute commands, expand
@@ -34,8 +34,12 @@ from collections import deque
 from dataclasses import dataclass
 from enum import Enum, IntEnum
 import re
-from string import ascii_letters
 from typing import Iterator, Mapping
+
+if __package__:
+    from .character_rules import CatcodeLayer, category
+else:
+    from character_rules import CatcodeLayer, category
 
 
 class CatCode(IntEnum):
@@ -121,39 +125,63 @@ class CatcodeTable:
     """Caller-owned mutable categories; copies belong to separate reading contexts."""
 
     def __init__(self, assignments: Mapping[str, int] | None = None,
-                 *, default: CatCode = CatCode.OTHER):
-        self.default = CatCode(default)
+                 *, default: int, layers: tuple[CatcodeLayer, ...] = ()):
+        self._cache: dict[str, CatCode] = {}
+        self.default = default
+        self._layers = layers
         self._assignments: dict[str, CatCode] = {}
         for character, category in (assignments or {}).items():
             self[character] = category
 
     def __getitem__(self, character: str) -> CatCode:
-        return self._assignments.get(character, self.default)
+        if not isinstance(character, str) or len(character) != 1:
+            raise ValueError("Catcode lookup requires one character")
+        if character in self._assignments:
+            return self._assignments[character]
+        if character not in self._cache:
+            result = self.default
+            for layer in reversed(self._layers):
+                code = layer.resolve(character)
+                if code is not None:
+                    result = CatCode(code)
+                    break
+            self._cache[character] = result
+        return self._cache[character]
 
     def __setitem__(self, character: str, category: int) -> None:
         if not isinstance(character, str) or len(character) != 1:
             raise ValueError("A catcode assignment requires one Unicode character")
-        self._assignments[character] = CatCode(category)
+        self._assignments[character] = CatCode(validate_category(category))
+
+    @property
+    def default(self) -> CatCode:
+        return self._default
+
+    @default.setter
+    def default(self, value: int) -> None:
+        self._default = CatCode(validate_category(value))
+        self._cache.clear()
+
+    def apply_layer(self, layer: CatcodeLayer) -> None:
+        """Apply effects in execution order, above any earlier runtime assignments."""
+        if self._assignments:
+            self._layers += (CatcodeLayer("runtime", assignments=tuple(self._assignments.items())),)
+            self._assignments = {}
+        self._layers += (layer,)
+        self._cache.clear()
 
     def copy(self) -> CatcodeTable:
-        return CatcodeTable(self._assignments, default=self.default)
+        return CatcodeTable(self._assignments, default=self.default, layers=self._layers)
 
-    @classmethod
-    def latex_ascii(cls) -> CatcodeTable:
-        """Explicit ASCII profile; @ is OTHER and Unicode letters are not guessed."""
-        result = cls({character: CatCode.LETTER for character in ascii_letters})
-        for character, category in {
-            "\\": CatCode.ESCAPE, "{": CatCode.BEGIN_GROUP,
-            "}": CatCode.END_GROUP, "$": CatCode.MATH_SHIFT,
-            "&": CatCode.ALIGNMENT_TAB, "\r": CatCode.END_OF_LINE,
-            "#": CatCode.PARAMETER, "^": CatCode.SUPERSCRIPT,
-            "_": CatCode.SUBSCRIPT, "\x00": CatCode.IGNORED,
-            " ": CatCode.SPACE, "\t": CatCode.SPACE,
-            "~": CatCode.ACTIVE, "\x0c": CatCode.ACTIVE,
-            "%": CatCode.COMMENT, "\x7f": CatCode.INVALID,
-        }.items():
-            result[character] = category
-        return result
+    def restore_from(self, saved: CatcodeTable) -> None:
+        """Restore a snapshot in place, retaining references held by a reader."""
+        self.default = saved.default
+        self._layers = saved._layers
+        self._assignments = dict(saved._assignments)
+
+
+def validate_category(value: int) -> int:
+    return category(value, "CatcodeTable")
 
 
 @dataclass(frozen=True, slots=True)
@@ -180,14 +208,14 @@ class TexReader:
     """
 
     def __init__(self, text: str, *, source_id: str = "<memory>",
-                 occurrence_id: int = 0, catcodes: CatcodeTable | None = None,
-                 endline_char: int = 13):
+                 occurrence_id: int = 0, catcodes: CatcodeTable,
+                 endline_char: int):
         if not isinstance(text, str):
             raise TypeError("TexReader expects decoded str; decoding belongs to the source owner")
         self.text = text
         self.source_id = source_id
         self.occurrence_id = occurrence_id
-        self.catcodes = catcodes if catcodes is not None else CatcodeTable.latex_ascii()
+        self.catcodes = catcodes
         self.endline_char = endline_char
         self.state = ReaderState.NEW_LINE
         self._queue: deque[_Character] = deque()

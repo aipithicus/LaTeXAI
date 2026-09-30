@@ -1,0 +1,23 @@
+# profiles/mouth/inline_braced.yaml
+# =============================================================================
+# Balanced-Brace Delimited Inline Literal Profile (\url{...}, \path{...})
+# =============================================================================
+
+identity:
+  name: inline_braced
+  category: inline_literal
+  description: "Inline literal enclosed in balanced braces with internal specials treated as OTHER"
+
+family: inline
+delimiter_mode: balanced_braces
+multiline_allowed: true
+
+lexical_mode:
+  character_classes:
+    - {id: specials, kind: catcode_run, domain: mouth_characters, pattern: '[$&#^_~%]+', catcode: 12}
+  source_capture:
+    preserve_raw_slice: true
+
+span_classification:
+  category: opaque_inline_literal
+  semantic_role: code_inline
