@@ -24,85 +24,77 @@ class PolicyLoaderTests(unittest.TestCase):
             policy = load_policy(preset)
             self.assertIsInstance(policy, ExtractionPolicy)
             self.assertEqual(policy.name, preset)
-            self.assertTrue(policy.target_pipeline)
+            self.assertTrue(policy.target)
             self.assertTrue(policy.description)
 
     def test_compact_alias_resolves_to_preflight(self):
         policy = load_policy("compact")
         self.assertEqual(policy.name, "preflight")
 
-    def test_preflight_policy_rules(self):
+    def test_preflight_role_actions(self):
         policy = load_policy("preflight")
 
-        # Span actions
-        comment_action = policy.get_span_action("editorial_comment_block")
-        self.assertEqual(comment_action.action, "delete_span")
-        self.assertTrue(comment_action.emit_tombstone)
-        self.assertEqual(comment_action.tombstone_category, "PRUNED_SEMANTIC")
+        # Semantic roles
+        self.assertTrue(policy.should_eliminate_role("author_notes"))
+        self.assertTrue(policy.should_eliminate_role("editorial_annotation"))
+        self.assertTrue(policy.should_eliminate_role("dead_conditional"))
+        self.assertFalse(policy.should_eliminate_role("opaque_literal"))
+        self.assertEqual(policy.get_role_action("opaque_literal"), "preserve")
+        self.assertEqual(policy.get_role_action("code_inline"), "preserve")
+        self.assertEqual(policy.get_role_action("transparent_container"), "unwrap")
+        self.assertTrue(policy.should_unwrap_role("transparent_container"))
 
-        verbatim_action = policy.get_span_action("opaque_literal")
-        self.assertEqual(verbatim_action.action, "preserve_immutable")
-        self.assertFalse(verbatim_action.strip_comments)
-        self.assertFalse(verbatim_action.normalize_whitespace)
+        # Lexical events
+        self.assertTrue(policy.should_eliminate_comment_line())
+        self.assertTrue(policy.should_strip_comment_inline())
+        self.assertTrue(policy.should_preserve_line_continuation())
+        self.assertEqual(policy.lexical_events.magic_directive, "extract_metadata")
 
-        # Lexical comments
-        self.assertEqual(policy.lexical_comments.full_line_action, "drop_line")
-        self.assertEqual(policy.lexical_comments.inline_action, "strip_payload_preserve_boundary")
-        self.assertEqual(policy.lexical_comments.line_continuation_action, "preserve_continuation_marker")
+        # Structural normalization
+        self.assertTrue(policy.should_coalesce_paragraphs())
+        self.assertTrue(policy.should_strip_trailing_whitespace())
 
-        # Whitespace
-        self.assertEqual(policy.whitespace.max_consecutive_blank_lines, 1)
-        self.assertTrue(policy.whitespace.strip_trailing_spaces)
-        self.assertTrue(policy.whitespace.swallow_first_verbatim_newline)
-
-        # Macro pruning
-        self.assertTrue(policy.should_drop_macro("todo"))
-        self.assertTrue(policy.should_drop_macro(r"\todo"))
-        self.assertTrue(policy.should_drop_macro("annotation"))
-        self.assertFalse(policy.should_unwrap_macro("textbf"))
-
-        # Conditionals & Provenance
-        self.assertTrue(policy.conditionals.simplify_static_branches)
+        # Provenance
         self.assertTrue(policy.provenance.emit_ledger)
         self.assertTrue(policy.provenance.rle_compression)
 
     def test_lossless_policy_rules(self):
         policy = load_policy("lossless")
 
-        # Span actions: sidecar routing instead of deletion
-        comment_action = policy.get_span_action("editorial_comment_block")
-        self.assertEqual(comment_action.action, "route_to_sidecar")
-        self.assertEqual(comment_action.destination_sidecar, "editorial_notes.jsonl")
-        self.assertTrue(comment_action.preserve_in_source)
+        # Roles
+        self.assertEqual(policy.get_role_action("author_notes"), "route_to_sidecar")
+        self.assertFalse(policy.should_eliminate_role("editorial_annotation"))
+        self.assertFalse(policy.should_eliminate_role("dead_conditional"))
 
-        # Exact whitespace
-        self.assertIsNone(policy.whitespace.max_consecutive_blank_lines)
-        self.assertFalse(policy.whitespace.strip_trailing_spaces)
+        # Lexical events
+        self.assertFalse(policy.should_eliminate_comment_line())
+        self.assertEqual(policy.lexical_events.comment_line, "preserve")
+        self.assertEqual(policy.lexical_events.comment_inline, "preserve")
 
-        # No pruning
-        self.assertFalse(policy.should_drop_macro("todo"))
-        self.assertFalse(policy.conditionals.simplify_static_branches)
-        self.assertFalse(policy.provenance.track_tombstones)
+        # Normalization
+        self.assertFalse(policy.should_coalesce_paragraphs())
+        self.assertFalse(policy.should_strip_trailing_whitespace())
+
+        # Provenance
+        self.assertTrue(policy.provenance.emit_ledger)
+        self.assertFalse(policy.provenance.rle_compression)
 
     def test_prose_extraction_policy_unwrapping(self):
         policy = load_policy("prose_extraction")
 
-        # Styling macros unwrapped to reveal prose
-        self.assertTrue(policy.should_unwrap_macro("textbf"))
-        self.assertTrue(policy.should_unwrap_macro(r"\textbf"))
-        self.assertTrue(policy.should_unwrap_macro("textit"))
-        self.assertTrue(policy.should_unwrap_macro("emph"))
-        self.assertTrue(policy.should_unwrap_macro("blue"))
-        self.assertFalse(policy.should_unwrap_macro("unknown_macro"))
+        # Styling containers unwrapped to reveal prose
+        self.assertTrue(policy.should_unwrap_role("formatting_container"))
+        self.assertTrue(policy.should_eliminate_role("author_notes"))
+        self.assertTrue(policy.should_eliminate_role("editorial_annotation"))
 
         # Opaque literal markdown conversion
-        self.assertEqual(policy.get_span_action("opaque_literal").action, "convert_to_markdown_fence")
-        self.assertEqual(policy.get_span_action("opaque_inline_literal").action, "convert_to_inline_code")
+        self.assertEqual(policy.get_role_action("opaque_literal"), "convert_to_markdown")
+        self.assertEqual(policy.get_role_action("code_inline"), "convert_to_markdown")
 
-    def test_unknown_category_fallback(self):
+    def test_unknown_role_fallback(self):
         policy = load_policy("preflight")
-        fallback = policy.get_span_action("unregistered_custom_category")
-        self.assertEqual(fallback.action, "preserve_immutable")
+        fallback = policy.get_role_action("unregistered_custom_role")
+        self.assertEqual(fallback, "preserve")
 
     def test_missing_policy_raises_error(self):
         with self.assertRaises(FileNotFoundError):

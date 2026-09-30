@@ -2,102 +2,48 @@
 # =============================================================================
 # Archival & Roundtripping Policy: Lossless Preservation
 #
-# Designed for high-fidelity archival, compiler verification, roundtripping,
-# and AST generation. Preserves all author comments, exact whitespace formatting,
-# and inactive branches without destructive edits.
+# Retains all author comments, exact whitespace formatting, inactive branches,
+# and author macros without destructive edits. Routes author notes to sidecars.
 # =============================================================================
 
 identity:
   name: lossless
-  version: "1.0.0"
-  target_pipeline: "archival_preservation"
+  target: "archival_manifest"
   description: "Non-destructive preservation: retains exact comments, whitespace, conditional branches, and author macros with zero source loss"
 
 # -----------------------------------------------------------------------------
-# 1. Span Actions: Mapping declarative classifications to pipeline actions
+# 1. Action per Semantic Role (classified by bindings and syntax)
 # -----------------------------------------------------------------------------
-span_actions:
-  opaque_literal:
-    action: preserve_immutable
-    strip_comments: false
-    normalize_whitespace: false
-    description: "Preserve code listings verbatim"
-
-  opaque_inline_literal:
-    action: preserve_immutable
-    strip_comments: false
-    description: "Preserve inline verbatim unchanged"
-
-  editorial_comment_block:
-    action: route_to_sidecar
-    destination_sidecar: "editorial_notes.jsonl"
-    preserve_in_source: true
-    description: "Retain comment blocks in source and catalog them in an external sidecar"
-
-  transparent_block:
-    action: preserve_delimiters
-    description: "Retain environment boundaries intact"
-
-  wrapped_block:
-    action: preserve_delimiters
-    description: "Retain environment boundaries intact without executing hooks"
-
-  semi_verbatim_block:
-    action: preserve_immutable
-    description: "Retain semi-verbatim blocks verbatim"
-
-  external_verbatim_resource:
-    action: preserve_reference
-    description: "Retain external file reference without forced inlining"
+role_actions:
+  author_notes: route_to_sidecar      # Route \begin{comment} to sidecar, retain in source
+  editorial_annotation: preserve     # Keep \todo, \note intact
+  dead_conditional: preserve         # Keep inactive \iftrue / \iffalse branches intact
+  opaque_literal: preserve           # Keep verbatim, lstlisting intact
+  code_inline: preserve              # Keep \verb, \lstinline intact
+  semi_verbatim: preserve            # Keep alltt intact
+  transparent_container: preserve    # Retain environment boundaries
+  formatting_container: preserve     # Retain styling macros
+  external_verbatim: preserve        # Retain external file references without forced inlining
 
 # -----------------------------------------------------------------------------
-# 2. Lexical Comments: Rules for CatCode.COMMENT / EventKind.COMMENT
+# 2. Action per Lexical Event (emitted by tex_reader.py)
 # -----------------------------------------------------------------------------
-lexical_comments:
-  full_line_comment:
-    action: preserve_line
-    description: "Retain full-line comments exactly as written"
-
-  inline_comment:
-    action: preserve_comment
-    description: "Retain inline comments and preceding whitespace unchanged"
-
-  line_continuation:
-    action: preserve_continuation_marker
-    description: "Retain line continuation markers"
-
-  magic_comments:
-    action: preserve_line
-    description: "Retain tool and compiler directives in source"
+lexical_events:
+  comment_line: preserve             # Retain full-line comments exactly as written
+  comment_inline: preserve           # Retain inline comments and preceding whitespace
+  line_continuation: preserve        # Retain line continuation markers
+  magic_directive: preserve          # Retain tool and compiler directives in source
 
 # -----------------------------------------------------------------------------
-# 3. Whitespace & Layout Normalization
+# 3. Structural Normalization
 # -----------------------------------------------------------------------------
-whitespace_rules:
-  max_consecutive_blank_lines: null    # Unbounded: retain all empty lines verbatim
-  strip_trailing_spaces: false         # Preserve trailing whitespace on every line
-  swallow_first_verbatim_newline: false # Keep exact byte stream
-  enforce_newline_at_eof: false        # Preserve exact author EOF state
-  output_line_ending: "preserve"       # Maintain original CRLF / LF line endings
+structural_normalization:
+  paragraph_breaks: preserve         # Unbounded: retain all empty lines verbatim
+  trailing_whitespace: preserve      # Preserve trailing whitespace on every line
 
 # -----------------------------------------------------------------------------
-# 4. Semantic Macro Pruning
-# -----------------------------------------------------------------------------
-macro_pruning:
-  drop_commands: []                    # Do not prune any macros
-  unwrap_commands: []                  # Do not unwrap any macros
-
-# -----------------------------------------------------------------------------
-# 5. Conditional Evaluation
-# -----------------------------------------------------------------------------
-conditional_evaluation:
-  simplify_static_branches: false      # Do not prune dead conditional branches
-  unknown_conditionals: "preserve"
-
-# -----------------------------------------------------------------------------
-# 6. Provenance & Diagnostics
+# 4. Provenance
 # -----------------------------------------------------------------------------
 provenance:
   emit_ledger: true
-  rle_compression: false               # Emit full granular 1-to-1 token/span ledger
-  track_tombstones: false              # No deletions occur in lossless mode
+  rle_compression: false

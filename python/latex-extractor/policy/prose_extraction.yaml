@@ -3,123 +3,48 @@
 # NLP & Semantic Search Policy: Prose Extraction
 #
 # Optimized for text mining, document embedding, RAG ingestion, and semantic
-# indexing. Unwraps superficial styling macros to produce clean prose, eliminates
-# author notes and comments, and standardizes structural boundaries.
+# indexing. Unwraps styling macros to produce clean prose, eliminates author notes,
+# and converts code blocks to markdown formatting.
 # =============================================================================
 
 identity:
   name: prose_extraction
-  version: "1.0.0"
-  target_pipeline: "nlp_extraction"
-  description: "Prose extraction: unwraps typographic and styling macros, discards comments and editorial blocks, and prepares clean prose for NLP and embedding workflows"
+  target: "prose_stream"
+  description: "Prose extraction: unwraps typographic and styling containers, eliminates editorial blocks, and converts code to markdown"
 
 # -----------------------------------------------------------------------------
-# 1. Span Actions
+# 1. Action per Semantic Role (classified by bindings and syntax)
 # -----------------------------------------------------------------------------
-span_actions:
-  opaque_literal:
-    action: convert_to_markdown_fence
-    strip_comments: false
-    normalize_whitespace: false
-    description: "Format verbatim code listings into markdown code blocks (```)"
-
-  opaque_inline_literal:
-    action: convert_to_inline_code
-    description: "Format inline code into markdown backticks (`...`)"
-
-  editorial_comment_block:
-    action: delete_span
-    emit_tombstone: true
-    tombstone_category: "PRUNED_NLP"
-    description: "Strip comment blocks completely from prose corpus"
-
-  transparent_block:
-    action: unwrap_delimiters
-    description: "Unwrap transparent content blocks"
-
-  wrapped_block:
-    action: unwrap_delimiters
-    description: "Unwrap boundary hooks and retain text body"
-
-  semi_verbatim_block:
-    action: convert_to_markdown_fence
-    description: "Format semi-verbatim listings into code fences"
-
-  external_verbatim_resource:
-    action: inline_as_markdown_fence
-    description: "Inline external source file as a code fence"
+role_actions:
+  author_notes: eliminate             # Strip comment blocks completely
+  editorial_annotation: eliminate     # Strip \todo, \note annotations
+  dead_conditional: eliminate         # Prune inactive branches
+  opaque_literal: convert_to_markdown # Format verbatim listings as markdown code fences
+  code_inline: convert_to_markdown    # Format inline code as backticks
+  semi_verbatim: convert_to_markdown  # Format semi-verbatim listings as code fences
+  transparent_container: unwrap       # Unwrap container delimiters
+  formatting_container: unwrap        # Unwrap \textbf, \emph, \textcolor to raw prose
+  external_verbatim: convert_to_markdown
 
 # -----------------------------------------------------------------------------
-# 2. Lexical Comments
+# 2. Action per Lexical Event (emitted by tex_reader.py)
 # -----------------------------------------------------------------------------
-lexical_comments:
-  full_line_comment:
-    action: drop_line
-    emit_tombstone: false
-    description: "Discard all comment lines"
-
-  inline_comment:
-    action: strip_payload_preserve_boundary
-    boundary_preservation: "preserve_trailing_space"
-    description: "Strip inline comments from text sentences"
-
-  line_continuation:
-    action: drop
-    description: "Remove continuation markers for smooth prose joining"
-
-  magic_comments:
-    action: drop_line
-    description: "Discard editor/compiler directives"
+lexical_events:
+  comment_line: eliminate             # Discard all comment lines
+  comment_inline: strip_payload       # Strip inline comments from text
+  line_continuation: eliminate        # Join lines cleanly across continuation marks
+  magic_directive: eliminate          # Discard editor/compiler directives
 
 # -----------------------------------------------------------------------------
-# 3. Whitespace & Layout Normalization
+# 3. Structural Normalization
 # -----------------------------------------------------------------------------
-whitespace_rules:
-  max_consecutive_blank_lines: 1       # Normalize paragraph boundaries
-  strip_trailing_spaces: true
-  swallow_first_verbatim_newline: true
-  enforce_newline_at_eof: true
-  output_line_ending: "\n"
+structural_normalization:
+  paragraph_breaks: coalesce          # Normalize paragraph boundaries
+  trailing_whitespace: strip
 
 # -----------------------------------------------------------------------------
-# 4. Semantic Macro Pruning: Unwrapping styling to reveal raw prose
-# -----------------------------------------------------------------------------
-macro_pruning:
-  drop_commands:
-    - "todo"
-    - "todonotes"
-    - "note"
-    - "comment"
-    - "draft"
-    - "annotation"
-  unwrap_commands:
-    - "textbf"
-    - "textit"
-    - "emph"
-    - "textsf"
-    - "textsc"
-    - "textsl"
-    - "underline"
-    - "textcolor"
-    - "color"
-    - "blue"
-    - "red"
-    - "green"
-    - "small"
-    - "large"
-    - "Large"
-
-# -----------------------------------------------------------------------------
-# 5. Conditional Evaluation
-# -----------------------------------------------------------------------------
-conditional_evaluation:
-  simplify_static_branches: true
-  unknown_conditionals: "preserve"
-
-# -----------------------------------------------------------------------------
-# 6. Provenance & Diagnostics
+# 4. Provenance
 # -----------------------------------------------------------------------------
 provenance:
   emit_ledger: true
   rle_compression: true
-  track_tombstones: true
