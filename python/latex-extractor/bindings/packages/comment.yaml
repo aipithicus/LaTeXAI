@@ -1,28 +1,32 @@
 # bindings/packages/comment.yaml
 # =============================================================================
 # CTAN Package: comment (Victor Eijkhout)
-# Model: lib/LaTeXML/Package/comment.sty.ltxml / lib-ctan/comment/comment.sty
+# Model: lib/LaTeXML/Package/comment.sty.ltxml / CTAN macros/latex/contrib/comment/comment.sty
 #
 # Dedicated selective exclusion/inclusion engine for environments.
 # Comprehension layer only: defines the syntactic boundaries of comment blocks.
-# What the pipeline does with these blocks (e.g. prune vs archive) is governed by policy.
+# Strict termination: \end{comment} must occur at the beginning of the line (column 0).
 # =============================================================================
 
 identity:
   package: comment
   version: "3.8"
   tier: ctan_package
-  source_reference: "lib-ctan/comment/comment.sty"
+  source_reference: "lib/LaTeXML/Package/comment.sty.ltxml"
   description: "Selectively includes or excludes entire sections of text and environments"
 
 reading:
   environments:
     - name: comment
       family: delimited_raw_block
+      profile: discard_block
       terminator:
         exact_string: "\\end{comment}"
-        # In comment.sty, \end{comment} must appear on its own line
-        regex_pattern: "^\\s*\\\\end\\{comment\\}\\s*$"
+        # In comment.sty, \end{comment} MUST start at column 0 without leading spaces.
+        # Indented '  \end{comment}' is treated as comment text, NOT the delimiter!
+        regex_pattern: "^\\\\end\\{comment\\}"
+        requires_column_zero: true
+        trailing_line_behavior: "ignore"
       span_classification:
         category: "editorial_comment_block"
         semantic_role: "author_notes"
@@ -33,9 +37,10 @@ reading:
       syntax: "{env_name}"
       registers: environment
       family: delimited_raw_block
+      profile: discard_block
       span_classification:
         category: "editorial_comment_block"
-      description: "Registers \\begin{env_name}...\\end{env_name} as an editorial comment block"
+      description: "Registers \\begin{env_name}...\\end{env_name} as an editorial comment block with column 0 termination"
 
     - command: "\\includecomment"
       syntax: "{env_name}"
@@ -52,4 +57,3 @@ reading:
       span_classification:
         category: "wrapped_block"
       description: "Registers environment with boundary code hooks"
-

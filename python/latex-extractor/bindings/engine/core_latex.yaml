@@ -1,62 +1,86 @@
 # bindings/engine/core_latex.yaml
 # =============================================================================
 # Core LaTeX 2e / TeX primitives and format constructs.
+# Built into LaTeX 2e base (latex.ltx / l3bootstrap.dtx / TeX82).
 # Active in all LaTeX documents by default.
 # =============================================================================
 
 identity:
   name: core_latex
   tier: engine_kernel
-  source_reference: "LaTeX 2e Kernel (latex.ltx) / TeX.pool"
-  description: "Core primitives and structural boundaries active across all documents"
+  source_reference: "base/latex.ltx / l3kernel/l3bootstrap.dtx"
+  description: "Core primitives, catcode mutators, reader parameters, and structural boundaries"
 
 reading:
-  # Lexical and catcode mutators that alter subsequent character tokenization
+  # ---------------------------------------------------------------------------
+  # Lexical and Catcode Mutators
+  # ---------------------------------------------------------------------------
   catcode_mutators:
     - name: "\\makeatletter"
       action: "assign_catcode"
       target_char: "@"
       category: 11  # CatCode.LETTER
       scope: local
+      affects_reading: true
 
     - name: "\\makeatother"
       action: "assign_catcode"
       target_char: "@"
       category: 12  # CatCode.OTHER
       scope: local
+      affects_reading: true
 
     - name: "\\catcode"
       action: "assign_catcode_dynamic"
       syntax: "char_number '='? category_number"
       scope: local
+      affects_reading: true
 
+    # Expl3 Syntax Switching (l3kernel/l3bootstrap.dtx)
+    # Combines catcode overrides with reader-parameter effects (endlinechar)
     - name: "\\ExplSyntaxOn"
       action: "expl3_lexical_enter"
       overrides:
-        "@": 11
-        "_": 11
-        ":": 11
-        " ": 9   # IGNORE
-        "\t": 9  # IGNORE
-        "~": 10  # SPACE
+        "_": 11     # CatCode.LETTER
+        ":": 11     # CatCode.LETTER
+        "@": 12     # CatCode.OTHER (@ is NOT a letter in expl3!)
+        "~": 10     # CatCode.SPACE
+        " ": 9      # CatCode.IGNORED
+        "\t": 9     # CatCode.IGNORED
+      reader_parameters:
+        endlinechar: 32  # When endlinechar=32 and ' ' is IGNORED (9), newlines inject no spaces
+      save_state: true
       scope: local
+      affects_reading: true
 
     - name: "\\ExplSyntaxOff"
       action: "expl3_lexical_exit"
+      restore_state: true
       scope: local
+      affects_reading: true
 
-  # Scoping and grouping primitives
+  # ---------------------------------------------------------------------------
+  # Scoping and Grouping Primitives
+  # ---------------------------------------------------------------------------
   grouping:
     - name: "\\begingroup"
       action: "push_lexical_scope"
+      trigger: control_sequence
     - name: "\\endgroup"
       action: "pop_lexical_scope"
-    - name: "{"
+      trigger: control_sequence
+    - name: "group_begin"
       action: "push_lexical_scope"
-    - name: "}"
+      trigger: token_category
+      catcode: 1    # CatCode.BEGIN_GROUP (matches '{' or any char with catcode 1)
+    - name: "group_end"
       action: "pop_lexical_scope"
+      trigger: token_category
+      catcode: 2    # CatCode.END_GROUP (matches '}' or any char with catcode 2)
 
-  # Static condition evaluation and branch elimination
+  # ---------------------------------------------------------------------------
+  # Static Conditionals
+  # ---------------------------------------------------------------------------
   conditionals:
     - name: "\\iftrue"
       evaluation: always_true
@@ -70,7 +94,9 @@ reading:
     - name: "\\fi"
       action: "conditional_terminator"
 
-  # Structural file inclusion directives (handled during preflight/inlining)
+  # ---------------------------------------------------------------------------
+  # Structural File Inclusions
+  # ---------------------------------------------------------------------------
   inclusions:
     - name: "\\input"
       syntax: "file_path"

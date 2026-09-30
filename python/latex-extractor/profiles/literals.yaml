@@ -1,4 +1,8 @@
-# profiles/literal_profiles.yaml
+# profiles/literals.yaml
+# =============================================================================
+# Reusable Reading Profiles for Literal and Delimited Spans
+# =============================================================================
+
 profiles:
   # 1. Standard block verbatim (\begin{verbatim} ... \end{verbatim})
   raw_block:
@@ -13,6 +17,7 @@ profiles:
   discard_block:
     family: block
     terminator_pattern: "\\end{{{name}}}"
+    requires_column_zero: true  # comment.sty requires \end{comment} at col 0
     span_classification: editorial_comment_block
 
   # 3. Semi-verbatim (\begin{alltt} ... \end{alltt})
@@ -36,3 +41,12 @@ profiles:
     family: inline
     delimiter_mode: balanced_braces
     specials_as_other: ["%", "#", "_", "~", "&", "$", "^"]
+
+  # 6. Interpolated / escaped verbatim (\begin{lstlisting}[escapeinside={(*@}{@*)}] ...)
+  interpolated_verbatim_block:
+    family: block
+    terminator_pattern: "\\end{{{name}}}"
+    comment_char: null
+    escape_char: null
+    interpolations_allowed: true
+    interpolation_mode: balanced_delimiters

@@ -1,57 +1,93 @@
 # bindings/packages/fancyvrb.yaml
 # =============================================================================
 # CTAN Package: fancyvrb (Timothy Van Zandt, Denis Girou, Sebastian Rahtz)
-# Model: lib/LaTeXML/Package/fancyvrb.sty.ltxml / lib-ctan/fancyvrb/fancyvrb.sty
+# Model: lib/LaTeXML/Package/fancyvrb.sty.ltxml / lib-ctan/fancyvrb/tex/latex/fancyvrb/fancyvrb.sty
 #
 # Advanced customizable verbatim environments with options and definition factories.
+# Note: Options such as commandchars, commentchar, and codes mutate reading rules!
 # =============================================================================
 
 identity:
   package: fancyvrb
-  version: "4.5"
+  version: "4.7"
   tier: ctan_package
   requires_engine: verbatim_core
-  source_reference: "lib-ctan/fancyvrb/fancyvrb.sty"
-  description: "Sophisticated verbatim facilities with key-value options and environment factories"
+  source_reference: "lib-ctan/fancyvrb/tex/latex/fancyvrb/fancyvrb.sty"
+  description: "Sophisticated verbatim facilities with key-value options, reading-affecting parameters, and environment factories"
 
 reading:
+  # ---------------------------------------------------------------------------
+  # Option Resolution: Reading-Affecting Configuration Parameters
+  # (lib-ctan/fancyvrb/tex/latex/fancyvrb/fancyvrb.sty:131)
+  # ---------------------------------------------------------------------------
+  option_resolution:
+    default_profile: raw_block
+    reading_affecting_keys:
+      commandchars:
+        effect: "assign_command_and_group_delimiters"
+        syntax: "\\char1\\char2\\char3" # e.g. commandchars=\\\{\}
+        profile_override: "semi_verbatim_block"
+      commentchar:
+        effect: "enable_verbatim_comment"
+        syntax: "\\char"               # e.g. commentchar=\%
+      codes:
+        effect: "dynamic_catcode_mutations"
+        unsupported_action: "report_unresolved"
+    unsupported_options_behavior: "report_unresolved"
+
+  # ---------------------------------------------------------------------------
+  # Environments
+  # ---------------------------------------------------------------------------
   environments:
     - name: Verbatim
       family: block_verbatim
+      profile: raw_block
       has_optional_arguments: true
-      options_syntax: "key_val"         # \begin{Verbatim}[numbers=left,frame=single]
+      options_syntax: "key_val"         # \begin{Verbatim}[numbers=left,commandchars=\\\{\}]
       terminator:
         exact_string: "\\end{Verbatim}"
         regex_pattern: "\\\\end\\s*\\{Verbatim\\}"
+        trailing_line_behavior: "discard_with_warning"
       span_classification:
-        category: "opaque_literal"
+        category: "configurable_literal"
+        default_category: "opaque_literal"
         semantic_role: "code_listing"
 
     - name: BVerbatim
       family: block_verbatim
+      profile: raw_block
       has_optional_arguments: true
       options_syntax: "key_val"         # Boxed verbatim (aligned horizontally)
       terminator:
         exact_string: "\\end{BVerbatim}"
         regex_pattern: "\\\\end\\s*\\{BVerbatim\\}"
+        trailing_line_behavior: "discard_with_warning"
       span_classification:
-        category: "opaque_literal"
+        category: "configurable_literal"
+        default_category: "opaque_literal"
         semantic_role: "code_listing"
 
     - name: LVerbatim
       family: block_verbatim
+      profile: raw_block
       has_optional_arguments: true
       options_syntax: "key_val"         # Line-mode verbatim
       terminator:
         exact_string: "\\end{LVerbatim}"
         regex_pattern: "\\\\end\\s*\\{LVerbatim\\}"
+        trailing_line_behavior: "discard_with_warning"
       span_classification:
-        category: "opaque_literal"
+        category: "configurable_literal"
+        default_category: "opaque_literal"
         semantic_role: "code_listing"
 
+  # ---------------------------------------------------------------------------
+  # Commands
+  # ---------------------------------------------------------------------------
   commands:
     - name: "\\Verb"
       family: inline_verbatim
+      profile: inline_delimited
       has_optional_arguments: true
       options_syntax: "key_val"         # \Verb[fontfamily=courier]|...|
       delimiter_mode: "dynamic_char"
@@ -68,15 +104,17 @@ reading:
         category: "external_verbatim_resource"
         semantic_role: "code_listing"
 
-  # Definition factories: author commands that mint brand-new verbatim environments
+  # ---------------------------------------------------------------------------
+  # Definition Factories
+  # ---------------------------------------------------------------------------
   factories:
     - command: "\\DefineVerbatimEnvironment"
       syntax: "{new_env_name}{base_env_name}{options}"
       registers: environment
       inherit_from_arg: 2              # Inherits the profile of {base_env_name} (e.g. 'Verbatim')
       span_classification:
-        category: "opaque_literal"
-      description: "Creates \\begin{new_env_name}...\\end{new_env_name} using base_env_name reading rules"
+        category: "configurable_literal"
+      description: "Creates \\begin{new_env_name}...\\end{new_env_name} using base_env_name reading rules and bound options"
 
     - command: "\\CustomVerbatimCommand"
       syntax: "{new_cs_name}{base_cs_name}{options}"
@@ -90,4 +128,3 @@ reading:
       syntax: "{env_name}{base_env_name}{options}"
       registers: environment_override
       inherit_from_arg: 2
-
