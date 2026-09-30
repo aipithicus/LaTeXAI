@@ -1,0 +1,43 @@
+# bindings/packages/alltt.yaml
+# =============================================================================
+# CTAN Package: alltt (Johannes Braams, LaTeX3 Project)
+# Model: lib/LaTeXML/Package/alltt.sty.ltxml / lib-ctan/alltt/alltt.sty
+#
+# Semi-verbatim environment where \ and { } remain functional.
+# =============================================================================
+
+identity:
+  package: alltt
+  tier: ctan_package
+  source_reference: "lib-ctan/alltt/alltt.sty"
+  description: "Semi-verbatim environment where backslash and braces retain their normal meanings"
+
+reading:
+  lexical_mode:
+    # Retains \ as CatCode 0 (ESCAPE) and { } as CatCodes 1, 2 (BEGIN/END GROUP)
+    catcode_overrides:
+      "$": 12   # CatCode.OTHER
+      "&": 12   # CatCode.OTHER
+      "#": 12   # CatCode.OTHER
+      "^": 12   # CatCode.OTHER
+      "_": 12   # CatCode.OTHER
+      "~": 12   # CatCode.OTHER
+      "%": 12   # CatCode.OTHER (literal character code 37; not a comment)
+
+    whitespace:
+      preserve_leading_spaces: true
+      preserve_consecutive_spaces: true
+      obey_lines: true
+      swallow_first_newline: true
+
+  environments:
+    - name: alltt
+      family: block_semi_verbatim
+      arity: 0
+      terminator:
+        exact_string: "\\end{alltt}"
+        regex_pattern: "\\\\end\\s*\\{alltt\\}"
+      span_classification:
+        category: "semi_verbatim_block"
+        semantic_role: "formatted_code_listing"
+

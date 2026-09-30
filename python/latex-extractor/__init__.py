@@ -45,6 +45,16 @@ from .provenance import (
     SourceLine,
     Tombstone,
 )
+from .policy_loader import (
+    ExtractionPolicy,
+    SpanActionConfig,
+    LexicalCommentPolicy,
+    WhitespacePolicy,
+    MacroPruningPolicy,
+    ConditionalPolicy,
+    ProvenancePolicy,
+    load_policy,
+)
 from .pipeline import preprocess_paper
 
 __all__ = [
@@ -78,5 +88,13 @@ __all__ = [
     "ProvenanceRun",
     "SourceLine",
     "Tombstone",
+    "ExtractionPolicy",
+    "SpanActionConfig",
+    "LexicalCommentPolicy",
+    "WhitespacePolicy",
+    "MacroPruningPolicy",
+    "ConditionalPolicy",
+    "ProvenancePolicy",
+    "load_policy",
     "preprocess_paper",
 ]

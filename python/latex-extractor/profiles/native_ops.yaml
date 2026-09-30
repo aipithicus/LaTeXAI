@@ -1,0 +1,43 @@
+# core/native_operations.yaml
+operations:
+  # --- Catcode Mutations ---
+  - name: "\\makeatletter"
+    handler: "core.catcode.makeatletter"
+    scope: local
+    affects_reading: true
+
+  - name: "\\makeatother"
+    handler: "core.catcode.makeatother"
+    scope: local
+    affects_reading: true
+
+  - name: "\\catcode"
+    handler: "core.catcode.assign"
+    # Argument syntax: <number or `\char> = <number>
+    syntax: "char_ref '='? int"
+    scope: local
+    affects_reading: true
+
+  - name: "\\ExplSyntaxOn"
+    handler: "core.catcode.expl3_on"
+    scope: local
+    affects_reading: true
+
+  - name: "\\ExplSyntaxOff"
+    handler: "core.catcode.expl3_off"
+    scope: local
+    affects_reading: true
+
+  # --- Grouping / Scoping ---
+  - name: "\\begingroup"
+    handler: "core.scope.push_group"
+  - name: "\\endgroup"
+    handler: "core.scope.pop_group"
+
+  # --- Inclusions (Resolved during Preprocessing) ---
+  - name: "\\input"
+    handler: "core.io.input_file"
+    syntax: "file_path"
+  - name: "\\include"
+    handler: "core.io.include_file"
+    syntax: "file_path"

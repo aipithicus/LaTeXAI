@@ -1,0 +1,52 @@
+# bindings/packages/listings.yaml
+# =============================================================================
+# CTAN Package: listings (Carsten Heinz, Brooks Moses, Jobst Hoffmann)
+# Model: lib/LaTeXML/Package/listings.sty.ltxml / lib-ctan/listings/listings.sty
+#
+# Source code listings with language formatting, key-val options, and escapes.
+# =============================================================================
+
+identity:
+  package: listings
+  version: "1.9"
+  tier: ctan_package
+  source_reference: "lib-ctan/listings/listings.sty"
+  description: "Typesetting source code environments with syntax highlighting and escape delimiters"
+
+reading:
+  environments:
+    - name: lstlisting
+      family: block_verbatim
+      has_optional_arguments: true
+      options_syntax: "key_val"         # \begin{lstlisting}[language=Python,caption=Main]
+      terminator:
+        exact_string: "\\end{lstlisting}"
+        regex_pattern: "\\\\end\\s*\\{lstlisting\\}"
+      escape_inside_aware: true         # Can specify escapeinside={(*@}{@*)} for TeX interpolation
+      span_classification:
+        category: "opaque_literal"
+        semantic_role: "code_listing"
+
+  commands:
+    - name: "\\lstinline"
+      family: inline_verbatim
+      has_optional_arguments: true
+      options_syntax: "key_val"         # \lstinline[language=C]|int x = 0;| or \lstinline{foo}
+      delimiter_mode: "hybrid_delim_or_braced" # Supports both |...| and {...}
+      span_classification:
+        category: "opaque_inline_literal"
+        semantic_role: "code_inline"
+
+    - name: "\\lstinputlisting"
+      family: external_verbatim_file
+      has_optional_arguments: true
+      options_syntax: "key_val"
+      syntax: "{file_path}"
+      span_classification:
+        category: "external_verbatim_resource"
+        semantic_role: "code_listing"
+
+    - name: "\\lstset"
+      syntax: "{key_vals}"
+      family: configuration_command
+

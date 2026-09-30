@@ -1,0 +1,123 @@
+# policy/preflight.yaml
+# =============================================================================
+# Default Preflight & Extraction Policy: Compact Preparation
+#
+# Optimized for clean AST parsing, LLM context compaction, and downstream
+# semantic extraction. Eliminates editorial noise and dead branches while
+# guaranteeing 100% fidelity for mathematical formulas, prose, and verbatim code.
+# =============================================================================
+
+identity:
+  name: preflight
+  version: "1.0.0"
+  target_pipeline: "compact_preflight"
+  description: "Authoritative preflight preparation policy: eliminates dead branches, author comments, and redundant blank lines while preserving verbatim spans and mathematical structure"
+
+# -----------------------------------------------------------------------------
+# 1. Span Actions: Mapping declarative classifications to pipeline actions
+# -----------------------------------------------------------------------------
+span_actions:
+  opaque_literal:
+    action: preserve_immutable
+    strip_comments: false
+    normalize_whitespace: false
+    description: "Preserve code listings (verbatim, listings) exactly as authored"
+
+  opaque_inline_literal:
+    action: preserve_immutable
+    strip_comments: false
+    description: "Preserve inline code (\\verb, \\lstinline) unchanged"
+
+  editorial_comment_block:
+    action: delete_span
+    emit_tombstone: true
+    tombstone_category: "PRUNED_SEMANTIC"
+    description: "Delete editorial comment blocks (\\begin{comment}...\\end{comment})"
+
+  transparent_block:
+    action: unwrap_delimiters
+    description: "Remove surrounding \\begin{env}...\\end{env} boundaries, preserving inner prose"
+
+  wrapped_block:
+    action: execute_boundary_hooks
+    description: "Execute before/after hooks and retain body content"
+
+  semi_verbatim_block:
+    action: preserve_whitespace_allow_macro_expansion
+    normalize_whitespace: false
+    description: "Retain physical layout while permitting command expansion (alltt)"
+
+  external_verbatim_resource:
+    action: inline_literal_file
+    description: "Inline external verbatim files as immutable code listings"
+
+# -----------------------------------------------------------------------------
+# 2. Lexical Comments: Rules for CatCode.COMMENT / EventKind.COMMENT
+# -----------------------------------------------------------------------------
+lexical_comments:
+  full_line_comment:
+    action: drop_line
+    emit_tombstone: true
+    tombstone_category: "STRIPPED_COMMENT"
+    description: "Completely discard lines containing only comments and whitespace"
+
+  inline_comment:
+    action: strip_payload_preserve_boundary
+    boundary_preservation: "preserve_trailing_space"
+    emit_tombstone: false
+    description: "Strip comment payload, retaining preceding code and necessary token boundary"
+
+  line_continuation:
+    action: preserve_continuation_marker
+    description: "Retain trailing '%' that acts as a line continuation or token boundary"
+
+  magic_comments:
+    action: parse_metadata_then_drop
+    directives:
+      - "!TeX root"
+      - "!TEX root"
+      - "!TeX TS-program"
+      - "!TEX TS-program"
+      - "!TeX spellcheck"
+    destination: "preflight_manifest"
+    description: "Extract compiler/root directives into manifest, then omit from cleaned output"
+
+# -----------------------------------------------------------------------------
+# 3. Whitespace & Layout Normalization
+# -----------------------------------------------------------------------------
+whitespace_rules:
+  max_consecutive_blank_lines: 1       # Normalize 2+ blank lines to 1 empty line (single \par)
+  strip_trailing_spaces: true          # Trim trailing ASCII spaces and tabs on non-verbatim lines
+  swallow_first_verbatim_newline: true # LaTeX kernel standard: discard newline directly after \begin{verbatim}
+  enforce_newline_at_eof: true         # Ensure master.tex terminates with a trailing newline
+  output_line_ending: "\n"             # Standardize on explicit LF
+
+# -----------------------------------------------------------------------------
+# 4. Semantic Macro Pruning
+# -----------------------------------------------------------------------------
+macro_pruning:
+  drop_commands:
+    - "todo"
+    - "todonotes"
+    - "note"
+    - "comment"
+    - "draft"
+    - "missingfigure"
+    - "fxnote"
+    - "annotation"
+  unwrap_commands: []                  # Retain semantic formatting in default compact mode
+
+# -----------------------------------------------------------------------------
+# 5. Conditional Evaluation
+# -----------------------------------------------------------------------------
+conditional_evaluation:
+  simplify_static_branches: true       # Evaluate \iftrue, \iffalse, \if0, \if1 and prune dead code
+  unknown_conditionals: "preserve"     # Leave \ifx, \ifdim, \ifdefined untouched
+
+# -----------------------------------------------------------------------------
+# 6. Provenance & Diagnostics
+# -----------------------------------------------------------------------------
+provenance:
+  emit_ledger: true                    # Generate master.provenance.json
+  rle_compression: true                # Emit run-length encoded interval mappings
+  track_tombstones: true               # Record deleted lines and intervals

@@ -1,0 +1,43 @@
+# bindings/packages/verbatim.yaml
+# =============================================================================
+# CTAN Package: verbatim (Rainer Schöpf, LaTeX3 Project Tools bundle)
+# Model: lib/LaTeXML/Package/verbatim.sty.ltxml / lib-ctan/tools/verbatim.sty
+#
+# Extends the core LaTeX verbatim engine with file-input capability and hooks.
+# Does NOT define the core verbatim environment (which lives in engine/verbatim.yaml).
+# =============================================================================
+
+identity:
+  package: verbatim
+  tier: ctan_package
+  requires_engine: verbatim_core
+  source_reference: "lib-ctan/tools/verbatim.sty"
+  description: "LaTeX Tools bundle verbatim extension package providing \\verbatiminput and token hooks"
+
+reading:
+  commands:
+    - name: "\\verbatiminput"
+      family: external_verbatim_file
+      syntax: "{file_path}"
+      starred_variant: false
+      span_classification:
+        category: "external_verbatim_resource"
+        semantic_role: "code_listing"
+
+    - name: "\\verbatiminput*"
+      family: external_verbatim_file
+      syntax: "{file_path}"
+      starred_variant: true
+      visible_spaces: true
+      span_classification:
+        category: "external_verbatim_resource"
+        semantic_role: "code_listing"
+
+  registers:
+    - name: "\\every@verbatim"
+      type: "tokens"
+      description: "Hook executed at the start of each verbatim environment"
+    - name: "\\verbatim@line"
+      type: "tokens"
+      description: "Internal line buffer"
+

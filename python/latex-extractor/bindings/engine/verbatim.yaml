@@ -1,0 +1,94 @@
+# bindings/engine/verbatim.yaml
+# =============================================================================
+# Authoritative specification for LaTeX Kernel Verbatim constructs.
+# Built into LaTeX 2e base (latex.ltx / latex_constructs.pool.ltxml).
+# Active in all LaTeX documents without requiring \usepackage{verbatim}.
+# =============================================================================
+
+identity:
+  name: verbatim_core
+  tier: engine_kernel
+  source_reference: "LaTeX 2e Kernel (latex.ltx) / TeX82 §343--359"
+  description: "Authoritative specification for core LaTeX verbatim environments and commands"
+
+# -----------------------------------------------------------------------------
+# 1. Lexical Mode: Category code and reader state overrides
+# -----------------------------------------------------------------------------
+lexical_mode:
+  # All TeX specials shift to CatCode 12 (OTHER). No macro expansion or grouping occurs.
+  catcode_overrides:
+    "\\": 12   # CatCode.OTHER (No escape sequence)
+    "{": 12    # CatCode.OTHER (No group begin)
+    "}": 12    # CatCode.OTHER (No group end)
+    "$": 12    # CatCode.OTHER (No math toggle)
+    "&": 12    # CatCode.OTHER (No alignment tab)
+    "#": 12    # CatCode.OTHER (No macro parameter)
+    "^": 12    # CatCode.OTHER (No superscript / no ^^ notation expansion)
+    "_": 12    # CatCode.OTHER (No subscript)
+    "~": 12    # CatCode.OTHER (No active tie / non-breaking space)
+    "%": 12    # CatCode.OTHER (NO COMMENT: % is literal character code 37)
+
+  # Whitespace & line-boundary behavior inside verbatim
+  whitespace:
+    preserve_leading_spaces: true       # State N space-skipping is DISABLED
+    preserve_consecutive_spaces: true   # State S space-skipping is DISABLED
+    preserve_trailing_spaces: true      # Trailing line spaces are literal code, NOT stripped
+    obey_lines: true                    # Newlines do NOT trigger \par; each is a physical line break
+    swallow_first_newline: true         # The newline immediately following \begin{verbatim} is discarded
+
+# -----------------------------------------------------------------------------
+# 2. Environments: Block verbatim
+# -----------------------------------------------------------------------------
+environments:
+  - name: verbatim
+    family: block_verbatim
+    arity: 0                            # Takes NO arguments. Immediate '[' is literal text, NOT an option!
+    starred_variant: false
+    visible_spaces: false
+    terminator:
+      exact_string: "\\end{verbatim}"
+      regex_pattern: "\\\\end\\s*\\{verbatim\\}"
+      trailing_line_behavior: "discard_with_warning" # Characters on same line after \end{verbatim} are ignored
+    span_classification:
+      category: "opaque_literal"
+      semantic_role: "code_listing"
+
+  - name: verbatim*
+    family: block_verbatim
+    arity: 0                            # Takes NO arguments
+    starred_variant: true
+    visible_spaces: true                # Spaces are rendered with visible space glyph (U+2423 ␣)
+    terminator:
+      exact_string: "\\end{verbatim*}"
+      regex_pattern: "\\\\end\\s*\\{verbatim\\*\\}"
+      trailing_line_behavior: "discard_with_warning"
+    span_classification:
+      category: "opaque_literal"
+      semantic_role: "code_listing"
+
+# -----------------------------------------------------------------------------
+# 3. Commands: Inline verbatim
+# -----------------------------------------------------------------------------
+commands:
+  - name: "\\verb"
+    family: inline_verbatim
+    starred_variant: false
+    visible_spaces: false
+    delimiter_mode: "dynamic_char"       # The very next character defines the closing delimiter
+    invalid_delimiters: ["*", " ", "\t", "\r", "\n"] # Letters and spaces cannot be delimiters
+    multiline_allowed: false             # \verb cannot span across lines; raises error if EOL hit
+    span_classification:
+      category: "opaque_inline_literal"
+      semantic_role: "code_inline"
+
+  - name: "\\verb*"
+    family: inline_verbatim
+    starred_variant: true
+    visible_spaces: true                # Spaces are rendered with visible space glyph (U+2423 ␣)
+    delimiter_mode: "dynamic_char"
+    invalid_delimiters: [" ", "\t", "\r", "\n"]
+    multiline_allowed: false
+    span_classification:
+      category: "opaque_inline_literal"
+      semantic_role: "code_inline"
+

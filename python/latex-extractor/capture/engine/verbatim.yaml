@@ -1,0 +1,43 @@
+# capture/engine/verbatim.yaml
+# =============================================================================
+# Downstream Projection & Capture: LaTeX Kernel Verbatim
+#
+# Corresponds to: bindings/engine/verbatim.yaml
+# Maps core verbatim environments and inline commands to canonical XML IR.
+# =============================================================================
+
+identity:
+  name: verbatim_core_capture
+  corresponds_to_binding: "engine/verbatim"
+  tier: engine_kernel
+  target_format: "ltx_xml"
+  description: "Canonical XML IR projection for core LaTeX verbatim environments and commands"
+
+projections:
+  environments:
+    verbatim:
+      xml_element: "ltx:verbatim"
+      attributes:
+        font: "typewriter"
+      semantic_role: "code_listing"
+
+    verbatim*:
+      xml_element: "ltx:verbatim"
+      attributes:
+        font: "typewriter"
+        show_spaces: "true"
+      semantic_role: "code_listing"
+
+  commands:
+    "\\verb":
+      xml_element: "ltx:verbatim"
+      attributes:
+        font: "typewriter"
+      semantic_role: "code_inline"
+
+    "\\verb*":
+      xml_element: "ltx:verbatim"
+      attributes:
+        font: "typewriter"
+        show_spaces: "true"
+      semantic_role: "code_inline"

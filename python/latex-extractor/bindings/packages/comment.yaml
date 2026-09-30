@@ -1,0 +1,55 @@
+# bindings/packages/comment.yaml
+# =============================================================================
+# CTAN Package: comment (Victor Eijkhout)
+# Model: lib/LaTeXML/Package/comment.sty.ltxml / lib-ctan/comment/comment.sty
+#
+# Dedicated selective exclusion/inclusion engine for environments.
+# Comprehension layer only: defines the syntactic boundaries of comment blocks.
+# What the pipeline does with these blocks (e.g. prune vs archive) is governed by policy.
+# =============================================================================
+
+identity:
+  package: comment
+  version: "3.8"
+  tier: ctan_package
+  source_reference: "lib-ctan/comment/comment.sty"
+  description: "Selectively includes or excludes entire sections of text and environments"
+
+reading:
+  environments:
+    - name: comment
+      family: delimited_raw_block
+      terminator:
+        exact_string: "\\end{comment}"
+        # In comment.sty, \end{comment} must appear on its own line
+        regex_pattern: "^\\s*\\\\end\\{comment\\}\\s*$"
+      span_classification:
+        category: "editorial_comment_block"
+        semantic_role: "author_notes"
+
+  # Dynamic definition factories that create custom included/excluded environments
+  factories:
+    - command: "\\excludecomment"
+      syntax: "{env_name}"
+      registers: environment
+      family: delimited_raw_block
+      span_classification:
+        category: "editorial_comment_block"
+      description: "Registers \\begin{env_name}...\\end{env_name} as an editorial comment block"
+
+    - command: "\\includecomment"
+      syntax: "{env_name}"
+      registers: environment
+      family: unwrap_block
+      span_classification:
+        category: "transparent_block"
+      description: "Registers \\begin{env_name}...\\end{env_name} as transparent content"
+
+    - command: "\\specialcomment"
+      syntax: "{env_name}{before_code}{after_code}"
+      registers: environment
+      family: wrapped_block
+      span_classification:
+        category: "wrapped_block"
+      description: "Registers environment with boundary code hooks"
+

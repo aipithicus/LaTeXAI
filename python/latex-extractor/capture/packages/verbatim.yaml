@@ -1,0 +1,28 @@
+# capture/packages/verbatim.yaml
+# =============================================================================
+# Downstream Projection & Capture: verbatim.sty
+#
+# Corresponds to: bindings/packages/verbatim.yaml
+# =============================================================================
+
+identity:
+  package: verbatim
+  corresponds_to_binding: "packages/verbatim"
+  tier: ctan_package
+  target_format: "ltx_xml"
+  description: "Projection rules for \\verbatiminput external transclusion"
+
+projections:
+  commands:
+    "\\verbatiminput":
+      xml_element: "ltx:verbatim"
+      attributes:
+        font: "typewriter"
+      semantic_role: "code_listing"
+
+    "\\verbatiminput*":
+      xml_element: "ltx:verbatim"
+      attributes:
+        font: "typewriter"
+        show_spaces: "true"
+      semantic_role: "code_listing"

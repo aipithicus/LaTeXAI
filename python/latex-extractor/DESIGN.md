@@ -180,11 +180,47 @@ and preparation.log is overwritten rather than appended. Those shortcomings
 remain open. The cleanup checkpoint specifies the shared-storage/logger-first
 sequence, static discovery algorithm, asset planning and measurable I/O checks.
 
+## Independent lexical reader
+
+`tex_reader.py` supplies a dependency-free, in-memory character reader. It is a
+new foundation, not yet the normalizer used by the preparation pipeline.
+
+- It implements the N/M/S transitions for all 16 catcodes, control words and
+  symbols, active-character identities, ignored/invalid characters, comments,
+  spaces and paragraph tokens. Paragraph runs are not capped.
+- It implements file-like physical-line handling (CRLF/CR/LF, trailing ASCII
+  spaces, final and empty lines), configurable TeX82 `endlinechar`, and classic
+  `^^` character preprocessing, including control-sequence lookahead.
+- Catcodes are supplied through a document-owned mutable table. The default is
+  an explicit ASCII LaTeX profile, with other Unicode characters classified as
+  OTHER unless assigned. Unicode is not normalized or classified with isalpha.
+- `next_token()` returns one token at a time; callers can apply known reading
+  effects before requesting another. `next_event()` additionally exposes skipped
+  source and state transitions. The methods share a cursor. No token list or log
+  is retained automatically, and the reader opens no files.
+- Immutable tokens carry source and occurrence identity plus half-open decoded
+  character spans. They are not byte offsets; encoding correspondence belongs
+  to the source owner. Events identify consumed comment/end-of-line suffixes,
+  while token origins identify the characters that contributed the token.
+
+The reader follows the TeX82 character algorithm over decoded text. It does not
+claim a complete pdfTeX/XeTeX/LuaTeX input implementation: extended Unicode caret
+notation and engine/format-specific category initialization are outside this
+contract. Invalid-category characters raise a persistent explicit error.
+
+This module does not execute catcode assignments, expand macros, recognize
+literal environments or serialize cleaned source. Those are consumers of the
+reader. A binding/profile dispatcher must establish literal modes; a later
+execution layer supplies scoped meanings and input/token stacks. Calling
+`list(TexReader(source))` does not automatically interpret commands in that source.
+The existing `normalizer.py` remains the heuristic pipeline path until those
+consumers and the source-preserving emitter are connected.
+
 ## Known limits and next design work
 
-The TeX traversal uses regular expressions and limited state tracking; it does
-not implement a TeX AST or the complete Knuth reader algorithm. The separate
-BibTeX reader assembles nested data values, not arbitrary TeX execution.
+The pipeline's TeX traversal still uses regular expressions and limited state
+tracking. It does not yet use the independent reader or implement a TeX AST.
+The separate BibTeX reader assembles nested data values, not arbitrary TeX execution.
 
 The 2026-09-29 cleanup review reran all 38 focused tests successfully and
 reproduced additional gaps outside that coverage: same-line inclusion loses
@@ -215,11 +251,10 @@ records witnesses, immediate patch order and structural follow-up.
 - Graphics options, search-path resolution, multiple PDF pages and naming
   collisions need further qualification.
 
-A shared token reader should precede a larger AST. It should implement control
-sequence boundaries, comments, literal contexts and TeX's N/M/S reader states
-within an explicit supported catcode model. Tokenization depends on catcodes;
-unsupported changes must be observable. AST structure can then be built on those
-tokens for the constructs the extractor actually needs.
+The shared token reader precedes a larger AST. Its next consumers must establish
+literal contexts and apply known reading effects through the supplied catcode
+table. Unsupported effects must remain observable. AST structure can then be
+built on those tokens for the constructs the extractor actually needs.
 
 The architectural direction is source assembly plus resolution of reading
 behavior, followed by emission of a compact master that may retain unexpanded
@@ -254,7 +289,8 @@ automatic lint/repair is not implemented in this patch.
 
 ## Verification
 
-The focused Python driver is `t/latex-extractor/test_preprocessing.py`:
+The focused Python drivers are `t/latex-extractor/test_preprocessing.py` for the
+existing pipeline and `t/latex-extractor/test_tex_reader.py` for lexical conformance:
 
 ```powershell
 & python/.venv/Scripts/python.exe -B -m unittest discover -s t/latex-extractor -p 'test_*.py' -v
@@ -266,3 +302,8 @@ input/cycles, nested roots, output exclusion on reruns, bibliography failures,
 strict decoding, valid Unicode preservation, dimension/conversion errors,
 overlapping deletions and paragraph preservation. Runtime files live under
 `temp/t/latex-extractor/`; temporary fixture directories are cleaned up.
+
+Reader fixtures cover all 48 state/category combinations, boundary and EOF
+cases, comments versus spaces, mutable categories, classic caret notation and
+source spans. Expected lexical results are specified directly, independently of
+the old normalizer. The reader tests use no files or compiler processes.

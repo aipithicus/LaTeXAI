@@ -1,0 +1,38 @@
+# profiles/literal_profiles.yaml
+profiles:
+  # 1. Standard block verbatim (\begin{verbatim} ... \end{verbatim})
+  raw_block:
+    family: block
+    terminator_pattern: "\\end{{{name}}}"
+    comment_char: null          # '%' is literal text (no catcode 14)
+    escape_char: null           # '\' is literal text (no catcode 0)
+    preserve_whitespace: true   # Keep leading spaces and EOLs exactly as authored
+    allow_nesting: false
+
+  # 2. Block discard (\begin{comment} ... \end{comment})
+  discard_block:
+    family: block
+    terminator_pattern: "\\end{{{name}}}"
+    span_classification: editorial_comment_block
+
+  # 3. Semi-verbatim (\begin{alltt} ... \end{alltt})
+  semi_verbatim_block:
+    family: block
+    terminator_pattern: "\\end{{{name}}}"
+    comment_char: null          # '%' is literal
+    escape_char: "\\"           # Commands still expand/execute!
+    group_delimiters: ["{", "}"]# Grouping braces still work
+    specials_as_other: ["$", "&", "#", "^", "_", "~"]
+
+  # 4. Inline delimiter-driven (\verb|...|, \verb+...+)
+  inline_delimited:
+    family: inline
+    delimiter_mode: next_char   # The very next character defines the closing delimiter
+    has_star_variant: true      # \verb* (visible spaces)
+    escape_char: null
+
+  # 5. Inline braced literal (\url{http://...}, \path{foo_bar})
+  inline_braced:
+    family: inline
+    delimiter_mode: balanced_braces
+    specials_as_other: ["%", "#", "_", "~", "&", "$", "^"]

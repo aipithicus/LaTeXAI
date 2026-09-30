@@ -1,0 +1,125 @@
+# policy/prose_extraction.yaml
+# =============================================================================
+# NLP & Semantic Search Policy: Prose Extraction
+#
+# Optimized for text mining, document embedding, RAG ingestion, and semantic
+# indexing. Unwraps superficial styling macros to produce clean prose, eliminates
+# author notes and comments, and standardizes structural boundaries.
+# =============================================================================
+
+identity:
+  name: prose_extraction
+  version: "1.0.0"
+  target_pipeline: "nlp_extraction"
+  description: "Prose extraction: unwraps typographic and styling macros, discards comments and editorial blocks, and prepares clean prose for NLP and embedding workflows"
+
+# -----------------------------------------------------------------------------
+# 1. Span Actions
+# -----------------------------------------------------------------------------
+span_actions:
+  opaque_literal:
+    action: convert_to_markdown_fence
+    strip_comments: false
+    normalize_whitespace: false
+    description: "Format verbatim code listings into markdown code blocks (```)"
+
+  opaque_inline_literal:
+    action: convert_to_inline_code
+    description: "Format inline code into markdown backticks (`...`)"
+
+  editorial_comment_block:
+    action: delete_span
+    emit_tombstone: true
+    tombstone_category: "PRUNED_NLP"
+    description: "Strip comment blocks completely from prose corpus"
+
+  transparent_block:
+    action: unwrap_delimiters
+    description: "Unwrap transparent content blocks"
+
+  wrapped_block:
+    action: unwrap_delimiters
+    description: "Unwrap boundary hooks and retain text body"
+
+  semi_verbatim_block:
+    action: convert_to_markdown_fence
+    description: "Format semi-verbatim listings into code fences"
+
+  external_verbatim_resource:
+    action: inline_as_markdown_fence
+    description: "Inline external source file as a code fence"
+
+# -----------------------------------------------------------------------------
+# 2. Lexical Comments
+# -----------------------------------------------------------------------------
+lexical_comments:
+  full_line_comment:
+    action: drop_line
+    emit_tombstone: false
+    description: "Discard all comment lines"
+
+  inline_comment:
+    action: strip_payload_preserve_boundary
+    boundary_preservation: "preserve_trailing_space"
+    description: "Strip inline comments from text sentences"
+
+  line_continuation:
+    action: drop
+    description: "Remove continuation markers for smooth prose joining"
+
+  magic_comments:
+    action: drop_line
+    description: "Discard editor/compiler directives"
+
+# -----------------------------------------------------------------------------
+# 3. Whitespace & Layout Normalization
+# -----------------------------------------------------------------------------
+whitespace_rules:
+  max_consecutive_blank_lines: 1       # Normalize paragraph boundaries
+  strip_trailing_spaces: true
+  swallow_first_verbatim_newline: true
+  enforce_newline_at_eof: true
+  output_line_ending: "\n"
+
+# -----------------------------------------------------------------------------
+# 4. Semantic Macro Pruning: Unwrapping styling to reveal raw prose
+# -----------------------------------------------------------------------------
+macro_pruning:
+  drop_commands:
+    - "todo"
+    - "todonotes"
+    - "note"
+    - "comment"
+    - "draft"
+    - "annotation"
+  unwrap_commands:
+    - "textbf"
+    - "textit"
+    - "emph"
+    - "textsf"
+    - "textsc"
+    - "textsl"
+    - "underline"
+    - "textcolor"
+    - "color"
+    - "blue"
+    - "red"
+    - "green"
+    - "small"
+    - "large"
+    - "Large"
+
+# -----------------------------------------------------------------------------
+# 5. Conditional Evaluation
+# -----------------------------------------------------------------------------
+conditional_evaluation:
+  simplify_static_branches: true
+  unknown_conditionals: "preserve"
+
+# -----------------------------------------------------------------------------
+# 6. Provenance & Diagnostics
+# -----------------------------------------------------------------------------
+provenance:
+  emit_ledger: true
+  rle_compression: true
+  track_tombstones: true

@@ -1,0 +1,90 @@
+# bindings/engine/core_latex.yaml
+# =============================================================================
+# Core LaTeX 2e / TeX primitives and format constructs.
+# Active in all LaTeX documents by default.
+# =============================================================================
+
+identity:
+  name: core_latex
+  tier: engine_kernel
+  source_reference: "LaTeX 2e Kernel (latex.ltx) / TeX.pool"
+  description: "Core primitives and structural boundaries active across all documents"
+
+reading:
+  # Lexical and catcode mutators that alter subsequent character tokenization
+  catcode_mutators:
+    - name: "\\makeatletter"
+      action: "assign_catcode"
+      target_char: "@"
+      category: 11  # CatCode.LETTER
+      scope: local
+
+    - name: "\\makeatother"
+      action: "assign_catcode"
+      target_char: "@"
+      category: 12  # CatCode.OTHER
+      scope: local
+
+    - name: "\\catcode"
+      action: "assign_catcode_dynamic"
+      syntax: "char_number '='? category_number"
+      scope: local
+
+    - name: "\\ExplSyntaxOn"
+      action: "expl3_lexical_enter"
+      overrides:
+        "@": 11
+        "_": 11
+        ":": 11
+        " ": 9   # IGNORE
+        "\t": 9  # IGNORE
+        "~": 10  # SPACE
+      scope: local
+
+    - name: "\\ExplSyntaxOff"
+      action: "expl3_lexical_exit"
+      scope: local
+
+  # Scoping and grouping primitives
+  grouping:
+    - name: "\\begingroup"
+      action: "push_lexical_scope"
+    - name: "\\endgroup"
+      action: "pop_lexical_scope"
+    - name: "{"
+      action: "push_lexical_scope"
+    - name: "}"
+      action: "pop_lexical_scope"
+
+  # Static condition evaluation and branch elimination
+  conditionals:
+    - name: "\\iftrue"
+      evaluation: always_true
+    - name: "\\iffalse"
+      evaluation: always_false
+    - name: "\\newif"
+      syntax: "\\if{name}"
+      registers: boolean_switch
+    - name: "\\else"
+      action: "conditional_alternative"
+    - name: "\\fi"
+      action: "conditional_terminator"
+
+  # Structural file inclusion directives (handled during preflight/inlining)
+  inclusions:
+    - name: "\\input"
+      syntax: "file_path"
+      behavior: "pure_token_splice"
+      requires_clearpage: false
+      extensions: [".tex", ""]
+
+    - name: "\\include"
+      syntax: "file_path"
+      behavior: "chapter_splice"
+      requires_clearpage: true
+      extensions: [".tex", ""]
+
+    - name: "\\subfile"
+      syntax: "file_path"
+      behavior: "strip_child_preamble"
+      extensions: [".tex", ""]

@@ -1,17 +1,10 @@
-r"""
-Knuth Reader State Machine & Non-Mutating Whitespace Normalizer for LaTeX.
+"""Heuristic comment/whitespace normalizer used by the preparation prototype.
 
-Architecture:
-  - Non-Mutating Protected Zones: Identifies verbatim and code blocks as immutable lines.
-  - Zero Mutation: Protected lines are passed through completely untouched (no sentinel placeholders).
-  - Complementary Set Processing: Normalization and Knuth FSM operations are strictly confined
-    to the complementary set of non-verbatim lines.
-  - Inline Protection: Within complementary lines, inline \verb|...| and \url{...} spans are
-    protected from comment stripping and inner space compaction.
-  - Escaped \%: Recognized directly via backslash parity without sentinel injection.
-  - Text normalization: Universal LF, preservation of decoded Unicode,
-    trailing space trimming, and canonical paragraph break capping (\n{3,} -> \n\n).
-  - Provenance Tracking: Supports line-level tracking via SourceLine and Tombstone.
+This path combines regex protection, line mutation and paragraph capping; it
+does not implement the complete TeX reader. The independent lexical core is
+tex_reader.py. Pipeline migration requires reading profiles and a source emitter,
+so merely tokenizing a whole manuscript here would not be a safe replacement.
+See DESIGN.md for the remaining Unicode, context and provenance limitations.
 """
 
 from __future__ import annotations
@@ -41,8 +34,8 @@ def knuth_normalize_provenance(
     lines: List[SourceLine]
 ) -> Tuple[List[SourceLine], List[Tombstone]]:
     """
-    Executes Knuth reader state machine and whitespace normalization on a list
-    of SourceLine objects, tracking provenance and recording dropped lines in tombstones.
+    Apply the prototype rewrites to SourceLine objects, recording tombstones.
+    SourceLine records are mutated; these are bounded heuristics, not full N/M/S.
     """
     is_protected_line = [False] * len(lines)
     in_block = False
@@ -165,9 +158,7 @@ def knuth_normalize_provenance(
 
 def knuth_normalize(text: str) -> str:
     """
-    Executes Knuth's TeX Reader State Machine and whitespace normalization
-    by partitioning the document into protected blocks (verbatim/code) and
-    applying operations strictly to the complementary set of lines.
+    Apply the heuristic pipeline normalizer to decoded source text.
     """
     clean_text = re.sub(r"\r\n|[\r\x0b\x0c\x85\u2028\u2029]", "\n", text)
     raw_lines = clean_text.splitlines(keepends=True)
