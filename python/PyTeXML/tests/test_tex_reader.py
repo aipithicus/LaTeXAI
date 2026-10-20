@@ -9,8 +9,8 @@ from pathlib import Path
 import sys
 import unittest
 
-REPO = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(REPO / "python" / "latex-extractor"))
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from tex_reader import (
     CatCode, CatcodeTable, EventKind, InvalidCharacterError, ReaderState,

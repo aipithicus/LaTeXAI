@@ -7,8 +7,9 @@ import sys
 import unittest
 import yaml
 
-REPO = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(REPO / "python" / "latex-extractor"))
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+REPO = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from policy_loader import (
     ExtractionPolicy,
@@ -103,8 +104,8 @@ class PolicyLoaderTests(unittest.TestCase):
 
 class CaptureProjectionTests(unittest.TestCase):
     def setUp(self):
-        self.capture_dir = REPO / "python" / "latex-extractor" / "capture"
-        self.bindings_dir = REPO / "python" / "latex-extractor" / "bindings"
+        self.capture_dir = PROJECT_ROOT / "capture"
+        self.bindings_dir = PROJECT_ROOT / "bindings"
 
     def test_capture_directory_structure(self):
         self.assertTrue(self.capture_dir.is_dir())
@@ -142,7 +143,7 @@ class CaptureProjectionTests(unittest.TestCase):
 
 class BindingConformanceTests(unittest.TestCase):
     def setUp(self):
-        self.bindings_dir = REPO / "python" / "latex-extractor" / "bindings"
+        self.bindings_dir = PROJECT_ROOT / "bindings"
 
     def load_binding(self, rel_path: str) -> dict:
         path = self.bindings_dir / rel_path
@@ -212,7 +213,7 @@ class BindingConformanceTests(unittest.TestCase):
         self.assertIn("escapeinside", listings["reading"]["option_resolution"]["reading_affecting_keys"])
 
     def test_generic_discard_block_profile_does_not_force_column_zero(self):
-        mouth_file = REPO / "python" / "latex-extractor" / "profiles" / "mouth" / "discard_block.yaml"
+        mouth_file = PROJECT_ROOT / "profiles" / "mouth" / "discard_block.yaml"
         with mouth_file.open(encoding="utf-8") as f:
             profile = yaml.safe_load(f)
         self.assertNotIn("requires_column_zero", profile)

@@ -7,8 +7,8 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-REPO = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(REPO / "python" / "latex-extractor"))
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from bibliography import BibliographyPreparationError, prepare_bibliography, _visible_source
 from bibtex import Database, BibTeXError, extraction_bbl
@@ -16,14 +16,14 @@ from converter import batch_convert_assets_to_svg, raster_to_svg_wrapper
 from inliner import inline_latex_tree_provenance
 from normalizer import knuth_normalize
 from pipeline import preprocess_paper
-from preflight import find_root_tex, preflight_inventory, characterize_image, run_draftmode_probe
+from preflight import find_root_tex, preflight_inventory, characterize_image
 from pruner import simplify_conditionals
 from source_io import SourceDecodingError, invalid_utf8_spans, open_source
 
 
 class PreparationTests(unittest.TestCase):
     def setUp(self):
-        scratch = REPO / "temp" / "t" / "latex-extractor"
+        scratch = PROJECT_ROOT / "temp" / "tests"
         scratch.mkdir(parents=True, exist_ok=True)
         self.temp = tempfile.TemporaryDirectory(dir=scratch)
         self.addCleanup(self.temp.cleanup)
@@ -80,14 +80,11 @@ class PreparationTests(unittest.TestCase):
         self.document(name="src/paper.tex")
         self.assertEqual(find_root_tex(str(self.root)), "src/paper.tex")
 
-    def test_nested_probe_places_records_next_to_root(self):
-        with patch("preflight.subprocess.run") as run:
-            run.return_value.returncode = 0
-            run.return_value.stdout = ""
-            run_draftmode_probe(str(self.root), "src/paper")
-        command = run.call_args.args[0]
-        self.assertIn("src/paper.tex", command)
-        self.assertIn("-output-directory=src", command)
+    def test_preflight_inventory_is_pure_python_without_subprocess(self):
+        self.document(name="src/paper.tex")
+        manifest = preflight_inventory(str(self.root), root_tex="src/paper.tex")
+        self.assertEqual(manifest.root_file, "src/paper.tex")
+        self.assertEqual(manifest.engine, "pytexml")
 
     def test_default_output_never_becomes_a_root(self):
         self.document(name="extracted/master.tex")
@@ -161,10 +158,10 @@ class PreparationTests(unittest.TestCase):
         self.assertTrue((output / "bibliography.bib").is_file())
         self.assertNotIn("\\bibliography{", text)
 
-    def test_preflight_compiler_probe_is_opt_in(self):
+    def test_preflight_compiler_probe_is_not_called(self):
         self.document()
-        with patch("preflight.run_draftmode_probe", side_effect=AssertionError("Unexpected probe")):
-            preflight_inventory(str(self.root))
+        manifest = preflight_inventory(str(self.root))
+        self.assertIsNotNone(manifest)
 
     def test_native_bibliography_needs_no_publisher_style(self):
         self.document("\\cite{key}\n\\bibliography{refs}")

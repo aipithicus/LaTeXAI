@@ -46,7 +46,7 @@ def preprocess_paper(
     output_file: Optional[str] = None,
     root_tex: Optional[str] = None,
     execute_probe: bool = False,
-    engine: str = "pdflatex",
+    engine: str = "pytexml",
     drop_commands: Optional[List[str]] = None,
     keep_content_commands: Optional[List[str]] = None,
     drop_environments: Optional[List[str]] = None,

@@ -1,20 +1,4 @@
-# =============================================================================
-# Python Package Dependencies (installed in d:\aipithicus\LaTeXAI\python\.venv)
-# =============================================================================
-# Core library for raster image introspection (dimensions, DPI, color modes)
+# image introspection (dimensions, DPI, color modes)
 pillow>=9.0.0
 pymupdf
 pyyaml
-# =============================================================================
-# External System Toolchains (Optional / Non-PIP)
-# =============================================================================
-# The preflight module automatically probes system PATH for these binaries:
-#   - pdflatex (pdfTeX engine for -draftmode single-pass dry runs)
-#   - latexmk (multi-pass build runner & dependency recorder)
-#   - bibtex  (classic bibliography engine)
-#   - biber   (biblatex bibliography engine)
-#   - tectonic (self-contained XeTeX/BibTeX engine)
-#
-# Discovery and bibliography preparation do not need a compiler.
-# Compiler probes are optional and disabled by default.
-# Discovery uses bounded lexical/regex heuristics, not a complete TeX AST.

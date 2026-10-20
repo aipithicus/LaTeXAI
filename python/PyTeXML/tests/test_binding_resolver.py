@@ -10,8 +10,8 @@ import re
 import sys
 import unittest
 
-REPO = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(REPO / "python" / "latex-extractor"))
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from binding_resolver import (
     BindingResolver,

@@ -4,7 +4,8 @@ import sys
 import unittest
 from unittest.mock import patch
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "python" / "latex-extractor"))
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from binding_resolver import (
     BindingResolver, EffectiveReadingProfile, ReaderContext, UnresolvedBindingResult,

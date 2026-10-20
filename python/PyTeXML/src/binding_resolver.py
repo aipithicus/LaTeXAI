@@ -26,8 +26,16 @@ else:
     from mouth_profiles import MouthBaseline, MouthProfiles, load_mapping
 
 
-BINDINGS_DIR = Path(__file__).resolve().parent / "bindings"
-PROFILES_DIR = Path(__file__).resolve().parent / "profiles"
+def _find_dir(name: str) -> Path:
+    current = Path(__file__).resolve().parent
+    for candidate in (current.parent / name, current / name):
+        if candidate.is_dir():
+            return candidate
+    return current.parent / name
+
+
+BINDINGS_DIR = _find_dir("bindings")
+PROFILES_DIR = _find_dir("profiles")
 
 
 class ExecutionMode(str, Enum):

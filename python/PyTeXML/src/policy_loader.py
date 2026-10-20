@@ -15,7 +15,15 @@ from typing import Any, Dict, Optional, Union
 import yaml
 
 
-POLICY_DIR = Path(__file__).resolve().parent / "policy"
+def _find_policy_dir() -> Path:
+    current = Path(__file__).resolve().parent
+    for candidate in (current.parent / "policy", current / "policy"):
+        if candidate.is_dir():
+            return candidate
+    return current.parent / "policy"
+
+
+POLICY_DIR = _find_policy_dir()
 
 
 class RoleAction(str, Enum):

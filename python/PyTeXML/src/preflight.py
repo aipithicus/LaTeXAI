@@ -20,8 +20,6 @@ import json
 import os
 from pathlib import Path
 import re
-import shutil
-import subprocess
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 try:
@@ -81,20 +79,6 @@ class BibliographyInfo:
 
 
 @dataclass
-class ToolchainInfo:
-    pdflatex_available: bool
-    latexmk_available: bool
-    bibtex_available: bool
-    biber_available: bool
-    tectonic_available: bool
-    pdflatex_path: Optional[str] = None
-    latexmk_path: Optional[str] = None
-
-    def to_dict(self) -> Dict[str, Any]:
-        return dataclasses.asdict(self)
-
-
-@dataclass
 class StyleFileInfo:
     rel_path: str
     abs_path: str
@@ -140,9 +124,6 @@ class PreflightManifest:
     base_name: str
     project_dir: str
     engine: str
-
-    # Toolchain probe
-    toolchain: ToolchainInfo
 
     # Bibliography
     bibliography: BibliographyInfo
@@ -393,80 +374,6 @@ def characterize_image(rel_path: str, abs_path: str) -> ImageAssetInfo:
     )
 
 
-# -----------------------------------------------------------------------------
-# Dry Run Execution & Recorder (.fls) Parser
-# -----------------------------------------------------------------------------
-
-def run_draftmode_probe(
-    project_dir: str,
-    base_name: str,
-    engine: str = "pdflatex",
-    timeout_sec: int = 15
-) -> Tuple[bool, str]:
-    """
-    Executes a single-pass dry run with -draftmode -recorder.
-    Does NOT output PDF pages or rasterize images.
-    Returns (success, log_output).
-    """
-    cmd = [
-        engine,
-        "-draftmode",
-        "-recorder",
-        "-interaction=nonstopmode",
-        f"{base_name}.tex"
-    ]
-    input_parent = Path(base_name).parent
-    if input_parent != Path("."):
-        cmd.insert(1, f"-output-directory={input_parent.as_posix()}")
-    try:
-        res = subprocess.run(
-            cmd,
-            cwd=project_dir,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            timeout=timeout_sec
-        )
-        return res.returncode == 0, res.stdout
-    except Exception as e:
-        return False, str(e)
-
-
-def parse_fls_records(fls_path: str, project_dir: Path) -> Set[Path]:
-    """
-    Parses a TeX -recorder .fls file and extracts all local files opened as INPUT.
-    Filters out system TeX Live / MiKTeX / global distribution files.
-    """
-    local_inputs: Set[Path] = set()
-    if not os.path.exists(fls_path):
-        return local_inputs
-
-    proj_dir_resolved = project_dir.resolve()
-
-    with open_source(fls_path) as f:
-        for line in f:
-            if not line.startswith("INPUT "):
-                continue
-            raw_path = line[6:].strip()
-            p = Path(raw_path)
-
-            if not p.is_absolute():
-                candidate = (project_dir / p).resolve()
-            else:
-                candidate = p.resolve()
-
-            # Confine to local project directory
-            try:
-                candidate.relative_to(proj_dir_resolved)
-                if candidate.exists():
-                    local_inputs.add(candidate)
-            except ValueError:
-                # System style/font file outside workspace
-                continue
-
-    return local_inputs
-
-
 def _extract_graphicspaths(content: str, p_dir: Path) -> List[Path]:
     """Extracts all search directories declared in \\graphicspath{{dir1/}{dir2/}}."""
     search_dirs = [p_dir]
@@ -603,25 +510,6 @@ def _static_scan_active_paths(p_dir: Path, root_name: str, excluded_dirs: Option
             found_paths.add(f.resolve())
 
     return found_paths
-
-
-def check_toolchain() -> ToolchainInfo:
-    """Probes whether TeX compilation binaries are available on system PATH."""
-    pdf_p = shutil.which("pdflatex")
-    mk_p = shutil.which("latexmk")
-    btx_p = shutil.which("bibtex")
-    bbr_p = shutil.which("biber")
-    tec_p = shutil.which("tectonic")
-
-    return ToolchainInfo(
-        pdflatex_available=bool(pdf_p),
-        latexmk_available=bool(mk_p),
-        bibtex_available=bool(btx_p),
-        biber_available=bool(bbr_p),
-        tectonic_available=bool(tec_p),
-        pdflatex_path=pdf_p,
-        latexmk_path=mk_p,
-    )
 
 
 def probe_style_file(rel_path: str, abs_path: str, is_active: bool) -> StyleFileInfo:
@@ -961,14 +849,13 @@ def preflight_inventory(
 
     project_dir: str,
     root_tex: Optional[str] = None,
-    engine: str = "pdflatex",
+    engine: str = "pytexml",
     execute_probe: bool = False,
     excluded_dirs: Optional[List[Path]] = None,
 ) -> PreflightManifest:
     """
     Full project characterization:
       - Automatically detects root_tex if not explicitly provided.
-      - Probes toolchain availability (pdflatex, latexmk, etc.).
       - Gathers image assets, bibliography, source topology, and package/style bindings.
     """
     p_dir = Path(project_dir).resolve()
@@ -976,10 +863,7 @@ def preflight_inventory(
     if not p_dir.exists():
         raise FileNotFoundError(f"Project directory does not exist: {project_dir}")
 
-    # 1. Probe Toolchain
-    toolchain = check_toolchain()
-
-    # 2. Resolve root .tex file dynamically
+    # 1. Resolve root .tex file dynamically
     if root_tex is None:
         resolved_root_name = find_root_tex(str(p_dir), excluded_dirs)
     else:
@@ -991,29 +875,17 @@ def preflight_inventory(
         resolved_root_name = root_path.relative_to(p_dir).as_posix()
 
     base_name = Path(resolved_root_name).stem
-
-    # 3. Run compiler dry-run probe only if requested AND pdflatex is installed
-    if execute_probe and toolchain.pdflatex_available:
-        run_draftmode_probe(str(p_dir), str(Path(resolved_root_name).with_suffix("")), engine=engine)
-
     root_path = p_dir / resolved_root_name
-    fls_path = root_path.with_suffix(".fls")
     aux_path = root_path.with_suffix(".aux")
     bcf_path = root_path.with_suffix(".bcf")
     bbl_path = root_path.with_suffix(".bbl")
 
-    # 4. Parse active inputs recorded by engine (with static fallback)
-    active_paths = {p for p in parse_fls_records(str(fls_path), p_dir)
-                    if not excluded_path(p, p_dir, excluded_dirs)}
-    root_resolved = (p_dir / resolved_root_name).resolve()
+    # 2. Parse active inputs recorded via static taxonomy walk
+    active_paths = _static_scan_active_paths(p_dir, resolved_root_name, excluded_dirs)
+    root_resolved = root_path.resolve()
     active_paths.add(root_resolved)
 
-    # If compiler probe didn't run or .fls was absent, use the static scanner.
-    if len(active_paths) == 1:
-        static_found = _static_scan_active_paths(p_dir, resolved_root_name, excluded_dirs)
-        active_paths.update(static_found)
-
-    # 5. Classify Bibliography
+    # 3. Classify Bibliography
     bib_info = _characterize_bibliography(p_dir, base_name, aux_path, bcf_path, bbl_path, active_paths)
 
     # 6. Categorize active files vs. local files on disk
@@ -1078,17 +950,7 @@ def preflight_inventory(
     has_tikz = any("tikz" in s.rel_path.lower() for s in local_styles_info) or any(pkg.name == "tikz" for pkg in packages_declared)
     has_minted = any(pkg.name == "minted" for pkg in packages_declared)
     has_listings = any(pkg.name == "listings" for pkg in packages_declared)
-    has_tikz_external = False
-
-    if os.path.exists(fls_path):
-        with open_source(fls_path) as f:
-            fls_content = f.read()
-            if "tikz.sty" in fls_content:
-                has_tikz = True
-            if "tikzlibraryexternal" in fls_content:
-                has_tikz_external = True
-            if "minted.sty" in fls_content:
-                has_minted = True
+    has_tikz_external = any(pkg.name == "tikz" and "external" in pkg.options for pkg in packages_declared)
     # 11. Upfront detection of implicit rendered graphics (assetless floats, CD, drawings)
     implicit_graphics = detect_implicit_graphics(p_dir, sorted(active_tex))
     has_implicit = len(implicit_graphics) > 0
@@ -1099,7 +961,6 @@ def preflight_inventory(
         base_name=base_name,
         project_dir=str(p_dir),
         engine=engine,
-        toolchain=toolchain,
         bibliography=bib_info,
         active_images=active_images,
         dormant_images=sorted(dormant_images),

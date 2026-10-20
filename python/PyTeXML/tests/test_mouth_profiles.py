@@ -5,8 +5,8 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-REPO = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(REPO / "python/latex-extractor"))
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from binding_resolver import BindingResolver
 from character_rules import CharacterRule, ProfileError, compile_layer
@@ -157,7 +157,7 @@ class MouthIntegrationTests(unittest.TestCase):
 
 class ProfileLoadingTests(unittest.TestCase):
     def setUp(self):
-        root = REPO / "temp/python/tests"
+        root = PROJECT_ROOT / "temp/tests"
         root.mkdir(parents=True, exist_ok=True)
         self.temp = tempfile.TemporaryDirectory(dir=root)
         self.addCleanup(self.temp.cleanup)
