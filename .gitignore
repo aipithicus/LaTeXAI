@@ -3,6 +3,10 @@
 *.bak
 **/\#*
 **/\.\#*
+
+__pycache__/
+
+
 # Old Makefiles
 Makefile.old
 private/

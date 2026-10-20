@@ -157,7 +157,7 @@ class MouthIntegrationTests(unittest.TestCase):
 
 class ProfileLoadingTests(unittest.TestCase):
     def setUp(self):
-        root = REPO / "temp/t/latex-extractor"
+        root = REPO / "temp/python/tests"
         root.mkdir(parents=True, exist_ok=True)
         self.temp = tempfile.TemporaryDirectory(dir=root)
         self.addCleanup(self.temp.cleanup)

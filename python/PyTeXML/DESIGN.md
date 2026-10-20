@@ -182,6 +182,12 @@ sequence, static discovery algorithm, asset planning and measurable I/O checks.
 
 ## Independent lexical reader
 
+The [source span engine specification](../../../aipithicus-issues/LaTeXAI/briefs/source-span-engine.md)
+defines the next integration layer: context-qualified spans, YAML-selected
+structural/literal handlers, a shared reader cursor, staged dependency resolution,
+and checked rewrite materialization. It distinguishes current foundations from
+proposed APIs and implementation milestones.
+
 `tex_reader.py` supplies a dependency-free, in-memory character reader. It is a
 new foundation, not yet the normalizer used by the preparation pipeline.
 
@@ -337,11 +343,11 @@ automatic lint/repair is not implemented in this patch.
 
 ## Verification
 
-The focused Python drivers are `t/latex-extractor/test_preprocessing.py` for the
-existing pipeline and `t/latex-extractor/test_tex_reader.py` for lexical conformance:
+The focused Python drivers are `python/tests/test_preprocessing.py` for the
+existing pipeline and `python/tests/test_tex_reader.py` for lexical conformance:
 
 ```powershell
-& python/.venv/Scripts/python.exe -B -m unittest discover -s t/latex-extractor -p 'test_*.py' -v
+& python/.venv/Scripts/python.exe -B -m unittest discover -s python/tests -p 'test_*.py' -v
 ```
 
 The generate/emit/embed test rejects any attempted subprocess invocation. Other
@@ -349,7 +355,7 @@ tests cover native bibliography syntax and parent relationships, repeated
 input/cycles, nested roots, output exclusion on reruns, bibliography failures,
 strict decoding, valid Unicode preservation, dimension/conversion errors,
 overlapping deletions and paragraph preservation. Runtime files live under
-`temp/t/latex-extractor/`; temporary fixture directories are cleaned up.
+`temp/python/tests/`; temporary fixture directories are cleaned up.
 
 Reader fixtures cover all 48 state/category combinations, boundary and EOF
 cases, comments versus spaces, mutable categories, classic caret notation and
