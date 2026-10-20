@@ -3,7 +3,7 @@ LaTeX-Extractor: Preflight discovery, inlining, pruning, Knuth normalization,
 SVG asset conversion, provenance tracking, and replication package generator.
 """
 
-from .preflight import (
+from .src.preflight import (
     preflight_inventory,
     find_root_tex,
     check_toolchain,
@@ -16,22 +16,22 @@ from .preflight import (
     PackageUsage,
     ToolchainInfo,
 )
-from .pruner import (
+from .src.pruner import (
     prune_latex,
     prune_latex_provenance,
     simplify_conditionals,
     strip_macro_with_args,
     strip_environment,
 )
-from .inliner import (
+from .src.inliner import (
     inline_latex_tree,
     inline_latex_tree_provenance,
 )
-from .normalizer import (
+from .src.normalizer import (
     knuth_normalize,
     knuth_normalize_provenance,
 )
-from .converter import (
+from .src.converter import (
     pdf_to_svg,
     raster_to_svg_wrapper,
     convert_asset_to_svg,
@@ -39,13 +39,13 @@ from .converter import (
     rewrite_tex_image_references,
     rewrite_lines_image_references,
 )
-from .provenance import (
+from .src.provenance import (
     ProvenanceLedger,
     ProvenanceRun,
     SourceLine,
     Tombstone,
 )
-from .policy_loader import (
+from .src.policy_loader import (
     ExtractionPolicy,
     RoleAction,
     EventAction,
@@ -54,7 +54,7 @@ from .policy_loader import (
     ProvenancePolicy,
     load_policy,
 )
-from .binding_resolver import (
+from .src.binding_resolver import (
     BindingResolver,
     ReaderContext,
     ExecutionMode,
@@ -66,9 +66,9 @@ from .binding_resolver import (
     SpanClassification,
     InterpolationRule,
 )
-from .pipeline import preprocess_paper
-from .character_rules import CharacterRule, CatcodeLayer, ProfileError
-from .mouth_profiles import MouthProfiles, MouthBaseline
+from .src.pipeline import preprocess_paper
+from .src.character_rules import CharacterRule, CatcodeLayer, ProfileError
+from .src.mouth_profiles import MouthProfiles, MouthBaseline
 
 __all__ = [
     "preflight_inventory",
