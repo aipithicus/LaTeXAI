@@ -1,7 +1,7 @@
 """Structural execution routing over one source-preserving reader cursor.
 
 Execute only resolved local reading effects in an established active context.
-Literal grammar is delegated to LiteralScanner. Definition collection, conditional
+Literal and stored-definition grammar is delegated to dedicated scanners. Conditional
 execution, package discovery, expansion and master.tex assembly remain outside
 this slice. Unsupported behavior leaves a located boundary and unchanged residue.
 """
@@ -13,8 +13,9 @@ from typing import Iterator
 from .context import ExecutionMode, ReaderContext
 from .contracts import (
     EffectiveReadingProfile, LiteralRegion, ReadingBoundary, ReadingIssue,
-    ReadingKnowledge, require_resolved,
+    ReadingKnowledge, StoredDefinition, require_resolved,
 )
+from .definition_scanner import DefinitionScanner
 from .literal_scanner import LiteralScanner
 from .tex_reader import CatCode, EventKind, InvalidCharacterError, ReadEvent, SourceSpan, TexReader, TokenKind
 
@@ -37,6 +38,7 @@ class StructuralDispatcher:
 
     def __init__(self, reader: TexReader, context: ReaderContext, knowledge: ReadingKnowledge):
         self.literals = LiteralScanner(reader, context, knowledge)
+        self.definitions = DefinitionScanner(reader, context)
         self.reader, self.context, self.knowledge = reader, context, knowledge
         self._base_scope_depth = context.scope_depth
         self._groups: list[_GroupFrame] = []
@@ -54,7 +56,7 @@ class StructuralDispatcher:
         if not condition:
             raise ReadingIssue(reason, detail)
 
-    def next_item(self) -> ReadEvent | LiteralRegion | ReadingBoundary | None:
+    def next_item(self) -> ReadEvent | LiteralRegion | StoredDefinition | ReadingBoundary | None:
         if self.halted or self._finished:
             return None
         reader, context = self.reader, self.context
@@ -77,9 +79,18 @@ class StructuralDispatcher:
                                       remainder_start=len(reader.text))
             self._finished = True
             return None
-        if event.kind != EventKind.TOKEN or event.token is None:
+        if event.token is None:
             return event
         token = event.token
+        definition = context.lookup_definition(token.value, token.kind)
+        if definition is not None:
+            return self._boundary(event.span, "stored_macro",
+                                  f"Stored macro {token.value!r} requires interpretation; defined at "
+                                  f"{definition.span.source_id}:{definition.span.start}")
+        if event.kind != EventKind.TOKEN:
+            # Implicit paragraph tokens normally pass through, but a stored
+            # redefinition must block that route just like an explicit command.
+            return event
         if token.kind == TokenKind.ACTIVE_CHARACTER:
             return self._boundary(event.span, "active_character", "Active character meaning is unresolved")
         if token.catcode in {CatCode.MATH_SHIFT, CatCode.ALIGNMENT_TAB}:
@@ -97,6 +108,10 @@ class StructuralDispatcher:
             if token.kind != TokenKind.CONTROL_SEQUENCE:
                 return event
             profile = require_resolved(self.knowledge.resolve_command(token.value))
+            if profile.family == "stored_definition":
+                definition = self.definitions.read(event.span.start, profile)
+                context.record_definition(definition)
+                return definition
             if profile.action is not None:
                 self._effect(profile, event.span)
                 return event
@@ -107,6 +122,12 @@ class StructuralDispatcher:
                               "unsupported_literal_grammar", "Only literal braced environment names are supported")
                 with context.argument_scanning():
                     name = self._environment_name()
+                # The direct environment route must respect author redefinitions
+                # of the entry/exit commands as well as of the opener itself.
+                for command in (name, "end" + name):
+                    meaning = context.lookup_definition(command)
+                    self._require(meaning is None, "stored_macro",
+                                  f"Environment command {command!r} has a stored definition")
                 profile = require_resolved(self.knowledge.resolve_environment(name))
                 self._require(profile.grammar.get("handler") == "token_delimited"
                               and profile.grammar.get("arity") == 0,
@@ -168,6 +189,6 @@ class StructuralDispatcher:
             name.append(token.value)
         raise ReadingIssue("unclosed_header", "Environment name has no closing brace")
 
-    def __iter__(self) -> Iterator[ReadEvent | LiteralRegion | ReadingBoundary]:
+    def __iter__(self) -> Iterator[ReadEvent | LiteralRegion | StoredDefinition | ReadingBoundary]:
         while (item := self.next_item()) is not None:
             yield item

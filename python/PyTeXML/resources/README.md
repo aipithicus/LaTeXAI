@@ -48,7 +48,7 @@ the core binding. Its `context_effect` status means an immediate state helper
 exists; `scanner` describes an implemented in-memory grammar handler; `deferred`
 means a scanner/dispatcher is still required. These statuses do not imply
 integration into preparation. The registry currently covers catcode mutators,
-grouping, inclusions and the initial literal grammar, not all future TeX operations.
+grouping, inclusions and the initial literal/definition grammars, not all future TeX operations.
 
 All runtime loaders use the duplicate-key-rejecting [YAML loader](../src/yaml_io.py).
 Each owner validates its current contract. Mouth profiles validate inheritance and

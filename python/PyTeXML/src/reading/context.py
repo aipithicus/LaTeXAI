@@ -1,11 +1,14 @@
-"""Document-local execution mode and scoped lexical state."""
+"""Document-local execution mode, lexical state, and stored definitions."""
 from __future__ import annotations
 from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import Enum
 from typing import Iterator
-from .contracts import EffectiveReadingProfile, MouthBaseline
-from .tex_reader import CatCode, CatcodeTable
+from .contracts import EffectiveReadingProfile, MouthBaseline, StoredDefinition
+from .tex_reader import CatCode, CatcodeTable, TokenKind
+
+
+DefinitionKey = tuple[TokenKind, str]
 
 
 class ExecutionMode(str, Enum):
@@ -30,7 +33,7 @@ class _ScopeSnapshot:
 
 
 class ReaderContext:
-    """Immediate lexical state; source dispatch and global assignments live above it.
+    """Scoped reading state; source dispatch and global assignments live above it.
 
     Literal callers establish a lexical_scope(), enter the resolved profile, and
     restore it on exit. A live TexReader can share catcodes; the caller must also
@@ -48,6 +51,10 @@ class ReaderContext:
         self.expl3_saved_catcodes: dict[str, CatCode] = {}
         self.expl3_saved_endlinechar = self.endlinechar
         self._scope_stack: list[_ScopeSnapshot] = []
+        self._definitions: dict[DefinitionKey, StoredDefinition] = {}
+        # Journal only changed meanings, avoiding a copy of every definition at
+        # each group (including temporary literal scopes).
+        self._definition_scopes: list[dict[DefinitionKey, StoredDefinition | None]] = []
 
     def _snapshot(self) -> _ScopeSnapshot:
         return _ScopeSnapshot(self.catcodes.copy(), self.endlinechar,
@@ -65,7 +72,24 @@ class ReaderContext:
         ctx = ReaderContext(baseline=self.baseline, mode=self.mode)
         ctx._restore(self._snapshot())
         ctx._scope_stack = [saved.copy() for saved in self._scope_stack]
+        ctx._definitions = dict(self._definitions)
+        ctx._definition_scopes = [dict(saved) for saved in self._definition_scopes]
         return ctx
+
+    def lookup_definition(self, name: str, kind: TokenKind = TokenKind.CONTROL_SEQUENCE) -> StoredDefinition | None:
+        """Active characters and same-spelled control symbols have distinct meanings."""
+        return self._definitions.get((kind, name))
+
+    def record_definition(self, definition: StoredDefinition) -> None:
+        """Publish a completed local definition, called by active execution routing."""
+        if self.mode != ExecutionMode.ACTIVE_EXECUTION:
+            raise ValueError("Definitions can only be installed in active execution")
+        key = (definition.target.kind, definition.target.value)
+        if self._definition_scopes:
+            saved = self._definition_scopes[-1]
+            if key not in saved:
+                saved[key] = self._definitions.get(key)
+        self._definitions[key] = definition
 
     @contextmanager
     def execution_mode(self, mode: ExecutionMode) -> Iterator[None]:
@@ -93,6 +117,7 @@ class ReaderContext:
 
     def push_scope(self) -> None:
         self._scope_stack.append(self._snapshot())
+        self._definition_scopes.append({})
 
     @property
     def scope_depth(self) -> int:
@@ -103,6 +128,11 @@ class ReaderContext:
         if not self._scope_stack:
             return False
         self._restore(self._scope_stack.pop())
+        for key, previous in self._definition_scopes.pop().items():
+            if previous is None:
+                self._definitions.pop(key, None)
+            else:
+                self._definitions[key] = previous
         return True
 
     @contextmanager

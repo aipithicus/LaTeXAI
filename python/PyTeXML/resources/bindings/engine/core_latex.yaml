@@ -8,11 +8,31 @@
 identity:
   name: core_latex
   tier: engine_kernel
-  source_reference: "base/latex.ltx / l3kernel/l3bootstrap.dtx"
+  source_reference: "TeX82 tex.web (get_r_token / scan_toks) / base/latex.ltx / l3kernel/l3bootstrap.dtx"
   description: "Core primitives, catcode mutators, reader parameters, and structural boundaries"
 
 reading:
   commands:
+    # TeX82 scan_toks/get_r_token: only the local, non-expanding form is
+    # executable in the initial structural dispatcher. Other forms resolve to
+    # explicit contracts which the scanner declines before reading arguments.
+    - name: "\\def"
+      family: stored_definition
+      scope: local
+      grammar: {handler: primitive_definition, expansion: none}
+    - name: "\\gdef"
+      family: stored_definition
+      scope: global
+      grammar: {handler: primitive_definition, expansion: none}
+    - name: "\\edef"
+      family: stored_definition
+      scope: local
+      grammar: {handler: primitive_definition, expansion: full}
+    - name: "\\xdef"
+      family: stored_definition
+      scope: global
+      grammar: {handler: primitive_definition, expansion: full}
+
     - name: "\\begin"
       family: environment_open
       grammar:

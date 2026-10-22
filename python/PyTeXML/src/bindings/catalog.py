@@ -112,6 +112,12 @@ class BindingCatalog:
                     handler = grammar["handler"]
                     if not isinstance(handler, str) or handler not in self.reading_handlers:
                         raise ProfileError(f"{path}: unknown grammar handler {handler!r} for {name}")
+                if spec.get("family") == "stored_definition":
+                    if (set(grammar) != {"handler", "expansion"}
+                            or grammar.get("handler") != "primitive_definition"
+                            or grammar.get("expansion") not in ("none", "full")
+                            or spec.get("scope") not in ("local", "global")):
+                        raise ProfileError(f"{path}: {name} requires a primitive definition grammar, expansion and scope")
                 if section in ("catcode_mutators", "grouping", "inclusions"):
                     action = spec.get("behavior" if section == "inclusions" else "action")
                     if not isinstance(action, str) or action not in self.reading_handlers:

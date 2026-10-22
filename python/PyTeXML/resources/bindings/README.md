@@ -12,7 +12,7 @@ Bindings are strictly partitioned into two tiers to prevent engine primitives an
 python/PyTeXML/resources/bindings/
 ├── README.md
 ├── engine/                       # Core LaTeX 2e / TeX primitives (always active)
-│   ├── core_latex.yaml           # Environment opener, inclusions, grouping, catcodes, conditionals
+│   ├── core_latex.yaml           # Definitions, environment opener, inclusions, grouping, catcodes, conditionals
 │   └── verbatim.yaml             # Authoritative kernel verbatim & \verb specification
 └── packages/                     # Activated dynamically via \usepackage / \RequirePackage
     ├── alltt.yaml                # Semi-verbatim environment (\ and { } retained)
@@ -111,7 +111,7 @@ There is no macro expansion or native-engine fallback here.
 
 `resolver.new_context("latex_ascii")` constructs a context from the loaded YAML
 baseline. `ReaderContext` applies immediate local effects and restores scoped catcodes,
-`endlinechar`, and expl3 saved state. Repeated `\ExplSyntaxOn` reapplies its
+`endlinechar`, expl3 saved state, and stored local definitions. Repeated `\ExplSyntaxOn` reapplies its
 assignments while preserving the saved baseline. `StructuralDispatcher` owns active
 execution routing, source group pairing, the supported environment header scan,
 and synchronization of a live reader's `endline_char`. Literal profile entry/exit
@@ -167,3 +167,43 @@ arguments, and literal bodies never route their apparent effects or group tokens
 Reading result records and the narrow `ReadingKnowledge` protocol live in
 [contracts.py](../../src/reading/contracts.py). This remains a preparation-oriented
 execution surface, not the future expansion or asynchronous binding contract.
+
+## 7. Stored primitive definitions
+
+Commands in the `stored_definition` family declare `scope: local|global` and
+`grammar: {handler: primitive_definition, expansion: none|full}`. The catalog
+validates these fields; the resolver preserves them without applying the
+declaration. `StructuralDispatcher` delegates the local, non-expanding form to
+[DefinitionScanner](../../src/reading/definition_scanner.py). Global or expanding
+forms are rejected before scanning arguments. This vocabulary describes the
+current primitive forms, not a schema for arbitrary definition factories.
+
+The scanner implements the parameter/body collection rules from TeX82's
+`get_r_token` and non-expanding `scan_toks` in
+[tex.web](https://github.com/TeX-Live/texlive-source/blob/trunk/texk/web2c/tex.web).
+It accepts a control sequence or active-character target, consecutive parameters
+1–9, delimited parameter text, balanced category-driven body groups, doubled
+parameter markers, and the special parameter-ending `#{` form. Group and parameter
+characters follow their current categories; parameter numbers require OTHER-category
+ASCII digits. It reports malformed input without TeX's token-insertion repairs.
+
+`StoredDefinition` holds original opening/body/closing and parameter-text spans,
+the target token, raw parameter/body token tuples, parameter count and optional
+`hash_brace` token. The tuples preserve lexical input: `##` is not collapsed,
+references are not substituted, and the hash brace is not synthesized into the
+body. They are not yet an expansion-ready replacement list. Token occurrence
+spans and categories remain valid after later lexical changes.
+
+The scanner reads in `STORED_DEFINITION` mode and returns a capture without
+resolving or executing body commands or publishing a definition. Only the
+dispatcher installs a successful capture. Context scope journals restore prior
+meanings without copying every stored definition at each group. Active characters
+and same-spelled control symbols have separate keys. Failed captures leave prior
+meanings intact and preserve the declaration's source as boundary residue.
+
+Lookup checks stored meanings before selecting binding handlers, including implicit
+paragraph tokens and the entry/exit commands of a directly dispatched environment.
+A stored invocation currently stops at an explicit boundary; deciding whether it
+is reading-neutral requires later analysis. This is lexical capture and scoped
+shadowing, not complete TeX meaning validation: prefix/outer/protected semantics,
+LaTeX declaration wrappers, global assignments and expansion remain future work.

@@ -80,7 +80,7 @@ tested foundations, not yet integrated into that pipeline. Projection YAMLs have
 runtime consumer, and the handler registry does not execute handlers. Its
 `context_effect` entries describe state helpers routed for supported local effects; `deferred` entries
 require future dispatch/scanning work; `scanner` entries describe the initial
-in-memory literal handlers.
+in-memory literal and definition handlers.
 
 All runtime YAML loaders reject duplicate keys through the shared strict loader.
 Policies validate their fields and action values. Catalog loading checks binding
@@ -101,7 +101,7 @@ reader = TexReader(source, source_id="paper.tex", occurrence_id=0,
                    catcodes=context.catcodes, endline_char=context.endlinechar)
 dispatcher = StructuralDispatcher(reader, context, resolver)
 for item in dispatcher:
-    # ReadEvent, LiteralRegion, or a final ReadingBoundary; no source edits.
+    # ReadEvent, LiteralRegion, StoredDefinition, or a final ReadingBoundary.
     ...
 ```
 
@@ -112,6 +112,24 @@ It applies resolved local reading effects (`\makeatletter`, `\makeatother`,
 kinds. Mismatched or unmatched closers produce a diagnostic without popping a
 scope. Group exit restores lexical settings in place, preserving cursor state.
 Directives and group tokens retain their original `ReadEvent` spans.
+
+For local `\def`, the dispatcher delegates to
+[DefinitionScanner](src/reading/definition_scanner.py), then installs the completed
+`StoredDefinition` in the context. YAML selects the primitive grammar, assignment
+scope, and expansion requirement. The scanner collects parameter text and a
+balanced body under `STORED_DEFINITION`; body commands, apparent literals, nested
+definitions and input commands do not execute. Captures retain exact source spans
+and definition-time tokens, including catcodes and `^^` occurrence spans. Parameter
+numbers are checked, but `##` pairs stay uncompiled and the special `#{` rule is
+recorded explicitly for later interpretation. No body is serialized and retokenized.
+
+Local definitions shadow bindings immediately and restore on matching group exit.
+A scope journals only the meanings changed in that scope. A stored macro invocation
+is a located boundary, including redefined literal commands and environment
+entry/exit commands; it cannot silently invoke the previous binding. This increment
+captures declarations, without classifying their eventual reading effects or
+expanding their invocations. Expanding/global forms (`\edef`, `\xdef`, `\gdef`),
+prefixes, and LaTeX wrappers such as `\newcommand` remain unsupported boundaries.
 
 The dispatcher delegates kernel `\verb`, `\verb*`, `verbatim`, and `verbatim*`
 to [LiteralScanner](src/reading/literal_scanner.py). Literal scanners have no
@@ -133,7 +151,8 @@ checkpoint to rewind executed directives. Successful group/literal exit never
 restores the cursor to its entry state.
 
 This is not yet a whole-document structural parser. Unknown commands, active
-meanings, definitions, conditionals, computed environment names, math/alignment
+meanings, unsupported definitions, stored macro invocations, conditionals,
+computed environment names, math/alignment
 structure and unsupported package literal grammars return a located
 `ReadingBoundary` and halt this scan. Its `remainder` covers unchanged source not
 already emitted by preceding items. At EOF an unclosed group diagnostic points to

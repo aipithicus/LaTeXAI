@@ -136,6 +136,36 @@ class ResourceLoadingTests(unittest.TestCase):
                 with self.assertRaises(ProfileError):
                     BindingCatalog(self.bindings)
 
+    def test_definition_contract_requires_explicit_supported_fields(self):
+        valid = {"name": r"\example", "family": "stored_definition", "scope": "local",
+                 "grammar": {"handler": "primitive_definition", "expansion": "none"}}
+        for changed in ({"scope": "unknown"}, {"scope": None},
+                        {"grammar": {"handler": "primitive_definition"}},
+                        {"grammar": {"handler": "primitive_definition", "expansion": False}},
+                        {"grammar": {"handler": "primitive_definition", "expansion": "none", "extra": True}},
+                        {"grammar": {"handler": "inline_character", "expansion": "none"}}):
+            with self.subTest(changed=changed):
+                self.core["reading"] = {"commands": [valid | changed]}
+                self.write("engine/core.yaml", self.core)
+                with self.assertRaisesRegex(ProfileError, "requires a primitive definition grammar"):
+                    BindingCatalog(self.bindings)
+
+    def test_definition_contract_is_resolved_from_yaml_without_losing_scope_or_expansion(self):
+        from src.bindings.resolver import BindingResolver
+        from src.reading.contracts import UnresolvedBindingResult
+
+        resolver = BindingResolver()
+        for name, scope, expansion in (("def", "local", "none"), ("gdef", "global", "none"),
+                                        ("edef", "local", "full"), ("xdef", "global", "full")):
+            with self.subTest(name=name):
+                profile = resolver.resolve_command(name)
+                self.assertEqual(profile.family, "stored_definition")
+                self.assertEqual(profile.state_management.scope, scope)
+                self.assertEqual(profile.grammar, {"handler": "primitive_definition", "expansion": expansion})
+                self.assertIsInstance(resolver.resolve_command(name, {"unexpected": True}), UnresolvedBindingResult)
+        resolver.resolve_command("def").grammar["expansion"] = "full"
+        self.assertEqual(resolver.resolve_command("def").grammar["expansion"], "none")
+
     def test_handler_registry_rejects_executable_and_unknown_fields(self):
         data = load_mapping(HANDLERS_PATH)
         data["handlers"]["assign_catcode"]["python_import"] = "example.run"

@@ -1,4 +1,4 @@
-# Handler vocabulary for core effects, inclusions and initial literal grammar.
+# Handler vocabulary for core effects, inclusions, literal and definition grammar.
 # Command names, syntax, scope and effects belong to bindings. This is capability
 # metadata, not an executable dispatch table. No Python symbols are imported from
 # YAML. A scanner status does not imply preparation-pipeline integration.
@@ -7,6 +7,9 @@ identity:
   description: "Reading actions and their current implementation boundary"
 
 handlers:
+  primitive_definition:
+    status: scanner
+    description: "Capture local unexpanded primitive definitions; global and expanding forms remain boundaries"
   environment_name:
     status: scanner
     description: "Read a literal braced environment name without expansion"

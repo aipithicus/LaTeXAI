@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Protocol
 from .character_rules import CatcodeLayer
-from .tex_reader import CatcodeTable, SourceSpan
+from .tex_reader import CatcodeTable, SourceSpan, Token
 
 
 @dataclass(frozen=True, slots=True)
@@ -115,6 +115,29 @@ class LiteralRegion:
     body: SourceSpan
     closing: SourceSpan
     name: str
+    binding_id: str
+
+
+@dataclass(frozen=True, slots=True)
+class StoredDefinition:
+    """A lexical capture, not an expanded or compiled replacement list.
+
+    Tokens retain definition-time categories and source occurrences. In particular,
+    doubled parameter markers remain two tokens. ``hash_brace`` records TeX's
+    special parameter-ending marker plus opening brace; a later compiler must
+    account for that brace in both the delimiter and replacement list.
+    opening/body/closing partition span; parameter_text lies within opening.
+    """
+    span: SourceSpan
+    opening: SourceSpan
+    parameter_text: SourceSpan
+    body: SourceSpan
+    closing: SourceSpan
+    target: Token
+    parameter_tokens: tuple[Token, ...]
+    body_tokens: tuple[Token, ...]
+    parameter_count: int
+    hash_brace: Token | None
     binding_id: str
 
 
