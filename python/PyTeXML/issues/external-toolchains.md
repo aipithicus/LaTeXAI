@@ -1,36 +1,57 @@
-Viewed preflight.py:1000-1080
-Viewed preflight.py:500-550
+# PyTeXML native processing and dependencies
 
-Your assessment is spot on. Leaning on external compilers (`pdflatex`, `latexmk`, `bibtex`, etc.) was a **crutch inherited from the limitations of tools like `arxiv-latex-cleaner`, `arxiv_collector`, and `latexpand`**.
+PyTeXML is developing its own discovery, reader dispatch, binding resolution and
+preparation pipeline. It is temporarily hosted in LaTeXAI while that design and
+its bindings mature. Self-sufficient processing with a small dependency set is
+the architectural direction, including the work still to be implemented.
 
-### 1. Why Those Tools Needed External Compilers
-Those tools lacked a TeX lexer or reader. Because they relied on naive regular expressions, they constantly failed on:
-- Commented-out inputs: `% \input{appendix.tex}`
-- Verbatim code snippets: `\begin{lstlisting}\input{foo}\end{lstlisting}`
-- Conditional blocks: `\iffalse \input{dead} \fi`
+## Current dependency boundary
 
-To circumvent those failures without writing an engine, they delegated discovery to the TeX compiler itself via `pdflatex -draftmode -recorder`, which emits a `.fls` file listing every file opened by the TeX engine during compilation.
+[requirements.txt](../requirements.txt) declares three Python packages:
 
-### 2. Why PyTeXML Makes External Toolchains Obsolete
-The entire reason you built [tex_reader.py](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/tex_reader.py) and the declarative [bindings/](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/bindings/) is so **Python can comprehend the source stream directly**:
+- PyYAML loads the declarative profiles, bindings and policies.
+- Pillow supplies raster image inspection, including dimensions.
+- PyMuPDF supplies PDF inspection and PDF-page export to SVG.
 
-1. **Infallible Input Discovery**: Because [tex_reader.py](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/tex_reader.py) tracks CatCodes and boundary states, it natively distinguishes a real `\input` from a commented `% \input` or a literal `\input` inside a Python code block. No `.fls` recorder or 4GB TeX Live installation is needed.
-2. **Bibliography Handling**: [bibliography.py](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/bibliography.py) and [bibtex.py](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/bibtex.py) already extract, parse, and inline existing `.bbl` files and `.bib` entries natively in Python.
-3. **Asset Characterization**: [pillow](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/requirements.txt#L5) and [pymupdf](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/requirements.txt#L6) are self-contained C-extension wheels that handle raster dimension reading and PDF-to-SVG vector rasterization without requiring system Inkscape or Ghostscript.
+These are library dependencies, including native implementations where supplied
+by those packages. The preparation path does not invoke `pdflatex`, `latexmk`,
+`bibtex`, `biber`, Tectonic or the Perl LaTeXML engine. Compiler probes and
+recorder-file discovery have been removed from [preflight.py](../src/preflight.py).
+The remaining `engine` and `execute_probe` arguments do not enable such a probe.
 
-### 3. Cleanup Actions to Complete the In-Housing
+## Implemented foundations
 
-To make PyTeXML explicitly 100% self-contained and remove the vestigial toolchain baggage:
+- Discovery currently uses PyTeXML's static source traversal. Its coverage is
+  bounded; removing the compiler path does not by itself establish complete
+  dependency closure.
+- [tex_reader.py](../src/tex_reader.py) implements incremental N/M/S token reading
+  with supplied catcodes, physical-line behavior and source spans.
+  [binding_resolver.py](../src/binding_resolver.py) resolves declarative reading
+  profiles and supported effects. These are foundations for native dispatch;
+  the current discovery and normalization paths do not yet consume them.
+- [bibliography.py](../src/bibliography.py) and [bibtex.py](../src/bibtex.py)
+  prepare supported classic BBLs and generate a canonical extraction bibliography
+  from supported BibTeX data without running an external bibliography processor.
+- [converter.py](../src/converter.py) exports PDF pages to SVG and embeds raster
+  data in SVG wrappers. Raster wrapping is not vectorization. Unsupported asset
+  conversion remains an explicit error; the package does not copy all original
+  assets as a fallback.
 
-1. **Clean [requirements.txt](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/requirements.txt)**:
-   Remove lines 8–20 referencing `pdflatex`, `latexmk`, `bibtex`, `biber`, and `tectonic`. The file should strictly list the pure pip dependencies:
-   ```text
-   pillow>=9.0.0
-   pymupdf
-   pyyaml
-   ```
+## Continuing the native implementation
 
-2. **Deprecate / Prune Compiler Probes in [preflight.py](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/preflight.py)**:
-   - Retire [run_draftmode_probe()](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/preflight.py#L400-L432) and the `execute_probe` argument.
-   - Retire [check_toolchain()](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/preflight.py#L608-L625) and [ToolchainInfo](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/preflight.py#L83-L94) (or simplify it if you only wanted passive diagnostic logging).
-   - Remove reliance on stale `.fls` files in [preflight.py:L1006](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/preflight.py#L1006), making the pure Python AST/reader traversal the primary and only discovery mechanism.
+The next integration work connects source traversal to the reader, scoped state,
+YAML-selected structural and literal handlers, and dependency requests. That is
+how discovery will distinguish active inputs from source inside comments,
+literals, stored definitions and skipped branches under the supported reading
+context. A catcode-aware token reader alone does not establish all those contexts.
+
+Package knowledge belongs in bindings; author definitions contribute runtime
+knowledge. Unsupported reading effects must produce explicit unresolved results
+with preserved source, rather than a claim of infallible discovery or a silent
+fallback to an external compiler. Ordinary macro expansion and XML interpretation
+remain later stages.
+
+This work continues through PyTeXML's own parsing components and bindings. The
+[preparation contract](DESIGN.md) and
+[span-engine design](../../../../aipithicus-issues/LaTeXAI/briefs/source-span-engine.md)
+describe the stages and their acceptance criteria.

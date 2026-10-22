@@ -1,4 +1,4 @@
-# LaTeX Extractor: preparation contract
+# PyTeXML: preparation contract
 
 ## Purpose
 
@@ -70,10 +70,12 @@ Discovery excludes `extracted/`, the caller's actual output directory, and the
 existing `.git/`, `artifacts/`, and `build/` exclusions. An output directory cannot
 equal or contain the source project.
 
-Preparation and standalone preflight default to static traversal. The existing
-compiler probe requires `execute_probe=True`; normal preparation has no compiler
-dependency. Optional engine validation is a separate observation, not a fallback
-for missing native bibliography support.
+Preparation and standalone preflight use native static discovery. External
+compiler probes and recorder-file discovery have been removed. The currently
+accepted `engine` and `execute_probe` arguments do not enable an external compiler.
+PyTeXML will develop its own reader dispatch and dependency resolution; that work
+does not require restoring an external toolchain. See the
+[native-processing direction](external-toolchains.md).
 
 Source text is decoded as UTF-8 strictly. A decoding failure identifies the file
 and every malformed byte span (original offset and hex bytes), aborts preparation,
@@ -182,7 +184,7 @@ sequence, static discovery algorithm, asset planning and measurable I/O checks.
 
 ## Independent lexical reader
 
-The [source span engine specification](../../../aipithicus-issues/LaTeXAI/briefs/source-span-engine.md)
+The [source span engine specification](../../../../aipithicus-issues/LaTeXAI/briefs/source-span-engine.md)
 defines the next integration layer: context-qualified spans, YAML-selected
 structural/literal handlers, a shared reader cursor, staged dependency resolution,
 and checked rewrite materialization. It distinguishes current foundations from
@@ -218,7 +220,7 @@ contract. Invalid-category characters raise a persistent explicit error.
 This module does not execute catcode assignments, expand macros, recognize
 literal environments or serialize cleaned source. Those are consumers of the
 reader. A binding/profile dispatcher must establish literal modes; a later
-execution layer supplies scoped meanings and input/token stacks. Calling
+execution layer supplies scoped meanings and input/token stacks.
 Iterating a configured `TexReader` does not automatically interpret commands in
 that source. Its category table and `endline_char` are required constructor inputs.
 The existing `normalizer.py` remains the heuristic pipeline path until those
@@ -242,7 +244,7 @@ it does not expand regexes into an enumerated Unicode table.
 
 Bootstrap with `resolver.new_context("latex_ascii")`, then pass its `catcodes`
 and `endlinechar` to `TexReader`. Baseline and literal configuration share the
-same regex-rule contract, described in [the mouth profile reference](profiles/mouth/README.md).
+same regex-rule contract, described in [the mouth profile reference](../profiles/mouth/README.md).
 Inheritance and later effects overlay earlier layers in execution order; explicit
 assignments override regex rules within a layer. Unknown fields, invalid patterns,
 duplicate keys/identities and invalid numeric assignments produce configuration
@@ -281,11 +283,12 @@ reproduced additional gaps outside that coverage: same-line inclusion loses
 neighboring text or subsequent inputs; a commented end marker can truncate
 content; missing inputs can become comments that disappear before a SUCCESS
 result; stale recorder files can suppress static asset discovery; and distinct
-assets with the same stem can overwrite one SVG destination. SUCCESS therefore
-does not yet establish source/payload closure. These are actionable prototype
-defects, not reasons to wait for bulk binding migration. The
-[cleanup checkpoint](../../../aipithicus-issues/LaTeXAI/reports/compiler-research/prototype-cleanup-20260929.md)
-records witnesses, immediate patch order and structural follow-up.
+assets with the same stem can overwrite one SVG destination. That historical
+snapshot did not establish source/payload closure. Subsequent cleanup removed
+recorder-file discovery; the other findings still need dedicated verification
+and fixes. The
+[cleanup checkpoint](../../../../aipithicus-issues/LaTeXAI/reports/compiler-research/prototype-cleanup-20260929.md)
+records those witnesses, immediate patch order and structural follow-up.
 
 - Inlining still needs shared lexical context for comments, literal regions,
   command spans, definitions and conditionals. The repeated-input fix does not
@@ -296,8 +299,8 @@ records witnesses, immediate patch order and structural follow-up.
 - A blank paragraph after a swallowed comment newline is preserved. This local
   repair does not qualify general whitespace normalization or style-file
   cleanup under arbitrary catcodes.
-- Discovery remains heuristic. Local transitive dependencies, stale recorder
-  files and dynamic paths need explicit resolution evidence.
+- Discovery remains heuristic. Local transitive dependencies and dynamic paths
+  need explicit resolution evidence from PyTeXML's own reading machinery.
 - The provenance ledger counts tagged fragments as output lines even when edits
   join or split physical lines. Sequence alignment also guesses some origins.
   It must be replaced by emission-time span bookkeeping before exact diagnostic
@@ -318,7 +321,7 @@ author styles and definitions are handled dynamically. The required knowledge
 stores include core-operation contracts, a default catcode profile used to
 initialize mutable document-local state, and reusable literal-reading profiles.
 Their interfaces and pass interactions are investigated in the
-[source-preparation survey](../../../aipithicus-issues/LaTeXAI/briefs/source-preparation-survey/README.md).
+[source-preparation survey](../../../../aipithicus-issues/LaTeXAI/briefs/source-preparation-survey/README.md).
 That design work does not block the bounded cleanup above.
 
 It also does not block foundational engineering: source spans, an incremental
@@ -343,11 +346,13 @@ automatic lint/repair is not implemented in this patch.
 
 ## Verification
 
-The focused Python drivers are `python/tests/test_preprocessing.py` for the
-existing pipeline and `python/tests/test_tex_reader.py` for lexical conformance:
+The focused Python drivers are [test_preprocessing.py](../tests/test_preprocessing.py)
+for the existing pipeline and [test_tex_reader.py](../tests/test_tex_reader.py)
+for lexical conformance. Run the suite from the PyTeXML project root with a Python
+environment containing the dependencies in [requirements.txt](../requirements.txt):
 
 ```powershell
-& python/.venv/Scripts/python.exe -B -m unittest discover -s python/tests -p 'test_*.py' -v
+python -B -m unittest discover -s tests -p 'test_*.py' -v
 ```
 
 The generate/emit/embed test rejects any attempted subprocess invocation. Other
@@ -355,7 +360,7 @@ tests cover native bibliography syntax and parent relationships, repeated
 input/cycles, nested roots, output exclusion on reruns, bibliography failures,
 strict decoding, valid Unicode preservation, dimension/conversion errors,
 overlapping deletions and paragraph preservation. Runtime files live under
-`temp/python/tests/`; temporary fixture directories are cleaned up.
+the project's `temp/tests/`; temporary fixture directories are cleaned up.
 
 Reader fixtures cover all 48 state/category combinations, boundary and EOF
 cases, comments versus spaces, mutable categories, classic caret notation and
