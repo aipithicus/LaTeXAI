@@ -1,11 +1,7 @@
-"""Strict source decoding and output-aware project enumeration."""
-
+"""Strict source decoding with located malformed-byte diagnostics."""
 from __future__ import annotations
-
 import io
-import os
 from pathlib import Path
-from typing import Iterable, Iterator
 
 
 class SourceDecodingError(ValueError):
@@ -50,21 +46,3 @@ def open_source(path: Path | str) -> io.StringIO:
             "Specify a verified source encoding before transcoding; no bytes were discarded."
         ) from exc
     return io.StringIO(text.replace("\r\n", "\n").replace("\r", "\n"))
-
-
-def excluded_path(path: Path, project_dir: Path, excluded_dirs: Iterable[Path] = ()) -> bool:
-    roots = [project_dir / name for name in (".git", "artifacts", "build", "extracted")]
-    roots.extend(Path(p) for p in excluded_dirs)
-    resolved = path.resolve()
-    return any(resolved.is_relative_to(root.resolve()) for root in roots)
-
-
-def project_files(project_dir: Path, excluded_dirs: Iterable[Path] = ()) -> Iterator[Path]:
-    """Enumerate deterministically without descending into generated output."""
-    for directory, dirs, files in os.walk(project_dir):
-        base = Path(directory)
-        dirs[:] = sorted(d for d in dirs if not excluded_path(base / d, project_dir, excluded_dirs))
-        for name in sorted(files):
-            path = base / name
-            if not excluded_path(path, project_dir, excluded_dirs):
-                yield path

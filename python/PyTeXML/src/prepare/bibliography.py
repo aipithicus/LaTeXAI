@@ -10,10 +10,11 @@ from __future__ import annotations
 from pathlib import Path
 import re
 
-from .preflight import PreflightManifest
+from .manifest import BibliographyInfo, PreflightManifest
 from .provenance import SourceLine, Tombstone
 from ..source_io import open_source
-from ..bibtex import Database, BibTeXError, extraction_bbl
+from ..bibtex import Database, BibTeXError
+from typing import List, Set
 
 
 class BibliographyPreparationError(ValueError):
@@ -173,3 +174,181 @@ def prepare_bibliography(
             result.append(SourceLine(text[cursor:end], line.src_file, line.src_line, line.op))
         offset = end
     return result, tombstones
+
+
+def _clean_bib_entry(b: str) -> str:
+    b = b.strip()
+    if not b:
+        return ""
+    return b if b.lower().endswith(".bib") else f"{b}.bib"
+
+
+def _characterize_bibliography(
+    p_dir: Path,
+    base_name: str,
+    aux_path: Path,
+    bcf_path: Path,
+    bbl_path: Path,
+    active_paths: Set[Path]
+) -> BibliographyInfo:
+    """Classifies bibliography structure, multi-database declarations, and tracks citation volume."""
+    bbl_exists = bbl_path.exists()
+    bib_files: List[str] = []
+    citations_count = 0
+    root_tex = bbl_path.with_suffix(".tex")
+
+    # 1. BibLaTeX detection via .bcf
+    if bcf_path.exists():
+        with open_source(bcf_path) as f:
+            bcf_text = f.read()
+            citations_count = len(re.findall(r"<bcf:citekey", bcf_text))
+            bib_matches = re.findall(r"<bcf:datasource[^>]*>([^<]+)</bcf:datasource>", bcf_text)
+            for m in bib_matches:
+                cleaned = _clean_bib_entry(m)
+                if cleaned and cleaned not in bib_files:
+                    bib_files.append(cleaned)
+
+        missing_bibs = [b for b in bib_files if not (p_dir / b).exists()]
+
+        return BibliographyInfo(
+            kind="BIBLATEX",
+            backend="biber",
+            bbl_path=bbl_path.as_posix() if bbl_exists else None,
+            bbl_exists=bbl_exists,
+            bbl_needed=not bbl_exists,
+            bib_files=bib_files,
+            missing_bib_files=missing_bibs,
+            citations_count=citations_count
+        )
+
+    # 2. Classic BibTeX / Natbib detection via .aux
+    if aux_path.exists():
+        with open_source(aux_path) as f:
+            for line in f:
+                if line.startswith(r"\citation{"):
+                    citations_count += 1
+                elif line.startswith(r"\bibdata{"):
+                    raw = line[9:].rstrip("}\n\r")
+                    for b in raw.split(","):
+                        cleaned = _clean_bib_entry(b)
+                        if cleaned and cleaned not in bib_files:
+                            bib_files.append(cleaned)
+
+    # 3. Static fallback: scan root .tex source if .aux was missing or didn't find bibdata
+    if not bib_files and root_tex.exists():
+        with open_source(root_tex) as f:
+            tex_content = f.read()
+
+        # Check for multi-bib \bibliography{chaos, ref, sub/more}
+        bib_matches = re.finditer(r"\\bibliography\s*\{([^}]+)\}", tex_content)
+        for m in bib_matches:
+            raw_inside = re.sub(r"%.*", "", m.group(1))
+            for piece in raw_inside.split(","):
+                cleaned = _clean_bib_entry(piece)
+                if cleaned and cleaned not in bib_files:
+                    bib_files.append(cleaned)
+
+        # Check for biblatex \addbibresource
+        res_matches = re.finditer(r"\\addbibresource(?:\s*\[[^\]]*\])?\s*\{([^}]+)\}", tex_content)
+        is_biblatex_source = False
+        for m in res_matches:
+            is_biblatex_source = True
+            raw_inside = re.sub(r"%.*", "", m.group(1))
+            cleaned = _clean_bib_entry(raw_inside)
+            if cleaned and cleaned not in bib_files:
+                bib_files.append(cleaned)
+
+        if is_biblatex_source:
+            missing_bibs = [b for b in bib_files if not (p_dir / b).exists()]
+            return BibliographyInfo(
+                kind="BIBLATEX",
+                backend="biber",
+                bbl_path=bbl_path.as_posix() if bbl_exists else None,
+                bbl_exists=bbl_exists,
+                bbl_needed=not bbl_exists,
+                bib_files=bib_files,
+                missing_bib_files=missing_bibs,
+                citations_count=citations_count
+            )
+
+    if bib_files:
+        missing_bibs = [b for b in bib_files if not (p_dir / b).exists()]
+        return BibliographyInfo(
+            kind="CLASSIC_BIBTEX",
+            backend="bibtex",
+            bbl_path=bbl_path.as_posix() if bbl_exists else None,
+            bbl_exists=bbl_exists,
+            bbl_needed=not bbl_exists,
+            bib_files=bib_files,
+            missing_bib_files=missing_bibs,
+            citations_count=citations_count
+        )
+
+    # 4. Check for hardcoded thebibliography in root source
+    if root_tex.exists():
+        with open_source(root_tex) as f:
+            content = f.read()
+            if r"\begin{thebibliography}" in content:
+                cites = len(re.findall(r"\\bibitem", content))
+                return BibliographyInfo(
+                    kind="EMBEDDED",
+                    backend=None,
+                    bbl_path=None,
+                    bbl_exists=False,
+                    bbl_needed=False,
+                    bib_files=[],
+                    missing_bib_files=[],
+                    citations_count=cites
+                )
+
+    # 5. Check if matching .bbl already exists on disk
+    if bbl_exists:
+        return BibliographyInfo(
+            kind="PRECOMPILED_BBL",
+            backend=None,
+            bbl_path=bbl_path.as_posix(),
+            bbl_exists=True,
+            bbl_needed=False,
+            bib_files=[],
+            missing_bib_files=[],
+            citations_count=0
+        )
+
+    return BibliographyInfo(
+        kind="NONE",
+        backend=None,
+        bbl_path=None,
+        bbl_exists=False,
+        bbl_needed=False,
+        bib_files=[],
+        missing_bib_files=[],
+        citations_count=0
+    )
+
+
+def extraction_bbl(database: Database, keys: list[str]) -> str:
+    """Serialize keyed, field-labelled content; no publisher-style emulation."""
+    entries = database.selected(keys)
+    lines = [value.resolve() for value in database.preambles]
+    lines.append(r"\begin{thebibliography}{" + str(max(1, len(entries))) + "}")
+    for entry in entries:
+        if re.search(r"[\\{}%#\s]", entry.key):
+            raise BibTeXError(f"Cannot emit nonliteral bibliography key {entry.key!r}")
+        lines.append(r"\bibitem{" + entry.key + "}")
+        lines.append(r"\textbf{entrytype}: " + _label(entry.kind) + r"\par")
+        for name, field_value in entry.fields:
+            value = field_value.resolve()
+            # Bibliographic data preserves raw URL/identifier characters.
+            # Other values remain TeX source, including grouping and math.
+            if name in ("url", "doi", "eprint") and "\\" not in value:
+                value = r"\url{" + value + "}"
+            lines.append(r"\textbf{" + _label(name) + "}: {" + value + r"}\par")
+    lines.append(r"\end{thebibliography}")
+    return "\n".join(lines) + "\n"
+
+
+def _label(text: str) -> str:
+    # Labels are data, never field-supplied TeX commands.
+    return "".join("\\" + ch if ch in "_&#%${}" else
+                   r"\textasciitilde{}" if ch == "~" else
+                   r"\textasciicircum{}" if ch == "^" else ch for ch in text)

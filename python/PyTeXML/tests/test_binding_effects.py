@@ -7,10 +7,9 @@ from unittest.mock import patch
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.bindings.resolver import (
-    BindingResolver, EffectiveReadingProfile, ReaderContext, UnresolvedBindingResult,
-    UnresolvedReason,
-)
+from src.bindings.resolver import BindingResolver
+from src.reading.contracts import EffectiveReadingProfile, UnresolvedBindingResult, UnresolvedReason
+from src.reading.context import ReaderContext
 from src.prepare.policy import load_policy
 from src.reading.tex_reader import CatCode, TexReader, TokenKind
 

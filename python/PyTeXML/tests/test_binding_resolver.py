@@ -13,14 +13,9 @@ import unittest
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.bindings.resolver import (
-    BindingResolver,
-    EffectiveReadingProfile,
-    ExecutionMode,
-    ReaderContext,
-    UnresolvedBindingResult,
-    UnresolvedReason,
-)
+from src.bindings.resolver import BindingResolver
+from src.reading.contracts import EffectiveReadingProfile, UnresolvedBindingResult, UnresolvedReason
+from src.reading.context import ExecutionMode, ReaderContext
 from src.reading.tex_reader import (
     CatCode,
     CatcodeTable,
@@ -41,7 +36,7 @@ class BindingResolverTests(unittest.TestCase):
             "inline_braced", "latex_ascii"
         ]
         for name in expected:
-            self.assertIn(name, self.resolver.profiles)
+            self.assertIn(name, self.resolver.catalog.profiles)
 
     def test_default_engine_verbatim_resolution(self):
         profile = self.resolver.resolve_environment("verbatim")

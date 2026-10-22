@@ -109,7 +109,7 @@ class MouthIntegrationTests(unittest.TestCase):
                 self.assertEqual(ctx.catcodes[" "], CatCode.ACTIVE)
                 self.assertEqual(ctx.catcodes["\t"], CatCode.ACTIVE)
                 self.assertEqual(ctx.catcodes["a"], CatCode.LETTER)
-        raw = resolver.mouth.layers("raw_block")[0].rules[0]
+        raw = resolver.catalog.mouth.layers("raw_block")[0].rules[0]
         self.assertTrue(raw.fullmatch("\\{}$&#^_~%"))
         self.assertFalse(raw.fullmatch("a"))
         self.assertFalse(raw.fullmatch(" "))
@@ -149,8 +149,8 @@ class MouthIntegrationTests(unittest.TestCase):
             self.assertEqual(list(regex.spans("a%\\b")), [(1, 3)])
 
     def test_registry_is_separate_and_wrong_baseline_kind_is_rejected(self):
-        self.assertIn("native_operations", self.resolver.operation_registries)
-        self.assertNotIn("operations", self.resolver.profiles)
+        self.assertIn("native_operations", self.resolver.catalog.operation_registries)
+        self.assertNotIn("operations", self.resolver.catalog.profiles)
         with self.assertRaisesRegex(ProfileError, "baseline_catcodes"):
             self.resolver.new_context("raw_block")
 

@@ -20,11 +20,12 @@ from pathlib import Path
 import shutil
 from typing import Dict, List, Optional, Tuple
 
-from .preflight import preflight_inventory, PreflightManifest
+from .inventory import preflight_inventory
+from .manifest import PreflightManifest
 from .pruner import prune_latex, prune_latex_provenance
 from .inliner import inline_latex_tree, inline_latex_tree_provenance
 from .normalizer import knuth_normalize, knuth_normalize_provenance
-from ..converter import batch_convert_assets_to_svg, rewrite_tex_image_references, rewrite_lines_image_references
+from .assets import batch_convert_assets_to_svg, rewrite_tex_image_references, rewrite_lines_image_references
 from .provenance import ProvenanceLedger, SourceLine, Tombstone
 from ..source_io import open_source
 from .bibliography import prepare_bibliography

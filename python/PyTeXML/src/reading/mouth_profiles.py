@@ -1,15 +1,11 @@
 """Load and validate mouth configuration once, outside the incremental reader."""
 from __future__ import annotations
-
 from copy import deepcopy
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
-
-import yaml
-
+from ..yaml_io import load_mapping
 from .character_rules import CatcodeLayer, ProfileError, compile_layer
-from .tex_reader import CatcodeTable
+from .contracts import MouthBaseline
 
 
 def overlay(*layers: dict[str, Any]) -> dict[str, Any]:
@@ -21,48 +17,6 @@ def overlay(*layers: dict[str, Any]) -> dict[str, Any]:
             else:
                 result[key] = deepcopy(value)
     return result
-
-
-class _UniqueLoader(yaml.SafeLoader):
-    pass
-
-
-def _mapping(loader: _UniqueLoader, node: yaml.MappingNode, deep: bool = False) -> dict:
-    result = {}
-    for key_node, value_node in node.value:
-        key = loader.construct_object(key_node, deep=deep)
-        try:
-            if key in result:
-                raise ProfileError(f"Duplicate YAML key {key!r} at {key_node.start_mark}")
-            result[key] = loader.construct_object(value_node, deep=deep)
-        except TypeError as error:
-            raise ProfileError(f"Invalid YAML mapping key at {key_node.start_mark}") from error
-    return result
-
-
-_UniqueLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, _mapping)
-
-
-def load_mapping(path: Path) -> dict[str, Any]:
-    try:
-        with path.open(encoding="utf-8") as stream:
-            data = yaml.load(stream, Loader=_UniqueLoader)
-    except yaml.YAMLError as error:
-        raise ProfileError(f"{path}: {error}") from error
-    if not isinstance(data, dict):
-        raise ProfileError(f"{path}: expected a YAML mapping")
-    return data
-
-
-@dataclass(frozen=True, slots=True)
-class MouthBaseline:
-    name: str
-    default: int
-    endlinechar: int
-    layers: tuple[CatcodeLayer, ...]
-
-    def new_catcodes(self) -> CatcodeTable:
-        return CatcodeTable(default=self.default, layers=self.layers)
 
 
 class MouthProfiles:
@@ -77,7 +31,7 @@ class MouthProfiles:
         if not directory.is_dir():
             raise ProfileError(f"Missing mouth profile directory: {directory}")
         for path in sorted(directory.glob("*.yaml")):
-            data = load_mapping(path)
+            data = load_mapping(path, error_type=ProfileError)
             identity = data.get("identity", {})
             if not isinstance(identity, dict):
                 raise ProfileError(f"{path}: identity must be a mapping")

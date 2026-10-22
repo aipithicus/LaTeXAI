@@ -1,252 +1,18 @@
-"""Resolve declarative reading contracts without expanding manuscript macros.
+"""Resolve reading contracts using a catalog and document-local package activation.
 
-Bindings and literal profiles are loaded once per resolver. Package activation
-is document-local and ordered; resolving an occurrence performs no file I/O.
-The result contains immediate lexical effects plus explicit argument/literal
-grammar for the future dispatcher. It does not scan source or execute factories,
-configuration commands, interpolation bodies, or dynamic TeX assignments.
+Resolution does not scan source or execute factories, configuration commands,
+interpolation bodies, or dynamic TeX assignments.
 """
 from __future__ import annotations
-
-from contextlib import contextmanager
 from copy import deepcopy
-from dataclasses import dataclass, field
-from enum import Enum
-from pathlib import Path
 import re
 from typing import Any, Iterator
-
-from ..reading.tex_reader import CatCode, CatcodeTable
-from ..reading.character_rules import CatcodeLayer, compile_layer
-from ..reading.mouth_profiles import MouthBaseline, MouthProfiles, load_mapping
-
-
-
-
-BINDINGS_DIR = Path(__file__).resolve().parents[2] / "bindings"
-PROFILES_DIR = Path(__file__).resolve().parents[2] / "profiles"
-
-
-class ExecutionMode(str, Enum):
-    ACTIVE_EXECUTION = "active_execution"
-    ARGUMENT_SCANNING = "argument_scanning"
-    STORED_DEFINITION = "stored_definition"
-    SKIPPED_BRANCH = "skipped_branch"
-
-
-class UnresolvedReason(str, Enum):
-    UNKNOWN_CONSTRUCT = "unknown_construct"
-    PACKAGE_NOT_LOADED = "package_not_loaded"
-    UNSUPPORTED_READING_OPTION = "unsupported_reading_option"
-    ARGUMENTS_REQUIRED = "arguments_required"
-    UNSUPPORTED_OPERATION = "unsupported_operation"
-    CONFLICTING_DEFINITIONS = "conflicting_definitions"
-
-
-@dataclass(frozen=True, slots=True)
-class UnresolvedBindingResult:
-    occurrence_name: str
-    reason: UnresolvedReason
-    detail: str
-    raw_options: dict[str, Any] = field(default_factory=dict)
-
-
-@dataclass(frozen=True, slots=True)
-class TerminatorRule:
-    exact_string: str
-    regex_pattern: str
-    matching_domain: str = "stream"
-    requires_column_zero: bool = False
-    trailing_content_allowed: bool = True
-    trailing_line_behavior: str = "preserve_trailing_content"
-    boundary_mode: str = "raw_delimiter"
-
-
-@dataclass(frozen=True, slots=True)
-class StateManagementRule:
-    guard_variable: str | None = None
-    repeated_call_behavior: str = "normal"
-    saved_parameters: dict[str, list[str]] = field(default_factory=dict)
-    restores_parameters: dict[str, list[str]] = field(default_factory=dict)
-    exit_behavior: str = "normal"
-    scope: str = "local"
-
-
-@dataclass(frozen=True, slots=True)
-class SpanClassification:
-    category: str
-    semantic_role: str
-
-
-@dataclass(frozen=True, slots=True)
-class InterpolationRule:
-    """A delimiter pair consumed by a literal dispatcher, not a global catcode change."""
-    opening: str
-    closing: str
-    mode: str = "tex"
-
-
-@dataclass(frozen=True, slots=True)
-class EffectiveReadingProfile:
-    """Resolved data for one occurrence; applying it is not argument/body execution."""
-    name: str
-    family: str
-    catcode_overrides: dict[str, int] = field(default_factory=dict)
-    catcode_layers: tuple[CatcodeLayer, ...] = ()
-    reader_parameters: dict[str, Any] = field(default_factory=dict)
-    tex_mechanics: dict[str, Any] = field(default_factory=dict)
-    terminator: TerminatorRule | None = None
-    state_management: StateManagementRule | None = None
-    span_classification: SpanClassification | None = None
-    source_capture: dict[str, Any] = field(default_factory=dict)
-    active_options: dict[str, Any] = field(default_factory=dict)
-    grammar: dict[str, Any] = field(default_factory=dict)
-    interpolations: tuple[InterpolationRule, ...] = ()
-    action: str | None = None
-    binding_id: str = ""
-
-
-@dataclass
-class _ScopeSnapshot:
-    catcodes: CatcodeTable
-    endlinechar: int
-    expl3_active: bool
-    expl3_saved_catcodes: dict[str, CatCode]
-    expl3_saved_endlinechar: int
-
-    def copy(self) -> _ScopeSnapshot:
-        return _ScopeSnapshot(self.catcodes.copy(), self.endlinechar,
-                              self.expl3_active, dict(self.expl3_saved_catcodes),
-                              self.expl3_saved_endlinechar)
-
-
-class ReaderContext:
-    """Immediate lexical state; source dispatch and global assignments live above it.
-
-    Literal callers establish a lexical_scope(), enter the resolved profile, and
-    restore it on exit. A live TexReader can share catcodes; the caller must also
-    synchronize endline_char before it loads subsequent physical lines.
-    """
-
-    def __init__(self, *, baseline: MouthBaseline, catcodes: CatcodeTable | None = None,
-                 endlinechar: int | None = None,
-                 mode: ExecutionMode = ExecutionMode.ACTIVE_EXECUTION):
-        self.baseline = baseline
-        self.catcodes = catcodes.copy() if catcodes is not None else baseline.new_catcodes()
-        self.endlinechar = baseline.endlinechar if endlinechar is None else endlinechar
-        self.mode = mode
-        self.expl3_active = False
-        self.expl3_saved_catcodes: dict[str, CatCode] = {}
-        self.expl3_saved_endlinechar = self.endlinechar
-        self._scope_stack: list[_ScopeSnapshot] = []
-
-    def _snapshot(self) -> _ScopeSnapshot:
-        return _ScopeSnapshot(self.catcodes.copy(), self.endlinechar,
-                              self.expl3_active, dict(self.expl3_saved_catcodes),
-                              self.expl3_saved_endlinechar)
-
-    def _restore(self, saved: _ScopeSnapshot) -> None:
-        self.catcodes.restore_from(saved.catcodes)
-        self.endlinechar = saved.endlinechar
-        self.expl3_active = saved.expl3_active
-        self.expl3_saved_catcodes = dict(saved.expl3_saved_catcodes)
-        self.expl3_saved_endlinechar = saved.expl3_saved_endlinechar
-
-    def copy(self) -> ReaderContext:
-        ctx = ReaderContext(baseline=self.baseline, mode=self.mode)
-        ctx._restore(self._snapshot())
-        ctx._scope_stack = [saved.copy() for saved in self._scope_stack]
-        return ctx
-
-    @contextmanager
-    def execution_mode(self, mode: ExecutionMode) -> Iterator[None]:
-        previous = self.mode
-        self.mode = mode
-        try:
-            yield
-        finally:
-            self.mode = previous
-
-    @contextmanager
-    def argument_scanning(self) -> Iterator[None]:
-        with self.execution_mode(ExecutionMode.ARGUMENT_SCANNING):
-            yield
-
-    @contextmanager
-    def stored_definition(self) -> Iterator[None]:
-        with self.execution_mode(ExecutionMode.STORED_DEFINITION):
-            yield
-
-    @contextmanager
-    def skipped_branch(self) -> Iterator[None]:
-        with self.execution_mode(ExecutionMode.SKIPPED_BRANCH):
-            yield
-
-    def push_scope(self) -> None:
-        self._scope_stack.append(self._snapshot())
-
-    def pop_scope(self) -> bool:
-        if not self._scope_stack:
-            return False
-        self._restore(self._scope_stack.pop())
-        return True
-
-    @contextmanager
-    def lexical_scope(self) -> Iterator[None]:
-        self.push_scope()
-        try:
-            yield
-        finally:
-            self.pop_scope()
-
-    def apply_profile(self, profile: EffectiveReadingProfile) -> bool:
-        """Apply immediate effects, not a literal scanner or command's full behavior.
-
-        Refuse unresolved results and interpolation plans rather than silently
-        presenting them as completely applied. In inactive modes nothing changes.
-        """
-        if not isinstance(profile, EffectiveReadingProfile):
-            raise TypeError("Only a resolved reading profile can be applied")
-        if self.mode != ExecutionMode.ACTIVE_EXECUTION:
-            return False
-        if profile.interpolations:
-            raise ValueError("Interpolation requires a literal dispatcher")
-        if profile.state_management and profile.state_management.scope != "local":
-            raise ValueError("Global assignments require the execution dispatcher")
-        unknown = set(profile.reader_parameters) - {"endlinechar"}
-        if unknown:
-            raise ValueError(f"Unsupported reader parameters: {sorted(unknown)}")
-
-        action = profile.action
-        if action == "push_lexical_scope":
-            self.push_scope()
-            return True
-        if action == "pop_lexical_scope":
-            return self.pop_scope()
-        if action == "expl3_lexical_exit":
-            if self.expl3_active:
-                for char, code in self.expl3_saved_catcodes.items():
-                    self.catcodes[char] = code
-                self.endlinechar = self.expl3_saved_endlinechar
-                self.expl3_saved_catcodes = {}
-                self.expl3_active = False
-            return True
-        if action == "expl3_lexical_enter" and not self.expl3_active:
-            if profile.state_management is None:
-                raise ValueError("ExplSyntaxOn requires a state management contract")
-            chars = profile.state_management.saved_parameters.get("catcodes", [])
-            self.expl3_saved_catcodes = {char: self.catcodes[char] for char in chars}
-            self.expl3_saved_endlinechar = self.endlinechar
-            self.expl3_active = True
-
-        # Repeated ExplSyntaxOn reapplies effects, without overwriting the baseline.
-        for layer in profile.catcode_layers:
-            self.catcodes.apply_layer(layer)
-        for char, code in profile.catcode_overrides.items():
-            self.catcodes[char] = code
-        if "endlinechar" in profile.reader_parameters:
-            self.endlinechar = profile.reader_parameters["endlinechar"]
-        return True
+from .catalog import BindingCatalog
+from ..reading.context import ReaderContext
+from ..reading.contracts import (
+    EffectiveReadingProfile, InterpolationRule, SpanClassification,
+    StateManagementRule, TerminatorRule, UnresolvedBindingResult, UnresolvedReason,
+)
 
 
 def _merge(*layers: dict[str, Any]) -> dict[str, Any]:
@@ -325,50 +91,20 @@ def _delimiter_pair(value: Any) -> tuple[str, str] | None:
 
 
 class BindingResolver:
-    """One in-memory registry with ordered document-local package activation."""
+    """One document's ordered package activation over reusable catalog knowledge."""
 
-    def __init__(self, bindings_dir: Path | None = None, profiles_dir: Path | None = None):
-        self.bindings_dir = bindings_dir or BINDINGS_DIR
-        self.profiles_dir = profiles_dir or PROFILES_DIR
-        self.profiles: dict[str, dict[str, Any]] = {}
-        self.engine_bindings: dict[str, dict[str, Any]] = {}
-        self.package_bindings: dict[str, dict[str, Any]] = {}
+    def __init__(self, catalog: BindingCatalog | None = None):
+        self.catalog = catalog if catalog is not None else BindingCatalog()
         self.active_packages: list[str] = []
-        self._lexical_layers: dict[str, CatcodeLayer] = {}
-        self._load_all()
-
-    @staticmethod
-    def _load_yaml(path: Path) -> dict[str, Any]:
-        return load_mapping(path)
-
-    def _load_all(self) -> None:
-        self.mouth = MouthProfiles(self.profiles_dir / "mouth")
-        self.profiles = self.mouth.profiles
-        self.operation_registries = self.mouth.registries
-        for p in sorted((self.bindings_dir / "engine").glob("*.yaml")):
-            self.engine_bindings[p.stem] = self._load_yaml(p)
-        for p in sorted((self.bindings_dir / "packages").glob("*.yaml")):
-            data = self._load_yaml(p)
-            self.package_bindings[data["identity"]["package"]] = data
-        for tier, bindings in (("engine", self.engine_bindings), ("packages", self.package_bindings)):
-            for name, data in bindings.items():
-                origin, reading = f"{tier}/{name}", data["reading"]
-                self._lexical_layers[origin] = compile_layer(reading.get("lexical_mode", {}), origin)
-                for section in ("environments", "environment_overrides", "commands", "command_overrides"):
-                    for spec in reading.get(section, []):
-                        if "profile" in spec:
-                            self.mouth.profile(spec["profile"])
-                            key = f"{origin}/{spec['name']}"
-                            self._lexical_layers[key] = compile_layer(spec.get("lexical_mode", {}), key)
 
     def new_context(self, baseline: str = "latex_ascii", **kwargs: Any) -> ReaderContext:
         """Bootstrap from already loaded YAML; subsequent reading performs no I/O."""
-        return ReaderContext(baseline=self.mouth.baseline(baseline), **kwargs)
+        return ReaderContext(baseline=self.catalog.mouth.baseline(baseline), **kwargs)
 
     def load_package(self, package_name: str) -> bool:
         """Activate once; a repeated request must not reorder prior definitions."""
         clean = package_name.strip()
-        if clean not in self.package_bindings:
+        if clean not in self.catalog.package_bindings:
             return False
         if clean not in self.active_packages:
             self.active_packages.append(clean)
@@ -379,8 +115,8 @@ class BindingResolver:
 
     def _active_bindings(self) -> Iterator[tuple[str, dict[str, Any]]]:
         for name in reversed(self.active_packages):
-            yield f"packages/{name}", self.package_bindings[name]["reading"]
-        for name, data in self.engine_bindings.items():
+            yield f"packages/{name}", self.catalog.package_bindings[name]["reading"]
+        for name, data in self.catalog.engine_bindings.items():
             yield f"engine/{name}", data["reading"]
 
     @staticmethod
@@ -390,7 +126,7 @@ class BindingResolver:
 
     def _missing(self, name: str, sections: tuple[str, ...],
                  options: dict[str, Any]) -> UnresolvedBindingResult:
-        for pkg, data in self.package_bindings.items():
+        for pkg, data in self.catalog.package_bindings.items():
             if pkg in self.active_packages:
                 continue
             if any(spec.get("name", spec.get("command")) == name
@@ -465,7 +201,7 @@ class BindingResolver:
         return self._missing(clean, sections, opts)
 
     def _profile(self, name: str) -> dict[str, Any]:
-        return self.mouth.profile(name)
+        return self.catalog.mouth.profile(name)
 
     def _resolve_options(self, name: str, options: dict[str, Any], contract: dict[str, Any]
                          ) -> tuple[dict[str, Any], dict[str, int], tuple[InterpolationRule, ...]] | UnresolvedBindingResult:
@@ -537,8 +273,8 @@ class BindingResolver:
         if isinstance(resolved, UnresolvedBindingResult):
             return resolved
         active, option_codes, interpolations = resolved
-        layers = self.mouth.layers(profile_name) + tuple(
-            layer for layer in (self._lexical_layers[origin], self._lexical_layers[f"{origin}/{name}"])
+        layers = self.catalog.mouth.layers(profile_name) + tuple(
+            layer for layer in (self.catalog.lexical_layers[origin], self.catalog.lexical_layers[f"{origin}/{name}"])
             if layer.rules or layer.assignments)
         classification = merged["span_classification"]
         category = classification.get("default_category", classification["category"])

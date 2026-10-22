@@ -11,12 +11,14 @@ the architectural direction, including the work still to be implemented.
 
 - PyYAML loads the declarative profiles, bindings and policies.
 - Pillow supplies raster image inspection, including dimensions.
-- PyMuPDF supplies PDF inspection and PDF-page export to SVG.
+- PyMuPDF supplies PDF-page export to SVG.
 
 These are library dependencies, including native implementations where supplied
 by those packages. The preparation path does not invoke `pdflatex`, `latexmk`,
 `bibtex`, `biber`, Tectonic or the Perl LaTeXML engine. Compiler probes and
-recorder-file discovery have been removed from [preflight.py](../src/prepare/preflight.py).
+recorder-file discovery have been removed from the discovery/inventory path, now
+organized as [discovery.py](../src/prepare/discovery.py) and
+[inventory.py](../src/prepare/inventory.py).
 The remaining `engine` and `execute_probe` arguments do not enable such a probe.
 
 ## Implemented foundations
@@ -26,13 +28,13 @@ The remaining `engine` and `execute_probe` arguments do not enable such a probe.
   dependency closure.
 - [tex_reader.py](../src/reading/tex_reader.py) implements incremental N/M/S token reading
   with supplied catcodes, physical-line behavior and source spans.
-  [binding_resolver.py](../src/bindings/resolver.py) resolves declarative reading
+  [resolver.py](../src/bindings/resolver.py) resolves declarative reading
   profiles and supported effects. These are foundations for native dispatch;
   the current discovery and normalization paths do not yet consume them.
 - [bibliography.py](../src/prepare/bibliography.py) and [bibtex.py](../src/bibtex.py)
   prepare supported classic BBLs and generate a canonical extraction bibliography
   from supported BibTeX data without running an external bibliography processor.
-- [converter.py](../src/converter.py) exports PDF pages to SVG and embeds raster
+- [assets.py](../src/assets.py) exports PDF pages to SVG and embeds raster
   data in SVG wrappers. Raster wrapping is not vectorization. Unsupported asset
   conversion remains an explicit error; the package does not copy all original
   assets as a fallback.

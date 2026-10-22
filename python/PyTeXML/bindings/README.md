@@ -9,7 +9,7 @@ interpretation and XML capture remain separate consumers under development.
 Bindings are strictly partitioned into two tiers to prevent engine primitives and CTAN packages from mixing concerns:
 
 ```
-python/latex-extractor/bindings/
+python/PyTeXML/bindings/
 ├── README.md
 ├── engine/                       # Core LaTeX 2e / TeX primitives (always active)
 │   ├── core_latex.yaml           # Inclusions, grouping, catcode mutators, conditionals
@@ -71,8 +71,13 @@ Downstream XML IR projections for these bindings live under mirror paths in `cap
 
 ## 4. Resolver contract
 
-`binding_resolver.py` loads YAML once per resolver and resolves occurrences in
-memory. [Mouth profiles](../profiles/mouth/README.md) contain the authoritative
+[catalog.py](../src/bindings/catalog.py) loads YAML and compiles reading knowledge
+once. A catalog can be supplied to multiple `BindingResolver(catalog)` instances;
+each resolver owns its document's package activation order and resolves occurrences
+in memory. `BindingResolver()` creates its own catalog when none is supplied.
+Reading state lives in [context.py](../src/reading/context.py), and result types
+live in [contracts.py](../src/reading/contracts.py).
+[Mouth profiles](../profiles/mouth/README.md) contain the authoritative
 regex character classes and baseline reading parameters. There is no legacy
 profile-file fallback. Resolution composes inherited profile layers, the owning
 binding's lexical settings, construct settings, and supported option effects, in

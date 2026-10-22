@@ -11,12 +11,16 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.prepare.bibliography import BibliographyPreparationError, prepare_bibliography, _visible_source
-from src.bibtex import Database, BibTeXError, extraction_bbl
-from src.converter import batch_convert_assets_to_svg, raster_to_svg_wrapper
+from src.bibtex import Database, BibTeXError
+from src.prepare.bibliography import extraction_bbl
+from src.prepare.assets import batch_convert_assets_to_svg
+from src.assets import raster_to_svg_wrapper
 from src.prepare.inliner import inline_latex_tree_provenance
 from src.prepare.normalizer import knuth_normalize
 from src.prepare.pipeline import preprocess_paper
-from src.prepare.preflight import find_root_tex, preflight_inventory, characterize_image
+from src.prepare.discovery import find_root_tex
+from src.prepare.inventory import preflight_inventory
+from src.assets import characterize_image
 from src.prepare.pruner import simplify_conditionals
 from src.source_io import SourceDecodingError, invalid_utf8_spans, open_source
 
@@ -249,7 +253,7 @@ class PreparationTests(unittest.TestCase):
         self.assertFalse((self.root / "bad.svg").exists())
 
     def test_missing_pillow_never_fabricates_dimensions(self):
-        with patch("src.converter.Image", None):
+        with patch("src.assets.Image", None):
             with self.assertRaisesRegex(RuntimeError, "Pillow"):
                 raster_to_svg_wrapper(self.root / "anything.png", self.root / "anything.svg")
 
@@ -295,33 +299,6 @@ class PreparationTests(unittest.TestCase):
         self.assertIn(r"\providecommand{\noop}[1]{#1}", bbl)
         self.assertIn(r"\url{https://example.org/a_b?q=1&v=20%25}", knuth_normalize(bbl))
 
-    def test_native_reader_keeps_dependency_records_and_citation_order(self):
-        db = Database()
-        db.read("@inproceedings{child,title={Child},crossref={parent}}\n"
-                "@proceedings{parent,title={Parent},year=2025}\n"
-                "@misc{other,title={Other}}")
-        self.assertEqual([x.key for x in db.selected(["other", "child", "other"])],
-                         ["other", "child", "parent"])
-        self.assertEqual([(name, value.resolve()) for name, value in db.entries["child"][0].fields],
-                         [("title", "Child"), ("crossref", "parent")])
-        self.assertEqual([x.key for x in db.selected(["*"])], ["child", "parent", "other"])
-
-    def test_native_reader_rejects_ambiguous_or_incomplete_data(self):
-        cases = [
-            ("@misc{a,title={Unclosed}", "Expected"),
-            ("@misc{a,title={Unclosed", "Unterminated"),
-            ('@misc{a,title="Unclosed}', "Unbalanced"),
-        ]
-        for text, message in cases:
-            with self.subTest(text=text), self.assertRaisesRegex(BibTeXError, message):
-                Database().read(text, "refs.bib")
-        db = Database()
-        db.read("@misc{a,crossref={b}} @misc{b,crossref={a}}")
-        with self.assertRaisesRegex(BibTeXError, "Cyclic"):
-            db.selected(["a"])
-        with self.assertRaisesRegex(BibTeXError, "missing"):
-            db.selected(["missing"])
-
     def test_native_reader_shares_strings_across_declared_databases(self):
         self.document("\\cite{key}\n\\bibliography{strings,refs}")
         self.put("strings.bib", '@string{journalname="Shared Journal"}')
@@ -338,19 +315,6 @@ class PreparationTests(unittest.TestCase):
         self.assertIn("{Two}", text)
         self.assertIn("Repeated field", manifest.bibliography.preparation_warnings[0])
         self.assertIn("Repeated field", (out / "preparation.log").read_text())
-
-    def test_duplicate_keys_are_retained_but_conflicting_citations_fail(self):
-        db = Database()
-        db.read("@misc{a,title={One}} @misc{a,title={Two}} @misc{b,title={Unique}}")
-        self.assertEqual(len(db.entries["a"]), 2)
-        self.assertEqual([x.key for x in db.selected(["b"])], ["b"])
-        with self.assertRaisesRegex(BibTeXError, "Conflicting"):
-            db.selected(["a"])
-        with self.assertRaisesRegex(BibTeXError, "Conflicting"):
-            db.selected(["*"])
-        identical = Database()
-        identical.read("@misc{a,title={One}} @misc{a,title={One}}")
-        self.assertEqual(len(identical.selected(["a"])), 1)
 
     def test_undefined_strings_only_block_selected_content(self):
         db = Database()

@@ -1,5 +1,9 @@
 # PyTeXML: preparation contract
 
+The [project README](../README.md) records current module locations and execution
+commands. Preparation code lives in `src/prepare/`; reusable reading machinery
+and binding resolution live in `src/reading/` and `src/bindings/`.
+
 ## Purpose
 
 Preparation turns a source project into a compact extraction package. After a
@@ -190,8 +194,9 @@ structural/literal handlers, a shared reader cursor, staged dependency resolutio
 and checked rewrite materialization. It distinguishes current foundations from
 proposed APIs and implementation milestones.
 
-`tex_reader.py` supplies a dependency-free, in-memory character reader. It is a
-new foundation, not yet the normalizer used by the preparation pipeline.
+[tex_reader.py](../src/reading/tex_reader.py) supplies a dependency-free,
+in-memory character reader. It is a new foundation, not yet the normalizer used
+by the preparation pipeline.
 
 - It implements the N/M/S transitions for all 16 catcodes, control words and
   symbols, active-character identities, ignored/invalid characters, comments,
@@ -223,28 +228,33 @@ reader. A binding/profile dispatcher must establish literal modes; a later
 execution layer supplies scoped meanings and input/token stacks.
 Iterating a configured `TexReader` does not automatically interpret commands in
 that source. Its category table and `endline_char` are required constructor inputs.
-The existing `normalizer.py` remains the heuristic pipeline path until those
-consumers and the source-preserving emitter are connected.
+The existing [normalizer.py](../src/prepare/normalizer.py) remains the heuristic
+pipeline path until those consumers and the source-preserving emitter are connected.
 
 ## Independent binding resolver
 
-`binding_resolver.py` loads the YAML registries once, then resolves occurrences
-without filesystem I/O. Active package declarations take precedence over engine
-defaults; repeated activation preserves the original load order. Effective
+[catalog.py](../src/bindings/catalog.py) loads and compiles binding/profile knowledge.
+[resolver.py](../src/bindings/resolver.py) resolves occurrences against that catalog
+without filesystem I/O. Multiple document-local resolvers can share one catalog.
+Active package declarations take precedence over engine defaults; repeated
+activation preserves the original load order. Effective
 profiles retain literal defaults, binding overrides, argument grammar, boundary
 rules and separate lexical-category/policy-role classifications.
 
-`mouth_profiles.py` loads only `profiles/mouth/`; removed profile files have no
-fallback path. `operations.yaml` is retained as a separate provisional registry,
+[mouth_profiles.py](../src/reading/mouth_profiles.py) loads only `profiles/mouth/`;
+removed profile files have no fallback path. `operations.yaml` is retained as a separate provisional registry,
 not a literal profile or a claim that its future handlers execute today. Regex
-character classes compile once into immutable layers. `character_rules.py`
-provides full-span membership and maximal-run coverage queries on a supplied
+character classes compile once into immutable layers.
+[character_rules.py](../src/reading/character_rules.py) provides full-span
+membership and maximal-run coverage queries on a supplied
 character view. The reader's table memoizes individual character classifications;
 it does not expand regexes into an enumerated Unicode table.
 
 Bootstrap with `resolver.new_context("latex_ascii")`, then pass its `catcodes`
 and `endlinechar` to `TexReader`. Baseline and literal configuration share the
 same regex-rule contract, described in [the mouth profile reference](../profiles/mouth/README.md).
+The context implementation lives in [context.py](../src/reading/context.py);
+baseline and resolved-effect types live in [contracts.py](../src/reading/contracts.py).
 Inheritance and later effects overlay earlier layers in execution order; explicit
 assignments override regex rules within a layer. Unknown fields, invalid patterns,
 duplicate keys/identities and invalid numeric assignments produce configuration

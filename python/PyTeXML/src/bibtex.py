@@ -1,4 +1,4 @@
-"""Small, dependency-free BibTeX data reader and extraction serializer.
+"""Small, dependency-free BibTeX data reader.
 
 The reader preserves TeX within field values. It does not execute TeX, interpret
 BST programs, split personal names, or apply BibLaTeX inheritance rules.
@@ -263,31 +263,3 @@ class Reader:
                 if self.text[self.pos:self.pos + 1] != closing:
                     self.take(",")
             self.database.entries.setdefault(key, []).append(Entry(kind, key, fields))
-
-
-def extraction_bbl(database: Database, keys: list[str]) -> str:
-    """Serialize keyed, field-labelled content; no publisher-style emulation."""
-    entries = database.selected(keys)
-    lines = [value.resolve() for value in database.preambles]
-    lines.append(r"\begin{thebibliography}{" + str(max(1, len(entries))) + "}")
-    for entry in entries:
-        if re.search(r"[\\{}%#\s]", entry.key):
-            raise BibTeXError(f"Cannot emit nonliteral bibliography key {entry.key!r}")
-        lines.append(r"\bibitem{" + entry.key + "}")
-        lines.append(r"\textbf{entrytype}: " + _label(entry.kind) + r"\par")
-        for name, field_value in entry.fields:
-            value = field_value.resolve()
-            # Bibliographic data preserves raw URL/identifier characters.
-            # Other values remain TeX source, including grouping and math.
-            if name in ("url", "doi", "eprint") and "\\" not in value:
-                value = r"\url{" + value + "}"
-            lines.append(r"\textbf{" + _label(name) + "}: {" + value + r"}\par")
-    lines.append(r"\end{thebibliography}")
-    return "\n".join(lines) + "\n"
-
-
-def _label(text: str) -> str:
-    # Labels are data, never field-supplied TeX commands.
-    return "".join("\\" + ch if ch in "_&#%${}" else
-                   r"\textasciitilde{}" if ch == "~" else
-                   r"\textasciicircum{}" if ch == "^" else ch for ch in text)
