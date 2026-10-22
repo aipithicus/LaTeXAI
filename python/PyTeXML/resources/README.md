@@ -16,6 +16,32 @@ reading contracts; future interpretation can extend that ownership without
 creating separate preparation copies of package knowledge. Author-local state
 belongs to document execution and is not a global YAML library.
 
+## Naming and references
+
+Every resource YAML declares an explicit local identity equal to its filename
+stem, with exact spelling and case. Use the existing schema field: `identity.name`
+for engine bindings, mouth profiles, policies and engine projections;
+`identity.package` for package bindings/projections; `identity.registry` for
+registries. For example, `engine/verbatim.yaml` declares `name: verbatim`.
+Missing or mismatched identities are configuration errors, including in custom
+policy files. Loaders share the same validation; the resource-wide test also
+checks experimental files that have no runtime consumer.
+
+Directories establish namespaces within each library. Binding references use
+qualified IDs such as `engine/verbatim` and `packages/verbatim`, without `.yaml`.
+`requires_engine` and projection `corresponds_to_binding` fields use those IDs.
+Mouth `profile` and `inherits` references already have an unambiguous mouth-profile
+namespace and use local names. Top-level filesystem locations such as `resources/`
+are not part of these IDs. Experimental projections have their own library
+namespace and reference the corresponding binding explicitly.
+
+Renaming a resource means changing its filename, declaration and references
+together; no alternate identity aliases are maintained. Names inside aggregate
+resources, such as handler keys and TeX command names, are not file identities and
+do not require separate files.
+
+## Loading boundaries
+
 Profiles do not decide which source to delete. Policies do not define catcodes.
 The handler registry does not repeat command names, syntax, scope, or effects from
 the core binding. Its `context_effect` status means an immediate state helper

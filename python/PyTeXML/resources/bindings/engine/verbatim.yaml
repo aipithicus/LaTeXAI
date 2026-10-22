@@ -6,7 +6,7 @@
 # =============================================================================
 
 identity:
-  name: verbatim_core
+  name: verbatim
   tier: engine_kernel
   source_reference: "base/ltmiscen.dtx"
   description: "Authoritative specification for core LaTeX kernel verbatim environments and commands"

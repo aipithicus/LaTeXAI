@@ -11,7 +11,7 @@ identity:
   package: fancyvrb
   version: "4.7"
   tier: ctan_package
-  requires_engine: verbatim_core
+  requires_engine: engine/verbatim
   source_reference: "lib-ctan/fancyvrb/tex/latex/fancyvrb/fancyvrb.sty"
   description: "Sophisticated verbatim facilities with key-value options, reading-affecting parameters, and environment factories"
 

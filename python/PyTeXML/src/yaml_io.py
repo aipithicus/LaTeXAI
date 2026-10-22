@@ -1,4 +1,4 @@
-"""Strict YAML mapping loading; resource-specific schemas stay with their owners."""
+"""Strict YAML loading and resource identities; domain schemas stay with their owners."""
 from __future__ import annotations
 from pathlib import Path
 from typing import Any
@@ -40,3 +40,22 @@ def load_mapping(path: Path, *, error_type: type[ValueError] = ValueError) -> di
     if not isinstance(data, dict):
         raise error_type(f"{path}: expected a YAML mapping")
     return data
+
+
+def validate_resource_identity(data: dict[str, Any], path: Path, *, key: str = "name",
+                               error_type: type[ValueError] = ValueError) -> str:
+    """Require one resource's declared local identity to equal its filename stem.
+
+    The caller supplies the schema's identity field and owns the namespace.
+    This validates already loaded data; it performs no additional file I/O and
+    does not constrain names of entries inside aggregate registries.
+    """
+    identity = data.get("identity")
+    if not isinstance(identity, dict):
+        raise error_type(f"{path}: identity must be a mapping")
+    name = identity.get(key)
+    if not isinstance(name, str) or not name:
+        raise error_type(f"{path}: identity.{key} must be a nonempty string")
+    if name != path.stem:
+        raise error_type(f"{path}: identity.{key} {name!r} must match filename stem {path.stem!r}")
+    return name

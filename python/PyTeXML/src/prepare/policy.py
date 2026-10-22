@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, Union
-from ..yaml_io import load_mapping
+from ..yaml_io import load_mapping, validate_resource_identity
 
 
 POLICY_DIR = Path(__file__).resolve().parents[2] / "resources" / "policies"
@@ -96,7 +96,8 @@ def load_policy(policy_identifier_or_path: Union[str, Path]) -> ExtractionPolicy
     Load the named 'prepare' preset or an explicit policy file.
 
     Experimental policies require an explicit path and are never searched as
-    presets. Missing fields use the dataclass defaults; supplied fields are strict.
+    presets. A matching identity.name is required; omitted action/settings fields
+    use the dataclass defaults and supplied fields are strict.
     """
     if isinstance(policy_identifier_or_path, str) and policy_identifier_or_path == "prepare":
         path = POLICY_DIR / "prepare.yaml"
@@ -108,8 +109,8 @@ def load_policy(policy_identifier_or_path: Union[str, Path]) -> ExtractionPolicy
     raw = load_mapping(path)
     _validate_policy(raw, path)
 
-    ident = raw.get("identity", {})
-    name = ident.get("name", path.stem)
+    name = validate_resource_identity(raw, path)
+    ident = raw["identity"]
     target = ident.get("target", "unknown")
     desc = ident.get("description", "")
 

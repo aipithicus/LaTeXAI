@@ -6,7 +6,20 @@ import unittest
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 REPO = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(PROJECT_ROOT))
-from src.yaml_io import load_mapping
+from src.yaml_io import load_mapping, validate_resource_identity
+
+
+class ResourceIdentityTests(unittest.TestCase):
+    def test_all_yaml_resources_follow_the_filename_identity_rule(self):
+        resources = PROJECT_ROOT / "resources"
+        paths = sorted(resources.rglob("*.yaml"))
+        self.assertTrue(paths)
+        for path in paths:
+            with self.subTest(resource=path.relative_to(resources)):
+                data = load_mapping(path)
+                key = ("registry" if path.parent.name == "registries" else
+                       "package" if path.parent.name == "packages" else "name")
+                self.assertEqual(validate_resource_identity(data, path, key=key), path.stem)
 
 
 class ExperimentalProjectionTests(unittest.TestCase):
@@ -20,24 +33,19 @@ class ExperimentalProjectionTests(unittest.TestCase):
         self.assertTrue((self.capture_dir / "packages").is_dir())
 
     def test_capture_files_correspond_to_bindings(self):
-        expected_mirrors = [
-            ("engine", "verbatim.yaml"),
-            ("packages", "comment.yaml"),
-            ("packages", "verbatim.yaml"),
-            ("packages", "fancyvrb.yaml"),
-            ("packages", "listings.yaml"),
-            ("packages", "alltt.yaml"),
-        ]
-        for sub, name in expected_mirrors:
-            cap_file = self.capture_dir / sub / name
-            bind_file = self.bindings_dir / sub / name
-            self.assertTrue(cap_file.is_file(), f"Missing capture mirror: {cap_file}")
-            self.assertTrue(bind_file.is_file(), f"Missing binding file: {bind_file}")
-
-            data = load_mapping(cap_file)
-            self.assertIn("identity", data)
-            self.assertIn("projections", data)
-            self.assertEqual(data["identity"]["corresponds_to_binding"], f"{sub}/{name.replace('.yaml', '')}")
+        projections = sorted(self.capture_dir.rglob("*.yaml"))
+        self.assertTrue(projections)
+        for cap_file in projections:
+            with self.subTest(projection=cap_file):
+                relative = cap_file.relative_to(self.capture_dir)
+                bind_file = self.bindings_dir / relative
+                self.assertTrue(bind_file.is_file(), f"Missing binding file: {bind_file}")
+                key = "package" if relative.parts[0] == "packages" else "name"
+                data = load_mapping(cap_file)
+                self.assertEqual(validate_resource_identity(data, cap_file, key=key),
+                                 validate_resource_identity(load_mapping(bind_file), bind_file, key=key))
+                self.assertIn("projections", data)
+                self.assertEqual(data["identity"]["corresponds_to_binding"], relative.with_suffix("").as_posix())
 
     def test_bindings_are_purified_of_semantics(self):
         """Verifies that no binding file retains the downstream 'semantics' projection section."""

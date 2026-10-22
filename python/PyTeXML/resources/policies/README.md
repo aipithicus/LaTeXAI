@@ -82,5 +82,7 @@ selected by a short name and are never loaded by default.
 The shared YAML loader rejects duplicate keys and non-mapping roots. The policy
 loader rejects unknown sections/fields, malformed mappings, invalid actions and
 non-boolean provenance flags (including strings such as `"false"`). Omitted fields
-retain the typed configuration's defaults. New semantic role names are allowed;
-an unconfigured role still defaults to `preserve`.
+other than `identity.name` retain the typed configuration's defaults.
+`identity.name` is required and must exactly equal the filename stem, including for
+explicit custom or experimental files. New semantic role names are allowed; an
+unconfigured role still defaults to `preserve`.

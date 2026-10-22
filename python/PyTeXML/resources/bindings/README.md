@@ -68,9 +68,10 @@ Every binding file defines:
   * `external_verbatim_resource` (e.g. `\verbatiminput`): external file transclusions in literal mode.
 
 Experimental projections reference binding-relative IDs such as `engine/verbatim`
-and `packages/listings`. These paths are separate from logical identities such as
-`verbatim_core`, which existing `requires_engine` declarations reference. The
-projections are not the final PyTeXML XML schema.
+and `packages/listings`. Local identities match filename stems; the containing
+tier supplies the namespace. `requires_engine: engine/verbatim` references the
+engine binding whose local name is `verbatim`. The projections are not the final
+PyTeXML XML schema.
 
 ## 4. Resolver contract
 
@@ -78,9 +79,10 @@ projections are not the final PyTeXML XML schema.
 once. A catalog can be supplied to multiple `BindingResolver(catalog)` instances;
 each resolver owns its document's package activation order and resolves occurrences
 in memory. `BindingResolver()` creates its own catalog when none is supplied.
-The catalog rejects duplicate identities/construct names, malformed consumed
-sections, and missing profile/engine references. Engine filename IDs and logical
-identities remain distinct; package filenames match their package identities.
+The catalog rejects missing/mismatched filename identities, duplicate
+identities/construct names, malformed consumed sections, and missing profile/engine
+references. Engine and package bindings follow the same filename rule. Engine
+dependencies use qualified `engine/<name>` IDs; bare names and aliases are rejected.
 `catcode_mutators.action`, `grouping.action`, and `inclusions.behavior` reference
 the [handler vocabulary](../registries/reading_handlers.yaml). That vocabulary
 contains no duplicated command declarations and imports no executable code.

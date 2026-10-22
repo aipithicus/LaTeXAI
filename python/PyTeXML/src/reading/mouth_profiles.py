@@ -3,7 +3,7 @@ from __future__ import annotations
 from copy import deepcopy
 from pathlib import Path
 from typing import Any
-from ..yaml_io import load_mapping
+from ..yaml_io import load_mapping, validate_resource_identity
 from .character_rules import CatcodeLayer, ProfileError, compile_layer
 from .contracts import MouthBaseline
 
@@ -36,9 +36,9 @@ class MouthProfiles:
                 raise ProfileError(f"{path}: identity must be a mapping")
             if "registry" in identity:
                 raise ProfileError(f"{path}: registries do not belong in mouth profiles")
-            name = identity.get("name")
-            if not isinstance(name, str) or not name or name in self.profiles:
-                raise ProfileError(f"{path}: missing or duplicate identity {name!r}")
+            name = validate_resource_identity(data, path, error_type=ProfileError)
+            if name in self.profiles:
+                raise ProfileError(f"{path}: duplicate identity {name!r}")
             self.profiles[name] = data
         if not self.profiles:
             raise ProfileError(f"No mouth profiles found in {directory}")

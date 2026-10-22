@@ -68,8 +68,10 @@ and intended consumer:
 
 Use `load_policy("prepare")` for the preparation preset. Experimental policies
 require an explicit file path. The old `preflight`/`compact` names and old resource
-directories have no compatibility fallback. Binding identities and regex reading
-rules are preserved.
+directories have no compatibility fallback. Resource identities match filename
+stems, with directories supplying namespaces; see the
+[naming convention](resources/README.md#naming-and-references). Regex reading rules
+are unchanged.
 
 The preparation pipeline still uses its existing discovery and rewrite routines.
 The reader, binding resolver, and policy loader are independently tested

@@ -188,10 +188,10 @@ lexical_mode:
         with self.assertRaisesRegex(ProfileError, "Duplicate YAML key"):
             MouthProfiles(self.directory)
 
-    def test_duplicate_profile_names_are_rejected(self):
+    def test_profile_identity_must_match_filename(self):
         for name in ("one.yaml", "two.yaml"):
             self.write(name, "identity: {name: same, category: inline_literal}\n")
-        with self.assertRaisesRegex(ProfileError, "duplicate identity"):
+        with self.assertRaisesRegex(ProfileError, "identity.name.*must match filename stem"):
             MouthProfiles(self.directory)
 
     def test_missing_and_cyclic_inheritance_are_rejected(self):

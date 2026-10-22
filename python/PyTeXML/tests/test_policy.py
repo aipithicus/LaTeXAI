@@ -47,12 +47,25 @@ class PolicyLoaderTests(unittest.TestCase):
         scratch.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(dir=scratch) as directory:
             path = Path(directory) / "minimal.yaml"
-            path.write_text("{}", encoding="utf-8")
+            path.write_text("identity: {name: minimal}", encoding="utf-8")
             policy = load_policy(path)
         self.assertEqual(policy.name, "minimal")
         self.assertEqual(policy.get_role_action("new_role"), "preserve")
         self.assertTrue(policy.should_preserve_line_continuation())
         self.assertTrue(policy.provenance.emit_ledger)
+
+    def test_custom_policy_requires_a_matching_declared_identity(self):
+        scratch = PROJECT_ROOT / "temp/tests"
+        scratch.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=scratch) as directory:
+            path = Path(directory) / "custom.yaml"
+            for source, error in (("{}", "identity must be a mapping"),
+                                  ("identity: {}", "identity.name must be a nonempty string"),
+                                  ("identity: {name: alias}", "must match filename stem")):
+                with self.subTest(source=source):
+                    path.write_text(source, encoding="utf-8")
+                    with self.assertRaisesRegex(ValueError, error):
+                        load_policy(path)
 
     def test_all_preset_policies_exist_and_load(self):
         presets = ["prepare"]

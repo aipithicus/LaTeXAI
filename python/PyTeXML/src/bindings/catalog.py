@@ -6,7 +6,7 @@ exclusively to document-local resolvers and reading contexts.
 from __future__ import annotations
 from pathlib import Path
 from typing import Any
-from ..yaml_io import load_mapping
+from ..yaml_io import load_mapping, validate_resource_identity
 from ..reading.character_rules import CatcodeLayer, ProfileError, compile_layer
 from ..reading.mouth_profiles import MouthProfiles
 
@@ -48,20 +48,19 @@ class BindingCatalog:
                 identity, reading = data.get("identity"), data.get("reading")
                 if not isinstance(identity, dict) or not isinstance(reading, dict):
                     raise ProfileError(f"{path}: identity and reading must be mappings")
-                name = identity.get("name" if tier == "engine" else "package")
-                if not isinstance(name, str) or not name or name in identities:
-                    raise ProfileError(f"{path}: missing or duplicate binding identity {name!r}")
-                if tier == "packages" and name != path.stem:
-                    raise ProfileError(f"{path}: binding identity {name!r} must match its filename")
+                name = validate_resource_identity(data, path,
+                    key="name" if tier == "engine" else "package", error_type=ProfileError)
+                if name in identities:
+                    raise ProfileError(f"{path}: duplicate binding identity {name!r}")
                 identities.add(name)
                 self._validate_reading(reading, path)
-                target[path.stem] = data
-        engine_names = {data["identity"]["name"] for data in self.engine_bindings.values()}
+                target[name] = data
+        engine_ids = {f"engine/{name}" for name in self.engine_bindings}
         for tier, bindings in (("engine", self.engine_bindings), ("packages", self.package_bindings)):
             for name, data in bindings.items():
                 origin, reading = f"{tier}/{name}", data["reading"]
                 requires = data["identity"].get("requires_engine")
-                if requires is not None and (not isinstance(requires, str) or requires not in engine_names):
+                if requires is not None and (not isinstance(requires, str) or requires not in engine_ids):
                     raise ProfileError(f"{origin}: unknown required engine identity {requires!r}")
                 self.lexical_layers[origin] = compile_layer(reading.get("lexical_mode", {}), origin)
                 for section in ("environments", "environment_overrides", "commands", "command_overrides"):
@@ -73,6 +72,7 @@ class BindingCatalog:
 
     def _load_handlers(self) -> dict[str, dict[str, str]]:
         data = self._load_yaml(self.handlers_path)
+        validate_resource_identity(data, self.handlers_path, key="registry", error_type=ProfileError)
         identity, handlers = data.get("identity"), data.get("handlers")
         if (set(data) != {"identity", "handlers"} or not isinstance(identity, dict)
                 or identity.get("registry") != "reading_handlers"

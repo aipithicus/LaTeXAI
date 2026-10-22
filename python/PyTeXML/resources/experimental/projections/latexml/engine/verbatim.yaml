@@ -7,7 +7,7 @@
 # =============================================================================
 
 identity:
-  name: verbatim_core_capture
+  name: verbatim
   corresponds_to_binding: "engine/verbatim"
   tier: engine_kernel
   target_format: "ltx_xml"

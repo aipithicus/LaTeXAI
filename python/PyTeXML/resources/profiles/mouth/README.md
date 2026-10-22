@@ -91,5 +91,8 @@ identity. Raw-byte provenance and transformed-character mappings are separate.
 
 Literal profiles describe local effects rather than complete initial tables.
 Only `baseline_catcodes` profiles may initialize a document. Missing directories,
-inheritance cycles, duplicate profile identities and duplicate YAML keys are
-configuration errors. Removed `catcodes.yaml`/`literals.yaml` files are not read.
+inheritance cycles, missing/mismatched filename identities, duplicate profile
+identities and duplicate YAML keys are configuration errors. Every profile's
+`identity.name` equals its filename stem; `inherits` and binding `profile` references
+use that local name in the mouth-profile namespace. Removed
+`catcodes.yaml`/`literals.yaml` files are not read.

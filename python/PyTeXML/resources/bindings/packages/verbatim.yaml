@@ -14,7 +14,7 @@
 identity:
   package: verbatim
   tier: ctan_package
-  requires_engine: verbatim_core
+  requires_engine: engine/verbatim
   source_reference: "lib/LaTeXML/Package/verbatim.sty.ltxml"
   description: "LaTeX Tools bundle verbatim extension package providing ordered overrides of verbatim and \\verbatiminput"
 
