@@ -109,6 +109,16 @@ class ResourceLoadingTests(unittest.TestCase):
         with self.assertRaisesRegex(ProfileError, "duplicate name in reading.commands"):
             BindingCatalog(self.bindings)
 
+    def test_literal_grammar_handler_references_are_validated(self):
+        for grammar, error in (([], "grammar must be a mapping"),
+                               ({"handler": "missing"}, "unknown grammar handler"),
+                               ({"handler": ["inline_character"]}, "unknown grammar handler")):
+            with self.subTest(grammar=grammar):
+                self.core["reading"] = {"commands": [{"name": r"\example", "grammar": grammar}]}
+                self.write("engine/core.yaml", self.core)
+                with self.assertRaisesRegex(ProfileError, error):
+                    BindingCatalog(self.bindings)
+
     def test_malformed_binding_sections_are_configuration_errors(self):
         for reading in ([], {"commands": {}}, {"commands": [42]}):
             with self.subTest(reading=reading):

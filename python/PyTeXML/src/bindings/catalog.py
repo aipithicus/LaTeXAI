@@ -83,7 +83,7 @@ class BindingCatalog:
         for name, spec in handlers.items():
             if (not isinstance(name, str) or not name or not isinstance(spec, dict)
                     or set(spec) != {"status", "description"}
-                    or spec["status"] not in ("context_effect", "deferred")
+                    or spec["status"] not in ("context_effect", "scanner", "deferred")
                     or not isinstance(spec["description"], str) or not spec["description"]):
                 raise ProfileError(f"{self.handlers_path}: invalid handler {name!r}")
         return handlers
@@ -105,6 +105,13 @@ class BindingCatalog:
                 if not isinstance(name, str) or not name or name in names:
                     raise ProfileError(f"{path}: missing or duplicate name in reading.{section}: {name!r}")
                 names.add(name)
+                grammar = spec.get("grammar", {})
+                if not isinstance(grammar, dict):
+                    raise ProfileError(f"{path}: {name} grammar must be a mapping")
+                if "handler" in grammar:
+                    handler = grammar["handler"]
+                    if not isinstance(handler, str) or handler not in self.reading_handlers:
+                        raise ProfileError(f"{path}: unknown grammar handler {handler!r} for {name}")
                 if section in ("catcode_mutators", "grouping", "inclusions"):
                     action = spec.get("behavior" if section == "inclusions" else "action")
                     if not isinstance(action, str) or action not in self.reading_handlers:

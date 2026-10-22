@@ -45,10 +45,10 @@ do not require separate files.
 Profiles do not decide which source to delete. Policies do not define catcodes.
 The handler registry does not repeat command names, syntax, scope, or effects from
 the core binding. Its `context_effect` status means an immediate state helper
-exists; `deferred` means a scanner/dispatcher is still required. Neither status
-claims that a source occurrence is automatically dispatched today. The registry
-currently covers only catcode mutators, grouping, and inclusions, not all future
-TeX operations or literal handlers.
+exists; `scanner` describes an implemented in-memory grammar handler; `deferred`
+means a scanner/dispatcher is still required. These statuses do not imply
+integration into preparation. The registry currently covers catcode mutators,
+grouping, inclusions and the initial literal grammar, not all future TeX operations.
 
 All runtime loaders use the duplicate-key-rejecting [YAML loader](../src/yaml_io.py).
 Each owner validates its current contract. Mouth profiles validate inheritance and

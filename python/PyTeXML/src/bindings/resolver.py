@@ -172,6 +172,13 @@ class BindingResolver:
                             span_classification=SpanClassification("lexical_directive", "catcode_mutation"))
                     if section == "grouping":
                         return EffectiveReadingProfile(clean, "grouping", action=action, binding_id=origin)
+                    if section in {"commands", "command_overrides"} and spec.get("family") == "environment_open":
+                        if opts:
+                            return self._unresolved(clean, UnresolvedReason.UNSUPPORTED_READING_OPTION,
+                                                    "Environment opener has no resolved options", opts)
+                        return EffectiveReadingProfile(
+                            clean, "environment_open", binding_id=origin,
+                            grammar=deepcopy(spec.get("grammar", {})))
                     if section in {"commands", "command_overrides"} and spec.get("family") in {
                             "inline_verbatim", "external_verbatim_file"}:
                         return self._build_literal(clean, spec, reading, origin, opts, environment=False)

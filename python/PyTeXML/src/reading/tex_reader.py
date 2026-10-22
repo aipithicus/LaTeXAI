@@ -187,6 +187,38 @@ class _Character:
     start: int
     end: int
     transformed: bool = False
+    synthetic_endline: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class CharacterLookahead:
+    """An unconsumed mouth character, not a token or an original-source slice.
+
+    Looking ahead may perform ^^ conversion. That conversion stays in the
+    cursor even if the caller subsequently changes category codes.
+    """
+    value: str
+    catcode: CatCode
+    span: SourceSpan
+    transformed: bool
+    synthetic_endline: bool
+
+
+@dataclass(frozen=True, slots=True)
+class PhysicalLine:
+    """Current original line and its TeX input_ln window (string offsets)."""
+    span: SourceSpan
+    content_end: int
+    mouth_end: int
+    endline_char: int | None
+
+
+@dataclass(frozen=True, slots=True)
+class ReaderCheckpoint:
+    """Opaque, reader-local cursor snapshot; not a snapshot of execution state."""
+    _owner: object
+    _cursor: tuple
+    _catcodes: CatcodeTable
 
 
 _PHYSICAL_ENDLINE = re.compile(r"\r\n|\r|\n")
@@ -226,6 +258,73 @@ class TexReader:
         self._endline_queued = False
         self._tail_reported = False
         self._failure: InvalidCharacterError | None = None
+        self._position = 0
+        self._line_start = 0
+        self._physical_content_end = 0
+        self._checkpoint_owner = object()
+
+    @property
+    def position(self) -> int:
+        """End of consumed source; excludes pending character lookahead."""
+        return self._position
+
+    def source_span(self, start: int, end: int) -> SourceSpan:
+        if not 0 <= start <= end <= len(self.text):
+            raise ValueError("Source span is outside this buffer")
+        return self._span(start, end)
+
+    def source_slice(self, span: SourceSpan) -> str:
+        if (span.source_id, span.occurrence_id) != (self.source_id, self.occurrence_id):
+            raise ValueError("Source span belongs to a different source occurrence")
+        self.source_span(span.start, span.end)
+        return self.text[span.start:span.end]
+
+    @property
+    def current_line(self) -> PhysicalLine | None:
+        if not self._ready:
+            return None
+        return PhysicalLine(self._span(self._line_start, self._line_end),
+                            self._physical_content_end, self._content_end,
+                            self._line_end_char)
+
+    def peek_character(self) -> CharacterLookahead | None:
+        """Inspect this loaded line only, without consuming or loading another.
+
+        None means the current line's mouth window is exhausted (or no line
+        is loaded), not necessarily end of the source. Use current_line for
+        the original trailing spaces/newline that input_ln removes.
+        """
+        if self._failure is not None:
+            raise self._failure
+        if not self._ready or (unit := self._expanded_peek()) is None:
+            return None
+        return CharacterLookahead(unit.value, self.catcodes[unit.value],
+                                  self._span(unit.start, unit.end), unit.transformed,
+                                  unit.synthetic_endline)
+
+    def checkpoint(self) -> ReaderCheckpoint:
+        """Capture bounded lexical lookahead, including already converted chars.
+
+        Callers must not use this to undo execution effects or lexical scopes
+        in ReaderContext. Successful literal exit restores scope, not cursor.
+        """
+        return ReaderCheckpoint(self._checkpoint_owner, (
+            self.state, tuple(self._queue), self._started, self._ready,
+            self._next_line, self._raw_pos, self._content_end, self._line_end,
+            self._line_end_char, self._endline_queued, self._tail_reported,
+            self._failure, self._position, self._line_start,
+            self._physical_content_end, self.endline_char), self.catcodes.copy())
+
+    def restore(self, checkpoint: ReaderCheckpoint) -> None:
+        if not isinstance(checkpoint, ReaderCheckpoint) or checkpoint._owner is not self._checkpoint_owner:
+            raise ValueError("Checkpoint belongs to a different reader")
+        (self.state, queued, self._started, self._ready,
+         self._next_line, self._raw_pos, self._content_end, self._line_end,
+         self._line_end_char, self._endline_queued, self._tail_reported,
+         self._failure, self._position, self._line_start,
+         self._physical_content_end, self.endline_char) = checkpoint._cursor
+        self._queue = deque(queued)
+        self.catcodes.restore_from(checkpoint._catcodes)
 
     @property
     def endline_char(self) -> int:
@@ -248,6 +347,8 @@ class TexReader:
         start = self._next_line
         match = _PHYSICAL_ENDLINE.search(self.text, start)
         content_end = match.start() if match else len(self.text)
+        self._line_start = start
+        self._physical_content_end = content_end
         self._line_end = match.end() if match else len(self.text)
         self._next_line = self._line_end
         while content_end > start and self.text[content_end - 1] == " ":
@@ -270,7 +371,7 @@ class TexReader:
                 self._raw_pos += 1
             elif not self._endline_queued and self._line_end_char is not None:
                 self._queue.append(_Character(
-                    chr(self._line_end_char), self._content_end, self._line_end, True))
+                    chr(self._line_end_char), self._content_end, self._line_end, True, True))
                 self._endline_queued = True
             else:
                 return None
@@ -295,7 +396,8 @@ class TexReader:
                 count = 3
                 value = chr(ord(third.value) ^ 64)
             consumed = [self._queue.popleft() for _ in range(count)]
-            self._queue.appendleft(_Character(value, first.start, consumed[-1].end, True))
+            self._queue.appendleft(_Character(value, first.start, consumed[-1].end, True,
+                                             any(c.synthetic_endline for c in consumed)))
         return None
 
     def _finish_line(self) -> None:
@@ -328,6 +430,14 @@ class TexReader:
                      self._span(escape.start, last.end), transformed)
 
     def next_event(self) -> ReadEvent | None:
+        event = self._next_event()
+        if event is not None:
+            self._position = event.span.end
+        else:
+            self._position = len(self.text)
+        return event
+
+    def _next_event(self) -> ReadEvent | None:
         if self._failure is not None:
             raise self._failure
         while True:

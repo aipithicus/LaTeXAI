@@ -1,12 +1,21 @@
-# Handler vocabulary for catcode_mutators, grouping and inclusions.
+# Handler vocabulary for core effects, inclusions and initial literal grammar.
 # Command names, syntax, scope and effects belong to bindings. This is capability
 # metadata, not an executable dispatch table. No Python symbols are imported from
-# YAML. Literal scanners and other future handlers are not yet enumerated here.
+# YAML. A scanner status does not imply preparation-pipeline integration.
 identity:
   registry: reading_handlers
   description: "Reading actions and their current implementation boundary"
 
 handlers:
+  environment_name:
+    status: scanner
+    description: "Read a literal braced environment name without expansion"
+  inline_character:
+    status: scanner
+    description: "Read an inline literal with a locally active character delimiter"
+  token_delimited:
+    status: scanner
+    description: "Match an exact block terminator by character token identity"
   assign_catcode:
     status: context_effect
     description: "Apply already resolved character assignments in ReaderContext"

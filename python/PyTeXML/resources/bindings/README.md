@@ -12,7 +12,7 @@ Bindings are strictly partitioned into two tiers to prevent engine primitives an
 python/PyTeXML/resources/bindings/
 ├── README.md
 ├── engine/                       # Core LaTeX 2e / TeX primitives (always active)
-│   ├── core_latex.yaml           # Inclusions, grouping, catcode mutators, conditionals
+│   ├── core_latex.yaml           # Environment opener, inclusions, grouping, catcodes, conditionals
 │   └── verbatim.yaml             # Authoritative kernel verbatim & \verb specification
 └── packages/                     # Activated dynamically via \usepackage / \RequirePackage
     ├── alltt.yaml                # Semi-verbatim environment (\ and { } retained)
@@ -83,7 +83,8 @@ The catalog rejects missing/mismatched filename identities, duplicate
 identities/construct names, malformed consumed sections, and missing profile/engine
 references. Engine and package bindings follow the same filename rule. Engine
 dependencies use qualified `engine/<name>` IDs; bare names and aliases are rejected.
-`catcode_mutators.action`, `grouping.action`, and `inclusions.behavior` reference
+`catcode_mutators.action`, `grouping.action`, `inclusions.behavior` and optional
+`grammar.handler` reference
 the [handler vocabulary](../registries/reading_handlers.yaml). That vocabulary
 contains no duplicated command declarations and imports no executable code.
 Reading state lives in [context.py](../../src/reading/context.py), and result types
@@ -115,3 +116,28 @@ assignments while preserving the saved baseline. The caller owns execution mode,
 literal scope, argument/body scanning, and synchronization of a live reader's
 `endline_char`. Interpolation plans require a literal dispatcher and cannot be
 applied as ordinary context mutations. Terminator metadata is not a scanner.
+
+## 5. Initial literal grammar consumers
+
+[LiteralDispatcher](../../src/reading/dispatcher.py) consumes a narrow portion of
+these contracts without importing the catalog implementation. `environment_name`
+reads a non-expanding braced name and resolves its environment; `inline_character`
+handles a dynamic character delimiter; `token_delimited` scans an exact sequence
+of character tokens. These are reusable Python algorithms selected by YAML,
+not package-specific Python implementations. The preparation pipeline does not
+call them yet.
+
+The kernel entries specify the optional star, the starred binding identity,
+delimiter-prefix spaces and local delimiter category. Space skipping follows
+`@sverb` in the [LaTeX kernel](https://github.com/latex3/latex2e/blob/develop/base/ltmiscen.dtx)
+since 2020/10/01. Tab delimiters remain outside this initial supported grammar.
+Kernel block terminators explicitly use `matching_domain: mouth_tokens` and
+`boundary_mode: token_sequence`; their definition-time categories come from the
+declared `terminator_baseline` plus the literal profile. The initial handler
+requires `regex_pattern` to equal the escaped `exact_string`. It does not ignore
+a different regex rule or claim that these two fields are interchangeable.
+
+Package line-based terminators, options, interpolation and factories remain
+explicitly unsupported by this dispatcher. Activating an overriding package
+cannot silently select the kernel scanner. A resolved reading profile describes
+knowledge; it does not, by itself, prove that a runtime handler supports it.

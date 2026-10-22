@@ -8,7 +8,7 @@ expansion and XML interpretation belong to later development.
 
 | Location | Responsibility |
 | --- | --- |
-| [`src/reading/`](src/reading) | Reusable N/M/S reader, regex catcode rules, mouth profiles, reading contracts, and scoped document state |
+| [`src/reading/`](src/reading) | Reusable N/M/S reader and cursor, initial literal dispatcher, regex catcode rules, mouth profiles, and scoped document state |
 | [`src/bindings/`](src/bindings) | Reusable binding catalog and document-local resolution/package activation |
 | [`src/prepare/`](src/prepare) | Discovery, inlining, pruning, normalization, bibliography preparation, provenance, policy loading, and publication |
 | [`src/source_io.py`](src/source_io.py) | Strict source decoding and malformed-byte diagnostics |
@@ -73,19 +73,64 @@ stems, with directories supplying namespaces; see the
 [naming convention](resources/README.md#naming-and-references). Regex reading rules
 are unchanged.
 
-The preparation pipeline still uses its existing discovery and rewrite routines.
-The reader, binding resolver, and policy loader are independently tested
-foundations, not yet integrated into that pipeline. Projection YAMLs have no
+The preparation pipeline still uses its existing discovery and transformations
+for assembling `master.tex`. Original manuscript sources are never edited.
+The reader, literal dispatcher, binding resolver, and policy loader are independently
+tested foundations, not yet integrated into that pipeline. Projection YAMLs have no
 runtime consumer, and the handler registry does not execute handlers. Its
 `context_effect` entries describe existing state helpers; `deferred` entries
-require future dispatch/scanning work.
+require future dispatch/scanning work; `scanner` entries describe the initial
+in-memory literal handlers.
 
 All runtime YAML loaders reject duplicate keys through the shared strict loader.
 Policies validate their fields and action values. Catalog loading checks binding
 identities, current construct-list structure, engine/profile references and the
 registered core reading actions. This is validation of the current contracts,
-not a complete schema for future bindings. These organization changes do not
-implement the structural/literal dispatcher.
+not a complete schema for future bindings.
+
+## Initial literal reading
+
+```python
+from src.bindings.resolver import BindingResolver
+from src.reading.dispatcher import LiteralDispatcher
+from src.reading.tex_reader import TexReader
+
+resolver = BindingResolver()
+context = resolver.new_context()
+reader = TexReader(source, source_id="paper.tex", occurrence_id=0,
+                   catcodes=context.catcodes, endline_char=context.endlinechar)
+dispatcher = LiteralDispatcher(reader, context, resolver)
+for item in dispatcher:
+    # ReadEvent, LiteralRegion, or a final ReadingBoundary; no source edits.
+    ...
+```
+
+This bounded component supports kernel `\verb`, `\verb*`, `verbatim`, and
+`verbatim*` in an established active context. YAML selects the generic grammar
+handlers. A literal records contiguous opening/body/closing spans into the
+original buffer, including authored CRLF, tabs and trailing spaces. Those spans
+use Python string offsets, not encoded byte offsets. Block terminators match
+tokens and their category codes; inline delimiters become locally active.
+Closing a literal restores lexical settings while retaining the cursor's exit
+N/M/S state. No substring readers or source copies are needed.
+
+`TexReader.position` excludes unconsumed lookahead; `current_line` exposes both
+the raw physical line and its trimmed mouth window. `peek_character()` stays on
+that line and preserves any `^^` conversion already performed. Reader-local
+`checkpoint()` / `restore()` also preserve pending characters, captured
+`endlinechar`, category settings and sticky errors. They do not snapshot or roll
+back execution effects in `ReaderContext` and are not used for successful literal
+exit.
+
+This is not yet a whole-document structural parser. Unknown commands, active
+meanings, definitions, conditionals, computed environment names and unsupported
+package literal grammars return a located `ReadingBoundary` and halt this scan.
+Its `remainder` covers unchanged source from the unresolved construct onward.
+Unclosed literals retain that residue rather than consuming it as proven literal
+content. Stored-definition, argument-scanning and skipped-branch modes require
+their owning scanners; this dispatcher does not dispatch inside them. It performs
+no package discovery, arbitrary catcode assignments, macro expansion or XML work.
+Reading after catalog bootstrap performs no filesystem I/O.
 
 ## Running and checking
 

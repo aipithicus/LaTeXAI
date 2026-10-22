@@ -96,3 +96,10 @@ identities and duplicate YAML keys are configuration errors. Every profile's
 `identity.name` equals its filename stem; `inherits` and binding `profile` references
 use that local name in the mouth-profile namespace. Removed
 `catcodes.yaml`/`literals.yaml` files are not read.
+
+The initial [literal dispatcher](../../../src/reading/dispatcher.py) enters and
+leaves local profiles on the same `TexReader`. Its grammar selection belongs to
+bindings. Cursor handoff retains already converted lookahead and the loaded
+physical line's captured `endlinechar`; scope exit restores lexical settings but
+does not rewind input or reset N/M/S to its entry value. Raw source spans remain
+separate from the mouth's trimmed and converted character view.

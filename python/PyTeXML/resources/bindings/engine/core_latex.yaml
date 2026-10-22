@@ -12,6 +12,13 @@ identity:
   description: "Core primitives, catcode mutators, reader parameters, and structural boundaries"
 
 reading:
+  commands:
+    - name: "\\begin"
+      family: environment_open
+      grammar:
+        handler: environment_name
+        argument: braced_literal_name
+
   # ---------------------------------------------------------------------------
   # Lexical and Catcode Mutators
   # ---------------------------------------------------------------------------

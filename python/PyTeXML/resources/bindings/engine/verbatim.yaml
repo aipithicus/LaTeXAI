@@ -39,11 +39,16 @@ reading:
       family: block_verbatim
       profile: raw_block
       arity: 0                                   # Takes NO arguments. Immediate '[' is literal text
+      grammar:
+        handler: token_delimited
+        terminator_baseline: latex_ascii
       starred_variant: false
       visible_spaces: false
       terminator:
         exact_string: "\\end{verbatim}"
         regex_pattern: "\\\\end\\{verbatim\\}"   # Kernel does NOT allow whitespace like \end {verbatim}
+        matching_domain: mouth_tokens
+        boundary_mode: token_sequence
         trailing_line_behavior: "preserve_trailing_content" # Kernel does NOT discard remainder of the line
       span_classification:
         category: "opaque_literal"
@@ -53,11 +58,16 @@ reading:
       family: block_verbatim
       profile: raw_block
       arity: 0
+      grammar:
+        handler: token_delimited
+        terminator_baseline: latex_ascii
       starred_variant: true
       visible_spaces: true                       # Spaces are rendered with visible space glyph (U+2423 ␣)
       terminator:
         exact_string: "\\end{verbatim*}"
         regex_pattern: "\\\\end\\{verbatim\\*\\}"
+        matching_domain: mouth_tokens
+        boundary_mode: token_sequence
         trailing_line_behavior: "preserve_trailing_content"
       span_classification:
         category: "opaque_literal"
@@ -71,12 +81,17 @@ reading:
       family: inline_verbatim
       profile: inline_delimited
       grammar:
+        handler: inline_character
         control_sequence: "verb"
         star_token_allowed: true                 # Reader sees \verb then separate * token
+        star_token: "*"
+        starred_command: "\\verb*"
+        delimiter_skip_characters: [" "]         # Kernel @sverb since 2020/10/01
+        delimiter_catcode: 13                    # Closing delimiter executes the local group exit
       starred_variant: false
       visible_spaces: false
-      delimiter_mode: "dynamic_char"             # The very next character defines the closing delimiter
-      invalid_delimiters: ["*", " ", "\t", "\r", "\n"] # Letters and spaces cannot be delimiters
+      delimiter_mode: "dynamic_char"
+      invalid_delimiters: [" ", "\t", "\r", "\n"] # Whitespace not handled as a delimiter by this profile
       multiline_allowed: false                   # \verb cannot span across lines; raises error if EOL hit
       span_classification:
         category: "opaque_inline_literal"
@@ -85,6 +100,10 @@ reading:
     - name: "\\verb*"
       family: inline_verbatim
       profile: inline_delimited
+      grammar:
+        handler: inline_character
+        delimiter_skip_characters: [" "]
+        delimiter_catcode: 13
       starred_variant: true
       visible_spaces: true
       delimiter_mode: "dynamic_char"
