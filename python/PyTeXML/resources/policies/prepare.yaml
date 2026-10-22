@@ -1,0 +1,50 @@
+# resources/policies/prepare.yaml
+# =============================================================================
+# Preparation Policy (loader-supported; pipeline integration pending)
+#
+# Maps semantic roles (from bindings/AST) and lexical event classifications
+# to pipeline actions for compiling a clean, compact, canonical master.tex.
+# =============================================================================
+
+identity:
+  name: prepare
+  target: "extracted/master.tex"
+  description: "Primary extraction policy: eliminates authorial draft markup and dead branches, canonicalizes whitespace"
+
+# -----------------------------------------------------------------------------
+# 1. Action per Semantic Role (classified by bindings and syntax)
+# -----------------------------------------------------------------------------
+role_actions:
+  author_notes: eliminate             # \begin{comment} and \excludecomment blocks
+  editorial_annotation: eliminate     # \todo, \note, \annotation (identified by binding role)
+  dead_conditional: eliminate         # Inactive \iftrue / \iffalse branches
+  code_listing: preserve              # verbatim, lstlisting; lexical category remains separate
+  code_inline: preserve               # \verb, \lstinline (inline code preserved immutable)
+  formatted_code_listing: preserve    # alltt; preparation preserves ordinary macro calls
+  transparent_container: unwrap       # \includecomment blocks (delimiters stripped, content kept)
+  wrapped_container: preserve         # Boundary hooks remain for the execution dispatcher
+  formatting_container: preserve      # \textbf, \emph, etc. (styling preserved in master.tex)
+  external_verbatim: inline           # \verbatiminput transcluded as immutable literal
+
+# -----------------------------------------------------------------------------
+# 2. Action per Lexical Event (emitted by tex_reader.py)
+# -----------------------------------------------------------------------------
+lexical_events:
+  comment_line: eliminate             # Discard lines containing only comments and whitespace
+  comment_inline: strip_payload       # Strip comment text while preserving necessary token boundary
+  line_continuation: preserve         # Retain trailing '%' suppressing newline whitespace
+  magic_directive: extract_metadata   # Extract % !TeX directives to manifest, omit from source
+
+# -----------------------------------------------------------------------------
+# 3. Structural Normalization
+# -----------------------------------------------------------------------------
+structural_normalization:
+  paragraph_breaks: coalesce          # Coalesce 2+ empty lines into a single canonical \par break
+  trailing_whitespace: strip          # Trim trailing whitespace outside opaque literals
+
+# -----------------------------------------------------------------------------
+# 4. Provenance
+# -----------------------------------------------------------------------------
+provenance:
+  emit_ledger: true
+  rle_compression: true

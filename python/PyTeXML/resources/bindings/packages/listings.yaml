@@ -1,0 +1,85 @@
+# resources/bindings/packages/listings.yaml
+# =============================================================================
+# CTAN Package: listings (Carsten Heinz, Brooks Moses, Jobst Hoffmann)
+# Model: lib/LaTeXML/Package/listings.sty.ltxml / lib-ctan/listings/tex/latex/listings/listings.sty
+#
+# Source code listings with language formatting, key-val options, and escapes.
+# Operational contract for reading: escapeinside, escapechar, and mathescape
+# reconfigure the reader to interpolate TeX tokens within the listing.
+# =============================================================================
+
+identity:
+  package: listings
+  version: "1.11b"
+  tier: ctan_package
+  source_reference: "lib-ctan/listings/tex/latex/listings/listings.sty"
+  description: "Typesetting source code environments with syntax highlighting and escape delimiters"
+
+reading:
+  # ---------------------------------------------------------------------------
+  # Option Resolution: Reading-Affecting Configuration Parameters
+  # ---------------------------------------------------------------------------
+  option_resolution:
+    default_profile: raw_block
+    reading_affecting_keys:
+      escapeinside:
+        effect: "define_interpolation_delimiters"
+        syntax: "{open_delim}{close_delim}"   # e.g. escapeinside={(*@}{@*)}
+        profile_override: "interpolated_verbatim_block"
+      escapechar:
+        effect: "define_single_escape_char"
+        syntax: "char"                        # e.g. escapechar=`
+        profile_override: "interpolated_verbatim_block"
+      mathescape:
+        effect: "toggle_math_mode_on_dollar"
+        syntax: "boolean"                     # mathescape=true
+    unsupported_options_behavior: "report_unresolved"
+    non_reading_options: [language, caption, label, numbers, frame]
+
+  # ---------------------------------------------------------------------------
+  # Environments
+  # ---------------------------------------------------------------------------
+  environments:
+    - name: lstlisting
+      family: block_verbatim
+      profile: raw_block
+      has_optional_arguments: true
+      options_syntax: "key_val"               # \begin{lstlisting}[language=Python,escapeinside={(*@}{@*)}]
+      terminator:
+        exact_string: "\\end{lstlisting}"
+        matching_domain: "physical_line"
+        regex_pattern: "\\\\end[ \\t]*\\{lstlisting\\}"
+        trailing_line_behavior: "discard_with_warning"
+      span_classification:
+        category: "configurable_literal"
+        default_category: "opaque_literal"
+        semantic_role: "code_listing"
+
+  # ---------------------------------------------------------------------------
+  # Commands
+  # ---------------------------------------------------------------------------
+  commands:
+    - name: "\\lstinline"
+      family: inline_verbatim
+      profile: inline_delimited
+      has_optional_arguments: true
+      options_syntax: "key_val"               # \lstinline[language=C]|int x = 0;| or \lstinline{foo}
+      delimiter_mode: "hybrid_delim_or_braced" # Supports both |...| and {...}
+      span_classification:
+        category: "opaque_inline_literal"
+        semantic_role: "code_inline"
+
+    - name: "\\lstinputlisting"
+      family: external_verbatim_file
+      profile: raw_block
+      has_optional_arguments: true
+      options_syntax: "key_val"
+      syntax: "{file_path}"
+      span_classification:
+        category: "external_verbatim_resource"
+        semantic_role: "external_verbatim"
+
+    - name: "\\lstset"
+      syntax: "{key_vals}"
+      family: configuration_command
+      affects_subsequent_reading: true

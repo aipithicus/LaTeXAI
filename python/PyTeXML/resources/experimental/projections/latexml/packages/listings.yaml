@@ -1,0 +1,34 @@
+# resources/experimental/projections/latexml/packages/listings.yaml
+# =============================================================================
+# Downstream Projection & Capture: listings.sty
+#
+# Corresponds to: bindings/packages/listings.yaml
+# =============================================================================
+
+identity:
+  package: listings
+  corresponds_to_binding: "packages/listings"
+  tier: ctan_package
+  target_format: "ltx_xml"
+  description: "Projection rules for listings code blocks and inline code"
+
+projections:
+  environments:
+    lstlisting:
+      xml_element: "ltx:listing"
+      attributes:
+        font: "typewriter"
+      semantic_role: "code_listing"
+
+  commands:
+    "\\lstinline":
+      xml_element: "ltx:listing"
+      attributes:
+        font: "typewriter"
+      semantic_role: "code_inline"
+
+    "\\lstinputlisting":
+      xml_element: "ltx:listing"
+      attributes:
+        font: "typewriter"
+      semantic_role: "code_listing"

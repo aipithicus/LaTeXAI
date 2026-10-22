@@ -1,0 +1,31 @@
+# resources/profiles/mouth/semi_verbatim_block.yaml
+# =============================================================================
+# Semi-Verbatim Block Profile (\begin{alltt} ... \end{alltt})
+# =============================================================================
+
+identity:
+  name: semi_verbatim_block
+  category: block_literal
+  description: "Semi-verbatim block; retains physical lines and active spaces, but commands and groups execute"
+
+family: block
+terminator_pattern: "\\end{{{name}}}"
+comment_char: null
+escape_char: "\\"             # Backslash remains active escape
+group_delimiters: ["{", "}"]  # Braces remain active grouping
+
+lexical_mode:
+  character_classes:
+    - {id: specials, kind: catcode_run, domain: mouth_characters, pattern: '[$&#^_~%]+', catcode: 12}
+    - {id: whitespace, kind: catcode_run, domain: mouth_characters, pattern: '[ \t\r]+', catcode: 13}
+  tex_mechanics:
+    trailing_spaces_stripped_by_input_ln: true
+    active_endlinechar_obeylines: true
+    active_space_obeyspaces: true
+  source_capture:
+    preserve_raw_slice: true
+    preserve_indentation: true
+
+span_classification:
+  category: semi_verbatim_block
+  semantic_role: formatted_code_listing

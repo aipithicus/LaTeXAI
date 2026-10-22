@@ -5,7 +5,7 @@ from src.reading.mouth_profiles import MouthProfiles
 from src.reading.tex_reader import TexReader
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-PROFILES = MouthProfiles(PROJECT_ROOT / "profiles" / "mouth")
+PROFILES = MouthProfiles(PROJECT_ROOT / "resources" / "profiles" / "mouth")
 BASELINE = PROFILES.baseline("latex_ascii")
 
 

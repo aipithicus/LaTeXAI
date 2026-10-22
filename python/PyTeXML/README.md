@@ -8,9 +8,9 @@ expansion and XML interpretation belong to later development.
 
 | Location | Responsibility |
 | --- | --- |
-| [`src/reading/`](src/reading/) | Reusable N/M/S reader, regex catcode rules, mouth profiles, reading contracts, and scoped document state |
-| [`src/bindings/`](src/bindings/) | Reusable binding catalog and document-local resolution/package activation |
-| [`src/prepare/`](src/prepare/) | Discovery, inlining, pruning, normalization, bibliography preparation, provenance, policy loading, and publication |
+| [`src/reading/`](src/reading) | Reusable N/M/S reader, regex catcode rules, mouth profiles, reading contracts, and scoped document state |
+| [`src/bindings/`](src/bindings) | Reusable binding catalog and document-local resolution/package activation |
+| [`src/prepare/`](src/prepare) | Discovery, inlining, pruning, normalization, bibliography preparation, provenance, policy loading, and publication |
 | [`src/source_io.py`](src/source_io.py) | Strict source decoding and malformed-byte diagnostics |
 | [`src/bibtex.py`](src/bibtex.py) | Reusable BibTeX parser and data model |
 | [`src/assets.py`](src/assets.py) | Image inspection and individual asset conversion |
@@ -55,20 +55,35 @@ individual source files are no longer supported; use module execution below.
 
 ## Configuration and integration status
 
-The YAML libraries remain at their existing locations through the first two
-organization steps: [bindings](bindings/README.md), [mouth profiles](profiles/mouth/README.md),
-[policies](policy/README.md), and provisional [XML projections](capture/README.md).
-Their contents and identities have not changed.
+All YAML libraries live under [resources/](resources/README.md), organized by owner
+and intended consumer:
+
+| Location within `resources/` | Responsibility |
+| --- | --- |
+| [bindings/](resources/bindings/README.md) | Core/package reading knowledge; reusable across preparation and later interpretation |
+| [profiles/mouth/](resources/profiles/mouth/README.md) | Baseline catcodes and reusable local reading configurations |
+| [registries/reading_handlers.yaml](resources/registries/reading_handlers.yaml) | Reading-action vocabulary and implementation status; no command rules or executable imports |
+| [policies/prepare.yaml](resources/policies/prepare.yaml) | Preparation role/event actions |
+| [experimental/](resources/experimental/README.md) | Lossless/prose policy sketches and provisional LaTeXML projections |
+
+Use `load_policy("prepare")` for the preparation preset. Experimental policies
+require an explicit file path. The old `preflight`/`compact` names and old resource
+directories have no compatibility fallback. Binding identities and regex reading
+rules are preserved.
 
 The preparation pipeline still uses its existing discovery and rewrite routines.
 The reader, binding resolver, and policy loader are independently tested
 foundations, not yet integrated into that pipeline. Projection YAMLs have no
-runtime consumer, and the operation registry does not execute handlers.
+runtime consumer, and the handler registry does not execute handlers. Its
+`context_effect` entries describe existing state helpers; `deferred` entries
+require future dispatch/scanning work.
 
-The remaining organization step will consolidate/classify the YAML libraries
-under `resources/` and align validation. Policies still use their existing loader;
-the strict mapping loader is currently used by mouth profiles and binding catalogs.
-These changes are separate from reader/dispatcher feature development.
+All runtime YAML loaders reject duplicate keys through the shared strict loader.
+Policies validate their fields and action values. Catalog loading checks binding
+identities, current construct-list structure, engine/profile references and the
+registered core reading actions. This is validation of the current contracts,
+not a complete schema for future bindings. These organization changes do not
+implement the structural/literal dispatcher.
 
 ## Running and checking
 

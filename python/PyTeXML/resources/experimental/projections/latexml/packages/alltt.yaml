@@ -1,0 +1,21 @@
+# resources/experimental/projections/latexml/packages/alltt.yaml
+# =============================================================================
+# Downstream Projection & Capture: alltt.sty
+#
+# Corresponds to: bindings/packages/alltt.yaml
+# =============================================================================
+
+identity:
+  package: alltt
+  corresponds_to_binding: "packages/alltt"
+  tier: ctan_package
+  target_format: "ltx_xml"
+  description: "Projection rules for alltt semi-verbatim environment"
+
+projections:
+  environments:
+    alltt:
+      xml_element: "ltx:verbatim"
+      attributes:
+        font: "typewriter"
+      semantic_role: "formatted_code_listing"

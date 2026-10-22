@@ -1,0 +1,36 @@
+# Handler vocabulary for catcode_mutators, grouping and inclusions.
+# Command names, syntax, scope and effects belong to bindings. This is capability
+# metadata, not an executable dispatch table. No Python symbols are imported from
+# YAML. Literal scanners and other future handlers are not yet enumerated here.
+identity:
+  registry: reading_handlers
+  description: "Reading actions and their current implementation boundary"
+
+handlers:
+  assign_catcode:
+    status: context_effect
+    description: "Apply already resolved character assignments in ReaderContext"
+  assign_catcode_dynamic:
+    status: deferred
+    description: "Requires an assignment argument scanner and execution dispatcher"
+  expl3_lexical_enter:
+    status: context_effect
+    description: "Apply resolved expl3 effects and preserve their first snapshot"
+  expl3_lexical_exit:
+    status: context_effect
+    description: "Restore the saved expl3 state"
+  push_lexical_scope:
+    status: context_effect
+    description: "Snapshot document-local lexical state"
+  pop_lexical_scope:
+    status: context_effect
+    description: "Restore document-local lexical state"
+  pure_token_splice:
+    status: deferred
+    description: "Requires reading-aware file inclusion; the preparation inliner is separate"
+  chapter_splice:
+    status: deferred
+    description: "Requires include semantics and reading-aware file inclusion"
+  strip_child_preamble:
+    status: deferred
+    description: "Requires subfile context and reading-aware file inclusion"

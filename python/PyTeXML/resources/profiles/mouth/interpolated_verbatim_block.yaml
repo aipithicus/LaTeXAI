@@ -1,0 +1,19 @@
+# resources/profiles/mouth/interpolated_verbatim_block.yaml
+# =============================================================================
+# Interpolated Verbatim Block Profile (\begin{lstlisting}[escapeinside=...] ...)
+# =============================================================================
+
+identity:
+  name: interpolated_verbatim_block
+  category: block_literal
+  description: "Verbatim block with dynamic escape portals/delimiters returning control to TeX"
+
+inherits: raw_block
+family: block
+terminator_pattern: "\\end{{{name}}}"
+interpolations_allowed: true
+interpolation_mode: delimiter_pairs
+
+span_classification:
+  category: interpolated_literal
+  semantic_role: code_listing

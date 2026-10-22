@@ -241,8 +241,9 @@ activation preserves the original load order. Effective
 profiles retain literal defaults, binding overrides, argument grammar, boundary
 rules and separate lexical-category/policy-role classifications.
 
-[mouth_profiles.py](../src/reading/mouth_profiles.py) loads only `profiles/mouth/`;
-removed profile files have no fallback path. `operations.yaml` is retained as a separate provisional registry,
+[mouth_profiles.py](../src/reading/mouth_profiles.py) loads only `resources/profiles/mouth/`;
+removed profile files have no fallback path. The catalog loads
+`resources/registries/reading_handlers.yaml` separately as capability metadata,
 not a literal profile or a claim that its future handlers execute today. Regex
 character classes compile once into immutable layers.
 [character_rules.py](../src/reading/character_rules.py) provides full-span
@@ -252,7 +253,7 @@ it does not expand regexes into an enumerated Unicode table.
 
 Bootstrap with `resolver.new_context("latex_ascii")`, then pass its `catcodes`
 and `endlinechar` to `TexReader`. Baseline and literal configuration share the
-same regex-rule contract, described in [the mouth profile reference](../profiles/mouth/README.md).
+same regex-rule contract, described in [the mouth profile reference](../resources/profiles/mouth/README.md).
 The context implementation lives in [context.py](../src/reading/context.py);
 baseline and resolved-effect types live in [contracts.py](../src/reading/contracts.py).
 Inheritance and later effects overlay earlier layers in execution order; explicit

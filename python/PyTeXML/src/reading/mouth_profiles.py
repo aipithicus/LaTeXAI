@@ -25,7 +25,6 @@ class MouthProfiles:
     def __init__(self, directory: Path):
         self.directory = directory
         self.profiles: dict[str, dict[str, Any]] = {}
-        self.registries: dict[str, dict[str, Any]] = {}
         self._resolved: dict[str, dict[str, Any]] = {}
         self._layers: dict[str, tuple[CatcodeLayer, ...]] = {}
         if not directory.is_dir():
@@ -35,12 +34,12 @@ class MouthProfiles:
             identity = data.get("identity", {})
             if not isinstance(identity, dict):
                 raise ProfileError(f"{path}: identity must be a mapping")
-            registry = identity.get("registry")
-            name = registry if registry is not None else identity.get("name")
-            target = self.registries if registry is not None else self.profiles
-            if not isinstance(name, str) or not name or name in target:
+            if "registry" in identity:
+                raise ProfileError(f"{path}: registries do not belong in mouth profiles")
+            name = identity.get("name")
+            if not isinstance(name, str) or not name or name in self.profiles:
                 raise ProfileError(f"{path}: missing or duplicate identity {name!r}")
-            target[name] = data
+            self.profiles[name] = data
         if not self.profiles:
             raise ProfileError(f"No mouth profiles found in {directory}")
         for name in self.profiles:

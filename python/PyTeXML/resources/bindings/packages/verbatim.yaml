@@ -1,0 +1,109 @@
+# resources/bindings/packages/verbatim.yaml
+# =============================================================================
+# CTAN Package: verbatim (Rainer Schöpf, LaTeX3 Project Tools bundle)
+# Model: lib/LaTeXML/Package/verbatim.sty.ltxml / required/tools/verbatim.dtx
+#
+# Extends and overrides the core LaTeX verbatim engine:
+#   - Replaces kernel verbatim/verbatim* with a line-buffer scanner
+#   - Relaxes delimiter parsing to accept whitespace: \end {verbatim}
+#   - Discards remainder of line after \end{verbatim}
+#   - Provides \verbatiminput file transclusion
+#   - Provides package-local comment environment
+# =============================================================================
+
+identity:
+  package: verbatim
+  tier: ctan_package
+  requires_engine: verbatim_core
+  source_reference: "lib/LaTeXML/Package/verbatim.sty.ltxml"
+  description: "LaTeX Tools bundle verbatim extension package providing ordered overrides of verbatim and \\verbatiminput"
+
+reading:
+  # ---------------------------------------------------------------------------
+  # Ordered Overrides of Engine Verbatim Constructs
+  # ---------------------------------------------------------------------------
+  environment_overrides:
+    - name: verbatim
+      family: block_verbatim
+      profile: raw_block
+      overrides_kernel_binding: true
+      arity: 0
+      starred_variant: false
+      visible_spaces: false
+      terminator:
+        exact_string: "\\end{verbatim}"
+        matching_domain: "physical_line"
+        regex_pattern: "\\\\end[ \\t]*\\{verbatim\\}"     # Package allows horizontal space in \end {verbatim}, no newlines
+        trailing_line_behavior: "discard_with_warning"   # Package discards remainder of line after \end{verbatim}
+      span_classification:
+        category: "opaque_literal"
+        semantic_role: "code_listing"
+
+    - name: verbatim*
+      family: block_verbatim
+      profile: raw_block
+      overrides_kernel_binding: true
+      arity: 0
+      starred_variant: true
+      visible_spaces: true
+      terminator:
+        exact_string: "\\end{verbatim*}"
+        matching_domain: "physical_line"
+        regex_pattern: "\\\\end[ \\t]*\\{verbatim\\*\\}"
+        trailing_line_behavior: "discard_with_warning"
+      span_classification:
+        category: "opaque_literal"
+        semantic_role: "code_listing"
+
+  # ---------------------------------------------------------------------------
+  # Package-Provided Environments
+  # ---------------------------------------------------------------------------
+  environments:
+    - name: comment
+      family: delimited_raw_block
+      profile: discard_block
+      terminator:
+        exact_string: "\\end{comment}"
+        matching_domain: "physical_line"
+        regex_pattern: "\\\\end[ \\t]*\\{comment\\}"      # verbatim.sty accepts horizontal space inside \end {comment}
+        trailing_line_behavior: "discard_with_warning"
+      span_classification:
+        category: "editorial_comment_block"
+        semantic_role: "author_notes"
+
+  # ---------------------------------------------------------------------------
+  # Package Commands
+  # ---------------------------------------------------------------------------
+  commands:
+    - name: "\\verbatiminput"
+      family: external_verbatim_file
+      profile: raw_block
+      grammar:
+        control_sequence: "verbatiminput"
+        star_token_allowed: true
+      syntax: "{file_path}"
+      starred_variant: false
+      span_classification:
+        category: "external_verbatim_resource"
+        semantic_role: "external_verbatim"
+
+    - name: "\\verbatiminput*"
+      family: external_verbatim_file
+      profile: raw_block
+      syntax: "{file_path}"
+      starred_variant: true
+      visible_spaces: true
+      span_classification:
+        category: "external_verbatim_resource"
+        semantic_role: "external_verbatim"
+
+  # ---------------------------------------------------------------------------
+  # Token Registers & Hooks
+  # ---------------------------------------------------------------------------
+  registers:
+    - name: "\\every@verbatim"
+      type: "tokens"
+      description: "Hook executed at the start of each verbatim environment"
+    - name: "\\verbatim@line"
+      type: "tokens"
+      description: "Internal physical line buffer"

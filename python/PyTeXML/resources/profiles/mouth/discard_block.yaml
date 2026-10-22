@@ -1,0 +1,17 @@
+# resources/profiles/mouth/discard_block.yaml
+# =============================================================================
+# Discard / Editorial Comment Block Profile (\begin{comment} ... \end{comment})
+# =============================================================================
+
+identity:
+  name: discard_block
+  category: block_literal
+  description: "Quenched editorial comment block; suspended parsing, marked for extraction or elimination"
+
+inherits: raw_block
+family: block
+terminator_pattern: "\\end{{{name}}}"
+
+span_classification:
+  category: editorial_comment_block
+  semantic_role: author_notes

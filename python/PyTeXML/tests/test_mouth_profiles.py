@@ -149,7 +149,7 @@ class MouthIntegrationTests(unittest.TestCase):
             self.assertEqual(list(regex.spans("a%\\b")), [(1, 3)])
 
     def test_registry_is_separate_and_wrong_baseline_kind_is_rejected(self):
-        self.assertIn("native_operations", self.resolver.catalog.operation_registries)
+        self.assertIn("assign_catcode", self.resolver.catalog.reading_handlers)
         self.assertNotIn("operations", self.resolver.catalog.profiles)
         with self.assertRaisesRegex(ProfileError, "baseline_catcodes"):
             self.resolver.new_context("raw_block")

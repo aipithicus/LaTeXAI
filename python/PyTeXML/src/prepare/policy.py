@@ -1,9 +1,8 @@
 """
-Policy Engine and Configuration Loader for LaTeX Extractor.
+Preparation policy configuration for PyTeXML.
 
-Loads declarative, role-based YAML specifications from the `policy/` directory
-and exposes structured, typed configurations to the preflight, pruner, inliner,
-and emitter pipelines.
+Loads declarative role/event actions from resources/policies. This loader does
+not apply rewrites and is not yet wired into the preparation pipeline.
 """
 
 from __future__ import annotations
@@ -11,11 +10,11 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
-import yaml
+from typing import Any, Dict, Union
+from ..yaml_io import load_mapping
 
 
-POLICY_DIR = Path(__file__).resolve().parents[2] / "policy"
+POLICY_DIR = Path(__file__).resolve().parents[2] / "resources" / "policies"
 
 
 class RoleAction(str, Enum):
@@ -94,24 +93,20 @@ class ExtractionPolicy:
 
 def load_policy(policy_identifier_or_path: Union[str, Path]) -> ExtractionPolicy:
     """
-    Loads and validates an ExtractionPolicy from a named preset (e.g. 'preflight', 'lossless')
-    or from an explicit file path.
+    Load the named 'prepare' preset or an explicit policy file.
+
+    Experimental policies require an explicit path and are never searched as
+    presets. Missing fields use the dataclass defaults; supplied fields are strict.
     """
-    path = Path(policy_identifier_or_path)
+    if isinstance(policy_identifier_or_path, str) and policy_identifier_or_path == "prepare":
+        path = POLICY_DIR / "prepare.yaml"
+    else:
+        path = Path(policy_identifier_or_path)
     if not path.is_file():
-        candidate = POLICY_DIR / f"{policy_identifier_or_path}.yaml"
-        if candidate.is_file():
-            path = candidate
-        elif str(policy_identifier_or_path) == "compact" and (POLICY_DIR / "preflight.yaml").is_file():
-            path = POLICY_DIR / "preflight.yaml"
-        else:
-            raise FileNotFoundError(f"Policy not found: {policy_identifier_or_path} (searched {candidate})")
+        raise FileNotFoundError(f"Policy not found: {path}; use 'prepare' or an explicit file path")
 
-    with open(path, "r", encoding="utf-8") as f:
-        raw = yaml.safe_load(f)
-
-    if not isinstance(raw, dict):
-        raise ValueError(f"Invalid policy schema in {path}: root must be a mapping")
+    raw = load_mapping(path)
+    _validate_policy(raw, path)
 
     ident = raw.get("identity", {})
     name = ident.get("name", path.stem)
@@ -154,3 +149,46 @@ def load_policy(policy_identifier_or_path: Union[str, Path]) -> ExtractionPolicy
         provenance=provenance,
         raw_config=raw,
     )
+
+
+def _validate_policy(raw: Dict[str, Any], path: Path) -> None:
+    """Validate current policy fields without defining future rewrite semantics."""
+    allowed = {"identity", "role_actions", "lexical_events", "structural_normalization", "provenance"}
+    def fail(message: str) -> None:
+        raise ValueError(f"{path}: {message}")
+
+    if set(raw) - allowed:
+        fail(f"unknown policy sections: {list(set(raw) - allowed)!r}")
+    for section in allowed:
+        if not isinstance(raw.get(section, {}), dict):
+            fail(f"{section} must be a mapping")
+    identity = raw.get("identity", {})
+    if set(identity) - {"name", "target", "description"}:
+        fail("unknown identity fields")
+    for key, value in identity.items():
+        if not isinstance(value, str) or (key != "description" and not value):
+            fail(f"identity.{key} must be a string" + ("" if key == "description" else " with a value"))
+    for role, action in raw.get("role_actions", {}).items():
+        if not isinstance(role, str) or not role:
+            fail("role_actions keys must be nonempty role names")
+        if not isinstance(action, str) or action not in {a.value for a in RoleAction}:
+            fail(f"unknown action {action!r} for role {role!r}")
+    choices = {
+        "lexical_events": {
+            "comment_line": {"eliminate", "preserve", "route_to_sidecar"},
+            "comment_inline": {"strip_payload", "preserve"},
+            "line_continuation": {"preserve", "eliminate"},
+            "magic_directive": {"extract_metadata", "preserve", "eliminate"},
+        },
+        "structural_normalization": {
+            "paragraph_breaks": {"coalesce", "preserve"},
+            "trailing_whitespace": {"strip", "preserve"},
+        },
+    }
+    for section, fields in choices.items():
+        for key, value in raw.get(section, {}).items():
+            if key not in fields or not isinstance(value, str) or value not in fields[key]:
+                fail(f"invalid {section}.{key}: {value!r}")
+    for key, value in raw.get("provenance", {}).items():
+        if key not in {"emit_ledger", "rle_compression"} or type(value) is not bool:
+            fail(f"provenance.{key} must be a known boolean field")

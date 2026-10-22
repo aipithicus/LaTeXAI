@@ -1,0 +1,50 @@
+# resources/experimental/policies/lossless.yaml
+# =============================================================================
+# Archival & Roundtripping Policy: Lossless Preservation
+#
+# Retains all author comments, exact whitespace formatting, inactive branches,
+# and author macros without destructive edits. Routes author notes to sidecars.
+# =============================================================================
+
+identity:
+  name: lossless
+  target: "archival_manifest"
+  description: "Non-destructive preservation: retains exact comments, whitespace, conditional branches, and author macros with zero source loss"
+
+# -----------------------------------------------------------------------------
+# 1. Action per Semantic Role (classified by bindings and syntax)
+# -----------------------------------------------------------------------------
+role_actions:
+  author_notes: route_to_sidecar      # Route \begin{comment} to sidecar, retain in source
+  editorial_annotation: preserve     # Keep \todo, \note intact
+  dead_conditional: preserve         # Keep inactive \iftrue / \iffalse branches intact
+  code_listing: preserve             # Keep verbatim, lstlisting intact
+  code_inline: preserve              # Keep \verb, \lstinline intact
+  formatted_code_listing: preserve   # Keep alltt intact
+  transparent_container: preserve    # Retain environment boundaries
+  wrapped_container: preserve
+  formatting_container: preserve     # Retain styling macros
+  external_verbatim: preserve        # Retain external file references without forced inlining
+
+# -----------------------------------------------------------------------------
+# 2. Action per Lexical Event (emitted by tex_reader.py)
+# -----------------------------------------------------------------------------
+lexical_events:
+  comment_line: preserve             # Retain full-line comments exactly as written
+  comment_inline: preserve           # Retain inline comments and preceding whitespace
+  line_continuation: preserve        # Retain line continuation markers
+  magic_directive: preserve          # Retain tool and compiler directives in source
+
+# -----------------------------------------------------------------------------
+# 3. Structural Normalization
+# -----------------------------------------------------------------------------
+structural_normalization:
+  paragraph_breaks: preserve         # Unbounded: retain all empty lines verbatim
+  trailing_whitespace: preserve      # Preserve trailing whitespace on every line
+
+# -----------------------------------------------------------------------------
+# 4. Provenance
+# -----------------------------------------------------------------------------
+provenance:
+  emit_ledger: true
+  rle_compression: false

@@ -121,7 +121,7 @@ class ResolvedEffectTests(unittest.TestCase):
         self.assertIsInstance(result, UnresolvedBindingResult)
 
     def test_external_package_commands_select_inlining_from_actual_role(self):
-        policy = load_policy("preflight")
+        policy = load_policy("prepare")
         for package, name in (("verbatim", r"\verbatiminput"), ("verbatim", r"\verbatiminput*"),
                               ("fancyvrb", r"\VerbatimInput"), ("listings", r"\lstinputlisting")):
             with self.subTest(command=name):
@@ -134,7 +134,7 @@ class ResolvedEffectTests(unittest.TestCase):
 
     def test_policy_uses_semantic_role_without_losing_lexical_category(self):
         self.resolver.load_package("alltt")
-        prose = load_policy("prose_extraction")
+        prose = load_policy(PROJECT_ROOT / "resources/experimental/policies/prose_extraction.yaml")
         for name in ("verbatim", "alltt"):
             profile = self.resolver.resolve_environment(name)
             self.assertEqual(prose.get_role_action(profile.span_classification.semantic_role),
