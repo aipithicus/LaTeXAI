@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Iterable, Literal
 
-from .contracts import LiteralRegion, ReadingBoundary, StoredDefinition
+from .contracts import LiteralRegion, ReadingBoundary, SkippedRegion, StoredDefinition
 from .spans import SourceBasis, SourceSpan, SpanSet
 from .tex_reader import ReadEvent
 
@@ -93,7 +93,7 @@ class Coverage:
         return tuple(sorted(segments, key=lambda segment: segment.span.start))
 
 
-ReadingItem = ReadEvent | LiteralRegion | StoredDefinition | ReadingBoundary
+ReadingItem = ReadEvent | LiteralRegion | StoredDefinition | SkippedRegion | ReadingBoundary
 
 
 @dataclass(frozen=True, slots=True, init=False)
@@ -102,7 +102,7 @@ class ReadingCoverage:
 
     Partial streams and gaps are allowed and stay unknown. Boundaries must be
     terminal and retain their diagnostic anchors independently of coverage. Only
-    source extents are coalesced; literal/definition records retain their identity,
+    source extents are coalesced; literal/definition/skipped records retain their identity,
     including records with empty bodies. Ordinary per-token events are not stored.
     """
     basis: SourceBasis
@@ -110,18 +110,19 @@ class ReadingCoverage:
     unknown: SpanSet
     literal_regions: tuple[LiteralRegion, ...]
     stored_definitions: tuple[StoredDefinition, ...]
+    skipped_regions: tuple[SkippedRegion, ...]
     diagnostics: tuple[ReadingBoundary, ...]
 
     def __init__(self, basis: SourceBasis, items: Iterable[ReadingItem]):
         if not isinstance(basis, SourceBasis):
             raise TypeError("Reading coverage requires a SourceBasis")
         observed: list[SourceSpan] = []
-        literals, definitions, diagnostics = [], [], []
+        literals, definitions, skipped, diagnostics = [], [], [], []
         end = 0
         for item in items:
             if diagnostics:
                 raise ValueError("A reading boundary must be the last item")
-            if not isinstance(item, (ReadEvent, LiteralRegion, StoredDefinition, ReadingBoundary)):
+            if not isinstance(item, (ReadEvent, LiteralRegion, StoredDefinition, SkippedRegion, ReadingBoundary)):
                 raise TypeError("Expected a dispatcher reading item")
             basis.require(item.span)
             if isinstance(item, ReadingBoundary):
@@ -141,6 +142,11 @@ class ReadingCoverage:
                         or parts[0].end != parts[1].start or parts[1].end != parts[2].start):
                     raise ValueError("Region parts must partition the region extent")
                 (literals if isinstance(item, LiteralRegion) else definitions).append(item)
+            if isinstance(item, SkippedRegion):
+                basis.require(item.conditional)
+                if item.conditional.end > item.span.start or item.branch not in ("then", "else"):
+                    raise ValueError("Skipped region requires an earlier conditional and a then/else branch")
+                skipped.append(item)
             if item.span.start == item.span.end:
                 continue
             if observed and observed[-1].end == item.span.start:
@@ -153,15 +159,18 @@ class ReadingCoverage:
         object.__setattr__(self, "unknown", coverage.complement(basis.whole))
         object.__setattr__(self, "literal_regions", tuple(literals))
         object.__setattr__(self, "stored_definitions", tuple(definitions))
+        object.__setattr__(self, "skipped_regions", tuple(skipped))
         object.__setattr__(self, "diagnostics", tuple(diagnostics))
 
-    def query(self, kind: Literal["literal", "definition"], *,
+    def query(self, kind: Literal["literal", "definition", "skipped"], *,
               part: Literal["span", "body"] = "span", window: SourceSpan | None = None) -> Coverage:
-        """Query the extent or body of a dispatched literal/definition occurrence."""
-        if kind not in ("literal", "definition") or part not in ("span", "body"):
-            raise ValueError("Expected literal/definition coverage of span/body")
+        """Skipped extents exclude delimiters and have no separate body part."""
+        if (kind not in ("literal", "definition", "skipped") or part not in ("span", "body")
+                or (kind == "skipped" and part != "span")):
+            raise ValueError("Expected literal/definition span/body coverage or skipped span coverage")
         window = self.basis.whole if window is None else window
         self.basis.require(window)
-        records = self.literal_regions if kind == "literal" else self.stored_definitions
+        records = {"literal": self.literal_regions, "definition": self.stored_definitions,
+                   "skipped": self.skipped_regions}[kind]
         matches = SpanSet(self.basis, (getattr(record, part) for record in records)).clip(window)
         return Coverage(window, matches, self.unknown.clip(window))

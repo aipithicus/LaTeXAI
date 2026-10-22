@@ -1,9 +1,10 @@
 """Structural execution routing over one source-preserving reader cursor.
 
 Execute only resolved local reading effects in an established active context.
-Literal and stored-definition grammar is delegated to dedicated scanners. Conditional
-execution, package discovery, expansion and master.tex assembly remain outside
-this slice. Unsupported behavior leaves a located boundary and unchanged residue.
+Literal, stored-definition and skipped-branch scanning is delegated to dedicated
+scanners. Only constant conditionals execute here. Package discovery, expansion
+and master.tex assembly remain outside this slice. Unsupported behavior leaves
+a located boundary and unchanged residue.
 """
 from __future__ import annotations
 
@@ -12,11 +13,12 @@ from typing import Iterator
 
 from .context import ExecutionMode, ReaderContext
 from .contracts import (
-    EffectiveReadingProfile, LiteralRegion, ReadingBoundary, ReadingIssue,
-    ReadingKnowledge, StoredDefinition, require_resolved,
+    ConditionalRule, EffectiveReadingProfile, LiteralRegion, ReadingBoundary, ReadingIssue,
+    ReadingKnowledge, SkippedRegion, StoredDefinition, require_resolved,
 )
 from .definition_scanner import DefinitionScanner
 from .literal_scanner import LiteralScanner
+from .skipped_scanner import SkippedBranchScanner, SkippedScan
 from .spans import SourceSpan
 from .tex_reader import CatCode, EventKind, InvalidCharacterError, ReadEvent, TexReader, TokenKind
 
@@ -27,22 +29,34 @@ class _GroupFrame:
     opening: SourceSpan
 
 
+@dataclass(slots=True)
+class _ConditionalFrame:
+    opening: SourceSpan
+    truth: bool
+    in_alternative: bool = False
+
+
 class StructuralDispatcher:
     """Route active events and preserve original source spans.
 
     Applied directives and group tokens retain their original ReadEvent. The
     dispatcher owns its structural group stack; caller-created lexical scopes
     cannot be closed by source. A boundary retains state at the stopping point,
-    without repairing groups or rolling back effects already executed. EOF with
-    unclosed groups anchors the diagnostic to an opener and has empty residue.
+    without repairing groups or rolling back effects already executed. Conditionals
+    have an independent stack and create no lexical scopes. EOF in executed text
+    with unclosed structure anchors the diagnostic to an opener with empty residue.
     """
 
     def __init__(self, reader: TexReader, context: ReaderContext, knowledge: ReadingKnowledge):
         self.literals = LiteralScanner(reader, context, knowledge)
         self.definitions = DefinitionScanner(reader, context)
+        self.skipped = SkippedBranchScanner(reader, context, knowledge)
         self.reader, self.context, self.knowledge = reader, context, knowledge
         self._base_scope_depth = context.scope_depth
         self._groups: list[_GroupFrame] = []
+        self._conditionals: list[_ConditionalFrame] = []
+        self._skip_start: int | None = None
+        self._pending_skip: SkippedScan | None = None
         self.halted = False
         self._finished = False
 
@@ -57,11 +71,14 @@ class StructuralDispatcher:
         if not condition:
             raise ReadingIssue(reason, detail)
 
-    def next_item(self) -> ReadEvent | LiteralRegion | StoredDefinition | ReadingBoundary | None:
+    def next_item(self) -> ReadEvent | LiteralRegion | StoredDefinition | SkippedRegion | ReadingBoundary | None:
         if self.halted or self._finished:
             return None
         reader, context = self.reader, self.context
-        cursor_span = reader.source_span(reader.position, reader.position)
+        # A skipped scan has consumed its delimiter, but it is still owed to the
+        # output stream. A context failure here must retain that source too.
+        cursor_span = (self._pending_skip.terminator.span if self._pending_skip is not None
+                       else reader.source_span(reader.position, reader.position))
         if context.mode != ExecutionMode.ACTIVE_EXECUTION:
             return self._boundary(cursor_span, "inactive_context",
                                   "An owning scanner must handle this execution mode")
@@ -69,11 +86,24 @@ class StructuralDispatcher:
                 or context.scope_depth != self._base_scope_depth + len(self._groups)):
             return self._boundary(cursor_span, "context_changed",
                                   "Reader parameters or scope ownership changed outside the dispatcher")
+        if self._skip_start is not None:
+            return self._scan_skipped()
+        if self._pending_skip is not None:
+            pending, self._pending_skip = self._pending_skip, None
+            try:
+                self._conditional(pending.rule, pending.terminator.span)
+                return pending.terminator
+            except ReadingIssue as error:
+                return self._boundary(pending.terminator.span, error.reason, error.detail)
         try:
             event = reader.next_event()
         except InvalidCharacterError as error:
             return self._boundary(error.span, "invalid_character", str(error))
         if event is None:
+            if self._conditionals:
+                return self._boundary(self._conditionals[-1].opening, "unclosed_conditional",
+                                      f"EOF with {len(self._conditionals)} unclosed conditional(s)",
+                                      remainder_start=len(reader.text))
             if self._groups:
                 return self._boundary(self._groups[-1].opening, "unclosed_group",
                                       f"EOF with {len(self._groups)} unclosed source group(s)",
@@ -109,6 +139,15 @@ class StructuralDispatcher:
             if token.kind != TokenKind.CONTROL_SEQUENCE:
                 return event
             profile = require_resolved(self.knowledge.resolve_command(token.value))
+            if profile.family == "conditional":
+                self._require(profile.conditional is not None and profile.action is None
+                              and not profile.grammar and not profile.catcode_overrides
+                              and not profile.catcode_layers and not profile.reader_parameters
+                              and not profile.interpolations and not profile.active_options
+                              and profile.terminator is None and profile.state_management is None,
+                              "unsupported_conditional", "Conditional requires a standalone nesting/evaluation rule")
+                self._conditional(profile.conditional, event.span)
+                return event
             if profile.family == "stored_definition":
                 definition = self.definitions.read(event.span.start, profile)
                 context.record_definition(definition)
@@ -138,6 +177,45 @@ class StructuralDispatcher:
             return self._boundary(event.span, error.reason, error.detail)
         except InvalidCharacterError as error:
             return self._boundary(event.span, "invalid_character", str(error))
+
+    def _conditional(self, rule: ConditionalRule, span: SourceSpan) -> None:
+        """Own execution and stack changes; conditionals do not create scopes."""
+        if rule.role == "opener":
+            self._require(rule.evaluation in {"always_true", "always_false"},
+                          "unsupported_conditional", "Conditional predicate requires interpretation")
+            truth = rule.evaluation == "always_true"
+            self._conditionals.append(_ConditionalFrame(span, truth))
+            if not truth:
+                self._skip_start = span.end
+            return
+        self._require(rule.evaluation is None, "unsupported_conditional",
+                      "Only conditional openers may have an evaluation rule")
+        self._require(rule.role in {"alternative", "case_alternative", "terminator"},
+                      "unsupported_conditional", "Unknown conditional role")
+        self._require(bool(self._conditionals), "unmatched_conditional", "No conditional is available to close or branch")
+        frame = self._conditionals[-1]
+        if rule.role == "terminator":
+            self._conditionals.pop()
+        elif rule.role == "alternative":
+            self._require(not frame.in_alternative, "extra_conditional_alternative",
+                          "This conditional already entered its alternative")
+            frame.in_alternative = True
+            if frame.truth:
+                self._skip_start = span.end
+        else:
+            raise ReadingIssue("unexpected_case_alternative", "A case alternative cannot branch this boolean conditional")
+
+    def _scan_skipped(self) -> SkippedRegion | ReadingBoundary:
+        frame = self._conditionals[-1]
+        try:
+            scanned = self.skipped.read(stop_at_alternative=not frame.in_alternative)
+        except ReadingIssue as error:
+            return self._boundary(frame.opening, error.reason, error.detail, remainder_start=self._skip_start)
+        except InvalidCharacterError as error:
+            return self._boundary(error.span, "invalid_character", str(error), remainder_start=self._skip_start)
+        self._skip_start = None
+        self._pending_skip = scanned
+        return SkippedRegion(scanned.span, frame.opening, "else" if frame.in_alternative else "then")
 
     def _effect(self, profile: EffectiveReadingProfile, span: SourceSpan) -> None:
         """Route generic action identities; command spellings remain in bindings."""
@@ -190,6 +268,6 @@ class StructuralDispatcher:
             name.append(token.value)
         raise ReadingIssue("unclosed_header", "Environment name has no closing brace")
 
-    def __iter__(self) -> Iterator[ReadEvent | LiteralRegion | StoredDefinition | ReadingBoundary]:
+    def __iter__(self) -> Iterator[ReadEvent | LiteralRegion | StoredDefinition | SkippedRegion | ReadingBoundary]:
         while (item := self.next_item()) is not None:
             yield item

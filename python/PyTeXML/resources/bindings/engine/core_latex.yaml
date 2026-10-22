@@ -8,7 +8,7 @@
 identity:
   name: core_latex
   tier: engine_kernel
-  source_reference: "TeX82 tex.web (get_r_token / scan_toks) / base/latex.ltx / l3kernel/l3bootstrap.dtx"
+  source_reference: "TeX82 tex.web (get_r_token / scan_toks / conditional / pass_text) / base/latex.ltx / l3kernel/l3bootstrap.dtx"
   description: "Core primitives, catcode mutators, reader parameters, and structural boundaries"
 
 reading:
@@ -38,6 +38,13 @@ reading:
       grammar:
         handler: environment_name
         argument: braced_literal_name
+
+    # A factory is not itself a nesting conditional. Dynamic boolean meanings
+    # remain outside the bounded dispatcher.
+    - name: "\\newif"
+      family: conditional_factory
+      syntax: "\\if{name}"
+      registers: boolean_switch
 
   # ---------------------------------------------------------------------------
   # Lexical and Catcode Mutators
@@ -123,20 +130,36 @@ reading:
       state_management: {group_kind: simple}
 
   # ---------------------------------------------------------------------------
-  # Static Conditionals
+  # TeX82 conditional meanings. Nesting is known even when evaluation is not.
   # ---------------------------------------------------------------------------
   conditionals:
     - name: "\\iftrue"
+      role: opener
       evaluation: always_true
     - name: "\\iffalse"
+      role: opener
       evaluation: always_false
-    - name: "\\newif"
-      syntax: "\\if{name}"
-      registers: boolean_switch
+    - {name: "\\if", role: opener, evaluation: deferred}
+    - {name: "\\ifcat", role: opener, evaluation: deferred}
+    - {name: "\\ifnum", role: opener, evaluation: deferred}
+    - {name: "\\ifdim", role: opener, evaluation: deferred}
+    - {name: "\\ifodd", role: opener, evaluation: deferred}
+    - {name: "\\ifvmode", role: opener, evaluation: deferred}
+    - {name: "\\ifhmode", role: opener, evaluation: deferred}
+    - {name: "\\ifmmode", role: opener, evaluation: deferred}
+    - {name: "\\ifinner", role: opener, evaluation: deferred}
+    - {name: "\\ifvoid", role: opener, evaluation: deferred}
+    - {name: "\\ifhbox", role: opener, evaluation: deferred}
+    - {name: "\\ifvbox", role: opener, evaluation: deferred}
+    - {name: "\\ifx", role: opener, evaluation: deferred}
+    - {name: "\\ifeof", role: opener, evaluation: deferred}
+    - {name: "\\ifcase", role: opener, evaluation: deferred}
     - name: "\\else"
-      action: "conditional_alternative"
+      role: alternative
     - name: "\\fi"
-      action: "conditional_terminator"
+      role: terminator
+    - name: "\\or"
+      role: case_alternative
 
   # ---------------------------------------------------------------------------
   # Structural File Inclusions

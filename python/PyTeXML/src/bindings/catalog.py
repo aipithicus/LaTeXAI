@@ -105,6 +105,14 @@ class BindingCatalog:
                 if not isinstance(name, str) or not name or name in names:
                     raise ProfileError(f"{path}: missing or duplicate name in reading.{section}: {name!r}")
                 names.add(name)
+                if section == "conditionals":
+                    role = spec.get("role")
+                    fields = {"name", "role", "evaluation"} if role == "opener" else {"name", "role"}
+                    if (set(spec) != fields
+                            or role not in ("opener", "alternative", "case_alternative", "terminator")
+                            or (role == "opener" and spec.get("evaluation") not in
+                                ("always_true", "always_false", "deferred"))):
+                        raise ProfileError(f"{path}: {name} requires a conditional role and opener-only evaluation")
                 grammar = spec.get("grammar", {})
                 if not isinstance(grammar, dict):
                     raise ProfileError(f"{path}: {name} grammar must be a mapping")

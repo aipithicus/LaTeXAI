@@ -113,7 +113,7 @@ There is no macro expansion or native-engine fallback here.
 baseline. `ReaderContext` applies immediate local effects and restores scoped catcodes,
 `endlinechar`, expl3 saved state, and stored local definitions. Repeated `\ExplSyntaxOn` reapplies its
 assignments while preserving the saved baseline. `StructuralDispatcher` owns active
-execution routing, source group pairing, the supported environment header scan,
+execution routing, source group and conditional pairing, the supported environment header scan,
 and synchronization of a live reader's `endline_char`. Literal profile entry/exit
 and body scanning are delegated to `LiteralScanner`. Interpolation plans require
 further literal handling and cannot be
@@ -207,3 +207,57 @@ A stored invocation currently stops at an explicit boundary; deciding whether it
 is reading-neutral requires later analysis. This is lexical capture and scoped
 shadowing, not complete TeX meaning validation: prefix/outer/protected semantics,
 LaTeX declaration wrappers, global assignments and expansion remain future work.
+
+## 8. Bounded conditionals and skipped text
+
+`reading.conditionals` describes command meanings with a small validated schema:
+
+```yaml
+conditionals:
+  - {name: "\\iftrue", role: opener, evaluation: always_true}
+  - {name: "\\iffalse", role: opener, evaluation: always_false}
+  - {name: "\\ifnum", role: opener, evaluation: deferred}
+  - {name: "\\else", role: alternative}
+  - {name: "\\or", role: case_alternative}
+  - {name: "\\fi", role: terminator}
+```
+
+Openers require `evaluation: always_true|always_false|deferred`; other roles have
+no evaluation field. Legacy action fields and combined grammar/effect declarations
+are rejected here. The kernel inventory enumerates all TeX82 conditional tests;
+extension primitives need explicit additional declarations. `\newif` is a
+deferred command factory, not a nesting opener. Command spelling is not an
+algorithmic test: a binding can declare another name with one of these meanings.
+
+`resolve_command` returns the rule in an `EffectiveReadingProfile` for active
+routing. `resolve_conditional` supplies only the nesting rule for skipped scanning,
+without resolving unrelated arguments or effects. Both use the same winning
+declaration across active packages and engine bindings; a nonconditional package
+override suppresses the old conditional meaning. `None` means no conditional
+meaning in this established knowledge context, not a guess about an undiscovered
+package. The runtime checks stored author meanings first. Dynamic aliases and
+new conditional factories require later support, and do not execute today.
+
+`StructuralDispatcher` owns conditional state and evaluates only constant rules.
+It declines deferred predicates before scanning arguments. Its stack is independent
+of groups: conditionals create no lexical scopes. A successful skipped scan returns
+source coverage and the consumed delimiter for the dispatcher to route; it does
+not change conditional state itself. No source text is copied or rewritten.
+
+[SkippedBranchScanner](../../src/reading/skipped_scanner.py) follows the nesting
+principle of `pass_text` in [TeX82's tex.web](https://github.com/TeX-Live/texlive-source/blob/trunk/texk/web2c/tex.web):
+read mouth tokens without expansion, increment for conditional opener meanings,
+decrement for nested terminators, and return at an eligible outer delimiter.
+Other tokens do not execute, even apparent definitions and verbatim openers.
+False then-branches stop at `else`, `or` or `fi`; an outer `or` is a diagnostic for
+these boolean conditionals. A discarded else-branch continues to `fi`, ignoring
+intervening outer `else`/`or` tokens as TeX does. An extra `else` in an executing
+alternative is a diagnostic. Comments, `^^` conversion and current catcodes still
+apply; outer-macro checks and engine error recovery are not implemented.
+
+`SkippedRegion` retains an exact extent, its owning conditional opener span and
+`then|else` branch identity. Executed delimiters are separate events. Unfinished
+skips retain unknown coverage from their start; completed empty branches still
+retain a record. `ReadingCoverage.query("skipped")` exposes established inactive
+extents without authorizing deletion. Production preparation does not use this
+dispatcher or scanner yet.

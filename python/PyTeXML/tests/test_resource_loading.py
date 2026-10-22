@@ -174,6 +174,52 @@ class ResourceLoadingTests(unittest.TestCase):
         with self.assertRaisesRegex(ProfileError, "invalid handler"):
             BindingCatalog(self.bindings, handlers_path=path)
 
+    def test_conditional_contract_rejects_ambiguous_or_unhandled_fields(self):
+        for fields in ({}, {"role": "opener"}, {"role": "opener", "evaluation": True},
+                       {"role": "opener", "evaluation": "unknown"},
+                       {"role": ["opener"], "evaluation": "always_true"},
+                       {"role": "terminator", "evaluation": "always_true"},
+                       {"role": "alternative", "action": "conditional_alternative"},
+                       {"role": "terminator", "grammar": {"handler": "inline_character"}},
+                       {"role": "terminator", "python_import": "example.run"}):
+            with self.subTest(fields=fields):
+                self.core["reading"] = {"conditionals": [{"name": r"\choice"} | fields]}
+                self.write("engine/core.yaml", self.core)
+                with self.assertRaisesRegex(ProfileError, "conditional role and opener-only evaluation"):
+                    BindingCatalog(self.bindings)
+
+    def test_conditional_aliases_and_deferred_predicates_resolve_from_yaml(self):
+        from src.bindings.resolver import BindingResolver
+        from src.reading.contracts import ConditionalRule, UnresolvedBindingResult
+
+        specs = [{"name": r"\yes", "role": "opener", "evaluation": "always_true"},
+                 {"name": r"\no", "role": "opener", "evaluation": "always_false"},
+                 {"name": r"\test", "role": "opener", "evaluation": "deferred"},
+                 {"name": r"\otherwise", "role": "alternative"},
+                 {"name": r"\case", "role": "case_alternative"},
+                 {"name": r"\done", "role": "terminator"}]
+        self.core["reading"] = {"conditionals": specs}
+        self.write("engine/core.yaml", self.core)
+        resolver = BindingResolver(BindingCatalog(self.bindings))
+        for spec in specs:
+            with self.subTest(spec=spec):
+                rule = ConditionalRule(spec["role"], spec.get("evaluation"))
+                self.assertEqual(resolver.resolve_conditional(spec["name"]), rule)
+                profile = resolver.resolve_command(spec["name"])
+                self.assertEqual(profile.family, "conditional")
+                self.assertEqual(profile.conditional, rule)
+                self.assertEqual(profile.binding_id, "engine/core")
+                self.assertIsInstance(resolver.resolve_command(spec["name"], {"extra": True}), UnresolvedBindingResult)
+        self.assertIsNone(resolver.resolve_conditional("if_not_declared"))
+
+    def test_newif_is_a_factory_without_a_conditional_nesting_role(self):
+        from src.bindings.resolver import BindingResolver
+        from src.reading.contracts import UnresolvedBindingResult
+
+        resolver = BindingResolver()
+        self.assertIsNone(resolver.resolve_conditional("newif"))
+        self.assertIsInstance(resolver.resolve_command("newif"), UnresolvedBindingResult)
+
     def test_registry_identity_must_match_filename(self):
         path = self.root / "renamed.yaml"
         path.write_text(HANDLERS_PATH.read_text(encoding="utf-8"), encoding="utf-8")

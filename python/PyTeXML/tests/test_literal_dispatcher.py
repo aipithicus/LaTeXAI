@@ -169,8 +169,8 @@ class LiteralDispatcherTests(unittest.TestCase):
                 self.assertEqual(item.reason, "unsupported_literal_grammar")
                 self.assertEqual(self.reader.source_slice(item.remainder), source)
 
-    def test_expanding_definitions_conditionals_and_unknown_commands_are_frontiers(self):
-        for source in (r"\edef\x{\verb|body|}", r"\iffalse\verb|\fi|LIVE",
+    def test_expanding_definitions_predicates_and_unknown_commands_are_frontiers(self):
+        for source in (r"\edef\x{\verb|body|}", r"\ifnum1=0\verb|\fi|LIVE",
                        r"\unknown{\begin{verbatim}x\end{verbatim}}",
                        r"\begin{\which}body", r"\begin{document}body"):
             with self.subTest(source=source):

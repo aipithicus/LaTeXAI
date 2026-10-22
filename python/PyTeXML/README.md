@@ -141,28 +141,54 @@ tokens and their category codes; inline delimiters become locally active.
 Closing a literal restores lexical settings while retaining the cursor's exit
 N/M/S state. No substring readers or source copies are needed.
 
+The dispatcher also owns a conditional stack independent of lexical groups.
+YAML separates conditional nesting roles from predicate evaluation. Only constant
+true/false predicates (`\iftrue`, `\iffalse` and declared equivalents) execute;
+other declared TeX82 predicates can nest inside skipped text but stop an active
+scan before their arguments. `\else` and `\fi` route through the dispatcher.
+[SkippedBranchScanner](src/reading/skipped_scanner.py) advances the same mouth
+cursor without expansion, literal dispatch, definition publication or effects.
+Thus `\iffalse\verb|\fi|LIVE` ends skipping at that first `\fi`. Comments and
+current catcodes still affect tokenization. Stored author macros shadow binding
+meanings, including conditional-looking names; they do not expand while skipped.
+
+A `SkippedRegion` covers only the discarded branch text, including any nested
+conditional tokens. Its owning conditional opener is retained as a source span;
+the executed branch delimiters remain separate `ReadEvent`s. The scanner hands
+the already-read closing delimiter back to the dispatcher without retokenization.
+Empty branches retain records. A failed skip returns a diagnostic and unresolved
+source from the branch start, rather than claiming a completed skipped region.
+This classifies source; it neither deletes source nor chooses output edits.
+
 `TexReader.position` excludes unconsumed lookahead; `current_line` exposes both
 the raw physical line and its trimmed mouth window. `peek_character()` stays on
 that line and preserves any `^^` conversion already performed. Reader-local
 `checkpoint()` / `restore()` also preserve pending characters, captured
 `endlinechar`, category settings and sticky errors. They do not snapshot or roll
-back execution effects or the dispatcher's group stack. Do not use a reader-only
+back execution effects or the dispatcher's group/conditional stacks. Do not use a reader-only
 checkpoint to rewind executed directives. Successful group/literal exit never
 restores the cursor to its entry state.
 
 This is not yet a whole-document structural parser. Unknown commands, active
-meanings, unsupported definitions, stored macro invocations, conditionals,
+meanings, unsupported definitions, stored macro invocations, unevaluated predicates,
 computed environment names, math/alignment
 structure and unsupported package literal grammars return a located
 `ReadingBoundary` and halt this scan. Its `remainder` covers unchanged source not
-already emitted by preceding items. At EOF an unclosed group diagnostic points to
-its opener but has empty residue; no duplicate source or synthetic closer is
+already emitted by preceding items. At EOF in executed text an unclosed group or
+conditional diagnostic points to its opener but has empty residue; no duplicate source or synthetic closer is
 emitted. A boundary retains already executed state for diagnosis without repair.
 Unclosed literals retain that residue rather than consuming it as proven literal
 content. Stored-definition, argument-scanning and skipped-branch modes require
 their owning scanners; this dispatcher does not dispatch inside them. It performs
 no package discovery, dynamic/global assignments, macro expansion or XML work.
 Reading after catalog bootstrap performs no filesystem I/O.
+
+Conditional classification assumes established binding and author-meaning context.
+It uses explicit declarations, never an `if` name prefix. The initial nesting
+inventory is TeX82; extension/package conditional primitives and dynamic aliases
+need their own declarations or future meaning support. `\newif`, `\let`, predicate
+evaluation, outer-command checks and TeX's error-recovery repairs remain outside
+this increment. Production preparation still uses its existing paths.
 
 ## Source intervals and coverage
 
@@ -184,7 +210,7 @@ not a point-membership test. Set construction sorts arbitrary input; operations
 sweep normalized intervals without per-character masks or source text copies.
 
 [coverage.py](src/reading/coverage.py) consumes established top-level dispatcher
-items. It retains literal/definition records and diagnostics, coalesces observed
+items. It retains literal/definition/skipped records and diagnostics, coalesces observed
 source extents, and treats every unobserved gap or suffix as unknown. It does not
 execute the reader, reinterpret raw tokens, or certify undispatched reader events.
 Use this instead of the iteration loop above to consume a fresh dispatcher once:
@@ -195,6 +221,7 @@ from src.reading.coverage import ReadingCoverage
 coverage = ReadingCoverage(reader.basis, dispatcher)
 literal_bodies = coverage.query("literal", part="body")
 definition_bodies = coverage.query("definition", part="body")
+skipped_text = coverage.query("skipped")
 selected_bodies = literal_bodies.union(definition_bodies)
 for segment in selected_bodies.partition():
     # segment.span and segment.state: match, nonmatch, or unknown
@@ -205,8 +232,11 @@ Already collected dispatcher items can be supplied instead. A partial collection
 does not imply that the rest was scanned, and consuming an exhausted dispatcher
 does not recover earlier results. Queries can select whole regions (`part="span"`)
 or bodies, optionally within a source window. Original records remain available
-in `literal_regions` and `stored_definitions`, even when adjacent coverage merges
+in `literal_regions`, `stored_definitions` and `skipped_regions`, even when adjacent coverage merges
 or a body is empty. Ordinary per-token events are not retained by the adapter.
+The `skipped` query selects branch extents excluding executed delimiters; only
+`part="span"` applies. Such extents are known nonmatches for dispatched literals
+and definitions: apparent declarations inside skipped text never ran.
 
 Each `Coverage` query has disjoint `matches` and `unknown`; `nonmatches` is the
 remaining coverage in its window. Negation preserves unknowns. Union, intersection
@@ -216,7 +246,7 @@ same basis and window; use `restrict()` explicitly when narrowing a query.
 Nonmatching literal coverage means only that the established reading did not
 dispatch a literal there. It does not prove ordinary prose or authorize cleanup.
 
-Diagnostic anchors are separate from unknown character coverage. An unclosed-group
+Diagnostic anchors are separate from unknown character coverage. An unclosed-structure
 diagnostic at EOF can have an earlier opener as its anchor and empty remaining
 coverage; the diagnostic is retained. Likewise, an empty unresolved location has
 no character coverage. Empty `unknown` therefore does not imply structural validity.

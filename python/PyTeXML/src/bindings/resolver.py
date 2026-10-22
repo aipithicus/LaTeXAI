@@ -10,7 +10,7 @@ from typing import Any, Iterator
 from .catalog import BindingCatalog
 from ..reading.context import ReaderContext
 from ..reading.contracts import (
-    EffectiveReadingProfile, InterpolationRule, SpanClassification,
+    ConditionalRule, EffectiveReadingProfile, InterpolationRule, SpanClassification,
     StateManagementRule, TerminatorRule, UnresolvedBindingResult, UnresolvedReason,
 )
 
@@ -136,63 +136,88 @@ class BindingResolver:
         return self._unresolved(name, UnresolvedReason.UNKNOWN_CONSTRUCT,
                                 f"No active binding for '{name}'", options)
 
+    _command_sections = ("catcode_mutators", "grouping", "command_overrides",
+                         "commands", "factories", "inclusions", "conditionals")
+
+    def _command_specs(self, clean: str) -> Iterator[tuple[str, dict[str, Any], str, dict[str, Any]]]:
+        """Yield only the winning declaration, including nonconditional shadows."""
+        for origin, reading in self._active_bindings():
+            for section in self._command_sections:
+                for spec in reading.get(section, []):
+                    if spec.get("name", spec.get("command")) == clean:
+                        yield origin, reading, section, spec
+                        return
+
+    def resolve_conditional(self, name: str) -> ConditionalRule | None:
+        """Classify without resolving arguments/effects or expanding macros.
+
+        None means no conditional meaning in the established binding context.
+        Stored author definitions take precedence at the scanner/dispatcher.
+        """
+        clean = name if name.startswith("\\") else f"\\{name}"
+        for _, _, section, spec in self._command_specs(clean):
+            if section == "conditionals":
+                return ConditionalRule(spec["role"], spec.get("evaluation"))
+        return None
+
     def resolve_command(self, name: str, options: dict[str, Any] | None = None
                         ) -> EffectiveReadingProfile | UnresolvedBindingResult:
         """Resolve command identity. The caller consumes stars/arguments using grammar."""
         clean = name if name.startswith("\\") else f"\\{name}"
         opts = dict(options or {})
-        sections = ("catcode_mutators", "grouping", "command_overrides",
-                    "commands", "factories", "inclusions", "conditionals")
-        for origin, reading in self._active_bindings():
-            for section in sections:
-                for spec in reading.get(section, []):
-                    if spec.get("name", spec.get("command")) != clean:
-                        continue
-                    action = spec.get("action")
-                    if section == "catcode_mutators":
-                        if action == "assign_catcode_dynamic":
-                            return self._unresolved(clean, UnresolvedReason.ARGUMENTS_REQUIRED,
-                                                    "TeX assignment arguments require a token scanner", opts)
-                        if action not in {"assign_catcode", "expl3_lexical_enter", "expl3_lexical_exit"}:
-                            return self._unresolved(clean, UnresolvedReason.UNSUPPORTED_OPERATION,
-                                                    f"No implementation for {action!r}", opts)
-                        if opts:
-                            return self._unresolved(clean, UnresolvedReason.UNSUPPORTED_READING_OPTION,
-                                                    "A catcode operation has no literal options", opts)
-                        sm = spec.get("state_management", {})
-                        overrides = dict(spec.get("overrides", {}))
-                        if "target_char" in spec:
-                            overrides[spec["target_char"]] = spec["category"]
-                        return EffectiveReadingProfile(
-                            name=clean, family="catcode_mutator", action=action, binding_id=origin,
-                            catcode_overrides=overrides,
-                            reader_parameters=deepcopy(spec.get("reader_parameters", {})),
-                            state_management=StateManagementRule(
-                                **deepcopy(sm), scope=spec.get("scope", "local")),
-                            span_classification=SpanClassification("lexical_directive", "catcode_mutation"))
-                    if section == "grouping":
-                        return self._build_group(clean, spec, origin)
-                    if section in {"commands", "command_overrides"} and spec.get("family") == "stored_definition":
-                        if opts:
-                            return self._unresolved(clean, UnresolvedReason.UNSUPPORTED_READING_OPTION,
-                                                    "Definition declarations have no resolved options", opts)
-                        return EffectiveReadingProfile(
-                            clean, "stored_definition", binding_id=origin,
-                            grammar=deepcopy(spec["grammar"]),
-                            state_management=StateManagementRule(scope=spec["scope"]))
-                    if section in {"commands", "command_overrides"} and spec.get("family") == "environment_open":
-                        if opts:
-                            return self._unresolved(clean, UnresolvedReason.UNSUPPORTED_READING_OPTION,
-                                                    "Environment opener has no resolved options", opts)
-                        return EffectiveReadingProfile(
-                            clean, "environment_open", binding_id=origin,
-                            grammar=deepcopy(spec.get("grammar", {})))
-                    if section in {"commands", "command_overrides"} and spec.get("family") in {
-                            "inline_verbatim", "external_verbatim_file"}:
-                        return self._build_literal(clean, spec, reading, origin, opts, environment=False)
+        for origin, reading, section, spec in self._command_specs(clean):
+            action = spec.get("action")
+            if section == "conditionals":
+                if opts:
+                    return self._unresolved(clean, UnresolvedReason.UNSUPPORTED_READING_OPTION,
+                                            "Conditional commands have no resolved options", opts)
+                return EffectiveReadingProfile(
+                    clean, "conditional", binding_id=origin,
+                    conditional=ConditionalRule(spec["role"], spec.get("evaluation")))
+            if section == "catcode_mutators":
+                if action == "assign_catcode_dynamic":
+                    return self._unresolved(clean, UnresolvedReason.ARGUMENTS_REQUIRED,
+                                            "TeX assignment arguments require a token scanner", opts)
+                if action not in {"assign_catcode", "expl3_lexical_enter", "expl3_lexical_exit"}:
                     return self._unresolved(clean, UnresolvedReason.UNSUPPORTED_OPERATION,
-                                            "This operation requires the execution/argument dispatcher", opts)
-        return self._missing(clean, sections, opts)
+                                            f"No implementation for {action!r}", opts)
+                if opts:
+                    return self._unresolved(clean, UnresolvedReason.UNSUPPORTED_READING_OPTION,
+                                            "A catcode operation has no literal options", opts)
+                sm = spec.get("state_management", {})
+                overrides = dict(spec.get("overrides", {}))
+                if "target_char" in spec:
+                    overrides[spec["target_char"]] = spec["category"]
+                return EffectiveReadingProfile(
+                    name=clean, family="catcode_mutator", action=action, binding_id=origin,
+                    catcode_overrides=overrides,
+                    reader_parameters=deepcopy(spec.get("reader_parameters", {})),
+                    state_management=StateManagementRule(
+                        **deepcopy(sm), scope=spec.get("scope", "local")),
+                    span_classification=SpanClassification("lexical_directive", "catcode_mutation"))
+            if section == "grouping":
+                return self._build_group(clean, spec, origin)
+            if section in {"commands", "command_overrides"} and spec.get("family") == "stored_definition":
+                if opts:
+                    return self._unresolved(clean, UnresolvedReason.UNSUPPORTED_READING_OPTION,
+                                            "Definition declarations have no resolved options", opts)
+                return EffectiveReadingProfile(
+                    clean, "stored_definition", binding_id=origin,
+                    grammar=deepcopy(spec["grammar"]),
+                    state_management=StateManagementRule(scope=spec["scope"]))
+            if section in {"commands", "command_overrides"} and spec.get("family") == "environment_open":
+                if opts:
+                    return self._unresolved(clean, UnresolvedReason.UNSUPPORTED_READING_OPTION,
+                                            "Environment opener has no resolved options", opts)
+                return EffectiveReadingProfile(
+                    clean, "environment_open", binding_id=origin,
+                    grammar=deepcopy(spec.get("grammar", {})))
+            if section in {"commands", "command_overrides"} and spec.get("family") in {
+                    "inline_verbatim", "external_verbatim_file"}:
+                return self._build_literal(clean, spec, reading, origin, opts, environment=False)
+            return self._unresolved(clean, UnresolvedReason.UNSUPPORTED_OPERATION,
+                                    "This operation requires the execution/argument dispatcher", opts)
+        return self._missing(clean, self._command_sections, opts)
 
     def resolve_group(self, catcode: int) -> EffectiveReadingProfile | UnresolvedBindingResult:
         """Category-driven lookup; argument delimiters must not call this as execution."""

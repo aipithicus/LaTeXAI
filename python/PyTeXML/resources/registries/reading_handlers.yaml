@@ -1,4 +1,4 @@
-# Handler vocabulary for core effects, inclusions, literal and definition grammar.
+# Handler vocabulary for core effects, inclusions and source scanners.
 # Command names, syntax, scope and effects belong to bindings. This is capability
 # metadata, not an executable dispatch table. No Python symbols are imported from
 # YAML. A scanner status does not imply preparation-pipeline integration.
@@ -7,6 +7,9 @@ identity:
   description: "Reading actions and their current implementation boundary"
 
 handlers:
+  bounded_conditional:
+    status: scanner
+    description: "StructuralDispatcher evaluates constant predicates and routes delimiters; a mouth-based scanner skips inactive branches"
   primitive_definition:
     status: scanner
     description: "Capture local unexpanded primitive definitions; global and expanding forms remain boundaries"

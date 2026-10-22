@@ -245,8 +245,8 @@ class StructuralDispatcherTests(unittest.TestCase):
                 self.assertEqual(self.context.scope_depth, 0)
                 self.assertEqual(self.context.catcodes["@"], CatCode.OTHER)
 
-    def test_conditionals_remain_execution_boundaries(self):
-        for construct in (r"\iftrue\makeatother\fi", r"\iffalse\makeatother\fi"):
+    def test_predicate_conditionals_remain_execution_boundaries(self):
+        for construct in (r"\ifnum1=1\makeatother\fi", r"\ifx\a\b\makeatother\fi"):
             with self.subTest(construct=construct):
                 self.setup_reader(r"{\makeatletter" + construct + "}")
                 items = list(self.dispatcher)

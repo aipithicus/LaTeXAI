@@ -73,6 +73,13 @@ class InterpolationRule:
 
 
 @dataclass(frozen=True, slots=True)
+class ConditionalRule:
+    """Nesting meaning is independent of whether its predicate can be evaluated."""
+    role: str
+    evaluation: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class EffectiveReadingProfile:
     """Resolved data for one occurrence; applying it is not argument/body execution."""
     name: str
@@ -90,6 +97,7 @@ class EffectiveReadingProfile:
     interpolations: tuple[InterpolationRule, ...] = ()
     action: str | None = None
     binding_id: str = ""
+    conditional: ConditionalRule | None = None
 
 
 class ReadingKnowledge(Protocol):
@@ -97,6 +105,7 @@ class ReadingKnowledge(Protocol):
     def resolve_command(self, name: str) -> EffectiveReadingProfile | UnresolvedBindingResult: ...
     def resolve_environment(self, name: str) -> EffectiveReadingProfile | UnresolvedBindingResult: ...
     def resolve_group(self, catcode: int) -> EffectiveReadingProfile | UnresolvedBindingResult: ...
+    def resolve_conditional(self, name: str) -> ConditionalRule | None: ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -117,6 +126,19 @@ class LiteralRegion:
     closing: SourceSpan
     name: str
     binding_id: str
+
+
+@dataclass(frozen=True, slots=True)
+class SkippedRegion:
+    """Unexecuted source, excluding the separately emitted branch delimiters.
+
+    Nested conditional tokens belong to this extent. ``conditional`` identifies
+    the owning executed opener; it is provenance, not a contained subspan.
+    Empty branches retain a zero-width record.
+    """
+    span: SourceSpan
+    conditional: SourceSpan
+    branch: str
 
 
 @dataclass(frozen=True, slots=True)
