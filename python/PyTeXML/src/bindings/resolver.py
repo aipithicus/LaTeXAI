@@ -16,26 +16,15 @@ from pathlib import Path
 import re
 from typing import Any, Iterator
 
-if __package__:
-    from .tex_reader import CatCode, CatcodeTable
-    from .character_rules import CatcodeLayer, compile_layer
-    from .mouth_profiles import MouthBaseline, MouthProfiles, load_mapping
-else:
-    from tex_reader import CatCode, CatcodeTable
-    from character_rules import CatcodeLayer, compile_layer
-    from mouth_profiles import MouthBaseline, MouthProfiles, load_mapping
+from ..reading.tex_reader import CatCode, CatcodeTable
+from ..reading.character_rules import CatcodeLayer, compile_layer
+from ..reading.mouth_profiles import MouthBaseline, MouthProfiles, load_mapping
 
 
-def _find_dir(name: str) -> Path:
-    current = Path(__file__).resolve().parent
-    for candidate in (current.parent / name, current / name):
-        if candidate.is_dir():
-            return candidate
-    return current.parent / name
 
 
-BINDINGS_DIR = _find_dir("bindings")
-PROFILES_DIR = _find_dir("profiles")
+BINDINGS_DIR = Path(__file__).resolve().parents[2] / "bindings"
+PROFILES_DIR = Path(__file__).resolve().parents[2] / "profiles"
 
 
 class ExecutionMode(str, Enum):

@@ -68,6 +68,9 @@ floating-point values and numeric strings are not coerced.
 ## Bootstrap and source views
 
 ```python
+from src.bindings.resolver import BindingResolver
+from src.reading.tex_reader import TexReader
+
 resolver = BindingResolver()
 context = resolver.new_context("latex_ascii")
 reader = TexReader(source, catcodes=context.catcodes,

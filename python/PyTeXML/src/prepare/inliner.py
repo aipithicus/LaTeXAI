@@ -17,12 +17,8 @@ from pathlib import Path
 import re
 from typing import List, Optional, Set, Tuple
 
-try:
-    from .provenance import SourceLine, Tombstone
-    from .source_io import SourceDecodingError, open_source
-except ImportError:
-    from provenance import SourceLine, Tombstone  # type: ignore
-    from source_io import SourceDecodingError, open_source
+from .provenance import SourceLine, Tombstone
+from ..source_io import SourceDecodingError, open_source
 
 
 def inline_latex_tree_provenance(

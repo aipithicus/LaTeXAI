@@ -8,12 +8,8 @@ from typing import Any
 
 import yaml
 
-if __package__:
-    from .character_rules import CatcodeLayer, ProfileError, compile_layer
-    from .tex_reader import CatcodeTable
-else:
-    from character_rules import CatcodeLayer, ProfileError, compile_layer
-    from tex_reader import CatcodeTable
+from .character_rules import CatcodeLayer, ProfileError, compile_layer
+from .tex_reader import CatcodeTable
 
 
 def overlay(*layers: dict[str, Any]) -> dict[str, Any]:

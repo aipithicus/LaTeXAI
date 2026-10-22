@@ -8,17 +8,17 @@ import unittest
 from unittest.mock import patch
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(PROJECT_ROOT / "src"))
+sys.path.insert(0, str(PROJECT_ROOT))
 
-from bibliography import BibliographyPreparationError, prepare_bibliography, _visible_source
-from bibtex import Database, BibTeXError, extraction_bbl
-from converter import batch_convert_assets_to_svg, raster_to_svg_wrapper
-from inliner import inline_latex_tree_provenance
-from normalizer import knuth_normalize
-from pipeline import preprocess_paper
-from preflight import find_root_tex, preflight_inventory, characterize_image
-from pruner import simplify_conditionals
-from source_io import SourceDecodingError, invalid_utf8_spans, open_source
+from src.prepare.bibliography import BibliographyPreparationError, prepare_bibliography, _visible_source
+from src.bibtex import Database, BibTeXError, extraction_bbl
+from src.converter import batch_convert_assets_to_svg, raster_to_svg_wrapper
+from src.prepare.inliner import inline_latex_tree_provenance
+from src.prepare.normalizer import knuth_normalize
+from src.prepare.pipeline import preprocess_paper
+from src.prepare.preflight import find_root_tex, preflight_inventory, characterize_image
+from src.prepare.pruner import simplify_conditionals
+from src.source_io import SourceDecodingError, invalid_utf8_spans, open_source
 
 
 class PreparationTests(unittest.TestCase):
@@ -249,7 +249,7 @@ class PreparationTests(unittest.TestCase):
         self.assertFalse((self.root / "bad.svg").exists())
 
     def test_missing_pillow_never_fabricates_dimensions(self):
-        with patch("converter.Image", None):
+        with patch("src.converter.Image", None):
             with self.assertRaisesRegex(RuntimeError, "Pillow"):
                 raster_to_svg_wrapper(self.root / "anything.png", self.root / "anything.svg")
 

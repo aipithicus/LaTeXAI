@@ -1,8 +1,8 @@
 """Explicit YAML bootstrap shared by lexical conformance fixtures."""
 from pathlib import Path
 
-from mouth_profiles import MouthProfiles
-from tex_reader import TexReader
+from src.reading.mouth_profiles import MouthProfiles
+from src.reading.tex_reader import TexReader
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 PROFILES = MouthProfiles(PROJECT_ROOT / "profiles" / "mouth")

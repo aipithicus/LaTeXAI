@@ -189,10 +189,7 @@ def prune_latex_provenance(
     using line-sequence alignment to track deleted lines in tombstones.
     """
     import difflib
-    try:
-        from .provenance import SourceLine, Tombstone
-    except ImportError:
-        from provenance import SourceLine, Tombstone  # type: ignore
+    from .provenance import SourceLine, Tombstone
 
     orig_text = "".join(l.text for l in lines)
     pruned_text = prune_latex(

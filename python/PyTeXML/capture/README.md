@@ -9,7 +9,7 @@ This directory defines the downstream projection specifications that map bound L
 The `capture/` layer mirrors the directory structure of `bindings/`:
 
 ```
-python/latex-extractor/
+python/PyTeXML/
 ├── bindings/                     # Pure syntactic comprehension & lexical rules
 │   ├── engine/                   # Engine kernel primitives
 │   │   ├── core_latex.yaml

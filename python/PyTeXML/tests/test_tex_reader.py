@@ -10,9 +10,9 @@ import sys
 import unittest
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(PROJECT_ROOT / "src"))
+sys.path.insert(0, str(PROJECT_ROOT))
 
-from tex_reader import (
+from src.reading.tex_reader import (
     CatCode, CatcodeTable, EventKind, InvalidCharacterError, ReaderState,
     TokenKind,
 )

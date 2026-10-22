@@ -10,16 +10,10 @@ from __future__ import annotations
 from pathlib import Path
 import re
 
-try:
-    from .preflight import PreflightManifest
-    from .provenance import SourceLine, Tombstone
-    from .source_io import open_source
-    from .bibtex import Database, BibTeXError, extraction_bbl
-except ImportError:
-    from preflight import PreflightManifest
-    from provenance import SourceLine, Tombstone
-    from source_io import open_source
-    from bibtex import Database, BibTeXError, extraction_bbl
+from .preflight import PreflightManifest
+from .provenance import SourceLine, Tombstone
+from ..source_io import open_source
+from ..bibtex import Database, BibTeXError, extraction_bbl
 
 
 class BibliographyPreparationError(ValueError):

@@ -9,9 +9,9 @@ import yaml
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 REPO = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(PROJECT_ROOT / "src"))
+sys.path.insert(0, str(PROJECT_ROOT))
 
-from policy_loader import (
+from src.prepare.policy import (
     ExtractionPolicy,
     load_policy,
     POLICY_DIR,

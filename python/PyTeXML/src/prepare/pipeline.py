@@ -20,24 +20,14 @@ from pathlib import Path
 import shutil
 from typing import Dict, List, Optional, Tuple
 
-try:
-    from .preflight import preflight_inventory, PreflightManifest
-    from .pruner import prune_latex, prune_latex_provenance
-    from .inliner import inline_latex_tree, inline_latex_tree_provenance
-    from .normalizer import knuth_normalize, knuth_normalize_provenance
-    from .converter import batch_convert_assets_to_svg, rewrite_tex_image_references, rewrite_lines_image_references
-    from .provenance import ProvenanceLedger, SourceLine, Tombstone
-    from .source_io import open_source
-    from .bibliography import prepare_bibliography
-except ImportError:
-    from preflight import preflight_inventory, PreflightManifest  # type: ignore
-    from pruner import prune_latex, prune_latex_provenance  # type: ignore
-    from inliner import inline_latex_tree, inline_latex_tree_provenance  # type: ignore
-    from normalizer import knuth_normalize, knuth_normalize_provenance  # type: ignore
-    from converter import batch_convert_assets_to_svg, rewrite_tex_image_references, rewrite_lines_image_references  # type: ignore
-    from provenance import ProvenanceLedger, SourceLine, Tombstone  # type: ignore
-    from source_io import open_source
-    from bibliography import prepare_bibliography
+from .preflight import preflight_inventory, PreflightManifest
+from .pruner import prune_latex, prune_latex_provenance
+from .inliner import inline_latex_tree, inline_latex_tree_provenance
+from .normalizer import knuth_normalize, knuth_normalize_provenance
+from ..converter import batch_convert_assets_to_svg, rewrite_tex_image_references, rewrite_lines_image_references
+from .provenance import ProvenanceLedger, SourceLine, Tombstone
+from ..source_io import open_source
+from .bibliography import prepare_bibliography
 
 
 def preprocess_paper(

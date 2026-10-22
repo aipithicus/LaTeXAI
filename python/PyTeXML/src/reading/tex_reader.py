@@ -36,10 +36,7 @@ from enum import Enum, IntEnum
 import re
 from typing import Iterator, Mapping
 
-if __package__:
-    from .character_rules import CatcodeLayer, category
-else:
-    from character_rules import CatcodeLayer, category
+from .character_rules import CatcodeLayer, category
 
 
 class CatCode(IntEnum):

@@ -5,14 +5,14 @@ import unittest
 from unittest.mock import patch
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(PROJECT_ROOT / "src"))
+sys.path.insert(0, str(PROJECT_ROOT))
 
-from binding_resolver import (
+from src.bindings.resolver import (
     BindingResolver, EffectiveReadingProfile, ReaderContext, UnresolvedBindingResult,
     UnresolvedReason,
 )
-from policy_loader import load_policy
-from tex_reader import CatCode, TexReader, TokenKind
+from src.prepare.policy import load_policy
+from src.reading.tex_reader import CatCode, TexReader, TokenKind
 
 
 class ResolvedEffectTests(unittest.TestCase):

@@ -22,10 +22,7 @@ from pathlib import Path
 import re
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-try:
-    from .source_io import SourceDecodingError, open_source, project_files, excluded_path
-except ImportError:
-    from source_io import SourceDecodingError, open_source, project_files, excluded_path
+from ..source_io import SourceDecodingError, open_source, project_files, excluded_path
 
 IMAGE_EXTENSIONS = {
     ".png", ".jpg", ".jpeg", ".pdf", ".eps", ".svg", ".tif", ".tiff", ".bmp", ".webp"

@@ -6,12 +6,12 @@ import unittest
 from unittest.mock import patch
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(PROJECT_ROOT / "src"))
+sys.path.insert(0, str(PROJECT_ROOT))
 
-from binding_resolver import BindingResolver
-from character_rules import CharacterRule, ProfileError, compile_layer
-from mouth_profiles import MouthProfiles
-from tex_reader import CatCode, TexReader
+from src.bindings.resolver import BindingResolver
+from src.reading.character_rules import CharacterRule, ProfileError, compile_layer
+from src.reading.mouth_profiles import MouthProfiles
+from src.reading.tex_reader import CatCode, TexReader
 
 
 def rule(name, pattern, code):
@@ -139,7 +139,7 @@ class MouthIntegrationTests(unittest.TestCase):
 
     def test_no_io_or_regex_recompilation_after_bootstrap(self):
         with patch.object(Path, "open", side_effect=AssertionError("Unexpected I/O")), \
-             patch("character_rules.re.compile", side_effect=AssertionError("Unexpected compilation")):
+             patch("src.reading.character_rules.re.compile", side_effect=AssertionError("Unexpected compilation")):
             ctx = self.resolver.new_context()
             profile = self.resolver.resolve_environment("verbatim")
             ctx.apply_profile(profile)

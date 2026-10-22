@@ -12,10 +12,7 @@ from __future__ import annotations
 import re
 from typing import List, Optional, Tuple
 
-try:
-    from .provenance import SourceLine, Tombstone
-except ImportError:
-    from provenance import SourceLine, Tombstone  # type: ignore
+from .provenance import SourceLine, Tombstone
 
 BLOCK_VERBATIM_START_RE = re.compile(
     r"\\begin\{(?:verbatim|Verbatim|lstlisting|minted|alltt|filecontents\*?)\*?\}",
