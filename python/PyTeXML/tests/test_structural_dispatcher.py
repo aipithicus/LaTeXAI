@@ -320,7 +320,7 @@ class StructuralDispatcherTests(unittest.TestCase):
                 spans = [item.remainder if isinstance(item, ReadingBoundary) else item.span for item in items]
                 self.assertEqual("".join(self.reader.source_slice(span) for span in spans), source)
                 self.assertEqual([s.start for s in spans[1:]], [s.end for s in spans[:-1]])
-                self.assertTrue(all((s.source_id, s.occurrence_id) == ("paper.tex", 4) for s in spans))
+                self.assertTrue(all((s.basis.source_id, s.basis.occurrence_id) == ("paper.tex", 4) for s in spans))
                 self.assertEqual(self.reader.text, source)
 
     def test_dispatch_after_bootstrap_performs_no_file_io(self):

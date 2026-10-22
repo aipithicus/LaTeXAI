@@ -4,7 +4,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Protocol
 from .character_rules import CatcodeLayer
-from .tex_reader import CatcodeTable, SourceSpan, Token
+from .spans import SourceSpan
+from .tex_reader import CatcodeTable, Token
 
 
 @dataclass(frozen=True, slots=True)

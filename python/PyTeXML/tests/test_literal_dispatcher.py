@@ -34,7 +34,7 @@ class LiteralDispatcherTests(unittest.TestCase):
                           (item.opening, item.body, item.closing)], [opening, body, closing])
         self.assertEqual(self.reader.source_slice(item.span), opening + body + closing)
         for span in (item.span, item.opening, item.body, item.closing):
-            self.assertEqual((span.source_id, span.occurrence_id), ("paper.tex", 3))
+            self.assertEqual((span.basis.source_id, span.basis.occurrence_id), ("paper.tex", 3))
 
     def test_inline_opaque_body_and_normal_comment_after_exit(self):
         source = r"\verb|% \input{x} \endinput { \foo }| % real" + "\nZ"

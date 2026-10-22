@@ -9,8 +9,9 @@ from .contracts import (
     EffectiveReadingProfile, LiteralRegion, ReadingIssue, ReadingKnowledge, require_resolved,
 )
 from .tex_reader import (
-    CatCode, SourceSpan, TexReader, Token, TokenKind,
+    CatCode, TexReader, Token, TokenKind,
 )
+from .spans import SourceSpan
 
 
 class LiteralScanner:

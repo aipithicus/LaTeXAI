@@ -6,7 +6,8 @@ import unittest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from reader_support import new_reader
-from src.reading.tex_reader import CatCode, InvalidCharacterError, ReaderState, SourceSpan
+from src.reading.spans import SourceBasis
+from src.reading.tex_reader import CatCode, InvalidCharacterError, ReaderState
 
 
 class ReaderCursorTests(unittest.TestCase):
@@ -92,11 +93,12 @@ class ReaderCursorTests(unittest.TestCase):
         reader = new_reader("abc", source_id="p", occurrence_id=2)
         with self.assertRaises(ValueError):
             reader.restore(new_reader("abc").checkpoint())
-        for span in (SourceSpan("q", 2, 0, 1), SourceSpan("p", 1, 0, 1),
-                     SourceSpan("p", 2, -1, 1), SourceSpan("p", 2, 2, 1),
-                     SourceSpan("p", 2, 0, 4)):
-            with self.subTest(span=span), self.assertRaises(ValueError):
-                reader.source_slice(span)
+        for basis in (SourceBasis("q", 2, 3), SourceBasis("p", 1, 3), SourceBasis("p", 2, 3)):
+            with self.subTest(basis=basis), self.assertRaises(ValueError):
+                reader.source_slice(basis.span(0, 1))
+        for start, end in ((-1, 1), (2, 1), (0, 4)):
+            with self.subTest(start=start, end=end), self.assertRaises(ValueError):
+                reader.source_span(start, end)
         self.assertEqual(reader.source_slice(reader.source_span(1, 3)), "bc")
 
     def test_eof_checkpoint_does_not_create_another_empty_line(self):

@@ -17,7 +17,8 @@ from .contracts import (
 )
 from .definition_scanner import DefinitionScanner
 from .literal_scanner import LiteralScanner
-from .tex_reader import CatCode, EventKind, InvalidCharacterError, ReadEvent, SourceSpan, TexReader, TokenKind
+from .spans import SourceSpan
+from .tex_reader import CatCode, EventKind, InvalidCharacterError, ReadEvent, TexReader, TokenKind
 
 
 @dataclass(frozen=True, slots=True)
@@ -86,7 +87,7 @@ class StructuralDispatcher:
         if definition is not None:
             return self._boundary(event.span, "stored_macro",
                                   f"Stored macro {token.value!r} requires interpretation; defined at "
-                                  f"{definition.span.source_id}:{definition.span.start}")
+                                  f"{definition.span.basis.source_id}:{definition.span.start}")
         if event.kind != EventKind.TOKEN:
             # Implicit paragraph tokens normally pass through, but a stored
             # redefinition must block that route just like an explicit command.

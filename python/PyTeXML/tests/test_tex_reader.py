@@ -117,8 +117,8 @@ class ReaderTransitionTests(unittest.TestCase):
         for _ in range(2):
             with self.assertRaises(InvalidCharacterError) as caught:
                 reader.next_token()
-            self.assertEqual(caught.exception.span.source_id, 'source.tex')
-            self.assertEqual(caught.exception.span.occurrence_id, 9)
+            self.assertEqual(caught.exception.span.basis.source_id, 'source.tex')
+            self.assertEqual(caught.exception.span.basis.occurrence_id, 9)
             self.assertEqual((caught.exception.span.start, caught.exception.span.end), (1, 2))
 
     def test_invalid_characters_in_comments_are_never_read(self):
@@ -140,7 +140,7 @@ class PhysicalInputTests(unittest.TestCase):
         self.assertEqual([t.value for t in tokens], list('a b c '))
         self.assertEqual([(t.span.start, t.span.end) for t in tokens],
                          [(0, 1), (1, 3), (3, 4), (4, 5), (5, 6), (6, 7)])
-        self.assertTrue(all(t.span.source_id == 'mixed' and t.span.occurrence_id == 2
+        self.assertTrue(all(t.span.basis.source_id == 'mixed' and t.span.basis.occurrence_id == 2
                             for t in tokens))
         for character in ('\x0b', '\x85', '\u2028', '\u2029', '\u200b', '\ufffd'):
             with self.subTest(character=character):
@@ -296,7 +296,7 @@ class ContextAndSourceTests(unittest.TestCase):
             events.append(event)
         comment = next(e for e in events if e.kind == EventKind.COMMENT)
         self.assertEqual(source[comment.span.start:comment.span.end], '% note\r\n')
-        self.assertEqual(comment.span.occurrence_id, 4)
+        self.assertEqual(comment.span.basis.occurrence_id, 4)
         self.assertEqual((events[0].span.start, events[0].span.end), (0, 1))
         self.assertEqual(reader.text, source)
 

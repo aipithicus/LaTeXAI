@@ -37,6 +37,7 @@ import re
 from typing import Iterator, Mapping
 
 from .character_rules import CatcodeLayer, category
+from .spans import SourceBasis, SourceSpan
 
 
 class CatCode(IntEnum):
@@ -80,14 +81,6 @@ class EventKind(Enum):
 
 
 @dataclass(frozen=True, slots=True)
-class SourceSpan:
-    source_id: str
-    occurrence_id: int
-    start: int
-    end: int
-
-
-@dataclass(frozen=True, slots=True)
 class Token:
     kind: TokenKind
     value: str
@@ -113,8 +106,8 @@ class InvalidCharacterError(ValueError):
         self.character = character
         self.span = span
         super().__init__(
-            f"Catcode 15 character U+{ord(character):04X} in {span.source_id} "
-            f"occurrence {span.occurrence_id} at characters {span.start}:{span.end}"
+            f"Catcode 15 character U+{ord(character):04X} in {span.basis.source_id} "
+            f"occurrence {span.basis.occurrence_id} at characters {span.start}:{span.end}"
         )
 
 
@@ -242,8 +235,7 @@ class TexReader:
         if not isinstance(text, str):
             raise TypeError("TexReader expects decoded str; decoding belongs to the source owner")
         self.text = text
-        self.source_id = source_id
-        self.occurrence_id = occurrence_id
+        self.basis = SourceBasis(source_id, occurrence_id, len(text))
         self.catcodes = catcodes
         self.endline_char = endline_char
         self.state = ReaderState.NEW_LINE
@@ -269,14 +261,10 @@ class TexReader:
         return self._position
 
     def source_span(self, start: int, end: int) -> SourceSpan:
-        if not 0 <= start <= end <= len(self.text):
-            raise ValueError("Source span is outside this buffer")
         return self._span(start, end)
 
     def source_slice(self, span: SourceSpan) -> str:
-        if (span.source_id, span.occurrence_id) != (self.source_id, self.occurrence_id):
-            raise ValueError("Source span belongs to a different source occurrence")
-        self.source_span(span.start, span.end)
+        self.basis.require(span)
         return self.text[span.start:span.end]
 
     @property
@@ -337,7 +325,7 @@ class TexReader:
         self._endline_char = value
 
     def _span(self, start: int, end: int) -> SourceSpan:
-        return SourceSpan(self.source_id, self.occurrence_id, start, end)
+        return self.basis.span(start, end)
 
     def _load_line(self) -> bool:
         self.state = ReaderState.NEW_LINE

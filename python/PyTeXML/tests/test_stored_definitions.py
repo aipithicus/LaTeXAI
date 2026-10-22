@@ -374,7 +374,7 @@ class StoredDefinitionTests(unittest.TestCase):
                         parts = (item.opening, item.body, item.closing)
                         self.assertEqual("".join(self.reader.source_slice(s) for s in parts), self.reader.source_slice(item.span))
                         for token in (item.target, *item.parameter_tokens, *item.body_tokens):
-                            self.assertEqual((token.span.source_id, token.span.occurrence_id), ("paper.tex", 7))
+                            self.assertEqual((token.span.basis.source_id, token.span.basis.occurrence_id), ("paper.tex", 7))
                             self.assertGreaterEqual(token.span.start, item.span.start)
                             self.assertLessEqual(token.span.end, item.span.end)
                 self.assertEqual(self.reader.text, source)

@@ -8,7 +8,7 @@ expansion and XML interpretation belong to later development.
 
 | Location | Responsibility |
 | --- | --- |
-| [`src/reading/`](src/reading) | Reusable N/M/S reader and cursor, structural dispatcher, literal scanners, regex catcode rules, mouth profiles, and scoped document state |
+| [`src/reading/`](src/reading) | Reusable N/M/S reader and cursor, structural dispatcher, literal/definition scanners, source intervals and coverage queries, regex catcode rules, mouth profiles, and scoped document state |
 | [`src/bindings/`](src/bindings) | Reusable binding catalog and document-local resolution/package activation |
 | [`src/prepare/`](src/prepare) | Discovery, inlining, pruning, normalization, bibliography preparation, provenance, policy loading, and publication |
 | [`src/source_io.py`](src/source_io.py) | Strict source decoding and malformed-byte diagnostics |
@@ -163,6 +163,69 @@ content. Stored-definition, argument-scanning and skipped-branch modes require
 their owning scanners; this dispatcher does not dispatch inside them. It performs
 no package discovery, dynamic/global assignments, macro expansion or XML work.
 Reading after catalog bootstrap performs no filesystem I/O.
+
+## Source intervals and coverage
+
+[spans.py](src/reading/spans.py) owns `SourceBasis`, `SourceSpan` and `SpanSet`.
+Each reader creates one immutable, in-memory basis for its decoded source
+occurrence. Spans carry that basis plus validated half-open character offsets;
+source labels are available through `span.basis.source_id` and
+`span.basis.occurrence_id`. Equal filenames, occurrence numbers, lengths or text
+do not make separately created bases interchangeable. Operations reject foreign
+bases even for empty coverage. This is a runtime identity, not yet a durable
+source-store revision or a mapping between source, token and emitted coordinates.
+
+`SpanSet` normalizes coverage into sorted nonempty intervals, merging overlaps
+and adjacency. It supports union, intersection, difference, clipping, explicitly
+bounded complement, coverage checks, and partitioning at specified offsets.
+Empty spans retain locations in their original records but contribute no covered
+characters. Coverage containment of an empty span is consequently vacuous; it is
+not a point-membership test. Set construction sorts arbitrary input; operations
+sweep normalized intervals without per-character masks or source text copies.
+
+[coverage.py](src/reading/coverage.py) consumes established top-level dispatcher
+items. It retains literal/definition records and diagnostics, coalesces observed
+source extents, and treats every unobserved gap or suffix as unknown. It does not
+execute the reader, reinterpret raw tokens, or certify undispatched reader events.
+Use this instead of the iteration loop above to consume a fresh dispatcher once:
+
+```python
+from src.reading.coverage import ReadingCoverage
+
+coverage = ReadingCoverage(reader.basis, dispatcher)
+literal_bodies = coverage.query("literal", part="body")
+definition_bodies = coverage.query("definition", part="body")
+selected_bodies = literal_bodies.union(definition_bodies)
+for segment in selected_bodies.partition():
+    # segment.span and segment.state: match, nonmatch, or unknown
+    ...
+```
+
+Already collected dispatcher items can be supplied instead. A partial collection
+does not imply that the rest was scanned, and consuming an exhausted dispatcher
+does not recover earlier results. Queries can select whole regions (`part="span"`)
+or bodies, optionally within a source window. Original records remain available
+in `literal_regions` and `stored_definitions`, even when adjacent coverage merges
+or a body is empty. Ordinary per-token events are not retained by the adapter.
+
+Each `Coverage` query has disjoint `matches` and `unknown`; `nonmatches` is the
+remaining coverage in its window. Negation preserves unknowns. Union, intersection
+and difference use three-valued logic: a known match settles an OR and a known
+nonmatch settles an AND; unresolved cases stay unknown. Composition requires the
+same basis and window; use `restrict()` explicitly when narrowing a query.
+Nonmatching literal coverage means only that the established reading did not
+dispatch a literal there. It does not prove ordinary prose or authorize cleanup.
+
+Diagnostic anchors are separate from unknown character coverage. An unclosed-group
+diagnostic at EOF can have an earlier opener as its anchor and empty remaining
+coverage; the diagnostic is retained. Likewise, an empty unresolved location has
+no character coverage. Empty `unknown` therefore does not imply structural validity.
+
+The adapter accepts ordered, non-overlapping dispatcher observations and a terminal
+boundary; malformed partitions, incompatible bases and contradictory extents are
+rejected. This layer does not build a claim hierarchy, resume dependency requests,
+plan output edits, or emit `master.tex`. Production preparation remains separate.
+No additional YAML schema or dependency is needed for these interval algorithms.
 
 ## Running and checking
 
