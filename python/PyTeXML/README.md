@@ -100,5 +100,9 @@ python -B -m unittest discover -s tests -p 'test_*.py' -v
 
 See the [preparation contract](issues/DESIGN.md) and
 [native processing/dependency note](issues/external-toolchains.md) for scope and
-current limitations. Research exchanges under `issues/` retain their historical
-paths and are not instructions for running the current layout.
+current limitations. The [declarative binding design brief](../../../aipithicus-issues/LaTeXAI/briefs/pytexml-declarative-bindings.md)
+separates settled direction, proposed ontology/interfaces/schemas, and the
+investigations required before concrete custodian recipes and broader authoring.
+The current binding resources remain prototypes. Research exchanges under
+`issues/` retain their historical paths and are not instructions for running the
+current layout.
