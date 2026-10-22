@@ -119,6 +119,15 @@ class ResourceLoadingTests(unittest.TestCase):
                 with self.assertRaisesRegex(ProfileError, error):
                     BindingCatalog(self.bindings)
 
+    def test_grouping_requires_a_supported_declared_kind(self):
+        for state in ({}, {"group_kind": "unknown"}, {"group_kind": ["simple"]}, []):
+            with self.subTest(state=state):
+                self.core["reading"] = {"grouping": [{"name": r"\start", "action": "push_lexical_scope",
+                                                      "state_management": state}]}
+                self.write("engine/core.yaml", self.core)
+                with self.assertRaisesRegex(ProfileError, "requires a simple or semi_simple group_kind"):
+                    BindingCatalog(self.bindings)
+
     def test_malformed_binding_sections_are_configuration_errors(self):
         for reading in ([], {"commands": {}}, {"commands": [42]}):
             with self.subTest(reading=reading):

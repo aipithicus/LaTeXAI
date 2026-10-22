@@ -8,7 +8,7 @@ expansion and XML interpretation belong to later development.
 
 | Location | Responsibility |
 | --- | --- |
-| [`src/reading/`](src/reading) | Reusable N/M/S reader and cursor, initial literal dispatcher, regex catcode rules, mouth profiles, and scoped document state |
+| [`src/reading/`](src/reading) | Reusable N/M/S reader and cursor, structural dispatcher, literal scanners, regex catcode rules, mouth profiles, and scoped document state |
 | [`src/bindings/`](src/bindings) | Reusable binding catalog and document-local resolution/package activation |
 | [`src/prepare/`](src/prepare) | Discovery, inlining, pruning, normalization, bibliography preparation, provenance, policy loading, and publication |
 | [`src/source_io.py`](src/source_io.py) | Strict source decoding and malformed-byte diagnostics |
@@ -75,10 +75,10 @@ are unchanged.
 
 The preparation pipeline still uses its existing discovery and transformations
 for assembling `master.tex`. Original manuscript sources are never edited.
-The reader, literal dispatcher, binding resolver, and policy loader are independently
+The reader, structural dispatcher, binding resolver, and policy loader are independently
 tested foundations, not yet integrated into that pipeline. Projection YAMLs have no
 runtime consumer, and the handler registry does not execute handlers. Its
-`context_effect` entries describe existing state helpers; `deferred` entries
+`context_effect` entries describe state helpers routed for supported local effects; `deferred` entries
 require future dispatch/scanning work; `scanner` entries describe the initial
 in-memory literal handlers.
 
@@ -88,26 +88,35 @@ identities, current construct-list structure, engine/profile references and the
 registered core reading actions. This is validation of the current contracts,
 not a complete schema for future bindings.
 
-## Initial literal reading
+## Initial structural reading
 
 ```python
 from src.bindings.resolver import BindingResolver
-from src.reading.dispatcher import LiteralDispatcher
+from src.reading.dispatcher import StructuralDispatcher
 from src.reading.tex_reader import TexReader
 
 resolver = BindingResolver()
 context = resolver.new_context()
 reader = TexReader(source, source_id="paper.tex", occurrence_id=0,
                    catcodes=context.catcodes, endline_char=context.endlinechar)
-dispatcher = LiteralDispatcher(reader, context, resolver)
+dispatcher = StructuralDispatcher(reader, context, resolver)
 for item in dispatcher:
     # ReadEvent, LiteralRegion, or a final ReadingBoundary; no source edits.
     ...
 ```
 
-This bounded component supports kernel `\verb`, `\verb*`, `verbatim`, and
-`verbatim*` in an established active context. YAML selects the generic grammar
-handlers. A literal records contiguous opening/body/closing spans into the
+Execution routing belongs to [StructuralDispatcher](src/reading/dispatcher.py).
+It applies resolved local reading effects (`\makeatletter`, `\makeatother`,
+`\ExplSyntaxOn`, `\ExplSyntaxOff`) and handles category-driven brace groups and
+`\begingroup`/`\endgroup`. YAML supplies action identities, assignments and group
+kinds. Mismatched or unmatched closers produce a diagnostic without popping a
+scope. Group exit restores lexical settings in place, preserving cursor state.
+Directives and group tokens retain their original `ReadEvent` spans.
+
+The dispatcher delegates kernel `\verb`, `\verb*`, `verbatim`, and `verbatim*`
+to [LiteralScanner](src/reading/literal_scanner.py). Literal scanners have no
+top-level execution loop. YAML selects their generic grammar handlers. A literal
+records contiguous opening/body/closing spans into the
 original buffer, including authored CRLF, tabs and trailing spaces. Those spans
 use Python string offsets, not encoded byte offsets. Block terminators match
 tokens and their category codes; inline delimiters become locally active.
@@ -119,17 +128,21 @@ the raw physical line and its trimmed mouth window. `peek_character()` stays on
 that line and preserves any `^^` conversion already performed. Reader-local
 `checkpoint()` / `restore()` also preserve pending characters, captured
 `endlinechar`, category settings and sticky errors. They do not snapshot or roll
-back execution effects in `ReaderContext` and are not used for successful literal
-exit.
+back execution effects or the dispatcher's group stack. Do not use a reader-only
+checkpoint to rewind executed directives. Successful group/literal exit never
+restores the cursor to its entry state.
 
 This is not yet a whole-document structural parser. Unknown commands, active
-meanings, definitions, conditionals, computed environment names and unsupported
-package literal grammars return a located `ReadingBoundary` and halt this scan.
-Its `remainder` covers unchanged source from the unresolved construct onward.
+meanings, definitions, conditionals, computed environment names, math/alignment
+structure and unsupported package literal grammars return a located
+`ReadingBoundary` and halt this scan. Its `remainder` covers unchanged source not
+already emitted by preceding items. At EOF an unclosed group diagnostic points to
+its opener but has empty residue; no duplicate source or synthetic closer is
+emitted. A boundary retains already executed state for diagnosis without repair.
 Unclosed literals retain that residue rather than consuming it as proven literal
 content. Stored-definition, argument-scanning and skipped-branch modes require
 their owning scanners; this dispatcher does not dispatch inside them. It performs
-no package discovery, arbitrary catcode assignments, macro expansion or XML work.
+no package discovery, dynamic/global assignments, macro expansion or XML work.
 Reading after catalog bootstrap performs no filesystem I/O.
 
 ## Running and checking

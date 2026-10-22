@@ -18,22 +18,22 @@ handlers:
     description: "Match an exact block terminator by character token identity"
   assign_catcode:
     status: context_effect
-    description: "Apply already resolved character assignments in ReaderContext"
+    description: "StructuralDispatcher routes resolved local character assignments to ReaderContext"
   assign_catcode_dynamic:
     status: deferred
     description: "Requires an assignment argument scanner and execution dispatcher"
   expl3_lexical_enter:
     status: context_effect
-    description: "Apply resolved expl3 effects and preserve their first snapshot"
+    description: "Route resolved local expl3 entry and preserve its first snapshot"
   expl3_lexical_exit:
     status: context_effect
-    description: "Restore the saved expl3 state"
+    description: "Route local expl3 exit and restore the saved state"
   push_lexical_scope:
     status: context_effect
-    description: "Snapshot document-local lexical state"
+    description: "Open a declared source group and snapshot local lexical state"
   pop_lexical_scope:
     status: context_effect
-    description: "Restore document-local lexical state"
+    description: "Close a matching source group and restore local lexical state"
   pure_token_splice:
     status: deferred
     description: "Requires reading-aware file inclusion; the preparation inliner is separate"

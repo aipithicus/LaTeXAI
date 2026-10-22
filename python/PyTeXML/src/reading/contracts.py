@@ -2,9 +2,9 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any
+from typing import Any, Protocol
 from .character_rules import CatcodeLayer
-from .tex_reader import CatcodeTable
+from .tex_reader import CatcodeTable, SourceSpan
 
 
 @dataclass(frozen=True, slots=True)
@@ -54,6 +54,7 @@ class StateManagementRule:
     restores_parameters: dict[str, list[str]] = field(default_factory=dict)
     exit_behavior: str = "normal"
     scope: str = "local"
+    group_kind: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -88,3 +89,43 @@ class EffectiveReadingProfile:
     interpolations: tuple[InterpolationRule, ...] = ()
     action: str | None = None
     binding_id: str = ""
+
+
+class ReadingKnowledge(Protocol):
+    """Already loaded knowledge; package activation and loading stay outside."""
+    def resolve_command(self, name: str) -> EffectiveReadingProfile | UnresolvedBindingResult: ...
+    def resolve_environment(self, name: str) -> EffectiveReadingProfile | UnresolvedBindingResult: ...
+    def resolve_group(self, catcode: int) -> EffectiveReadingProfile | UnresolvedBindingResult: ...
+
+
+@dataclass(frozen=True, slots=True)
+class ReadingBoundary:
+    # Diagnostic anchor; at EOF this can identify an earlier unclosed group.
+    span: SourceSpan
+    # Source not covered by preceding emitted items; empty for an EOF diagnostic.
+    remainder: SourceSpan
+    reason: str
+    detail: str
+
+
+@dataclass(frozen=True, slots=True)
+class LiteralRegion:
+    span: SourceSpan
+    opening: SourceSpan
+    body: SourceSpan
+    closing: SourceSpan
+    name: str
+    binding_id: str
+
+
+class ReadingIssue(Exception):
+    """A scanner cannot establish further reading; routing locates the boundary."""
+    def __init__(self, reason: str, detail: str):
+        super().__init__(detail)
+        self.reason, self.detail = reason, detail
+
+
+def require_resolved(result: EffectiveReadingProfile | UnresolvedBindingResult) -> EffectiveReadingProfile:
+    if isinstance(result, UnresolvedBindingResult):
+        raise ReadingIssue(result.reason.value, result.detail)
+    return result

@@ -10,7 +10,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from src.bindings.catalog import BindingCatalog
 from src.bindings.resolver import BindingResolver
 from src.reading.context import ExecutionMode
-from src.reading.dispatcher import LiteralDispatcher, LiteralRegion, ReadingBoundary
+from src.reading.contracts import LiteralRegion, ReadingBoundary
+from src.reading.dispatcher import StructuralDispatcher
 from src.reading.tex_reader import CatCode, EventKind, ReadEvent, ReaderState, TexReader
 
 
@@ -24,7 +25,7 @@ class LiteralDispatcherTests(unittest.TestCase):
         self.context = self.resolver.new_context(endlinechar=endlinechar, mode=mode)
         self.reader = TexReader(text, catcodes=self.context.catcodes, endline_char=endlinechar,
                                 source_id="paper.tex", occurrence_id=3)
-        self.dispatcher = LiteralDispatcher(self.reader, self.context, self.resolver)
+        self.dispatcher = StructuralDispatcher(self.reader, self.context, self.resolver)
         return self.dispatcher
 
     def assert_region(self, item, opening, body, closing):
@@ -246,10 +247,10 @@ class LiteralDispatcherTests(unittest.TestCase):
     def test_reader_context_identity_and_parameters_must_agree(self):
         self.setup_reader("x")
         with self.assertRaises(ValueError):
-            LiteralDispatcher(self.reader, self.context.copy(), self.resolver)
+            StructuralDispatcher(self.reader, self.context.copy(), self.resolver)
         self.reader.endline_char = -1
         with self.assertRaises(ValueError):
-            LiteralDispatcher(self.reader, self.context, self.resolver)
+            StructuralDispatcher(self.reader, self.context, self.resolver)
 
 
 if __name__ == "__main__":

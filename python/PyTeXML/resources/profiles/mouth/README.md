@@ -97,9 +97,11 @@ identities and duplicate YAML keys are configuration errors. Every profile's
 use that local name in the mouth-profile namespace. Removed
 `catcodes.yaml`/`literals.yaml` files are not read.
 
-The initial [literal dispatcher](../../../src/reading/dispatcher.py) enters and
-leaves local profiles on the same `TexReader`. Its grammar selection belongs to
-bindings. Cursor handoff retains already converted lookahead and the loaded
+The [structural dispatcher](../../../src/reading/dispatcher.py) applies immediate
+reading effects and owns source group pairing. Its delegated
+[literal scanner](../../../src/reading/literal_scanner.py) enters and leaves local
+profiles on the same `TexReader`. Grammar selection belongs to bindings.
+Cursor handoff retains already converted lookahead and the loaded
 physical line's captured `endlinechar`; scope exit restores lexical settings but
 does not rewind input or reset N/M/S to its entry value. Raw source spans remain
 separate from the mouth's trimmed and converted character view.

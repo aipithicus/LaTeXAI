@@ -171,7 +171,7 @@ class BindingResolver:
                                 **deepcopy(sm), scope=spec.get("scope", "local")),
                             span_classification=SpanClassification("lexical_directive", "catcode_mutation"))
                     if section == "grouping":
-                        return EffectiveReadingProfile(clean, "grouping", action=action, binding_id=origin)
+                        return self._build_group(clean, spec, origin)
                     if section in {"commands", "command_overrides"} and spec.get("family") == "environment_open":
                         if opts:
                             return self._unresolved(clean, UnresolvedReason.UNSUPPORTED_READING_OPTION,
@@ -191,10 +191,15 @@ class BindingResolver:
         for origin, reading in self._active_bindings():
             for spec in reading.get("grouping", []):
                 if spec.get("trigger") == "token_category" and spec.get("catcode") == catcode:
-                    return EffectiveReadingProfile(spec["name"], "grouping",
-                                                   action=spec["action"], binding_id=origin)
+                    return self._build_group(spec["name"], spec, origin)
         return self._unresolved(str(catcode), UnresolvedReason.UNKNOWN_CONSTRUCT,
                                 "No group action for this category", {})
+
+    @staticmethod
+    def _build_group(name: str, spec: dict[str, Any], origin: str) -> EffectiveReadingProfile:
+        return EffectiveReadingProfile(
+            name, "grouping", action=spec["action"], binding_id=origin,
+            state_management=StateManagementRule(**deepcopy(spec.get("state_management", {}))))
 
     def resolve_environment(self, name: str, options: dict[str, Any] | None = None
                             ) -> EffectiveReadingProfile | UnresolvedBindingResult:

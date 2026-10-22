@@ -94,6 +94,11 @@ class ReaderContext:
     def push_scope(self) -> None:
         self._scope_stack.append(self._snapshot())
 
+    @property
+    def scope_depth(self) -> int:
+        """Number of lexical snapshots; structural group kinds belong to routing."""
+        return len(self._scope_stack)
+
     def pop_scope(self) -> bool:
         if not self._scope_stack:
             return False

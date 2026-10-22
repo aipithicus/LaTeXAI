@@ -116,6 +116,10 @@ class BindingCatalog:
                     action = spec.get("behavior" if section == "inclusions" else "action")
                     if not isinstance(action, str) or action not in self.reading_handlers:
                         raise ProfileError(f"{path}: unknown reading handler {action!r} for {name}")
+                if section == "grouping":
+                    state = spec.get("state_management", {})
+                    if not isinstance(state, dict) or state.get("group_kind") not in ("simple", "semi_simple"):
+                        raise ProfileError(f"{path}: {name} requires a simple or semi_simple group_kind")
                 if "profile" in spec:
                     profile = spec["profile"]
                     if not isinstance(profile, str):

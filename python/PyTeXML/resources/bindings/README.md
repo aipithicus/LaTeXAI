@@ -112,18 +112,21 @@ There is no macro expansion or native-engine fallback here.
 `resolver.new_context("latex_ascii")` constructs a context from the loaded YAML
 baseline. `ReaderContext` applies immediate local effects and restores scoped catcodes,
 `endlinechar`, and expl3 saved state. Repeated `\ExplSyntaxOn` reapplies its
-assignments while preserving the saved baseline. The caller owns execution mode,
-literal scope, argument/body scanning, and synchronization of a live reader's
-`endline_char`. Interpolation plans require a literal dispatcher and cannot be
+assignments while preserving the saved baseline. `StructuralDispatcher` owns active
+execution routing, source group pairing, the supported environment header scan,
+and synchronization of a live reader's `endline_char`. Literal profile entry/exit
+and body scanning are delegated to `LiteralScanner`. Interpolation plans require
+further literal handling and cannot be
 applied as ordinary context mutations. Terminator metadata is not a scanner.
 
 ## 5. Initial literal grammar consumers
 
-[LiteralDispatcher](../../src/reading/dispatcher.py) consumes a narrow portion of
+[StructuralDispatcher](../../src/reading/dispatcher.py) consumes a narrow portion of
 these contracts without importing the catalog implementation. `environment_name`
 reads a non-expanding braced name and resolves its environment; `inline_character`
 handles a dynamic character delimiter; `token_delimited` scans an exact sequence
-of character tokens. These are reusable Python algorithms selected by YAML,
+of character tokens. The latter two handlers live in the delegated
+[LiteralScanner](../../src/reading/literal_scanner.py). These are reusable Python algorithms selected by YAML,
 not package-specific Python implementations. The preparation pipeline does not
 call them yet.
 
@@ -141,3 +144,26 @@ Package line-based terminators, options, interpolation and factories remain
 explicitly unsupported by this dispatcher. Activating an overriding package
 cannot silently select the kernel scanner. A resolved reading profile describes
 knowledge; it does not, by itself, prove that a runtime handler supports it.
+
+## 6. Grouping and immediate effects
+
+The structural dispatcher routes `assign_catcode`, `expl3_lexical_enter`,
+`expl3_lexical_exit`, `push_lexical_scope` and `pop_lexical_scope`. It uses resolved
+data without hardcoded command spellings. These are local effects applied before
+the next token is read; already converted lookahead and the current line's
+captured `endlinechar` remain intact. Dynamic assignments, global prefixes and
+unsupported combinations establish a diagnostic boundary.
+
+Each grouping declaration supplies `state_management.group_kind`: `simple` for
+brace-category groups, `semi_simple` for the core `\begingroup`/`\endgroup` pair.
+Aliases can select a declared group kind independently of command spelling.
+The catalog validates this field; the resolver preserves it in
+`StateManagementRule`. The structural dispatcher checks pairing and owns the
+source group stack. `ReaderContext` owns lexical snapshots and exposes their
+depth; it does not infer group kinds from source. Caller-created scopes cannot
+be popped by the source dispatcher. Environment-name braces are scanned as
+arguments, and literal bodies never route their apparent effects or group tokens.
+
+Reading result records and the narrow `ReadingKnowledge` protocol live in
+[contracts.py](../../src/reading/contracts.py). This remains a preparation-oriented
+execution surface, not the future expansion or asynchronous binding contract.

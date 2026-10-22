@@ -86,17 +86,21 @@ reading:
     - name: "\\begingroup"
       action: "push_lexical_scope"
       trigger: control_sequence
+      state_management: {group_kind: semi_simple}
     - name: "\\endgroup"
       action: "pop_lexical_scope"
       trigger: control_sequence
+      state_management: {group_kind: semi_simple}
     - name: "group_begin"
       action: "push_lexical_scope"
       trigger: token_category
       catcode: 1    # CatCode.BEGIN_GROUP (matches '{' or any char with catcode 1)
+      state_management: {group_kind: simple}
     - name: "group_end"
       action: "pop_lexical_scope"
       trigger: token_category
       catcode: 2    # CatCode.END_GROUP (matches '}' or any char with catcode 2)
+      state_management: {group_kind: simple}
 
   # ---------------------------------------------------------------------------
   # Static Conditionals
