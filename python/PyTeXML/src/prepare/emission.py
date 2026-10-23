@@ -2,6 +2,7 @@
 from __future__ import annotations
 from dataclasses import dataclass, replace
 from ..reading.spans import SourceSpan
+from ..reading.contracts import DeferredRegion
 from ..reading.tex_reader import ReadEvent, TokenKind, CatCode, EventKind, ReaderState
 
 
@@ -14,6 +15,7 @@ class SourcePiece:
     command: object | None = None
     target: str | None = None
     source_end_line: int | None = None
+    deferred: DeferredRegion | None = None
 
     def rewritten(self, text: str, operation: str) -> SourcePiece:
         return replace(self, text=text, operation=operation)

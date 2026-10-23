@@ -139,6 +139,7 @@ reading:
   - name: \nocite
     family: source_command
     action: citation
+    metadata: {allow_wildcard: true}
     grammar:
       handler: source_arguments
       arguments:

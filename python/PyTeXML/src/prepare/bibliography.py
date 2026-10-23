@@ -8,6 +8,7 @@ from ..reading.tex_reader import TexReader, ReadEvent, TokenKind
 from ..reading.dispatcher import StructuralDispatcher
 from ..reading.contracts import SourceCommand, SourceEnd, ReadingBoundary, DeferredRegion, ReadingIssue
 from .emission import SourcePiece
+from .citations import discover_citations
 
 
 class BibliographyPreparationError(ValueError):
@@ -62,39 +63,26 @@ def prepare_bibliography(pieces, session, output_dir: Path):
     manifest.bibliography.bib_files = [session.name(p) for p in resources]
     texts = [store.document(path).text for path in resources]
     canonical = "\n".join(text.rstrip() + "\n" for text in texts)
-    keys = []
-    for piece in pieces:
-        if piece.command and piece.command.action == "citation":
-            try:
-                keys.extend(key.strip() for key in piece.command.value("keys").split(","))
-            except ReadingIssue as error:
-                session.require(piece.span, error.reason, error.detail)
-                keys.append("*")
-    keys = list(dict.fromkeys(keys))
-    if any(not key or re.search(r"[\\{}%#\s]", key) for key in keys):
-        return _preserve_declarations(pieces, session, command, "bibliography_keys",
-            "Nonliteral citation key requires expansion before bibliography preparation")
+    selection = discover_citations(pieces, session)
+    keys = selection.keys
     if existing:
         bbl = ''.join(p.text for p in session.bibliography_pieces or ())
         commands = [p.command for p in session.bibliography_pieces or () if p.command]
         backend = "existing-bbl"
     else:
-        known_keys = keys
-        if manifest.dependency_closure != "complete":
-            # Unread source may cite further entries. Do not silently discard
-            # those entries just because citation discovery was interrupted.
-            keys = ["*"]
-        if not keys:
-            # Citation bindings may not exist yet. Preserve available content in
-            # the canonical bibliography rather than leaving a raw-source pointer.
-            keys = ["*"]
         database = Database()
         try:
             for resource, text in zip(resources, texts):
                 database.read(text, str(resource))
-            # Including all entries for incomplete discovery must not conceal
-            # a concrete missing key which was already observed.
-            database.selected(known_keys)
+            # An inactive provider supplies only a candidate meaning. A missing
+            # candidate record is a diagnostic, not a proven missing citation.
+            absent_candidates = {key for key in keys if key != "*" and key not in database.entries
+                                 and key not in selection.established_keys}
+            for key in sorted(absent_candidates):
+                database.diagnostics.append(f"Unconfirmed citation key {key!r} has no bibliography record; binding activation remains pending")
+            keys = [key for key in keys if key not in absent_candidates]
+            # Only explicit wildcard citations select all entries. Uncertain
+            # discovery retains the whole database for later enrichment instead.
             bbl = extraction_bbl(database, keys)
         except BibTeXConflictError as error:
             # Preserve every variant in one payload resource. Choosing a winner
@@ -123,9 +111,15 @@ def prepare_bibliography(pieces, session, output_dir: Path):
         if not {"environment_begin", "environment_end"} <= environments:
             raise BibliographyPreparationError("Prepared .bbl does not contain a complete thebibliography environment")
         entry_keys = {c.value(c.metadata["bibliography_key"]) for c in commands if c.metadata.get("bibliography_key")}
-    missing = [key for key in keys if key != "*" and key not in entry_keys]
+    missing = [key for key in keys if key != "*" and key not in entry_keys
+               and key in selection.established_keys]
     if missing:
         raise BibliographyPreparationError("Bibliography entries missing for citation keys: " + ", ".join(missing))
+    if existing:
+        for key in keys:
+            if key != "*" and key not in entry_keys and key not in selection.established_keys:
+                manifest.bibliography.preparation_warnings.append(
+                    f"Unconfirmed citation key {key!r} has no formatted bibliography entry; binding activation remains pending")
     if canonical:
         (output_dir / "bibliography.bib").write_text(canonical, encoding="utf-8", newline="\n")
     (output_dir / "bibliography.bbl").write_text(bbl, encoding="utf-8", newline="\n")

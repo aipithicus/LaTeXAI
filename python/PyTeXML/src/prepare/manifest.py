@@ -21,6 +21,15 @@ class BibliographyInfo:
     canonical_bib: Optional[str] = None
     preparation_backend: Optional[str] = None
     preparation_warnings: List[str] = field(default_factory=list)
+    # Completeness of source-visible key observation, not macro expansion or
+    # package execution. Pending activation never requests every database entry.
+    citation_discovery: str = "not_run"
+    citation_discovery_scope: str = "source_visible_no_expansion"
+    citation_keys: List[str] = field(default_factory=list)
+    citation_gaps: List[Dict[str, Any]] = field(default_factory=list)
+    # Locations already live in requirements; do not duplicate every opaque
+    # expression as a second full diagnostic merely because it might cite.
+    citation_deferred_contexts: int = 0
 
     def to_dict(self) -> Dict[str, Any]:
         return dataclasses.asdict(self)

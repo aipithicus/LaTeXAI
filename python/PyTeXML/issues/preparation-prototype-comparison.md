@@ -9,21 +9,23 @@ The production workflow still uses the new reader and dispatcher.
 
 | Measure | Historical prototype output | Current workflow before this increment | Current workflow after this increment |
 | --- | ---: | ---: | ---: |
-| Master characters | 63,271 | 91,347 | 54,587 |
+| Master characters | 63,271 | 91,347 | 67,836 |
 | SVG assets emitted | 9 | 0 | 7 |
-| Inline bibliography | Present | Absent | Pending record-conflict resolution |
-| Canonical bibliography resource | Absent | Absent | Present; declaration rebased to it |
+| Inline bibliography | 33 entries | Absent | 33 entries; identical key set |
+| Canonical bibliography resource | Absent | Absent | Both complete databases in one resource |
 | Active manuscript traversal | Historical receipt only | Interrupted at local style `\newif` | Reaches document end |
 
-Character counts are not a fidelity score: the historical master contains an
-inline bibliography, and the new run does not yet. The restored raw source has
-no `.bbl`, although the historical master contains a formatted bibliography.
-The original bibliography-generation inputs are therefore not fully reproduced
-by this restoration.
+Character counts are not a fidelity score. The current native bibliography uses
+field-labelled content, while the historical output uses publisher-style formatting.
+The restored raw source has no `.bbl`; the current run generates one directly from
+the two `.bib` databases without a compiler. All 33 references resolve: eleven
+come from `chaos.bib`, twenty-two from `ref.bib`.
 
 The seven common SVG derivatives are byte-identical to the historical output.
-Every identity provenance segment was compared against its original source slice;
-all 1,061 emitted segments cover the new master continuously. The retained local
+In the first reader-integration run, every identity provenance segment was compared
+against its original source slice; all 1,061 emitted segments covered that master
+continuously. The bibliography follow-up verifies all 1,060 current segments cover
+the master continuously and all 412 identity segments match original slices. The retained local
 style is byte-identical to the restored original. Source-cache receipts contain
 four physical text reads: the manuscript, its style, and the two BibTeX databases.
 These receipts do not claim that image inspection/conversion uses the text cache.
@@ -53,6 +55,11 @@ These receipts do not claim that image inspection/conversion uses the text cache
    as `width=0.5\linewidth` no longer make an otherwise literal filename unresolved.
    Conflicting bibliography records remain together in a canonical payload and
    defer formatting instead of preventing publication of the master.
+5. **Bibliography discovery:** the narrow `natbib` YAML contract describes citation
+   headers without package-specific Python. Pending activation retains a provisional
+   command observation; it does not prevent literal key collection. Selection uses
+   those keys, not overall dependency closure. Only `\nocite{*}` requests all entries;
+   the complete canonical resource retains uncited metadata and unresolved variants.
 
 The reusable reading components do not decide what to delete. Package knowledge
 remains in YAML; preparation owns policy and emission. This increment neither
@@ -67,27 +74,43 @@ expands arbitrary macros nor establishes the future XML/async binding contract.
   at manuscript lines 531 and 538. Their dependency tokens are located, but those
   environments have no established reading contract. The references remain intact;
   no claim of a complete standalone dependency payload is made.
-- The databases contain conflicting versions of twelve keys, plus undefined
-  strings and repeated fields. Incomplete citation discovery requests all entries;
-  selection encounters `Gome08a` first. The output retains all database records in
-  `bibliography.bib` and labels formatting as `deferred-conflict`. No winner is
-  silently selected and no formatted `.bbl` is fabricated.
+- The databases contain differing versions of twelve keys, plus undefined strings
+  and repeated fields, but none of those conflicting keys is among the paper's 33
+  references. The earlier wildcard selection made these unrelated records block
+  formatting. The new run embeds all 33 references and retains both full databases
+  in `bibliography.bib` (424,249 bytes). `\citep` activation through the local style
+  is still pending, explicitly recorded separately from key observation. Author
+  macros and citations inside uninterpreted arguments still need later resolution.
 - Metadata footprint still needs attention: the current manifest and provenance
-  total roughly 751 KB, versus roughly 37 KB historically. The new records retain
+  total 762,345 bytes, versus roughly 37 KB historically. The new records retain
   more source and requirement detail. Compact repeated diagnostics without losing
   occurrence coordinates; do not treat shorter sidecars as evidence of correctness.
 
-The run is deliberately reported as **partial**. Next work should address bounded
-author-environment reading/dependency contracts and bibliography record resolution,
-using these observed cases. General package execution should remain a separate task.
+The run is reported as **partial**. Next work should address bounded author-environment
+reading/dependency contracts. General package execution remains a separate task;
+it no longer prevents preparation of this paper's bibliography.
 
 ## Verification
 
-The full PyTeXML suite passed **389 tests**. New cases exercise repeated cached
+The first increment passed **389 tests**. Its cases exercise repeated cached
 literal input, delimiter collisions, nested option groups, strict comment endings,
 live-catcode incompatibility, source-window bounds, scoped factories, replayed child
 inputs and effects, rollback of an unfinished replay, retained-style recovery,
 computed image widths, and canonical preservation of conflicting bibliography data.
+
+The bibliography follow-up passes the full suite of **400 tests**, including split databases, unused conflicting
+records, late/repeated citations, active and pending package grammars, optional
+notes, source protection, explicit wildcards and incomplete citation discovery.
+The real-paper rerun confirms 33 unique inlined items, matching the historical key
+set, exact retention of both databases, and one cached read per text source. Original
+manuscript/style/database files and the historical master remain unchanged.
+
+The editor's optional PDF validation failed inside XeTeX, reporting
+`Fontconfig error: Cannot load default config file` and
+`unable to read an entire line (buf_size=200000)`. This is not a successful PDF
+validation. It did not change the preparation result or add a runtime compiler
+dependency; the rerun's master bytes are identical before and after the final
+diagnostic refinement.
 
 The physical-line replay behavior follows the
 [comment 3.8 manual](https://mirrors.ctan.org/macros/latex/contrib/comment/comment.pdf):

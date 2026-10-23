@@ -73,6 +73,17 @@ class CatalogSharingTests(unittest.TestCase):
             with self.subTest(mutation=mutation), self.assertRaises(ProfileError):
                 self.catalog._validate_reading(reading, Path("comment.yaml"))
 
+    def test_citation_contract_requires_key_argument_and_boolean_wildcard_policy(self):
+        for mutation in ("missing_keys", "wildcard_string"):
+            reading = deepcopy(self.catalog.package_bindings["natbib"]["reading"])
+            command = reading["commands"][0]
+            if mutation == "missing_keys":
+                command["grammar"]["arguments"] = []
+            else:
+                command["metadata"] = {"allow_wildcard": "false"}
+            with self.subTest(mutation=mutation), self.assertRaises(ProfileError):
+                self.catalog._validate_reading(reading, Path("natbib.yaml"))
+
 
 if __name__ == "__main__":
     unittest.main()

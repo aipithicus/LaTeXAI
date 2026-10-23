@@ -19,6 +19,7 @@ python/PyTeXML/resources/bindings/
     ├── comment.yaml              # Victor Eijkhout's selective exclusion/inclusion engine
     ├── fancyvrb.yaml             # Configurable verbatim & \DefineVerbatimEnvironment
     ├── listings.yaml             # Syntax-highlighted code blocks & \lstinline
+    ├── natbib.yaml               # Citation-key argument grammar; no rendering or option execution
     └── verbatim.yaml             # Rainer Schöpf's \verbatiminput extension
 ```
 
@@ -37,6 +38,10 @@ Constructs contributed by specific `.sty` packages or `.cls` document classes.
   `BindingResolver.load_package()`. Recognizing package declarations in source is
   the preparation source owner's responsibility, using dispatcher command records. Later first-time activations take
   precedence; requesting an already active package does not reorder it.
+  `source_command_syntax()` can also expose a unique provider's argument shape
+  without activation. Such a header stays a `DeferredRegion`, with an optional
+  observed command and binding ID. Preparation can use its literal citation keys
+  provisionally; this does not authorize effects or dependency execution.
 * **Separation of concerns:** 
   * `comment.sty` owns `\begin{comment}` and `\excludecomment`.
   * `verbatim.sty` extends the engine with `\verbatiminput`.

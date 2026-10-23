@@ -1,0 +1,54 @@
+identity:
+  package: natbib
+  description: Citation-key reading only; citation rendering and package options remain downstream
+  source:
+    version: 8.31b
+    reference: https://mirrors.ctan.org/macros/latex/contrib/natbib/natnotes.pdf
+reading:
+  # The same argument grammar handles textual/parenthetical citations, the
+  # capitalized variants and their starred forms. Notes are captured, not run.
+  # Merge/elide key syntax is intentionally unresolved by this initial contract.
+  commands:
+  - name: \citep
+    family: source_command
+    action: citation
+    grammar: &citation_arguments
+      handler: source_arguments
+      arguments:
+      - {name: star, kind: star}
+      - {name: note, kind: optional}
+      - {name: second_note, kind: optional}
+      - {name: keys, kind: braced}
+  - name: \citet
+    family: source_command
+    action: citation
+    grammar: *citation_arguments
+  - name: \Citep
+    family: source_command
+    action: citation
+    grammar: *citation_arguments
+  - name: \Citet
+    family: source_command
+    action: citation
+    grammar: *citation_arguments
+  - name: \citealt
+    family: source_command
+    action: citation
+    grammar: *citation_arguments
+  - name: \citealp
+    family: source_command
+    action: citation
+    grammar: *citation_arguments
+  - name: \Citealt
+    family: source_command
+    action: citation
+    grammar: *citation_arguments
+  - name: \Citealp
+    family: source_command
+    action: citation
+    grammar: *citation_arguments
+  command_overrides:
+  - name: \cite
+    family: source_command
+    action: citation
+    grammar: *citation_arguments

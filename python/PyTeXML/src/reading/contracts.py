@@ -142,6 +142,10 @@ class DeferredRegion:
     reason: str
     detail: str
     tokens: tuple[Token, ...] = ()
+    # A uniquely known argument grammar may describe this header even when its
+    # provider is not active. This is an observation, never an executed command.
+    command: SourceCommand | None = None
+    binding_id: str = ""
 
 
 @dataclass(frozen=True, slots=True)

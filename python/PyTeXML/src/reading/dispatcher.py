@@ -247,7 +247,8 @@ class StructuralDispatcher:
                     if syntax is not None:
                         command = ArgumentScanner(reader, context).read(event.span, syntax)
                         return DeferredRegion(command.span, resolved.reason.value, resolved.detail,
-                                              (token,) + tuple(t for arg in command.arguments for t in arg.tokens))
+                                              (token,) + tuple(t for arg in command.arguments for t in arg.tokens),
+                                              command, syntax.binding_id)
                     # An inactive literal binding can require a different mouth.
                     # Do not treat its body as ordinary executed TeX.
             profile = require_resolved(resolved)

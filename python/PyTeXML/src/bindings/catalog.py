@@ -164,6 +164,12 @@ class BindingCatalog:
                         arg_names.add(arg["name"])
                     if spec.get("family") in ("source_command", "environment_factory") and spec.get("action") not in self.reading_handlers:
                         raise ProfileError(f"{path}: unknown source command action for {name}")
+                    if spec.get("action") == "citation":
+                        if {"name": "keys", "kind": "braced"} not in arguments:
+                            raise ProfileError(f"{path}: {name} citation requires braced keys")
+                        wildcard = spec.get("metadata", {}).get("allow_wildcard", False)
+                        if type(wildcard) is not bool:
+                            raise ProfileError(f"{path}: {name} allow_wildcard must be boolean")
                     if spec.get("family") == "environment_factory":
                         self._validate_factory(spec, arg_names, path)
                 if section in ("catcode_mutators", "grouping", "inclusions"):

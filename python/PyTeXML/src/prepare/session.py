@@ -203,7 +203,7 @@ class PreparationSession:
         self.frames.append(_Input(path, reader, emit, import_dir, include=include, recovery=recovery))
         self.dispatcher.enter_source(reader, catcode_overrides=overrides)
 
-    def _emit(self, span, text=None, *, command=None, target=None, operation=None):
+    def _emit(self, span, text=None, *, command=None, target=None, operation=None, deferred=None):
         if not self.frames[-1].emit:
             return
         raw = self.raw(span)
@@ -211,7 +211,7 @@ class PreparationSession:
         if text:
             self.pieces.append(SourcePiece(text, span, self.line(span), operation or
                               ("IDENTITY" if text == raw else "MOUTH_EMISSION"), command, target,
-                              self.line(span.basis.span(max(span.start, span.end - 1), span.end))))
+                              self.line(span.basis.span(max(span.start, span.end - 1), span.end)), deferred))
 
     def _omit(self, span, reason):
         if span.start != span.end:
@@ -480,7 +480,7 @@ class PreparationSession:
                     if (len(item.tokens) == 1 and item.tokens[0].kind == TokenKind.CONTROL_SEQUENCE
                             and item.span.end == item.tokens[0].span.end):
                         raw += " "
-                    self._emit(item.span, raw, operation="DEFER_INTERPRETATION")
+                    self._emit(item.span, raw, operation="DEFER_INTERPRETATION", deferred=item)
                 elif isinstance(item, ReadEvent):
                     text = event_text(item, self.raw(item.span))
                     self._emit(item.span, text)

@@ -119,6 +119,25 @@ source declarations and argument shapes live in
 [source_traversal.yaml](resources/bindings/engine/source_traversal.yaml);
 package-specific discovery shapes live in their package binding.
 
+Bibliography preparation selects source-visible citation keys across all emitted
+input occurrences, including citations after the bibliography declaration. The
+initial [natbib contract](resources/bindings/packages/natbib.yaml) supplies citation
+argument shapes, including stars and up to two notes. An inactive package's unique
+grammar can supply a located, provisional key observation without activating the
+package or executing a retained style. `DeferredRegion.command` records that
+distinction; it is not an executed `SourceCommand` event.
+
+The bibliography manifest reports `citation_discovery`, its non-expanding scope,
+the observed `citation_keys`, and specific `citation_gaps`. Other uninterpreted
+contexts are counted in `citation_deferred_contexts`; their locations already live
+in `requirements`. Partial interpretation does not select every database entry.
+Only explicit `\nocite{*}` requests that. Empty/computed key sets do not manufacture
+citations; unobserved entries remain in the emitted canonical `bibliography.bib`.
+Known keys are formatted into `bibliography.bbl` and embedded in `master.tex`.
+Unconfirmed missing keys remain diagnostics; missing established citations still
+report resource errors. Selected conflicting records retain the canonical-resource
+fallback. Unused duplicate keys cannot prevent formatting the selected references.
+
 All runtime YAML loaders reject duplicate keys through the shared strict loader.
 Policies validate their fields and action values. Catalog loading checks binding
 identities, current construct-list structure, engine/profile references and the

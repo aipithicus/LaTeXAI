@@ -346,12 +346,13 @@ class TraversalTests(unittest.TestCase):
         self.assertIn("BETWEEN\\bibliography{refs}AFTER", text)
         self.assertEqual(manifest.unresolved[0]["reason"], "bibliography_sites")
 
-    def test_missing_citation_reading_support_embeds_all_available_entries(self):
+    def test_no_observed_citations_keeps_available_entries_in_canonical_resource(self):
         self.document("\\bibliography{refs}")
         self.put("refs.bib", "@misc{key,title={CONTENT}}")
-        text, manifest, _, _ = self.prepare()
+        text, manifest, out, _ = self.prepare()
         self.assertNotIn("\\bibliography{refs}", text)
-        self.assertIn("\\bibitem{key}", text)
+        self.assertNotIn("\\bibitem{key}", text)
+        self.assertIn("CONTENT", (out / "bibliography.bib").read_text())
         self.assertEqual(manifest.bibliography.preparation_backend, "native-bibtex")
 
     def test_partial_rerun_can_become_complete_without_stale_diagnostics(self):
