@@ -11,6 +11,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from src.bindings.catalog import BindingCatalog
 from src.bindings.resolver import BindingResolver
 from src.reading.contracts import EffectiveReadingProfile, UnresolvedBindingResult, UnresolvedReason
+from src.reading.character_rules import ProfileError
 
 
 class CatalogSharingTests(unittest.TestCase):
@@ -57,6 +58,20 @@ class CatalogSharingTests(unittest.TestCase):
         self.assertEqual(observed.grammar, expected.grammar)
         self.assertEqual(observed.reader_parameters, expected.reader_parameters)
         self.assertEqual(self.catalog.engine_bindings, declarations)
+
+    def test_factory_recipes_reject_unbound_arguments_and_invalid_name_templates(self):
+        original = self.catalog.package_bindings["comment"]["reading"]
+        for mutation in ("name_argument", "regex_pattern", "unknown_field"):
+            reading = deepcopy(original)
+            recipe = reading["factories"][0]["metadata"]
+            if mutation == "name_argument":
+                recipe[mutation] = "absent"
+            elif mutation == "regex_pattern":
+                recipe["terminator"][mutation] = r"{name}["
+            else:
+                recipe[mutation] = True
+            with self.subTest(mutation=mutation), self.assertRaises(ProfileError):
+                self.catalog._validate_reading(reading, Path("comment.yaml"))
 
 
 if __name__ == "__main__":

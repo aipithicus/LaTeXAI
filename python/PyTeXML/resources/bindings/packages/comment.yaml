@@ -12,13 +12,14 @@ identity:
   package: comment
   version: "3.8"
   tier: ctan_package
-  source_reference: "lib/LaTeXML/Package/comment.sty.ltxml"
+  source_reference: "https://mirrors.ctan.org/macros/latex/contrib/comment/comment.pdf"
   description: "Selectively includes or excludes entire sections of text and environments"
 
 reading:
   environments:
     - name: comment
       family: delimited_raw_block
+      grammar: {handler: physical_line_literal, arity: 0, body_start: next_physical_line}
       profile: discard_block
       lexical_mode:
         catcode_overrides:
@@ -42,22 +43,37 @@ reading:
   # Dynamic definition factories that create custom included/excluded environments
   factories:
     - command: "\\excludecomment"
-      syntax: "{env_name}"
-      registers: environment
-      family: delimited_raw_block
-      profile: discard_block
-      span_classification:
-        category: "editorial_comment_block"
-        semantic_role: "author_notes"
+      family: environment_factory
+      action: define_environment
+      grammar:
+        handler: source_arguments
+        arguments: [{name: name, kind: braced}]
+      metadata:
+        name_argument: name
+        base: comment
+        base_binding: packages/comment
+        variants: [{suffix: '', options: {}}]
+        terminator:
+          exact_string: '\end{{{name}}}'
+          regex_pattern: '^\\end\{{{name}\}}$'
+        classification: {category: editorial_comment_block, semantic_role: author_notes}
       description: "Registers \\begin{env_name}...\\end{env_name} as an editorial comment block with column 0 termination"
 
     - command: "\\includecomment"
-      syntax: "{env_name}"
-      registers: environment
-      family: unwrap_block
-      span_classification:
-        category: "transparent_block"
-        semantic_role: "transparent_container"
+      family: environment_factory
+      action: define_environment
+      grammar:
+        handler: source_arguments
+        arguments: [{name: name, kind: braced}]
+      metadata:
+        name_argument: name
+        base: comment
+        base_binding: packages/comment
+        variants: [{suffix: '', options: {}}]
+        terminator:
+          exact_string: '\end{{{name}}}'
+          regex_pattern: '^\\end\{{{name}\}}$'
+        classification: {category: transparent_block, semantic_role: transparent_container}
       description: "Registers \\begin{env_name}...\\end{env_name} as transparent content"
 
     - command: "\\specialcomment"

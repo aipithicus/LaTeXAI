@@ -24,6 +24,7 @@ def preprocess_paper(
     clean_styles: bool = False,
     emit_manifest_json: bool = True,
     emit_provenance: bool = True,
+    policy: str = "prepare",
 ) -> Tuple[str, PreflightManifest, Path, Optional[ProvenanceLedger]]:
     """Publish prepared source, with explicit partial status when knowledge is missing.
 
@@ -54,7 +55,7 @@ def preprocess_paper(
         try:
             # Invalidate the previous entrypoint before a rerun can fail.
             (out_dir / "master.tex").unlink(missing_ok=True)
-            session = PreparationSession(p_dir, root_tex=root_tex, engine=engine, excluded_dirs=[out_dir])
+            session = PreparationSession(p_dir, root_tex=root_tex, engine=engine, excluded_dirs=[out_dir], policy=policy)
             if output_file:
                 secondary = Path(output_file).resolve()
                 if session.store.contains(secondary):
@@ -79,7 +80,7 @@ def preprocess_paper(
                 prepared_bbl = ''.join(p.text for p in pieces if p.span in spans)
                 (out_dir / "bibliography.bbl").write_text(prepared_bbl, encoding="utf-8", newline="\n")
             dependencies = [Path(s.abs_path) for s in manifest.local_styles] + [p_dir / p for p in manifest.code_inputs]
-            if dependencies and not copy_local_dependencies:
+            if (dependencies or session.literal_payloads) and not copy_local_dependencies:
                 raise ValueError("Local code dependencies must be emitted for a standalone extraction package")
             # Local code remains source-preserving until its own emission contract
             # exists. The cache also supplies payload bytes; no reopen/copy pass.
@@ -87,6 +88,10 @@ def preprocess_paper(
                 target = out_dir / source.relative_to(p_dir)
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_text(session.payload_text(source), encoding="utf-8", newline="\n")
+            for source, relative in session.literal_payloads.items():
+                target = out_dir / relative
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text(session.store.document(source).text, encoding="utf-8", newline="")
             master_tex_content = "".join(p.text for p in pieces)
             ledger = ProvenanceLedger.build_from_pieces(pieces, session.tombstones) if emit_provenance else None
             if ledger:
@@ -115,6 +120,8 @@ def preprocess_paper(
             for diagnostic in manifest.unresolved:
                 log.write(f"UNRESOLVED: {diagnostic['source']}:{diagnostic['line']} "
                           f"[{diagnostic['reason']}] {diagnostic['detail']}\n")
+            for warning in manifest.warnings:
+                log.write(f"WARNING: {warning['source']}:{warning['line']} {warning['detail']}\n")
             for requirement in manifest.requirements:
                 log.write(f"DEFERRED ({requirement['stage']}): {requirement['source']}:{requirement['line']} "
                           f"[{requirement['reason']}] {requirement['detail']}\n")

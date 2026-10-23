@@ -74,7 +74,7 @@ class ContinuationTests(unittest.TestCase):
     def test_full_project_survey_keeps_candidate_and_active_dependencies_distinct(self):
         self.put("main.tex", r"\documentclass{article}\input{live}")
         self.put("live.tex", "LIVE")
-        self.put("unused.tex", r"\def\later{\input{latent}}\input{other}\catcode`\%=12 \input{after}")
+        self.put("unused.tex", r"\def\later{\input{latent}}\input{other}\catcode`\%=\computed \input{after}")
         self.put("after.tex", "AFTER")
         self.put("other.tex", "OTHER")
         text, manifest, _, _ = self.prepare()

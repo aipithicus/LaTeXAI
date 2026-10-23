@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections import deque
+from dataclasses import replace
 import re
 
 from .context import ExecutionMode, ReaderContext
@@ -13,6 +14,7 @@ from .tex_reader import (
 )
 from .spans import SourceSpan
 
+_NEWLINE = re.compile(r"\r\n|\r|\n")
 
 class LiteralScanner:
     """Consume a resolved literal occurrence with temporary lexical settings.
@@ -41,10 +43,16 @@ class LiteralScanner:
             raise ReadingIssue("inactive_context", "Literal entry requires active execution")
         try:
             handler = profile.grammar.get("handler")
-            self._require(handler in {"inline_character", "token_delimited"},
+            self._require(handler in {"inline_character", "token_delimited", "physical_line_literal"},
                           "No initial literal handler is selected by this binding")
-            self._require(not profile.interpolations and not profile.active_options and profile.action is None,
+            self._require(not profile.interpolations and profile.action is None,
                           "Literal options, actions and interpolation require further dispatch")
+            if handler == "physical_line_literal":
+                self._require(profile.span_classification.category in {"opaque_literal", "editorial_comment_block", "transparent_block"}
+                              and not profile.catcode_overrides,
+                              "Reading-affecting options need a further literal handler")
+                return self._physical_lines(start, profile)
+            self._require(not profile.active_options, "Literal options require further dispatch")
             with self.context.lexical_scope():
                 self.context.apply_profile(profile)
                 reader.endline_char = self.context.endlinechar
@@ -58,7 +66,50 @@ class LiteralScanner:
                 profile: EffectiveReadingProfile) -> LiteralRegion:
         span = self.reader.source_span
         return LiteralRegion(span(start, closing.end), span(start, body_start),
-                             span(body_start, closing.start), closing, profile.name, profile.binding_id)
+                             span(body_start, closing.start), closing, profile.name, profile.binding_id,
+                             profile.span_classification)
+
+    def _physical_lines(self, start: int, profile: EffectiveReadingProfile) -> LiteralRegion:
+        rule = profile.terminator
+        self._require(rule is not None and rule.matching_domain == "physical_line",
+                      "Physical-line literal requires a line terminator contract")
+        pattern = re.compile(rule.regex_pattern)
+        body_start = (self.reader.current_line.span.end if profile.grammar.get("body_start") == "next_physical_line"
+                      else self.reader.position)
+        line_start = (body_start if profile.grammar.get("body_start") == "next_physical_line"
+                      else self.reader.current_line.span.start)
+        source = self.reader.text
+        while line_start < self.reader.limit:
+            newline = _NEWLINE.search(source, line_start, self.reader.limit)
+            content_end = newline.start() if newline else self.reader.limit
+            line_end = newline.end() if newline else self.reader.limit
+            line = source[line_start:content_end].rstrip(" ")
+            match = pattern.search(line, max(0, body_start - line_start))
+            if (match and (not rule.requires_column_zero or match.start() == 0)
+                    and (rule.trailing_content_allowed or match.end() == len(line))):
+                end = line_start + match.end()
+                if rule.trailing_line_behavior == "discard_with_warning" or not rule.trailing_content_allowed:
+                    end = line_end
+                closing = self.reader.source_span(line_start + match.start(), end)
+                # These handlers capture raw lines only under their declared
+                # reading configuration. An arbitrary author-made comment or
+                # active character outside the profile cannot be ignored.
+                actual = ReaderContext(baseline=self.context.baseline, catcodes=self.context.catcodes,
+                                       endlinechar=self.context.endlinechar)
+                expected = ReaderContext(baseline=self.context.baseline)
+                actual.apply_profile(profile)
+                expected.apply_profile(profile)
+                self._require(actual.endlinechar == expected.endlinechar
+                              and all(actual.catcodes[c] == expected.catcodes[c]
+                                      for c in set(source[body_start:end]) if c not in "\r\n"),
+                              "Live reading state differs from the physical-line literal contract")
+                self.reader.consume_raw_to(end)
+                region = self._region(start, body_start, closing, profile)
+                if rule.trailing_line_behavior == "discard_with_warning" and line[match.end():].strip():
+                    region = replace(region, warnings=("Package discards content following the literal terminator on this line",))
+                return region
+            line_start = line_end
+        raise ReadingIssue("unclosed_literal", "No matching physical-line literal terminator")
 
     def _check_body_token(self, token: Token, definition: ReaderContext) -> None:
         # A block first scans unexpanded tokens, but subsequently executes its

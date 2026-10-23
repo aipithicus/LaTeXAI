@@ -66,6 +66,7 @@ reading:
 
     - name: "\\catcode"
       action: "assign_catcode_dynamic"
+      grammar: {handler: literal_catcode_assignment}
       syntax: "char_number '='? category_number"
       scope: local
       affects_reading: true

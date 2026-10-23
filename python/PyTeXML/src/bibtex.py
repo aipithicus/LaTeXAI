@@ -14,6 +14,11 @@ class BibTeXError(ValueError):
     pass
 
 
+class BibTeXConflictError(BibTeXError):
+    """Several retained records prevent an unambiguous keyed selection."""
+    pass
+
+
 @dataclass
 class Value:
     text: str
@@ -69,7 +74,7 @@ class Database:
             candidates = self.entries[key]
             entry = candidates[0]
             if any(candidate != entry for candidate in candidates[1:]):
-                raise BibTeXError(f"Conflicting bibliography entries for cited key {key!r}")
+                raise BibTeXConflictError(f"Conflicting bibliography entries for selected key {key!r}")
             selected[key] = entry
             active.add(key)
             for name, value in entry.fields:

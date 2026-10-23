@@ -42,6 +42,7 @@ reading:
   environments:
     - name: lstlisting
       family: block_verbatim
+      grammar: {handler: physical_line_literal, arity: 0}
       profile: raw_block
       has_optional_arguments: true
       options_syntax: "key_val"               # \begin{lstlisting}[language=Python,escapeinside={(*@}{@*)}]
@@ -70,14 +71,16 @@ reading:
         semantic_role: "code_inline"
 
     - name: "\\lstinputlisting"
-      family: external_verbatim_file
-      profile: raw_block
-      has_optional_arguments: true
-      options_syntax: "key_val"
-      syntax: "{file_path}"
-      span_classification:
-        category: "external_verbatim_resource"
-        semantic_role: "external_verbatim"
+      family: source_command
+      action: external_literal
+      grammar:
+        handler: source_arguments
+        arguments:
+          - {name: options, kind: optional}
+          - {name: target, kind: braced}
+      metadata:
+        semantic_role: external_verbatim
+        inline_environment: lstlisting
 
     - name: "\\lstset"
       syntax: "{key_vals}"

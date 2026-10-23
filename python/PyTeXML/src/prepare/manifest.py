@@ -83,10 +83,12 @@ class PreflightManifest:
     source_dependency_closure: str = "unresolved"
     requirements: List[Dict[str, Any]] = field(default_factory=list)
     source_survey: List[Dict[str, Any]] = field(default_factory=list)
+    resources: List[Dict[str, Any]] = field(default_factory=list)
     reading_assumptions: List[str] = field(default_factory=list)
     input_occurrences: List[Dict[str, Any]] = field(default_factory=list)
     dependencies: List[Dict[str, Any]] = field(default_factory=list)
     unresolved: List[Dict[str, Any]] = field(default_factory=list)
+    warnings: List[Dict[str, Any]] = field(default_factory=list)
     preserved_source_spans: List[Dict[str, Any]] = field(default_factory=list)
     unclassified_files: List[str] = field(default_factory=list)
     source_reads: List[str] = field(default_factory=list)

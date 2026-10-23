@@ -1,8 +1,8 @@
 """
 Preparation policy configuration for PyTeXML.
 
-Loads declarative role/event actions from resources/policies. This loader does
-not apply rewrites and is not yet wired into the preparation pipeline.
+Loads declarative role/event actions from resources/policies. Preparation consumes
+supported role actions; lexical/event and projection settings remain provisional.
 """
 
 from __future__ import annotations

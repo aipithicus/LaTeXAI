@@ -5,6 +5,7 @@ exclusively to document-local resolvers and reading contexts.
 """
 from __future__ import annotations
 from pathlib import Path
+import re
 from typing import Any
 from ..yaml_io import load_mapping, validate_resource_identity
 from ..reading.character_rules import CatcodeLayer, ProfileError, compile_layer
@@ -56,6 +57,7 @@ class BindingCatalog:
                 self._validate_reading(reading, path)
                 target[name] = data
         engine_ids = {f"engine/{name}" for name in self.engine_bindings}
+        binding_ids = engine_ids | {f"packages/{name}" for name in self.package_bindings}
         for tier, bindings in (("engine", self.engine_bindings), ("packages", self.package_bindings)):
             for name, data in bindings.items():
                 origin, reading = f"{tier}/{name}", data["reading"]
@@ -63,6 +65,10 @@ class BindingCatalog:
                 if requires is not None and (not isinstance(requires, str) or requires not in engine_ids):
                     raise ProfileError(f"{origin}: unknown required engine identity {requires!r}")
                 self.lexical_layers[origin] = compile_layer(reading.get("lexical_mode", {}), origin)
+                for factory in reading.get("factories", []):
+                    if (factory.get("family") == "environment_factory"
+                            and factory["metadata"]["base_binding"] not in binding_ids):
+                        raise ProfileError(f"{origin}: unknown factory base binding")
                 for section in ("environments", "environment_overrides", "commands", "command_overrides"):
                     for spec in reading.get(section, []):
                         if "profile" in spec:
@@ -129,13 +135,20 @@ class BindingCatalog:
                     handler = grammar["handler"]
                     if not isinstance(handler, str) or handler not in self.reading_handlers:
                         raise ProfileError(f"{path}: unknown grammar handler {handler!r} for {name}")
+                if grammar.get("handler") == "physical_line_literal":
+                    if (set(grammar) - {"handler", "arity", "body_start"} or grammar.get("arity") != 0
+                            or grammar.get("body_start", "after_header") not in {"after_header", "next_physical_line"}):
+                        raise ProfileError(f"{path}: invalid physical-line literal grammar for {name}")
                 if spec.get("family") == "stored_definition":
                     if (set(grammar) != {"handler", "expansion"}
                             or grammar.get("handler") != "primitive_definition"
                             or grammar.get("expansion") not in ("none", "full")
                             or spec.get("scope") not in ("local", "global")):
                         raise ProfileError(f"{path}: {name} requires a primitive definition grammar, expansion and scope")
-                if spec.get("family") in ("source_command", "structural_environment"):
+                if spec.get("action") == "assign_catcode_dynamic":
+                    if grammar != {"handler": "literal_catcode_assignment"} or spec.get("scope") != "local":
+                        raise ProfileError(f"{path}: {name} requires the local literal assignment scanner")
+                if spec.get("family") in ("source_command", "structural_environment", "environment_factory"):
                     if not isinstance(spec.get("metadata", {}), dict):
                         raise ProfileError(f"{path}: {name} metadata must be a mapping")
                     arguments = grammar.get("arguments")
@@ -149,8 +162,10 @@ class BindingCatalog:
                                 or arg["name"] in arg_names or arg.get("kind") not in ("braced", "optional", "star", "filename")):
                             raise ProfileError(f"{path}: invalid source argument for {name}")
                         arg_names.add(arg["name"])
-                    if spec.get("family") == "source_command" and spec.get("action") not in self.reading_handlers:
+                    if spec.get("family") in ("source_command", "environment_factory") and spec.get("action") not in self.reading_handlers:
                         raise ProfileError(f"{path}: unknown source command action for {name}")
+                    if spec.get("family") == "environment_factory":
+                        self._validate_factory(spec, arg_names, path)
                 if section in ("catcode_mutators", "grouping", "inclusions"):
                     action = spec.get("behavior" if section == "inclusions" else "action")
                     if not isinstance(action, str) or action not in self.reading_handlers:
@@ -164,3 +179,48 @@ class BindingCatalog:
                     if not isinstance(profile, str):
                         raise ProfileError(f"{path}: {name} profile must be a name")
                     self.mouth.profile(profile)
+
+    @staticmethod
+    def _validate_factory(spec, arguments, path):
+        recipe = spec.get("metadata", {})
+        required = {"name_argument", "base_binding", "variants", "terminator"}
+        allowed = required | {"base", "base_argument", "options_argument", "classification"}
+        def fail():
+            raise ProfileError(f"{path}: invalid environment factory recipe for {spec.get('command', spec.get('name'))}")
+        if (spec.get("action") != "define_environment" or not required <= recipe.keys()
+                or set(recipe) - allowed or ("base" in recipe) == ("base_argument" in recipe)):
+            fail()
+        for key in ("name_argument", "base_argument", "options_argument"):
+            if key in recipe and (not isinstance(recipe[key], str) or recipe[key] not in arguments):
+                fail()
+        if not isinstance(recipe["base_binding"], str) or not recipe["base_binding"]:
+            fail()
+        if "base" in recipe and (not isinstance(recipe["base"], str) or not recipe["base"]):
+            fail()
+        variants = recipe["variants"]
+        if not isinstance(variants, list) or not variants:
+            fail()
+        suffixes = set()
+        for variant in variants:
+            if (not isinstance(variant, dict) or set(variant) != {"suffix", "options"}
+                    or not isinstance(variant["suffix"], str) or not isinstance(variant["options"], dict)
+                    or variant["suffix"] in suffixes):
+                fail()
+            suffixes.add(variant["suffix"])
+        term = recipe["terminator"]
+        if (not isinstance(term, dict) or set(term) != {"exact_string", "regex_pattern"}
+                or any(not isinstance(v, str) or "{name}" not in v for v in term.values())):
+            fail()
+        try:
+            exact = term["exact_string"].format(name="example+*")
+            pattern = term["regex_pattern"].format(name=re.escape("example+*"))
+            if re.fullmatch(pattern, exact) is None:
+                fail()
+        except (KeyError, ValueError, re.error):
+            fail()
+        if "classification" in recipe:
+            category = recipe["classification"]
+            if (not isinstance(category, dict) or set(category) != {"category", "semantic_role"}
+                    or category["category"] not in {"editorial_comment_block", "transparent_block"}
+                    or not isinstance(category["semantic_role"], str) or not category["semantic_role"]):
+                fail()

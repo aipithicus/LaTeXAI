@@ -122,15 +122,17 @@ class ResolvedEffectTests(unittest.TestCase):
 
     def test_external_package_commands_select_inlining_from_actual_role(self):
         policy = load_policy("prepare")
-        for package, name in (("verbatim", r"\verbatiminput"), ("verbatim", r"\verbatiminput*"),
+        for package, name in (("verbatim", r"\verbatiminput"),
                               ("fancyvrb", r"\VerbatimInput"), ("listings", r"\lstinputlisting")):
             with self.subTest(command=name):
                 self.resolver.load_package(package)
                 profile = self.resolver.resolve_command(name)
                 self.assertIsInstance(profile, EffectiveReadingProfile)
-                self.assertEqual(profile.grammar["syntax"], "{file_path}")
-                self.assertEqual(policy.get_role_action(profile.span_classification.semantic_role), "inline")
-                self.assertEqual(self.effective_codes(profile)["%"], CatCode.OTHER)
+                self.assertEqual(profile.action, "external_literal")
+                self.assertEqual(profile.grammar["arguments"][-1], {"name": "target", "kind": "braced"})
+                self.assertEqual(policy.get_role_action(profile.tex_mechanics["semantic_role"]), "inline")
+                # The path is a normal TeX argument. Only its external body is literal.
+                self.assertEqual(self.effective_codes(profile)["%"], CatCode.COMMENT)
 
     def test_policy_uses_semantic_role_without_losing_lexical_category(self):
         self.resolver.load_package("alltt")
@@ -144,9 +146,9 @@ class ResolvedEffectTests(unittest.TestCase):
 
     def test_pending_commands_do_not_become_successful_noops(self):
         pending = self.resolver.resolve_command(r"\catcode")
-        self.assertIsInstance(pending, UnresolvedBindingResult)
-        self.assertEqual(pending.reason, UnresolvedReason.ARGUMENTS_REQUIRED)
-        with self.assertRaises(TypeError):
+        self.assertIsInstance(pending, EffectiveReadingProfile)
+        self.assertEqual(pending.grammar["handler"], "literal_catcode_assignment")
+        with self.assertRaises(ValueError):
             self.resolver.new_context().apply_profile(pending)
         unloaded = self.resolver.resolve_command(r"\VerbatimInput")
         self.assertEqual(unloaded.reason, UnresolvedReason.PACKAGE_NOT_LOADED)

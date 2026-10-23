@@ -86,10 +86,13 @@ partial emissions, not exceptions; callers must inspect `preparation_status` and
 5. **Emit:** retain literal/definition slices; serialize established mouth events,
    discard comments and skipped bodies, and replace active input directives.
    Explicit paragraph tokens prevent accidental paragraphs at input seams. At a
-   genuine reading boundary, preserve the original root suffix. If an input or package
+   genuine reading boundary in emitted source, preserve the original root suffix. If an input
    traversal is unfinished, undo that root operation's emissions before keeping
    its original directive and following source. This avoids inventing EOF seams
    under unknown reading state. Previously completed root operations remain.
+   Separately retained local code has an input checkpoint: unresolved code stays
+   in the payload, its missing effects are diagnosed, and the caller resumes under
+   its recorded entry-state assumptions. This does not establish package closure.
 6. **Survey:** inspect every indexed `.tex`, `.sty`, `.cls`, `.bbl` and `.tikz`
    buffer with the same reader and scanners. Record candidate commands and
    protected regions independently of active occurrences. After a reading
@@ -138,13 +141,16 @@ citation keys. Later extraction does not need to find raw `.bib` or `.bbl` paths
   fields are not silently inherited or renamed. A later interpreter can resolve
   those relationships with package-specific rules.
 - Repeated fields and keys retain all occurrences and produce diagnostics.
-  Conflicting records fail when their key is selected for inline output; uncited
+  Conflicting records cannot be selected for inline output; uncited
   conflicts remain in the enrichment database with warnings. Exactly identical
   duplicates produce one inline item. Undefined strings are diagnosed during
   parsing and block emission only when a selected field or preamble uses them.
   Missing referenced entries, malformed syntax, and cyclic parent references
   fail explicitly. No
   first/last-value policy silently chooses between conflicting records.
+  When a selected key conflicts, preparation emits the combined canonical database,
+  rebases the bibliography declaration to it, and publishes a partial master with
+  a located conflict. Inline formatting remains pending; variants are not discarded.
 - `bibliography.bib` combines declared databases in declaration order without
   dropping fields that the formatted bibliography omits. It is a canonical
   package resource name, not a newly invented parsed bibliography schema. It can
@@ -284,11 +290,13 @@ suppress execution of these effects.
 
 Supported literal options yield category assignments or explicit interpolation
 plans. Unclassified options and unsupported operations return unresolved results.
-Dynamic `\catcode` arguments, package configuration commands, definition factories,
-literal-body dispatch and interpolation execution still need the source dispatcher.
+Bounded literal `\catcode` assignments, physical-line literal bodies and declared
+environment factories now route through the source dispatcher. Computed assignments,
+general package configuration and interpolation execution remain pending.
 The resolver does not expand macros, scan environments, or perform rewrites. Its
 source-capture metadata preserves reading evidence without committing to an XML
-schema. The resolver is wired into preparation; the general policy loader remains independent.
+schema. Preparation consumes supported role actions from policy; the remaining
+lexical-event, normalization and projection settings remain provisional.
 
 ## Known limits and next design work
 
@@ -299,7 +307,7 @@ are captured under entry catcodes, not interpreted. Unbound command envelopes
 protect adjacent balanced groups without claiming to know the command's arity.
 The manifest states the assumption that unbound behavior does not change reading
 outside those envelopes. This is not a proof about arbitrary author macros.
-Dynamic/global assignments, predicates and unsupported literal grammars still
+Computed/global assignments, predicates and unsupported literal grammars still
 produce reading boundaries. Hooks, definition wrappers and subfile preamble
 stripping need additional handlers.
 Literal/definition/argument scans that exhaust their physical input are boundaries;

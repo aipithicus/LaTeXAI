@@ -37,7 +37,7 @@ reading:
         effect: "dynamic_catcode_mutations"
         unsupported_action: "report_unresolved"
     # Retained for later formatting; all other keys need a binding decision.
-    non_reading_options: [numbers, frame, fontfamily, fontsize, fontshape, fontseries]
+    non_reading_options: [numbers, frame, fontfamily, fontsize, fontshape, fontseries, showspaces]
     unsupported_options_behavior: "report_unresolved"
 
   # ---------------------------------------------------------------------------
@@ -46,6 +46,7 @@ reading:
   environments:
     - name: Verbatim
       family: block_verbatim
+      grammar: {handler: physical_line_literal, arity: 0}
       profile: raw_block
       has_optional_arguments: true
       options_syntax: "key_val"         # \begin{Verbatim}[numbers=left,commandchars=\\\{\}]
@@ -61,6 +62,7 @@ reading:
 
     - name: BVerbatim
       family: block_verbatim
+      grammar: {handler: physical_line_literal, arity: 0}
       profile: raw_block
       has_optional_arguments: true
       options_syntax: "key_val"         # Boxed verbatim (aligned horizontally)
@@ -76,6 +78,7 @@ reading:
 
     - name: LVerbatim
       family: block_verbatim
+      grammar: {handler: physical_line_literal, arity: 0}
       profile: raw_block
       has_optional_arguments: true
       options_syntax: "key_val"         # Line-mode verbatim
@@ -104,25 +107,41 @@ reading:
         semantic_role: "code_inline"
 
     - name: "\\VerbatimInput"
-      family: external_verbatim_file
-      profile: raw_block
-      has_optional_arguments: true
-      options_syntax: "key_val"
-      syntax: "{file_path}"
-      span_classification:
-        category: "external_verbatim_resource"
-        semantic_role: "external_verbatim"
+      family: source_command
+      action: external_literal
+      grammar:
+        handler: source_arguments
+        arguments:
+          - {name: options, kind: optional}
+          - {name: target, kind: braced}
+      metadata:
+        semantic_role: external_verbatim
+        inline_environment: Verbatim
 
   # ---------------------------------------------------------------------------
   # Definition Factories
   # ---------------------------------------------------------------------------
   factories:
     - command: "\\DefineVerbatimEnvironment"
-      syntax: "{new_env_name}{base_env_name}{options}"
-      registers: environment
-      inherit_from_arg: 2              # Inherits the profile of {base_env_name} (e.g. 'Verbatim')
-      span_classification:
-        category: "configurable_literal"
+      family: environment_factory
+      action: define_environment
+      grammar:
+        handler: source_arguments
+        arguments:
+          - {name: name, kind: braced}
+          - {name: base, kind: braced}
+          - {name: options, kind: braced}
+      metadata:
+        name_argument: name
+        base_argument: base
+        options_argument: options
+        base_binding: packages/fancyvrb
+        variants:
+          - {suffix: '', options: {}}
+          - {suffix: '*', options: {showspaces: true}}
+        terminator:
+          exact_string: '\end{{{name}}}'
+          regex_pattern: '\\end[ \t]*\{{{name}\}}'
       description: "Creates \\begin{new_env_name}...\\end{new_env_name} using base_env_name reading rules and bound options"
 
     - command: "\\CustomVerbatimCommand"

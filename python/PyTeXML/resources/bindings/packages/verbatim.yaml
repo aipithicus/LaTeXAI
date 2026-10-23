@@ -25,6 +25,7 @@ reading:
   environment_overrides:
     - name: verbatim
       family: block_verbatim
+      grammar: {handler: physical_line_literal, arity: 0}
       profile: raw_block
       overrides_kernel_binding: true
       arity: 0
@@ -41,6 +42,7 @@ reading:
 
     - name: verbatim*
       family: block_verbatim
+      grammar: {handler: physical_line_literal, arity: 0}
       profile: raw_block
       overrides_kernel_binding: true
       arity: 0
@@ -61,6 +63,7 @@ reading:
   environments:
     - name: comment
       family: delimited_raw_block
+      grammar: {handler: physical_line_literal, arity: 0}
       profile: discard_block
       terminator:
         exact_string: "\\end{comment}"
@@ -76,26 +79,17 @@ reading:
   # ---------------------------------------------------------------------------
   commands:
     - name: "\\verbatiminput"
-      family: external_verbatim_file
-      profile: raw_block
+      family: source_command
+      action: external_literal
       grammar:
-        control_sequence: "verbatiminput"
-        star_token_allowed: true
-      syntax: "{file_path}"
-      starred_variant: false
-      span_classification:
-        category: "external_verbatim_resource"
-        semantic_role: "external_verbatim"
-
-    - name: "\\verbatiminput*"
-      family: external_verbatim_file
-      profile: raw_block
-      syntax: "{file_path}"
-      starred_variant: true
-      visible_spaces: true
-      span_classification:
-        category: "external_verbatim_resource"
-        semantic_role: "external_verbatim"
+        handler: source_arguments
+        arguments:
+          - {name: star, kind: star}
+          - {name: target, kind: braced}
+      metadata:
+        semantic_role: external_verbatim
+        inline_environment: verbatim
+        starred_environment: verbatim*
 
   # ---------------------------------------------------------------------------
   # Token Registers & Hooks

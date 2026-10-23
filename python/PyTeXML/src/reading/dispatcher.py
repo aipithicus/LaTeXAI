@@ -8,7 +8,7 @@ a located boundary and unchanged residue.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Iterator
 
 from .context import ExecutionMode, ReaderContext
@@ -17,7 +17,9 @@ from .contracts import (
     ReadingKnowledge, SkippedRegion, StoredDefinition, SourceCommand, SourceEnd, require_resolved,
     DeferredRegion, UnresolvedBindingResult, UnresolvedReason,
 )
-from .argument_scanner import ArgumentScanner
+from .argument_scanner import ArgumentScanner, key_values
+from .assignment_scanner import AssignmentScanner
+from .environment_registry import declarations, resolve_environment
 from .definition_scanner import DefinitionScanner
 from .deferred_scanner import DeferredScanner
 from .literal_scanner import LiteralScanner
@@ -37,6 +39,19 @@ class _ConditionalFrame:
     opening: SourceSpan
     truth: bool
     in_alternative: bool = False
+
+
+@dataclass(frozen=True, slots=True)
+class InputRecovery:
+    """Preparation-only resumption point; abandoning input is not TeX execution."""
+    owner: object
+    reader: TexReader
+    context: ReaderContext
+    parents: tuple
+    groups: tuple
+    conditionals: tuple
+    environments: tuple
+    replays: dict
 
 
 class StructuralDispatcher:
@@ -70,6 +85,34 @@ class StructuralDispatcher:
         self._parents: list[tuple[TexReader, dict[str, CatCode]]] = []
         self._environment_stack: list[str] = []
         self._root_ended = False
+        self._replays = {}
+
+    def input_recovery(self) -> InputRecovery:
+        """Snapshot only at an active handoff, before entering retained code."""
+        if not self.preparation or self.halted or self._finished or self._pending_skip or self._skip_start is not None:
+            raise ValueError("Recovery requires an active preparation handoff")
+        return InputRecovery(self, self.reader, self.context.copy(), tuple(self._parents),
+                             tuple(self._groups), tuple(replace(f) for f in self._conditionals),
+                             tuple(self._environment_stack), dict(self._replays))
+
+    def resume_input(self, saved: InputRecovery) -> None:
+        """Resume after separately retained unresolved code under explicit assumptions.
+
+        The preparation owner must preserve the code and record the missing effects.
+        Strict execution never uses this route. The caller's cursor was suspended,
+        so no source is rescanned and no I/O is needed.
+        """
+        if not self.preparation or saved.owner is not self or not self.halted:
+            raise ValueError("Invalid preparation recovery")
+        self.context.restore_from(saved.context)
+        self._parents = list(saved.parents)
+        self._groups = list(saved.groups)
+        self._conditionals = [replace(f) for f in saved.conditionals]
+        self._environment_stack = list(saved.environments)
+        self._replays = dict(saved.replays)
+        self._skip_start = self._pending_skip = None
+        self.halted = self._finished = False
+        self._set_reader(saved.reader)
 
     def _set_reader(self, reader: TexReader) -> None:
         self.reader = reader
@@ -130,6 +173,10 @@ class StructuralDispatcher:
         except InvalidCharacterError as error:
             return self._boundary(error.span, "invalid_character", str(error))
         if event is None:
+            if reader in self._replays:
+                parent, closing, name, metadata = self._replays.pop(reader)
+                self._set_reader(parent)
+                return SourceCommand(closing, name, "transparent_end", (), metadata)
             if self._parents:
                 end = SourceEnd(reader.terminated_span or reader.source_span(len(reader.text), len(reader.text)),
                                 "endinput" if reader.terminated_span else "eof")
@@ -204,6 +251,18 @@ class StructuralDispatcher:
                     # An inactive literal binding can require a different mouth.
                     # Do not treat its body as ordinary executed TeX.
             profile = require_resolved(resolved)
+            if profile.family == "environment_factory":
+                command = ArgumentScanner(reader, context).read(event.span, profile)
+                for declaration in declarations(command, self.knowledge):
+                    context.record_environment(declaration)
+                return command
+            if profile.family == "catcode_assignment":
+                self._require(profile.grammar.get("handler") == "literal_catcode_assignment"
+                              and profile.state_management.scope == "local",
+                              "unsupported_reading_effect", "Assignment needs a supported local scanner")
+                command = AssignmentScanner(reader, context).catcode(event.span, profile)
+                context.catcodes[command.metadata["character"]] = command.metadata["category"]
+                return command
             if profile.family == "source_command":
                 self._require(self.source_commands, "unsupported_operation", "Source commands require an input owner")
                 command = ArgumentScanner(reader, context).read(event.span, profile)
@@ -250,21 +309,37 @@ class StructuralDispatcher:
                     meaning = context.lookup_definition(command)
                     self._require(meaning is None, "stored_macro",
                                   f"Environment command {command!r} has a stored definition")
-                resolved = self.knowledge.resolve_environment(name)
+                resolved = resolve_environment(name, None, context, self.knowledge)
                 if (self.preparation and isinstance(resolved, UnresolvedBindingResult)
                         and resolved.reason == UnresolvedReason.UNKNOWN_CONSTRUCT):
                     return deferred.environment(event.span, name, protect=self._protect_deferred_environment)
                 profile = require_resolved(resolved)
+                if profile.grammar.get("has_optional_arguments"):
+                    with context.argument_scanning():
+                        options = ArgumentScanner(reader, context).group("options", optional=True)
+                    profile = require_resolved(resolve_environment(name, key_values(options), context, self.knowledge))
                 if profile.family == "structural_environment" and self.source_commands:
                     header = ArgumentScanner(reader, context).read(event.span, profile)
                     context.push_scope()
                     self._groups.append(_GroupFrame("environment:" + name, event.span))
                     self._environment_stack.append(name)
                     return SourceCommand(header.span, name, "environment_begin", header.arguments, profile.tex_mechanics)
-                self._require(profile.grammar.get("handler") == "token_delimited"
+                self._require(profile.grammar.get("handler") in {"token_delimited", "physical_line_literal"}
                               and profile.grammar.get("arity") == 0,
                               "unsupported_literal_grammar", "Environment requires an unsupported header or body handler")
-            return self.literals.read(event.span.start, profile)
+            region = self.literals.read(event.span.start, profile)
+            if region.classification.category == "transparent_block":
+                self._require(profile.grammar.get("body_start") == "next_physical_line"
+                              and profile.terminator.requires_column_zero
+                              and not profile.terminator.trailing_content_allowed,
+                              "unsupported_literal_grammar", "Transparent replay needs whole physical lines")
+                replay = reader.line_window(region.body)
+                metadata = {"semantic_role": region.classification.semantic_role,
+                            "closing_source": reader.source_slice(region.closing)}
+                self._replays[replay] = (reader, region.closing, region.name, metadata)
+                self._set_reader(replay)
+                return SourceCommand(region.opening, region.name, "transparent_begin", (), metadata)
+            return region
         except ReadingIssue as error:
             return self._boundary(event.span, error.reason, error.detail)
         except InvalidCharacterError as error:
@@ -288,7 +363,7 @@ class StructuralDispatcher:
         if profile.family == "stored_definition":
             self.definitions.read(token.span.start, profile)  # capture, never install
             return True
-        if profile.family in {"conditional", "catcode_mutator", "grouping"}:
+        if profile.family in {"conditional", "catcode_mutator", "catcode_assignment", "grouping", "environment_factory"}:
             raise ReadingIssue("environment_reading", "Control flow or reading effects inside an unbound environment require resolution")
         if profile.family == "source_command" and profile.action != "environment_end":
             command = ArgumentScanner(self.reader, self.context).read(token.span, profile)
@@ -302,8 +377,12 @@ class StructuralDispatcher:
             checkpoint = self.reader.checkpoint()
             with self.context.argument_scanning():
                 name = self._environment_name()
-            nested = self.knowledge.resolve_environment(name)
-            if isinstance(nested, EffectiveReadingProfile) and nested.grammar.get("handler") == "token_delimited":
+            nested = resolve_environment(name, None, self.context, self.knowledge)
+            if isinstance(nested, EffectiveReadingProfile) and nested.grammar.get("handler") in {"token_delimited", "physical_line_literal"}:
+                if nested.grammar.get("has_optional_arguments"):
+                    with self.context.argument_scanning():
+                        options = ArgumentScanner(self.reader, self.context).group("options", optional=True)
+                    nested = require_resolved(resolve_environment(name, key_values(options), self.context, self.knowledge))
                 self.literals.read(token.span.start, nested)
                 return True
             if isinstance(nested, UnresolvedBindingResult) and nested.reason != UnresolvedReason.UNKNOWN_CONSTRUCT:

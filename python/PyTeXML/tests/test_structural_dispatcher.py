@@ -256,7 +256,7 @@ class StructuralDispatcherTests(unittest.TestCase):
                 self.assertEqual(self.context.catcodes["@"], CatCode.LETTER)
 
     def test_dynamic_assignment_and_global_prefix_remain_unresolved(self):
-        for source, reason in ((r"\catcode`\@=11", "arguments_required"),
+        for source, reason in ((r"\catcode`\@=\computed", "computed_assignment"),
                                (r"\global\makeatletter", "unknown_construct")):
             with self.subTest(source=source):
                 self.setup_reader(source)
@@ -264,6 +264,33 @@ class StructuralDispatcherTests(unittest.TestCase):
                 self.assertEqual(item.reason, reason)
                 self.assertEqual(self.reader.source_slice(item.remainder), source)
                 self.assertEqual(self.context.catcodes["@"], CatCode.OTHER)
+
+    def test_literal_assignment_applies_after_arguments_and_restores_at_group_exit(self):
+        self.setup_reader(r"{\catcode`\@=11 \foo@bar}\foo@bar")
+        items = list(self.dispatcher)
+        # Unknown commands stop the strict dispatcher; use only character tokens here.
+        self.assertEqual(items[1].metadata, {"character": "@", "category": 11})
+        self.assertEqual(items[-1].reason, "unknown_construct")
+        self.assertIn("foo@bar", items[-1].detail)
+        self.setup_reader(r"{\catcode64=11 @} @")
+        items = list(self.dispatcher)
+        ats = [i.token for i in items if getattr(i, "token", None) and i.token.value == "@"]
+        self.assertEqual([t.catcode for t in ats], [CatCode.LETTER, CatCode.OTHER])
+
+    def test_assignment_does_not_retokenize_an_unqualified_number_terminator(self):
+        self.setup_reader(r"\catcode64=11@")
+        item = self.dispatcher.next_item()
+        self.assertEqual(item.reason, "assignment_terminator")
+        self.assertEqual(self.context.catcodes["@"], CatCode.OTHER)
+
+    def test_assignment_range_and_computed_numbers_remain_located(self):
+        for source in (r"\catcode37=16 ", r"\catcode37=\value ", r"\catcode\which=12 "):
+            with self.subTest(source=source):
+                self.setup_reader(source)
+                item = self.dispatcher.next_item()
+                self.assertIsInstance(item, ReadingBoundary)
+                self.assertEqual(self.reader.source_slice(item.remainder), source)
+                self.assertEqual(self.context.catcodes["%"], CatCode.COMMENT)
 
     def test_unhandled_implicit_scopes_stop_before_contained_effects(self):
         for source in (r"$\makeatletter$@", r"&\makeatletter"):

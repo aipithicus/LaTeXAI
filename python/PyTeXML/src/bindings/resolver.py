@@ -188,8 +188,8 @@ class BindingResolver:
         opts = dict(options or {})
         for origin, reading, section, spec in self._command_specs(clean):
             action = spec.get("action")
-            if spec.get("family") == "source_command":
-                return EffectiveReadingProfile(clean, "source_command", action=spec["action"],
+            if spec.get("family") in {"source_command", "environment_factory"}:
+                return EffectiveReadingProfile(clean, spec["family"], action=spec["action"],
                     grammar=deepcopy(spec["grammar"]), tex_mechanics=deepcopy(spec.get("metadata", {})), binding_id=origin)
             if section == "conditionals":
                 if opts:
@@ -200,8 +200,9 @@ class BindingResolver:
                     conditional=ConditionalRule(spec["role"], spec.get("evaluation")))
             if section == "catcode_mutators":
                 if action == "assign_catcode_dynamic":
-                    return self._unresolved(clean, UnresolvedReason.ARGUMENTS_REQUIRED,
-                                            "TeX assignment arguments require a token scanner", opts)
+                    return EffectiveReadingProfile(clean, "catcode_assignment", action=action,
+                        grammar=deepcopy(spec["grammar"]), binding_id=origin,
+                        state_management=StateManagementRule(scope=spec["scope"]))
                 if action not in {"assign_catcode", "expl3_lexical_enter", "expl3_lexical_exit"}:
                     return self._unresolved(clean, UnresolvedReason.UNSUPPORTED_OPERATION,
                                             f"No implementation for {action!r}", opts)

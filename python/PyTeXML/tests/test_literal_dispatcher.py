@@ -159,8 +159,7 @@ class LiteralDispatcherTests(unittest.TestCase):
         self.assertFalse(self.context.pop_scope())
 
     def test_unsupported_package_override_never_falls_back_to_kernel(self):
-        for package, source in (("verbatim", r"\begin{verbatim}x\end{verbatim}"),
-                                ("alltt", r"\begin{alltt}x\end{alltt}")):
+        for package, source in (("alltt", r"\begin{alltt}x\end{alltt}"),):
             with self.subTest(package=package):
                 dispatch = self.setup_reader(source)
                 self.assertTrue(self.resolver.load_package(package))
@@ -168,6 +167,49 @@ class LiteralDispatcherTests(unittest.TestCase):
                 self.assertIsInstance(item, ReadingBoundary)
                 self.assertEqual(item.reason, "unsupported_literal_grammar")
                 self.assertEqual(self.reader.source_slice(item.remainder), source)
+
+    def test_physical_line_literal_uses_regex_rule_and_resumes_next_line(self):
+        source = "\\begin{verbatim}\r\n% \\input{fake}  \r\n\\end \t{verbatim} discarded\r\nZ"
+        dispatch = self.setup_reader(source)
+        self.resolver.load_package("verbatim")
+        region = dispatch.next_item()
+        self.assertIsInstance(region, LiteralRegion)
+        self.assertEqual(self.reader.source_slice(region.body), "\r\n% \\input{fake}  \r\n")
+        self.assertEqual(self.reader.source_slice(region.closing), "\\end \t{verbatim} discarded\r\n")
+        self.assertEqual(len(region.warnings), 1)
+        self.assertEqual(dispatch.next_item().token.value, "Z")
+        self.assertEqual(self.context.catcodes["%"], CatCode.COMMENT)
+
+    def test_physical_line_handler_does_not_ignore_unmodelled_live_catcodes(self):
+        dispatch = self.setup_reader("\\begin{verbatim}\nx hides terminator \\end{verbatim}\n")
+        self.resolver.load_package("verbatim")
+        self.context.catcodes["x"] = CatCode.COMMENT
+        item = dispatch.next_item()
+        self.assertIsInstance(item, ReadingBoundary)
+        self.assertEqual(item.reason, "unsupported_literal_grammar")
+
+    def test_strict_comment_terminator_rejects_indentation_and_suffix(self):
+        source = ("\\begin{comment}\n  \\end{comment}\n\\end{comment}%suffix\n"
+                  "\\end{comment}   \nZ")
+        dispatch = self.setup_reader(source)
+        self.resolver.load_package("comment")
+        region = dispatch.next_item()
+        self.assertIsInstance(region, LiteralRegion)
+        self.assertIn("%suffix", self.reader.source_slice(region.body))
+        self.assertEqual(dispatch.next_item().token.value, "Z")
+
+    def test_listing_plain_options_are_captured_and_interpolation_stays_pending(self):
+        for options, expected in (("language=Python,caption={A,B}", LiteralRegion),
+                                  ("mathescape=true", ReadingBoundary),
+                                  ("unknown=anything", ReadingBoundary)):
+            with self.subTest(options=options):
+                dispatch = self.setup_reader("\\begin{lstlisting}[" + options + "]\n%body\n\\end{lstlisting}\nZ")
+                self.resolver.load_package("listings")
+                region = dispatch.next_item()
+                self.assertIsInstance(region, expected)
+                if expected == LiteralRegion:
+                    self.assertEqual(self.reader.source_slice(region.body), "\n%body\n")
+                    self.assertEqual(dispatch.next_item().token.value, "Z")
 
     def test_expanding_definitions_predicates_and_unknown_commands_are_frontiers(self):
         for source in (r"\edef\x{\verb|body|}", r"\ifnum1=0\verb|\fi|LIVE",

@@ -103,9 +103,22 @@ class EffectiveReadingProfile:
 class ReadingKnowledge(Protocol):
     """Already loaded knowledge; package activation and loading stay outside."""
     def resolve_command(self, name: str) -> EffectiveReadingProfile | UnresolvedBindingResult: ...
-    def resolve_environment(self, name: str) -> EffectiveReadingProfile | UnresolvedBindingResult: ...
+    def resolve_environment(self, name: str, options: dict[str, Any] | None = None) -> EffectiveReadingProfile | UnresolvedBindingResult: ...
     def resolve_group(self, catcode: int) -> EffectiveReadingProfile | UnresolvedBindingResult: ...
     def resolve_conditional(self, name: str) -> ConditionalRule | None: ...
+
+
+@dataclass(frozen=True, slots=True)
+class EnvironmentDeclaration:
+    """A scoped author declaration selecting existing reading machinery."""
+    name: str
+    base: str
+    options: dict[str, Any]
+    exact_terminator: str
+    regex_terminator: str
+    binding_id: str
+    span: SourceSpan
+    classification: SpanClassification | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -139,6 +152,8 @@ class LiteralRegion:
     closing: SourceSpan
     name: str
     binding_id: str
+    classification: SpanClassification | None = None
+    warnings: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)

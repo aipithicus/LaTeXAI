@@ -11,6 +11,41 @@ from src.reading.tex_reader import CatCode, InvalidCharacterError, ReaderState
 
 
 class ReaderCursorTests(unittest.TestCase):
+    def test_line_replay_retains_basis_and_does_not_read_beyond_window(self):
+        source = "HEAD\r\nBODY  \r\nTAIL"
+        reader = new_reader(source)
+        start, end = source.index("BODY"), source.index("TAIL")
+        replay = reader.line_window(reader.source_span(start, end))
+        self.assertIs(replay.text, reader.text)
+        self.assertIs(replay.basis, reader.basis)
+        self.assertEqual("".join(t.value for t in replay), "BODY ")
+        self.assertEqual(replay.position, end)
+        self.assertIsNone(replay.next_event())
+        self.assertEqual(reader.position, 0)
+        empty = reader.line_window(reader.source_span(end, end))
+        self.assertIsNone(empty.next_event())
+        with self.assertRaises(ValueError):
+            reader.line_window(reader.source_span(start + 1, end))
+        with self.assertRaises(ValueError):
+            reader.line_window(reader.source_span(5, end))  # between CR and LF
+        with self.assertRaises(ValueError):
+            replay.line_window(reader.source_span(0, end))
+
+    def test_raw_handoff_resumes_at_suffix_and_respects_endinput(self):
+        reader = new_reader("a%not tokens\r\nZ")
+        reader.next_token()
+        reader.consume_raw_to(reader.text.index("Z"))
+        self.assertEqual(reader.next_token().value, "Z")
+        with self.assertRaises(ValueError):
+            reader.consume_raw_to(0)
+        reader = new_reader("abc\nZ")
+        reader.next_token()
+        reader.end_input_after_line()
+        with self.assertRaises(ValueError):
+            reader.consume_raw_to(len(reader.text))
+        reader.consume_raw_to(2)
+        self.assertEqual(reader.next_token().value, "c")
+
     def test_pending_converted_character_is_not_reinterpreted_on_handoff(self):
         reader = new_reader(r"\foo^^25tail")
         self.assertEqual(reader.next_token().value, "foo")

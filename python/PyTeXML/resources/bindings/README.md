@@ -104,9 +104,9 @@ not global category changes. Unknown options, unsupported code hooks, and combin
 interpolation modes return `UnresolvedBindingResult`. Only options explicitly
 classified by the owning binding can pass through as non-reading metadata.
 
-Command lookup includes active package bindings. Dynamic `\catcode` needs scanned
-arguments; configuration commands and definition factories need execution support.
-These return explicit unresolved results rather than successful empty profiles.
+Command lookup includes active package bindings. Bounded `\catcode` arguments and
+declared environment factories route to scanners. Unimplemented configuration
+commands and factories return explicit unresolved results rather than successful empty profiles.
 There is no macro expansion or native-engine fallback here.
 
 `resolver.new_context("latex_ascii")` constructs a context from the loaded YAML
@@ -139,9 +139,13 @@ declared `terminator_baseline` plus the literal profile. The initial handler
 requires `regex_pattern` to equal the escaped `exact_string`. It does not ignore
 a different regex rule or claim that these two fields are interchangeable.
 
-Package line-based terminators, options, interpolation and factories remain
-explicitly unsupported by this dispatcher. Activating an overriding package
-cannot silently select the kernel scanner. A resolved reading profile describes
+The `physical_line_literal` handler matches `regex_pattern` against each physical
+line, honoring column-zero, trailing-content and discarded-suffix rules. The regex
+takes precedence over `exact_string` for this handler. `body_start:
+next_physical_line` discards a package-declared opening-line suffix. Non-reading
+options pass through; interpolation, code hooks and incompatible live catcodes
+remain pending. Activating an overriding package cannot silently select the kernel scanner.
+A resolved reading profile describes
 knowledge; it does not, by itself, prove that a runtime handler supports it.
 
 ## 6. Grouping and immediate effects
@@ -150,7 +154,9 @@ The structural dispatcher routes `assign_catcode`, `expl3_lexical_enter`,
 `expl3_lexical_exit`, `push_lexical_scope` and `pop_lexical_scope`. It uses resolved
 data without hardcoded command spellings. These are local effects applied before
 the next token is read; already converted lookahead and the current line's
-captured `endlinechar` remain intact. Dynamic assignments, global prefixes and
+captured `endlinechar` remain intact. The `literal_catcode_assignment` scanner
+handles decimal/backtick character codes and decimal categories ending at space,
+`\relax` or EOF. Other numeric/terminator forms, computed assignments, global prefixes and
 unsupported combinations establish a diagnostic boundary.
 
 Each grouping declaration supplies `state_management.group_kind`: `simple` for
@@ -166,6 +172,27 @@ arguments, and literal bodies never route their apparent effects or group tokens
 Reading result records and the narrow `ReadingKnowledge` protocol live in
 [contracts.py](../../src/reading/contracts.py). This remains a preparation-oriented
 execution surface, not the future expansion or asynchronous binding contract.
+
+### Scoped environment recipes
+
+An `environment_factory` declares `action: define_environment`, a
+`source_arguments` grammar, and a bounded recipe in `metadata`. The recipe names
+the environment-name argument, a fixed base or base argument, optional bound
+options, the required base binding identity, variants, and terminator templates.
+`{name}` in the regex template receives a regex-escaped name; it is never executable
+code. The catalog validates these consumed fields.
+
+The dispatcher installs declarations in `ReaderContext`; scope journals restore
+previous meanings. `environment_registry.py` resolves them using the existing
+base handler. Initial recipes cover `\DefineVerbatimEnvironment` (including the
+starred variant), `\excludecomment`, and `\includecomment`. They do not implement
+arbitrary author environment definitions or general macro expansion.
+
+Included comments use the package's raw-line capture followed by body input,
+without implicit grouping, as specified in the
+[comment 3.8 manual](https://mirrors.ctan.org/macros/latex/contrib/comment/comment.pdf).
+The dispatcher replays a bounded window over the same buffer and source basis,
+without temporary files. This separates boundary capture from body execution.
 
 ## 7. Stored primitive definitions
 

@@ -1,6 +1,6 @@
 # resources/policies/prepare.yaml
 # =============================================================================
-# Preparation Policy (loader-supported; pipeline integration pending)
+# Preparation Policy (bounded role actions integrated; event settings provisional)
 #
 # Maps semantic roles (from bindings/AST) and lexical event classifications
 # to pipeline actions for compiling a clean, compact, canonical master.tex.

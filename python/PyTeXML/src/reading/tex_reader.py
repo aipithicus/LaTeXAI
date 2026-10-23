@@ -235,6 +235,8 @@ class TexReader:
         if not isinstance(text, str):
             raise TypeError("TexReader expects decoded str; decoding belongs to the source owner")
         self.text = text
+        self.start = 0
+        self.limit = len(text)
         self.basis = SourceBasis(source_id, occurrence_id, len(text))
         self.catcodes = catcodes
         self.endline_char = endline_char
@@ -256,6 +258,29 @@ class TexReader:
         self._checkpoint_owner = object()
         self._stop_after_line: int | None = None
         self.terminated_span: SourceSpan | None = None
+
+    def line_window(self, span: SourceSpan) -> TexReader:
+        """Read a proven whole-line region again in memory, retaining its basis.
+
+        Used for packages that capture raw lines and subsequently input that
+        body. No substring copy, new file, or fabricated source occurrence.
+        """
+        self.basis.require(span)
+        if not self.start <= span.start <= span.end <= self.limit:
+            raise ValueError("Replay window must stay inside the current source window")
+        for position in (span.start, span.end):
+            if position not in (0, len(self.text)) and (self.text[position - 1] not in "\r\n"
+                    or self.text[position - 1:position + 1] == "\r\n"):
+                raise ValueError("Replay window must use physical-line boundaries")
+        reader = TexReader(self.text, source_id=self.basis.source_id,
+                           occurrence_id=self.basis.occurrence_id,
+                           catcodes=self.catcodes, endline_char=self.endline_char)
+        reader.basis = self.basis
+        reader._next_line = reader._position = span.start
+        reader.start = span.start
+        reader.limit = span.end
+        reader._started = span.start == span.end
+        return reader
 
     def end_input_after_line(self) -> None:
         """Defer file termination until the next physical-line refill."""
@@ -310,6 +335,30 @@ class TexReader:
             self._physical_content_end, self.endline_char, self._stop_after_line,
             self.terminated_span), self.catcodes.copy())
 
+    def consume_raw_to(self, end: int) -> None:
+        """Hand a proven literal extent back without tokenizing its body.
+
+        Forward only. A handler must establish the extent and owns its meaning.
+        Physical line loading still honors input_ln and pending endinput limits.
+        """
+        if not self.position <= end <= self.limit or self._failure is not None:
+            raise ValueError("Invalid raw cursor handoff")
+        if self._stop_after_line is not None and end > self._stop_after_line:
+            raise ValueError("Raw handoff crosses pending endinput")
+        self._queue.clear()
+        while not self._ready or end > self._line_end:
+            if not self._load_line():
+                raise ValueError("Raw handoff crosses source termination")
+        self._position = end
+        self._raw_pos = end
+        if end == self._line_end:
+            self._ready = False
+            self._endline_queued = True
+            self._tail_reported = True
+            self.state = ReaderState.NEW_LINE
+        else:
+            self.state = ReaderState.MID_LINE
+
     def restore(self, checkpoint: ReaderCheckpoint) -> None:
         if not isinstance(checkpoint, ReaderCheckpoint) or checkpoint._owner is not self._checkpoint_owner:
             raise ValueError("Checkpoint belongs to a different reader")
@@ -338,17 +387,17 @@ class TexReader:
     def _load_line(self) -> bool:
         self.state = ReaderState.NEW_LINE
         if self._stop_after_line is not None and self._next_line >= self._stop_after_line:
-            self.terminated_span = self._span(self._stop_after_line, len(self.text))
+            self.terminated_span = self._span(self._stop_after_line, self.limit)
             return False
-        if self._started and self._next_line >= len(self.text):
+        if self._started and self._next_line >= self.limit:
             return False
         self._started = True
         start = self._next_line
-        match = _PHYSICAL_ENDLINE.search(self.text, start)
-        content_end = match.start() if match else len(self.text)
+        match = _PHYSICAL_ENDLINE.search(self.text, start, self.limit)
+        content_end = match.start() if match else self.limit
         self._line_start = start
         self._physical_content_end = content_end
-        self._line_end = match.end() if match else len(self.text)
+        self._line_end = match.end() if match else self.limit
         self._next_line = self._line_end
         while content_end > start and self.text[content_end - 1] == " ":
             content_end -= 1
@@ -433,7 +482,7 @@ class TexReader:
         if event is not None:
             self._position = event.span.end
         else:
-            self._position = len(self.text)
+            self._position = self.limit
         return event
 
     def _next_event(self) -> ReadEvent | None:

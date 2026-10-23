@@ -100,14 +100,20 @@ entry-catcode assumptions used for unbound behavior; `source_survey` records
 independent per-file observations, not execution. Deferred spans remain unknown
 in structural coverage even though their text has been captured.
 
-Genuine reading boundaries, including unsupported catcode assignments, predicates
+Genuine reading boundaries, including computed catcode assignments, predicates
 and literal grammars, still limit emission. The unfinished root operation and
 following suffix are preserved in that case, with `partial` status. The survey
 continues inspecting the source under an explicitly independent profile. There
 is no legacy-regex or compiler fallback. Any future executable prototype
-comparison must use a separate entry point, not replace this integration.
+comparison uses the separate restored prototype, never a fallback in this integration.
+An unsupported operation in separately retained local code can resume its caller
+at the input checkpoint under explicitly recorded entry-state assumptions. The code
+and missing effects remain in the payload/manifest; this is preparation recovery,
+not a claim of completed package execution.
 
-The policy loader and projection YAMLs remain independent of runtime emission.
+The policy now controls supported literal-role elimination/preservation, external
+literal inlining, and transparent-wrapper unwrapping. Other policy fields and
+projection YAMLs remain provisional.
 The handler registry is vocabulary, not an executable plugin loader. Core
 source declarations and argument shapes live in
 [source_traversal.yaml](resources/bindings/engine/source_traversal.yaml);
@@ -143,6 +149,10 @@ It applies resolved local reading effects (`\makeatletter`, `\makeatother`,
 kinds. Mismatched or unmatched closers produce a diagnostic without popping a
 scope. Group exit restores lexical settings in place, preserving cursor state.
 Directives and group tokens retain their original `ReadEvent` spans.
+Bounded `\catcode` scanning also supports decimal/backtick character codes and
+decimal categories, terminated by space, `\relax` or EOF. Assignments retain their
+source. Computed numbers, other numeric forms, global prefixes and general token
+pushback remain explicit boundaries.
 
 For local `\def`, the dispatcher delegates to
 [DefinitionScanner](src/reading/definition_scanner.py), then installs the completed
@@ -169,8 +179,26 @@ records contiguous opening/body/closing spans into the
 original buffer, including authored CRLF, tabs and trailing spaces. Those spans
 use Python string offsets, not encoded byte offsets. Block terminators match
 tokens and their category codes; inline delimiters become locally active.
+Package physical-line literals use their declared regex, anchoring and suffix
+rules. Plain `verbatim`, `Verbatim`/`BVerbatim`/`LVerbatim`, `lstlisting`, and
+comment blocks are supported when their reading contracts are satisfied.
+Interpolation and custom code hooks remain pending.
 Closing a literal restores lexical settings while retaining the cursor's exit
 N/M/S state. No substring readers or source copies are needed.
+
+The generic environment registry implements the declared recipes for
+`\DefineVerbatimEnvironment`, `\excludecomment` and `\includecomment`. Definitions
+are scoped and do not execute inside stored definitions or skipped branches.
+Included comment bodies are captured by physical lines and read again through an
+in-memory window of the same source basis; their wrappers introduce no scope.
+This replay can resolve child inputs and reading effects before preparation
+unwraps the container. Other environment factories and author declaration wrappers
+remain future work.
+
+External literal commands (`\verbatiminput`, `\VerbatimInput`, `\lstinputlisting`)
+use the shared source cache. Safe bodies are inlined with exact source provenance;
+delimiter collisions or unsupported options retain one rebased payload resource.
+No original manuscript file is modified.
 
 The dispatcher also owns a conditional stack independent of lexical groups.
 YAML separates conditional nesting roles from predicate evaluation. Only constant
@@ -211,7 +239,7 @@ emitted. A boundary retains already executed state for diagnosis without repair.
 Unclosed literals retain that residue rather than consuming it as proven literal
 content. Stored-definition, argument-scanning and skipped-branch modes require
 their owning scanners; this dispatcher does not dispatch inside them. It performs
-no package discovery, dynamic/global assignments, macro expansion or XML work.
+no package discovery, general computed/global assignments, macro expansion or XML work.
 Reading after catalog bootstrap performs no filesystem I/O.
 
 Conditional classification assumes established binding and author-meaning context.
@@ -307,3 +335,6 @@ investigations required before concrete custodian recipes and broader authoring.
 The current binding resources remain prototypes. Research exchanges under
 `issues/` retain their historical paths and are not instructions for running the
 current layout.
+
+The [restored-prototype comparison](issues/preparation-prototype-comparison.md)
+records the 2405.15943v3 run, current improvements and remaining preparation gaps.

@@ -4,7 +4,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import Enum
 from typing import Iterator
-from .contracts import EffectiveReadingProfile, MouthBaseline, StoredDefinition
+from .contracts import EffectiveReadingProfile, MouthBaseline, StoredDefinition, EnvironmentDeclaration
 from .tex_reader import CatCode, CatcodeTable, TokenKind
 
 
@@ -55,6 +55,8 @@ class ReaderContext:
         # Journal only changed meanings, avoiding a copy of every definition at
         # each group (including temporary literal scopes).
         self._definition_scopes: list[dict[DefinitionKey, StoredDefinition | None]] = []
+        self._environments: dict[str, EnvironmentDeclaration] = {}
+        self._environment_scopes: list[dict[str, EnvironmentDeclaration | None]] = []
 
     def _snapshot(self) -> _ScopeSnapshot:
         return _ScopeSnapshot(self.catcodes.copy(), self.endlinechar,
@@ -74,7 +76,37 @@ class ReaderContext:
         ctx._scope_stack = [saved.copy() for saved in self._scope_stack]
         ctx._definitions = dict(self._definitions)
         ctx._definition_scopes = [dict(saved) for saved in self._definition_scopes]
+        ctx._environments = dict(self._environments)
+        ctx._environment_scopes = [dict(saved) for saved in self._environment_scopes]
         return ctx
+
+    def restore_from(self, saved: ReaderContext) -> None:
+        """Restore a suspended input's state without replacing the live table."""
+        if self.baseline != saved.baseline:
+            raise ValueError("Cannot restore a different reading baseline")
+        self._restore(saved._snapshot())
+        self.mode = saved.mode
+        self._scope_stack = [state.copy() for state in saved._scope_stack]
+        self._definitions = dict(saved._definitions)
+        self._definition_scopes = [dict(state) for state in saved._definition_scopes]
+        self._environments = dict(saved._environments)
+        self._environment_scopes = [dict(state) for state in saved._environment_scopes]
+
+    def lookup_environment(self, name: str) -> EnvironmentDeclaration | None:
+        return self._environments.get(name)
+
+    def record_environment(self, declaration: EnvironmentDeclaration) -> None:
+        if self.mode != ExecutionMode.ACTIVE_EXECUTION:
+            raise ValueError("Environment registration requires active execution")
+        name = declaration.name
+        if self._environment_scopes:
+            self._environment_scopes[-1].setdefault(name, self._environments.get(name))
+        self._environments[name] = declaration
+        for command in (name, "end" + name):
+            key = (TokenKind.CONTROL_SEQUENCE, command)
+            if self._definition_scopes:
+                self._definition_scopes[-1].setdefault(key, self._definitions.get(key))
+            self._definitions.pop(key, None)
 
     def lookup_definition(self, name: str, kind: TokenKind = TokenKind.CONTROL_SEQUENCE) -> StoredDefinition | None:
         """Active characters and same-spelled control symbols have distinct meanings."""
@@ -118,6 +150,7 @@ class ReaderContext:
     def push_scope(self) -> None:
         self._scope_stack.append(self._snapshot())
         self._definition_scopes.append({})
+        self._environment_scopes.append({})
 
     @property
     def scope_depth(self) -> int:
@@ -133,6 +166,11 @@ class ReaderContext:
                 self._definitions.pop(key, None)
             else:
                 self._definitions[key] = previous
+        for name, previous in self._environment_scopes.pop().items():
+            if previous is None:
+                self._environments.pop(name, None)
+            else:
+                self._environments[name] = previous
         return True
 
     @contextmanager
@@ -155,6 +193,8 @@ class ReaderContext:
             return False
         if profile.interpolations:
             raise ValueError("Interpolation requires a literal dispatcher")
+        if profile.action == "assign_catcode_dynamic":
+            raise ValueError("Assignment requires argument scanning and execution routing")
         if profile.state_management and profile.state_management.scope != "local":
             raise ValueError("Global assignments require the execution dispatcher")
         unknown = set(profile.reader_parameters) - {"endlinechar"}

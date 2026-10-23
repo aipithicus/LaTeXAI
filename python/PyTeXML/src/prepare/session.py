@@ -13,14 +13,17 @@ import re
 from ..source_io import SourceStore
 from ..assets import IMAGE_EXTENSIONS, characterize_image
 from ..bindings.resolver import BindingResolver
-from ..reading.dispatcher import StructuralDispatcher
+from ..reading.dispatcher import StructuralDispatcher, InputRecovery
+from ..reading.argument_scanner import key_values
 from ..reading.coverage import ReadingCoverage
 from ..reading.contracts import (SourceCommand, SourceEnd, ReadingBoundary, ReadingIssue,
-                                StoredDefinition, SkippedRegion, DeferredRegion)
+                                StoredDefinition, SkippedRegion, DeferredRegion, LiteralRegion)
 from ..reading.tex_reader import TexReader, ReadEvent, TokenKind, CatCode
 from .discovery import select_root
 from .emission import SourcePiece, event_text
 from .survey import survey_sources
+from .policy import load_policy
+from .resources import prepare_external_literal
 from .provenance import Tombstone
 from .manifest import PreflightManifest, BibliographyInfo, PackageUsage, StyleFileInfo, ImplicitGraphicInfo
 
@@ -46,14 +49,17 @@ class _Input:
     packages: list = field(default_factory=list)
     include: bool = False
     bibliography_start: int | None = None
+    recovery: InputRecovery | None = None
 
 
 class PreparationSession:
-    def __init__(self, project_dir: Path, *, root_tex=None, excluded_dirs=(), engine="pytexml", catalog=None):
+    def __init__(self, project_dir: Path, *, root_tex=None, excluded_dirs=(), engine="pytexml", catalog=None, policy="prepare"):
         self.store = SourceStore(project_dir, excluded_dirs)
         self.resolver = BindingResolver(catalog)
         self.root = select_root(self.store, root_tex, catalog=self.resolver.catalog)
         self.context = self.resolver.new_context()
+        self.policy = load_policy(policy)
+        self.literal_payloads = {}
         self.manifest = PreflightManifest(self.name(self.root), self.root.stem, str(self.store.root), engine,
             BibliographyInfo("NONE", None, None, False, False))
         self.pieces: list[SourcePiece] = []
@@ -150,6 +156,14 @@ class PreparationSession:
         targets = {p.target for p in self.pieces if p.target is not None}
         self.images = {p for p in self.images if self.name(p) in targets}
         self.manifest.active_images = [i for i in self.manifest.active_images if i.rel_path in targets]
+        retained_resources = {(p.command.span.basis.source_id, p.command.span.basis.occurrence_id,
+                               p.command.span.start, p.command.span.end)
+                              for p in self.pieces if p.command and p.command.action == "external_literal"}
+        self.manifest.resources = [r for r in self.manifest.resources
+            if (r["source"], r["occurrence"], r["start"], r["end"]) in retained_resources
+            or self.store.root / r["source"] in self.styles or self.store.root / r["source"] in self.code]
+        payloads = {r.get("payload") for r in self.manifest.resources}
+        self.literal_payloads = {path: target for path, target in self.literal_payloads.items() if target in payloads}
         if self.bibliography_pieces is not None:
             retained = {id(p) for p in self.pieces}
             if any(id(p) not in retained for p in self.bibliography_pieces):
@@ -185,7 +199,8 @@ class PreparationSession:
             self.fail(command.span, "input_cycle", chain)
         reader = self._reader(path)
         overrides = self.resolver.catalog.engine_bindings["source_traversal"]["reading"]["package_input_catcodes"] if package else None
-        self.frames.append(_Input(path, reader, emit, import_dir, include=include))
+        recovery = self.dispatcher.input_recovery() if not emit and self.frames[-1].emit else None
+        self.frames.append(_Input(path, reader, emit, import_dir, include=include, recovery=recovery))
         self.dispatcher.enter_source(reader, catcode_overrides=overrides)
 
     def _emit(self, span, text=None, *, command=None, target=None, operation=None):
@@ -232,7 +247,7 @@ class PreparationSession:
                 continue
             profile = self.resolver.resolve_command(token.value)
             if getattr(profile, "action", None) in {"source_input", "source_include", "source_import",
-                    "source_subimport", "asset_reference", "bibliography", "biblatex_resource", "package_load"}:
+                    "source_subimport", "asset_reference", "bibliography", "biblatex_resource", "package_load", "external_literal"}:
                 self.require(token.span, "deferred_dependency", "Dependency inside an uninterpreted expression requires its owning context",
                              stage="preparation")
 
@@ -259,6 +274,17 @@ class PreparationSession:
     def _command(self, command):
         frame, action = self.frames[-1], command.action
         self.commands.append(command)
+        if action == "external_literal":
+            prepare_external_literal(self, command)
+            return
+        if action in {"transparent_begin", "transparent_end"}:
+            role = command.metadata["semantic_role"]
+            role_action = self.policy.get_role_action(role)
+            if role_action == "unwrap":
+                self._omit(command.span, "Policy unwrapped " + role)
+                return
+            if action == "transparent_begin" and role_action != "preserve":
+                self.require(command.span, "policy_action", f"Transparent role does not support {role_action!r}", stage="preparation")
         if action == "environment_begin":
             self._neutral(command)
         if action in {"source_input", "source_include", "source_import", "source_subimport"}:
@@ -331,8 +357,9 @@ class PreparationSession:
             return
         if action == "asset_reference":
             self._neutral(command)
-            options = dict(option.strip().partition("=")[::2]
-                           for option in command.value("options").split(",") if option.strip())
+            # Widths/captions can contain unexpanded TeX without making the
+            # filename or PDF page computed. Inspect only options we consume.
+            options = key_values(command.argument("options"))
             if options.get("page", "1").strip() != "1":
                 self.defer(command.span, "asset_page", "Only first-page PDF conversion is currently qualified")
             if not frame.emit:
@@ -407,7 +434,7 @@ class PreparationSession:
             if self.frames[-1].packages:
                 self._package()
                 continue
-            if len(self.frames) == 1:
+            if len(self.frames) == 1 and self.dispatcher.reader is self._root_reader:
                 self._checkpoint = (self.frames[0].reader.position, len(self.pieces),
                                     len(self.tombstones), len(self.commands))
             item = self.dispatcher.next_item()
@@ -420,6 +447,15 @@ class PreparationSession:
                     start, pieces, tombstones, commands = self._checkpoint
                     self._checkpoint = (min(start, item.remainder.start), pieces, tombstones, commands)
                 self.diagnose(item.span, item.reason, item.detail)
+                recoverable = next((i for i, frame in enumerate(self.frames) if frame.recovery is not None), None)
+                if recoverable is not None:
+                    frame = self.frames[recoverable]
+                    self.require(item.span, "retained_code_reading",
+                        f"Retained {self.name(frame.path)!r}; caller resumes with its entry reading state. "
+                        "This file's reading effects and dependencies still require resolution.", stage="preparation")
+                    self.dispatcher.resume_input(frame.recovery)
+                    del self.frames[recoverable:]
+                    continue
                 raise _PreserveRemainder
             self._observations[item.span.basis].append(item)
             if isinstance(item, SourceEnd):
@@ -452,6 +488,18 @@ class PreparationSession:
                         self._omit(item.span, "Mouth discarded comment, spacing or ignored character")
                 elif isinstance(item, SkippedRegion):
                     self._omit(item.span, "Inactive conditional branch")
+                elif isinstance(item, LiteralRegion) and item.classification:
+                    for detail in item.warnings:
+                        self.manifest.warnings.append({"source": item.span.basis.source_id,
+                            "start": item.closing.start, "end": item.closing.end,
+                            "line": self.line(item.closing), "detail": detail})
+                    action = self.policy.get_role_action(item.classification.semantic_role)
+                    if action == "eliminate":
+                        self._omit(item.span, "Policy eliminated " + item.classification.semantic_role)
+                    else:
+                        self._emit(item.span)
+                        if action != "preserve":
+                            self.require(item.span, "policy_action", f"Literal role does not support {action!r}", stage="preparation")
                 else:
                     self._emit(item.span)
                     if isinstance(item, StoredDefinition) and self.frames[-1].path in self.styles:

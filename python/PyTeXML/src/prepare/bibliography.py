@@ -2,7 +2,7 @@
 from __future__ import annotations
 from pathlib import Path
 import re
-from ..bibtex import Database, BibTeXError
+from ..bibtex import Database, BibTeXError, BibTeXConflictError
 from ..reading.spans import SourceBasis
 from ..reading.tex_reader import TexReader, ReadEvent, TokenKind
 from ..reading.dispatcher import StructuralDispatcher
@@ -96,6 +96,20 @@ def prepare_bibliography(pieces, session, output_dir: Path):
             # a concrete missing key which was already observed.
             database.selected(known_keys)
             bbl = extraction_bbl(database, keys)
+        except BibTeXConflictError as error:
+            # Preserve every variant in one payload resource. Choosing a winner
+            # is semantic resolution, not a reason to discard the prepared master.
+            (output_dir / "bibliography.bib").write_text(canonical, encoding="utf-8", newline="\n")
+            info = manifest.bibliography
+            info.canonical_bib = "bibliography.bib"
+            info.preparation_backend = "deferred-conflict"
+            info.preparation_warnings = database.diagnostics
+            retained = _preserve_declarations(pieces, session, command, "bibliography_conflict", str(error))
+            arg = command.argument("names")
+            a, b = arg.span.start - command.span.start, arg.span.end - command.span.start
+            replacement = declaration.text[:a] + "bibliography" + declaration.text[b:]
+            return [piece.rewritten(replacement, "REBASE_BIBLIOGRAPHY") if piece is declaration else piece
+                    for piece in retained]
         except BibTeXError as error:
             raise BibliographyPreparationError(str(error)) from error
         backend = "native-bibtex"

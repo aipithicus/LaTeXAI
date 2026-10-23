@@ -1,8 +1,9 @@
 # Preparation policy
 
 This directory holds the `prepare` preset for assembling `master.tex`.
-The loader validates this configuration; the preparation pipeline does not yet
-consume it. Alternative policies live under [experimental/](../experimental/README.md).
+The loader validates this configuration. Preparation consumes role actions for
+recognized literals, external literal files and transparent comment wrappers.
+Alternative policies live under [experimental/](../experimental/README.md).
 
 ---
 
@@ -34,10 +35,15 @@ The policy provides a clean, minimal mapping from these inputs to **Pipeline Act
 Lexical categories (`opaque_literal`, `semi_verbatim_block`, etc.) describe how a
 span is read. Policy lookup uses its separate `semantic_role`. The reader currently
 emits token/skip events; it does not directly emit the four classifications above.
-The policy loader selects actions but does not perform edits. These policies are
-not yet connected to the preparation pipeline.
+The policy loader selects actions; the preparation source owner performs edits.
+Supported roles can eliminate/preserve recognized literal regions, inline/preserve
+external literal resources, and unwrap/preserve transparent containers. Unimplemented
+role actions are reported without silently deleting content. Lexical-event,
+normalization and provenance settings remain provisional; the established mouth
+emitter and pipeline arguments still own those behaviors. Selecting an experimental
+policy does not implement its proposed lossless/prose projection.
 
-An action expresses intent, not proof that a rewrite is valid. The future emitter
+An action expresses intent, not proof that a rewrite is valid. The emitter
 must preserve established reading behavior, including comment-suppressed newlines,
 token boundaries and paragraph tokens. In particular, `coalesce` and `strip` do
 not authorize unconditional blank-line or whitespace removal. Literal content,

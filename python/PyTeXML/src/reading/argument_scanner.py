@@ -86,3 +86,37 @@ class ArgumentScanner:
                     arguments.append(arg)
         return SourceCommand(self.reader.source_span(opening.start, self.reader.position), profile.name,
                              profile.action, tuple(arguments), profile.tex_mechanics)
+
+
+def key_values(argument: ScannedArgument | None) -> dict[str, str]:
+    """Split a captured key/value list at top-level commas, without expansion."""
+    if argument is None:
+        return {}
+    entries, current, depth = [], [], 0
+    for token in argument.tokens:
+        if token.catcode == CatCode.BEGIN_GROUP:
+            depth += 1
+        elif token.catcode == CatCode.END_GROUP:
+            depth -= 1
+        if token.value == "," and token.catcode == CatCode.OTHER and depth == 0:
+            entries.append(current)
+            current = []
+        else:
+            current.append(token)
+    entries.append(current)
+    result = {}
+    for entry in entries:
+        if not entry or all(t.catcode == CatCode.SPACE for t in entry):
+            continue
+        separator = next((i for i, t in enumerate(entry)
+                          if t.kind == TokenKind.CHARACTER and t.catcode == CatCode.OTHER and t.value == "="), None)
+        key_tokens = entry if separator is None else entry[:separator]
+        if any(t.kind != TokenKind.CHARACTER or t.catcode not in {CatCode.LETTER, CatCode.OTHER, CatCode.SPACE}
+               or t.value in "\\{}" for t in key_tokens):
+            raise ReadingIssue("computed_option", "Option names require literal characters")
+        key = "".join(t.value for t in key_tokens).strip()
+        if not key:
+            raise ReadingIssue("computed_option", "Option names require literal characters")
+        result[key] = ("".join(("\\" if t.kind == TokenKind.CONTROL_SEQUENCE else "") + t.value
+                              for t in entry[separator + 1:]).strip() if separator is not None else "true")
+    return result

@@ -2,6 +2,15 @@ identity:
   registry: reading_handlers
   description: Reading actions and their current implementation boundary
 handlers:
+  define_environment:
+    status: scanner
+    description: Register a scoped environment using a declared base, options and terminator recipe
+  physical_line_literal:
+    status: scanner
+    description: Match configured literal terminators against physical lines while preserving raw source
+  external_literal:
+    status: scanner
+    description: Capture a literal file reference for cached transclusion or retained payload emission
   bounded_conditional:
     status: scanner
     description: StructuralDispatcher evaluates constant predicates and routes delimiters;
@@ -24,8 +33,11 @@ handlers:
     description: StructuralDispatcher routes resolved local character assignments
       to ReaderContext
   assign_catcode_dynamic:
-    status: deferred
-    description: Requires an assignment argument scanner and execution dispatcher
+    status: scanner
+    description: Route bounded literal assignments; computed values and general numeric scanning remain deferred
+  literal_catcode_assignment:
+    status: scanner
+    description: Scan decimal or backtick character codes and decimal categories terminated by space, relax or EOF
   expl3_lexical_enter:
     status: context_effect
     description: Route resolved local expl3 entry and preserve its first snapshot
