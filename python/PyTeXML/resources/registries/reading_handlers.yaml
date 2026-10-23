@@ -1,51 +1,109 @@
-# Handler vocabulary for core effects, inclusions and source scanners.
-# Command names, syntax, scope and effects belong to bindings. This is capability
-# metadata, not an executable dispatch table. No Python symbols are imported from
-# YAML. A scanner status does not imply preparation-pipeline integration.
 identity:
   registry: reading_handlers
-  description: "Reading actions and their current implementation boundary"
-
+  description: Reading actions and their current implementation boundary
 handlers:
   bounded_conditional:
     status: scanner
-    description: "StructuralDispatcher evaluates constant predicates and routes delimiters; a mouth-based scanner skips inactive branches"
+    description: StructuralDispatcher evaluates constant predicates and routes delimiters;
+      a mouth-based scanner skips inactive branches
   primitive_definition:
     status: scanner
-    description: "Capture local unexpanded primitive definitions; global and expanding forms remain boundaries"
+    description: Capture local unexpanded primitive definitions; global and expanding
+      forms remain boundaries
   environment_name:
     status: scanner
-    description: "Read a literal braced environment name without expansion"
+    description: Read a literal braced environment name without expansion
   inline_character:
     status: scanner
-    description: "Read an inline literal with a locally active character delimiter"
+    description: Read an inline literal with a locally active character delimiter
   token_delimited:
     status: scanner
-    description: "Match an exact block terminator by character token identity"
+    description: Match an exact block terminator by character token identity
   assign_catcode:
     status: context_effect
-    description: "StructuralDispatcher routes resolved local character assignments to ReaderContext"
+    description: StructuralDispatcher routes resolved local character assignments
+      to ReaderContext
   assign_catcode_dynamic:
     status: deferred
-    description: "Requires an assignment argument scanner and execution dispatcher"
+    description: Requires an assignment argument scanner and execution dispatcher
   expl3_lexical_enter:
     status: context_effect
-    description: "Route resolved local expl3 entry and preserve its first snapshot"
+    description: Route resolved local expl3 entry and preserve its first snapshot
   expl3_lexical_exit:
     status: context_effect
-    description: "Route local expl3 exit and restore the saved state"
+    description: Route local expl3 exit and restore the saved state
   push_lexical_scope:
     status: context_effect
-    description: "Open a declared source group and snapshot local lexical state"
+    description: Open a declared source group and snapshot local lexical state
   pop_lexical_scope:
     status: context_effect
-    description: "Close a matching source group and restore local lexical state"
+    description: Close a matching source group and restore local lexical state
   pure_token_splice:
     status: deferred
-    description: "Requires reading-aware file inclusion; the preparation inliner is separate"
+    description: Input behavior implemented by source_input and the preparation source owner
   chapter_splice:
     status: deferred
-    description: "Requires include semantics and reading-aware file inclusion"
+    description: Include behavior implemented by source_include with explicit page boundaries
   strip_child_preamble:
     status: deferred
-    description: "Requires subfile context and reading-aware file inclusion"
+    description: Requires subfile context and reading-aware file inclusion
+  source_arguments:
+    status: scanner
+    description: Scan declarative ordered braced, optional, star and filename arguments without expansion
+  document_class:
+    status: scanner
+    description: Emit a class declaration request for the source owner
+  package_load:
+    status: scanner
+    description: Emit an ordered package activation request
+  metadata:
+    status: scanner
+    description: Capture reading-neutral declaration metadata
+  end_input:
+    status: scanner
+    description: Finish the current physical line before returning from an input
+  environment_end:
+    status: scanner
+    description: Close the matching environment group in the structural dispatcher
+  bibliography:
+    status: scanner
+    description: Request an inline classic bibliography at its source site
+  bibliography_style:
+    status: scanner
+    description: Capture publisher-style metadata for canonical bibliography preparation
+  biblatex_resource:
+    status: scanner
+    description: Recognize a deferred rich bibliography resource
+  biblatex_print:
+    status: scanner
+    description: Recognize a deferred rich bibliography emission site
+  citation:
+    status: scanner
+    description: Capture supported literal citation keys
+  include_selection:
+    status: scanner
+    description: Capture the literal include selection
+  opaque:
+    status: scanner
+    description: Retain a command whose arguments require a reading-neutral proof
+  source_input:
+    status: scanner
+    description: Request a source input occurrence
+  source_include:
+    status: scanner
+    description: Request an include occurrence with page boundaries
+  source_import:
+    status: scanner
+    description: Request an input under an explicit document-relative import directory
+  source_subimport:
+    status: scanner
+    description: Request an input relative to the active import directory
+  asset_reference:
+    status: scanner
+    description: Capture a literal image dependency and its argument span
+  asset_search_paths:
+    status: scanner
+    description: Capture scoped literal graphics search directories
+  asset_extensions:
+    status: scanner
+    description: Capture scoped graphics extension declarations

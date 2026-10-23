@@ -14,9 +14,12 @@ from typing import Iterator
 from .context import ExecutionMode, ReaderContext
 from .contracts import (
     ConditionalRule, EffectiveReadingProfile, LiteralRegion, ReadingBoundary, ReadingIssue,
-    ReadingKnowledge, SkippedRegion, StoredDefinition, require_resolved,
+    ReadingKnowledge, SkippedRegion, StoredDefinition, SourceCommand, SourceEnd, require_resolved,
+    DeferredRegion, UnresolvedBindingResult, UnresolvedReason,
 )
+from .argument_scanner import ArgumentScanner
 from .definition_scanner import DefinitionScanner
+from .deferred_scanner import DeferredScanner
 from .literal_scanner import LiteralScanner
 from .skipped_scanner import SkippedBranchScanner, SkippedScan
 from .spans import SourceSpan
@@ -47,7 +50,8 @@ class StructuralDispatcher:
     with unclosed structure anchors the diagnostic to an opener with empty residue.
     """
 
-    def __init__(self, reader: TexReader, context: ReaderContext, knowledge: ReadingKnowledge):
+    def __init__(self, reader: TexReader, context: ReaderContext, knowledge: ReadingKnowledge,
+                 *, source_commands: bool = False, preparation: bool = False):
         self.literals = LiteralScanner(reader, context, knowledge)
         self.definitions = DefinitionScanner(reader, context)
         self.skipped = SkippedBranchScanner(reader, context, knowledge)
@@ -59,6 +63,32 @@ class StructuralDispatcher:
         self._pending_skip: SkippedScan | None = None
         self.halted = False
         self._finished = False
+        self.source_commands = source_commands
+        # Preparation captures ordinary uninterpreted expressions and continues.
+        # The default execution API retains its strict boundary behavior.
+        self.preparation = preparation
+        self._parents: list[tuple[TexReader, dict[str, CatCode]]] = []
+        self._environment_stack: list[str] = []
+        self._root_ended = False
+
+    def _set_reader(self, reader: TexReader) -> None:
+        self.reader = reader
+        reader.endline_char = self.context.endlinechar
+        self.literals = LiteralScanner(reader, self.context, self.knowledge)
+        self.definitions = DefinitionScanner(reader, self.context)
+        self.skipped = SkippedBranchScanner(reader, self.context, self.knowledge)
+
+    def enter_source(self, reader: TexReader, *, catcode_overrides: dict[str, int] | None = None) -> None:
+        """Suspend one mouth; execution scopes/conditionals belong to the document."""
+        if not self.source_commands or self.halted or self._finished or self._pending_skip or self._skip_start is not None:
+            raise ValueError("Input may only start at an active source-command boundary")
+        if reader.catcodes is not self.context.catcodes:
+            raise ValueError("Input occurrences must share the document's catcode table")
+        saved = {char: self.context.catcodes[char] for char in catcode_overrides or {}}
+        self._parents.append((self.reader, saved))
+        for char, code in (catcode_overrides or {}).items():
+            self.context.catcodes[char] = code
+        self._set_reader(reader)
 
     def _boundary(self, span: SourceSpan, reason: str, detail: str,
                   *, remainder_start: int | None = None) -> ReadingBoundary:
@@ -71,7 +101,7 @@ class StructuralDispatcher:
         if not condition:
             raise ReadingIssue(reason, detail)
 
-    def next_item(self) -> ReadEvent | LiteralRegion | StoredDefinition | SkippedRegion | ReadingBoundary | None:
+    def next_item(self) -> ReadEvent | LiteralRegion | StoredDefinition | SkippedRegion | ReadingBoundary | SourceCommand | SourceEnd | DeferredRegion | None:
         if self.halted or self._finished:
             return None
         reader, context = self.reader, self.context
@@ -100,6 +130,14 @@ class StructuralDispatcher:
         except InvalidCharacterError as error:
             return self._boundary(error.span, "invalid_character", str(error))
         if event is None:
+            if self._parents:
+                end = SourceEnd(reader.terminated_span or reader.source_span(len(reader.text), len(reader.text)),
+                                "endinput" if reader.terminated_span else "eof")
+                parent, saved = self._parents.pop()
+                for char, code in saved.items():
+                    self.context.catcodes[char] = code
+                self._set_reader(parent)
+                return end
             if self._conditionals:
                 return self._boundary(self._conditionals[-1].opening, "unclosed_conditional",
                                       f"EOF with {len(self._conditionals)} unclosed conditional(s)",
@@ -109,12 +147,16 @@ class StructuralDispatcher:
                                       f"EOF with {len(self._groups)} unclosed source group(s)",
                                       remainder_start=len(reader.text))
             self._finished = True
+            if self.source_commands and not self._root_ended:
+                self._root_ended = True
+                return SourceEnd(reader.terminated_span or reader.source_span(len(reader.text), len(reader.text)),
+                                 "endinput" if reader.terminated_span else "eof")
             return None
         if event.token is None:
             return event
         token = event.token
         definition = context.lookup_definition(token.value, token.kind)
-        if definition is not None:
+        if definition is not None and not self.preparation:
             return self._boundary(event.span, "stored_macro",
                                   f"Stored macro {token.value!r} requires interpretation; defined at "
                                   f"{definition.span.basis.source_id}:{definition.span.start}")
@@ -122,12 +164,22 @@ class StructuralDispatcher:
             # Implicit paragraph tokens normally pass through, but a stored
             # redefinition must block that route just like an explicit command.
             return event
-        if token.kind == TokenKind.ACTIVE_CHARACTER:
+        if token.kind == TokenKind.ACTIVE_CHARACTER and not self.preparation:
             return self._boundary(event.span, "active_character", "Active character meaning is unresolved")
-        if token.catcode in {CatCode.MATH_SHIFT, CatCode.ALIGNMENT_TAB}:
+        if token.catcode in {CatCode.MATH_SHIFT, CatCode.ALIGNMENT_TAB} and not self.preparation:
             return self._boundary(event.span, "unsupported_structure",
                                   "Math and alignment require their own mode and scope handling")
         try:
+            deferred = DeferredScanner(reader, context)
+            if definition is not None:
+                return deferred.command(token, "stored_macro", f"Unexpanded {token.value!r}; definition at "
+                    f"{definition.span.basis.source_id}:{definition.span.start}")
+            if token.kind == TokenKind.ACTIVE_CHARACTER:
+                return DeferredRegion(event.span, "active_character", "Active character retained without expansion", (token,))
+            if self.preparation and token.catcode == CatCode.MATH_SHIFT:
+                return deferred.math(event)
+            if self.preparation and token.catcode == CatCode.ALIGNMENT_TAB:
+                return DeferredRegion(event.span, "alignment_interpretation", "Alignment retained without interpretation", (token,))
             if token.catcode in {CatCode.BEGIN_GROUP, CatCode.END_GROUP}:
                 profile = require_resolved(self.knowledge.resolve_group(token.catcode))
                 expected_action = ("push_lexical_scope" if token.catcode == CatCode.BEGIN_GROUP
@@ -138,7 +190,37 @@ class StructuralDispatcher:
                 return event
             if token.kind != TokenKind.CONTROL_SEQUENCE:
                 return event
-            profile = require_resolved(self.knowledge.resolve_command(token.value))
+            resolved = self.knowledge.resolve_command(token.value)
+            if self.preparation and isinstance(resolved, UnresolvedBindingResult):
+                if resolved.reason == UnresolvedReason.UNKNOWN_CONSTRUCT:
+                    return deferred.command(token, resolved.reason.value, resolved.detail)
+                if resolved.reason == UnresolvedReason.PACKAGE_NOT_LOADED:
+                    inspect = getattr(self.knowledge, "source_command_syntax", None)
+                    syntax = inspect(token.value) if inspect else None
+                    if syntax is not None:
+                        command = ArgumentScanner(reader, context).read(event.span, syntax)
+                        return DeferredRegion(command.span, resolved.reason.value, resolved.detail,
+                                              (token,) + tuple(t for arg in command.arguments for t in arg.tokens))
+                    # An inactive literal binding can require a different mouth.
+                    # Do not treat its body as ordinary executed TeX.
+            profile = require_resolved(resolved)
+            if profile.family == "source_command":
+                self._require(self.source_commands, "unsupported_operation", "Source commands require an input owner")
+                command = ArgumentScanner(reader, context).read(event.span, profile)
+                if command.action == "end_input":
+                    reader.end_input_after_line()
+                elif command.action == "environment_end":
+                    name = command.value("name")
+                    self._require(bool(self._environment_stack) and self._environment_stack[-1] == name
+                                  and bool(self._groups) and self._groups[-1].kind == "environment:" + name,
+                                  "mismatched_environment", f"No matching environment group for {name}")
+                    self._environment_stack.pop()
+                    self._groups.pop()
+                    context.pop_scope()
+                    reader.endline_char = context.endlinechar
+                    env = require_resolved(self.knowledge.resolve_environment(name))
+                    command = SourceCommand(command.span, command.name, command.action, command.arguments, env.tex_mechanics)
+                return command
             if profile.family == "conditional":
                 self._require(profile.conditional is not None and profile.action is None
                               and not profile.grammar and not profile.catcode_overrides
@@ -168,7 +250,17 @@ class StructuralDispatcher:
                     meaning = context.lookup_definition(command)
                     self._require(meaning is None, "stored_macro",
                                   f"Environment command {command!r} has a stored definition")
-                profile = require_resolved(self.knowledge.resolve_environment(name))
+                resolved = self.knowledge.resolve_environment(name)
+                if (self.preparation and isinstance(resolved, UnresolvedBindingResult)
+                        and resolved.reason == UnresolvedReason.UNKNOWN_CONSTRUCT):
+                    return deferred.environment(event.span, name, protect=self._protect_deferred_environment)
+                profile = require_resolved(resolved)
+                if profile.family == "structural_environment" and self.source_commands:
+                    header = ArgumentScanner(reader, context).read(event.span, profile)
+                    context.push_scope()
+                    self._groups.append(_GroupFrame("environment:" + name, event.span))
+                    self._environment_stack.append(name)
+                    return SourceCommand(header.span, name, "environment_begin", header.arguments, profile.tex_mechanics)
                 self._require(profile.grammar.get("handler") == "token_delimited"
                               and profile.grammar.get("arity") == 0,
                               "unsupported_literal_grammar", "Environment requires an unsupported header or body handler")
@@ -177,6 +269,47 @@ class StructuralDispatcher:
             return self._boundary(event.span, error.reason, error.detail)
         except InvalidCharacterError as error:
             return self._boundary(event.span, "invalid_character", str(error))
+
+    def _protect_deferred_environment(self, token) -> bool | DeferredRegion:
+        """Locate known protected syntax without executing an unbound body.
+
+        Routing remains here, not in the envelope scanner. Reading effects and
+        conditional control flow require the environment's missing contract.
+        """
+        if token.kind != TokenKind.CONTROL_SEQUENCE:
+            return False
+        if self.context.lookup_definition(token.value) is not None:
+            raise ReadingIssue("environment_reading", "A stored invocation inside an unbound environment needs reading resolution")
+        profile = self.knowledge.resolve_command(token.value)
+        if isinstance(profile, UnresolvedBindingResult):
+            if profile.reason != UnresolvedReason.UNKNOWN_CONSTRUCT:
+                raise ReadingIssue(profile.reason.value, profile.detail)
+            return DeferredScanner(self.reader, self.context).command(token, profile.reason.value, profile.detail)
+        if profile.family == "stored_definition":
+            self.definitions.read(token.span.start, profile)  # capture, never install
+            return True
+        if profile.family in {"conditional", "catcode_mutator", "grouping"}:
+            raise ReadingIssue("environment_reading", "Control flow or reading effects inside an unbound environment require resolution")
+        if profile.family == "source_command" and profile.action != "environment_end":
+            command = ArgumentScanner(self.reader, self.context).read(token.span, profile)
+            return DeferredRegion(command.span, "environment_binding", "Source command inside an unbound environment",
+                                  (token,) + tuple(t for arg in command.arguments for t in arg.tokens))
+        handler = profile.grammar.get("handler")
+        if handler == "inline_character":
+            self.literals.read(token.span.start, profile)
+            return True
+        if handler == "environment_name":
+            checkpoint = self.reader.checkpoint()
+            with self.context.argument_scanning():
+                name = self._environment_name()
+            nested = self.knowledge.resolve_environment(name)
+            if isinstance(nested, EffectiveReadingProfile) and nested.grammar.get("handler") == "token_delimited":
+                self.literals.read(token.span.start, nested)
+                return True
+            if isinstance(nested, UnresolvedBindingResult) and nested.reason != UnresolvedReason.UNKNOWN_CONSTRUCT:
+                raise ReadingIssue(nested.reason.value, nested.detail)
+            self.reader.restore(checkpoint)
+        return False
 
     def _conditional(self, rule: ConditionalRule, span: SourceSpan) -> None:
         """Own execution and stack changes; conditionals do not create scopes."""
@@ -268,6 +401,6 @@ class StructuralDispatcher:
             name.append(token.value)
         raise ReadingIssue("unclosed_header", "Environment name has no closing brace")
 
-    def __iter__(self) -> Iterator[ReadEvent | LiteralRegion | StoredDefinition | SkippedRegion | ReadingBoundary]:
+    def __iter__(self) -> Iterator[ReadEvent | LiteralRegion | StoredDefinition | SkippedRegion | ReadingBoundary | SourceCommand | SourceEnd | DeferredRegion]:
         while (item := self.next_item()) is not None:
             yield item

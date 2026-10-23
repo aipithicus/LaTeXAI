@@ -160,6 +160,27 @@ class BindingResolver:
                 return ConditionalRule(spec["role"], spec.get("evaluation"))
         return None
 
+    def source_command_syntax(self, name: str) -> EffectiveReadingProfile | None:
+        """Inspect a unique inactive package's source-argument grammar.
+
+        This does not activate that package or establish the command's meaning.
+        Preparation uses it only to capture a pending reference's full header.
+        Literal/effect profiles are deliberately outside this observational API.
+        """
+        clean = name if name.startswith("\\") else f"\\{name}"
+        candidates = []
+        for package, data in self.catalog.package_bindings.items():
+            for section in self._command_sections:
+                for spec in data["reading"].get(section, []):
+                    if spec.get("name", spec.get("command")) == clean:
+                        candidates.append((package, spec))
+        if len(candidates) != 1 or candidates[0][1].get("family") != "source_command":
+            return None
+        package, spec = candidates[0]
+        return EffectiveReadingProfile(clean, "source_command", action=spec["action"],
+            grammar=deepcopy(spec["grammar"]), tex_mechanics=deepcopy(spec.get("metadata", {})),
+            binding_id=f"packages/{package}")
+
     def resolve_command(self, name: str, options: dict[str, Any] | None = None
                         ) -> EffectiveReadingProfile | UnresolvedBindingResult:
         """Resolve command identity. The caller consumes stars/arguments using grammar."""
@@ -167,6 +188,9 @@ class BindingResolver:
         opts = dict(options or {})
         for origin, reading, section, spec in self._command_specs(clean):
             action = spec.get("action")
+            if spec.get("family") == "source_command":
+                return EffectiveReadingProfile(clean, "source_command", action=spec["action"],
+                    grammar=deepcopy(spec["grammar"]), tex_mechanics=deepcopy(spec.get("metadata", {})), binding_id=origin)
             if section == "conditionals":
                 if opts:
                     return self._unresolved(clean, UnresolvedReason.UNSUPPORTED_READING_OPTION,
@@ -242,6 +266,9 @@ class BindingResolver:
             for section in sections:
                 for spec in reading.get(section, []):
                     if spec.get("name") == clean:
+                        if spec.get("family") == "structural_environment":
+                            return EffectiveReadingProfile(clean, "structural_environment", binding_id=origin,
+                                grammar=deepcopy(spec["grammar"]), tex_mechanics=deepcopy(spec.get("metadata", {})))
                         return self._build_literal(clean, spec, reading, origin, opts, environment=True)
         return self._missing(clean, sections, opts)
 

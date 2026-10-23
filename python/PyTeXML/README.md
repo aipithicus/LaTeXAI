@@ -10,19 +10,29 @@ expansion and XML interpretation belong to later development.
 | --- | --- |
 | [`src/reading/`](src/reading) | Reusable N/M/S reader and cursor, structural dispatcher, literal/definition scanners, source intervals and coverage queries, regex catcode rules, mouth profiles, and scoped document state |
 | [`src/bindings/`](src/bindings) | Reusable binding catalog and document-local resolution/package activation |
-| [`src/prepare/`](src/prepare) | Discovery, inlining, pruning, normalization, bibliography preparation, provenance, policy loading, and publication |
-| [`src/source_io.py`](src/source_io.py) | Strict source decoding and malformed-byte diagnostics |
+| [`src/prepare/`](src/prepare) | Cached source traversal, dependency resolution, emission, bibliography, assets, provenance, and publication |
+| [`src/source_io.py`](src/source_io.py) | Run-scoped source cache, strict decoding and malformed-byte diagnostics |
 | [`src/bibtex.py`](src/bibtex.py) | Reusable BibTeX parser and data model |
 | [`src/assets.py`](src/assets.py) | Image inspection and individual asset conversion |
 | [`src/yaml_io.py`](src/yaml_io.py) | Strict YAML mapping loading, with schema validation left to each consumer |
 
-Within preparation, [discovery](src/prepare/discovery.py) owns source enumeration,
-root selection, and static dependency scanning. [Inventory](src/prepare/inventory.py)
-assembles [manifest records](src/prepare/manifest.py) from that discovery,
-[bibliography characterization/preparation](src/prepare/bibliography.py), asset
-inspection, and [implicit-graphics detection](src/prepare/implicit_graphics.py).
-[Asset preparation](src/prepare/assets.py) owns destination planning and TeX
-reference rewriting. The existing line-based provenance remains preparation-local.
+Within preparation, [session.py](src/prepare/session.py) owns one ordered
+multi-file traversal through the structural dispatcher. [Discovery](src/prepare/discovery.py)
+selects the root from cached buffers; [inventory](src/prepare/inventory.py) exposes
+the same traversal's manifest. A [project survey](src/prepare/survey.py) also reads
+every indexed TeX/code/BBL source from the shared cache, retaining candidate work
+in unvisited files, stored bodies and beyond reading boundaries. Survey candidates
+do not become active dependency edges. Each inclusion has its own reader occurrence;
+physical source files are read once per session, including local code and bibliography
+resources. Package bindings activate at their declarations. Active local styles
+are scanned and retained separately, with resolved file references rebased.
+
+[Emission](src/prepare/emission.py) retains exact literal/definition slices and
+serializes established mouth events. Bibliography and image edits use captured
+command arguments. [Provenance](src/prepare/provenance.py) records emitted
+character intervals and occurrence identity, including mixed-source lines.
+The old regex discovery, inliner, pruner, normalizer and implicit-graphics scanner
+have been removed.
 
 Import components through their owning modules, for example:
 
@@ -73,14 +83,35 @@ stems, with directories supplying namespaces; see the
 [naming convention](resources/README.md#naming-and-references). Regex reading rules
 are unchanged.
 
-The preparation pipeline still uses its existing discovery and transformations
-for assembling `master.tex`. Original manuscript sources are never edited.
-The reader, structural dispatcher, binding resolver, and policy loader are independently
-tested foundations, not yet integrated into that pipeline. Projection YAMLs have no
-runtime consumer, and the handler registry does not execute handlers. Its
-`context_effect` entries describe state helpers routed for supported local effects; `deferred` entries
-require future dispatch/scanning work; `scanner` entries describe the initial
-in-memory literal and definition handlers.
+The preparation entry point uses the reader, dispatcher, binding resolver and
+source coverage. Original manuscript sources are never edited. Its dispatcher
+uses `preparation=True`: ordinary unbound commands, stored invocations and math
+are preserved for interpretation while later literal inputs continue to assemble.
+Missing external package bindings become located requirements. A computed filename
+defers that command, not the rest of the manuscript. The strict dispatcher API
+still stops when it cannot establish execution behavior.
+
+The manifest separates `requirements` (with a stage), actual preparation
+`unresolved` diagnostics, source-visible dependency resolution
+(`source_dependency_closure`), and full `dependency_closure`. A preparation can
+finish with downstream interpretation/binding requirements. That is not proof
+of expanded dependency closure or compilation. `reading_assumptions` records the
+entry-catcode assumptions used for unbound behavior; `source_survey` records
+independent per-file observations, not execution. Deferred spans remain unknown
+in structural coverage even though their text has been captured.
+
+Genuine reading boundaries, including unsupported catcode assignments, predicates
+and literal grammars, still limit emission. The unfinished root operation and
+following suffix are preserved in that case, with `partial` status. The survey
+continues inspecting the source under an explicitly independent profile. There
+is no legacy-regex or compiler fallback. Any future executable prototype
+comparison must use a separate entry point, not replace this integration.
+
+The policy loader and projection YAMLs remain independent of runtime emission.
+The handler registry is vocabulary, not an executable plugin loader. Core
+source declarations and argument shapes live in
+[source_traversal.yaml](resources/bindings/engine/source_traversal.yaml);
+package-specific discovery shapes live in their package binding.
 
 All runtime YAML loaders reject duplicate keys through the shared strict loader.
 Policies validate their fields and action values. Catalog loading checks binding
@@ -188,7 +219,7 @@ It uses explicit declarations, never an `if` name prefix. The initial nesting
 inventory is TeX82; extension/package conditional primitives and dynamic aliases
 need their own declarations or future meaning support. `\newif`, `\let`, predicate
 evaluation, outer-command checks and TeX's error-recovery repairs remain outside
-this increment. Production preparation still uses its existing paths.
+this increment. Production preparation consumes this bounded dispatcher through its source owner.
 
 ## Source intervals and coverage
 
@@ -254,7 +285,7 @@ no character coverage. Empty `unknown` therefore does not imply structural valid
 The adapter accepts ordered, non-overlapping dispatcher observations and a terminal
 boundary; malformed partitions, incompatible bases and contradictory extents are
 rejected. This layer does not build a claim hierarchy, resume dependency requests,
-plan output edits, or emit `master.tex`. Production preparation remains separate.
+plan output edits, or emit `master.tex`. Preparation consumes one coverage snapshot per input occurrence.
 No additional YAML schema or dependency is needed for these interval algorithms.
 
 ## Running and checking

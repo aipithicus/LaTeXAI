@@ -1,0 +1,402 @@
+identity:
+  name: source_traversal
+  description: Bounded LaTeX source declarations and preparation dependency arguments
+reading:
+  package_input_catcodes: {"@": 11}
+  baseline_classes:
+  - article
+  - report
+  - book
+  - letter
+  - minimal
+  commands:
+  - name: \documentclass
+    family: source_command
+    action: document_class
+    grammar:
+      handler: source_arguments
+      arguments:
+      - name: options
+        kind: optional
+      - name: name
+        kind: braced
+      - name: version
+        kind: optional
+  - name: \usepackage
+    family: source_command
+    action: package_load
+    grammar:
+      handler: source_arguments
+      arguments:
+      - name: options
+        kind: optional
+      - name: name
+        kind: braced
+      - name: version
+        kind: optional
+  - name: \RequirePackage
+    family: source_command
+    action: package_load
+    grammar:
+      handler: source_arguments
+      arguments:
+      - name: options
+        kind: optional
+      - name: name
+        kind: braced
+      - name: version
+        kind: optional
+  - name: \ProvidesPackage
+    family: source_command
+    action: metadata
+    grammar:
+      handler: source_arguments
+      arguments:
+      - name: name
+        kind: braced
+      - name: version
+        kind: optional
+  - name: \ProvidesClass
+    family: source_command
+    action: metadata
+    grammar:
+      handler: source_arguments
+      arguments:
+      - name: name
+        kind: braced
+      - name: version
+        kind: optional
+  - name: \NeedsTeXFormat
+    family: source_command
+    action: metadata
+    grammar:
+      handler: source_arguments
+      arguments:
+      - name: name
+        kind: braced
+      - name: version
+        kind: optional
+  - name: \endinput
+    family: source_command
+    action: end_input
+    grammar:
+      handler: source_arguments
+      arguments: []
+  - name: \end
+    family: source_command
+    action: environment_end
+    grammar:
+      handler: source_arguments
+      arguments:
+      - name: name
+        kind: braced
+  - name: \bibliography
+    family: source_command
+    action: bibliography
+    grammar:
+      handler: source_arguments
+      arguments:
+      - name: names
+        kind: braced
+  - name: \bibliographystyle
+    family: source_command
+    action: bibliography_style
+    grammar:
+      handler: source_arguments
+      arguments:
+      - name: name
+        kind: braced
+  - name: \addbibresource
+    family: source_command
+    action: biblatex_resource
+    grammar:
+      handler: source_arguments
+      arguments:
+      - name: options
+        kind: optional
+      - name: name
+        kind: braced
+  - name: \printbibliography
+    family: source_command
+    action: biblatex_print
+    grammar:
+      handler: source_arguments
+      arguments:
+      - name: options
+        kind: optional
+  - name: \cite
+    family: source_command
+    action: citation
+    grammar:
+      handler: source_arguments
+      arguments:
+      - name: star
+        kind: star
+      - name: note
+        kind: optional
+      - name: keys
+        kind: braced
+  - name: \nocite
+    family: source_command
+    action: citation
+    grammar:
+      handler: source_arguments
+      arguments:
+      - name: keys
+        kind: braced
+  - name: \includeonly
+    family: source_command
+    action: include_selection
+    grammar:
+      handler: source_arguments
+      arguments:
+      - name: names
+        kind: braced
+  - name: \title
+    family: source_command
+    action: opaque
+    grammar:
+      handler: source_arguments
+      arguments:
+      - name: body
+        kind: braced
+  - name: \author
+    family: source_command
+    action: opaque
+    grammar:
+      handler: source_arguments
+      arguments:
+      - name: body
+        kind: braced
+  - name: \date
+    family: source_command
+    action: opaque
+    grammar:
+      handler: source_arguments
+      arguments:
+      - name: body
+        kind: braced
+  - name: \label
+    family: source_command
+    action: opaque
+    grammar:
+      handler: source_arguments
+      arguments:
+      - name: body
+        kind: braced
+  - name: \ref
+    family: source_command
+    action: opaque
+    grammar:
+      handler: source_arguments
+      arguments:
+      - name: body
+        kind: braced
+  - name: \pageref
+    family: source_command
+    action: opaque
+    grammar:
+      handler: source_arguments
+      arguments:
+      - name: body
+        kind: braced
+  - name: \textbf
+    family: source_command
+    action: opaque
+    grammar:
+      handler: source_arguments
+      arguments:
+      - name: body
+        kind: braced
+  - name: \textit
+    family: source_command
+    action: opaque
+    grammar:
+      handler: source_arguments
+      arguments:
+      - name: body
+        kind: braced
+  - name: \emph
+    family: source_command
+    action: opaque
+    grammar:
+      handler: source_arguments
+      arguments:
+      - name: body
+        kind: braced
+  - name: \footnote
+    family: source_command
+    action: opaque
+    grammar:
+      handler: source_arguments
+      arguments:
+      - name: body
+        kind: braced
+  - name: \caption
+    family: source_command
+    action: opaque
+    grammar:
+      handler: source_arguments
+      arguments:
+      - name: body
+        kind: braced
+  - name: \section
+    family: source_command
+    action: opaque
+    grammar:
+      handler: source_arguments
+      arguments:
+      - name: star
+        kind: star
+      - name: short
+        kind: optional
+      - name: body
+        kind: braced
+  - name: \subsection
+    family: source_command
+    action: opaque
+    grammar:
+      handler: source_arguments
+      arguments:
+      - name: star
+        kind: star
+      - name: short
+        kind: optional
+      - name: body
+        kind: braced
+  - name: \subsubsection
+    family: source_command
+    action: opaque
+    grammar:
+      handler: source_arguments
+      arguments:
+      - name: star
+        kind: star
+      - name: short
+        kind: optional
+      - name: body
+        kind: braced
+  - name: \chapter
+    family: source_command
+    action: opaque
+    grammar:
+      handler: source_arguments
+      arguments:
+      - name: star
+        kind: star
+      - name: short
+        kind: optional
+      - name: body
+        kind: braced
+  - name: \paragraph
+    family: source_command
+    action: opaque
+    grammar:
+      handler: source_arguments
+      arguments:
+      - name: star
+        kind: star
+      - name: short
+        kind: optional
+      - name: body
+        kind: braced
+  - name: \maketitle
+    family: source_command
+    action: opaque
+    grammar:
+      handler: source_arguments
+      arguments: []
+  - name: \tableofcontents
+    family: source_command
+    action: opaque
+    grammar:
+      handler: source_arguments
+      arguments: []
+  - name: \clearpage
+    family: source_command
+    action: opaque
+    grammar:
+      handler: source_arguments
+      arguments: []
+  - name: \newpage
+    family: source_command
+    action: opaque
+    grammar:
+      handler: source_arguments
+      arguments: []
+  - name: \par
+    family: source_command
+    action: opaque
+    grammar:
+      handler: source_arguments
+      arguments: []
+  - name: \relax
+    family: source_command
+    action: opaque
+    grammar:
+      handler: source_arguments
+      arguments: []
+  - name: \noindent
+    family: source_command
+    action: opaque
+    grammar:
+      handler: source_arguments
+      arguments: []
+  - name: \centering
+    family: source_command
+    action: opaque
+    grammar:
+      handler: source_arguments
+      arguments: []
+  - name: \bibitem
+    family: source_command
+    action: opaque
+    metadata: {bibliography_key: key}
+    grammar:
+      handler: source_arguments
+      arguments:
+      - {name: label, kind: optional}
+      - {name: key, kind: braced}
+  - name: \newblock
+    family: source_command
+    action: opaque
+    grammar: {handler: source_arguments, arguments: []}
+  environments:
+  - name: document
+    family: structural_environment
+    grammar:
+      handler: source_arguments
+      arguments: []
+    metadata:
+      document: true
+  - name: thebibliography
+    family: structural_environment
+    grammar:
+      handler: source_arguments
+      arguments:
+      - name: width
+        kind: braced
+    metadata:
+      bibliography: true
+  - name: figure
+    family: structural_environment
+    grammar:
+      handler: source_arguments
+      arguments:
+      - name: placement
+        kind: optional
+    metadata:
+      implicit: assetless_float
+      category: ASSETLESS_FLOAT
+      floating: true
+  - name: figure*
+    family: structural_environment
+    grammar:
+      handler: source_arguments
+      arguments:
+      - name: placement
+        kind: optional
+    metadata:
+      implicit: assetless_float
+      category: ASSETLESS_FLOAT
+      floating: true

@@ -166,12 +166,18 @@ reading:
   # ---------------------------------------------------------------------------
   inclusions:
     - name: "\\input"
+      family: source_command
+      action: source_input
+      grammar: {handler: source_arguments, arguments: [{name: target, kind: filename}]}
       syntax: "file_path"
       behavior: "pure_token_splice"
       requires_clearpage: false
       extensions: [".tex", ""]
 
     - name: "\\include"
+      family: source_command
+      action: source_include
+      grammar: {handler: source_arguments, arguments: [{name: target, kind: braced}]}
       syntax: "file_path"
       behavior: "chapter_splice"
       requires_clearpage: true

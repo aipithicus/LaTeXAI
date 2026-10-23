@@ -119,6 +119,19 @@ class ReadingBoundary:
 
 
 @dataclass(frozen=True, slots=True)
+class DeferredRegion:
+    """Source captured for later interpretation, without executing its contents.
+
+    Adjacent groups on an unknown command are a protective envelope, not a claim
+    about its argument signature. Tokens are observations under the entry catcodes.
+    """
+    span: SourceSpan
+    reason: str
+    detail: str
+    tokens: tuple[Token, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
 class LiteralRegion:
     span: SourceSpan
     opening: SourceSpan
@@ -162,6 +175,44 @@ class StoredDefinition:
     parameter_count: int
     hash_brace: Token | None
     binding_id: str
+
+
+@dataclass(frozen=True, slots=True)
+class ScannedArgument:
+    name: str
+    span: SourceSpan
+    tokens: tuple[Token, ...]
+
+    def literal(self) -> str:
+        from .tex_reader import TokenKind, CatCode
+        if any(t.kind != TokenKind.CHARACTER or t.catcode not in
+               (CatCode.LETTER, CatCode.OTHER, CatCode.SPACE, CatCode.SUBSCRIPT, CatCode.SUPERSCRIPT) for t in self.tokens):
+            raise ReadingIssue("computed_argument", f"{self.name} requires interpretation")
+        return "".join(t.value for t in self.tokens).strip()
+
+
+@dataclass(frozen=True, slots=True)
+class SourceCommand:
+    """An established active command; the preparation owner resolves resources."""
+    span: SourceSpan
+    name: str
+    action: str
+    arguments: tuple[ScannedArgument, ...] = ()
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+    def argument(self, name: str) -> ScannedArgument | None:
+        return next((arg for arg in self.arguments if arg.name == name), None)
+
+    def value(self, name: str, default: str = "") -> str:
+        arg = self.argument(name)
+        return arg.literal() if arg is not None else default
+
+
+@dataclass(frozen=True, slots=True)
+class SourceEnd:
+    """Completion of an input occurrence, with any deliberately unread suffix."""
+    span: SourceSpan
+    reason: str = "eof"
 
 
 class ReadingIssue(Exception):

@@ -7,7 +7,7 @@ and binding resolution live in `src/reading/` and `src/bindings/`.
 ## Purpose
 
 Preparation turns a source project into a compact extraction package. After a
-successful preparation, `extracted/master.tex` is the authoritative manuscript
+complete preparation, `extracted/master.tex` is the authoritative manuscript
 for subsequent stages. Raw-source paths in diagnostics are bookkeeping, not
 runtime dependencies. The package does not duplicate original image assets.
 
@@ -32,6 +32,17 @@ this prototype has not established those properties for arbitrary TeX projects.
 The emitted manifest's `entrypoint` is `master.tex`. Its `root_file` and absolute
 source paths record the discovery inputs for diagnostics.
 
+Emission is not gated on a complete binding library. Missing package bindings
+and ordinary unexpanded expressions produce located `requirements` while later
+literal inputs continue to assemble. Requirements identify preparation, binding
+or interpretation work. `preparation_status: complete` means the implemented
+preparation operations finished; it does not certify expanded semantics.
+`source_dependency_closure` describes source-visible requests under the recorded
+`reading_assumptions`; `dependency_closure` also accounts for outstanding
+interpretation and binding knowledge. Pending preparation work produces `partial`
+status. A partial master can retain unresolved references. Neither an emitted
+entrypoint nor a completed lexical pass proves raw-source independence.
+
 ## Package
 
 | File | Role |
@@ -42,60 +53,72 @@ source paths record the discovery inputs for diagnostics.
 | `*.svg` | Converted file-backed assets, preserving relative subdirectories |
 | Local styles/code | Discovered local dependencies needed by the master |
 | `manifest.json` | Discovery results, bibliography preparation fields, image dimensions/diagnostics, implicit graphics candidates |
-| `master.provenance.json` | Current line-based diagnostic map; accuracy limitations below |
-| `preparation.log` | `STARTED`, `SUCCESS`, or `FAILED`, with explicit errors/warnings |
+| `master.provenance.json` | Version 2 emitted-character intervals with source occurrence identity |
+| `preparation.log` | `STARTED`, `SUCCESS`, `PARTIAL`, or `FAILED`, with located diagnostics |
 
-Successful preparation uses SVG derivatives only. A missing active image, unsupported
-conversion, or unavailable raster dimensions is an error, not permission to
+Complete preparation uses SVG derivatives only. A missing active image, conversion
+failure, or unavailable raster dimensions is an error, not permission to
 fabricate dimensions, leave an unresolved image reference, or copy all originals.
+An unsupported reading request, such as unimplemented PDF page selection, is
+preserved in a partial master and diagnosed; it is never converted as page one.
 The current converter supports raster wrapping and PDF/SVG conversion. EPS needs
 a functioning converter; raw EPS bytes must not be mislabeled as PNG.
 
-Preparation writes the master only after its preceding phases succeed. A failed
-rerun leaves any previous master in place; `preparation.log` records the failed
-attempt. Callers must check the exception/exit status. Atomic replacement of an
-entire existing output package remains future work.
+Preparation writes the master only after its preceding phases succeed. A rerun invalidates its previous master before traversal; `preparation.log` appends the new attempt and result. Callers must check the exception/exit status. Atomic replacement of an
+entire existing output package remains future work. Knowledge gaps are successful
+partial emissions, not exceptions; callers must inspect `preparation_status` and
+`dependency_closure` before treating output as a complete payload.
 
 ## Current stages
 
-1. **Preflight:** discover a root, classify files, probe dimensions, identify
-   bibliography declarations, and inventory implicit graphics candidates.
-2. **Inline:** expand supported inclusion forms, preserving repeated occurrences
-   and using the active recursion stack to detect cycles.
-3. **Prune:** apply the existing bounded conditional/draft transformations.
-4. **Prepare bibliography:** reuse or natively generate a BBL, check literal
-   citation keys, emit it, and replace the bibliography command with its contents.
-5. **Normalize:** apply the current whitespace/comment transformations.
-6. **Convert:** create SVG assets and rewrite supported image references.
-7. **Package:** emit the master, discovered dependencies, manifest and diagnostics.
+1. **Index/cache:** enumerate source files once, excluding generated output;
+   lazily cache raw bytes, decoded buffers and decoding failures.
+2. **Select root:** recognize class declarations and actual comment metadata
+   through the reader. Multiple candidates require an explicit root.
+3. **Traverse:** follow each active input occurrence in order through the same
+   dispatcher. Share catcodes, scopes and package activation across input mouths;
+   keep cursor state and source identity specific to each occurrence.
+4. **Resolve:** gather file, package, image and bibliography requests at established
+   command spans. Scan local styles and retain their required code. Missing
+   package knowledge becomes a requirement. A fully scanned computed reference
+   defers only that command. Ordinary unexpanded commands, dollar-delimited math
+   and unbound environments are captured without executing their contents.
+5. **Emit:** retain literal/definition slices; serialize established mouth events,
+   discard comments and skipped bodies, and replace active input directives.
+   Explicit paragraph tokens prevent accidental paragraphs at input seams. At a
+   genuine reading boundary, preserve the original root suffix. If an input or package
+   traversal is unfinished, undo that root operation's emissions before keeping
+   its original directive and following source. This avoids inventing EOF seams
+   under unknown reading state. Previously completed root operations remain.
+6. **Survey:** inspect every indexed `.tex`, `.sty`, `.cls`, `.bbl` and `.tikz`
+   buffer with the same reader and scanners. Record candidate commands and
+   protected regions independently of active occurrences. After a reading
+   boundary, a lexical census uses an explicit independent entry profile; it
+   does not authorize rewrites or establish active dependencies. Unreadable
+   unreferenced sources receive survey diagnostics. No source copies are written.
+7. **Prepare resources:** generate/emit/embed classic bibliography, convert assets,
+   and rewrite resolved argument spans. Existing BBLs enter the traversal at
+   their source site; generated TeX values receive a diagnostic reading audit,
+   whose unsupported results do not veto bibliography serialization.
+8. **Publish:** write master, dependency payload, manifest and character-span
+   provenance. Publication is not yet a transactional directory swap.
 
-Root paths remain project-relative, including roots below the project directory.
-Discovery excludes `extracted/`, the caller's actual output directory, and the
-existing `.git/`, `artifacts/`, and `build/` exclusions. An output directory cannot
-equal or contain the source project.
+Input lookup uses the root document directory then the project root, with an
+explicit import directory when present. It never guesses by basename. Repeated
+inputs share buffers but retain separate occurrences. Cycles, missing files and
+ambiguous candidates fail explicitly. Braced and space-terminated primitive
+input forms are supported. Endinput finishes its physical line before leaving
+that input; the document's closing environment ends the document.
 
-Preparation and standalone preflight use native static discovery. External
-compiler probes and recorder-file discovery have been removed. The currently
-accepted `engine` and `execute_probe` arguments do not enable an external compiler.
-PyTeXML will develop its own reader dispatch and dependency resolution; that work
-does not require restoring an external toolchain. See the
-[native-processing direction](external-toolchains.md).
+Root paths remain project-relative. Discovery excludes extracted/, the actual
+output directory, .git/, artifacts/ and build/. Output cannot equal or contain
+the source project. No external probe is invoked; execute_probe=True is rejected.
 
-Source text is decoded as UTF-8 strictly. A decoding failure identifies the file
-and every malformed byte span (original offset and hex bytes), aborts preparation,
-and is recorded in `preparation.log`. Automatic encoding detection/transcoding is
-not implemented. Generated text is written with explicit LF line endings.
-
-Blanket Unicode normalization and invisible-character deletion were removed.
-However, the inliner and string normalizer still convert additional Unicode
-line separators to LF; full valid-Unicode preservation is not established.
-This remaining unconditional conversion is a cleanup item. Decoding, TeX
-interpretation, and projection policy are separate:
-invisibility is not evidence of catcode 9 (ignored), and a layout-only effect may
-be deliberately omitted by the canonical projection once interpreted. A valid
-U+FFFD replacement character can also indicate earlier data loss, which cannot
-be recovered by transcoding. Future lint should distinguish these cases. Any
-repair needs context and a recorded edit, rather than blanket character deletion.
+Source decoding is strict UTF-8, with located original-byte errors logged.
+Cached buffers preserve CR/LF spelling and valid Unicode. Literal and definition
+slices retain their characters. Ordinary whitespace emission follows bounded
+mouth records; invisible characters are not deleted indiscriminately.
+Provenance uses decoded Unicode codepoints, not UTF-8 byte offsets.
 
 ## Bibliography contract
 
@@ -129,8 +152,11 @@ citation keys. Later extraction does not need to find raw `.bib` or `.bbl` paths
 - Preparation checks that every recognized literal citation key has a prepared
   `bibitem`. Missing entries and missing databases needed for generation are
   explicit errors. A bibliography that failed to prepare is never deleted.
-- Biblatex metadata BBLs, multiple bibliography sites, and dynamically constructed
-  citation keys require additional support and currently fail explicitly.
+- Biblatex metadata BBLs and multiple bibliography sites require additional
+  support. The first classic site is prepared; subsequent sites are preserved
+  and diagnosed. When citation discovery is incomplete, computed, or has no
+  supported citations, native formatting includes all available database entries
+  rather than leaving an unnecessary pointer to the original database.
   Rich-format formatting and metadata adapters belong in a later expansion of
   this contract.
 
@@ -143,50 +169,34 @@ preparation. The eventual XML fields, rather than visual labels, own semantics.
 
 ## Implicit graphics
 
-This stage discovers candidate drawings/diagrams that exist as latent source,
-including assetless floats, recognized drawing environments and possible
-morphism grids. It does not render them. These are heuristic observations, not a
-claim of complete recognition or a reason to delete source.
+Implicit assets are recorded from dispatched environment metadata. Initial
+coverage includes figure candidates; the old regex drawing/morphism detector
+has been removed. Broader drawing environments require their reading bindings.
+This stage does not render latent code or build the downstream XML.
 
-The main extraction pipeline is expected to render them through an adaptation of
-LaTeXML/LaTeXAI bindings, eventually represented in YAML or TOML. That rendering
-contract is separate from the current file-backed asset conversion.
+## I/O, discovery and logging ownership
 
-## Planned I/O, discovery and logging ownership
+SourceStore supplies one file index and cached bytes/text to root selection,
+traversal, local-code packaging and bibliography processing. Failures are cached.
+Images still use library file APIs for inspection and conversion; these binary
+reads are not covered by the source cache.
 
-These are implementation targets, not descriptions of completed behavior:
+Dependency edges, input occurrences and unresolved locations belong to the
+source owner. Coverage is built per occurrence. Unobserved gaps remain explicit.
+Preserved root extents are recorded in `preserved_source_spans` and provenance as
+`PRESERVE_UNRESOLVED`. This records exact source retention, not resolved reading
+coverage. Files not established active while discovery is incomplete go into
+`unclassified_files`; they are not labelled dormant. Diagnostics remain anchored
+at the actual failing child/package location even when its splice is undone.
+Image references resolve before conversion; argument spans own their rewrites.
+Explicit image extensions sharing a stem get distinct SVG names; any remaining
+destination collision fails rather than overwriting.
 
-- A run-scoped source repository owns one reusable output-aware file index and
-  lazy immutable text buffers with original-byte correspondence. Reading passes
-  share those buffers. Repeated inclusion keeps separate occurrence/state data;
-  caching a file does not make one tokenization or execution valid everywhere.
-- Discovery and inlining share reference records and a resolver. A cheap scan
-  may identify candidates; the reader establishes their context, bindings supply
-  package dependency rules, and author code is handled dynamically. Worklists
-  revisit unresolved requests when relevant facts become available. Unknown
-  activation must not be called dormant or complete closure.
-- Asset requests are gathered early; conversion follows resolved demand,
-  identity, page/options and collision-free destination allocation. Equivalent
-  required conversions share a result. Metadata is obtained on demand and reused.
-  Large binary inputs/derivatives use bounded buffers or controlled streaming.
-- Analysis stages return content, edits, resource requests and diagnostics.
-  Bibliography generation shares one in-memory BBL between inline emission and
-  its requested sidecar. Intermediate sources and pass-state dumps are not
-  default artifacts. Publication owns final writes and managed temporary files;
-  preserving a previous complete output must not require copying the raw corpus.
-- A small reusable Python logger receives caller-owned run/sink configuration
-  and structured diagnostic events. A buffered append-only JSONL sink records
-  start, phase, warning/error and final outcome events, with explicit flush and
-  durability policy. Logging must not hide the original error. Provenance is a
-  separately emitted mapping, not inferred from the log.
+preparation.log appends start/outcome/error records. A reusable structured logger
+remains future work. Resource writes can precede master publication; transactional
+publication and obsolete-derivative cleanup remain open.
 
-Currently, discovery enumerates/reopens files across several passes, native
-bibliography generation rereads databases, stages write before final publication,
-and preparation.log is overwritten rather than appended. Those shortcomings
-remain open. The cleanup checkpoint specifies the shared-storage/logger-first
-sequence, static discovery algorithm, asset planning and measurable I/O checks.
-
-## Independent lexical reader
+## Reusable lexical reader
 
 The [source span engine specification](../../../../aipithicus-issues/LaTeXAI/briefs/source-span-engine.md)
 defines the next integration layer: context-qualified spans, YAML-selected
@@ -195,7 +205,7 @@ and checked rewrite materialization. It distinguishes current foundations from
 proposed APIs and implementation milestones.
 
 [tex_reader.py](../src/reading/tex_reader.py) supplies a dependency-free,
-in-memory character reader. It is a new foundation, not yet the normalizer used
+in-memory character reader. It supplies preparation's structural dispatcher and emission layer, replacing heuristic normalization
 by the preparation pipeline.
 
 - It implements the N/M/S transitions for all 16 catcodes, control words and
@@ -228,9 +238,6 @@ reader. A binding/profile dispatcher must establish literal modes; a later
 execution layer supplies scoped meanings and input/token stacks.
 Iterating a configured `TexReader` does not automatically interpret commands in
 that source. Its category table and `endline_char` are required constructor inputs.
-The existing [normalizer.py](../src/prepare/normalizer.py) remains the heuristic
-pipeline path until those consumers and the source-preserving emitter are connected.
-
 ## Independent binding resolver
 
 [catalog.py](../src/bindings/catalog.py) loads and compiles binding/profile knowledge.
@@ -281,48 +288,50 @@ Dynamic `\catcode` arguments, package configuration commands, definition factori
 literal-body dispatch and interpolation execution still need the source dispatcher.
 The resolver does not expand macros, scan environments, or perform rewrites. Its
 source-capture metadata preserves reading evidence without committing to an XML
-schema. Neither it nor the policy loader is wired into preparation yet.
+schema. The resolver is wired into preparation; the general policy loader remains independent.
 
 ## Known limits and next design work
 
-The pipeline's TeX traversal still uses regular expressions and limited state
-tracking. It does not yet use the independent reader or implement a TeX AST.
-The separate BibTeX reader assembles nested data values, not arbitrary TeX execution.
+The production path uses the shared reader and dispatcher. It is deliberately
+bounded: ordinary unknown commands/active characters and stored macro invocations
+are preserved without expansion. Dollar-delimited math and unbound environments
+are captured under entry catcodes, not interpreted. Unbound command envelopes
+protect adjacent balanced groups without claiming to know the command's arity.
+The manifest states the assumption that unbound behavior does not change reading
+outside those envelopes. This is not a proof about arbitrary author macros.
+Dynamic/global assignments, predicates and unsupported literal grammars still
+produce reading boundaries. Hooks, definition wrappers and subfile preamble
+stripping need additional handlers.
+Literal/definition/argument scans that exhaust their physical input are boundaries;
+continuation across input EOF is not implemented. Active groups and evaluated
+conditionals can cross input boundaries.
 
-The 2026-09-29 cleanup review reran all 38 focused tests successfully and
-reproduced additional gaps outside that coverage: same-line inclusion loses
-neighboring text or subsequent inputs; a commented end marker can truncate
-content; missing inputs can become comments that disappear before a SUCCESS
-result; stale recorder files can suppress static asset discovery; and distinct
-assets with the same stem can overwrite one SVG destination. That historical
-snapshot did not establish source/payload closure. Subsequent cleanup removed
-recorder-file discovery; the other findings still need dedicated verification
-and fixes. The
-[cleanup checkpoint](../../../../aipithicus-issues/LaTeXAI/reports/compiler-research/prototype-cleanup-20260929.md)
-records those witnesses, immediate patch order and structural follow-up.
+Current source grammars cover common literal dependencies, not all LaTeX packages.
+Opaque arguments retain their contents and located deferred-dependency requests;
+their bodies are not executed during header scanning. Local styles are retained with resolved file references
+rebased. Imports or assets executed inside retained local code still need additional
+payload contracts.
 
-- Inlining still needs shared lexical context for comments, literal regions,
-  command spans, definitions and conditionals. The repeated-input fix does not
-  establish correctness for every inclusion form.
-- Conditional deletion intervals are now merged before applying edits. Unknown
-  conditional nesting and pruning inside literal/definition contexts remain
-  unresolved. Default command-name-based pruning still needs redesign.
-- A blank paragraph after a swallowed comment newline is preserved. This local
-  repair does not qualify general whitespace normalization or style-file
-  cleanup under arbitrary catcodes.
-- Discovery remains heuristic. Local transitive dependencies and dynamic paths
-  need explicit resolution evidence from PyTeXML's own reading machinery.
-- The provenance ledger counts tagged fragments as output lines even when edits
-  join or split physical lines. Sequence alignment also guesses some origins.
-  It must be replaced by emission-time span bookkeeping before exact diagnostic
-  mapping can be claimed. RLE compression can follow that representation.
-- Graphics options, search-path resolution, multiple PDF pages and naming
-  collisions need further qualification.
+Generated bibliography fields can contain TeX. Definitions, dependencies and
+unsupported behavior in these fields requires later resolution and produces
+diagnostics. Native formatting still emits those values and the canonical
+enrichment resource. Unknown field expressions do not retract later source edits
+or undo an enclosing input. Actual field dependencies/effects remain diagnosed
+for another resolution pass; the audit does not execute them retroactively.
+Existing BBLs are traversed at their original source position.
+Biblatex and later bibliography sites remain located preparation work.
 
-The shared token reader precedes a larger AST. Its next consumers must establish
-literal contexts and apply known reading effects through the supplied catcode
-table. Unsupported effects must remain observable. AST structure can then be
-built on those tokens for the constructs the extractor actually needs.
+SVG conversion still needs qualification for PDF page selection and richer options.
+There is no unconditional style cleanup, draft-command deletion, general lint repair
+or AST. Explicit legacy cleanup options fail instead of running regex transforms.
+
+Provenance v2 records emitted extents and source occurrence ranges. Identity segments
+permit direct character interpolation; transformed segments relate whole ranges.
+Mixed-source lines and repeated inputs retain all origins. This does not claim
+byte offsets or per-character correspondence inside replacements. Historical
+cleanup witnesses remain in the
+[cleanup checkpoint](../../../../aipithicus-issues/LaTeXAI/reports/compiler-research/prototype-cleanup-20260929.md);
+current multi-file tests cover the resolved input/context/closure cases.
 
 The architectural direction is source assembly plus resolution of reading
 behavior, followed by emission of a compact master that may retain unexpanded
@@ -358,7 +367,7 @@ automatic lint/repair is not implemented in this patch.
 ## Verification
 
 The focused Python drivers are [test_preprocessing.py](../tests/test_preprocessing.py)
-for the existing pipeline and [test_tex_reader.py](../tests/test_tex_reader.py)
+for preparation and bibliography and [test_tex_reader.py](../tests/test_tex_reader.py)
 for lexical conformance. Run the suite from the PyTeXML project root with a Python
 environment containing the dependencies in [requirements.txt](../requirements.txt):
 
@@ -370,7 +379,10 @@ The generate/emit/embed test rejects any attempted subprocess invocation. Other
 tests cover native bibliography syntax and parent relationships, repeated
 input/cycles, nested roots, output exclusion on reruns, bibliography failures,
 strict decoding, valid Unicode preservation, dimension/conversion errors,
-overlapping deletions and paragraph preservation. Runtime files live under
+conditional routing and paragraph preservation.
+[test_preparation_traversal.py](../tests/test_preparation_traversal.py) covers the
+production multi-file path, cached reads, imports, local code, asset lookup,
+failures and occurrence-aware provenance. Runtime files live under
 the project's `temp/tests/`; temporary fixture directories are cleaned up.
 
 Reader fixtures cover all 48 state/category combinations, boundary and EOF

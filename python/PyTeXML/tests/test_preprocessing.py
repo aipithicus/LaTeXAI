@@ -10,18 +10,16 @@ from unittest.mock import patch
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.prepare.bibliography import BibliographyPreparationError, prepare_bibliography, _visible_source
+from src.prepare.bibliography import BibliographyPreparationError
 from src.bibtex import Database, BibTeXError
 from src.prepare.bibliography import extraction_bbl
 from src.prepare.assets import batch_convert_assets_to_svg
 from src.assets import raster_to_svg_wrapper
-from src.prepare.inliner import inline_latex_tree_provenance
-from src.prepare.normalizer import knuth_normalize
+from src.prepare.session import PreparationSession, PreparationUnresolved
 from src.prepare.pipeline import preprocess_paper
 from src.prepare.discovery import find_root_tex
 from src.prepare.inventory import preflight_inventory
 from src.assets import characterize_image
-from src.prepare.pruner import simplify_conditionals
 from src.source_io import SourceDecodingError, invalid_utf8_spans, open_source
 
 
@@ -43,33 +41,29 @@ class PreparationTests(unittest.TestCase):
         return self.put(name, "\\documentclass{article}\n\\begin{document}\n" + body + "\n\\end{document}\n")
 
     def flatten(self, name="main.tex"):
-        lines, _ = inline_latex_tree_provenance(self.root / name, self.root)
-        return "".join(line.text for line in lines)
+        session = PreparationSession(self.root, root_tex=name).run()
+        return "".join(piece.text for piece in session.pieces)
 
     def test_repeated_inputs_are_distinct_occurrences(self):
         self.document("\\input{part}\n\\input{part}")
         self.put("part.tex", "REPEATED BODY\n")
         self.assertEqual(self.flatten().count("REPEATED BODY"), 2)
 
-    def test_cycle_stack_is_released_after_each_call(self):
-        self.document("\\input{part}")
+    def test_cycle_is_explicit_and_a_new_run_is_independent(self):
+        self.document(r"\input{part}")
         self.put("part.tex", "\\input{main}\n")
-        stack = set()
-        lines, _ = inline_latex_tree_provenance(self.root / "main.tex", self.root, visited_files=stack)
-        self.assertIn("Recursive include cycle", "".join(line.text for line in lines))
-        self.assertEqual(stack, set())
+        with self.assertRaisesRegex(PreparationUnresolved, "input_cycle"):
+            preprocess_paper(str(self.root))
+        self.put("part.tex", "Recovered")
+        text, _, _, _ = preprocess_paper(str(self.root))
+        self.assertIn("Recovered", text)
 
-    def test_import_stacks_are_released_after_decode_failure(self):
-        self.document("\\subimport{sections}{part}")
-        child = self.put("sections/part.tex", "")
-        child.write_bytes(b"\xff")
-        active = set()
-        directories = [self.root]
+    def test_import_decode_failure_is_logged(self):
+        self.document(r"\usepackage{import}\subimport{sections}{part}")
+        self.put("sections/part.tex", "").write_bytes(b"\xff")
         with self.assertRaises(SourceDecodingError):
-            inline_latex_tree_provenance(self.root / "main.tex", self.root,
-                                        dir_stack=directories, visited_files=active)
-        self.assertEqual(active, set())
-        self.assertEqual(directories, [self.root])
+            preprocess_paper(str(self.root))
+        self.assertIn("sections", (self.root / "extracted/preparation.log").read_text())
 
     def test_nested_discovered_and_explicit_roots(self):
         self.document(name="src/paper.tex")
@@ -182,15 +176,17 @@ class PreparationTests(unittest.TestCase):
 
     def test_biblatex_data_is_not_pasted_as_formatted_text(self):
         self.document("\\addbibresource{refs.bib}\n\\printbibliography")
-        with self.assertRaisesRegex(BibliographyPreparationError, "Biblatex"):
-            preprocess_paper(str(self.root))
+        text, manifest, _, _ = preprocess_paper(str(self.root))
+        self.assertIn("\\addbibresource{refs.bib}", text)
+        self.assertIn("\\printbibliography", text)
+        self.assertNotIn("thebibliography", text)
+        self.assertEqual(manifest.preparation_status, "partial")
+        self.assertEqual(manifest.unresolved[0]["reason"], "bibliography_formatter")
 
-    def test_comment_mask_keeps_offsets_and_ignores_literal_commands(self):
-        source = "% \\cite{no}\n\\verb|\\cite{no}|\n\\cite{yes} \\% literal % \\cite{no}\n"
-        masked = _visible_source(source)
-        self.assertEqual(len(source), len(masked))
-        self.assertNotIn("{no}", masked)
-        self.assertIn("\\cite{yes}", masked)
+    def test_bibliography_commands_in_literals_are_not_prepared(self):
+        self.document(r"\verb|\bibliography{absent}|")
+        text, _, _, _ = preprocess_paper(str(self.root))
+        self.assertIn(r"\verb|\bibliography{absent}|", text)
 
     def test_source_decoding_failure_is_logged_with_byte_offset(self):
         self.document()
@@ -214,7 +210,6 @@ class PreparationTests(unittest.TestCase):
         source = "García α e\u0301 \u200b\u2060\ufeff \\verb|e\u0301\u200b|\n"
         path = self.put("unicode.tex", source)
         self.assertEqual(open_source(path).read(), source)
-        self.assertEqual(knuth_normalize(source), source)
         self.assertEqual(invalid_utf8_spans(source.encode("utf-8")), [])
 
     def test_bibliography_decoding_failure_is_not_swallowed(self):
@@ -232,7 +227,7 @@ class PreparationTests(unittest.TestCase):
         self.assertIn("customstyle.sty", (self.root / "extracted/preparation.log").read_text())
 
     def test_conversion_failure_is_logged_without_master_or_raw_copy(self):
-        self.document("\\includegraphics{bad.png}")
+        self.document("\\usepackage{graphicx}\\includegraphics{bad.png}")
         self.put("bad.png", "invalid image")
         with self.assertRaises(RuntimeError):
             preprocess_paper(str(self.root))
@@ -265,14 +260,14 @@ class PreparationTests(unittest.TestCase):
             batch_convert_assets_to_svg([asset], out, self.root)
         self.assertEqual(list(out.iterdir()), [])
 
-    def test_overlapping_conditional_deletions_preserve_tail(self):
-        self.assertEqual(simplify_conditionals(r"\iffalse OUT \iftrue IN \fi REST \fi KEEP"), " KEEP")
-        self.assertEqual(simplify_conditionals(r"A\iftrue B\iffalse C\fi D\else E\fi F"), "A B D F")
-
-    def test_paragraph_after_comment_is_preserved(self):
-        self.assertEqual(knuth_normalize("alpha% comment\n\nbeta\n"), "alpha\n\nbeta\n")
-        self.assertEqual(knuth_normalize("alpha% comment\n   beta\n"), "alphabeta\n")
-        self.assertEqual(knuth_normalize("alpha% comment\n% another\n\nbeta\n"), "alpha\n\nbeta\n")
+    def test_nested_conditionals_preserve_only_executed_text(self):
+        self.document(r"A\iftrue B\iffalse C\fi D\else E\fi F")
+        text, _, _, _ = preprocess_paper(str(self.root))
+        self.assertIn("B", text)
+        self.assertIn("D", text)
+        self.assertNotIn(" E", text)
+        self.assertNotIn(" C", text)
+        self.assertIn("F", text)
 
     def test_native_reader_handles_nested_values_strings_and_preambles(self):
         db = Database()
@@ -297,7 +292,7 @@ class PreparationTests(unittest.TestCase):
         self.assertEqual(fields["strangefield"], "Untouched")
         bbl = extraction_bbl(db, ["key"])
         self.assertIn(r"\providecommand{\noop}[1]{#1}", bbl)
-        self.assertIn(r"\url{https://example.org/a_b?q=1&v=20%25}", knuth_normalize(bbl))
+        self.assertIn(r"\url{https://example.org/a_b?q=1&v=20%25}", bbl)
 
     def test_native_reader_shares_strings_across_declared_databases(self):
         self.document("\\cite{key}\n\\bibliography{strings,refs}")

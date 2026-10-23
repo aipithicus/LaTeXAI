@@ -19,18 +19,22 @@ by those packages. The preparation path does not invoke `pdflatex`, `latexmk`,
 recorder-file discovery have been removed from the discovery/inventory path, now
 organized as [discovery.py](../src/prepare/discovery.py) and
 [inventory.py](../src/prepare/inventory.py).
-The remaining `engine` and `execute_probe` arguments do not enable such a probe.
+`engine` is descriptive metadata; `execute_probe=True` is explicitly rejected.
 
 ## Implemented foundations
 
-- Discovery currently uses PyTeXML's static source traversal. Its coverage is
-  bounded; removing the compiler path does not by itself establish complete
-  dependency closure.
-- [tex_reader.py](../src/reading/tex_reader.py) implements incremental N/M/S token reading
-  with supplied catcodes, physical-line behavior and source spans.
-  [resolver.py](../src/bindings/resolver.py) resolves declarative reading
-  profiles and supported effects. These are foundations for native dispatch;
-  the current discovery and normalization paths do not yet consume them.
+- Production discovery and input assembly share a cached, ordered source traversal.
+  Each input occurrence runs through the N/M/S reader and structural dispatcher.
+  Comments, literals, definitions and bounded skipped branches have established
+  contexts. Ordinary unexpanded expressions and missing package bindings retain
+  located requirements while later source-visible inputs continue to assemble.
+  Actual reading boundaries constrain emission but do not veto publication.
+- A cached whole-project survey records candidate work independently of active
+  traversal, including unvisited files and source beyond reading boundaries.
+  Observations made under an independent profile are not executed dependencies.
+- Package activation uses declarative binding knowledge. Local styles and their
+  active inputs are scanned from source. No missing binding causes a native
+  package-source or compiler fallback.
 - [bibliography.py](../src/prepare/bibliography.py) and [bibtex.py](../src/bibtex.py)
   prepare supported classic BBLs and generate a canonical extraction bibliography
   from supported BibTeX data without running an external bibliography processor.
@@ -41,11 +45,10 @@ The remaining `engine` and `execute_probe` arguments do not enable such a probe.
 
 ## Continuing the native implementation
 
-The next integration work connects source traversal to the reader, scoped state,
-YAML-selected structural and literal handlers, and dependency requests. That is
-how discovery will distinguish active inputs from source inside comments,
-literals, stored definitions and skipped branches under the supported reading
-context. A catcode-aware token reader alone does not establish all those contexts.
+The next work extends reading coverage: author macro reading effects, dynamic
+assignments, deferred hooks, math/alignment contexts and additional package/literal
+handlers. Integration is now live; this list describes unsupported behavior,
+not a replacement of the integrated workflow by the old prototype.
 
 Package knowledge belongs in bindings; author definitions contribute runtime
 knowledge. Unsupported reading effects must produce explicit unresolved results

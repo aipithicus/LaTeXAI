@@ -89,6 +89,15 @@ class BindingCatalog:
         return handlers
 
     def _validate_reading(self, reading: dict[str, Any], path: Path) -> None:
+        if "package_input_catcodes" in reading:
+            assignments = reading["package_input_catcodes"]
+            if (not isinstance(assignments, dict) or any(not isinstance(c, str) or len(c) != 1
+                    or type(n) is not int or not 0 <= n <= 15 for c, n in assignments.items())):
+                raise ProfileError(f"{path}: invalid package input catcodes")
+        if "baseline_classes" in reading:
+            names = reading["baseline_classes"]
+            if not isinstance(names, list) or not names or any(not isinstance(n, str) or not n for n in names):
+                raise ProfileError(f"{path}: invalid baseline class inventory")
         # Validate the structural surface consumed today, not a speculative schema
         # for future interpretation. Override sections may intentionally reuse names.
         for section in ("catcode_mutators", "grouping", "inclusions", "conditionals",
@@ -126,6 +135,22 @@ class BindingCatalog:
                             or grammar.get("expansion") not in ("none", "full")
                             or spec.get("scope") not in ("local", "global")):
                         raise ProfileError(f"{path}: {name} requires a primitive definition grammar, expansion and scope")
+                if spec.get("family") in ("source_command", "structural_environment"):
+                    if not isinstance(spec.get("metadata", {}), dict):
+                        raise ProfileError(f"{path}: {name} metadata must be a mapping")
+                    arguments = grammar.get("arguments")
+                    if (set(grammar) != {"handler", "arguments"} or grammar.get("handler") != "source_arguments"
+                            or not isinstance(arguments, list)):
+                        raise ProfileError(f"{path}: {name} requires a source_arguments grammar")
+                    arg_names = set()
+                    for arg in arguments:
+                        if (not isinstance(arg, dict) or set(arg) != {"name", "kind"}
+                                or not isinstance(arg.get("name"), str) or not arg["name"]
+                                or arg["name"] in arg_names or arg.get("kind") not in ("braced", "optional", "star", "filename")):
+                            raise ProfileError(f"{path}: invalid source argument for {name}")
+                        arg_names.add(arg["name"])
+                    if spec.get("family") == "source_command" and spec.get("action") not in self.reading_handlers:
+                        raise ProfileError(f"{path}: unknown source command action for {name}")
                 if section in ("catcode_mutators", "grouping", "inclusions"):
                     action = spec.get("behavior" if section == "inclusions" else "action")
                     if not isinstance(action, str) or action not in self.reading_handlers:

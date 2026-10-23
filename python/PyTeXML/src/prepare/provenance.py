@@ -1,16 +1,9 @@
-"""
-Provenance & Source Map Engine for LaTeX Extractor.
+"""Emission-time diagnostic provenance.
 
-Provides a compact, Run-Length Encoded (RLE) source provenance ledger that maps
-every line and operation in the extracted master.tex back to original source files.
-
-Key Features:
-  - String pool dictionary encoding for source filenames and operation codes.
-  - Piecewise interval compression (70x+ compression ratio over naive AST/token maps).
-  - Dual O(log N) lookups:
-      - Backward Trace: master.tex:Line -> source_file:Line + operation
-      - Forward Trace: source_file:Line -> master.tex:Line OR tombstone reason
-  - Tombstone tracking for pruned conditionals, comments, and draft commands.
+Preparation emits version 2 decoded-character intervals, including source
+occurrence identities and mixed-source lines. IDENTITY segments have affine
+offset correspondence; transformations relate whole ranges. Legacy line-ledger
+read/write helpers below remain for existing version 1 diagnostic artifacts.
 """
 
 from __future__ import annotations
@@ -18,6 +11,7 @@ from __future__ import annotations
 import bisect
 from dataclasses import dataclass, field
 import json
+import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
@@ -93,6 +87,9 @@ class ProvenanceLedger:
         self.operations: List[str] = operations or []
         self.runs: List[ProvenanceRun] = runs or []
         self.tombstones: List[Tombstone] = tombstones or []
+        self.segments = None
+        self.master_length = 0
+        self.master_line_starts = []
 
         self._gen_starts: List[int] = [r.gen_start for r in self.runs]
         self._source_index: Dict[str, List[ProvenanceRun]] = {}
@@ -203,6 +200,13 @@ class ProvenanceLedger:
         Backward Lookup: Given a line number in master.tex, returns its source origin.
         Operates in O(log N) time via binary search.
         """
+        if self.segments is not None:
+            if not 1 <= master_line <= len(self.master_line_starts):
+                return None
+            start = self.master_line_starts[master_line - 1]
+            end = self.master_line_starts[master_line] if master_line < len(self.master_line_starts) else self.master_length
+            origins = [s for s in self.segments if s['generated'][0] < end and s['generated'][1] > start]
+            return {"origins": origins} if origins else None
         if not self.runs:
             return None
 
@@ -227,6 +231,11 @@ class ProvenanceLedger:
         Forward Lookup: Given a source file and line, checks if it survived into master.tex,
         or retrieves the tombstone explaining why it was pruned/stripped.
         """
+        if self.segments is not None:
+            matches = [s for s in self.segments if s['source_file'] == src_file
+                       and s['source_lines'][0] <= src_line <= s['source_lines'][1]]
+            if matches:
+                return {"status": "ACTIVE", "occurrences": matches}
         # 1. Check active runs
         runs = self._source_index.get(src_file, [])
         for r in runs:
@@ -253,6 +262,12 @@ class ProvenanceLedger:
 
     def to_dict(self) -> Dict[str, Any]:
         """Serializes the ledger into a compact string-pooled matrix."""
+        if self.segments is not None:
+            return {"version": 2, "coordinate_domain": "decoded_unicode_codepoints",
+                    "segments": self.segments, "master_length": self.master_length,
+                    "master_line_starts": self.master_line_starts,
+                    "sources": self.sources, "operations": self.operations,
+                    "tombstones": [vars(t) for t in self.tombstones]}
         file_pool = {name: idx for idx, name in enumerate(self.sources)}
         op_pool = {name: idx for idx, name in enumerate(self.operations)}
 
@@ -269,6 +284,13 @@ class ProvenanceLedger:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> ProvenanceLedger:
+        if data.get("version") == 2:
+            result = cls(sources=data['sources'], operations=data['operations'],
+                         tombstones=[Tombstone(**t) for t in data.get('tombstones', [])])
+            result.segments = data['segments']
+            result.master_length = data['master_length']
+            result.master_line_starts = data['master_line_starts']
+            return result
         sources = data.get("sources", [])
         ops = data.get("operations", [])
         raw_runs = data.get("runs", [])
@@ -304,7 +326,7 @@ class ProvenanceLedger:
 
     def save(self, filepath: Path) -> None:
         filepath.parent.mkdir(parents=True, exist_ok=True)
-        with open(filepath, "w", encoding="utf-8") as f:
+        with open(filepath, "w", encoding="utf-8", newline="\n") as f:
             f.write(self.to_json(indent=2))
 
     @classmethod
@@ -314,6 +336,10 @@ class ProvenanceLedger:
         return cls.from_dict(data)
 
     def summary(self) -> Dict[str, Any]:
+        if self.segments is not None:
+            return {"total_master_lines": len(self.master_line_starts), "total_runs": len(self.segments),
+                    "total_tombstones": len(self.tombstones), "sources_count": len(self.sources),
+                    "compression_ratio": round(len(self.master_line_starts) / max(1, len(self.segments)), 2)}
         total_gen_lines = self.runs[-1].gen_end if self.runs else 0
         op_counts: Dict[str, int] = {}
         for r in self.runs:
@@ -327,3 +353,41 @@ class ProvenanceLedger:
             "compression_ratio": round(total_gen_lines / max(len(self.runs), 1), 2),
             "operation_lines": op_counts
         }
+
+    @classmethod
+    def build_from_pieces(cls, pieces, tombstones=None):
+        """Character intervals support mixed-source lines and repeated inputs.
+
+        A rewritten segment relates whole extents; it does not claim an affine
+        character mapping. Only IDENTITY segments permit offset interpolation.
+        """
+        ledger = cls(tombstones=tombstones or [])
+        ledger.segments = []
+        text = ''.join(p.text for p in pieces)
+        ledger.master_length = len(text)
+        ledger.master_line_starts = ([0] + [m.end() for m in re.finditer(r"\r\n|\r|\n", text)
+                                           if m.end() < len(text)]) if text else []
+        offset = 0
+        for p in pieces:
+            if not p.text:
+                continue
+            span = p.span
+            segment = {'generated': [offset, offset + len(p.text)], 'source_file': span.basis.source_id,
+                       'occurrence': span.basis.occurrence_id, 'source': [span.start, span.end],
+                       'source_lines': [p.source_line, p.source_end_line or p.source_line],
+                       'operation': p.operation}
+            if ledger.segments and p.operation == 'IDENTITY':
+                previous = ledger.segments[-1]
+                if (previous['operation'] == 'IDENTITY' and previous['source_file'] == segment['source_file']
+                    and previous['occurrence'] == segment['occurrence'] and previous['source'][1] == span.start):
+                    previous['generated'][1] = segment['generated'][1]
+                    previous['source'][1] = span.end
+                    previous['source_lines'][1] = segment['source_lines'][1]
+                else:
+                    ledger.segments.append(segment)
+            else:
+                ledger.segments.append(segment)
+            offset += len(p.text)
+        ledger.sources = list(dict.fromkeys(s['source_file'] for s in ledger.segments))
+        ledger.operations = list(dict.fromkeys(s['operation'] for s in ledger.segments))
+        return ledger

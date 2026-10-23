@@ -254,6 +254,12 @@ class TexReader:
         self._line_start = 0
         self._physical_content_end = 0
         self._checkpoint_owner = object()
+        self._stop_after_line: int | None = None
+        self.terminated_span: SourceSpan | None = None
+
+    def end_input_after_line(self) -> None:
+        """Defer file termination until the next physical-line refill."""
+        self._stop_after_line = self._line_end
 
     @property
     def position(self) -> int:
@@ -301,7 +307,8 @@ class TexReader:
             self._next_line, self._raw_pos, self._content_end, self._line_end,
             self._line_end_char, self._endline_queued, self._tail_reported,
             self._failure, self._position, self._line_start,
-            self._physical_content_end, self.endline_char), self.catcodes.copy())
+            self._physical_content_end, self.endline_char, self._stop_after_line,
+            self.terminated_span), self.catcodes.copy())
 
     def restore(self, checkpoint: ReaderCheckpoint) -> None:
         if not isinstance(checkpoint, ReaderCheckpoint) or checkpoint._owner is not self._checkpoint_owner:
@@ -310,7 +317,8 @@ class TexReader:
          self._next_line, self._raw_pos, self._content_end, self._line_end,
          self._line_end_char, self._endline_queued, self._tail_reported,
          self._failure, self._position, self._line_start,
-         self._physical_content_end, self.endline_char) = checkpoint._cursor
+         self._physical_content_end, self.endline_char, self._stop_after_line,
+         self.terminated_span) = checkpoint._cursor
         self._queue = deque(queued)
         self.catcodes.restore_from(checkpoint._catcodes)
 
@@ -329,6 +337,9 @@ class TexReader:
 
     def _load_line(self) -> bool:
         self.state = ReaderState.NEW_LINE
+        if self._stop_after_line is not None and self._next_line >= self._stop_after_line:
+            self.terminated_span = self._span(self._stop_after_line, len(self.text))
+            return False
         if self._started and self._next_line >= len(self.text):
             return False
         self._started = True

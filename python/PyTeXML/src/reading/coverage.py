@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Iterable, Literal
 
-from .contracts import LiteralRegion, ReadingBoundary, SkippedRegion, StoredDefinition
+from .contracts import LiteralRegion, ReadingBoundary, SkippedRegion, StoredDefinition, SourceCommand, SourceEnd, DeferredRegion
 from .spans import SourceBasis, SourceSpan, SpanSet
 from .tex_reader import ReadEvent
 
@@ -93,7 +93,7 @@ class Coverage:
         return tuple(sorted(segments, key=lambda segment: segment.span.start))
 
 
-ReadingItem = ReadEvent | LiteralRegion | StoredDefinition | SkippedRegion | ReadingBoundary
+ReadingItem = ReadEvent | LiteralRegion | StoredDefinition | SkippedRegion | ReadingBoundary | SourceCommand | SourceEnd | DeferredRegion
 
 
 @dataclass(frozen=True, slots=True, init=False)
@@ -112,17 +112,18 @@ class ReadingCoverage:
     stored_definitions: tuple[StoredDefinition, ...]
     skipped_regions: tuple[SkippedRegion, ...]
     diagnostics: tuple[ReadingBoundary, ...]
+    deferred_regions: tuple[DeferredRegion, ...]
 
     def __init__(self, basis: SourceBasis, items: Iterable[ReadingItem]):
         if not isinstance(basis, SourceBasis):
             raise TypeError("Reading coverage requires a SourceBasis")
         observed: list[SourceSpan] = []
-        literals, definitions, skipped, diagnostics = [], [], [], []
+        literals, definitions, skipped, diagnostics, deferred = [], [], [], [], []
         end = 0
         for item in items:
             if diagnostics:
                 raise ValueError("A reading boundary must be the last item")
-            if not isinstance(item, (ReadEvent, LiteralRegion, StoredDefinition, SkippedRegion, ReadingBoundary)):
+            if not isinstance(item, (ReadEvent, LiteralRegion, StoredDefinition, SkippedRegion, ReadingBoundary, SourceCommand, SourceEnd, DeferredRegion)):
                 raise TypeError("Expected a dispatcher reading item")
             basis.require(item.span)
             if isinstance(item, ReadingBoundary):
@@ -134,6 +135,9 @@ class ReadingCoverage:
             if item.span.start < end:
                 raise ValueError("Reading items overlap or are out of source order")
             end = item.span.end
+            if isinstance(item, DeferredRegion):
+                deferred.append(item)
+                continue  # Captured source is not established structural coverage.
             if isinstance(item, (LiteralRegion, StoredDefinition)):
                 parts = (item.opening, item.body, item.closing)
                 for part in parts:
@@ -143,8 +147,8 @@ class ReadingCoverage:
                     raise ValueError("Region parts must partition the region extent")
                 (literals if isinstance(item, LiteralRegion) else definitions).append(item)
             if isinstance(item, SkippedRegion):
-                basis.require(item.conditional)
-                if item.conditional.end > item.span.start or item.branch not in ("then", "else"):
+                if ((item.conditional.basis is basis and item.conditional.end > item.span.start)
+                        or item.branch not in ("then", "else")):
                     raise ValueError("Skipped region requires an earlier conditional and a then/else branch")
                 skipped.append(item)
             if item.span.start == item.span.end:
@@ -161,6 +165,7 @@ class ReadingCoverage:
         object.__setattr__(self, "stored_definitions", tuple(definitions))
         object.__setattr__(self, "skipped_regions", tuple(skipped))
         object.__setattr__(self, "diagnostics", tuple(diagnostics))
+        object.__setattr__(self, "deferred_regions", tuple(deferred))
 
     def query(self, kind: Literal["literal", "definition", "skipped"], *,
               part: Literal["span", "body"] = "span", window: SourceSpan | None = None) -> Coverage:

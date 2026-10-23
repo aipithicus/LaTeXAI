@@ -1,329 +1,192 @@
-"""Prepare a standalone classic bibliography before publishing the master.
-
-Existing thebibliography BBLs are reused. Missing BBLs are prepared from native
-BibTeX data parsing; preparation never invokes a TeX engine.
-Biblatex data BBLs are not interchangeable with formatted thebibliography.
-"""
-
+"""Native bibliography formatting driven by established traversal commands."""
 from __future__ import annotations
-
 from pathlib import Path
 import re
-
-from .manifest import BibliographyInfo, PreflightManifest
-from .provenance import SourceLine, Tombstone
-from ..source_io import open_source
 from ..bibtex import Database, BibTeXError
-from typing import List, Set
+from ..reading.spans import SourceBasis
+from ..reading.tex_reader import TexReader, ReadEvent, TokenKind
+from ..reading.dispatcher import StructuralDispatcher
+from ..reading.contracts import SourceCommand, SourceEnd, ReadingBoundary, DeferredRegion, ReadingIssue
+from .emission import SourcePiece
 
 
 class BibliographyPreparationError(ValueError):
     pass
 
 
-_BIB = re.compile(r"\\bibliography\s*\{([^{}]+)\}")
-_STYLE = re.compile(r"\\bibliographystyle\s*\{([^{}]+)\}")
-_CITE = re.compile(
-    r"\\(?:[Cc]ite(?:t|p|alp|alt|author|year|yearpar|num|fullauthor)?|"
-    r"autocite|parencite|textcite|footcite|nocite)\*?"
-    r"\s*(?:\[[^\]]*\]\s*){0,2}\{([^{}]+)\}"
-)
-_ITEM = re.compile(r"\\bibitem\s*(?:\[[^\]]*\]\s*)?\{([^{}]+)\}")
+def _preserve_declarations(pieces, session, command, reason, detail):
+    session.diagnose(command.span, reason, detail)
+    # A traversed BBL must not remain alongside the original declaration if
+    # formatting is deferred. Undo that insertion, retaining the request.
+    inserted = {id(p) for p in session.bibliography_pieces or ()}
+    session.bibliography_pieces = None
+    return [p for p in pieces if id(p) not in inserted]
 
 
-def _visible_source(text: str) -> str:
-    """Mask comments and conventional literal regions, retaining offsets.
-
-    This is bounded lexical discovery, not macro expansion or an AST.
-    """
-    pattern = re.compile(
-        r"\\begin\{(verbatim\*?|Verbatim\*?|lstlisting|minted|filecontents\*?)\}"
-        r"[\s\S]*?\\end\{\1\}|\\verb\*?(?P<delimiter>[^\s])[^\n]*?(?P=delimiter)"
-    )
-    masked = list(text)
-    for match in pattern.finditer(text):
-        for i in range(match.start(), match.end()):
-            if masked[i] != "\n":
-                masked[i] = " "
-    for match in re.finditer(r"%", "".join(masked)):
-        if masked[match.start()] != "%":
-            continue
-        slash_count = 0
-        i = match.start() - 1
-        while i >= 0 and masked[i] == "\\":
-            slash_count += 1
-            i -= 1
-        if slash_count % 2 == 0:
-            end = text.find("\n", match.start())
-            if end < 0:
-                end = len(text)
-            masked[match.start():end] = " " * (end - match.start())
-    return "".join(masked)
-
-
-def _resource(name: str, suffix: str, project_dir: Path, origin: Path) -> Path:
-    name = name.strip()
-    if not name.endswith(suffix):
-        name += suffix
-    for directory in dict.fromkeys([project_dir, origin.parent]):
-        path = (directory / name).resolve()
-        if path.is_file():
-            return path
-    raise BibliographyPreparationError(f"Bibliography resource not found: {name} (from {origin})")
-
-
-def prepare_bibliography(
-    lines: list[SourceLine], manifest: PreflightManifest, project_dir: Path,
-    output_dir: Path,
-) -> tuple[list[SourceLine], list[Tombstone]]:
-    text = "".join(line.text for line in lines)
-    visible = _visible_source(text)
-    declarations = list(_BIB.finditer(visible))
-    if manifest.bibliography.kind == "BIBLATEX" or re.search(r"\\(?:addbibresource|printbibliography)\b", visible):
-        raise BibliographyPreparationError(
-            "Biblatex bibliography preparation requires a formatter for its metadata BBL; "
-            "it cannot be pasted as thebibliography. No master was published."
-        )
+def prepare_bibliography(pieces, session, output_dir: Path):
+    manifest, store = session.manifest, session.store
+    declarations = [p for p in pieces if p.command and p.command.action == "bibliography"]
+    if manifest.bibliography.kind == "BIBLATEX":
+        command = next(c for c in session.commands if c.action in {"biblatex_resource", "biblatex_print"})
+        return _preserve_declarations(pieces, session, command, "bibliography_formatter",
+            "Biblatex formatting is not implemented; bibliography source declarations are preserved")
     if not declarations:
-        return lines, []
+        return pieces
     if len(declarations) != 1:
-        raise BibliographyPreparationError("Multiple bibliography sites require separate preparation; no master was published")
-
-    root_path = project_dir / manifest.root_file
+        # The traversal inserts at the first site only. Later requests remain
+        # located and intact without retracting the already assembled first BBL.
+        declarations = declarations[:1]
+    declaration = declarations[0]
+    command = declaration.command
     existing = Path(manifest.bibliography.bbl_path) if manifest.bibliography.bbl_path else None
-    # Locate the declaring source for relative resources in an included file.
-    offset = 0
-    origin = root_path
-    for line in lines:
-        if offset <= declarations[0].start() < offset + len(line.text):
-            origin = project_dir / line.src_file
-            break
-        offset += len(line.text)
+    origin = store.root / command.span.basis.source_id
     resources = []
-    for name in declarations[0].group(1).split(","):
-        try:
-            path = _resource(name, ".bib", project_dir, origin)
-        except BibliographyPreparationError:
-            if existing and existing.is_file():
-                continue  # An existing formatted BBL needs no source databases.
-            raise
+    try:
+        names = command.value("names").split(",")
+    except ReadingIssue as error:
+        return _preserve_declarations(pieces, session, command, error.reason, error.detail)
+    for name in names:
+        target = name.strip()
+        if not target.endswith(".bib"):
+            target += ".bib"
+        path = next((p for d in dict.fromkeys([session.root.parent, store.root, origin.parent])
+                     if store.contains(p := (d / target).resolve())), None)
+        if path is None:
+            manifest.bibliography.missing_bib_files.append(target)
+            if existing:
+                continue
+            raise BibliographyPreparationError(f"Bibliography resource not found: {target} (from {origin})")
         if path not in resources:
             resources.append(path)
-    # One package-local database retains fields that formatted entries omit.
-    canonical = "\n".join(open_source(path).read().rstrip() + "\n" for path in resources)
-
-    keys = list(dict.fromkeys(key.strip() for match in _CITE.finditer(visible)
-                             for key in match.group(1).split(",")))
+            session.edge(command, path, "bibliography")
+    manifest.bibliography.bib_files = [session.name(p) for p in resources]
+    texts = [store.document(path).text for path in resources]
+    canonical = "\n".join(text.rstrip() + "\n" for text in texts)
+    keys = []
+    for piece in pieces:
+        if piece.command and piece.command.action == "citation":
+            try:
+                keys.extend(key.strip() for key in piece.command.value("keys").split(","))
+            except ReadingIssue as error:
+                session.require(piece.span, error.reason, error.detail)
+                keys.append("*")
+    keys = list(dict.fromkeys(keys))
     if any(not key or re.search(r"[\\{}%#\s]", key) for key in keys):
-        raise BibliographyPreparationError("Nonliteral citation key requires expansion before bibliography preparation")
-    if existing and existing.is_file():
-        bbl = open_source(existing).read()
+        return _preserve_declarations(pieces, session, command, "bibliography_keys",
+            "Nonliteral citation key requires expansion before bibliography preparation")
+    if existing:
+        bbl = ''.join(p.text for p in session.bibliography_pieces or ())
+        commands = [p.command for p in session.bibliography_pieces or () if p.command]
         backend = "existing-bbl"
     else:
+        known_keys = keys
+        if manifest.dependency_closure != "complete":
+            # Unread source may cite further entries. Do not silently discard
+            # those entries just because citation discovery was interrupted.
+            keys = ["*"]
         if not keys:
-            raise BibliographyPreparationError("No supported literal citation commands found; cannot choose bibliography entries")
+            # Citation bindings may not exist yet. Preserve available content in
+            # the canonical bibliography rather than leaving a raw-source pointer.
+            keys = ["*"]
         database = Database()
         try:
-            for resource in resources:
-                database.read(open_source(resource).read(), str(resource))
+            for resource, text in zip(resources, texts):
+                database.read(text, str(resource))
+            # Including all entries for incomplete discovery must not conceal
+            # a concrete missing key which was already observed.
+            database.selected(known_keys)
             bbl = extraction_bbl(database, keys)
-        except BibTeXError as exc:
-            raise BibliographyPreparationError(str(exc)) from exc
+        except BibTeXError as error:
+            raise BibliographyPreparationError(str(error)) from error
         backend = "native-bibtex"
         manifest.bibliography.preparation_warnings = database.diagnostics
-    if not re.search(r"\\begin\{thebibliography\}", bbl) or not re.search(r"\\end\{thebibliography\}", bbl):
-        raise BibliographyPreparationError("Prepared .bbl does not contain a complete thebibliography environment")
-    entry_keys = set(_ITEM.findall(bbl))
+        # The formatter knows the emitted envelope and selected keys. Missing
+        # reading knowledge about field values cannot veto that serialization.
+        entry_keys = {entry.key for entry in database.selected(keys)}
+        _audit_generated(bbl, session)
+    if existing:
+        environments = {c.action for c in commands if c.metadata.get("bibliography")}
+        if not {"environment_begin", "environment_end"} <= environments:
+            raise BibliographyPreparationError("Prepared .bbl does not contain a complete thebibliography environment")
+        entry_keys = {c.value(c.metadata["bibliography_key"]) for c in commands if c.metadata.get("bibliography_key")}
     missing = [key for key in keys if key != "*" and key not in entry_keys]
     if missing:
         raise BibliographyPreparationError("Bibliography entries missing for citation keys: " + ", ".join(missing))
-
     if canonical:
         (output_dir / "bibliography.bib").write_text(canonical, encoding="utf-8", newline="\n")
     (output_dir / "bibliography.bbl").write_text(bbl, encoding="utf-8", newline="\n")
-    manifest.bibliography.prepared_bbl = "bibliography.bbl"
-    manifest.bibliography.canonical_bib = "bibliography.bib" if canonical else None
-    manifest.bibliography.preparation_backend = backend
-    manifest.bibliography.bbl_needed = False
-    manifest.bibliography.citations_count = len(entry_keys)
-
-    # Replace only command spans; adjacent manuscript text survives.
-    edits = [(m.start(), m.end(), False) for m in _STYLE.finditer(visible)]
-    edits.append((declarations[0].start(), declarations[0].end(), True))
+    info = manifest.bibliography
+    info.prepared_bbl = "bibliography.bbl"
+    info.canonical_bib = "bibliography.bib" if canonical else None
+    info.preparation_backend = backend
+    info.bbl_needed = False
+    info.citations_count = len(entry_keys)
+    # Distinguish generated bibliography from original-file provenance.
+    basis = SourceBasis(session.name(existing) if existing else "bibliography.bbl",
+                        len(manifest.input_occurrences), len(bbl))
     result = []
-    tombstones = []
-    cursor = 0
-    offset = 0
-    edits.sort()
-    edit_index = 0
-    for line in lines:
-        end = offset + len(line.text)
-        cursor = max(cursor, offset)
-        while edit_index < len(edits) and edits[edit_index][0] < end:
-            start, stop, insert = edits[edit_index]
-            if start > cursor:
-                result.append(SourceLine(text[cursor:start], line.src_file, line.src_line, line.op))
-            if insert:
-                result.extend(SourceLine(part, "bibliography.bbl", i, "SPLICE_BIB")
-                              for i, part in enumerate(bbl.splitlines(keepends=True), 1))
-            tombstones.append(Tombstone(line.src_file, line.src_line, line.src_line,
-                                        "PREPARE_BIB", "Replaced by prepared inline bibliography"))
-            cursor = stop
-            edit_index += 1
-        if cursor < end:
-            result.append(SourceLine(text[cursor:end], line.src_file, line.src_line, line.op))
-        offset = end
-    return result, tombstones
+    for piece in pieces:
+        if piece is declaration:
+            if not existing:
+                result.append(SourcePiece(bbl, basis.whole, 1, "SPLICE_BIB",
+                                          source_end_line=1 + len(re.findall(r"\r\n|\r|\n", bbl.rstrip("\r\n")))))
+        elif not (piece.command and piece.command.action == "bibliography_style"):
+            result.append(piece)
+    return result
 
 
-def _clean_bib_entry(b: str) -> str:
-    b = b.strip()
-    if not b:
-        return ""
-    return b if b.lower().endswith(".bib") else f"{b}.bib"
+def _audit_generated(text, session):
+    """Audit generated TeX values for unresolved reading, without vetoing output.
 
+    Existing BBLs run at their input position in the document traversal. Native
+    formatting happens later, so new effects/dependencies cannot be executed here
+    and retroactively applied to the already-read manuscript.
+    """
+    context = session.bibliography_context.copy()
+    reader = TexReader(text, source_id="bibliography.bbl", catcodes=context.catcodes,
+                       endline_char=context.endlinechar)
+    dispatcher = StructuralDispatcher(reader, context, session.bibliography_knowledge, source_commands=True, preparation=True)
+    def report(span, reason, detail, *, preparation=False):
+        location = {"source": "bibliography.bbl", "occurrence": None,
+                    "start": span.start, "end": span.end,
+                    "line": text.count("\n", 0, span.start) + 1}
+        if preparation:
+            session.manifest.unresolved.append(dict(location, reason="bibliography_reading", detail=detail))
+            session.manifest.bibliography.preparation_warnings.append(
+                f"bibliography.bbl:{location['line']} ({span.start}:{span.end}): {detail}")
+        else:
+            session.manifest.requirements.append(dict(location, reason=reason, detail=detail, stage="interpretation"))
 
-def _characterize_bibliography(
-    p_dir: Path,
-    base_name: str,
-    aux_path: Path,
-    bcf_path: Path,
-    bbl_path: Path,
-    active_paths: Set[Path]
-) -> BibliographyInfo:
-    """Classifies bibliography structure, multi-database declarations, and tracks citation volume."""
-    bbl_exists = bbl_path.exists()
-    bib_files: List[str] = []
-    citations_count = 0
-    root_tex = bbl_path.with_suffix(".tex")
+    def inspect_tokens(tokens, *, reported_start=None):
+        for token in tokens:
+            if token.kind != TokenKind.CONTROL_SEQUENCE:
+                continue
+            profile = session.bibliography_knowledge.resolve_command(token.value)
+            action = getattr(profile, "action", None)
+            if action not in (None, "opaque"):
+                report(token.span, "deferred_dependency", f"Generated field contains {token.value!r} ({action}) requiring resolution",
+                       preparation=True)
+            elif not getattr(profile, "family", None) and token.span.start != reported_start:
+                report(token.span, "unknown_construct", f"Generated field retains unexpanded {token.value!r}")
 
-    # 1. BibLaTeX detection via .bcf
-    if bcf_path.exists():
-        with open_source(bcf_path) as f:
-            bcf_text = f.read()
-            citations_count = len(re.findall(r"<bcf:citekey", bcf_text))
-            bib_matches = re.findall(r"<bcf:datasource[^>]*>([^<]+)</bcf:datasource>", bcf_text)
-            for m in bib_matches:
-                cleaned = _clean_bib_entry(m)
-                if cleaned and cleaned not in bib_files:
-                    bib_files.append(cleaned)
-
-        missing_bibs = [b for b in bib_files if not (p_dir / b).exists()]
-
-        return BibliographyInfo(
-            kind="BIBLATEX",
-            backend="biber",
-            bbl_path=bbl_path.as_posix() if bbl_exists else None,
-            bbl_exists=bbl_exists,
-            bbl_needed=not bbl_exists,
-            bib_files=bib_files,
-            missing_bib_files=missing_bibs,
-            citations_count=citations_count
-        )
-
-    # 2. Classic BibTeX / Natbib detection via .aux
-    if aux_path.exists():
-        with open_source(aux_path) as f:
-            for line in f:
-                if line.startswith(r"\citation{"):
-                    citations_count += 1
-                elif line.startswith(r"\bibdata{"):
-                    raw = line[9:].rstrip("}\n\r")
-                    for b in raw.split(","):
-                        cleaned = _clean_bib_entry(b)
-                        if cleaned and cleaned not in bib_files:
-                            bib_files.append(cleaned)
-
-    # 3. Static fallback: scan root .tex source if .aux was missing or didn't find bibdata
-    if not bib_files and root_tex.exists():
-        with open_source(root_tex) as f:
-            tex_content = f.read()
-
-        # Check for multi-bib \bibliography{chaos, ref, sub/more}
-        bib_matches = re.finditer(r"\\bibliography\s*\{([^}]+)\}", tex_content)
-        for m in bib_matches:
-            raw_inside = re.sub(r"%.*", "", m.group(1))
-            for piece in raw_inside.split(","):
-                cleaned = _clean_bib_entry(piece)
-                if cleaned and cleaned not in bib_files:
-                    bib_files.append(cleaned)
-
-        # Check for biblatex \addbibresource
-        res_matches = re.finditer(r"\\addbibresource(?:\s*\[[^\]]*\])?\s*\{([^}]+)\}", tex_content)
-        is_biblatex_source = False
-        for m in res_matches:
-            is_biblatex_source = True
-            raw_inside = re.sub(r"%.*", "", m.group(1))
-            cleaned = _clean_bib_entry(raw_inside)
-            if cleaned and cleaned not in bib_files:
-                bib_files.append(cleaned)
-
-        if is_biblatex_source:
-            missing_bibs = [b for b in bib_files if not (p_dir / b).exists()]
-            return BibliographyInfo(
-                kind="BIBLATEX",
-                backend="biber",
-                bbl_path=bbl_path.as_posix() if bbl_exists else None,
-                bbl_exists=bbl_exists,
-                bbl_needed=not bbl_exists,
-                bib_files=bib_files,
-                missing_bib_files=missing_bibs,
-                citations_count=citations_count
-            )
-
-    if bib_files:
-        missing_bibs = [b for b in bib_files if not (p_dir / b).exists()]
-        return BibliographyInfo(
-            kind="CLASSIC_BIBTEX",
-            backend="bibtex",
-            bbl_path=bbl_path.as_posix() if bbl_exists else None,
-            bbl_exists=bbl_exists,
-            bbl_needed=not bbl_exists,
-            bib_files=bib_files,
-            missing_bib_files=missing_bibs,
-            citations_count=citations_count
-        )
-
-    # 4. Check for hardcoded thebibliography in root source
-    if root_tex.exists():
-        with open_source(root_tex) as f:
-            content = f.read()
-            if r"\begin{thebibliography}" in content:
-                cites = len(re.findall(r"\\bibitem", content))
-                return BibliographyInfo(
-                    kind="EMBEDDED",
-                    backend=None,
-                    bbl_path=None,
-                    bbl_exists=False,
-                    bbl_needed=False,
-                    bib_files=[],
-                    missing_bib_files=[],
-                    citations_count=cites
-                )
-
-    # 5. Check if matching .bbl already exists on disk
-    if bbl_exists:
-        return BibliographyInfo(
-            kind="PRECOMPILED_BBL",
-            backend=None,
-            bbl_path=bbl_path.as_posix(),
-            bbl_exists=True,
-            bbl_needed=False,
-            bib_files=[],
-            missing_bib_files=[],
-            citations_count=0
-        )
-
-    return BibliographyInfo(
-        kind="NONE",
-        backend=None,
-        bbl_path=None,
-        bbl_exists=False,
-        bbl_needed=False,
-        bib_files=[],
-        missing_bib_files=[],
-        citations_count=0
-    )
+    for item in dispatcher:
+        if isinstance(item, ReadingBoundary):
+            report(item.span, item.reason, item.detail, preparation=True)
+        if isinstance(item, DeferredRegion):
+            report(item.span, item.reason, item.detail, preparation=item.reason == "package_not_loaded")
+            inspect_tokens(item.tokens, reported_start=item.span.start)
+            continue
+        if isinstance(item, SourceCommand):
+            if item.action not in {"opaque", "environment_begin", "environment_end"}:
+                report(item.span, item.action, f"Generated bibliography contains {item.action} requiring resolution", preparation=True)
+            inspect_tokens(t for arg in item.arguments for t in arg.tokens)
+        elif not isinstance(item, (ReadEvent, SourceEnd, ReadingBoundary)):
+            report(item.span, "generated_structure", "Generated bibliography contains a definition or literal requiring earlier resolution", preparation=True)
+        elif isinstance(item, ReadEvent) and item.token and item.token.kind == TokenKind.CONTROL_SEQUENCE:
+            # Explicit control sequences are routed as SourceCommands above;
+            # an implicit paragraph token is safe. Effects/conditionals are not.
+            if item.token.value != "par":
+                report(item.span, "reading_effect", "Generated bibliography changes reading state", preparation=True)
 
 
 def extraction_bbl(database: Database, keys: list[str]) -> str:

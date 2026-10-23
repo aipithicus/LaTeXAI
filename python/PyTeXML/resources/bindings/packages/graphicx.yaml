@@ -1,0 +1,34 @@
+identity:
+  package: graphicx
+  description: Reading contracts for literal graphics dependencies; rendering stays
+    downstream
+reading:
+  commands:
+  - name: \includegraphics
+    family: source_command
+    action: asset_reference
+    grammar:
+      handler: source_arguments
+      arguments:
+      - name: star
+        kind: star
+      - name: options
+        kind: optional
+      - name: target
+        kind: braced
+  - name: \graphicspath
+    family: source_command
+    action: asset_search_paths
+    grammar:
+      handler: source_arguments
+      arguments:
+      - name: directories
+        kind: braced
+  - name: \DeclareGraphicsExtensions
+    family: source_command
+    action: asset_extensions
+    grammar:
+      handler: source_arguments
+      arguments:
+      - name: extensions
+        kind: braced

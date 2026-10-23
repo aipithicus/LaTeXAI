@@ -1,0 +1,25 @@
+identity:
+  package: import
+  description: Explicit import-directory source traversal
+reading:
+  commands:
+  - name: \import
+    family: source_command
+    action: source_import
+    grammar:
+      handler: source_arguments
+      arguments:
+      - name: directory
+        kind: braced
+      - name: target
+        kind: braced
+  - name: \subimport
+    family: source_command
+    action: source_subimport
+    grammar:
+      handler: source_arguments
+      arguments:
+      - name: directory
+        kind: braced
+      - name: target
+        kind: braced

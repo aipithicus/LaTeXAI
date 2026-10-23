@@ -1,7 +1,7 @@
 # Bindings Taxonomy & Organization
 
 This directory holds declarative reading contracts for the Python binding resolver.
-The preparation pipeline does not yet dispatch through these contracts. Downstream
+The preparation pipeline dispatches through supported reading contracts. Downstream
 interpretation and XML capture remain separate consumers under development.
 
 ## 1. Architectural Taxonomy
@@ -35,7 +35,7 @@ Constructs defined by the base TeX engine (`tex.web`) or the LaTeX 2e format (`l
 Constructs contributed by specific `.sty` packages or `.cls` document classes.
 * **Active status:** Dormant by default; the caller activates a known binding with
   `BindingResolver.load_package()`. Recognizing package declarations in source is
-  the future dispatcher's responsibility. Later first-time activations take
+  the preparation source owner's responsibility, using dispatcher command records. Later first-time activations take
   precedence; requesting an already active package does not reorder it.
 * **Separation of concerns:** 
   * `comment.sty` owns `\begin{comment}` and `\excludecomment`.
@@ -127,8 +127,7 @@ reads a non-expanding braced name and resolves its environment; `inline_characte
 handles a dynamic character delimiter; `token_delimited` scans an exact sequence
 of character tokens. The latter two handlers live in the delegated
 [LiteralScanner](../../src/reading/literal_scanner.py). These are reusable Python algorithms selected by YAML,
-not package-specific Python implementations. The preparation pipeline does not
-call them yet.
+not package-specific Python implementations. The preparation pipeline calls them through its ordered source traversal.
 
 The kernel entries specify the optional star, the starred binding identity,
 delimiter-prefix spaces and local delimiter category. Space skipping follows
@@ -203,8 +202,10 @@ meanings intact and preserve the declaration's source as boundary residue.
 
 Lookup checks stored meanings before selecting binding handlers, including implicit
 paragraph tokens and the entry/exit commands of a directly dispatched environment.
-A stored invocation currently stops at an explicit boundary; deciding whether it
-is reading-neutral requires later analysis. This is lexical capture and scoped
+A stored invocation stops at an explicit boundary in strict execution mode.
+Preparation instead captures it without expansion and records the need for later
+interpretation. It does not establish that the invocation is reading-neutral.
+This is lexical capture and scoped
 shadowing, not complete TeX meaning validation: prefix/outer/protected semantics,
 LaTeX declaration wrappers, global assignments and expansion remain future work.
 
@@ -259,5 +260,35 @@ apply; outer-macro checks and engine error recovery are not implemented.
 `then|else` branch identity. Executed delimiters are separate events. Unfinished
 skips retain unknown coverage from their start; completed empty branches still
 retain a record. `ReadingCoverage.query("skipped")` exposes established inactive
-extents without authorizing deletion. Production preparation does not use this
-dispatcher or scanner yet.
+extents without authorizing deletion. Production preparation consumes these
+dispatcher and scanner records through its cached source session.
+
+## Source traversal grammar
+
+Core declarations live in engine/source_traversal.yaml; graphicx and import
+each own one package binding. These are reading contracts, not the future
+expansion/XML schema. Command spelling and ordered argument shapes are declarative;
+ArgumentScanner implements the shared algorithms.
+
+A source_command declares an action and a source_arguments grammar. Each argument
+has a unique name and a kind: braced, optional, star, or filename. The scanner retains
+spans and unexpanded tokens. Resource names require literal characters.
+A structural_environment declares the same header grammar and optional metadata.
+The dispatcher owns environment grouping; the source owner handles resource requests.
+Bounded opaque arguments retain unexpanded source. Their expressions become
+located requirements; dependencies inside those arguments require their owning
+context before they can be resolved. A computed resource argument defers that
+command while traversal continues beyond it.
+
+Bindings activate at the declaration, never retroactively. Local styles/classes
+are scanned from cached source under declared package catcodes and emitted separately;
+they are not replaced by same-named external bindings. Missing external bindings
+become requirements and do not prevent later inputs from being assembled.
+`source_command_syntax` can inspect a unique inactive package's argument grammar
+to capture a pending source command; this never activates or executes the binding.
+Inactive literal/effect handlers do not use that observational route.
+
+The dispatcher owns both strict execution routing and its explicit preparation
+capture mode. Deferred regions retain entry-catcode assumptions and remain unknown
+to structural coverage. Actual unsupported reading operations still produce
+boundaries; full package semantics and general macro expansion remain downstream.
