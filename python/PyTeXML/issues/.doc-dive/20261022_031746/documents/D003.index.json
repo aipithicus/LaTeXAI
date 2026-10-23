@@ -1,0 +1,1027 @@
+{
+  "schema": 2,
+  "id": "D003",
+  "path": "D:\\aipithicus\\LaTeXAI\\python\\PyTeXML\\issues\\gemini-pylatexml-review.md",
+  "bytes": 48695,
+  "sha256": "d65c2cabc41be4a9924aa2335978e05eb761f8e68568826e8acb21cb37bec018",
+  "mtimeMs": 1792450976619.7727,
+  "encoding": "utf-8",
+  "bom": false,
+  "newline": "crlf",
+  "headings": [
+    {
+      "hid": "H00",
+      "level": 0,
+      "title": "PREAMBLE",
+      "digest": "5531",
+      "line": 1,
+      "headingStart": 0,
+      "bodyStart": 0,
+      "subtreeEnd": 316
+    },
+    {
+      "hid": "H01",
+      "level": 1,
+      "title": "so i was last working on latexAI python port but temporarily rooted in the latexAI perl project while build the foundations and workout some things in python. im trying to recollect the status, between the code and the aipithicus-issues docops folders",
+      "digest": "cb2c",
+      "line": 21,
+      "headingStart": 316,
+      "bodyStart": 571,
+      "subtreeEnd": 8787
+    },
+    {
+      "hid": "H02",
+      "level": 4,
+      "title": "1. High-Level Orientation & Strategy",
+      "digest": "1c8d",
+      "line": 27,
+      "headingStart": 772,
+      "bodyStart": 815,
+      "subtreeEnd": 1805
+    },
+    {
+      "hid": "H03",
+      "level": 4,
+      "title": "2. Codebase Status (`d:/aipithicus/LaTeXAI`)",
+      "digest": "a158",
+      "line": 34,
+      "headingStart": 1805,
+      "bodyStart": 1856,
+      "subtreeEnd": 5211
+    },
+    {
+      "hid": "H04",
+      "level": 5,
+      "title": "A. The Python Components in [LaTeXAI/python/](file:///d:/aipithicus/LaTeXAI/python/)",
+      "digest": "72dc",
+      "line": 36,
+      "headingStart": 1858,
+      "bodyStart": 1950,
+      "subtreeEnd": 4734
+    },
+    {
+      "hid": "H05",
+      "level": 5,
+      "title": "B. Git Working Tree State",
+      "digest": "6f6d",
+      "line": 49,
+      "headingStart": 4734,
+      "bodyStart": 4767,
+      "subtreeEnd": 5211
+    },
+    {
+      "hid": "H06",
+      "level": 4,
+      "title": "3. DocOps Status (`d:/aipithicus/aipithicus-issues/LaTeXAI`)",
+      "digest": "27b4",
+      "line": 58,
+      "headingStart": 5211,
+      "bodyStart": 5278,
+      "subtreeEnd": 7663
+    },
+    {
+      "hid": "H07",
+      "level": 5,
+      "title": "A. Perl Baseline Settlement",
+      "digest": "600a",
+      "line": 60,
+      "headingStart": 5280,
+      "bodyStart": 5315,
+      "subtreeEnd": 5891
+    },
+    {
+      "hid": "H08",
+      "level": 5,
+      "title": "B. Python Extractor Audit & Gaps",
+      "digest": "9bdd",
+      "line": 66,
+      "headingStart": 5891,
+      "bodyStart": 5931,
+      "subtreeEnd": 6569
+    },
+    {
+      "hid": "H09",
+      "level": 5,
+      "title": "C. The Architectural Blueprint (Committed Today)",
+      "digest": "6a2e",
+      "line": 71,
+      "headingStart": 6569,
+      "bodyStart": 6625,
+      "subtreeEnd": 7663
+    },
+    {
+      "hid": "H10",
+      "level": 4,
+      "title": "4. Immediate Next Steps / Roadmap",
+      "digest": "5357",
+      "line": 82,
+      "headingStart": 7663,
+      "bodyStart": 7703,
+      "subtreeEnd": 8787
+    },
+    {
+      "hid": "H11",
+      "level": 1,
+      "title": "now i recall one of my questions since i last touched this. by metaphor, if this python project was a thermodynamical system obeying conservation of energy and whatnot would the span algebra engine result in a lower energy state than without it? my gut wants this to be true, but i fear i might be reaching for something. if it provides value in the larger system design or adds robustness, which i think it does in the sense that it can walk over broken syntax and return home to tell the tale without crashing.",
+      "digest": "aa87",
+      "line": 94,
+      "headingStart": 8787,
+      "bodyStart": 9303,
+      "subtreeEnd": 14252
+    },
+    {
+      "hid": "H12",
+      "level": 4,
+      "title": "1. Where the \"Lower Energy State\" Holds",
+      "digest": "9d31",
+      "line": 100,
+      "headingStart": 9492,
+      "bodyStart": 9538,
+      "subtreeEnd": 12344
+    },
+    {
+      "hid": "H13",
+      "level": 5,
+      "title": "A. Elimination of Coordinate Drift (Suppressing Microstate Chaos)",
+      "digest": "2c50",
+      "line": 104,
+      "headingStart": 9767,
+      "bodyStart": 9840,
+      "subtreeEnd": 10988
+    },
+    {
+      "hid": "H14",
+      "level": 5,
+      "title": "B. Canonical Normal Forms (Relaxation to Ground State)",
+      "digest": "efd7",
+      "line": 111,
+      "headingStart": 10988,
+      "bodyStart": 11050,
+      "subtreeEnd": 11560
+    },
+    {
+      "hid": "H15",
+      "level": 5,
+      "title": "C. Localized \"Thermal Baths\" for Broken Syntax",
+      "digest": "fa47",
+      "line": 115,
+      "headingStart": 11560,
+      "bodyStart": 11614,
+      "subtreeEnd": 12344
+    },
+    {
+      "hid": "H16",
+      "level": 4,
+      "title": "2. Where You Might Be \"Reaching\" (The Over-Engineering Trap)",
+      "digest": "78ce",
+      "line": 121,
+      "headingStart": 12344,
+      "bodyStart": 12411,
+      "subtreeEnd": 13371
+    },
+    {
+      "hid": "H17",
+      "level": 4,
+      "title": "3. The Verdict",
+      "digest": "d491",
+      "line": 133,
+      "headingStart": 13371,
+      "bodyStart": 13392,
+      "subtreeEnd": 14252
+    },
+    {
+      "hid": "H18",
+      "level": 1,
+      "title": "it could also mean unnecessary complexity in a trade-off with parsimony and perhaps harmony",
+      "digest": "e3f7",
+      "line": 146,
+      "headingStart": 14252,
+      "bodyStart": 14347,
+      "subtreeEnd": 18786
+    },
+    {
+      "hid": "H19",
+      "level": 4,
+      "title": "1. The Source of Disharmony: Space vs. Time",
+      "digest": "0ee3",
+      "line": 158,
+      "headingStart": 15189,
+      "bodyStart": 15239,
+      "subtreeEnd": 16123
+    },
+    {
+      "hid": "H20",
+      "level": 4,
+      "title": "2. The Danger: The Formal Ontology Trap",
+      "digest": "da4b",
+      "line": 169,
+      "headingStart": 16123,
+      "bodyStart": 16169,
+      "subtreeEnd": 16735
+    },
+    {
+      "hid": "H21",
+      "level": 4,
+      "title": "3. The Harmonious Sweet Spot: Radical Parsimony",
+      "digest": "3352",
+      "line": 180,
+      "headingStart": 16735,
+      "bodyStart": 16789,
+      "subtreeEnd": 18003
+    },
+    {
+      "hid": "H22",
+      "level": 4,
+      "title": "4. Summary",
+      "digest": "d5c4",
+      "line": 198,
+      "headingStart": 18003,
+      "bodyStart": 18020,
+      "subtreeEnd": 18786
+    },
+    {
+      "hid": "H23",
+      "level": 1,
+      "title": "well im not really concerned all that much with the stream nature of tex because im kind of trying to handle with discreteness in the sense of breaking stream parsing problem that latexML emulated with a great deal of excessive complexity by separating concerns in \"spatially\" (in code space) and temporaly (e.g. pipeline stages). This approach is already taking shape. I think even if it was just for the sake of not falling into the cliche of regex swamp, then its probably worth it",
+      "digest": "e65d",
+      "line": 208,
+      "headingStart": 18786,
+      "bodyStart": 19274,
+      "subtreeEnd": 22729
+    },
+    {
+      "hid": "H24",
+      "level": 4,
+      "title": "1. Breaking the LaTeXML Monolith",
+      "digest": "4a56",
+      "line": 212,
+      "headingStart": 19370,
+      "bodyStart": 19409,
+      "subtreeEnd": 21135
+    },
+    {
+      "hid": "H25",
+      "level": 4,
+      "title": "2. The \"Regex Swamp\" is the Real Alternative",
+      "digest": "0f74",
+      "line": 233,
+      "headingStart": 21135,
+      "bodyStart": 21186,
+      "subtreeEnd": 22183
+    },
+    {
+      "hid": "H26",
+      "level": 4,
+      "title": "3. Why It's Worth It",
+      "digest": "e04c",
+      "line": 247,
+      "headingStart": 22183,
+      "bodyStart": 22210,
+      "subtreeEnd": 22729
+    },
+    {
+      "hid": "H27",
+      "level": 1,
+      "title": "its also in how i break down the problems. this is demonstrated in my preprocessing stage in how i make a few passes before i've built master.tex and how i deal with some macros, but not others until later when im ready to call the bindings in full",
+      "digest": "6bbe",
+      "line": 258,
+      "headingStart": 22729,
+      "bodyStart": 22981,
+      "subtreeEnd": 26554
+    },
+    {
+      "hid": "H28",
+      "level": 4,
+      "title": "The Two Traps This Avoids",
+      "digest": "e011",
+      "line": 266,
+      "headingStart": 23258,
+      "bodyStart": 23290,
+      "subtreeEnd": 24271
+    },
+    {
+      "hid": "H29",
+      "level": 4,
+      "title": "The Phased Pipeline: Staged Resolution",
+      "digest": "3e41",
+      "line": 284,
+      "headingStart": 24271,
+      "bodyStart": 24316,
+      "subtreeEnd": 25888
+    },
+    {
+      "hid": "H30",
+      "level": 4,
+      "title": "Why This Breakdown Brings Harmony",
+      "digest": "73d9",
+      "line": 296,
+      "headingStart": 25888,
+      "bodyStart": 25928,
+      "subtreeEnd": 26554
+    },
+    {
+      "hid": "H31",
+      "level": 1,
+      "title": "i think i was also a bit stuck at last commit because i was unhappy with something about bindings or unsure about what i wanted to do and finalizing or at least getting an acceptable binding interface v1 design with schema for bindings is important at this juncture for handling preprocessing stages and more important later as well. but it impacts design and implementation of other things",
+      "digest": "2ad0",
+      "line": 305,
+      "headingStart": 26554,
+      "bodyStart": 26948,
+      "subtreeEnd": 32634
+    },
+    {
+      "hid": "H32",
+      "level": 4,
+      "title": "The Three Friction Points in the Current Bindings",
+      "digest": "cf15",
+      "line": 319,
+      "headingStart": 28053,
+      "bodyStart": 28109,
+      "subtreeEnd": 29732
+    },
+    {
+      "hid": "H33",
+      "level": 4,
+      "title": "What a Clean \"Binding Interface v1\" Needs to Be",
+      "digest": "4bc1",
+      "line": 342,
+      "headingStart": 29732,
+      "bodyStart": 29786,
+      "subtreeEnd": 31640
+    },
+    {
+      "hid": "H34",
+      "level": 5,
+      "title": "1. Typed Triggers",
+      "digest": "9ab7",
+      "line": 356,
+      "headingStart": 30321,
+      "bodyStart": 30346,
+      "subtreeEnd": 30469
+    },
+    {
+      "hid": "H35",
+      "level": 5,
+      "title": "2. Typed Argument Grammar (Executable by `TexReader`)",
+      "digest": "6de6",
+      "line": 364,
+      "headingStart": 30469,
+      "bodyStart": 30530,
+      "subtreeEnd": 30963
+    },
+    {
+      "hid": "H36",
+      "level": 5,
+      "title": "3. Concrete Lexical & Scope Effects",
+      "digest": "d8c8",
+      "line": 376,
+      "headingStart": 30963,
+      "bodyStart": 31006,
+      "subtreeEnd": 31334
+    },
+    {
+      "hid": "H37",
+      "level": 5,
+      "title": "4. Strict Boundary Contract",
+      "digest": "8231",
+      "line": 386,
+      "headingStart": 31334,
+      "bodyStart": 31369,
+      "subtreeEnd": 31640
+    },
+    {
+      "hid": "H38",
+      "level": 4,
+      "title": "Why Resolving This Unblocks Everything Else",
+      "digest": "4bf7",
+      "line": 398,
+      "headingStart": 31640,
+      "bodyStart": 31690,
+      "subtreeEnd": 32634
+    },
+    {
+      "hid": "H39",
+      "level": 1,
+      "title": "well i dunno, the thing is most bindings won't activate during this stage, a subset will and the rest just have their spans captured to be expanded later. however i dont think the interface will look very different for preprocessing vs later . the crux is the design of the bindings schema. i dont mind focusing on satisfying preprocessing but i also have to think about rewriting all of them if i want to update the schema later and i already have to rewrite a bunch of from perl no matter what. but maybe there's a happy path here",
+      "digest": "d928",
+      "line": 410,
+      "headingStart": 32634,
+      "bodyStart": 33170,
+      "subtreeEnd": 37855
+    },
+    {
+      "hid": "H40",
+      "level": 4,
+      "title": "The Realization: The Invariant Core is the *Argument Prototype*",
+      "digest": "d167",
+      "line": 420,
+      "headingStart": 33692,
+      "bodyStart": 33762,
+      "subtreeEnd": 34793
+    },
+    {
+      "hid": "H41",
+      "level": 4,
+      "title": "The Happy Path Schema: Two Halves of the Same Coin",
+      "digest": "42d5",
+      "line": 443,
+      "headingStart": 34793,
+      "bodyStart": 34850,
+      "subtreeEnd": 35817
+    },
+    {
+      "hid": "H42",
+      "level": 4,
+      "title": "Why This is the Happy Path",
+      "digest": "117b",
+      "line": 478,
+      "headingStart": 35817,
+      "bodyStart": 35850,
+      "subtreeEnd": 37415
+    },
+    {
+      "hid": "H43",
+      "level": 4,
+      "title": "The Takeaway",
+      "digest": "91dc",
+      "line": 497,
+      "headingStart": 37415,
+      "bodyStart": 37434,
+      "subtreeEnd": 37855
+    },
+    {
+      "hid": "H44",
+      "level": 1,
+      "title": "im not sure its that mechanical yet, i think in some ways im actually leaning harder into bindings in the design so they are more complete and actually can substitute for the packages. because im hoping i dont need to rely on a tex emulation fallback and that lib-ctan will be a relatively dormant source of truth for cataloging the need and coverage of bindings instead of having pass throughs. because instead of human contributors, i have agents and in theory some specs for complete bindings capture",
+      "digest": "2aad",
+      "line": 508,
+      "headingStart": 37855,
+      "bodyStart": 38362,
+      "subtreeEnd": 42764
+    },
+    {
+      "hid": "H45",
+      "level": 4,
+      "title": "1. The Two Paradigms: Human Fallback vs. Agent Synthesis",
+      "digest": "5db4",
+      "line": 516,
+      "headingStart": 38606,
+      "bodyStart": 38669,
+      "subtreeEnd": 39790
+    },
+    {
+      "hid": "H46",
+      "level": 5,
+      "title": "The Old LaTeXML Paradigm (Human Shims + TeX Fallback)",
+      "digest": "b61c",
+      "line": 518,
+      "headingStart": 38671,
+      "bodyStart": 38732,
+      "subtreeEnd": 39289
+    },
+    {
+      "hid": "H47",
+      "level": 5,
+      "title": "Your Paradigm (Autonomous Complete Substitution)",
+      "digest": "c111",
+      "line": 523,
+      "headingStart": 39289,
+      "bodyStart": 39345,
+      "subtreeEnd": 39790
+    },
+    {
+      "hid": "H48",
+      "level": 4,
+      "title": "2. Why This Raised the Stakes for the Schema",
+      "digest": "659a",
+      "line": 530,
+      "headingStart": 39790,
+      "bodyStart": 39841,
+      "subtreeEnd": 40493
+    },
+    {
+      "hid": "H49",
+      "level": 4,
+      "title": "3. What \"Complete Substitution\" Demands from the Schema",
+      "digest": "4e8b",
+      "line": 540,
+      "headingStart": 40493,
+      "bodyStart": 40555,
+      "subtreeEnd": 41723
+    },
+    {
+      "hid": "H50",
+      "level": 4,
+      "title": "4. The Agent Synthesis Workflow",
+      "digest": "7135",
+      "line": 558,
+      "headingStart": 41723,
+      "bodyStart": 41761,
+      "subtreeEnd": 42764
+    },
+    {
+      "hid": "H51",
+      "level": 1,
+      "title": "ok and what about outstanding or unresolved issues",
+      "digest": "593a",
+      "line": 579,
+      "headingStart": 42764,
+      "bodyStart": 42818,
+      "subtreeEnd": 48695
+    },
+    {
+      "hid": "H52",
+      "level": 4,
+      "title": "1. The Python Extractor Frontier (In-Flight Architecture)",
+      "digest": "f1e1",
+      "line": 585,
+      "headingStart": 42949,
+      "bodyStart": 43013,
+      "subtreeEnd": 44974
+    },
+    {
+      "hid": "H53",
+      "level": 4,
+      "title": "2. The Binding Schema Crux (What Was Blocking You)",
+      "digest": "2e1e",
+      "line": 601,
+      "headingStart": 44974,
+      "bodyStart": 45031,
+      "subtreeEnd": 46263
+    },
+    {
+      "hid": "H54",
+      "level": 4,
+      "title": "3. The 7 Legacy Prototype Bugs Being Retired",
+      "digest": "f03d",
+      "line": 617,
+      "headingStart": 46263,
+      "bodyStart": 46314,
+      "subtreeEnd": 47448
+    },
+    {
+      "hid": "H55",
+      "level": 4,
+      "title": "4. The Perl Pipeline & Corpus Backlog (Parked / Ready)",
+      "digest": "0976",
+      "line": 633,
+      "headingStart": 47448,
+      "bodyStart": 47509,
+      "subtreeEnd": 48695
+    }
+  ],
+  "counts": [
+    9,
+    0,
+    0,
+    32,
+    14,
+    0
+  ],
+  "spine": {
+    "bytes": 3097,
+    "ratio": 0.06359995892802135
+  },
+  "breaks": [
+    {
+      "sid": "S01",
+      "line": 1,
+      "start": 0,
+      "end": 5,
+      "label": "---"
+    },
+    {
+      "sid": "S02",
+      "line": 19,
+      "start": 309,
+      "end": 314,
+      "label": "- subagents"
+    },
+    {
+      "sid": "S03",
+      "line": 25,
+      "start": 765,
+      "end": 770,
+      "label": "---"
+    },
+    {
+      "sid": "S04",
+      "line": 32,
+      "start": 1798,
+      "end": 1803,
+      "label": "---"
+    },
+    {
+      "sid": "S05",
+      "line": 56,
+      "start": 5204,
+      "end": 5209,
+      "label": "---"
+    },
+    {
+      "sid": "S06",
+      "line": 80,
+      "start": 7656,
+      "end": 7661,
+      "label": "---"
+    },
+    {
+      "sid": "S07",
+      "line": 92,
+      "start": 8780,
+      "end": 8785,
+      "label": "---"
+    },
+    {
+      "sid": "S08",
+      "line": 98,
+      "start": 9485,
+      "end": 9490,
+      "label": "---"
+    },
+    {
+      "sid": "S09",
+      "line": 119,
+      "start": 12337,
+      "end": 12342,
+      "label": "---"
+    },
+    {
+      "sid": "S10",
+      "line": 131,
+      "start": 13364,
+      "end": 13369,
+      "label": "---"
+    },
+    {
+      "sid": "S11",
+      "line": 144,
+      "start": 14245,
+      "end": 14250,
+      "label": "---"
+    },
+    {
+      "sid": "S12",
+      "line": 156,
+      "start": 15182,
+      "end": 15187,
+      "label": "---"
+    },
+    {
+      "sid": "S13",
+      "line": 167,
+      "start": 16116,
+      "end": 16121,
+      "label": "---"
+    },
+    {
+      "sid": "S14",
+      "line": 178,
+      "start": 16728,
+      "end": 16733,
+      "label": "---"
+    },
+    {
+      "sid": "S15",
+      "line": 196,
+      "start": 17996,
+      "end": 18001,
+      "label": "---"
+    },
+    {
+      "sid": "S16",
+      "line": 206,
+      "start": 18779,
+      "end": 18784,
+      "label": "---"
+    },
+    {
+      "sid": "S17",
+      "line": 231,
+      "start": 21128,
+      "end": 21133,
+      "label": "---"
+    },
+    {
+      "sid": "S18",
+      "line": 245,
+      "start": 22176,
+      "end": 22181,
+      "label": "---"
+    },
+    {
+      "sid": "S19",
+      "line": 256,
+      "start": 22722,
+      "end": 22727,
+      "label": "---"
+    },
+    {
+      "sid": "S20",
+      "line": 264,
+      "start": 23251,
+      "end": 23256,
+      "label": "---"
+    },
+    {
+      "sid": "S21",
+      "line": 282,
+      "start": 24264,
+      "end": 24269,
+      "label": "---"
+    },
+    {
+      "sid": "S22",
+      "line": 294,
+      "start": 25881,
+      "end": 25886,
+      "label": "---"
+    },
+    {
+      "sid": "S23",
+      "line": 303,
+      "start": 26547,
+      "end": 26552,
+      "label": "---"
+    },
+    {
+      "sid": "S24",
+      "line": 317,
+      "start": 28046,
+      "end": 28051,
+      "label": "---"
+    },
+    {
+      "sid": "S25",
+      "line": 340,
+      "start": 29725,
+      "end": 29730,
+      "label": "---"
+    },
+    {
+      "sid": "S26",
+      "line": 396,
+      "start": 31633,
+      "end": 31638,
+      "label": "---"
+    },
+    {
+      "sid": "S27",
+      "line": 408,
+      "start": 32627,
+      "end": 32632,
+      "label": "---"
+    },
+    {
+      "sid": "S28",
+      "line": 418,
+      "start": 33685,
+      "end": 33690,
+      "label": "---"
+    },
+    {
+      "sid": "S29",
+      "line": 441,
+      "start": 34786,
+      "end": 34791,
+      "label": "---"
+    },
+    {
+      "sid": "S30",
+      "line": 495,
+      "start": 37408,
+      "end": 37413,
+      "label": "---"
+    },
+    {
+      "sid": "S31",
+      "line": 506,
+      "start": 37848,
+      "end": 37853,
+      "label": "---"
+    },
+    {
+      "sid": "S32",
+      "line": 514,
+      "start": 38599,
+      "end": 38604,
+      "label": "---"
+    },
+    {
+      "sid": "S33",
+      "line": 528,
+      "start": 39783,
+      "end": 39788,
+      "label": "---"
+    },
+    {
+      "sid": "S34",
+      "line": 538,
+      "start": 40486,
+      "end": 40491,
+      "label": "---"
+    },
+    {
+      "sid": "S35",
+      "line": 556,
+      "start": 41716,
+      "end": 41721,
+      "label": "---"
+    },
+    {
+      "sid": "S36",
+      "line": 577,
+      "start": 42757,
+      "end": 42762,
+      "label": "---"
+    },
+    {
+      "sid": "S37",
+      "line": 583,
+      "start": 42942,
+      "end": 42947,
+      "label": "---"
+    },
+    {
+      "sid": "S38",
+      "line": 599,
+      "start": 44967,
+      "end": 44972,
+      "label": "---"
+    },
+    {
+      "sid": "S39",
+      "line": 615,
+      "start": 46256,
+      "end": 46261,
+      "label": "---"
+    },
+    {
+      "sid": "S40",
+      "line": 631,
+      "start": 47441,
+      "end": 47446,
+      "label": "---"
+    }
+  ],
+  "maxLine": 653,
+  "noise": [
+    {
+      "kind": "html",
+      "start": 24642,
+      "end": 24646,
+      "bytes": 4
+    },
+    {
+      "kind": "html",
+      "start": 24692,
+      "end": 24696,
+      "bytes": 4
+    },
+    {
+      "kind": "html",
+      "start": 24751,
+      "end": 24755,
+      "bytes": 4
+    },
+    {
+      "kind": "html",
+      "start": 24797,
+      "end": 24801,
+      "bytes": 4
+    },
+    {
+      "kind": "html",
+      "start": 24839,
+      "end": 24843,
+      "bytes": 4
+    },
+    {
+      "kind": "html",
+      "start": 24932,
+      "end": 24936,
+      "bytes": 4
+    },
+    {
+      "kind": "html",
+      "start": 24979,
+      "end": 24983,
+      "bytes": 4
+    },
+    {
+      "kind": "html",
+      "start": 25021,
+      "end": 25025,
+      "bytes": 4
+    },
+    {
+      "kind": "html",
+      "start": 25289,
+      "end": 25293,
+      "bytes": 4
+    },
+    {
+      "kind": "html",
+      "start": 25333,
+      "end": 25337,
+      "bytes": 4
+    },
+    {
+      "kind": "html",
+      "start": 25611,
+      "end": 25615,
+      "bytes": 4
+    },
+    {
+      "kind": "html",
+      "start": 25643,
+      "end": 25647,
+      "bytes": 4
+    },
+    {
+      "kind": "html",
+      "start": 25686,
+      "end": 25690,
+      "bytes": 4
+    },
+    {
+      "kind": "html",
+      "start": 29543,
+      "end": 29556,
+      "bytes": 13
+    },
+    {
+      "kind": "html",
+      "start": 30870,
+      "end": 30877,
+      "bytes": 7
+    },
+    {
+      "kind": "html",
+      "start": 34225,
+      "end": 34244,
+      "bytes": 19
+    },
+    {
+      "kind": "html",
+      "start": 34246,
+      "end": 34256,
+      "bytes": 10
+    },
+    {
+      "kind": "html",
+      "start": 34547,
+      "end": 34569,
+      "bytes": 22
+    },
+    {
+      "kind": "html",
+      "start": 34571,
+      "end": 34582,
+      "bytes": 11
+    },
+    {
+      "kind": "html",
+      "start": 34616,
+      "end": 34626,
+      "bytes": 10
+    },
+    {
+      "kind": "html",
+      "start": 34629,
+      "end": 34640,
+      "bytes": 11
+    },
+    {
+      "kind": "html",
+      "start": 34675,
+      "end": 34694,
+      "bytes": 19
+    },
+    {
+      "kind": "html",
+      "start": 34696,
+      "end": 34706,
+      "bytes": 10
+    },
+    {
+      "kind": "html",
+      "start": 34742,
+      "end": 34755,
+      "bytes": 13
+    },
+    {
+      "kind": "html",
+      "start": 34760,
+      "end": 34774,
+      "bytes": 14
+    }
+  ],
+  "setextSuspects": [
+    19
+  ],
+  "frontmatter": {
+    "start": 0,
+    "end": 314
+  }
+}

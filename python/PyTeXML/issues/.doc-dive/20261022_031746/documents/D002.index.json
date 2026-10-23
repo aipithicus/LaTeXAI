@@ -1,0 +1,146 @@
+{
+  "schema": 2,
+  "id": "D002",
+  "path": "D:\\aipithicus\\LaTeXAI\\python\\PyTeXML\\issues\\gemini-bindings-policy-profiles-etc.md",
+  "bytes": 7975,
+  "sha256": "64380d8eb588d8a3de66ed59ba0b65a705b293e25fd529e3a8c7782c9154232d",
+  "mtimeMs": 1792473272630.5452,
+  "encoding": "utf-8",
+  "bom": false,
+  "newline": "crlf",
+  "headings": [
+    {
+      "hid": "H00",
+      "level": 0,
+      "title": "PREAMBLE",
+      "digest": "5531",
+      "line": 1,
+      "headingStart": 0,
+      "bodyStart": 0,
+      "subtreeEnd": 1980
+    },
+    {
+      "hid": "H01",
+      "level": 3,
+      "title": "1. `bindings/` vs. `capture/`: Why Both Have YAML Files",
+      "digest": "83e6",
+      "line": 50,
+      "headingStart": 1980,
+      "bodyStart": 2041,
+      "subtreeEnd": 4380
+    },
+    {
+      "hid": "H02",
+      "level": 4,
+      "title": "Concrete Example: `verbatim`",
+      "digest": "1d14",
+      "line": 59,
+      "headingStart": 2948,
+      "bodyStart": 2983,
+      "subtreeEnd": 3894
+    },
+    {
+      "hid": "H03",
+      "level": 4,
+      "title": "Another Example: `comment.sty`",
+      "digest": "320e",
+      "line": 84,
+      "headingStart": 3894,
+      "bodyStart": 3931,
+      "subtreeEnd": 4380
+    },
+    {
+      "hid": "H04",
+      "level": 3,
+      "title": "2. What `profiles/` Does",
+      "digest": "f436",
+      "line": 90,
+      "headingStart": 4380,
+      "bodyStart": 4410,
+      "subtreeEnd": 5486
+    },
+    {
+      "hid": "H05",
+      "level": 3,
+      "title": "3. What `policy/` Does",
+      "digest": "b90b",
+      "line": 103,
+      "headingStart": 5486,
+      "bodyStart": 5514,
+      "subtreeEnd": 6499
+    },
+    {
+      "hid": "H06",
+      "level": 3,
+      "title": "Summary Checklist for Directory Clean-Up",
+      "digest": "dc7e",
+      "line": 115,
+      "headingStart": 6499,
+      "bodyStart": 6545,
+      "subtreeEnd": 7975
+    }
+  ],
+  "counts": [
+    0,
+    0,
+    4,
+    2,
+    0,
+    0
+  ],
+  "spine": {
+    "bytes": 0,
+    "ratio": 0
+  },
+  "breaks": [
+    {
+      "sid": "S01",
+      "line": 48,
+      "start": 1973,
+      "end": 1978,
+      "label": "---"
+    },
+    {
+      "sid": "S02",
+      "line": 88,
+      "start": 4373,
+      "end": 4378,
+      "label": "---"
+    },
+    {
+      "sid": "S03",
+      "line": 101,
+      "start": 5479,
+      "end": 5484,
+      "label": "---"
+    },
+    {
+      "sid": "S04",
+      "line": 113,
+      "start": 6492,
+      "end": 6497,
+      "label": "---"
+    }
+  ],
+  "maxLine": 369,
+  "noise": [
+    {
+      "kind": "html",
+      "start": 1808,
+      "end": 1833,
+      "bytes": 25
+    },
+    {
+      "kind": "html",
+      "start": 1880,
+      "end": 1893,
+      "bytes": 13
+    },
+    {
+      "kind": "html",
+      "start": 3856,
+      "end": 3888,
+      "bytes": 32
+    }
+  ]
+}

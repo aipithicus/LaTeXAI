@@ -1,0 +1,44 @@
+{
+  "schema": "pwsh_exec/invocation/0.1",
+  "id": "7f3da3551fef4e298a98422426370166",
+  "outcome": "exited",
+  "success": true,
+  "native_exit_code": 0,
+  "stdout": "",
+  "stderr": ".............................................................................................................................................................................................................................................................................................................................................................................\r\n----------------------------------------------------------------------\r\nRan 365 tests in 27.782s\r\n\r\nOK\r\n",
+  "capture": {
+    "stdout_bytes_observed": 0,
+    "stderr_bytes_observed": 471,
+    "stdout_bytes_retained": 0,
+    "stderr_bytes_retained": 471,
+    "stdout_truncated": false,
+    "stderr_truncated": false,
+    "stdout_decode_replaced": false,
+    "stderr_decode_replaced": false,
+    "stdout_path": "D:\\aipithicus\\LaTeXAI\\python\\PyTeXML\\temp\\test-runs\\20261023-preparation-commit\\stdout.bin",
+    "stderr_path": "D:\\aipithicus\\LaTeXAI\\python\\PyTeXML\\temp\\test-runs\\20261023-preparation-commit\\stderr.bin",
+    "result_path": "D:\\aipithicus\\LaTeXAI\\python\\PyTeXML\\temp\\test-runs\\20261023-preparation-commit\\result.json"
+  },
+  "timeout_seconds_requested": 150.0,
+  "timeout_seconds_effective": 150.0,
+  "cleanup": {
+    "status": "complete",
+    "job_object": "assigned",
+    "kill_on_job_close": true,
+    "diagnostics": []
+  },
+  "timing_ms": {
+    "elapsed": 30248.56,
+    "validation": 4.08,
+    "launch": 14.6,
+    "cleanup": 0.1
+  },
+  "powershell": {
+    "executable": "D:\\aghado01\\science-facility\\mcp\\pwsh_exec\\deps\\bin\\pwsh\\pwsh.exe",
+    "version": "7.6.4",
+    "dotnet": ".NET 10.0.10",
+    "profile": "D:\\aipithicus\\LaTeXAI\\scripts\\profile.ps1"
+  },
+  "cwd": "D:\\aipithicus\\LaTeXAI\\python\\PyTeXML",
+  "started_utc": "2026-10-23T18:31:10Z"
+}

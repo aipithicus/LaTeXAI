@@ -1,0 +1,6 @@
+{"doc":"D001","anchors":["H02","H03","H04","H05","H06","H07","H08","H09","H10","H11","H12","H17"],"basis":"d1","depth":1,"extent":"subtree","spans":[[679,1460],[1460,2610],[2610,4001],[4001,5274],[5274,6483],[6483,7318],[7318,8230],[8230,8983],[8983,10690],[10690,11526],[11526,14739],[14739,15718]],"bytes":15039,"elided":0,"elidedSpans":[]}
+{"doc":"D002","anchors":["H00","H01","H04","H05","H06"],"basis":"d1","depth":1,"extent":"subtree","spans":[[0,1980],[1980,4380],[4380,5486],[5486,6499],[6499,7975]],"bytes":7975,"elided":0,"elidedSpans":[]}
+{"doc":"D003","anchors":["H31","H39","H44"],"basis":"d1","depth":1,"extent":"subtree","spans":[[26554,32634],[32634,37855],[37855,42764]],"bytes":16210,"elided":0,"elidedSpans":[]}
+{"doc":"D002","anchors":["H01","H04"],"basis":"d1","depth":1,"extent":"subtree","spans":[[1980,4380],[4380,5486]],"bytes":3506,"elided":0,"elidedSpans":[]}
+{"doc":"D003","anchors":["H00","H01","H11","H18","H23","H27","H51"],"basis":"d1","depth":1,"extent":"subtree","spans":[[0,316],[316,8787],[8787,14252],[14252,18786],[18786,22729],[22729,26554],[42764,48695]],"bytes":32485,"elided":0,"elidedSpans":[]}
+{"doc":"D001","anchors":["H01"],"basis":"d1","depth":1,"extent":"subtree","spans":[[0,679]],"bytes":679,"elided":0,"elidedSpans":[]}

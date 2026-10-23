@@ -1,30 +1,3 @@
-Listed directory PyTeXML
-Listed directory capture
-Listed directory bindings
-Listed directory policy
-Listed directory profiles
-Listed directory recipes
-Viewed README.md:1-57
-Viewed README.md:1-102
-Viewed README.md:1-81
-Viewed README.md:1-92
-Listed directory gullet
-Listed directory mouth
-Viewed gemini-PyLaTeXML-notes.md:187-187
-Viewed gemini-PyLaTeXML-notes.md:1-187
-Viewed gemini-PyLaTeXML-notes.md:188-263
-Viewed gemini-PyLaTeXML-notes.md:260-263
-Viewed gemini-pylatexml-review.md:1-100
-Listed directory src
-Listed directory tests
-Viewed verbatim.yaml:1-40
-Viewed verbatim.yaml:1-40
-Viewed comment.yaml:1-45
-Viewed comment.yaml:1-20
-Viewed preflight.yaml:1-40
-Viewed latex_ascii.yaml:1-31
-Viewed raw_block.yaml:1-35
-
 The four configuration folders in [PyTeXML](file:///d:/aipithicus/LaTeXAI/python/PyTeXML) represent four distinct stages of the compilation pipeline, maintaining a strict separation between **lexical physics**, **syntactic reading**, **pipeline operations**, and **output representation**:
 
 ```

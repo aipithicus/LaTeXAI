@@ -6,6 +6,8 @@ bindings, lib-ctan etc
 
 LaTeX’s UTF-8 definitions map U+FEFF to \ifhmode\nobreak\fi, for example. That has a layout effect without printing a glyph. Your canonical projection can discard that effect after interpretation, while an optional presentation sidecar could retain it.
 
+ then let's start on the first span-engine milestone in PyTeXML: unchanged source in, structural and literal spans plus diagnostics out
+
 Full TeX interpretation, BibLaTeX adaptation, and contextual repair remain future work.
 
 1. Context-aware inlining and pruning across comments, verbatim, definitions, and conditionals.

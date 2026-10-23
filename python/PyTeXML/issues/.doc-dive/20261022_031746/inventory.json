@@ -1,0 +1,43 @@
+{
+  "schema": 2,
+  "stamp": "20261022_031746",
+  "workDir": "D:\\aipithicus\\LaTeXAI\\python\\PyTeXML\\issues\\.doc-dive\\20261022_031746",
+  "docs": [
+    {
+      "id": "D001",
+      "path": "D:\\aipithicus\\LaTeXAI\\python\\PyTeXML\\issues\\gemini-PyLaTeXML-notes.md",
+      "name": "gemini-PyLaTeXML-notes.md",
+      "bytes": 15718,
+      "grain": "0/0/13~15.3K",
+      "spineRatio": 0,
+      "levels": "0/0/13/4",
+      "notes": "breaks x11 (= h1-1) crlf",
+      "noiseRatio": 0.003,
+      "breaksUnaligned": false
+    },
+    {
+      "id": "D002",
+      "path": "D:\\aipithicus\\LaTeXAI\\python\\PyTeXML\\issues\\gemini-bindings-policy-profiles-etc.md",
+      "name": "gemini-bindings-policy-profiles-etc.md",
+      "bytes": 7975,
+      "grain": "0/0/4~7.8K",
+      "spineRatio": 0,
+      "levels": "0/0/4/2",
+      "notes": "breaks x4 (= h1-1) crlf",
+      "noiseRatio": 0.009,
+      "breaksUnaligned": false
+    },
+    {
+      "id": "D003",
+      "path": "D:\\aipithicus\\LaTeXAI\\python\\PyTeXML\\issues\\gemini-pylatexml-review.md",
+      "name": "gemini-pylatexml-review.md",
+      "bytes": 48695,
+      "grain": "9/9/9~5.3K",
+      "spineRatio": 0.064,
+      "levels": "9/0/0/32/14",
+      "notes": "breaks x40 (not h1-1) setext? x1 frontmatter crlf",
+      "noiseRatio": 0.004,
+      "breaksUnaligned": true
+    }
+  ]
+}

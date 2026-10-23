@@ -1,0 +1,77 @@
+{
+  "version": 2,
+  "coordinate_domain": "decoded_unicode_codepoints",
+  "segments": [
+    {
+      "generated": [
+        0,
+        27
+      ],
+      "source_file": "main.tex",
+      "occurrence": 0,
+      "source": [
+        0,
+        27
+      ],
+      "source_lines": [
+        1,
+        1
+      ],
+      "operation": "IDENTITY"
+    },
+    {
+      "generated": [
+        27,
+        28
+      ],
+      "source_file": "main.tex",
+      "occurrence": 0,
+      "source": [
+        27,
+        28
+      ],
+      "source_lines": [
+        1,
+        1
+      ],
+      "operation": "MOUTH_EMISSION"
+    },
+    {
+      "generated": [
+        28,
+        67
+      ],
+      "source_file": "main.tex",
+      "occurrence": 0,
+      "source": [
+        35,
+        74
+      ],
+      "source_lines": [
+        3,
+        3
+      ],
+      "operation": "IDENTITY"
+    }
+  ],
+  "master_length": 67,
+  "master_line_starts": [
+    0
+  ],
+  "sources": [
+    "main.tex"
+  ],
+  "operations": [
+    "IDENTITY",
+    "MOUTH_EMISSION"
+  ],
+  "tombstones": [
+    {
+      "src_file": "main.tex",
+      "src_start": 2,
+      "src_end": 2,
+      "op": "OMIT",
+      "reason": "Mouth discarded comment, spacing or ignored character"
+    }
+  ]
+}

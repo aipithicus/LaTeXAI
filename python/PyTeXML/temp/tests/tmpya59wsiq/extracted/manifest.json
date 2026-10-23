@@ -1,0 +1,130 @@
+{
+  "root_file": "main.tex",
+  "base_name": "main",
+  "project_dir": "D:\\aipithicus\\LaTeXAI\\python\\PyTeXML\\temp\\tests\\tmpya59wsiq",
+  "engine": "pytexml",
+  "bibliography": {
+    "kind": "NONE",
+    "backend": null,
+    "bbl_path": null,
+    "bbl_exists": false,
+    "bbl_needed": false,
+    "bib_files": [],
+    "missing_bib_files": [],
+    "citations_count": 0,
+    "prepared_bbl": null,
+    "canonical_bib": null,
+    "preparation_backend": null,
+    "preparation_warnings": []
+  },
+  "entrypoint": "master.tex",
+  "preparation_status": "complete",
+  "dependency_closure": "unresolved",
+  "source_dependency_closure": "complete",
+  "requirements": [
+    {
+      "source": "main.tex",
+      "occurrence": 0,
+      "start": 0,
+      "end": 27,
+      "line": 1,
+      "reason": "class_binding",
+      "detail": "No reading contract for class 'notyetbound'",
+      "stage": "binding"
+    }
+  ],
+  "source_survey": [
+    {
+      "source": "main.tex",
+      "basis": "independent_entry_profile",
+      "status": "observed",
+      "commands": [
+        {
+          "name": "documentclass",
+          "action": "document_class",
+          "context": "source_visible",
+          "start": 0,
+          "end": 27,
+          "arguments": {
+            "name": {
+              "literal": "notyetbound"
+            }
+          }
+        },
+        {
+          "name": "document",
+          "action": "environment_begin",
+          "context": "source_visible",
+          "start": 35,
+          "end": 51,
+          "arguments": {}
+        },
+        {
+          "name": "end",
+          "action": "environment_end",
+          "context": "source_visible",
+          "start": 60,
+          "end": 74,
+          "arguments": {
+            "name": {
+              "literal": "document"
+            }
+          }
+        },
+        {
+          "name": "par",
+          "context": "excluded_tail",
+          "start": 74,
+          "end": 74
+        }
+      ],
+      "protected": [],
+      "boundaries": [],
+      "length": 74
+    }
+  ],
+  "reading_assumptions": [
+    "Source-visible preparation does not expand macros. Unbound commands and packages are not assumed to generate inputs or change entry catcodes.",
+    "Uninterpreted math, environments and adjacent command groups retain their source; their contents are not executed."
+  ],
+  "input_occurrences": [
+    {
+      "id": 0,
+      "source": "main.tex",
+      "parent": null,
+      "unobserved": []
+    }
+  ],
+  "dependencies": [],
+  "unresolved": [],
+  "preserved_source_spans": [],
+  "unclassified_files": [],
+  "source_reads": [
+    "main.tex"
+  ],
+  "active_images": [],
+  "dormant_images": [],
+  "active_tex_files": [
+    "main.tex"
+  ],
+  "dormant_tex_files": [],
+  "packages_declared": [
+    {
+      "name": "notyetbound",
+      "options": [],
+      "is_local": false,
+      "local_path": null
+    }
+  ],
+  "local_styles": [],
+  "dormant_styles": [],
+  "code_inputs": [],
+  "implicit_graphics": [],
+  "implicit_graphics_count": 0,
+  "has_implicit_graphics": false,
+  "has_commutative_diagrams": false,
+  "has_tikz": false,
+  "has_tikz_external": false,
+  "has_minted": false,
+  "has_listings": false
+}

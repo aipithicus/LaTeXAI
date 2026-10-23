@@ -1,0 +1,289 @@
+{
+  "schema": 2,
+  "id": "D001",
+  "path": "D:\\aipithicus\\LaTeXAI\\python\\PyTeXML\\issues\\gemini-PyLaTeXML-notes.md",
+  "bytes": 15718,
+  "sha256": "5580d3a0d2ada6ad4f4ebf7dfa8065c028d95100c57762c0cd9f929dd4db727e",
+  "mtimeMs": 1792472866492.393,
+  "encoding": "utf-8",
+  "bom": false,
+  "newline": "crlf",
+  "headings": [
+    {
+      "hid": "H01",
+      "level": 3,
+      "title": "Formatting Highlights",
+      "digest": "4cd5",
+      "line": 1,
+      "headingStart": 0,
+      "bodyStart": 27,
+      "subtreeEnd": 679
+    },
+    {
+      "hid": "H02",
+      "level": 3,
+      "title": "The Fundamental Separation Criterion",
+      "digest": "3255",
+      "line": 10,
+      "headingStart": 679,
+      "bodyStart": 721,
+      "subtreeEnd": 1460
+    },
+    {
+      "hid": "H03",
+      "level": 3,
+      "title": "The 6 Kinds of Bindings",
+      "digest": "c306",
+      "line": 20,
+      "headingStart": 1460,
+      "bodyStart": 1489,
+      "subtreeEnd": 2610
+    },
+    {
+      "hid": "H04",
+      "level": 3,
+      "title": "1. Kind 1: Mouth & Lexical Mutators *(INITIAL — \"Hard\")*",
+      "digest": "f57b",
+      "line": 42,
+      "headingStart": 2610,
+      "bodyStart": 2674,
+      "subtreeEnd": 4001
+    },
+    {
+      "hid": "H05",
+      "level": 3,
+      "title": "2. Kind 2: Structural Inclusions & Exclusion Blocks *(INITIAL — \"Hard\")*",
+      "digest": "ed45",
+      "line": 69,
+      "headingStart": 4001,
+      "bodyStart": 4081,
+      "subtreeEnd": 5274
+    },
+    {
+      "hid": "H06",
+      "level": 3,
+      "title": "3. Kind 3: Definition & Environment Factories *(HYBRID — \"Hard\" to \"Medium\")*",
+      "digest": "59b8",
+      "line": 92,
+      "headingStart": 5274,
+      "bodyStart": 5359,
+      "subtreeEnd": 6483
+    },
+    {
+      "hid": "H07",
+      "level": 3,
+      "title": "4. Kind 4: Structural Alignments & 2-D Grids *(DEFERRED — \"Medium\")*",
+      "digest": "4afa",
+      "line": 115,
+      "headingStart": 6483,
+      "bodyStart": 6559,
+      "subtreeEnd": 7318
+    },
+    {
+      "hid": "H08",
+      "level": 3,
+      "title": "5. Kind 5: Notation Operators & Semantic Atoms *(DEFERRED — \"Easy\")*",
+      "digest": "5d83",
+      "line": 129,
+      "headingStart": 7318,
+      "bodyStart": 7394,
+      "subtreeEnd": 8230
+    },
+    {
+      "hid": "H09",
+      "level": 3,
+      "title": "6. Kind 6: Typesetting Furniture & Layout Hacks *(DEFERRED — \"Easy / Trivial\")*",
+      "digest": "4b8f",
+      "line": 148,
+      "headingStart": 8230,
+      "bodyStart": 8317,
+      "subtreeEnd": 8983
+    },
+    {
+      "hid": "H10",
+      "level": 3,
+      "title": "Summary Checklist for Schema Design",
+      "digest": "085b",
+      "line": 165,
+      "headingStart": 8983,
+      "bodyStart": 9024,
+      "subtreeEnd": 10690
+    },
+    {
+      "hid": "H11",
+      "level": 3,
+      "title": "1. The Core Distinction: Reading State vs. Macro Expansion",
+      "digest": "f68b",
+      "line": 190,
+      "headingStart": 10690,
+      "bodyStart": 10754,
+      "subtreeEnd": 11526
+    },
+    {
+      "hid": "H12",
+      "level": 3,
+      "title": "2. How Environmental Contexts Change Reading \"On the Fly\"",
+      "digest": "8f61",
+      "line": 201,
+      "headingStart": 11526,
+      "bodyStart": 11589,
+      "subtreeEnd": 14739
+    },
+    {
+      "hid": "H13",
+      "level": 4,
+      "title": "Zone 1: Standard Reading Context (Prose & Math)",
+      "digest": "597e",
+      "line": 218,
+      "headingStart": 12462,
+      "bodyStart": 12516,
+      "subtreeEnd": 12868
+    },
+    {
+      "hid": "H14",
+      "level": 4,
+      "title": "Zone 2: Opaque Literal Context (`verbatim`, `lstlisting`, `minted`)",
+      "digest": "d6dc",
+      "line": 225,
+      "headingStart": 12868,
+      "bodyStart": 12942,
+      "subtreeEnd": 13771
+    },
+    {
+      "hid": "H15",
+      "level": 4,
+      "title": "Zone 3: Escaped & Semi-Verbatim Contexts (`alltt`, `fancyvrb`, `listings`)",
+      "digest": "3b56",
+      "line": 236,
+      "headingStart": 13771,
+      "bodyStart": 13852,
+      "subtreeEnd": 14404
+    },
+    {
+      "hid": "H16",
+      "level": 4,
+      "title": "Zone 4: Exclusion Contexts (`comment.sty`, `\\excludecomment{draft}`)",
+      "digest": "3b50",
+      "line": 244,
+      "headingStart": 14404,
+      "bodyStart": 14479,
+      "subtreeEnd": 14739
+    },
+    {
+      "hid": "H17",
+      "level": 3,
+      "title": "3. Why This Prevents the Classic \"Regex Swamp\"",
+      "digest": "8da6",
+      "line": 252,
+      "headingStart": 14739,
+      "bodyStart": 14791,
+      "subtreeEnd": 15718
+    }
+  ],
+  "counts": [
+    0,
+    0,
+    13,
+    4,
+    0,
+    0
+  ],
+  "spine": {
+    "bytes": 0,
+    "ratio": 0
+  },
+  "breaks": [
+    {
+      "sid": "S01",
+      "line": 18,
+      "start": 1453,
+      "end": 1458,
+      "label": "---"
+    },
+    {
+      "sid": "S02",
+      "line": 40,
+      "start": 2603,
+      "end": 2608,
+      "label": "---"
+    },
+    {
+      "sid": "S03",
+      "line": 67,
+      "start": 3994,
+      "end": 3999,
+      "label": "---"
+    },
+    {
+      "sid": "S04",
+      "line": 90,
+      "start": 5267,
+      "end": 5272,
+      "label": "---"
+    },
+    {
+      "sid": "S05",
+      "line": 113,
+      "start": 6476,
+      "end": 6481,
+      "label": "---"
+    },
+    {
+      "sid": "S06",
+      "line": 127,
+      "start": 7311,
+      "end": 7316,
+      "label": "---"
+    },
+    {
+      "sid": "S07",
+      "line": 146,
+      "start": 8223,
+      "end": 8228,
+      "label": "---"
+    },
+    {
+      "sid": "S08",
+      "line": 163,
+      "start": 8976,
+      "end": 8981,
+      "label": "---"
+    },
+    {
+      "sid": "S09",
+      "line": 188,
+      "start": 10683,
+      "end": 10688,
+      "label": "---"
+    },
+    {
+      "sid": "S10",
+      "line": 199,
+      "start": 11519,
+      "end": 11524,
+      "label": "---"
+    },
+    {
+      "sid": "S11",
+      "line": 250,
+      "start": 14732,
+      "end": 14737,
+      "label": "---"
+    }
+  ],
+  "maxLine": 303,
+  "noise": [
+    {
+      "kind": "html",
+      "start": 247,
+      "end": 255,
+      "bytes": 8
+    },
+    {
+      "kind": "html",
+      "start": 7244,
+      "end": 7287,
+      "bytes": 43
+    }
+  ]
+}
