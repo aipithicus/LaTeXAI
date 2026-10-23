@@ -224,7 +224,7 @@ class StructuralDispatcher:
             if token.kind == TokenKind.ACTIVE_CHARACTER:
                 return DeferredRegion(event.span, "active_character", "Active character retained without expansion", (token,))
             if self.preparation and token.catcode == CatCode.MATH_SHIFT:
-                return deferred.math(event)
+                return deferred.math(token)
             if self.preparation and token.catcode == CatCode.ALIGNMENT_TAB:
                 return DeferredRegion(event.span, "alignment_interpretation", "Alignment retained without interpretation", (token,))
             if token.catcode in {CatCode.BEGIN_GROUP, CatCode.END_GROUP}:
@@ -346,30 +346,41 @@ class StructuralDispatcher:
         except InvalidCharacterError as error:
             return self._boundary(event.span, "invalid_character", str(error))
 
-    def _protect_deferred_environment(self, token) -> bool | DeferredRegion:
+    def _protect_deferred_environment(self, token, *, shadowed=()) -> bool | DeferredRegion | StoredDefinition:
         """Locate known protected syntax without executing an unbound body.
 
         Routing remains here, not in the envelope scanner. Reading effects and
         conditional control flow require the environment's missing contract.
         """
+        if token.catcode == CatCode.MATH_SHIFT:
+            return DeferredScanner(self.reader, self.context).math(token)
         if token.kind != TokenKind.CONTROL_SEQUENCE:
             return False
+        if token.value in shadowed:
+            return DeferredScanner(self.reader, self.context).command(
+                token, "stored_macro", "Unexecuted definition shadows the entry grammar")
         if self.context.lookup_definition(token.value) is not None:
             raise ReadingIssue("environment_reading", "A stored invocation inside an unbound environment needs reading resolution")
         profile = self.knowledge.resolve_command(token.value)
         if isinstance(profile, UnresolvedBindingResult):
+            if profile.reason == UnresolvedReason.PACKAGE_NOT_LOADED:
+                inspect = getattr(self.knowledge, "source_command_syntax", None)
+                syntax = inspect(token.value) if inspect else None
+                if syntax is not None:
+                    command = ArgumentScanner(self.reader, self.context).read(token.span, syntax)
+                    return DeferredRegion(command.span, profile.reason.value, profile.detail,
+                        (token,) + tuple(t for arg in command.arguments for t in arg.tokens), command, syntax.binding_id)
             if profile.reason != UnresolvedReason.UNKNOWN_CONSTRUCT:
                 raise ReadingIssue(profile.reason.value, profile.detail)
             return DeferredScanner(self.reader, self.context).command(token, profile.reason.value, profile.detail)
         if profile.family == "stored_definition":
-            self.definitions.read(token.span.start, profile)  # capture, never install
-            return True
+            return self.definitions.read(token.span.start, profile)  # capture, never install
         if profile.family in {"conditional", "catcode_mutator", "catcode_assignment", "grouping", "environment_factory"}:
             raise ReadingIssue("environment_reading", "Control flow or reading effects inside an unbound environment require resolution")
         if profile.family == "source_command" and profile.action != "environment_end":
             command = ArgumentScanner(self.reader, self.context).read(token.span, profile)
             return DeferredRegion(command.span, "environment_binding", "Source command inside an unbound environment",
-                                  (token,) + tuple(t for arg in command.arguments for t in arg.tokens))
+                                  (token,) + tuple(t for arg in command.arguments for t in arg.tokens), command, profile.binding_id)
         handler = profile.grammar.get("handler")
         if handler == "inline_character":
             self.literals.read(token.span.start, profile)

@@ -161,8 +161,9 @@ citation keys. Later extraction does not need to find raw `.bib` or `.bbl` paths
 - Biblatex metadata BBLs and multiple bibliography sites require additional
   support. The first classic site is prepared; subsequent sites are preserved
   and diagnosed. When citation discovery is incomplete, computed, or has no
-  supported citations, native formatting includes all available database entries
-  rather than leaving an unnecessary pointer to the original database.
+  supported citations, native formatting uses only observed literal keys;
+  unobserved metadata remains in the canonical bibliography resource. Only an
+  explicit `\nocite{*}` requests all entries.
   Rich-format formatting and metadata adapters belong in a later expansion of
   this contract.
 
@@ -173,7 +174,22 @@ formatting responsibilities. Harvesting/adapting those responsibilities must not
 require executing the Perl engine or interpreting BST programs during normal
 preparation. The eventual XML fields, rather than visual labels, own semantics.
 
-## Implicit graphics
+## File-backed and implicit graphics
+
+Direct image headers inside a captured, unbound environment are provisional
+observations under its entry reading and search state. Existing package YAML
+grammars supply the headers; the dispatcher protects comments, literals, stored
+bodies, math and opaque arguments. Preparation resolves literal filenames, emits
+SVG derivatives, and rewrites only the captured filename spans. It preserves the
+environment's other source and its unresolved reading contract.
+
+`candidate_dependencies` records these observations, their context spans and
+resolved payloads; `candidate_images` inventories resolved images not already in
+`active_images`. Neither is a claim that the environment executed. Missing,
+computed or ambiguous candidates and unsupported pages remain requirements, and
+an unexecuted search declaration prevents reuse of stale search settings. A
+rolled-back source operation does not retain its candidate assets in the payload.
+No per-environment Python exception or extra source-file read is required.
 
 Implicit assets are recorded from dispatched environment metadata. Initial
 coverage includes figure candidates; the old regex drawing/morphism detector

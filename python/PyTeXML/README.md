@@ -100,6 +100,25 @@ entry-catcode assumptions used for unbound behavior; `source_survey` records
 independent per-file observations, not execution. Deferred spans remain unknown
 in structural coverage even though their text has been captured.
 
+Unbound environments also retain `DeferredRegion.observations`: direct command
+headers scanned using existing YAML argument grammars. Preparation can resolve
+literal image filenames from these observations and emit their SVG derivatives
+without expanding the environment or executing its body. Captured filenames alone
+are rewritten; the surrounding environment source stays exact. The manifest keeps
+these in `candidate_dependencies` and `candidate_images`, separately from established
+active dependencies. A candidate shared with an active image is converted once.
+Prepared candidates record their payload paths and retain the unresolved reading
+context; they do not establish full dependency closure.
+
+Comments, known literals, stored bodies, math and opaque command arguments do not
+supply image observations. Missing/computed filenames, ambiguous matches and
+unsupported pages remain located requirements. An unexecuted graphics search-path
+or extension declaration prevents later candidates from using stale search settings.
+Reading effects and conditional flow inside an unbound environment still require
+resolution. This discovery uses the existing dispatcher cursor and source cache;
+it adds no package-specific Python, YAML exception for an author's environment,
+or compiler dependency.
+
 Genuine reading boundaries, including computed catcode assignments, predicates
 and literal grammars, still limit emission. The unfinished root operation and
 following suffix are preserved in that case, with `partial` status. The survey

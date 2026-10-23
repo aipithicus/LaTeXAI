@@ -2,7 +2,7 @@
 from __future__ import annotations
 from dataclasses import dataclass, replace
 from ..reading.spans import SourceSpan
-from ..reading.contracts import DeferredRegion
+from ..reading.contracts import DeferredRegion, SourceCommand
 from ..reading.tex_reader import ReadEvent, TokenKind, CatCode, EventKind, ReaderState
 
 
@@ -13,7 +13,7 @@ class SourcePiece:
     source_line: int
     operation: str = "IDENTITY"
     command: object | None = None
-    target: str | None = None
+    image_references: tuple[tuple[SourceCommand, str], ...] = ()
     source_end_line: int | None = None
     deferred: DeferredRegion | None = None
 

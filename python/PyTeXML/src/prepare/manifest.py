@@ -96,6 +96,7 @@ class PreflightManifest:
     reading_assumptions: List[str] = field(default_factory=list)
     input_occurrences: List[Dict[str, Any]] = field(default_factory=list)
     dependencies: List[Dict[str, Any]] = field(default_factory=list)
+    candidate_dependencies: List[Dict[str, Any]] = field(default_factory=list)
     unresolved: List[Dict[str, Any]] = field(default_factory=list)
     warnings: List[Dict[str, Any]] = field(default_factory=list)
     preserved_source_spans: List[Dict[str, Any]] = field(default_factory=list)
@@ -104,6 +105,7 @@ class PreflightManifest:
 
     # Assets
     active_images: List[ImageAssetInfo] = field(default_factory=list)
+    candidate_images: List[ImageAssetInfo] = field(default_factory=list)
     dormant_images: List[str] = field(default_factory=list)
 
     # TeX and Code Source Topology

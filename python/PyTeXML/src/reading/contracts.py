@@ -146,6 +146,9 @@ class DeferredRegion:
     # provider is not active. This is an observation, never an executed command.
     command: SourceCommand | None = None
     binding_id: str = ""
+    # Direct source-command headers captured inside an unbound environment.
+    # These remain observations, never execution events or expanded arguments.
+    observations: tuple[DeferredRegion, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)

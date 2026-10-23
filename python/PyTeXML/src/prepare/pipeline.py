@@ -6,7 +6,7 @@ from .session import PreparationSession
 from .manifest import PreflightManifest
 from .provenance import ProvenanceLedger
 from .bibliography import prepare_bibliography
-from .assets import batch_convert_assets_to_svg
+from .assets import batch_convert_assets_to_svg, rewrite_image_references
 
 
 def preprocess_paper(
@@ -63,18 +63,15 @@ def preprocess_paper(
             session.run()
             manifest = session.manifest
             pieces = prepare_bibliography(session.pieces, session, out_dir)
-            if manifest.active_images and not convert_images_to_svg:
-                raise ValueError("Active images require SVG conversion for a standalone extraction package")
-            if manifest.active_images:
-                mapping = batch_convert_assets_to_svg([Path(i.abs_path) for i in manifest.active_images], out_dir, p_dir)
-                rewritten = []
-                for piece in pieces:
-                    if piece.target is not None:
-                        arg = piece.command.argument("target")
-                        a, b = arg.span.start - piece.span.start, arg.span.end - piece.span.start
-                        piece = piece.rewritten(piece.text[:a] + mapping[piece.target] + piece.text[b:], "REWRITE_IMAGE")
-                    rewritten.append(piece)
-                pieces = rewritten
+            images = manifest.active_images + manifest.candidate_images
+            if images and not convert_images_to_svg:
+                raise ValueError("Referenced images require SVG conversion for a standalone extraction package")
+            if images:
+                mapping = batch_convert_assets_to_svg([Path(i.abs_path) for i in images], out_dir, p_dir)
+                pieces = rewrite_image_references(pieces, mapping)
+                for candidate in manifest.candidate_dependencies:
+                    if candidate.get("target") in mapping:
+                        candidate.update(payload=mapping[candidate["target"]], status="prepared")
             if session.bibliography_pieces is not None:
                 spans = {p.span for p in session.bibliography_pieces}
                 prepared_bbl = ''.join(p.text for p in pieces if p.span in spans)
@@ -115,7 +112,7 @@ def preprocess_paper(
             if output_file:
                 secondary.parent.mkdir(parents=True, exist_ok=True)
                 secondary.write_text(master_tex_content, encoding="utf-8", newline="\n")
-            for warning in [i.dimension_error for i in manifest.active_images if i.dimension_error] + manifest.bibliography.preparation_warnings:
+            for warning in [i.dimension_error for i in images if i.dimension_error] + manifest.bibliography.preparation_warnings:
                 log.write(f"WARNING: {warning}\n")
             for diagnostic in manifest.unresolved:
                 log.write(f"UNRESOLVED: {diagnostic['source']}:{diagnostic['line']} "

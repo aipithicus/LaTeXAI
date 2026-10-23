@@ -1,6 +1,6 @@
 """Bounded source capture for preparation; no expansion or effect execution."""
 from .argument_scanner import ArgumentScanner
-from .contracts import DeferredRegion, ReadingIssue
+from .contracts import DeferredRegion, ReadingIssue, StoredDefinition
 from .tex_reader import CatCode, TokenKind
 
 
@@ -27,15 +27,15 @@ class DeferredScanner:
         return DeferredRegion(self.reader.source_span(opening.span.start, self.reader.position),
                               reason, detail, tuple(tokens))
 
-    def math(self, event):
+    def math(self, opening):
         """Preserve dollar-delimited math using entry catcodes; do not digest it."""
         reader = self.reader
         checkpoint = reader.checkpoint()
         second = reader.next_token()
-        display = second is not None and second.catcode == CatCode.MATH_SHIFT and second.span.start == event.span.end
+        display = second is not None and second.catcode == CatCode.MATH_SHIFT and second.span.start == opening.span.end
         if not display:
             reader.restore(checkpoint)
-        tokens = [event.token] + ([second] if display else [])
+        tokens = [opening] + ([second] if display else [])
         depth = 0
         with self.context.argument_scanning():
             while (token := reader.next_token()) is not None:
@@ -52,7 +52,7 @@ class DeferredScanner:
                         if closing is None or closing.catcode != CatCode.MATH_SHIFT:
                             raise ReadingIssue("unclosed_math", "Display math needs two closing math shifts")
                         tokens.append(closing)
-                    return DeferredRegion(reader.source_span(event.span.start, reader.position),
+                    return DeferredRegion(reader.source_span(opening.span.start, reader.position),
                         "math_interpretation", "Math retained for downstream interpretation", tuple(tokens))
         raise ReadingIssue("unclosed_math", "EOF while capturing math")
 
@@ -62,13 +62,20 @@ class DeferredScanner:
         This is an entry-catcode observation. A missing literal binding can make
         its delimiters uncertain, so the requirement explicitly retains that fact.
         """
-        tokens, depth = [], 1
+        tokens, observations, depth = [], [], 1
+        shadowed = set()
         scanner = ArgumentScanner(self.reader, self.context)
         while (token := self.reader.next_token()) is not None:
-            protected = protect(token)
+            protected = protect(token, shadowed=shadowed)
             if protected:
+                if isinstance(protected, StoredDefinition):
+                    # Do not install definitions from an unexecuted body. Their
+                    # presence still invalidates later use of the old grammar.
+                    shadowed.add(protected.target.value)
                 if isinstance(protected, DeferredRegion):
                     tokens.extend(protected.tokens)
+                    if protected.command is not None and token.value not in shadowed:
+                        observations.append(protected)
                 continue
             tokens.append(token)
             if token.kind != TokenKind.CONTROL_SEQUENCE or token.value not in {"begin", "end"}:
@@ -86,5 +93,6 @@ class DeferredScanner:
                 depth += 1 if token.value == "begin" else -1
                 if not depth:
                     return DeferredRegion(self.reader.source_span(opening.start, self.reader.position),
-                        "environment_binding", f"Environment {name!r} captured under entry catcodes; reading behavior needs a binding", tuple(tokens))
+                        "environment_binding", f"Environment {name!r} captured under entry catcodes; reading behavior needs a binding",
+                        tuple(tokens), observations=tuple(observations))
         raise ReadingIssue("unclosed_environment", f"No source-visible closing delimiter for {name!r}")

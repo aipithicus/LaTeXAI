@@ -24,6 +24,7 @@ from .emission import SourcePiece, event_text
 from .survey import survey_sources
 from .policy import load_policy
 from .resources import prepare_external_literal
+from .assets import observe_environment_assets
 from .provenance import Tombstone
 from .manifest import PreflightManifest, BibliographyInfo, PackageUsage, StyleFileInfo, ImplicitGraphicInfo
 
@@ -68,6 +69,7 @@ class PreparationSession:
         self.active: set[Path] = set()
         self.styles: dict[Path, StyleFileInfo] = {}
         self.images: set[Path] = set()
+        self.candidate_images: set[Path] = set()
         self._implicit = []
         self.code: set[Path] = set()
         self.payload_edits: dict[Path, dict[tuple[int, int], str]] = {}
@@ -153,8 +155,13 @@ class PreparationSession:
         self.manifest.preserved_source_spans = [{"source": span.basis.source_id,
             "occurrence": span.basis.occurrence_id, "start": span.start, "end": span.end}]
         # Only convert assets whose references survived this emission rollback.
-        targets = {p.target for p in self.pieces if p.target is not None}
+        targets = {target for p in self.pieces for _, target in p.image_references}
         self.images = {p for p in self.images if self.name(p) in targets}
+        self.candidate_images = {p for p in self.candidate_images if self.name(p) in targets}
+        retained_contexts = {(p.span.basis.source_id, p.span.basis.occurrence_id, p.span.start, p.span.end)
+                             for p in self.pieces if p.deferred is not None}
+        self.manifest.candidate_dependencies = [d for d in self.manifest.candidate_dependencies
+            if (d["source"], d["occurrence"], *d["context_span"]) in retained_contexts]
         self.manifest.active_images = [i for i in self.manifest.active_images if i.rel_path in targets]
         retained_resources = {(p.command.span.basis.source_id, p.command.span.basis.occurrence_id,
                                p.command.span.start, p.command.span.end)
@@ -169,9 +176,14 @@ class PreparationSession:
             if any(id(p) not in retained for p in self.bibliography_pieces):
                 self.bibliography_pieces = None
 
-    def resolve(self, name, suffixes, span, *, directories=None, required=True):
+    def resolve(self, name, suffixes, span, *, directories=None, required=True, provisional=False):
+        def problem(reason, detail):
+            if provisional:
+                raise ReadingIssue(reason, detail)
+            self.fail(span, reason, detail)
+
         if not name or Path(name).is_absolute():
-            self.fail(span, "dependency_path", f"Expected a project-relative dependency: {name!r}")
+            problem("dependency_path", f"Expected a project-relative dependency: {name!r}")
         frame = self.frames[-1]
         roots = directories if directories is not None else [frame.import_dir or self.root.parent, self.store.root]
         for directory in dict.fromkeys(roots):
@@ -181,11 +193,11 @@ class PreparationSession:
                 if self.store.contains(path):
                     matches.append(path)
             if len(set(matches)) > 1:
-                self.fail(span, "ambiguous_dependency", f"Multiple candidates for {name!r}: {[self.name(p) for p in matches]}")
+                problem("ambiguous_dependency", f"Multiple candidates for {name!r}: {[self.name(p) for p in matches]}")
             if matches:
                 return matches[0]
         if required:
-            self.fail(span, "missing_dependency", f"Cannot resolve {name!r} in {[self.name(p) for p in roots if p.is_relative_to(self.store.root)]}")
+            problem("missing_dependency", f"Cannot resolve {name!r} in {[self.name(p) for p in roots if p.is_relative_to(self.store.root)]}")
         return None
 
     def edge(self, command, path, kind):
@@ -203,14 +215,15 @@ class PreparationSession:
         self.frames.append(_Input(path, reader, emit, import_dir, include=include, recovery=recovery))
         self.dispatcher.enter_source(reader, catcode_overrides=overrides)
 
-    def _emit(self, span, text=None, *, command=None, target=None, operation=None, deferred=None):
+    def _emit(self, span, text=None, *, command=None, target=None, operation=None, deferred=None, image_references=()):
         if not self.frames[-1].emit:
             return
         raw = self.raw(span)
         text = raw if text is None else text
         if text:
             self.pieces.append(SourcePiece(text, span, self.line(span), operation or
-                              ("IDENTITY" if text == raw else "MOUTH_EMISSION"), command, target,
+                              ("IDENTITY" if text == raw else "MOUTH_EMISSION"), command,
+                              ((command, target),) if target is not None else image_references,
                               self.line(span.basis.span(max(span.start, span.end - 1), span.end)), deferred))
 
     def _omit(self, span, reason):
@@ -241,8 +254,11 @@ class PreparationSession:
                     self.require(token.span, "argument_behavior", "Unexpanded argument token retained inside " + command.name)
         self._deferred_dependencies(t for arg in command.arguments for t in arg.tokens)
 
-    def _deferred_dependencies(self, tokens):
+    def _deferred_dependencies(self, tokens, *, observed=()):
+        starts = {command.span.start for command in observed}
         for token in tokens:
+            if token.span.start in starts:
+                continue
             if token.kind != TokenKind.CONTROL_SEQUENCE:
                 continue
             profile = self.resolver.resolve_command(token.value)
@@ -250,6 +266,20 @@ class PreparationSession:
                     "source_subimport", "asset_reference", "bibliography", "biblatex_resource", "package_load", "external_literal"}:
                 self.require(token.span, "deferred_dependency", "Dependency inside an uninterpreted expression requires its owning context",
                              stage="preparation")
+
+    def image_path(self, command, *, provisional=False):
+        """Resolve the literal image header against the current search context."""
+        options = key_values(command.argument("options"))
+        if options.get("page", "1").strip() != "1":
+            raise ReadingIssue("asset_page", "Only first-page PDF conversion is currently qualified")
+        name = command.value("target")
+        paths = next((self.graphic_paths[d] for d in sorted(self.graphic_paths, reverse=True)
+                      if d <= self.context.scope_depth), [])
+        exts = next((self.graphic_extensions[d] for d in sorted(self.graphic_extensions, reverse=True)
+                     if d <= self.context.scope_depth), sorted(IMAGE_EXTENSIONS))
+        frame = self.frames[-1]
+        return self.resolve(name, [""] if Path(name).suffix else exts, command.span,
+            directories=[frame.import_dir or self.root.parent, self.store.root, *paths], provisional=provisional)
 
     def _package(self):
         frame = self.frames[-1]
@@ -359,16 +389,9 @@ class PreparationSession:
             self._neutral(command)
             # Widths/captions can contain unexpanded TeX without making the
             # filename or PDF page computed. Inspect only options we consume.
-            options = key_values(command.argument("options"))
-            if options.get("page", "1").strip() != "1":
-                self.defer(command.span, "asset_page", "Only first-page PDF conversion is currently qualified")
             if not frame.emit:
                 self.defer(command.span, "package_asset", "Asset emission from local package code needs a payload rewrite contract")
-            name = command.value("target")
-            paths = next((self.graphic_paths[d] for d in sorted(self.graphic_paths, reverse=True) if d <= self.context.scope_depth), [])
-            exts = next((self.graphic_extensions[d] for d in sorted(self.graphic_extensions, reverse=True) if d <= self.context.scope_depth), sorted(IMAGE_EXTENSIONS))
-            path = self.resolve(name, [""] if Path(name).suffix else exts, command.span,
-                                directories=[frame.import_dir or self.root.parent, self.store.root, *paths])
+            path = self.image_path(command)
             self.images.add(path)
             for candidate in self._implicit:
                 candidate[1] = True
@@ -473,14 +496,17 @@ class PreparationSession:
                 elif isinstance(item, DeferredRegion):
                     self.require(item.span, item.reason, item.detail,
                                  stage="preparation" if item.reason == "package_not_loaded" else "interpretation")
-                    self._deferred_dependencies(item.tokens)
+                    image_references = observe_environment_assets(self, item)
+                    self._deferred_dependencies(item.tokens, observed=(o.command for o in item.observations
+                        if o.command.action == "asset_reference"))
                     raw = self.raw(item.span)
                     # A bare control word needs a separator after mouth-discarded
                     # whitespace. Protected groups and math remain exact slices.
                     if (len(item.tokens) == 1 and item.tokens[0].kind == TokenKind.CONTROL_SEQUENCE
                             and item.span.end == item.tokens[0].span.end):
                         raw += " "
-                    self._emit(item.span, raw, operation="DEFER_INTERPRETATION", deferred=item)
+                    self._emit(item.span, raw, operation="DEFER_INTERPRETATION", deferred=item,
+                               image_references=image_references)
                 elif isinstance(item, ReadEvent):
                     text = event_text(item, self.raw(item.span))
                     self._emit(item.span, text)
@@ -527,8 +553,10 @@ class PreparationSession:
         m.local_styles = list(self.styles.values())
         m.code_inputs = sorted(self.name(p) for p in self.code)
         m.active_images = [characterize_image(self.name(p), str(p)) for p in sorted(self.images)]
+        m.candidate_images = [characterize_image(self.name(p), str(p))
+                              for p in sorted(self.candidate_images - self.images)]
         for path in self.store.files:
-            if path not in self.active and path not in self.images:
+            if path not in self.active and path not in self.images and path not in self.candidate_images:
                 if m.unresolved or m.requirements:
                     m.unclassified_files.append(self.name(path))
                     continue

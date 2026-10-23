@@ -10,7 +10,7 @@ The production workflow still uses the new reader and dispatcher.
 | Measure | Historical prototype output | Current workflow before this increment | Current workflow after this increment |
 | --- | ---: | ---: | ---: |
 | Master characters | 63,271 | 91,347 | 67,836 |
-| SVG assets emitted | 9 | 0 | 7 |
+| SVG assets emitted | 9 | 0 | 9 |
 | Inline bibliography | 33 entries | Absent | 33 entries; identical key set |
 | Canonical bibliography resource | Absent | Absent | Both complete databases in one resource |
 | Active manuscript traversal | Historical receipt only | Interrupted at local style `\newif` | Reaches document end |
@@ -21,7 +21,7 @@ The restored raw source has no `.bbl`; the current run generates one directly fr
 the two `.bib` databases without a compiler. All 33 references resolve: eleven
 come from `chaos.bib`, twenty-two from `ref.bib`.
 
-The seven common SVG derivatives are byte-identical to the historical output.
+All nine SVG derivatives are byte-identical to the historical output.
 In the first reader-integration run, every identity provenance segment was compared
 against its original source slice; all 1,061 emitted segments covered that master
 continuously. The bibliography follow-up verifies all 1,060 current segments cover
@@ -60,6 +60,13 @@ These receipts do not claim that image inspection/conversion uses the text cache
    command observation; it does not prevent literal key collection. Selection uses
    those keys, not overall dependency closure. Only `\nocite{*}` requests all entries;
    the complete canonical resource retains uncited metadata and unresolved variants.
+6. **Assets inside deferred environments:** direct image headers captured by the
+   dispatcher remain observations with their binding grammar and original spans.
+   Preparation resolves their literal filenames against entry search settings,
+   emits the SVGs, and changes only those filenames in the preserved environment.
+   Candidate dependency records retain the unexecuted context and payload path;
+   they are not promoted to established active edges. No `suppfigure` special case
+   or general author-macro expansion was added.
 
 The reusable reading components do not decide what to delete. Package knowledge
 remains in YAML; preparation owns policy and emission. This increment neither
@@ -71,9 +78,12 @@ expands arbitrary macros nor establishes the future XML/async binding contract.
   remain unresolved. Caller continuation uses a recorded preparation assumption,
   not successful style execution.
 - `LN.png` and `MSEvsloss.png` occur inside author-defined `suppfigure` environments
-  at manuscript lines 531 and 538. Their dependency tokens are located, but those
-  environments have no established reading contract. The references remain intact;
-  no claim of a complete standalone dependency payload is made.
+  at manuscript lines 531 and 538. Both are now packaged as `LN.svg` and
+  `MSEvsloss.svg`, and the master references those payloads. The environments still
+  have no established reading contract: their declarations and bodies remain
+  unexpanded, and the manifest reports seven active images plus two prepared
+  candidate images. Discovery is resolved under the recorded entry-state
+  assumptions; complete environment interpretation is not claimed.
 - The databases contain differing versions of twelve keys, plus undefined strings
   and repeated fields, but none of those conflicting keys is among the paper's 33
   references. The earlier wildcard selection made these unrelated records block
@@ -82,13 +92,14 @@ expands arbitrary macros nor establishes the future XML/async binding contract.
   is still pending, explicitly recorded separately from key observation. Author
   macros and citations inside uninterpreted arguments still need later resolution.
 - Metadata footprint still needs attention: the current manifest and provenance
-  total 762,345 bytes, versus roughly 37 KB historically. The new records retain
+  total 764,222 bytes, versus roughly 37 KB historically. The new records retain
   more source and requirement detail. Compact repeated diagnostics without losing
   occurrence coordinates; do not treat shorter sidecars as evidence of correctness.
 
-The run is reported as **partial**. Next work should address bounded author-environment
-reading/dependency contracts. General package execution remains a separate task;
-it no longer prevents preparation of this paper's bibliography.
+The run is reported as **partial** because reading/interpretation requirements
+remain. The next comparison task is an optional rendering adapter for the SVG
+payload and a consistent font configuration. Broader author-environment contracts
+and general package execution remain separate work.
 
 ## Verification
 
@@ -104,6 +115,16 @@ notes, source protection, explicit wildcards and incomplete citation discovery.
 The real-paper rerun confirms 33 unique inlined items, matching the historical key
 set, exact retention of both databases, and one cached read per text source. Original
 manuscript/style/database files and the historical master remain unchanged.
+
+The environment-asset follow-up passes **409 tests**. Nine new cases cover repeated
+cached input, exact preservation around multiple filename edits, lossless embedded
+image bytes, protected and skipped source, provisional package syntax, unresolved
+filenames/pages, search context, shadowed commands, and emission rollback. The
+paper rerun emits all nine images; the two newly included derivatives match the
+historical SVGs and preserve the original PNG bytes. Only the two filenames change
+in the master. The other seven derivatives, all 33 inlined references, and the
+canonical bibliography are unchanged. All 1,060 provenance segments still cover
+the master continuously, and the 412 identity segments match their source slices.
 
 The editor's optional PDF validation failed inside XeTeX, reporting
 `Fontconfig error: Cannot load default config file` and
