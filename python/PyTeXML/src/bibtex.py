@@ -36,6 +36,18 @@ class Entry:
     key: str
     fields: list[tuple[str, Value]]
 
+    def equivalent(self, other: Entry) -> bool:
+        """Field order in separate databases does not make a new keyed record.
+
+        Duplicate fields remain ordered evidence; only unambiguous field sets
+        are compared as mappings. No record is removed from the database.
+        """
+        if self.kind != other.kind or self.key != other.key:
+            return False
+        if len(dict(self.fields)) != len(self.fields) or len(dict(other.fields)) != len(other.fields):
+            return self.fields == other.fields
+        return dict(self.fields) == dict(other.fields)
+
 
 @dataclass
 class Database:
@@ -73,7 +85,7 @@ class Database:
                 raise BibTeXError(f"Bibliography entry missing: {key}")
             candidates = self.entries[key]
             entry = candidates[0]
-            if any(candidate != entry for candidate in candidates[1:]):
+            if any(not candidate.equivalent(entry) for candidate in candidates[1:]):
                 raise BibTeXConflictError(f"Conflicting bibliography entries for selected key {key!r}")
             selected[key] = entry
             active.add(key)
