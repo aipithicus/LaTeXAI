@@ -21,6 +21,25 @@ from src.prepare.inventory import preflight_inventory
 
 
 class ManifestLocationTests(unittest.TestCase):
+    def test_eof_cursors_survive_trailing_discards_repeated_inputs_and_asset_edits(self):
+        from PIL import Image
+        self.put("main.tex", r"\documentclass{article}\usepackage{graphicx}\input{child}A\input{child}B\input{empty}C")
+        self.put("child.tex", "\\includegraphics{x.png}END% discarded\n   \n")
+        self.put("empty.tex", "% only a comment\n")
+        Image.new("RGB", (2, 2)).save(self.root / "x.png")
+        text, manifest, _, _ = self.prepare()
+        eof = [u for u in manifest.units if u["kind"] == "SourceEnd"]
+        self.assertEqual(len(eof), 4)
+        self.assertTrue(all(u["location_status"] == "mapped" for u in eof))
+        child = [u["locations"][0] for u in eof if u["origin"]["source"] == "child.tex"]
+        self.assertEqual(len(child), 2)
+        self.assertLess(child[0]["start"], child[1]["start"])
+        self.assertTrue(all(p["start"] == p["end"] for p in child))
+        self.assertEqual(text[child[0]["start"]], "A")
+        self.assertEqual(text[child[1]["start"]], "B")
+        empty = next(u for u in eof if u["origin"]["source"] == "empty.tex")
+        self.assertEqual(text[empty["locations"][0]["start"]], "C")
+
     def setUp(self):
         scratch = PROJECT / "temp/tests"
         scratch.mkdir(parents=True, exist_ok=True)

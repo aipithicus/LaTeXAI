@@ -290,7 +290,7 @@ class PreparationSession:
                        image_references=image_references)
             self._emit(span.basis.span(span.end, span.end), " ", operation="SYNTHETIC_SEPARATOR")
             return
-        if text:
+        if text or operation == "SOURCE_END":
             piece = SourcePiece(raw if source_edits else text, span, self.line(span), operation or
                               ("IDENTITY" if text == raw else "MOUTH_EMISSION"), command,
                               ((command, target),) if target is not None else image_references,
@@ -653,6 +653,9 @@ class PreparationSession:
             self._observations[item.span.basis].append(item)
             if isinstance(item, SourceEnd):
                 self._omit(item.span, "Unread remainder after endinput")
+                # Carry a zero-width cursor through the same ordered emission
+                # list as text. Later rewrites/splices move it automatically.
+                self._emit(item.span.basis.span(item.span.end, item.span.end), "", operation="SOURCE_END")
                 finished = self.frames.pop()
                 if finished.replacement is not None:
                     for i in range(finished.emission_start, len(self.pieces)):
