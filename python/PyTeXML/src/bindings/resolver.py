@@ -132,7 +132,8 @@ class BindingResolver:
             if any(spec.get("name", spec.get("command")) == name
                    for section in sections for spec in data["reading"].get(section, [])):
                 return self._unresolved(name, UnresolvedReason.PACKAGE_NOT_LOADED,
-                                        f"'{name}' requires package '{pkg}'", options)
+                                        f"Reading grammar for '{name}' is known from inactive binding '{pkg}'; "
+                                        "the source provider is not established", options)
         return self._unresolved(name, UnresolvedReason.UNKNOWN_CONSTRUCT,
                                 f"No active binding for '{name}'", options)
 

@@ -45,7 +45,8 @@ def observe_environment_assets(session, region):
         references.append((command, target))
         session.require(command.span, "observed_asset",
             "Literal image resolved for the payload under entry reading/search state; "
-            "its enclosing environment remains uninterpreted", stage="preparation", unit_id=command.unit_id)
+            "its enclosing environment remains uninterpreted", stage="interpretation", unit_id=command.unit_id,
+            materialization="pending")
     return tuple(references)
 
 

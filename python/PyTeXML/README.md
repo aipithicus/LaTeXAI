@@ -103,6 +103,19 @@ entry-catcode assumptions used for unbound behavior; `source_survey` records
 independent per-file observations, not execution. Deferred spans remain unknown
 in structural coverage even though their text has been captured.
 
+Activity, binding availability and payload delivery are independent. Reader units
+and their requirements carry `activity`: `reached` identifies an encountered
+declaration/invocation (not execution of its stored body), `skipped` identifies a
+discarded branch, and `unresolved` identifies an observation inside deferred code.
+Package requests record binding availability and activation independently of
+whether their declaration was reached.
+Requirement `materialization` is `pending`, `prepared` or `not_required`.
+`materialization_status` summarizes known payload requests, not expanded dependency
+closure. Missing citation-provider knowledge belongs to the binding stage; an
+unprepared image/input still has pending materialization. Converted observed
+images retain unknown activity and an interpretation requirement without keeping
+preparation partial merely because their enclosing environment is uninterpreted.
+
 Unbound environments also retain `DeferredRegion.observations`: direct command
 headers scanned using existing YAML argument grammars. Preparation can resolve
 literal image filenames from these observations and emit their SVG derivatives

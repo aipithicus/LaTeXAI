@@ -139,6 +139,7 @@ class PreparationSession:
             self.line_starts[path] = [0] + [m.end() for m in re.finditer(r"\r\n|\r|\n", doc.text)]
         (self.candidate_sources if candidate else self.active).add(path)
         occurrence = {"id": reader.basis.occurrence_id, "source": doc.name,
+            "activity": "unresolved" if candidate else "reached",
             "parent": parent if candidate else self.frames[-1].reader.basis.occurrence_id if self.frames else None}
         if candidate:
             occurrence["activation"] = "unresolved"
@@ -158,6 +159,7 @@ class PreparationSession:
         diagnostic = {"source": span.basis.source_id, "occurrence": span.basis.occurrence_id,
                       "start": span.start, "end": span.end, "line": self.line(span),
                       "reason": reason, "detail": detail, "unit_id": unit_id,
+                      "activity": self.units.records[unit_id].activity, "materialization": "pending",
                       "location_status": "pending", "locations": []}
         self.manifest.unresolved.append(diagnostic)
         return diagnostic
@@ -166,13 +168,16 @@ class PreparationSession:
         diagnostic = self.diagnose(span, reason, detail)
         raise PreparationUnresolved(f"{diagnostic['source']}:{diagnostic['line']} [{reason}] {detail}")
 
-    def require(self, span, reason, detail, *, stage="interpretation", unit_id=None, parent_id=None):
-        unit_id = unit_id or self.units.add(span, "requirement_target", parent_id)
+    def require(self, span, reason, detail, *, stage="interpretation", unit_id=None, parent_id=None,
+                materialization=None, activity=None):
+        unit_id = unit_id or self.units.add(span, "requirement_target", parent_id, activity=activity)
         self.units.require(unit_id, span)
         requirement = {"id": f"requirement-{len(self.manifest.requirements) + 1}", "unit_id": unit_id,
             "source": span.basis.source_id,
             "occurrence": span.basis.occurrence_id, "start": span.start, "end": span.end,
             "line": self.line(span), "reason": reason, "detail": detail, "stage": stage,
+            "activity": self.units.records[unit_id].activity,
+            "materialization": materialization or ("pending" if stage == "preparation" else "not_required"),
             "location_status": "pending", "locations": []}
         self.manifest.requirements.append(requirement)
         return requirement
@@ -317,7 +322,7 @@ class PreparationSession:
             for token in arg.tokens:
                 if token.kind != TokenKind.CHARACTER or token.catcode in (CatCode.PARAMETER, CatCode.MATH_SHIFT, CatCode.ALIGNMENT_TAB):
                     self.require(token.span, "argument_behavior", "Unexpanded argument token retained inside " + command.name,
-                                 parent_id=command.unit_id)
+                                 parent_id=command.unit_id, activity="unresolved")
         self._deferred_dependencies((t for arg in command.arguments for t in arg.tokens), parent_id=command.unit_id)
 
     def _deferred_dependencies(self, tokens, *, observed=(), parent_id=None):
@@ -331,7 +336,7 @@ class PreparationSession:
             if getattr(profile, "action", None) in {"source_input", "source_include", "source_import",
                     "source_subimport", "asset_reference", "bibliography", "biblatex_resource", "package_load", "external_literal"}:
                 self.require(token.span, "deferred_dependency", "Dependency inside an uninterpreted expression requires its owning context",
-                             stage="preparation", parent_id=parent_id)
+                             stage="preparation", parent_id=parent_id, activity="unresolved")
 
     def image_path(self, command, *, provisional=False):
         """Resolve the literal image header against the current search context."""
@@ -361,7 +366,9 @@ class PreparationSession:
             return
         self.loaded_packages.add(key)
         self.package_options[key] = tuple(options)
-        self.manifest.packages_declared.append(PackageUsage(name, options, path is not None, self.name(path) if path else None))
+        usage = PackageUsage(name, options, path is not None, self.name(path) if path else None,
+                             unit_id=command.unit_id, binding_available=name in self.resolver.catalog.package_bindings)
+        self.manifest.packages_declared.append(usage)
         if path:
             self.edge(command, path, "class" if is_class else "package")
             self.styles[path] = StyleFileInfo(self.name(path), str(path), True, len(self.store.read_bytes(path)))
@@ -375,6 +382,8 @@ class PreparationSession:
         elif not self.resolver.load_package(name):
             self.require(command.span, "package_binding", f"No reading binding for package {name!r}", stage="binding", unit_id=command.unit_id)
             self.dispatcher.defer_effects(command.span)
+        else:
+            usage.binding_activated = True
 
     def _definition_check(self, unit_id, declaration, target, requirement):
         self.require(self.units.records[unit_id].span, "definition_precondition",
@@ -566,13 +575,15 @@ class PreparationSession:
                 if len(self.frames) == 1:
                     start, pieces, tombstones, commands = self._checkpoint
                     self._checkpoint = (min(start, item.remainder.start), pieces, tombstones, commands)
-                self.diagnose(item.span, item.reason, item.detail, unit_id=item.unit_id)
+                diagnostic = self.diagnose(item.span, item.reason, item.detail, unit_id=item.unit_id)
                 recoverable = next((i for i, frame in enumerate(self.frames) if frame.recovery is not None), None)
                 if recoverable is not None:
                     frame = self.frames[recoverable]
+                    diagnostic["materialization"] = "prepared"
                     self.require(item.span, "retained_code_reading",
                         f"Retained {self.name(frame.path)!r}; caller resumes with its entry reading state. "
-                        "This file's reading effects and dependencies still require resolution.", stage="preparation", unit_id=item.unit_id)
+                        "This file's reading effects and dependencies still require resolution.", stage="preparation", unit_id=item.unit_id,
+                        materialization="prepared")
                     self.dispatcher.resume_input(frame.recovery)
                     self.dispatcher.defer_effects(item.span)
                     del self.frames[recoverable:]
@@ -596,8 +607,12 @@ class PreparationSession:
                     checkpoint = (len(self.pieces), len(self.tombstones))
                     self._command(item)
                 elif isinstance(item, DeferredRegion):
+                    dependency = item.command is not None and item.command.action in {
+                        "asset_reference", "source_input", "source_include", "source_import", "source_subimport",
+                        "bibliography", "biblatex_resource", "biblatex_print", "package_load", "external_literal"}
                     requirement = self.require(item.span, item.reason, item.detail,
-                                               stage="preparation" if item.reason == "package_not_loaded" else "interpretation", unit_id=item.unit_id)
+                        stage="binding" if item.reason == "package_not_loaded" else "interpretation", unit_id=item.unit_id,
+                        materialization="pending" if dependency else "not_required")
                     if isinstance(item, CollectedEnvironment):
                         requirement["definition_unit_id"] = item.definition_id
                     if self.frames[-1].emit and (isinstance(item, ConditionalRegion) or any(
@@ -697,6 +712,4 @@ class PreparationSession:
         m.implicit_graphics_count = len(m.implicit_graphics)
         m.has_implicit_graphics = bool(m.implicit_graphics)
         m.source_reads = list(self.store.read_paths)
-        m.source_dependency_closure = "unresolved" if m.unresolved or any(
-            r["stage"] == "preparation" for r in m.requirements) else "complete"
-        m.dependency_closure = "unresolved" if m.unresolved or m.requirements else "complete"
+        m.refresh_status()

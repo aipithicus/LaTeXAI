@@ -183,7 +183,8 @@ class StructuralDispatcher:
         if item.unit_id is not None:
             self.units.require(item.unit_id, item.span)
             return item
-        identifier = self.units.add(item.span, type(item).__name__, parent_id)
+        activity = "unresolved" if parent_id else "skipped" if isinstance(item, SkippedRegion) else "reached"
+        identifier = self.units.add(item.span, type(item).__name__, parent_id, activity=activity)
         item = replace(item, unit_id=identifier)
         if isinstance(item, DeferredRegion):
             # A captured command is another view of the same observed unit.

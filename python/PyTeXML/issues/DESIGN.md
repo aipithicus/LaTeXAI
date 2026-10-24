@@ -43,6 +43,19 @@ interpretation and binding knowledge. Pending preparation work produces `partial
 status. A partial master can retain unresolved references. Neither an emitted
 entrypoint nor a completed lexical pass proves raw-source independence.
 
+Source activity and preparation work are separate axes. Units identify reached
+headers, skipped branches or unresolved observations; reached definitions still
+store their bodies without executing them. Package declarations record binding
+availability/activation independently of locality and source activity.
+
+Requirements retain their owner stage plus a materialization disposition:
+`pending`, `prepared`, or `not_required`. The manifest's materialization status
+summarizes known payload requests and does not certify expanded closure. A binding
+gap for a captured citation needs no additional payload; a missing input or asset
+still does. Prepared candidate assets remain semantically unresolved observations
+without being counted as unfinished conversions. Retained-code reading gaps can
+leave preparation partial even when that code's payload is already prepared.
+
 ## Package
 
 | File | Role |

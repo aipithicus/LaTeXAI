@@ -73,6 +73,10 @@ def preprocess_paper(
                 for candidate in manifest.candidate_dependencies:
                     if candidate.get("target") in mapping:
                         candidate.update(payload=mapping[candidate["target"]], status="prepared")
+                prepared = {c["unit_id"] for c in manifest.candidate_dependencies if c["status"] == "prepared"}
+                for requirement in manifest.requirements:
+                    if requirement["reason"] == "observed_asset" and requirement["unit_id"] in prepared:
+                        requirement["materialization"] = "prepared"
             if session.bibliography_pieces is not None:
                 keys = {p.key for p in session.bibliography_pieces}
                 prepared_bbl = ''.join(p.text for p in pieces if p.key in keys)
@@ -102,10 +106,8 @@ def preprocess_paper(
             if ledger:
                 ledger.save(out_dir / "master.provenance.json")
             manifest.entrypoint = "master.tex"
-            pending_preparation = bool(manifest.unresolved) or any(r["stage"] == "preparation" for r in manifest.requirements)
-            manifest.preparation_status = "partial" if pending_preparation else "complete"
-            if pending_preparation:
-                manifest.source_dependency_closure = "unresolved"
+            manifest.refresh_status()
+            pending_preparation = manifest.preparation_status == "partial"
             if manifest.unresolved or manifest.requirements:
                 manifest.dependency_closure = "unresolved"
                 manifest.unclassified_files = sorted(set(manifest.unclassified_files +
@@ -139,6 +141,7 @@ def preprocess_paper(
             if session is not None and emit_manifest_json:
                 session.manifest.entrypoint = None
                 session.manifest.preparation_status = "failed"
+                session.manifest.materialization_status = "failed"
                 session.manifest.dependency_closure = "unresolved"
                 session.manifest.source_reads = list(session.store.read_paths)
                 session.pending_units()

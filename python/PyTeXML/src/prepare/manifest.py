@@ -54,6 +54,10 @@ class PackageUsage:
     options: List[str] = field(default_factory=list)
     is_local: bool = False
     local_path: Optional[str] = None
+    unit_id: Optional[str] = None
+    activity: str = "reached"
+    binding_available: bool = False
+    binding_activated: bool = False
 
     def to_dict(self) -> Dict[str, Any]:
         return dataclasses.asdict(self)
@@ -88,6 +92,8 @@ class PreflightManifest:
     # Canonical package entrypoint; root_file above records source discovery.
     entrypoint: Optional[str] = None
     preparation_status: str = "pending"  # pending, complete, partial, failed
+    materialization_status: str = "pending"  # pending, complete, failed; known requests only
+    activity_scope: str = "source_visible_under_reading_assumptions"
     dependency_closure: str = "unresolved"
     source_dependency_closure: str = "unresolved"
     requirements: List[Dict[str, Any]] = field(default_factory=list)
@@ -133,6 +139,17 @@ class PreflightManifest:
     has_tikz_external: bool = False
     has_minted: bool = False
     has_listings: bool = False
+
+    def refresh_status(self):
+        """Keep payload delivery, reading completion and full semantics distinct."""
+        pending_payload = any(r.get("materialization") == "pending"
+                              for r in (*self.requirements, *self.unresolved))
+        self.materialization_status = "pending" if pending_payload else "complete"
+        pending_preparation = bool(self.unresolved) or pending_payload or any(
+            r["stage"] == "preparation" for r in self.requirements)
+        self.source_dependency_closure = "unresolved" if pending_preparation else "complete"
+        self.dependency_closure = "unresolved" if self.unresolved or self.requirements else "complete"
+        self.preparation_status = "partial" if pending_preparation else "complete"
 
     def to_dict(self) -> Dict[str, Any]:
         return dataclasses.asdict(self)
