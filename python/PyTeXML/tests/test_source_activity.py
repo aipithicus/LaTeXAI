@@ -36,6 +36,40 @@ class ActivityPreparationTests(unittest.TestCase):
         return preprocess_paper(str(self.root), root_tex="main.tex")
 
 
+    def test_nearest_style_recovery_keeps_caller_declarations_and_siblings(self):
+        outer = r"\RequirePackage{middle}\RequirePackage{natbib}\input{outer-tail.tex}"
+        middle = r"\RequirePackage{inner}\RequirePackage{graphicx}\input{middle-tail.tex}"
+        inner = r"{\catcode\computed=12 \RequirePackage{never}"
+        for name, text in (("outer.sty", outer), ("middle.sty", middle), ("inner.sty", inner),
+                ("middle-tail.tex", "MIDDLE"), ("outer-tail.tex", "OUTER"), ("tail.tex", "TAIL")):
+            self.put(name, text)
+        text, manifest, output, _ = self.prepare(r"\usepackage{outer}\citep{a}\input{tail}")
+        self.assertIn("TAIL", text)
+        self.assertEqual([p.name for p in manifest.packages_declared],
+                         ["article", "outer", "middle", "inner", "graphicx", "natbib"])
+        self.assertEqual((output / "inner.sty").read_text(), inner)
+        self.assertEqual((output / "outer.sty").read_text(), outer)
+        self.assertTrue({"middle-tail.tex", "outer-tail.tex"} <= set(manifest.code_inputs))
+        self.assertFalse(any(r["reason"] == "package_not_loaded" for r in manifest.requirements))
+        requirement, = (r for r in manifest.requirements if r["reason"] == "retained_code_reading")
+        self.assertIn("'inner.sty'", requirement["detail"])
+        self.assertEqual(requirement["materialization"], "prepared")
+        self.assertEqual(manifest.materialization_status, "complete")
+        self.assertEqual(manifest.preparation_status, "partial")
+        self.assertEqual(len(manifest.source_reads), len(set(manifest.source_reads)))
+
+
+    def test_local_bound_package_activates_knowledge_and_still_discovers_source_dependencies(self):
+        self.put("natbib.sty", r"\RequirePackage{child}\DeclareOption{\computed}{\input{hidden}}")
+        self.put("child.sty", "% known local dependency\n")
+        _, manifest, output, _ = self.prepare(r"\usepackage{natbib}\citep{a}")
+        usage = next(p for p in manifest.packages_declared if p.name == "natbib")
+        self.assertTrue(usage.is_local and usage.binding_available and usage.binding_activated)
+        self.assertTrue((output / "child.sty").is_file())
+        self.assertFalse(any(r["reason"] == "package_not_loaded" for r in manifest.requirements))
+        self.assertTrue(any(r["reason"] == "retained_code_reading" for r in manifest.requirements))
+
+
     def test_unknown_citation_provider_is_not_unfinished_payload_work(self):
         text, manifest, _, _ = self.prepare(r"\usepackage{notbound}\citep{a} AFTER")
         requirement, = (r for r in manifest.requirements if r["reason"] == "package_not_loaded")

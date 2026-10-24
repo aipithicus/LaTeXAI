@@ -46,7 +46,10 @@ entrypoint nor a completed lexical pass proves raw-source independence.
 Source activity and preparation work are separate axes. Units identify reached
 headers, skipped branches or unresolved observations; reached definitions still
 store their bodies without executing them. Package declarations record binding
-availability/activation independently of locality and source activity.
+availability/activation independently of locality and source activity. A local
+copy can activate its named reading binding while its source is scanned for
+visible dependencies and author definitions. This does not verify that arbitrary
+local modifications conform to the binding's package semantics.
 
 Requirements retain their owner stage plus a materialization disposition:
 `pending`, `prepared`, or `not_required`. The manifest's materialization status
@@ -103,9 +106,10 @@ partial emissions, not exceptions; callers must inspect `preparation_status` and
    traversal is unfinished, undo that root operation's emissions before keeping
    its original directive and following source. This avoids inventing EOF seams
    under unknown reading state. Previously completed root operations remain.
-   Separately retained local code has an input checkpoint: unresolved code stays
+   Each separately retained local-code input has its own checkpoint: unresolved code stays
    in the payload, its missing effects are diagnosed, and the caller resumes under
-   its recorded entry-state assumptions. This does not establish package closure.
+   its recorded entry-state assumptions. Recovery returns to the immediate caller,
+   preserving its remaining declarations. This does not establish package closure.
 6. **Survey:** inspect every indexed `.tex`, `.sty`, `.cls`, `.bbl` and `.tikz`
    buffer with the same reader and scanners. Record candidate commands and
    protected regions independently of active occurrences. After a reading

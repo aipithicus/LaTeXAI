@@ -260,7 +260,7 @@ class PreparationSession:
             self.fail(command.span, "input_cycle", chain)
         reader = self._reader(path)
         overrides = self.resolver.catalog.engine_bindings["source_traversal"]["reading"]["package_input_catcodes"] if package else None
-        recovery = self.dispatcher.input_recovery() if not emit and self.frames[-1].emit else None
+        recovery = self.dispatcher.input_recovery() if not emit else None
         self.frames.append(_Input(path, reader, emit, import_dir, include=include, recovery=recovery,
             replacement=command.span if emit and command.action != "bibliography" else None,
             emission_start=len(self.pieces)))
@@ -370,6 +370,11 @@ class PreparationSession:
                              unit_id=command.unit_id, binding_available=name in self.resolver.catalog.package_bindings)
         self.manifest.packages_declared.append(usage)
         if path:
+            # Source location and binding availability are independent. A local
+            # copy still requests the named package's reading knowledge. Continue
+            # scanning its source for author definitions and visible dependencies.
+            if not is_class:
+                usage.binding_activated = self.resolver.load_package(name)
             self.edge(command, path, "class" if is_class else "package")
             self.styles[path] = StyleFileInfo(self.name(path), str(path), True, len(self.store.read_bytes(path)))
             self._enter(path, command, emit=False, package=True,
@@ -576,12 +581,13 @@ class PreparationSession:
                     start, pieces, tombstones, commands = self._checkpoint
                     self._checkpoint = (min(start, item.remainder.start), pieces, tombstones, commands)
                 diagnostic = self.diagnose(item.span, item.reason, item.detail, unit_id=item.unit_id)
-                recoverable = next((i for i, frame in enumerate(self.frames) if frame.recovery is not None), None)
+                recoverable = next((i for i in reversed(range(len(self.frames)))
+                                    if self.frames[i].recovery is not None), None)
                 if recoverable is not None:
                     frame = self.frames[recoverable]
                     diagnostic["materialization"] = "prepared"
                     self.require(item.span, "retained_code_reading",
-                        f"Retained {self.name(frame.path)!r}; caller resumes with its entry reading state. "
+                        f"Retained {self.name(frame.path)!r}; immediate caller resumes with its entry reading state. "
                         "This file's reading effects and dependencies still require resolution.", stage="preparation", unit_id=item.unit_id,
                         materialization="prepared")
                     self.dispatcher.resume_input(frame.recovery)
