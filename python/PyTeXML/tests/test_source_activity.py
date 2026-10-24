@@ -214,13 +214,14 @@ class ActivityPreparationTests(unittest.TestCase):
         self.assertEqual(manifest.dependency_closure, "unresolved")
         self.assertIn(r"\citep{a}", text)
 
-    def test_inactive_resource_provider_retains_pending_materialization(self):
+    def test_inactive_resource_provider_keeps_materialization_undetermined(self):
         self.put("plot.svg", '<svg xmlns="http://www.w3.org/2000/svg"/>')
         _, manifest, _, _ = self.prepare(r"\includegraphics{plot.svg}\usepackage{graphicx}")
         requirement = next(r for r in manifest.requirements if r["reason"] == "package_not_loaded")
         self.assertEqual(requirement["stage"], "binding")
-        self.assertEqual(requirement["materialization"], "pending")
-        self.assertEqual(manifest.materialization_status, "pending")
+        self.assertEqual(requirement["dependency"], "possible")
+        self.assertEqual(requirement["materialization"], "undetermined")
+        self.assertEqual(manifest.materialization_status, "complete")
         self.assertEqual(manifest.preparation_status, "partial")
 
     def test_prepared_candidate_asset_keeps_unknown_activity_not_pending_work(self):

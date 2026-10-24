@@ -192,15 +192,25 @@ class BindingCatalog:
                     if spec.get("family") == "option_control" and "starred_arguments" in grammar:
                         allowed.add("starred_arguments")
                     if (set(grammar) != allowed or grammar.get("handler") != "source_arguments"
-                            or not isinstance(arguments, list)):
+                            or not isinstance(arguments, list) or not isinstance(grammar.get("starred_arguments", []), list)):
                         raise ProfileError(f"{path}: {name} requires a source_arguments grammar")
                     arg_names = set()
-                    for arg in arguments:
-                        if (not isinstance(arg, dict) or set(arg) != {"name", "kind"}
+                    for arg in arguments + grammar.get("starred_arguments", []):
+                        if (not isinstance(arg, dict) or not {"name", "kind"} <= set(arg)
+                                or set(arg) - {"name", "kind", "role", "literal_categories"}
                                 or not isinstance(arg.get("name"), str) or not arg["name"]
-                                or arg["name"] in arg_names or arg.get("kind") not in ("braced", "optional", "star", "filename", "control_sequence")):
+                                or arg.get("role", "unknown") not in ("unknown", "data", "diagnostic", "stored", "branch")
+                                or arg.get("kind") not in ("braced", "optional", "star", "filename", "control_sequence")):
                             raise ProfileError(f"{path}: invalid source argument for {name}")
+                        categories = arg.get("literal_categories")
+                        if categories is not None and (not isinstance(categories, list) or not categories
+                                or any(type(c) is not int or c not in (3, 4, 6, 7, 8, 10, 11, 12) for c in categories)
+                                or len(set(categories)) != len(categories)):
+                            raise ProfileError(f"{path}: invalid literal categories for {name}")
                         arg_names.add(arg["name"])
+                    for specs in (arguments, grammar.get("starred_arguments", [])):
+                        if len({a["name"] for a in specs}) != len(specs):
+                            raise ProfileError(f"{path}: duplicate source argument for {name}")
                     if spec.get("family") in ("source_command", "environment_factory", "option_control") and spec.get("action") not in self.reading_handlers:
                         raise ProfileError(f"{path}: unknown source command action for {name}")
                     if spec.get("action") == "citation":
@@ -210,9 +220,16 @@ class BindingCatalog:
                         if type(wildcard) is not bool:
                             raise ProfileError(f"{path}: {name} allow_wildcard must be boolean")
                     if spec.get("action") == "pass_options":
-                        if (arguments != [{"name": "options", "kind": "braced"}, {"name": "name", "kind": "braced"}]
+                        if ([{k: a[k] for k in ("name", "kind")} for a in arguments] != [{"name": "options", "kind": "braced"}, {"name": "name", "kind": "braced"}]
                                 or spec.get("metadata") not in ({"target_kind": "package"}, {"target_kind": "class"})):
                             raise ProfileError(f"{path}: {name} requires literal forwarding arguments and a target kind")
+                    if spec.get("action") == "branch_test":
+                        if (spec.get("metadata") not in ({"predicate": "loaded", "kind": "package"},
+                                                       {"predicate": "loaded", "kind": "class"})
+                                or arguments != [{"name": "name", "kind": "braced", "role": "data"},
+                                                 {"name": "then", "kind": "braced", "role": "branch"},
+                                                 {"name": "else", "kind": "braced", "role": "branch"}]):
+                            raise ProfileError(f"{path}: invalid loaded-branch recipe for {name}")
                     if spec.get("action") == "capture_setting":
                         metadata = spec.get("metadata", {})
                         kind = metadata.get("value_kind")
@@ -300,8 +317,9 @@ class BindingCatalog:
         }
         shape = shapes.get(spec.get("action"))
         grammar, metadata = spec["grammar"], spec.get("metadata", {})
-        if (shape is None or grammar["arguments"] != shape[0]
-                or grammar.get("starred_arguments") != shape[1]
+        signature = lambda args: None if args is None else [{k: a[k] for k in ("name", "kind")} for a in args]
+        if (shape is None or signature(grammar["arguments"]) != shape[0]
+                or signature(grammar.get("starred_arguments")) != shape[1]
                 or (shape[1] is None and "starred_arguments" in grammar)):
             raise ProfileError(f"{path}: invalid option-control argument recipe")
         if spec["action"] == "process_options":

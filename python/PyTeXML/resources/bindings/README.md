@@ -411,8 +411,31 @@ expansion/XML schema. Command spelling and ordered argument shapes are declarati
 ArgumentScanner implements the shared algorithms.
 
 A source_command declares an action and a source_arguments grammar. Each argument
-has a unique name and a kind: braced, optional, star, or filename. The scanner retains
+has a unique name and a kind: braced, optional, star, filename, or control_sequence. The scanner retains
 spans and unexpanded tokens. Resource names require literal characters.
+An optional `role` is `unknown` (the default), `data`, `diagnostic`, `stored`, or
+`branch`. Roles describe the captured argument's use; they are not permission to
+execute it. In particular diagnostic expansion is deferred even though dependency
+spellings in a message are not dispatched as document commands. Active authored
+redefinitions take precedence over the original binding's argument roles.
+
+An optional `literal_categories` list selects the character-token categories
+admitted by that argument's literal-value operation. It does not mutate catcodes,
+expand control sequences, admit active characters, or change other arguments.
+Legacy option lists and names admit alignment-category `&` this way; filename
+rules retain their existing bounded contract. Invalid/duplicate categories,
+unknown roles and unsupported fields are configuration errors.
+
+`branch_test` is a bounded source-command action with metadata
+`{predicate: loaded, kind: package|class}` and exactly three braced arguments:
+`name` with role `data`, and `then`/`else` with role `branch`. The dispatcher asks
+the ordered source-load store, never the binding catalog, for its decision. It
+routes the selected frozen tokens and links both branches to the decision unit;
+unknown answers preserve the complete command. The initial recipes follow
+[latex2e ltclass.dtx](https://github.com/latex3/latex2e/blob/develop/base/ltclass.dtx);
+diagnostic argument recipes follow
+[lterror.dtx](https://github.com/latex3/latex2e/blob/develop/base/lterror.dtx).
+This is a reading contract, not a general expansion or XML construction schema.
 A structural_environment declares the same header grammar and optional metadata.
 The dispatcher owns environment grouping; the source owner handles resource requests.
 Bounded opaque arguments retain unexpanded source. Their expressions become

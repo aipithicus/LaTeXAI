@@ -77,6 +77,7 @@ def preprocess_paper(
                 for requirement in manifest.requirements:
                     if requirement["reason"] == "observed_asset" and requirement["unit_id"] in prepared:
                         requirement["materialization"] = "prepared"
+                        requirement["next_step"] = "interpretation"
             if session.bibliography_pieces is not None:
                 keys = {p.key for p in session.bibliography_pieces}
                 prepared_bbl = ''.join(p.text for p in pieces if p.key in keys)
@@ -108,8 +109,7 @@ def preprocess_paper(
             manifest.entrypoint = "master.tex"
             manifest.refresh_status()
             pending_preparation = manifest.preparation_status == "partial"
-            if manifest.unresolved or manifest.requirements:
-                manifest.dependency_closure = "unresolved"
+            if manifest.source_dependency_closure != "complete":
                 manifest.unclassified_files = sorted(set(manifest.unclassified_files +
                     manifest.dormant_tex_files + manifest.dormant_styles + manifest.dormant_images))
                 manifest.dormant_tex_files = []

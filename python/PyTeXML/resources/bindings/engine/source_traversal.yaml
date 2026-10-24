@@ -16,14 +16,14 @@ reading:
     metadata: {target_kind: package}
     grammar:
       handler: source_arguments
-      arguments: [{name: options, kind: braced}, {name: name, kind: braced}]
+      arguments: [{name: options, kind: braced, role: data, literal_categories: [4, 7, 8, 10, 11, 12]}, {name: name, kind: braced}]
   - name: \PassOptionsToClass
     family: source_command
     action: pass_options
     metadata: {target_kind: class}
     grammar:
       handler: source_arguments
-      arguments: [{name: options, kind: braced}, {name: name, kind: braced}]
+      arguments: [{name: options, kind: braced, role: data, literal_categories: [4, 7, 8, 10, 11, 12]}, {name: name, kind: braced}]
   - name: \documentclass
     family: source_command
     action: document_class
@@ -32,6 +32,8 @@ reading:
       arguments:
       - name: options
         kind: optional
+        role: data
+        literal_categories: [4, 7, 8, 10, 11, 12]
       - name: name
         kind: braced
       - name: version
@@ -44,6 +46,8 @@ reading:
       arguments:
       - name: options
         kind: optional
+        role: data
+        literal_categories: [4, 7, 8, 10, 11, 12]
       - name: name
         kind: braced
       - name: version
@@ -56,6 +60,8 @@ reading:
       arguments:
       - name: options
         kind: optional
+        role: data
+        literal_categories: [4, 7, 8, 10, 11, 12]
       - name: name
         kind: braced
       - name: version

@@ -241,11 +241,14 @@ class ScannedArgument:
     name: str
     span: SourceSpan
     tokens: tuple[Token, ...]
+    role: str = "unknown"
+    literal_categories: tuple[int, ...] | None = None
 
     def literal(self) -> str:
         from .tex_reader import TokenKind, CatCode
-        if any(t.kind != TokenKind.CHARACTER or t.catcode not in
-               (CatCode.LETTER, CatCode.OTHER, CatCode.SPACE, CatCode.SUBSCRIPT, CatCode.SUPERSCRIPT) for t in self.tokens):
+        categories = self.literal_categories or (CatCode.LETTER, CatCode.OTHER, CatCode.SPACE,
+                                                 CatCode.SUBSCRIPT, CatCode.SUPERSCRIPT)
+        if any(t.kind != TokenKind.CHARACTER or t.catcode not in categories for t in self.tokens):
             raise ReadingIssue("computed_argument", f"{self.name} requires interpretation")
         return "".join(t.value for t in self.tokens).strip()
 

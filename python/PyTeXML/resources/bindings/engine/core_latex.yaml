@@ -13,6 +13,37 @@ identity:
 
 reading:
   commands:
+    # latex2e base/ltclass.dtx v1.5o, @ifl@aded; no binding-availability test.
+    # https://github.com/latex3/latex2e/blob/develop/base/ltclass.dtx
+    - name: "\\@ifpackageloaded"
+      family: source_command
+      action: branch_test
+      metadata: {predicate: loaded, kind: package}
+      grammar:
+        handler: source_arguments
+        arguments: [{name: name, kind: braced, role: data}, {name: then, kind: braced, role: branch}, {name: else, kind: braced, role: branch}]
+    - name: "\\@ifclassloaded"
+      family: source_command
+      action: branch_test
+      metadata: {predicate: loaded, kind: class}
+      grammar:
+        handler: source_arguments
+        arguments: [{name: name, kind: braced, role: data}, {name: then, kind: braced, role: branch}, {name: else, kind: braced, role: branch}]
+    # latex2e base/lterror.dtx v1.2u: message/help tokens are expanded for
+    # diagnostics, not dispatched as document commands. Expansion remains later.
+    # https://github.com/latex3/latex2e/blob/develop/base/lterror.dtx
+    - name: "\\PackageError"
+      family: source_command
+      action: opaque
+      grammar:
+        handler: source_arguments
+        arguments: [{name: package, kind: braced, role: diagnostic}, {name: message, kind: braced, role: diagnostic}, {name: help, kind: braced, role: diagnostic}]
+    - name: "\\ClassError"
+      family: source_command
+      action: opaque
+      grammar:
+        handler: source_arguments
+        arguments: [{name: class, kind: braced, role: diagnostic}, {name: message, kind: braced, role: diagnostic}, {name: help, kind: braced, role: diagnostic}]
     # latex2e base/ltdefns.dtx: capture the authored signature and replacement
     # tokens; do not synthesize the kernel's optional-argument helper macros.
     - name: "\\newcommand"
@@ -41,8 +72,8 @@ reading:
       action: declare_option
       grammar:
         handler: source_arguments
-        arguments: [{name: name, kind: braced}, {name: body, kind: braced}]
-        starred_arguments: [{name: body, kind: braced}]
+        arguments: [{name: name, kind: braced, role: data, literal_categories: [4, 7, 8, 10, 11, 12]}, {name: body, kind: braced, role: stored}]
+        starred_arguments: [{name: body, kind: braced, role: stored}]
     - name: "\\ProcessOptions"
       family: option_control
       action: process_options
@@ -51,7 +82,7 @@ reading:
     - name: "\\ExecuteOptions"
       family: option_control
       action: execute_options
-      grammar: {handler: source_arguments, arguments: [{name: options, kind: braced}]}
+      grammar: {handler: source_arguments, arguments: [{name: options, kind: braced, role: data, literal_categories: [4, 7, 8, 10, 11, 12]}]}
 
     # TeX82 scan_toks/get_r_token: only the local, non-expanding form is
     # executable in the initial structural dispatcher. Other forms resolve to

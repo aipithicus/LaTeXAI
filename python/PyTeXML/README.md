@@ -106,15 +106,26 @@ in structural coverage even though their text has been captured.
 Activity, binding availability and payload delivery are independent. Reader units
 and their requirements carry `activity`: `reached` identifies an encountered
 declaration/invocation (not execution of its stored body), `skipped` identifies a
-discarded branch, and `unresolved` identifies an observation inside deferred code.
+discarded branch, `stored` identifies captured replacement code, `data` identifies
+declared data/diagnostic arguments, and `unresolved` identifies unknown activity.
+`activity_evidence` records the reason and links to the owning unit and controlling
+decision, where applicable. Argument roles come from YAML rather than containment
+alone. These unit links resolve to finalized artifact locations in the manifest.
 Package requests record `binding_available` and `binding_activated`, including for
 local package copies; these do not determine whether their declaration was reached.
 Local source still gets scanned and retained when its reading binding activates.
-Requirement `materialization` is `pending`, `prepared` or `not_required`.
+Requirements carry `dependency` (`none`, `possible`, `required`) and `next_step`.
+`materialization` is `pending`, `prepared`, `not_required`, or `undetermined` for
+a dependency whose owning context has not established a resource request.
 `materialization_status` summarizes known payload requests, not expanded dependency
 closure. Missing citation-provider knowledge belongs to the binding stage; an
-unprepared image/input still has pending materialization. Converted observed
-images retain unknown activity and an interpretation requirement without keeping
+established unprepared image/input still has pending materialization. A dependency
+mention inside unknown code needs argument/branch resolution first; one inside a
+stored definition waits for macro invocation. Diagnostic arguments are retained
+as data, with any diagnostic expansion deferred, without treating message text as
+file-load commands. `remaining_work` counts requirement and diagnostic records by
+their next step; a diagnostic and its linked requirement remain separate records.
+Converted observed images retain unknown activity and an interpretation requirement without keeping
 preparation partial merely because their enclosing environment is uninterpreted.
 
 Each retained-code input owns a recovery checkpoint. An unsupported nested style
@@ -134,6 +145,16 @@ and supporting definition units. These are source-visible decisions under the
 manifest's reading assumptions, not proof about hidden effects of arbitrary code.
 The kernel `if@twoside` rule supplies nesting without guessing its class-dependent
 truth. General `let` aliases, numeric predicates and hook execution remain deferred.
+
+The YAML `branch_test` recipe also supports literal class/package-loaded queries.
+The reader uses ordered source-visible load facts, independently of binding
+availability; it never looks ahead to activate a later package. Observed possible
+loads and unread retained-code suffixes make negative answers unknown. Positive
+facts remain usable. Decisions record their load evidence, uncertainty links and
+source-visible assumption. The dispatcher routes the selected captured token
+branch, preserving capture-time categories, while preparation emits the original
+wrapper with skipped content omitted and admitted inputs inlined. General expansion
+and character-mode literal parsing inside captured argument tokens remain deferred.
 
 Unbound environments also retain `DeferredRegion.observations`: direct command
 headers scanned using existing YAML argument grammars. Preparation can resolve

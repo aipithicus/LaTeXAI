@@ -37,7 +37,8 @@ def observe_environment_assets(session, region):
             path = session.image_path(command, provisional=True)
         except ReadingIssue as error:
             record["reason"] = error.reason
-            session.require(command.span, error.reason, error.detail, stage="preparation", unit_id=command.unit_id)
+            session.require(command.span, error.reason, error.detail, stage="preparation", unit_id=command.unit_id,
+                            dependency="possible", next_step="resource_resolution")
             continue
         target = session.name(path)
         record.update(target=target, status="resolved")
@@ -46,7 +47,7 @@ def observe_environment_assets(session, region):
         session.require(command.span, "observed_asset",
             "Literal image resolved for the payload under entry reading/search state; "
             "its enclosing environment remains uninterpreted", stage="interpretation", unit_id=command.unit_id,
-            materialization="pending")
+            materialization="pending", next_step="asset_conversion")
     return tuple(references)
 
 

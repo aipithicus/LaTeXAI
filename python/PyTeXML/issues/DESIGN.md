@@ -52,12 +52,30 @@ visible dependencies and author definitions. This does not verify that arbitrary
 local modifications conform to the binding's package semantics.
 
 Requirements retain their owner stage plus a materialization disposition:
-`pending`, `prepared`, or `not_required`. The manifest's materialization status
+`pending`, `prepared`, `not_required`, or `undetermined`. The manifest's materialization status
 summarizes known payload requests and does not certify expanded closure. A binding
 gap for a captured citation needs no additional payload; a missing input or asset
 still does. Prepared candidate assets remain semantically unresolved observations
 without being counted as unfinished conversions. Retained-code reading gaps can
 leave preparation partial even when that code's payload is already prepared.
+
+Activity has evidence: a selected/skipped unit links to its controlling decision;
+arguments link to the declaring header and YAML role; stored bodies link to their
+definition. `dependency=possible` is an observation awaiting context, not a missing
+file. `next_step` distinguishes branch/argument resolution, macro invocation,
+binding knowledge, resource resolution, conversion and later interpretation.
+Preparation can remain partial while known materialization is complete. Conversely,
+stored code and diagnostics remain available for later interpretation without
+being counted as unfinished file requests. Diagnostic-role knowledge does not
+claim that message expansion has been evaluated.
+
+Source-visible load tests use the same dispatcher and frozen-token cursor as
+bounded reading, with a separate ordered load-fact store. Binding presence is not
+a load fact. Missing facts justify a negative result only under the recorded
+source-visible assumption and in the absence of observed uncertain loads/unread
+local code. Selected braced branches are not reparsed under subsequently changed
+catcodes. Raw source is never modified; skipped extents and emitted edits remain
+accounted for at final materialization.
 
 ## Package
 

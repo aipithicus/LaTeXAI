@@ -20,7 +20,9 @@ def emit_observed_region(session, region, *, chain=()):
     references = observe_environment_assets(session, region)
     observed = [o.command for o in region.observations
                 if o.command.action in {"asset_reference", "source_input", "bibliography", "bibliography_style"}]
-    session._deferred_dependencies(region.tokens, observed=observed, parent_id=region.unit_id)
+    session._deferred_dependencies(region.tokens, observed=observed, parent_id=region.unit_id,
+                                   observations=region.observations,
+                                   role="branch" if isinstance(region, ConditionalRegion) else "unknown")
     cursor = region.span.start
     search_changed = False
 
@@ -73,7 +75,8 @@ def emit_observed_region(session, region, *, chain=()):
         except (ReadingIssue, SourceDecodingError, OSError, InvalidCharacterError) as error:
             reason = getattr(error, "reason", "conditional_input")
             record["reason"] = reason
-            session.require(command.span, reason, str(error), stage="preparation", unit_id=command.unit_id)
+            session.require(command.span, reason, str(error), stage="preparation", unit_id=command.unit_id,
+                            dependency="possible", next_step="resource_resolution")
             continue
         session.register_reader(path, reader, candidate=True, parent=command.span.basis.occurrence_id)
         captured = observer._identify(captured, command.unit_id)
@@ -140,7 +143,7 @@ def emit_bibliography(session, observation, owner):
                     for c in commands))
     except (ReadingIssue, SourceDecodingError, OSError, InvalidCharacterError) as error:
         session.require(command.span, getattr(error, "reason", "bibliography_reading"), str(error),
-                        stage="preparation", unit_id=command.unit_id)
+                        stage="preparation", unit_id=command.unit_id, dependency="possible", next_step="bibliography_resolution")
         session._emit(command.span, deferred=observation)
         return
     session.commands.append(command)

@@ -1,5 +1,6 @@
 """Small declarative, non-expanding argument grammars for source traversal."""
 from __future__ import annotations
+from dataclasses import replace
 from .contracts import ReadingIssue, ScannedArgument, SourceCommand
 from .tex_reader import CatCode, TokenKind
 
@@ -109,9 +110,10 @@ class ArgumentScanner:
                 else:
                     arg = self.group(name, optional=kind == "optional")
                 if arg is not None:
-                    arguments.append(arg)
+                    arguments.append(replace(arg, role=spec.get("role", "unknown"),
+                        literal_categories=tuple(spec["literal_categories"]) if "literal_categories" in spec else None))
         return SourceCommand(self.reader.source_span(opening.start, self.reader.position), profile.name,
-                             profile.action, tuple(arguments), profile.tex_mechanics)
+                             profile.action, tuple(arguments), {**profile.tex_mechanics, "binding_id": profile.binding_id})
 
 
 def key_values(argument: ScannedArgument | None) -> dict[str, str]:

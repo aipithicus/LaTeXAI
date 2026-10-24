@@ -18,7 +18,8 @@ from ..reading.argument_scanner import key_values
 from ..reading.coverage import ReadingCoverage
 from ..reading.contracts import (SourceCommand, SourceEnd, ReadingBoundary, ReadingIssue,
                                 StoredDefinition, CommandDefinition, EnvironmentDefinition, CollectedEnvironment,
-                                SkippedRegion, DeferredRegion, LiteralRegion, ConditionalRegion)
+                                SkippedRegion, DeferredRegion, LiteralRegion, ConditionalRegion, ScannedArgument)
+from ..reading.dependencies import observe_dependencies, DEPENDENCY_ACTIONS
 from ..reading.tex_reader import TexReader, ReadEvent, TokenKind, CatCode
 from ..reading.edit_map import EditMap
 from ..reading.units import UnitRegistry
@@ -33,6 +34,7 @@ from .assets import observe_environment_assets
 from .deferred import emit_observed_region
 from .provenance import Tombstone
 from .manifest import PreflightManifest, BibliographyInfo, PackageUsage, StyleFileInfo, ImplicitGraphicInfo
+from .requirements import work_classification
 
 
 class PreparationUnresolved(ValueError):
@@ -120,6 +122,7 @@ class PreparationSession:
         """Inventory/failure output has identities, but no finalized artifact yet."""
         self.manifest.units = [dict(u.to_dict(), location_status="pending", locations=[])
                                for u in self.units.records.values()]
+        self.manifest.conditional_decisions = list(self.dispatcher.decisions)
         for record in (*self.manifest.requirements, *self.manifest.unresolved):
             record.update(location_status="pending", locations=[])
 
@@ -154,23 +157,25 @@ class PreparationSession:
     def raw(self, span):
         return self.documents[span.basis].text[span.start:span.end]
 
-    def diagnose(self, span, reason, detail, *, unit_id=None):
+    def diagnose(self, span, reason, detail, *, unit_id=None, dependency="none"):
         unit_id = unit_id or self.units.add(span, "diagnostic")
         self.units.require(unit_id, span)
         diagnostic = {"source": span.basis.source_id, "occurrence": span.basis.occurrence_id,
                       "start": span.start, "end": span.end, "line": self.line(span),
                       "reason": reason, "detail": detail, "unit_id": unit_id,
-                      "activity": self.units.records[unit_id].activity, "materialization": "pending",
+                      "activity": self.units.records[unit_id].activity,
+                      "activity_evidence": dict(self.units.records[unit_id].activity_evidence),
+                      **work_classification(reason, "preparation", dependency=dependency),
                       "location_status": "pending", "locations": []}
         self.manifest.unresolved.append(diagnostic)
         return diagnostic
 
     def fail(self, span, reason, detail):
-        diagnostic = self.diagnose(span, reason, detail)
+        diagnostic = self.diagnose(span, reason, detail, dependency="required")
         raise PreparationUnresolved(f"{diagnostic['source']}:{diagnostic['line']} [{reason}] {detail}")
 
     def require(self, span, reason, detail, *, stage="interpretation", unit_id=None, parent_id=None,
-                materialization=None, activity=None):
+                materialization=None, activity=None, dependency=None, next_step=None):
         unit_id = unit_id or self.units.add(span, "requirement_target", parent_id, activity=activity)
         self.units.require(unit_id, span)
         requirement = {"id": f"requirement-{len(self.manifest.requirements) + 1}", "unit_id": unit_id,
@@ -178,7 +183,10 @@ class PreparationSession:
             "occurrence": span.basis.occurrence_id, "start": span.start, "end": span.end,
             "line": self.line(span), "reason": reason, "detail": detail, "stage": stage,
             "activity": self.units.records[unit_id].activity,
-            "materialization": materialization or ("pending" if stage == "preparation" else "not_required"),
+            "activity_evidence": dict(self.units.records[unit_id].activity_evidence),
+            **work_classification(reason, stage,
+                dependency=dependency or ("required" if materialization == "pending" else "none"),
+                materialization=materialization, next_step=next_step),
             "location_status": "pending", "locations": []}
         self.manifest.requirements.append(requirement)
         return requirement
@@ -320,24 +328,58 @@ class PreparationSession:
         # Capturing a bounded header does not require interpreting its contents.
         # Retain the whole header and locate work without dispatching its body.
         for arg in command.arguments:
-            for token in arg.tokens:
-                if token.kind != TokenKind.CHARACTER or token.catcode in (CatCode.PARAMETER, CatCode.MATH_SHIFT, CatCode.ALIGNMENT_TAB):
-                    self.require(token.span, "argument_behavior", "Unexpanded argument token retained inside " + command.name,
-                                 parent_id=command.unit_id, activity="unresolved")
-        self._deferred_dependencies((t for arg in command.arguments for t in arg.tokens), parent_id=command.unit_id)
+            identifier = command.metadata.get("argument_units", {}).get(arg.name, command.unit_id)
+            if arg.role in {"data", "diagnostic"}:
+                if arg.role == "diagnostic" and any(t.kind in {TokenKind.CONTROL_SEQUENCE, TokenKind.ACTIVE_CHARACTER} for t in arg.tokens):
+                    self.require(arg.span, "diagnostic_expansion", "Diagnostic expansion is deferred; these tokens are not dispatched as manuscript commands",
+                        unit_id=identifier if self.units.records[identifier].span == arg.span else None,
+                        parent_id=command.unit_id, activity="data", next_step="diagnostic_expansion")
+                continue
+            if any(t.kind != TokenKind.CHARACTER or t.catcode in (CatCode.PARAMETER, CatCode.MATH_SHIFT, CatCode.ALIGNMENT_TAB)
+                   for t in arg.tokens):
+                self.require(arg.span, "argument_behavior", "Captured argument retained inside " + command.name,
+                    unit_id=identifier if self.units.records[identifier].span == arg.span else None,
+                    parent_id=command.unit_id, activity="stored" if arg.role == "stored" else "unresolved",
+                    next_step="macro_invocation" if arg.role == "stored" else "argument_behavior")
+            self._observe_argument(arg, identifier)
 
-    def _deferred_dependencies(self, tokens, *, observed=(), parent_id=None):
+    def _observe_argument(self, argument, parent_id, *, excluded=()):
+        for token, identifier, action, role in observe_dependencies(argument,
+                self.documents[argument.span.basis].text, self.context, self.resolver,
+                self.units, parent_id, excluded=excluded):
+            self.require(token.span, "deferred_dependency", "Possible dependency; its owning context has not dispatched this request",
+                stage="interpretation" if role == "stored" else "preparation", unit_id=identifier,
+                dependency="possible", next_step="macro_invocation" if role == "stored" else
+                    "branch_selection" if role == "branch" else "argument_behavior")
+            if action in {"package_load", "document_class"} and role != "stored":
+                self.dispatcher.loads.invalidate(identifier)
+
+    def _deferred_dependencies(self, tokens, *, observed=(), observations=(), parent_id=None, command=None, role="unknown"):
         starts = {command.span.start for command in observed}
-        for token in tokens:
-            if token.span.start in starts:
-                continue
-            if token.kind != TokenKind.CONTROL_SEQUENCE:
-                continue
-            profile = self.resolver.resolve_command(token.value)
-            if getattr(profile, "action", None) in {"source_input", "source_include", "source_import",
-                    "source_subimport", "asset_reference", "bibliography", "biblatex_resource", "package_load", "external_literal"}:
-                self.require(token.span, "deferred_dependency", "Dependency inside an uninterpreted expression requires its owning context",
-                             stage="preparation", parent_id=parent_id, activity="unresolved")
+        envelopes = sorted((o.command for o in observations), key=lambda c: c.span.start)
+        if envelopes:
+            for header in envelopes:
+                if header.action in DEPENDENCY_ACTIONS and header.span.start not in starts:
+                    self.require(header.span, "deferred_dependency", "Possible dependency in a retained source region",
+                        stage="preparation", unit_id=header.unit_id, dependency="possible",
+                        next_step="branch_selection" if role == "branch" else "argument_behavior")
+                    if header.action in {"package_load", "document_class"}:
+                        self.dispatcher.loads.invalidate(header.unit_id)
+                for arg in header.arguments:
+                    self._observe_argument(arg, header.unit_id)
+            # Known headers were captured with their argument roles. Do not
+            # rediscover their flattened argument tokens as free-standing code.
+            positions = [c.span.start for c in envelopes]
+            tokens = tuple(t for t in tokens if (i := bisect_right(positions, t.span.start) - 1) < 0
+                           or t.span.start >= envelopes[i].span.end)
+        if command is not None:
+            for arg in command.arguments:
+                self._observe_argument(arg, command.metadata.get("argument_units", {}).get(arg.name, parent_id), excluded=starts)
+        else:
+            tokens = tuple(tokens)
+            if tokens:
+                span = tokens[0].span.basis.span(tokens[0].span.start, tokens[-1].span.end)
+                self._observe_argument(ScannedArgument("captured", span, tokens, role), parent_id, excluded=starts)
 
     def image_path(self, command, *, provisional=False):
         """Resolve the literal image header against the current search context."""
@@ -366,6 +408,7 @@ class PreparationSession:
                 self.dispatcher.defer_effects(command.span)
             return
         self.loaded_packages.add(key)
+        self.dispatcher.loads.record("class" if is_class else "package", name, command.unit_id)
         self.package_options[key] = tuple(options)
         usage = PackageUsage(name, options, path is not None, self.name(path) if path else None,
                              unit_id=command.unit_id, binding_available=name in self.resolver.catalog.package_bindings)
@@ -399,10 +442,6 @@ class PreparationSession:
     def _command(self, command):
         frame, action = self.frames[-1], command.action
         self.commands.append(command)
-        if action == "conditional_test":
-            self.manifest.conditional_decisions.append({"unit_id": command.unit_id,
-                "predicate": command.metadata["predicate"], "truth": command.metadata["truth"],
-                "definition_unit_ids": command.metadata["definition_unit_ids"]})
         for check in command.metadata.get("definition_checks", ()):
             self._definition_check(**check)
         if action == "pass_options":
@@ -574,7 +613,7 @@ class PreparationSession:
             if self.frames[-1].packages:
                 self._package()
                 continue
-            if len(self.frames) == 1 and self.dispatcher.reader is self._root_reader:
+            if len(self.frames) == 1 and self.dispatcher.reader is self._root_reader and not self.dispatcher.branch_in_progress:
                 self._checkpoint = (self.frames[0].reader.position, len(self.pieces),
                                     len(self.tombstones), len(self.commands))
             item = self.dispatcher.next_item()
@@ -587,6 +626,7 @@ class PreparationSession:
                     start, pieces, tombstones, commands = self._checkpoint
                     self._checkpoint = (min(start, item.remainder.start), pieces, tombstones, commands)
                 diagnostic = self.diagnose(item.span, item.reason, item.detail, unit_id=item.unit_id)
+                self.dispatcher.loads.invalidate(item.unit_id)
                 recoverable = next((i for i in reversed(range(len(self.frames)))
                                     if self.frames[i].recovery is not None), None)
                 if recoverable is not None:
@@ -619,12 +659,12 @@ class PreparationSession:
                     checkpoint = (len(self.pieces), len(self.tombstones))
                     self._command(item)
                 elif isinstance(item, DeferredRegion):
-                    dependency = item.command is not None and item.command.action in {
-                        "asset_reference", "source_input", "source_include", "source_import", "source_subimport",
-                        "bibliography", "biblatex_resource", "biblatex_print", "package_load", "external_literal"}
+                    dependency = item.command is not None and item.command.action in DEPENDENCY_ACTIONS
                     requirement = self.require(item.span, item.reason, item.detail,
                         stage="binding" if item.reason == "package_not_loaded" else "interpretation", unit_id=item.unit_id,
-                        materialization="pending" if dependency else "not_required")
+                        dependency="possible" if dependency else "none",
+                        next_step="binding_knowledge" if item.reason == "package_not_loaded" else
+                            "branch_selection" if item.reason == "branch_selection" else None)
                     if isinstance(item, CollectedEnvironment):
                         requirement["definition_unit_id"] = item.definition_id
                     if self.frames[-1].emit and (isinstance(item, ConditionalRegion) or any(
@@ -633,7 +673,8 @@ class PreparationSession:
                         continue
                     image_references = observe_environment_assets(self, item)
                     self._deferred_dependencies(item.tokens, observed=(o.command for o in item.observations
-                        if o.command.action == "asset_reference"), parent_id=item.unit_id)
+                        if o.command.action == "asset_reference"), parent_id=item.unit_id, command=item.command,
+                        observations=item.observations, role="branch" if isinstance(item, ConditionalRegion) else "unknown")
                     raw = self.raw(item.span)
                     # A bare control word needs a separator after mouth-discarded
                     # whitespace. Protected groups and math remain exact slices.
@@ -667,6 +708,10 @@ class PreparationSession:
                             self.require(item.span, "policy_action", f"Literal role does not support {action!r}", stage="preparation", unit_id=item.unit_id)
                 else:
                     self._emit(item.span)
+                    if isinstance(item, (StoredDefinition, EnvironmentDefinition)):
+                        body_id = next(i for i in self.units.children.get(item.unit_id, ())
+                                       if self.units.records[i].kind == "stored_body")
+                        self._observe_argument(ScannedArgument("body", item.body, item.body_tokens, "stored"), body_id)
                     if isinstance(item, CommandDefinition) and item.target_check == "unverified":
                         self._definition_check(item.unit_id, item.declaration, item.target.value, item.target_requirement)
                     if isinstance(item, EnvironmentDefinition):
@@ -702,9 +747,10 @@ class PreparationSession:
         m.active_images = [characterize_image(self.name(p), str(p)) for p in sorted(self.images)]
         m.candidate_images = [characterize_image(self.name(p), str(p))
                               for p in sorted(self.candidate_images - self.images)]
+        m.refresh_status()
         for path in self.store.files:
             if path not in self.active and path not in self.candidate_sources and path not in self.images and path not in self.candidate_images:
-                if m.unresolved or m.requirements:
+                if m.source_dependency_closure != "complete":
                     m.unclassified_files.append(self.name(path))
                     continue
                 if path.suffix.lower() == ".tex":

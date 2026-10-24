@@ -99,6 +99,7 @@ class PreflightManifest:
     requirements: List[Dict[str, Any]] = field(default_factory=list)
     units: List[Dict[str, Any]] = field(default_factory=list)
     conditional_decisions: List[Dict[str, Any]] = field(default_factory=list)
+    remaining_work: Dict[str, int] = field(default_factory=dict)
     prepared_artifacts: List[Dict[str, Any]] = field(default_factory=list)
     location_contract: Dict[str, Any] = field(default_factory=dict)
     source_survey: List[Dict[str, Any]] = field(default_factory=list)
@@ -147,10 +148,13 @@ class PreflightManifest:
                               for r in (*self.requirements, *self.unresolved))
         self.materialization_status = "pending" if pending_payload else "complete"
         pending_preparation = bool(self.unresolved) or pending_payload or any(
-            r["stage"] == "preparation" for r in self.requirements)
+            r["stage"] == "preparation" or (r.get("dependency") == "possible" and r.get("activity") != "stored")
+            for r in self.requirements)
         self.source_dependency_closure = "unresolved" if pending_preparation else "complete"
         self.dependency_closure = "unresolved" if self.unresolved or self.requirements else "complete"
         self.preparation_status = "partial" if pending_preparation else "complete"
+        from collections import Counter
+        self.remaining_work = dict(Counter(r.get("next_step", "unclassified") for r in (*self.requirements, *self.unresolved)))
 
     def to_dict(self) -> Dict[str, Any]:
         return dataclasses.asdict(self)

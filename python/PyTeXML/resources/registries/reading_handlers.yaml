@@ -2,6 +2,9 @@ identity:
   registry: reading_handlers
   description: Reading actions and their current implementation boundary
 handlers:
+  branch_test:
+    status: scanner
+    description: Select a braced branch from ordered source-visible class/package load facts; dispatch frozen tokens without general macro expansion
   define_configuration:
     status: scanner
     description: Capture a named ordered key/value recipe without applying it; binding declares its scope

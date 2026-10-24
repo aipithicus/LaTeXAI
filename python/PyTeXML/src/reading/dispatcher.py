@@ -9,6 +9,7 @@ a located boundary and unchanged residue.
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
+from collections import deque
 from typing import Iterator
 
 from .context import ExecutionMode, ReaderContext
@@ -16,7 +17,7 @@ from .contracts import (
     ConditionalRule, EffectiveReadingProfile, LiteralRegion, ReadingBoundary, ReadingIssue,
     ReadingKnowledge, SkippedRegion, StoredDefinition, SourceCommand, SourceEnd, require_resolved,
     DeferredRegion, UnresolvedBindingResult, UnresolvedReason, BooleanMeaning, CommandDefinition,
-    EnvironmentDefinition, UncertainMeaning,
+    EnvironmentDefinition, UncertainMeaning, ScannedArgument,
 )
 from .boolean_scanner import declaration as boolean_declaration
 from .argument_scanner import ArgumentScanner, key_values
@@ -30,6 +31,8 @@ from .literal_scanner import LiteralScanner
 from .skipped_scanner import SkippedBranchScanner, SkippedScan
 from .conditional_scanner import ConditionalScanner
 from .predicates import compare_characters
+from .dependencies import argument_activity
+from .loads import SourceLoadState
 from .spans import SourceSpan
 from .units import UnitRegistry
 from .options import OptionBody, OptionScope, option_names
@@ -48,6 +51,15 @@ class _ConditionalFrame:
     opening: SourceSpan
     truth: bool
     in_alternative: bool = False
+    unit_id: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class _BranchStart:
+    argument: ScannedArgument
+    after: tuple
+    unit_id: str
+    branch: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -62,6 +74,9 @@ class InputRecovery:
     environments: tuple
     replays: dict
     options: OptionScope | None
+    pending: tuple
+    branch_replays: dict
+    active_branches: tuple
 
 
 class StructuralDispatcher:
@@ -77,7 +92,7 @@ class StructuralDispatcher:
 
     def __init__(self, reader: TexReader, context: ReaderContext, knowledge: ReadingKnowledge,
                  *, source_commands: bool = False, preparation: bool = False, units: UnitRegistry | None = None,
-                 options: OptionScope | None = None):
+                 options: OptionScope | None = None, loads: SourceLoadState | None = None):
         self.literals = LiteralScanner(reader, context, knowledge)
         self.definitions = DefinitionScanner(reader, context)
         self.environments = EnvironmentScanner(reader, context)
@@ -100,6 +115,12 @@ class StructuralDispatcher:
         self._root_ended = False
         self._replays = {}
         self.units = units if units is not None else UnitRegistry()
+        self.loads = loads if loads is not None else SourceLoadState()
+        self.decisions = []
+        self._conditional_units = {}
+        self._pending = deque()
+        self._branch_replays = {}
+        self._active_branches = []
 
     def input_recovery(self) -> InputRecovery:
         """Snapshot only at an active handoff, before entering retained code."""
@@ -109,7 +130,7 @@ class StructuralDispatcher:
         return InputRecovery(self, self.reader, self.context.copy(), parents,
                              tuple(self._groups), tuple(replace(f) for f in self._conditionals),
                              tuple(self._environment_stack), dict(self._replays),
-                             options)
+                             options, tuple(self._pending), dict(self._branch_replays), tuple(self._active_branches))
 
     @staticmethod
     def _copy_option_stack(parents, options):
@@ -138,6 +159,9 @@ class StructuralDispatcher:
         self._conditionals = [replace(f) for f in saved.conditionals]
         self._environment_stack = list(saved.environments)
         self._replays = dict(saved.replays)
+        self._pending = deque(saved.pending)
+        self._branch_replays = dict(saved.branch_replays)
+        self._active_branches = list(saved.active_branches)
         self._skip_start = self._pending_skip = None
         self.halted = self._finished = False
         self._set_reader(saved.reader)
@@ -180,13 +204,41 @@ class StructuralDispatcher:
         item = self._next_item()
         return self._identify(item) if item is not None and not isinstance(item, ReadEvent) else item
 
+    def _activity_evidence(self):
+        guards = [(f.unit_id, "else" if f.in_alternative else "then") for f in self._conditionals]
+        guards.extend(self._active_branches)
+        if guards:
+            identifier, branch = max(guards, key=lambda g: int(g[0].split("-")[-1]))
+            return {"reason": "selected_branch", "decision_unit_id": identifier, "branch": branch}
+        return {"reason": "source_sequence", "assumption": "source_visible_reading"}
+
+    @property
+    def branch_in_progress(self):
+        return bool(self._pending or self._branch_replays)
+
     def _identify(self, item, parent_id=None):
         if item.unit_id is not None:
             self.units.require(item.unit_id, item.span)
             return item
-        activity = "unresolved" if parent_id else "skipped" if isinstance(item, SkippedRegion) else "reached"
-        identifier = self.units.add(item.span, type(item).__name__, parent_id, activity=activity)
+        activity = "unresolved" if parent_id else "reached"
+        evidence = {"reason": "deferred_observation"} if parent_id else self._activity_evidence()
+        if isinstance(item, SkippedRegion):
+            activity = "skipped"
+            evidence = {"reason": "excluded_branch", "decision_unit_id": self._conditional_units.get(item.conditional),
+                        "branch": item.branch}
+        identifier = self.units.add(item.span, type(item).__name__, parent_id, activity=activity, evidence=evidence)
         item = replace(item, unit_id=identifier)
+        if isinstance(item, SourceCommand) and item.arguments:
+            arguments = {}
+            for arg in item.arguments:
+                arguments[arg.name] = self.units.add(arg.span, "argument", identifier,
+                    activity=argument_activity(arg.role), evidence={"reason": "declared_argument_role",
+                        "argument_name": arg.name, "argument_role": arg.role,
+                        "binding_id": item.metadata.get("binding_id", "")})
+            item = replace(item, metadata={**item.metadata, "argument_units": arguments})
+        if isinstance(item, (StoredDefinition, EnvironmentDefinition)):
+            self.units.add(item.body, "stored_body", identifier, activity="stored",
+                           evidence={"reason": "stored_definition"})
         if isinstance(item, DeferredRegion):
             # A captured command is another view of the same observed unit.
             item = replace(item, command=replace(item.command, unit_id=identifier) if item.command else None,
@@ -198,6 +250,14 @@ class StructuralDispatcher:
     def _next_item(self):
         if self.halted or self._finished:
             return None
+        if self._pending:
+            item = self._pending.popleft()
+            if not isinstance(item, _BranchStart):
+                return item
+            cursor = TokenCursor(item.argument, self.reader.text, self.context)
+            self._branch_replays[cursor] = (self.reader, item.after)
+            self._active_branches.append((item.unit_id, item.branch))
+            self._set_reader(cursor)
         reader, context = self.reader, self.context
         # A skipped scan has consumed its delimiter, but it is still owed to the
         # output stream. A context failure here must retain that source too.
@@ -224,6 +284,12 @@ class StructuralDispatcher:
         except InvalidCharacterError as error:
             return self._boundary(error.span, "invalid_character", str(error))
         if event is None:
+            if reader in self._branch_replays:
+                parent, after = self._branch_replays.pop(reader)
+                self._active_branches.pop()
+                self._set_reader(parent)
+                self._pending.extendleft(reversed(after))
+                return self._next_item()
             if reader in self._replays:
                 parent, closing, name, metadata = self._replays.pop(reader)
                 self._set_reader(parent)
@@ -272,7 +338,7 @@ class StructuralDispatcher:
             deferred = DeferredScanner(reader, context)
             if isinstance(meaning, UncertainMeaning):
                 raise ReadingIssue("uncertain_meaning", f"{token.value!r} may have been redefined at {meaning.span}")
-            if (isinstance(reader, TokenCursor) and token.kind == TokenKind.CHARACTER
+            if (isinstance(reader, TokenCursor) and reader not in self._branch_replays and token.kind == TokenKind.CHARACTER
                     and token.catcode not in {CatCode.SPACE, CatCode.BEGIN_GROUP, CatCode.END_GROUP}):
                 raise ReadingIssue("option_body", "Option text requires interpretation beyond reading effects")
             if isinstance(meaning, BooleanMeaning):
@@ -285,7 +351,8 @@ class StructuralDispatcher:
                     truth = self._boolean_value(meaning.source)
                     context.record_meaning(meaning.target, BooleanMeaning(event.span, truth))
                 else:
-                    self._conditional(context.conditional_rule(token.value, self.knowledge), event.span)
+                    self._conditional(context.conditional_rule(token.value, self.knowledge), event.span,
+                                      metadata={"predicate": "established_boolean"})
                 return event
             if definition is not None:
                 return self._deferred(deferred.command(token, "stored_macro", f"Unexpanded {token.value!r}; definition at "
@@ -388,11 +455,15 @@ class StructuralDispatcher:
                         self.environments.validate_final(value)
                     context.record_capture_setting(command.metadata["key"], value)
                     return command
+                if command.action == "branch_test":
+                    return self._branch_test(command)
                 if command.action in {"opaque", "metadata", "citation"} and any(
                         t.kind in {TokenKind.CONTROL_SEQUENCE, TokenKind.ACTIVE_CHARACTER}
-                        for arg in command.arguments for t in arg.tokens):
+                        for arg in command.arguments if arg.role not in {"data", "diagnostic", "stored"} for t in arg.tokens):
                     self.defer_effects(command.span)
                 if command.action == "end_input":
+                    self._require(not isinstance(reader, TokenCursor), "token_input_boundary",
+                                  "Endinput in captured argument tokens needs the physical input owner")
                     reader.end_input_after_line()
                 elif command.action == "environment_end":
                     name = command.value("name")
@@ -415,8 +486,9 @@ class StructuralDispatcher:
                               "unsupported_conditional", "Conditional requires a standalone nesting/evaluation rule")
                 command = compare_characters(reader, context, token, profile.conditional)
                 if command is not None:
-                    self._conditional(ConditionalRule("opener", "always_true" if command.metadata["truth"] else "always_false"), command.span)
-                    return command
+                    identifier = self._conditional(ConditionalRule("opener", "always_true" if command.metadata["truth"] else "always_false"),
+                        command.span, metadata=command.metadata)
+                    return replace(command, unit_id=identifier)
                 if (self.preparation and profile.conditional.role == "opener"
                         and profile.conditional.evaluation == "deferred"):
                     return self._capture_conditional(token, profile.conditional)
@@ -549,7 +621,8 @@ class StructuralDispatcher:
                 self._require(not any(t.catcode == CatCode.PARAMETER for t in body.argument.tokens),
                               "option_body", f"Option {name!r} requires parameter-token compilation")
                 cursor = TokenCursor(body.argument, body.text, self.context)
-                replay = StructuralDispatcher(cursor, self.context, self.knowledge, units=self.units)
+                replay = StructuralDispatcher(cursor, self.context, self.knowledge, units=self.units, loads=self.loads)
+                replay.decisions = self.decisions
                 for item in replay:
                     if isinstance(item, (ReadingBoundary, DeferredRegion)):
                         raise ReadingIssue("option_body", f"Option {name!r} requires {item.reason} at "
@@ -701,16 +774,57 @@ class StructuralDispatcher:
             self.reader.restore(checkpoint)
         return False
 
-    def _conditional(self, rule: ConditionalRule, span: SourceSpan) -> None:
+    def _branch_test(self, command):
+        """Route a YAML-described braced branch over its already captured tokens."""
+        command = self._identify(command)
+        try:
+            name = command.value("name")
+            self._require(bool(name), "computed_argument", "A load query needs a nonempty literal name")
+            truth, facts, unknown = self.loads.query(command.metadata["kind"], name)
+            detail = "An earlier source region may contain additional loads" if truth is None else ""
+        except ReadingIssue as error:
+            name, truth, facts, unknown, detail = None, None, [], [], error.detail
+        self.decisions.append({"unit_id": command.unit_id, "predicate": "loaded",
+            "kind": command.metadata["kind"], "name": name, "truth": truth,
+            "definition_unit_ids": [], "load_unit_ids": facts, "uncertainty_unit_ids": unknown,
+            "assumption": "source_visible_loads"})
+        if truth is None:
+            return self._deferred(DeferredRegion(command.span, "branch_selection", detail,
+                tuple(t for a in command.arguments for t in a.tokens), command,
+                command.metadata["binding_id"], unit_id=command.unit_id))
+        then, otherwise = command.argument("then"), command.argument("else")
+        selected, rejected = (then, otherwise) if truth else (otherwise, then)
+        for arg in (selected, rejected):
+            self.units.decide(command.metadata["argument_units"][arg.name],
+                "reached" if arg is selected else "skipped",
+                {"reason": "selected_branch" if arg is selected else "excluded_branch",
+                 "decision_unit_id": command.unit_id, "branch": arg.name})
+        span = command.span
+        prefix = span.basis.span(span.start, then.span.start)
+        self._conditional_units[prefix] = command.unit_id
+        boundary = lambda s: SourceCommand(s, command.name, "branch_boundary", metadata={"decision_unit_id": command.unit_id})
+        middle = boundary(span.basis.span(then.span.end, otherwise.span.start))
+        suffix = boundary(span.basis.span(otherwise.span.end, span.end))
+        skipped = SkippedRegion(rejected.span, prefix, rejected.name)
+        before = [boundary(prefix)] if truth else [boundary(prefix), skipped, middle]
+        after = (middle, skipped, suffix) if truth else (suffix,)
+        self._pending.extend((*before, _BranchStart(selected, after, command.unit_id, selected.name)))
+        return self._next_item()
+
+    def _conditional(self, rule: ConditionalRule, span: SourceSpan, *, metadata=None):
         """Own execution and stack changes; conditionals do not create scopes."""
         if rule.role == "opener":
             self._require(rule.evaluation in {"always_true", "always_false"},
                           "unsupported_conditional", "Conditional predicate requires interpretation")
             truth = rule.evaluation == "always_true"
-            self._conditionals.append(_ConditionalFrame(span, truth))
+            identifier = self.units.add(span, "conditional_decision", activity="reached", evidence=self._activity_evidence())
+            self._conditional_units[span] = identifier
+            self.decisions.append({"unit_id": identifier, "predicate": "constant", "truth": truth,
+                                   "definition_unit_ids": [], **(metadata or {})})
+            self._conditionals.append(_ConditionalFrame(span, truth, unit_id=identifier))
             if not truth:
                 self._skip_start = span.end
-            return
+            return identifier
         self._require(rule.evaluation is None, "unsupported_conditional",
                       "Only conditional openers may have an evaluation rule")
         self._require(rule.role in {"alternative", "case_alternative", "terminator"},
