@@ -7,6 +7,7 @@ from .manifest import PreflightManifest
 from .provenance import ProvenanceLedger
 from .bibliography import prepare_bibliography
 from .assets import batch_convert_assets_to_svg, rewrite_image_references
+from .locations import finalize_locations
 
 
 def preprocess_paper(
@@ -73,24 +74,31 @@ def preprocess_paper(
                     if candidate.get("target") in mapping:
                         candidate.update(payload=mapping[candidate["target"]], status="prepared")
             if session.bibliography_pieces is not None:
-                spans = {p.span for p in session.bibliography_pieces}
-                prepared_bbl = ''.join(p.text for p in pieces if p.span in spans)
+                keys = {p.key for p in session.bibliography_pieces}
+                prepared_bbl = ''.join(p.text for p in pieces if p.key in keys)
                 (out_dir / "bibliography.bbl").write_text(prepared_bbl, encoding="utf-8", newline="\n")
             dependencies = [Path(s.abs_path) for s in manifest.local_styles] + [p_dir / p for p in manifest.code_inputs]
             if (dependencies or session.literal_payloads) and not copy_local_dependencies:
                 raise ValueError("Local code dependencies must be emitted for a standalone extraction package")
             # Local code remains source-preserving until its own emission contract
             # exists. The cache also supplies payload bytes; no reopen/copy pass.
+            payloads = {}
             for source in dependencies:
                 target = out_dir / source.relative_to(p_dir)
                 target.parent.mkdir(parents=True, exist_ok=True)
-                target.write_text(session.payload_text(source), encoding="utf-8", newline="\n")
+                payload = session.payload_text(source)
+                payloads[source] = (source.relative_to(p_dir).as_posix(), payload)
+                target.write_text(payload, encoding="utf-8", newline="\n")
             for source, relative in session.literal_payloads.items():
                 target = out_dir / relative
                 target.parent.mkdir(parents=True, exist_ok=True)
-                target.write_text(session.store.document(source).text, encoding="utf-8", newline="")
+                payload = session.store.document(source).text
+                payloads[source] = (relative, payload)
+                target.write_text(payload, encoding="utf-8", newline="")
             master_tex_content = "".join(p.text for p in pieces)
-            ledger = ProvenanceLedger.build_from_pieces(pieces, session.tombstones) if emit_provenance else None
+            locations = finalize_locations(session, pieces, master_tex_content, payloads)
+            ledger = ProvenanceLedger.build_from_pieces(pieces, locations.tombstones,
+                source_coverage=locations.source_coverage, artifact=locations.artifacts['master.tex']) if emit_provenance else None
             if ledger:
                 ledger.save(out_dir / "master.provenance.json")
             manifest.entrypoint = "master.tex"
@@ -133,6 +141,7 @@ def preprocess_paper(
                 session.manifest.preparation_status = "failed"
                 session.manifest.dependency_closure = "unresolved"
                 session.manifest.source_reads = list(session.store.read_paths)
+                session.pending_units()
                 (out_dir / "manifest.json").write_text(session.manifest.to_json(), encoding="utf-8", newline="\n")
             log.write(f"FAILED\n{type(exc).__name__}: {exc}\n")
             raise

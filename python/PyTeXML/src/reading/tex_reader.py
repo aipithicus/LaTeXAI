@@ -258,6 +258,9 @@ class TexReader:
         self._checkpoint_owner = object()
         self._stop_after_line: int | None = None
         self.terminated_span: SourceSpan | None = None
+        # Includes discard events consumed inside argument scanners. Emission
+        # subtracts preserved regions before turning these into tombstones.
+        self.discarded: list[tuple[SourceSpan, str]] = []
 
     def line_window(self, span: SourceSpan) -> TexReader:
         """Read a proven whole-line region again in memory, retaining its basis.
@@ -276,6 +279,7 @@ class TexReader:
                            occurrence_id=self.basis.occurrence_id,
                            catcodes=self.catcodes, endline_char=self.endline_char)
         reader.basis = self.basis
+        reader.discarded = self.discarded
         reader._next_line = reader._position = span.start
         reader.start = span.start
         reader.limit = span.end
@@ -333,7 +337,7 @@ class TexReader:
             self._line_end_char, self._endline_queued, self._tail_reported,
             self._failure, self._position, self._line_start,
             self._physical_content_end, self.endline_char, self._stop_after_line,
-            self.terminated_span), self.catcodes.copy())
+            self.terminated_span, len(self.discarded)), self.catcodes.copy())
 
     def consume_raw_to(self, end: int) -> None:
         """Hand a proven literal extent back without tokenizing its body.
@@ -367,7 +371,8 @@ class TexReader:
          self._line_end_char, self._endline_queued, self._tail_reported,
          self._failure, self._position, self._line_start,
          self._physical_content_end, self.endline_char, self._stop_after_line,
-         self.terminated_span) = checkpoint._cursor
+         self.terminated_span, discarded_count) = checkpoint._cursor
+        del self.discarded[discarded_count:]
         self._queue = deque(queued)
         self.catcodes.restore_from(checkpoint._catcodes)
 
@@ -401,6 +406,8 @@ class TexReader:
         self._next_line = self._line_end
         while content_end > start and self.text[content_end - 1] == " ":
             content_end -= 1
+        if content_end < self._physical_content_end:
+            self.discarded.append((self._span(content_end, self._physical_content_end), "input_ln trailing spaces"))
         self._content_end = content_end
         self._raw_pos = start
         self._line_end_char = self.endline_char if 0 <= self.endline_char <= 255 else None
@@ -481,6 +488,8 @@ class TexReader:
         event = self._next_event()
         if event is not None:
             self._position = event.span.end
+            if event.token is None and event.span.start < event.span.end:
+                self.discarded.append((event.span, event.kind.value))
         else:
             self._position = self.limit
         return event

@@ -33,7 +33,7 @@ def prepare_external_literal(session, command):
     elif action != "preserve":
         reason = ReadingIssue("policy_action", f"Unsupported external literal action {action!r}")
     record = {"source": command.span.basis.source_id, "occurrence": command.span.basis.occurrence_id, "start": command.span.start,
-              "end": command.span.end, "target": session.name(path), "kind": "external_literal"}
+              "end": command.span.end, "target": session.name(path), "kind": "external_literal", "unit_id": command.unit_id}
     session.manifest.resources.append(record)
     if action == "inline" and reason is None:
         options = command.argument("options")
@@ -61,9 +61,10 @@ def prepare_external_literal(session, command):
         raw = session.raw(command.span)
         replacement = raw[:a] + target + raw[b:]
         if session.frames[-1].emit:
-            session._emit(command.span, replacement, command=command, operation="REBASE_LITERAL_RESOURCE")
+            session._emit(command.span, replacement, command=command, operation="REBASE_LITERAL_RESOURCE",
+                          source_edits=((arg.span, target),))
         else:
-            session._payload_edit(command.span, replacement)
+            session._payload_edit(arg.span, target)
         record.update(disposition="retained", payload=target)
         if reason:
-            session.require(command.span, reason.reason, reason.detail, stage="preparation")
+            session.require(command.span, reason.reason, reason.detail, stage="preparation", unit_id=command.unit_id)

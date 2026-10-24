@@ -1,9 +1,10 @@
 """Native bibliography formatting driven by established traversal commands."""
 from __future__ import annotations
 from pathlib import Path
+from dataclasses import replace
 import re
 from ..bibtex import Database, BibTeXError, BibTeXConflictError
-from ..reading.spans import SourceBasis
+from ..reading.edit_map import EditMap
 from ..reading.tex_reader import TexReader, ReadEvent, TokenKind
 from ..reading.dispatcher import StructuralDispatcher
 from ..reading.contracts import SourceCommand, SourceEnd, ReadingBoundary, DeferredRegion, ReadingIssue
@@ -19,9 +20,9 @@ def _preserve_declarations(pieces, session, command, reason, detail):
     session.diagnose(command.span, reason, detail)
     # A traversed BBL must not remain alongside the original declaration if
     # formatting is deferred. Undo that insertion, retaining the request.
-    inserted = {id(p) for p in session.bibliography_pieces or ()}
+    inserted = {p.key for p in session.bibliography_pieces or ()}
     session.bibliography_pieces = None
-    return [p for p in pieces if id(p) not in inserted]
+    return [p for p in pieces if p.key not in inserted]
 
 
 def prepare_bibliography(pieces, session, output_dir: Path):
@@ -94,9 +95,7 @@ def prepare_bibliography(pieces, session, output_dir: Path):
             info.preparation_warnings = database.diagnostics
             retained = _preserve_declarations(pieces, session, command, "bibliography_conflict", str(error))
             arg = command.argument("names")
-            a, b = arg.span.start - command.span.start, arg.span.end - command.span.start
-            replacement = declaration.text[:a] + "bibliography" + declaration.text[b:]
-            return [piece.rewritten(replacement, "REBASE_BIBLIOGRAPHY") if piece is declaration else piece
+            return [piece.edit_source(arg.span, "bibliography", "REBASE_BIBLIOGRAPHY") if piece is declaration else piece
                     for piece in retained]
         except BibTeXError as error:
             raise BibliographyPreparationError(str(error)) from error
@@ -105,7 +104,7 @@ def prepare_bibliography(pieces, session, output_dir: Path):
         # The formatter knows the emitted envelope and selected keys. Missing
         # reading knowledge about field values cannot veto that serialization.
         entry_keys = {entry.key for entry in database.selected(keys)}
-        _audit_generated(bbl, session)
+        basis = _audit_generated(bbl, session)
     if existing:
         environments = {c.action for c in commands if c.metadata.get("bibliography")}
         if not {"environment_begin", "environment_end"} <= environments:
@@ -129,17 +128,18 @@ def prepare_bibliography(pieces, session, output_dir: Path):
     info.preparation_backend = backend
     info.bbl_needed = False
     info.citations_count = len(entry_keys)
-    # Distinguish generated bibliography from original-file provenance.
-    basis = SourceBasis(session.name(existing) if existing else "bibliography.bbl",
-                        len(manifest.input_occurrences), len(bbl))
+    inserted = {p.key for p in session.bibliography_pieces or ()}
     result = []
     for piece in pieces:
         if piece is declaration:
             if not existing:
                 result.append(SourcePiece(bbl, basis.whole, 1, "SPLICE_BIB",
-                                          source_end_line=1 + len(re.findall(r"\r\n|\r|\n", bbl.rstrip("\r\n")))))
-        elif not (piece.command and piece.command.action == "bibliography_style"):
-            result.append(piece)
+                    source_end_line=1 + len(re.findall(r"\r\n|\r|\n", bbl.rstrip("\r\n"))),
+                    mapping=EditMap.copied(basis.whole), replaces=declaration.replaces + (command.span,)))
+        elif piece.command and piece.command.action == "bibliography_style":
+            session._omit(piece.span, "Bibliography style superseded by prepared bibliography")
+        else:
+            result.append(replace(piece, replaces=piece.replaces + (command.span,)) if piece.key in inserted else piece)
     return result
 
 
@@ -152,20 +152,21 @@ def _audit_generated(text, session):
     """
     context = session.bibliography_context.copy()
     reader = TexReader(text, source_id="bibliography.bbl", catcodes=context.catcodes,
-                       endline_char=context.endlinechar)
-    dispatcher = StructuralDispatcher(reader, context, session.bibliography_knowledge, source_commands=True, preparation=True)
-    def report(span, reason, detail, *, preparation=False):
-        location = {"source": "bibliography.bbl", "occurrence": None,
-                    "start": span.start, "end": span.end,
-                    "line": text.count("\n", 0, span.start) + 1}
+                       endline_char=context.endlinechar, occurrence_id=len(session.manifest.input_occurrences))
+    session.generated_sources[reader.basis] = text
+    session.manifest.input_occurrences.append({"id": reader.basis.occurrence_id, "source": "bibliography.bbl",
+                                              "parent": None, "generated": True})
+    dispatcher = StructuralDispatcher(reader, context, session.bibliography_knowledge,
+        source_commands=True, preparation=True, units=session.units)
+    def report(span, reason, detail, *, preparation=False, unit_id=None, parent_id=None):
         if preparation:
-            session.manifest.unresolved.append(dict(location, reason="bibliography_reading", detail=detail))
+            location = session.diagnose(span, "bibliography_reading", detail, unit_id=unit_id)
             session.manifest.bibliography.preparation_warnings.append(
                 f"bibliography.bbl:{location['line']} ({span.start}:{span.end}): {detail}")
         else:
-            session.manifest.requirements.append(dict(location, reason=reason, detail=detail, stage="interpretation"))
+            session.require(span, reason, detail, unit_id=unit_id, parent_id=parent_id)
 
-    def inspect_tokens(tokens, *, reported_start=None):
+    def inspect_tokens(tokens, *, reported_start=None, parent_id=None):
         for token in tokens:
             if token.kind != TokenKind.CONTROL_SEQUENCE:
                 continue
@@ -173,28 +174,29 @@ def _audit_generated(text, session):
             action = getattr(profile, "action", None)
             if action not in (None, "opaque"):
                 report(token.span, "deferred_dependency", f"Generated field contains {token.value!r} ({action}) requiring resolution",
-                       preparation=True)
+                       preparation=True, parent_id=parent_id)
             elif not getattr(profile, "family", None) and token.span.start != reported_start:
-                report(token.span, "unknown_construct", f"Generated field retains unexpanded {token.value!r}")
+                report(token.span, "unknown_construct", f"Generated field retains unexpanded {token.value!r}", parent_id=parent_id)
 
     for item in dispatcher:
         if isinstance(item, ReadingBoundary):
-            report(item.span, item.reason, item.detail, preparation=True)
+            report(item.span, item.reason, item.detail, preparation=True, unit_id=item.unit_id)
         if isinstance(item, DeferredRegion):
-            report(item.span, item.reason, item.detail, preparation=item.reason == "package_not_loaded")
-            inspect_tokens(item.tokens, reported_start=item.span.start)
+            report(item.span, item.reason, item.detail, preparation=item.reason == "package_not_loaded", unit_id=item.unit_id)
+            inspect_tokens(item.tokens, reported_start=item.span.start, parent_id=item.unit_id)
             continue
         if isinstance(item, SourceCommand):
             if item.action not in {"opaque", "environment_begin", "environment_end"}:
-                report(item.span, item.action, f"Generated bibliography contains {item.action} requiring resolution", preparation=True)
-            inspect_tokens(t for arg in item.arguments for t in arg.tokens)
+                report(item.span, item.action, f"Generated bibliography contains {item.action} requiring resolution", preparation=True, unit_id=item.unit_id)
+            inspect_tokens((t for arg in item.arguments for t in arg.tokens), parent_id=item.unit_id)
         elif not isinstance(item, (ReadEvent, SourceEnd, ReadingBoundary)):
-            report(item.span, "generated_structure", "Generated bibliography contains a definition or literal requiring earlier resolution", preparation=True)
+            report(item.span, "generated_structure", "Generated bibliography contains a definition or literal requiring earlier resolution", preparation=True, unit_id=item.unit_id)
         elif isinstance(item, ReadEvent) and item.token and item.token.kind == TokenKind.CONTROL_SEQUENCE:
             # Explicit control sequences are routed as SourceCommands above;
             # an implicit paragraph token is safe. Effects/conditionals are not.
             if item.token.value != "par":
                 report(item.span, "reading_effect", "Generated bibliography changes reading state", preparation=True)
+    return reader.basis
 
 
 def extraction_bbl(database: Database, keys: list[str]) -> str:

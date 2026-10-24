@@ -1,6 +1,6 @@
 """Emission-time diagnostic provenance.
 
-Preparation emits version 2 decoded-character intervals, including source
+Preparation emits version 3 decoded-character intervals, including source
 occurrence identities and mixed-source lines. IDENTITY segments have affine
 offset correspondence; transformations relate whole ranges. Legacy line-ledger
 read/write helpers below remain for existing version 1 diagnostic artifacts.
@@ -34,6 +34,10 @@ class Tombstone:
     src_end: int
     op: str
     reason: str = ""
+    # Version 3 tombstones use character intervals, scoped to an input occurrence.
+    # Legacy line-ledger readers leave these fields unset.
+    occurrence: Optional[int] = None
+    source_lines: Optional[Tuple[int, int]] = None
 
     def to_tuple(self, file_pool: Dict[str, int], op_pool: Dict[str, int]) -> List[Any]:
         return [
@@ -90,6 +94,10 @@ class ProvenanceLedger:
         self.segments = None
         self.master_length = 0
         self.master_line_starts = []
+        self.version = 1
+        self.replacements = []
+        self.source_coverage = []
+        self.artifact = None
 
         self._gen_starts: List[int] = [r.gen_start for r in self.runs]
         self._source_index: Dict[str, List[ProvenanceRun]] = {}
@@ -251,7 +259,8 @@ class ProvenanceLedger:
         # 2. Check tombstones
         tombstones = self._tombstone_index.get(src_file, [])
         for t in tombstones:
-            if t.src_start <= src_line <= t.src_end:
+            start, end = t.source_lines or (t.src_start, t.src_end)
+            if start <= src_line <= end:
                 return {
                     "status": "PRUNED",
                     "operation": t.op,
@@ -263,11 +272,18 @@ class ProvenanceLedger:
     def to_dict(self) -> Dict[str, Any]:
         """Serializes the ledger into a compact string-pooled matrix."""
         if self.segments is not None:
-            return {"version": 2, "coordinate_domain": "decoded_unicode_codepoints",
+            result = {"version": self.version, "coordinate_domain": "decoded_unicode_codepoints",
                     "segments": self.segments, "master_length": self.master_length,
                     "master_line_starts": self.master_line_starts,
                     "sources": self.sources, "operations": self.operations,
                     "tombstones": [vars(t) for t in self.tombstones]}
+            if self.version >= 3:
+                result.update(artifact=self.artifact, replacements=self.replacements, source_coverage=self.source_coverage,
+                    intervals="zero_based_half_open", tombstones=[{
+                        "source_file": t.src_file, "occurrence": t.occurrence, "source": [t.src_start, t.src_end],
+                        "source_lines": list(t.source_lines) if t.source_lines else None,
+                        "operation": t.op, "reason": t.reason} for t in self.tombstones])
+            return result
         file_pool = {name: idx for idx, name in enumerate(self.sources)}
         op_pool = {name: idx for idx, name in enumerate(self.operations)}
 
@@ -284,12 +300,20 @@ class ProvenanceLedger:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> ProvenanceLedger:
-        if data.get("version") == 2:
+        if data.get("version") in (2, 3):
+            tombstones = ([Tombstone(t['source_file'], *t['source'], t['operation'], t['reason'],
+                           t['occurrence'], tuple(t['source_lines']) if t['source_lines'] else None)
+                           for t in data.get('tombstones', [])] if data['version'] == 3 else
+                          [Tombstone(**t) for t in data.get('tombstones', [])])
             result = cls(sources=data['sources'], operations=data['operations'],
-                         tombstones=[Tombstone(**t) for t in data.get('tombstones', [])])
+                         tombstones=tombstones)
+            result.version = data['version']
             result.segments = data['segments']
             result.master_length = data['master_length']
             result.master_line_starts = data['master_line_starts']
+            result.replacements = data.get('replacements', [])
+            result.source_coverage = data.get('source_coverage', [])
+            result.artifact = data.get('artifact')
             return result
         sources = data.get("sources", [])
         ops = data.get("operations", [])
@@ -355,14 +379,18 @@ class ProvenanceLedger:
         }
 
     @classmethod
-    def build_from_pieces(cls, pieces, tombstones=None):
+    def build_from_pieces(cls, pieces, tombstones=None, *, source_coverage=(), artifact=None):
         """Character intervals support mixed-source lines and repeated inputs.
 
         A rewritten segment relates whole extents; it does not claim an affine
         character mapping. Only IDENTITY segments permit offset interpolation.
         """
         ledger = cls(tombstones=tombstones or [])
+        ledger.version = 3
+        ledger.source_coverage = list(source_coverage)
+        ledger.artifact = artifact
         ledger.segments = []
+        replacements = {}
         text = ''.join(p.text for p in pieces)
         ledger.master_length = len(text)
         ledger.master_line_starts = ([0] + [m.end() for m in re.finditer(r"\r\n|\r|\n", text)
@@ -375,7 +403,20 @@ class ProvenanceLedger:
             segment = {'generated': [offset, offset + len(p.text)], 'source_file': span.basis.source_id,
                        'occurrence': span.basis.occurrence_id, 'source': [span.start, span.end],
                        'source_lines': [p.source_line, p.source_end_line or p.source_line],
-                       'operation': p.operation}
+                       'operation': p.operation,
+                       'mapping': ('copy' if len(p.mapping.runs) == 1 and p.mapping.runs[0].kind == 'copy'
+                                   else 'insert' if span.start == span.end else 'replace')}
+            if segment['mapping'] == 'copy' and len(p.text) != span.end - span.start:
+                raise ValueError('Copy segment changes source length')
+            if p.operation == 'IDENTITY' and segment['mapping'] != 'copy':
+                raise ValueError('Identity emission requires copy correspondence')
+            for source in p.replaces:
+                key = (source.basis.source_id, source.basis.occurrence_id, source.start, source.end)
+                ranges = replacements.setdefault(key, [])
+                if ranges and ranges[-1][1] == offset:
+                    ranges[-1][1] = offset + len(p.text)
+                else:
+                    ranges.append([offset, offset + len(p.text)])
             if ledger.segments and p.operation == 'IDENTITY':
                 previous = ledger.segments[-1]
                 if (previous['operation'] == 'IDENTITY' and previous['source_file'] == segment['source_file']
@@ -390,4 +431,9 @@ class ProvenanceLedger:
             offset += len(p.text)
         ledger.sources = list(dict.fromkeys(s['source_file'] for s in ledger.segments))
         ledger.operations = list(dict.fromkeys(s['operation'] for s in ledger.segments))
+        for i, segment in enumerate(ledger.segments, 1):
+            segment['id'] = f'segment-{i}'
+        ledger.replacements = [{'source_file': source, 'occurrence': occurrence, 'source': [start, end],
+                                'generated': ranges, 'operation': 'REPLACE'}
+                               for (source, occurrence, start, end), ranges in replacements.items()]
         return ledger

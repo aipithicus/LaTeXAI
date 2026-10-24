@@ -26,6 +26,7 @@ from .deferred_scanner import DeferredScanner
 from .literal_scanner import LiteralScanner
 from .skipped_scanner import SkippedBranchScanner, SkippedScan
 from .spans import SourceSpan
+from .units import UnitRegistry
 from .tex_reader import CatCode, EventKind, InvalidCharacterError, ReadEvent, TexReader, TokenKind
 
 
@@ -67,7 +68,7 @@ class StructuralDispatcher:
     """
 
     def __init__(self, reader: TexReader, context: ReaderContext, knowledge: ReadingKnowledge,
-                 *, source_commands: bool = False, preparation: bool = False):
+                 *, source_commands: bool = False, preparation: bool = False, units: UnitRegistry | None = None):
         self.literals = LiteralScanner(reader, context, knowledge)
         self.definitions = DefinitionScanner(reader, context)
         self.skipped = SkippedBranchScanner(reader, context, knowledge)
@@ -87,6 +88,7 @@ class StructuralDispatcher:
         self._environment_stack: list[str] = []
         self._root_ended = False
         self._replays = {}
+        self.units = units if units is not None else UnitRegistry()
 
     def input_recovery(self) -> InputRecovery:
         """Snapshot only at an active handoff, before entering retained code."""
@@ -146,6 +148,22 @@ class StructuralDispatcher:
             raise ReadingIssue(reason, detail)
 
     def next_item(self) -> ReadEvent | LiteralRegion | StoredDefinition | SkippedRegion | ReadingBoundary | SourceCommand | SourceEnd | DeferredRegion | None:
+        item = self._next_item()
+        return self._identify(item) if item is not None and not isinstance(item, ReadEvent) else item
+
+    def _identify(self, item, parent_id=None):
+        if item.unit_id is not None:
+            self.units.require(item.unit_id, item.span)
+            return item
+        identifier = self.units.add(item.span, type(item).__name__, parent_id)
+        item = replace(item, unit_id=identifier)
+        if isinstance(item, DeferredRegion):
+            # A captured command is another view of the same observed unit.
+            item = replace(item, command=replace(item.command, unit_id=identifier) if item.command else None,
+                           observations=tuple(self._identify(o, identifier) for o in item.observations))
+        return item
+
+    def _next_item(self):
         if self.halted or self._finished:
             return None
         reader, context = self.reader, self.context
@@ -321,7 +339,7 @@ class StructuralDispatcher:
                 self._conditional(profile.conditional, event.span)
                 return event
             if profile.family == "stored_definition":
-                definition = self.definitions.read(event.span.start, profile)
+                definition = self._identify(self.definitions.read(event.span.start, profile))
                 context.record_definition(definition)
                 return definition
             if profile.action is not None:

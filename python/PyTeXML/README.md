@@ -32,6 +32,8 @@ are scanned and retained separately, with resolved file references rebased.
 serializes established mouth events. Bibliography and image edits use captured
 command arguments. [Provenance](src/prepare/provenance.py) records emitted
 character intervals and occurrence identity, including mixed-source lines.
+[Final locations](src/prepare/locations.py) attach prepared-artifact addresses
+directly to units and requirements; using them does not require the provenance sidecar.
 The old regex discovery, inliner, pruner, normalizer and implicit-graphics scanner
 have been removed.
 
@@ -323,8 +325,52 @@ occurrence. Spans carry that basis plus validated half-open character offsets;
 source labels are available through `span.basis.source_id` and
 `span.basis.occurrence_id`. Equal filenames, occurrence numbers, lengths or text
 do not make separately created bases interchangeable. Operations reject foreign
-bases even for empty coverage. This is a runtime identity, not yet a durable
-source-store revision or a mapping between source, token and emitted coordinates.
+bases even for empty coverage. This is a runtime source identity. Published
+artifact revisions and source-to-emission correspondence are separate contracts
+described below; token-index mapping remains outside this interface.
+
+### Prepared locations and identities
+
+The dispatcher assigns read-local IDs to structural units through
+[units.py](src/reading/units.py). Captured observations carry explicit parent IDs;
+requirements have their own IDs and link to their units. The same dispatcher can
+read raw input occurrences or the finalized `master.tex`. IDs are unique within
+a traversal, not permanent identities across document revisions. Ordinary character
+events do not each allocate a unit record.
+
+[edit_map.py](src/reading/edit_map.py) composes explicit edits in memory. Copied
+ranges preserve offsets; replacements preserve whole-extent correspondence and
+label narrower interests as enclosing when exact correspondence is unavailable.
+Inserted lexical separators are separate synthetic pieces. Input/bibliography
+replacements also link the original directive to the emitted replacement range.
+
+After bibliography, image and payload rewrites, finalization computes absolute
+locations. `manifest.json` contains:
+
+- `units`: IDs, kinds, optional parents, diagnostic origins, final locations and status.
+- `requirements`: IDs, `unit_id`, existing reason/stage information, and directly usable locations.
+- `prepared_artifacts`: package-relative paths, SHA-256 hashes of emitted UTF-8 bytes, and decoded lengths.
+- `location_contract`: zero-based, half-open Unicode-code-point offsets in the exact
+  decoded artifact, with no newline translation. These are not UTF-8 byte offsets.
+
+A location names an `artifact`, `start`, `end`, and `precision` (`exact` or
+`enclosing`). Most manuscript locations target `master.tex`; retained local code
+targets its prepared payload file. `location_status` is `mapped`, `enclosing`,
+`partial`, `omitted`, or `unmapped`. Missing locations never imply that a requirement
+has been resolved. In particular, observations from a rolled-back child can remain
+unmapped in a partial preparation. The location index is not an execution schedule.
+Inventory-only output carries linked IDs with `pending` locations until materialization.
+
+The finalized master and its intentionally retained resources become downstream
+source truth. Original spans are optional preparation diagnostics. Artifact edits
+invalidate these locations until they are rebuilt. Context snapshots, context-effect
+classification, scheduling and general expansion are not implemented by this increment.
+
+Provenance v3 records full character tombstones with occurrence identity, explicit
+replacement relations and per-occurrence `source_coverage.unaccounted` ranges.
+Discard events consumed inside argument scanners are included only where source
+was actually removed. Preserved bodies and emission rollback take precedence.
+The accounting check reports unknown gaps rather than inferring their meaning.
 
 `SpanSet` normalizes coverage into sorted nonempty intervals, merging overlaps
 and adjacency. It supports union, intersection, difference, clipping, explicitly

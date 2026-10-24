@@ -6,7 +6,7 @@ fall back to raw-text dependency searches at an unresolved reading boundary.
 """
 from __future__ import annotations
 from bisect import bisect_right
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 import re
 
@@ -19,6 +19,9 @@ from ..reading.coverage import ReadingCoverage
 from ..reading.contracts import (SourceCommand, SourceEnd, ReadingBoundary, ReadingIssue,
                                 StoredDefinition, SkippedRegion, DeferredRegion, LiteralRegion)
 from ..reading.tex_reader import TexReader, ReadEvent, TokenKind, CatCode
+from ..reading.edit_map import EditMap
+from ..reading.units import UnitRegistry
+from ..reading.spans import SourceSpan
 from .discovery import select_root
 from .emission import SourcePiece, event_text
 from .survey import survey_sources
@@ -51,6 +54,8 @@ class _Input:
     include: bool = False
     bibliography_start: int | None = None
     recovery: InputRecovery | None = None
+    replacement: SourceSpan | None = None
+    emission_start: int = 0
 
 
 class PreparationSession:
@@ -75,6 +80,9 @@ class PreparationSession:
         self.payload_edits: dict[Path, dict[tuple[int, int], str]] = {}
         self.commands: list[SourceCommand] = []
         self.documents = {}
+        self.readers = {}
+        self.generated_sources = {}
+        self.units = UnitRegistry()
         self.line_starts = {}
         self.loaded_packages: set[str] = set()
         self.graphic_paths: dict[int, list[Path]] = {}
@@ -90,7 +98,8 @@ class PreparationSession:
         first = self._reader(self.root)
         self._root_reader = first
         self.frames.append(_Input(self.root, first, True))
-        self.dispatcher = StructuralDispatcher(first, self.context, self.resolver, source_commands=True, preparation=True)
+        self.dispatcher = StructuralDispatcher(first, self.context, self.resolver,
+            source_commands=True, preparation=True, units=self.units)
         self.manifest.reading_assumptions = [
             "Source-visible preparation does not expand macros. Unbound commands and packages are not assumed to generate inputs or change entry catcodes.",
             "Uninterpreted math, environments and adjacent command groups retain their source; their contents are not executed."]
@@ -98,12 +107,20 @@ class PreparationSession:
     def name(self, path):
         return path.relative_to(self.store.root).as_posix()
 
+    def pending_units(self):
+        """Inventory/failure output has identities, but no finalized artifact yet."""
+        self.manifest.units = [dict(u.to_dict(), location_status="pending", locations=[])
+                               for u in self.units.records.values()]
+        for record in (*self.manifest.requirements, *self.manifest.unresolved):
+            record.update(location_status="pending", locations=[])
+
     def _reader(self, path):
         doc = self.store.document(path)
         occurrence = len(self.manifest.input_occurrences)
         reader = TexReader(doc.text, source_id=doc.name, occurrence_id=occurrence,
                            catcodes=self.context.catcodes, endline_char=self.context.endlinechar)
         self.documents[reader.basis] = doc
+        self.readers[reader.basis] = reader
         self._observations[reader.basis] = []
         if path not in self.line_starts:
             self.line_starts[path] = [0] + [m.end() for m in re.finditer(r"\r\n|\r|\n", doc.text)]
@@ -113,15 +130,20 @@ class PreparationSession:
         return reader
 
     def line(self, span):
+        if span.basis in self.generated_sources:
+            return 1 + len(re.findall(r"\r\n|\r|\n", self.generated_sources[span.basis][:span.start]))
         return bisect_right(self.line_starts[self.documents[span.basis].path], span.start)
 
     def raw(self, span):
         return self.documents[span.basis].text[span.start:span.end]
 
-    def diagnose(self, span, reason, detail):
+    def diagnose(self, span, reason, detail, *, unit_id=None):
+        unit_id = unit_id or self.units.add(span, "diagnostic")
+        self.units.require(unit_id, span)
         diagnostic = {"source": span.basis.source_id, "occurrence": span.basis.occurrence_id,
                       "start": span.start, "end": span.end, "line": self.line(span),
-                      "reason": reason, "detail": detail}
+                      "reason": reason, "detail": detail, "unit_id": unit_id,
+                      "location_status": "pending", "locations": []}
         self.manifest.unresolved.append(diagnostic)
         return diagnostic
 
@@ -129,10 +151,16 @@ class PreparationSession:
         diagnostic = self.diagnose(span, reason, detail)
         raise PreparationUnresolved(f"{diagnostic['source']}:{diagnostic['line']} [{reason}] {detail}")
 
-    def require(self, span, reason, detail, *, stage="interpretation"):
-        self.manifest.requirements.append({"source": span.basis.source_id,
+    def require(self, span, reason, detail, *, stage="interpretation", unit_id=None, parent_id=None):
+        unit_id = unit_id or self.units.add(span, "requirement_target", parent_id)
+        self.units.require(unit_id, span)
+        requirement = {"id": f"requirement-{len(self.manifest.requirements) + 1}", "unit_id": unit_id,
+            "source": span.basis.source_id,
             "occurrence": span.basis.occurrence_id, "start": span.start, "end": span.end,
-            "line": self.line(span), "reason": reason, "detail": detail, "stage": stage})
+            "line": self.line(span), "reason": reason, "detail": detail, "stage": stage,
+            "location_status": "pending", "locations": []}
+        self.manifest.requirements.append(requirement)
+        return requirement
 
     def defer(self, span, reason, detail):
         self.diagnose(span, reason, detail)
@@ -151,7 +179,7 @@ class PreparationSession:
         del self.commands[commands:]
         self.pieces.append(SourcePiece(self.raw(span), span, self.line(span),
             "PRESERVE_UNRESOLVED", source_end_line=self.line(
-                span.basis.span(max(span.start, span.end - 1), span.end))))
+                span.basis.span(max(span.start, span.end - 1), span.end)), mapping=EditMap.copied(span)))
         self.manifest.preserved_source_spans = [{"source": span.basis.source_id,
             "occurrence": span.basis.occurrence_id, "start": span.start, "end": span.end}]
         # Only convert assets whose references survived this emission rollback.
@@ -172,8 +200,8 @@ class PreparationSession:
         payloads = {r.get("payload") for r in self.manifest.resources}
         self.literal_payloads = {path: target for path, target in self.literal_payloads.items() if target in payloads}
         if self.bibliography_pieces is not None:
-            retained = {id(p) for p in self.pieces}
-            if any(id(p) not in retained for p in self.bibliography_pieces):
+            retained = {p.key for p in self.pieces}
+            if any(p.key not in retained for p in self.bibliography_pieces):
                 self.bibliography_pieces = None
 
     def resolve(self, name, suffixes, span, *, directories=None, required=True, provisional=False):
@@ -203,7 +231,7 @@ class PreparationSession:
     def edge(self, command, path, kind):
         self.manifest.dependencies.append({"source": command.span.basis.source_id,
             "occurrence": command.span.basis.occurrence_id, "start": command.span.start,
-            "end": command.span.end, "kind": kind, "target": self.name(path)})
+            "end": command.span.end, "kind": kind, "target": self.name(path), "unit_id": command.unit_id})
 
     def _enter(self, path, command, *, emit, import_dir=None, package=False, include=False):
         if any(frame.path == path for frame in self.frames):
@@ -212,24 +240,39 @@ class PreparationSession:
         reader = self._reader(path)
         overrides = self.resolver.catalog.engine_bindings["source_traversal"]["reading"]["package_input_catcodes"] if package else None
         recovery = self.dispatcher.input_recovery() if not emit and self.frames[-1].emit else None
-        self.frames.append(_Input(path, reader, emit, import_dir, include=include, recovery=recovery))
+        self.frames.append(_Input(path, reader, emit, import_dir, include=include, recovery=recovery,
+            replacement=command.span if emit and command.action != "bibliography" else None,
+            emission_start=len(self.pieces)))
         self.dispatcher.enter_source(reader, catcode_overrides=overrides)
 
-    def _emit(self, span, text=None, *, command=None, target=None, operation=None, deferred=None, image_references=()):
+    def _emit(self, span, text=None, *, command=None, target=None, operation=None, deferred=None,
+              image_references=(), source_edits=()):
         if not self.frames[-1].emit:
             return
         raw = self.raw(span)
         text = raw if text is None else text
+        if raw and text == raw + " " and not source_edits:
+            self._emit(span, command=command, target=target, operation=operation, deferred=deferred,
+                       image_references=image_references)
+            self._emit(span.basis.span(span.end, span.end), " ", operation="SYNTHETIC_SEPARATOR")
+            return
         if text:
-            self.pieces.append(SourcePiece(text, span, self.line(span), operation or
+            piece = SourcePiece(raw if source_edits else text, span, self.line(span), operation or
                               ("IDENTITY" if text == raw else "MOUTH_EMISSION"), command,
                               ((command, target),) if target is not None else image_references,
-                              self.line(span.basis.span(max(span.start, span.end - 1), span.end)), deferred))
+                              self.line(span.basis.span(max(span.start, span.end - 1), span.end)), deferred,
+                              EditMap.copied(span) if text == raw or source_edits else EditMap.replaced(span, len(text)))
+            for target_span, replacement in source_edits:
+                piece = piece.edit_source(target_span, replacement, operation or "REWRITE_REFERENCE")
+            if piece.text != text:
+                raise ValueError("Declared emission edits do not produce the emitted text")
+            self.pieces.append(piece)
 
     def _omit(self, span, reason):
         if span.start != span.end:
-            self.tombstones.append(Tombstone(span.basis.source_id, self.line(span),
-                self.line(span.basis.span(max(span.start, span.end - 1), span.end)), "OMIT", reason))
+            self.tombstones.append(Tombstone(span.basis.source_id, span.start, span.end, "OMIT", reason,
+                occurrence=span.basis.occurrence_id,
+                source_lines=(self.line(span), self.line(span.basis.span(span.end - 1, span.end)))))
 
     def _payload_edit(self, span, replacement):
         path = self.documents[span.basis].path
@@ -245,16 +288,23 @@ class PreparationSession:
             text = text[:start] + replacement + text[end:]
         return text
 
+    def payload_piece(self, path, basis):
+        piece = SourcePiece(self.store.document(path).text, basis.whole, 1)
+        for (start, end), replacement in sorted(self.payload_edits.get(path, {}).items(), reverse=True):
+            piece = piece.edit_source(basis.span(start, end), replacement, "REBASE_PAYLOAD")
+        return piece
+
     def _neutral(self, command):
         # Capturing a bounded header does not require interpreting its contents.
         # Retain the whole header and locate work without dispatching its body.
         for arg in command.arguments:
             for token in arg.tokens:
                 if token.kind != TokenKind.CHARACTER or token.catcode in (CatCode.PARAMETER, CatCode.MATH_SHIFT, CatCode.ALIGNMENT_TAB):
-                    self.require(token.span, "argument_behavior", "Unexpanded argument token retained inside " + command.name)
-        self._deferred_dependencies(t for arg in command.arguments for t in arg.tokens)
+                    self.require(token.span, "argument_behavior", "Unexpanded argument token retained inside " + command.name,
+                                 parent_id=command.unit_id)
+        self._deferred_dependencies((t for arg in command.arguments for t in arg.tokens), parent_id=command.unit_id)
 
-    def _deferred_dependencies(self, tokens, *, observed=()):
+    def _deferred_dependencies(self, tokens, *, observed=(), parent_id=None):
         starts = {command.span.start for command in observed}
         for token in tokens:
             if token.span.start in starts:
@@ -265,7 +315,7 @@ class PreparationSession:
             if getattr(profile, "action", None) in {"source_input", "source_include", "source_import",
                     "source_subimport", "asset_reference", "bibliography", "biblatex_resource", "package_load", "external_literal"}:
                 self.require(token.span, "deferred_dependency", "Dependency inside an uninterpreted expression requires its owning context",
-                             stage="preparation")
+                             stage="preparation", parent_id=parent_id)
 
     def image_path(self, command, *, provisional=False):
         """Resolve the literal image header against the current search context."""
@@ -297,10 +347,10 @@ class PreparationSession:
         elif is_class:
             baseline = self.resolver.catalog.engine_bindings["source_traversal"]["reading"]["baseline_classes"]
             if name not in baseline:
-                self.require(command.span, "class_binding", f"No reading contract for class {name!r}", stage="binding")
+                self.require(command.span, "class_binding", f"No reading contract for class {name!r}", stage="binding", unit_id=command.unit_id)
                 self.context.invalidate_booleans(command.span)
         elif not self.resolver.load_package(name):
-            self.require(command.span, "package_binding", f"No reading binding for package {name!r}", stage="binding")
+            self.require(command.span, "package_binding", f"No reading binding for package {name!r}", stage="binding", unit_id=command.unit_id)
             self.context.invalidate_booleans(command.span)
 
     def _command(self, command):
@@ -316,7 +366,7 @@ class PreparationSession:
                 self._omit(command.span, "Policy unwrapped " + role)
                 return
             if action == "transparent_begin" and role_action != "preserve":
-                self.require(command.span, "policy_action", f"Transparent role does not support {role_action!r}", stage="preparation")
+                self.require(command.span, "policy_action", f"Transparent role does not support {role_action!r}", stage="preparation", unit_id=command.unit_id)
         if action == "environment_begin":
             self._neutral(command)
         if action in {"source_input", "source_include", "source_import", "source_subimport"}:
@@ -383,9 +433,10 @@ class PreparationSession:
             a, b = arg.span.start - command.span.start, arg.span.end - command.span.start
             replacement = raw[:a] + ",".join(resolved_names) + raw[b:]
             if frame.emit:
-                self._emit(command.span, replacement, command=command)
+                self._emit(command.span, replacement, command=command,
+                           source_edits=((arg.span, ",".join(resolved_names)),))
             else:
-                self._payload_edit(command.span, replacement)
+                self._payload_edit(arg.span, ",".join(resolved_names))
             return
         if action == "asset_reference":
             self._neutral(command)
@@ -433,7 +484,7 @@ class PreparationSession:
         # No-argument commands need a lexical separator after a control word.
         if (not command.arguments and action in {"opaque", "biblatex_print"}
                 or action == "boolean_declaration" and command.metadata["unbraced"]):
-            self._emit(command.span.basis.span(command.span.end, command.span.end), " ")
+            self._emit(command.span.basis.span(command.span.end, command.span.end), " ", operation="SYNTHETIC_SEPARATOR")
 
     def run(self):
         if self._ran:
@@ -453,6 +504,7 @@ class PreparationSession:
         self._inventory()
         self.manifest.source_survey = survey_sources(self.store, self.resolver.catalog)
         self.manifest.source_reads = list(self.store.read_paths)
+        self.pending_units()
         return self
 
     def _traverse(self):
@@ -472,13 +524,13 @@ class PreparationSession:
                 if len(self.frames) == 1:
                     start, pieces, tombstones, commands = self._checkpoint
                     self._checkpoint = (min(start, item.remainder.start), pieces, tombstones, commands)
-                self.diagnose(item.span, item.reason, item.detail)
+                self.diagnose(item.span, item.reason, item.detail, unit_id=item.unit_id)
                 recoverable = next((i for i, frame in enumerate(self.frames) if frame.recovery is not None), None)
                 if recoverable is not None:
                     frame = self.frames[recoverable]
                     self.require(item.span, "retained_code_reading",
                         f"Retained {self.name(frame.path)!r}; caller resumes with its entry reading state. "
-                        "This file's reading effects and dependencies still require resolution.", stage="preparation")
+                        "This file's reading effects and dependencies still require resolution.", stage="preparation", unit_id=item.unit_id)
                     self.dispatcher.resume_input(frame.recovery)
                     self.context.invalidate_booleans(item.span)
                     del self.frames[recoverable:]
@@ -488,6 +540,10 @@ class PreparationSession:
             if isinstance(item, SourceEnd):
                 self._omit(item.span, "Unread remainder after endinput")
                 finished = self.frames.pop()
+                if finished.replacement is not None:
+                    for i in range(finished.emission_start, len(self.pieces)):
+                        piece = self.pieces[i]
+                        self.pieces[i] = replace(piece, replaces=piece.replaces + (finished.replacement,))
                 if finished.bibliography_start is not None:
                     self.bibliography_pieces = self.pieces[finished.bibliography_start:]
                 if finished.include and self.frames:
@@ -499,10 +555,10 @@ class PreparationSession:
                     self._command(item)
                 elif isinstance(item, DeferredRegion):
                     self.require(item.span, item.reason, item.detail,
-                                 stage="preparation" if item.reason == "package_not_loaded" else "interpretation")
+                                 stage="preparation" if item.reason == "package_not_loaded" else "interpretation", unit_id=item.unit_id)
                     image_references = observe_environment_assets(self, item)
                     self._deferred_dependencies(item.tokens, observed=(o.command for o in item.observations
-                        if o.command.action == "asset_reference"))
+                        if o.command.action == "asset_reference"), parent_id=item.unit_id)
                     raw = self.raw(item.span)
                     # A bare control word needs a separator after mouth-discarded
                     # whitespace. Protected groups and math remain exact slices.
@@ -529,7 +585,7 @@ class PreparationSession:
                     else:
                         self._emit(item.span)
                         if action != "preserve":
-                            self.require(item.span, "policy_action", f"Literal role does not support {action!r}", stage="preparation")
+                            self.require(item.span, "policy_action", f"Literal role does not support {action!r}", stage="preparation", unit_id=item.unit_id)
                 else:
                     self._emit(item.span)
                     if isinstance(item, StoredDefinition) and self.frames[-1].path in self.styles:

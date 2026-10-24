@@ -143,6 +143,7 @@ class ReadingBoundary:
     remainder: SourceSpan
     reason: str
     detail: str
+    unit_id: str | None = field(default=None, compare=False)
 
 
 @dataclass(frozen=True, slots=True)
@@ -163,6 +164,7 @@ class DeferredRegion:
     # Direct source-command headers captured inside an unbound environment.
     # These remain observations, never execution events or expanded arguments.
     observations: tuple[DeferredRegion, ...] = ()
+    unit_id: str | None = field(default=None, compare=False)
 
 
 @dataclass(frozen=True, slots=True)
@@ -175,6 +177,7 @@ class LiteralRegion:
     binding_id: str
     classification: SpanClassification | None = None
     warnings: tuple[str, ...] = ()
+    unit_id: str | None = field(default=None, compare=False)
 
 
 @dataclass(frozen=True, slots=True)
@@ -188,6 +191,7 @@ class SkippedRegion:
     span: SourceSpan
     conditional: SourceSpan
     branch: str
+    unit_id: str | None = field(default=None, compare=False)
 
 
 @dataclass(frozen=True, slots=True)
@@ -211,6 +215,7 @@ class StoredDefinition:
     parameter_count: int
     hash_brace: Token | None
     binding_id: str
+    unit_id: str | None = field(default=None, compare=False)
 
 
 @dataclass(frozen=True, slots=True)
@@ -235,6 +240,7 @@ class SourceCommand:
     action: str
     arguments: tuple[ScannedArgument, ...] = ()
     metadata: dict[str, Any] = field(default_factory=dict)
+    unit_id: str | None = field(default=None, compare=False)
 
     def argument(self, name: str) -> ScannedArgument | None:
         return next((arg for arg in self.arguments if arg.name == name), None)
@@ -249,6 +255,7 @@ class SourceEnd:
     """Completion of an input occurrence, with any deliberately unread suffix."""
     span: SourceSpan
     reason: str = "eof"
+    unit_id: str | None = field(default=None, compare=False)
 
 
 class ReadingIssue(Exception):

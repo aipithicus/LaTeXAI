@@ -4,3 +4,6 @@
 
 # Generated development checkpoints; specimen source/catalog ownership is separate.
 /temp/specimen-runs/
+
+# Disposable test outputs must not enter Git's untracked-file inventory.
+/temp/tests/

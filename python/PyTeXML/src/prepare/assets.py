@@ -27,6 +27,7 @@ def observe_environment_assets(session, region):
                   "context_span": [region.span.start, region.span.end],
                   "context": region.reason, "basis": "entry_reading_and_search_state",
                   "binding": observation.binding_id, "status": "unresolved"}
+        record["unit_id"] = command.unit_id
         session.manifest.candidate_dependencies.append(record)
         try:
             if not session.frames[-1].emit:
@@ -36,7 +37,7 @@ def observe_environment_assets(session, region):
             path = session.image_path(command, provisional=True)
         except ReadingIssue as error:
             record["reason"] = error.reason
-            session.require(command.span, error.reason, error.detail, stage="preparation")
+            session.require(command.span, error.reason, error.detail, stage="preparation", unit_id=command.unit_id)
             continue
         target = session.name(path)
         record.update(target=target, status="resolved")
@@ -44,7 +45,7 @@ def observe_environment_assets(session, region):
         references.append((command, target))
         session.require(command.span, "observed_asset",
             "Literal image resolved for the payload under entry reading/search state; "
-            "its enclosing environment remains uninterpreted", stage="preparation")
+            "its enclosing environment remains uninterpreted", stage="preparation", unit_id=command.unit_id)
     return tuple(references)
 
 
@@ -58,16 +59,13 @@ def rewrite_image_references(pieces, mapping):
     result = []
     for piece in pieces:
         if piece.image_references:
-            text = piece.text
             boundary = piece.span.end
             for command, target in sorted(piece.image_references, key=lambda ref: ref[0].span.start, reverse=True):
                 arg = command.argument("target")
                 if arg.span.basis is not piece.span.basis or not piece.span.start <= arg.span.start <= arg.span.end <= boundary:
                     raise ValueError("Image filename edits must be disjoint and contained in their source piece")
-                a, b = arg.span.start - piece.span.start, arg.span.end - piece.span.start
-                text = text[:a] + mapping[target] + text[b:]
+                piece = piece.edit_source(arg.span, mapping[target], "REWRITE_IMAGE")
                 boundary = arg.span.start
-            piece = piece.rewritten(text, "REWRITE_IMAGE")
         result.append(piece)
     return result
 

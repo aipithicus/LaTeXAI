@@ -91,6 +91,9 @@ class PreflightManifest:
     dependency_closure: str = "unresolved"
     source_dependency_closure: str = "unresolved"
     requirements: List[Dict[str, Any]] = field(default_factory=list)
+    units: List[Dict[str, Any]] = field(default_factory=list)
+    prepared_artifacts: List[Dict[str, Any]] = field(default_factory=list)
+    location_contract: Dict[str, Any] = field(default_factory=dict)
     source_survey: List[Dict[str, Any]] = field(default_factory=list)
     resources: List[Dict[str, Any]] = field(default_factory=list)
     reading_assumptions: List[str] = field(default_factory=list)

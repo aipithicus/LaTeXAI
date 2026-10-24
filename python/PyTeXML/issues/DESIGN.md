@@ -52,8 +52,8 @@ entrypoint nor a completed lexical pass proves raw-source independence.
 | `bibliography.bib` | One package-local database for optional metadata enrichment, when source databases are available |
 | `*.svg` | Converted file-backed assets, preserving relative subdirectories |
 | Local styles/code | Discovered local dependencies needed by the master |
-| `manifest.json` | Discovery results, bibliography preparation fields, image dimensions/diagnostics, implicit graphics candidates |
-| `master.provenance.json` | Version 2 emitted-character intervals with source occurrence identity |
+| `manifest.json` | Discovery results, requirements linked to reader units, final prepared-artifact locations/hashes, bibliography and asset diagnostics |
+| `master.provenance.json` | Version 3 diagnostic character intervals, occurrence-aware tombstones, replacement relations and source coverage |
 | `preparation.log` | `STARTED`, `SUCCESS`, `PARTIAL`, or `FAILED`, with located diagnostics |
 
 Complete preparation uses SVG derivatives only. A missing active image, conversion
@@ -103,8 +103,11 @@ partial emissions, not exceptions; callers must inspect `preparation_status` and
    and rewrite resolved argument spans. Existing BBLs enter the traversal at
    their source site; generated TeX values receive a diagnostic reading audit,
    whose unsupported results do not veto bibliography serialization.
-8. **Publish:** write master, dependency payload, manifest and character-span
-   provenance. Publication is not yet a transactional directory swap.
+8. **Finalize locations and publish:** after all text edits, assign absolute prepared
+   artifact locations to units/requirements, then write master, dependency payload,
+   manifest and optional character-span provenance. The location index uses cached
+   source spans and composed edits, not a search or diff against reread files.
+   Publication is not yet a transactional directory swap.
 
 Input lookup uses the root document directory then the project root, with an
 explicit import directory when present. It never guesses by basename. Repeated
@@ -362,10 +365,27 @@ SVG conversion still needs qualification for PDF page selection and richer optio
 There is no unconditional style cleanup, draft-command deletion, general lint repair
 or AST. Explicit legacy cleanup options fail instead of running regex transforms.
 
-Provenance v2 records emitted extents and source occurrence ranges. Identity segments
+The manifest now identifies reader units and requirements explicitly and publishes
+their final `master.tex` or prepared-code locations independently of the provenance
+sidecar. IDs are traversal-local; artifact hashes identify the exact emitted revision.
+Coordinates count decoded Unicode code points, with zero-based half-open ranges
+and no newline translation. General context snapshots and asynchronous execution
+remain future work. Preparing raw files and later reading the master reuse the same
+reader machinery without requiring downstream access to raw-source history.
+
+The reusable edit map keeps copied runs affine, composes replacements and insertions,
+and marks ambiguous interior projections as enclosing. Known deletions are explicit;
+incomplete mappings remain partial/unmapped. Locations need rebuilding if an artifact
+changes. They do not establish semantic readiness or certify missing package effects.
+
+Provenance v3 records emitted extents and source occurrence ranges. Identity segments
 permit direct character interpolation; transformed segments relate whole ranges.
-Mixed-source lines and repeated inputs retain all origins. This does not claim
-byte offsets or per-character correspondence inside replacements. Historical
+Lexical separators have their own synthetic segments. Tombstones carry discarded
+character extents and occurrences; discard evidence from scanners is reconciled
+against actual retained output. Bibliography/input directives link to their replacement
+ranges. Per-occurrence source coverage exposes any unaccounted ranges. Mixed-source
+lines and repeated inputs retain their origins. This does not claim byte offsets or
+per-character correspondence inside arbitrary replacements. Historical
 cleanup witnesses remain in the
 [cleanup checkpoint](../../../../aipithicus-issues/LaTeXAI/reports/compiler-research/prototype-cleanup-20260929.md);
 current multi-file tests cover the resolved input/context/closure cases.
