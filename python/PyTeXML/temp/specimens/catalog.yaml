@@ -1,0 +1,14 @@
+schema: pytexml-specimens/1
+specimens:
+  2306.01911v1:
+    title: 'Generalized Bayesian MARS: Tools for Emulating Stochastic Computer Models'
+    source: 2306.01911v1-tex
+    main: main.tex
+  2405.15943v3:
+    title: Transformers Represent Belief State Geometry in their Residual Stream
+    source: 2405.15943v3-tex
+    main: fractals_in_residual_stream.tex
+  2512.18792v1:
+    title: The Dead Salmons of AI Interpretability
+    source: 2512.18792v1-tex
+    main: 00_main.tex

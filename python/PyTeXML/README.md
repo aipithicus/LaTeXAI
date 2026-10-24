@@ -424,3 +424,9 @@ current layout.
 
 The [restored-prototype comparison](issues/preparation-prototype-comparison.md)
 records the 2405.15943v3 run, current improvements and remaining preparation gaps.
+
+The [specimen iteration recipe](recipes/specimen-iterations.md) describes named
+multi-paper development batches, linked indexes, source/code fingerprints,
+per-paper outcomes and diffs. Identical generated resources share read-only hard
+links across checkpoints; source trees are retained once. The optional rendering
+adapter can add separately named evidence to an existing batch.
