@@ -73,7 +73,14 @@ class ArgumentScanner:
     def read(self, opening, profile) -> SourceCommand:
         arguments = []
         with self.context.argument_scanning():
-            for spec in profile.grammar["arguments"]:
+            specs = profile.grammar["arguments"]
+            if "starred_arguments" in profile.grammar:
+                token = self._peek()
+                if token is not None and token.kind == TokenKind.CHARACTER and token.value == "*" and token.catcode == CatCode.OTHER:
+                    token = self.reader.next_token()
+                    arguments.append(ScannedArgument("star", token.span, (token,)))
+                    specs = profile.grammar["starred_arguments"]
+            for spec in specs:
                 kind, name = spec["kind"], spec["name"]
                 if kind == "star":
                     token = self._peek()

@@ -161,11 +161,14 @@ class BindingCatalog:
                 if spec.get("action") == "assign_catcode_dynamic":
                     if grammar != {"handler": "literal_catcode_assignment"} or spec.get("scope") != "local":
                         raise ProfileError(f"{path}: {name} requires the local literal assignment scanner")
-                if spec.get("family") in ("source_command", "structural_environment", "environment_factory"):
+                if spec.get("family") in ("source_command", "structural_environment", "environment_factory", "option_control"):
                     if not isinstance(spec.get("metadata", {}), dict):
                         raise ProfileError(f"{path}: {name} metadata must be a mapping")
                     arguments = grammar.get("arguments")
-                    if (set(grammar) != {"handler", "arguments"} or grammar.get("handler") != "source_arguments"
+                    allowed = {"handler", "arguments"}
+                    if spec.get("family") == "option_control" and "starred_arguments" in grammar:
+                        allowed.add("starred_arguments")
+                    if (set(grammar) != allowed or grammar.get("handler") != "source_arguments"
                             or not isinstance(arguments, list)):
                         raise ProfileError(f"{path}: {name} requires a source_arguments grammar")
                     arg_names = set()
@@ -175,7 +178,7 @@ class BindingCatalog:
                                 or arg["name"] in arg_names or arg.get("kind") not in ("braced", "optional", "star", "filename")):
                             raise ProfileError(f"{path}: invalid source argument for {name}")
                         arg_names.add(arg["name"])
-                    if spec.get("family") in ("source_command", "environment_factory") and spec.get("action") not in self.reading_handlers:
+                    if spec.get("family") in ("source_command", "environment_factory", "option_control") and spec.get("action") not in self.reading_handlers:
                         raise ProfileError(f"{path}: unknown source command action for {name}")
                     if spec.get("action") == "citation":
                         if {"name": "keys", "kind": "braced"} not in arguments:
@@ -183,8 +186,14 @@ class BindingCatalog:
                         wildcard = spec.get("metadata", {}).get("allow_wildcard", False)
                         if type(wildcard) is not bool:
                             raise ProfileError(f"{path}: {name} allow_wildcard must be boolean")
+                    if spec.get("action") == "pass_options":
+                        if (arguments != [{"name": "options", "kind": "braced"}, {"name": "name", "kind": "braced"}]
+                                or spec.get("metadata") not in ({"target_kind": "package"}, {"target_kind": "class"})):
+                            raise ProfileError(f"{path}: {name} requires literal forwarding arguments and a target kind")
                     if spec.get("family") == "environment_factory":
                         self._validate_factory(spec, arg_names, path)
+                    if spec.get("family") == "option_control":
+                        self._validate_options(spec, path)
                 if section in ("catcode_mutators", "grouping", "inclusions"):
                     action = spec.get("behavior" if section == "inclusions" else "action")
                     if not isinstance(action, str) or action not in self.reading_handlers:
@@ -198,6 +207,27 @@ class BindingCatalog:
                     if not isinstance(profile, str):
                         raise ProfileError(f"{path}: {name} profile must be a name")
                     self.mouth.profile(profile)
+
+    @staticmethod
+    def _validate_options(spec, path):
+        braced = lambda name: {"name": name, "kind": "braced"}
+        shapes = {
+            "declare_option": ([braced("name"), braced("body")], [braced("body")]),
+            "process_options": ([], []),
+            "execute_options": ([braced("options")], None),
+        }
+        shape = shapes.get(spec.get("action"))
+        grammar, metadata = spec["grammar"], spec.get("metadata", {})
+        if (shape is None or grammar["arguments"] != shape[0]
+                or grammar.get("starred_arguments") != shape[1]
+                or (shape[1] is None and "starred_arguments" in grammar)):
+            raise ProfileError(f"{path}: invalid option-control argument recipe")
+        if spec["action"] == "process_options":
+            if (set(metadata) != {"order", "starred_order"}
+                    or any(v not in {"declaration", "request"} for v in metadata.values())):
+                raise ProfileError(f"{path}: option processing requires declared ordering rules")
+        elif metadata:
+            raise ProfileError(f"{path}: unexpected option-control metadata")
 
     @staticmethod
     def _validate_factory(spec, arguments, path):

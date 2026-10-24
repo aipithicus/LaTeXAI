@@ -21,6 +21,7 @@ from ..reading.contracts import (SourceCommand, SourceEnd, ReadingBoundary, Read
 from ..reading.tex_reader import TexReader, ReadEvent, TokenKind, CatCode
 from ..reading.edit_map import EditMap
 from ..reading.units import UnitRegistry
+from ..reading.options import OptionScope, option_names
 from ..reading.spans import SourceSpan
 from .discovery import select_root
 from .emission import SourcePiece, event_text
@@ -85,6 +86,9 @@ class PreparationSession:
         self.units = UnitRegistry()
         self.line_starts = {}
         self.loaded_packages: set[str] = set()
+        self.package_options: dict[str, tuple[str, ...]] = {}
+        self.forwarded_options: dict[str, tuple[str, ...]] = {}
+        self.class_options: tuple[str, ...] = ()
         self.graphic_paths: dict[int, list[Path]] = {}
         self.graphic_extensions: dict[int, list[str]] = {}
         self.includeonly: set[str] | None = None
@@ -233,7 +237,7 @@ class PreparationSession:
             "occurrence": command.span.basis.occurrence_id, "start": command.span.start,
             "end": command.span.end, "kind": kind, "target": self.name(path), "unit_id": command.unit_id})
 
-    def _enter(self, path, command, *, emit, import_dir=None, package=False, include=False):
+    def _enter(self, path, command, *, emit, import_dir=None, package=False, include=False, options=None):
         if any(frame.path == path for frame in self.frames):
             chain = " -> ".join(self.name(f.path) for f in self.frames) + " -> " + self.name(path)
             self.fail(command.span, "input_cycle", chain)
@@ -243,7 +247,7 @@ class PreparationSession:
         self.frames.append(_Input(path, reader, emit, import_dir, include=include, recovery=recovery,
             replacement=command.span if emit and command.action != "bibliography" else None,
             emission_start=len(self.pieces)))
-        self.dispatcher.enter_source(reader, catcode_overrides=overrides)
+        self.dispatcher.enter_source(reader, catcode_overrides=overrides, options=options)
 
     def _emit(self, span, text=None, *, command=None, target=None, operation=None, deferred=None,
               image_references=(), source_edits=()):
@@ -335,27 +339,44 @@ class PreparationSession:
         frame = self.frames[-1]
         name, options, command, is_class = frame.packages.pop(0)
         key = ("class:" if is_class else "package:") + name
+        options = list(self.forwarded_options.get(key, ())) + options
         path = self.resolve(name, [".cls" if is_class else ".sty"], command.span, required=False)
         if key in self.loaded_packages:
+            if not set(options) <= set(self.package_options[key]):
+                self.diagnose(command.span, "option_clash", f"{name!r} was already requested with different options",
+                              unit_id=command.unit_id)
+                self.dispatcher.defer_effects(command.span)
             return
         self.loaded_packages.add(key)
+        self.package_options[key] = tuple(options)
         self.manifest.packages_declared.append(PackageUsage(name, options, path is not None, self.name(path) if path else None))
         if path:
             self.edge(command, path, "class" if is_class else "package")
             self.styles[path] = StyleFileInfo(self.name(path), str(path), True, len(self.store.read_bytes(path)))
-            self._enter(path, command, emit=False, package=True)
+            self._enter(path, command, emit=False, package=True,
+                        options=OptionScope(key, tuple(options), self.class_options, is_class, self.context.scope_depth))
         elif is_class:
             baseline = self.resolver.catalog.engine_bindings["source_traversal"]["reading"]["baseline_classes"]
             if name not in baseline:
                 self.require(command.span, "class_binding", f"No reading contract for class {name!r}", stage="binding", unit_id=command.unit_id)
-                self.context.invalidate_booleans(command.span)
+                self.dispatcher.defer_effects(command.span)
         elif not self.resolver.load_package(name):
             self.require(command.span, "package_binding", f"No reading binding for package {name!r}", stage="binding", unit_id=command.unit_id)
-            self.context.invalidate_booleans(command.span)
+            self.dispatcher.defer_effects(command.span)
 
     def _command(self, command):
         frame, action = self.frames[-1], command.action
         self.commands.append(command)
+        if action == "pass_options":
+            name = command.value("name")
+            if not name or "," in name:
+                self.defer(command.span, "option_target", "Option forwarding requires one literal package/class name")
+            key = command.metadata["target_kind"] + ":" + name
+            if key in self.loaded_packages:
+                self.defer(command.span, "option_lifecycle", "Option forwarding after the target was loaded requires further resolution")
+            self.forwarded_options[key] = self.forwarded_options.get(key, ()) + option_names(command.argument("options"))
+            self._emit(command.span, command=command)
+            return
         if action == "external_literal":
             prepare_external_literal(self, command)
             return
@@ -420,7 +441,9 @@ class PreparationSession:
             return
         if action in {"package_load", "document_class"}:
             name = command.value("name")
-            options = [s.strip() for s in command.value("options").split(",") if s.strip()]
+            options = list(option_names(command.argument("options")))
+            if action == "document_class":
+                self.class_options = tuple(options)
             names = [s.strip() for s in name.split(",")]
             frame.packages.extend((n, options, command, action == "document_class") for n in names)
             # Rebase local names because master.tex moves to the payload root.
@@ -482,7 +505,7 @@ class PreparationSession:
         if action == "environment_end" and command.metadata.get("document"):
             self._ended_document = True
         # No-argument commands need a lexical separator after a control word.
-        if (not command.arguments and action in {"opaque", "biblatex_print"}
+        if (not command.arguments and action in {"opaque", "biblatex_print", "reading_noop", "process_options"}
                 or action == "boolean_declaration" and command.metadata["unbraced"]):
             self._emit(command.span.basis.span(command.span.end, command.span.end), " ", operation="SYNTHETIC_SEPARATOR")
 
@@ -532,7 +555,7 @@ class PreparationSession:
                         f"Retained {self.name(frame.path)!r}; caller resumes with its entry reading state. "
                         "This file's reading effects and dependencies still require resolution.", stage="preparation", unit_id=item.unit_id)
                     self.dispatcher.resume_input(frame.recovery)
-                    self.context.invalidate_booleans(item.span)
+                    self.dispatcher.defer_effects(item.span)
                     del self.frames[recoverable:]
                     continue
                 raise _PreserveRemainder

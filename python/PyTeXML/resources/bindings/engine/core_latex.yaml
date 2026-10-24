@@ -13,6 +13,25 @@ identity:
 
 reading:
   commands:
+    # latex2e base/ltclass.dtx: captured option code runs at processing time.
+    # The dispatcher executes only bounded reading effects from stored tokens.
+    - name: "\\DeclareOption"
+      family: option_control
+      action: declare_option
+      grammar:
+        handler: source_arguments
+        arguments: [{name: name, kind: braced}, {name: body, kind: braced}]
+        starred_arguments: [{name: body, kind: braced}]
+    - name: "\\ProcessOptions"
+      family: option_control
+      action: process_options
+      metadata: {order: declaration, starred_order: request}
+      grammar: {handler: source_arguments, arguments: [], starred_arguments: []}
+    - name: "\\ExecuteOptions"
+      family: option_control
+      action: execute_options
+      grammar: {handler: source_arguments, arguments: [{name: options, kind: braced}]}
+
     # TeX82 scan_toks/get_r_token: only the local, non-expanding form is
     # executable in the initial structural dispatcher. Other forms resolve to
     # explicit contracts which the scanner declines before reading arguments.

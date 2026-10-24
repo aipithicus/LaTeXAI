@@ -27,6 +27,8 @@ from .literal_scanner import LiteralScanner
 from .skipped_scanner import SkippedBranchScanner, SkippedScan
 from .spans import SourceSpan
 from .units import UnitRegistry
+from .options import OptionBody, OptionScope, option_names
+from .token_cursor import TokenCursor
 from .tex_reader import CatCode, EventKind, InvalidCharacterError, ReadEvent, TexReader, TokenKind
 
 
@@ -54,6 +56,7 @@ class InputRecovery:
     conditionals: tuple
     environments: tuple
     replays: dict
+    options: OptionScope | None
 
 
 class StructuralDispatcher:
@@ -68,7 +71,8 @@ class StructuralDispatcher:
     """
 
     def __init__(self, reader: TexReader, context: ReaderContext, knowledge: ReadingKnowledge,
-                 *, source_commands: bool = False, preparation: bool = False, units: UnitRegistry | None = None):
+                 *, source_commands: bool = False, preparation: bool = False, units: UnitRegistry | None = None,
+                 options: OptionScope | None = None):
         self.literals = LiteralScanner(reader, context, knowledge)
         self.definitions = DefinitionScanner(reader, context)
         self.skipped = SkippedBranchScanner(reader, context, knowledge)
@@ -84,7 +88,8 @@ class StructuralDispatcher:
         # Preparation captures ordinary uninterpreted expressions and continues.
         # The default execution API retains its strict boundary behavior.
         self.preparation = preparation
-        self._parents: list[tuple[TexReader, dict[str, CatCode]]] = []
+        self._parents: list[tuple[TexReader, dict[str, CatCode], OptionScope | None]] = []
+        self.options = options
         self._environment_stack: list[str] = []
         self._root_ended = False
         self._replays = {}
@@ -94,9 +99,22 @@ class StructuralDispatcher:
         """Snapshot only at an active handoff, before entering retained code."""
         if not self.preparation or self.halted or self._finished or self._pending_skip or self._skip_start is not None:
             raise ValueError("Recovery requires an active preparation handoff")
-        return InputRecovery(self, self.reader, self.context.copy(), tuple(self._parents),
+        parents, options = self._copy_option_stack(self._parents, self.options)
+        return InputRecovery(self, self.reader, self.context.copy(), parents,
                              tuple(self._groups), tuple(replace(f) for f in self._conditionals),
-                             tuple(self._environment_stack), dict(self._replays))
+                             tuple(self._environment_stack), dict(self._replays),
+                             options)
+
+    @staticmethod
+    def _copy_option_stack(parents, options):
+        copies = {}
+        def copy(scope):
+            if scope is None:
+                return None
+            if id(scope) not in copies:
+                copies[id(scope)] = scope.copy()
+            return copies[id(scope)]
+        return tuple((reader, saved, copy(scope)) for reader, saved, scope in parents), copy(options)
 
     def resume_input(self, saved: InputRecovery) -> None:
         """Resume after separately retained unresolved code under explicit assumptions.
@@ -108,7 +126,8 @@ class StructuralDispatcher:
         if not self.preparation or saved.owner is not self or not self.halted:
             raise ValueError("Invalid preparation recovery")
         self.context.restore_from(saved.context)
-        self._parents = list(saved.parents)
+        parents, self.options = self._copy_option_stack(saved.parents, saved.options)
+        self._parents = list(parents)
         self._groups = list(saved.groups)
         self._conditionals = [replace(f) for f in saved.conditionals]
         self._environment_stack = list(saved.environments)
@@ -124,14 +143,17 @@ class StructuralDispatcher:
         self.definitions = DefinitionScanner(reader, self.context)
         self.skipped = SkippedBranchScanner(reader, self.context, self.knowledge)
 
-    def enter_source(self, reader: TexReader, *, catcode_overrides: dict[str, int] | None = None) -> None:
+    def enter_source(self, reader: TexReader, *, catcode_overrides: dict[str, int] | None = None,
+                     options: OptionScope | None = None) -> None:
         """Suspend one mouth; execution scopes/conditionals belong to the document."""
         if not self.source_commands or self.halted or self._finished or self._pending_skip or self._skip_start is not None:
             raise ValueError("Input may only start at an active source-command boundary")
         if reader.catcodes is not self.context.catcodes:
             raise ValueError("Input occurrences must share the document's catcode table")
         saved = {char: self.context.catcodes[char] for char in catcode_overrides or {}}
-        self._parents.append((self.reader, saved))
+        self._parents.append((self.reader, saved, self.options))
+        if options is not None:
+            self.options = options
         for char, code in (catcode_overrides or {}).items():
             self.context.catcodes[char] = code
         self._set_reader(reader)
@@ -199,7 +221,7 @@ class StructuralDispatcher:
             if self._parents:
                 end = SourceEnd(reader.terminated_span or reader.source_span(len(reader.text), len(reader.text)),
                                 "endinput" if reader.terminated_span else "eof")
-                parent, saved = self._parents.pop()
+                parent, saved, self.options = self._parents.pop()
                 for char, code in saved.items():
                     self.context.catcodes[char] = code
                 self._set_reader(parent)
@@ -238,6 +260,9 @@ class StructuralDispatcher:
                                   "Math and alignment require their own mode and scope handling")
         try:
             deferred = DeferredScanner(reader, context)
+            if (isinstance(reader, TokenCursor) and token.kind == TokenKind.CHARACTER
+                    and token.catcode not in {CatCode.SPACE, CatCode.BEGIN_GROUP, CatCode.END_GROUP}):
+                raise ReadingIssue("option_body", "Option text requires interpretation beyond reading effects")
             if isinstance(meaning, BooleanMeaning):
                 self._require(meaning.uncertain is None, "uncertain_boolean",
                               f"Meaning of {token.value!r} may have changed in unexecuted source at "
@@ -282,6 +307,11 @@ class StructuralDispatcher:
                     # An inactive literal binding can require a different mouth.
                     # Do not treat its body as ordinary executed TeX.
             profile = require_resolved(resolved)
+            if profile.family == "option_control":
+                self._require(not isinstance(reader, TokenCursor), "option_body",
+                              "Nested option declarations/processing require further resolution")
+                command = ArgumentScanner(reader, context).read(event.span, profile)
+                return self._options(command)
             if profile.family == "conditional_factory":
                 self._require(profile.grammar.get("handler") == "boolean_declaration"
                               and profile.state_management is not None
@@ -309,12 +339,13 @@ class StructuralDispatcher:
                 context.catcodes[command.metadata["character"]] = command.metadata["category"]
                 return command
             if profile.family == "source_command":
-                self._require(self.source_commands, "unsupported_operation", "Source commands require an input owner")
+                self._require(self.source_commands or profile.action == "reading_noop",
+                              "unsupported_operation", "Source commands require an input owner")
                 command = ArgumentScanner(reader, context).read(event.span, profile)
                 if command.action in {"opaque", "metadata", "citation"} and any(
                         t.kind in {TokenKind.CONTROL_SEQUENCE, TokenKind.ACTIVE_CHARACTER}
                         for arg in command.arguments for t in arg.tokens):
-                    context.invalidate_booleans(command.span)
+                    self.defer_effects(command.span)
                 if command.action == "end_input":
                     reader.end_input_after_line()
                 elif command.action == "environment_end":
@@ -347,6 +378,8 @@ class StructuralDispatcher:
                 return event
             if profile.family in {"grouping", "catcode_mutator"}:
                 raise ReadingIssue("unsupported_operation", "Reading effect has no executable action")
+            self._require(not isinstance(reader, TokenCursor), "option_body",
+                          "Literal and environment reading requires a character-input contract")
             if profile.grammar.get("handler") == "environment_name":
                 self._require(profile.grammar.get("argument") == "braced_literal_name",
                               "unsupported_literal_grammar", "Only literal braced environment names are supported")
@@ -394,6 +427,48 @@ class StructuralDispatcher:
         except InvalidCharacterError as error:
             return self._boundary(event.span, "invalid_character", str(error))
 
+    def _options(self, command: SourceCommand) -> SourceCommand:
+        """Capture first, select later, then reuse strict dispatch over frozen tokens.
+
+        Option replay is an effect-only operation. Its source is already captured
+        by DeclareOption and is never re-emitted or added to top-level coverage.
+        Each selected body must be self-contained with respect to groups and
+        conditionals; dependencies and arbitrary macros remain explicit limits.
+        """
+        scope = self.options
+        self._require(scope is not None, "option_context", "Option commands require a package/class load")
+        self._require(self.context.scope_depth == scope.depth, "option_scope",
+                      "Option controls inside an additional lexical group need further resolution")
+        if command.action == "declare_option":
+            name = None if command.argument("star") else command.value("name").replace(" ", "")
+            scope.declare(name, OptionBody(command.argument("body"), self.reader.text))
+            return command
+        if command.action == "execute_options":
+            plan = scope.defaults(option_names(command.argument("options")))
+        else:
+            order = command.metadata["starred_order" if command.argument("star") else "order"]
+            plan = scope.plan(order)
+        saved = self.context.copy()
+        try:
+            for name, body in plan:
+                self._require(not any(t.catcode == CatCode.PARAMETER for t in body.argument.tokens),
+                              "option_body", f"Option {name!r} requires parameter-token compilation")
+                cursor = TokenCursor(body.argument, body.text, self.context)
+                replay = StructuralDispatcher(cursor, self.context, self.knowledge, units=self.units)
+                for item in replay:
+                    if isinstance(item, ReadingBoundary):
+                        raise ReadingIssue("option_body", f"Option {name!r} requires {item.reason} at "
+                                           f"{item.span.basis.source_id}:{item.span.start}: {item.detail}")
+        except ReadingIssue:
+            # Failed bounded resolution publishes no partly applied option state.
+            self.context.restore_from(saved)
+            raise
+        finally:
+            self.reader.endline_char = self.context.endlinechar
+        if command.action == "process_options":
+            scope.processed = True
+        return replace(command, metadata={**command.metadata, "selected_options": [name for name, _ in plan]})
+
     def _boolean_value(self, name: str) -> bool:
         rule = self.context.conditional_rule(name.removeprefix("\\"), self.knowledge)
         self._require(rule is not None and rule.role == "opener"
@@ -406,8 +481,15 @@ class StructuralDispatcher:
         # expressions may redefine a boolean or its setter, even globally.
         if region.reason != "math_interpretation" or any(
                 t.kind in {TokenKind.CONTROL_SEQUENCE, TokenKind.ACTIVE_CHARACTER} for t in region.tokens):
-            self.context.invalidate_booleans(region.span)
+            self.defer_effects(region.span)
         return region
+
+    def defer_effects(self, span):
+        """Unknown execution can invalidate live and suspended bounded state."""
+        self.context.invalidate_booleans(span)
+        for scope in (self.options, *(parent[2] for parent in self._parents)):
+            if scope is not None and scope.uncertain is None:
+                scope.uncertain = span
 
     def _protect_deferred_environment(self, token, *, shadowed=()) -> bool | DeferredRegion | StoredDefinition:
         """Locate known protected syntax without executing an unbound body.
@@ -438,7 +520,7 @@ class StructuralDispatcher:
             return DeferredScanner(self.reader, self.context).command(token, profile.reason.value, profile.detail)
         if profile.family == "stored_definition":
             return self.definitions.read(token.span.start, profile)  # capture, never install
-        if profile.family in {"conditional", "conditional_factory", "catcode_mutator", "catcode_assignment", "grouping", "environment_factory"}:
+        if profile.family in {"conditional", "conditional_factory", "catcode_mutator", "catcode_assignment", "grouping", "environment_factory", "option_control"}:
             raise ReadingIssue("environment_reading", "Control flow or reading effects inside an unbound environment require resolution")
         if profile.family == "source_command" and profile.action != "environment_end":
             command = ArgumentScanner(self.reader, self.context).read(token.span, profile)

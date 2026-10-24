@@ -317,6 +317,17 @@ plans. Unclassified options and unsupported operations return unresolved results
 Bounded literal `\catcode` assignments, physical-line literal bodies and declared
 environment factories now route through the source dispatcher. Computed assignments,
 general package configuration and interpolation execution remain pending.
+The legacy option interface now has a bounded path: YAML supplies declaration
+grammars and processing order; a per-load option store captures named/default
+bodies and selects them from local, global and forwarded literal options. The
+dispatcher alone applies selected effects through a captured-token cursor, without
+retokenizing or emitting those bodies a second time. Ordinary inputs inherit an
+option owner; nested package/class loads replace it until return. Unexecuted
+possible mutations invalidate option state. Replay is transactional in memory
+and restores context on failure. It does not expand arbitrary macros or execute
+file dependencies, literal grammars, parameter-bearing bodies, or cross-body
+groups/conditionals. Those remain located boundaries. Timed hooks and general
+definition wrappers are still separate increments.
 The resolver does not expand macros, scan environments, or perform rewrites. Its
 source-capture metadata preserves reading evidence without committing to an XML
 schema. Preparation consumes supported role actions from policy; the remaining

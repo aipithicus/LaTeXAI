@@ -249,6 +249,34 @@ use the shared source cache. Safe bodies are inlined with exact source provenanc
 delimiter collisions or unsupported options retain one rebased payload resource.
 No original manuscript file is modified.
 
+Local package/class loads now own bounded option contexts. `\DeclareOption`
+and `\DeclareOption*` capture their bodies without running them. `\ExecuteOptions`
+applies declared defaults; `\ProcessOptions` and its starred form select bodies
+using declaration or request order configured in the core YAML binding. Explicit
+document-class options are available to packages; literal `\PassOptionsToPackage`
+and `\PassOptionsToClass` requests are accumulated for their respective targets.
+Forwarded class options do not become global package options. Nested package
+loads have separate option contexts; ordinary inputs share their owner's context.
+Repeated loads with incompatible options produce located diagnostics.
+
+Selected bodies reuse the structural dispatcher over a
+[captured-token cursor](src/reading/token_cursor.py), preserving capture-time
+catcodes and spans. They apply only supported reading effects, boolean routing,
+groups and non-expanding definitions. Their source remains in the retained local
+code; replay neither duplicates it in the master nor alters top-level source
+coverage. Unselected bodies do not invalidate boolean state. Unknown executed
+code invalidates option knowledge as well as boolean knowledge.
+
+This follows the legacy option interface in
+[the LaTeX kernel](https://github.com/latex3/latex2e/blob/main/base/ltclass.dtx),
+not a general package interpreter. Selected bodies requiring macros such as
+`\CurrentOption`, parameter-token compilation, file loading, or character/literal
+scanning remain explicit boundaries. Each selected body must balance its own
+groups and conditionals. Option controls inside additional lexical groups,
+forwarding after a target is loaded, repeated processing, and key/value option
+frameworks also need further contracts. Failed effect replay restores its entry
+state, and preparation still publishes the retained code and a partial master.
+
 The dispatcher also owns a conditional stack independent of lexical groups.
 YAML separates conditional nesting roles from predicate evaluation. Constant
 true/false predicates (`\iftrue`, `\iffalse` and declared equivalents) and

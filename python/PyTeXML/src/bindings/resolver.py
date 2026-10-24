@@ -188,7 +188,7 @@ class BindingResolver:
         opts = dict(options or {})
         for origin, reading, section, spec in self._command_specs(clean):
             action = spec.get("action")
-            if spec.get("family") in {"source_command", "environment_factory"}:
+            if spec.get("family") in {"source_command", "environment_factory", "option_control"}:
                 return EffectiveReadingProfile(clean, spec["family"], action=spec["action"],
                     grammar=deepcopy(spec["grammar"]), tex_mechanics=deepcopy(spec.get("metadata", {})), binding_id=origin)
             if section == "conditionals":

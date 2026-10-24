@@ -10,6 +10,20 @@ reading:
   - letter
   - minimal
   commands:
+  - name: \PassOptionsToPackage
+    family: source_command
+    action: pass_options
+    metadata: {target_kind: package}
+    grammar:
+      handler: source_arguments
+      arguments: [{name: options, kind: braced}, {name: name, kind: braced}]
+  - name: \PassOptionsToClass
+    family: source_command
+    action: pass_options
+    metadata: {target_kind: class}
+    grammar:
+      handler: source_arguments
+      arguments: [{name: options, kind: braced}, {name: name, kind: braced}]
   - name: \documentclass
     family: source_command
     action: document_class
@@ -333,7 +347,7 @@ reading:
       arguments: []
   - name: \relax
     family: source_command
-    action: opaque
+    action: reading_noop
     grammar:
       handler: source_arguments
       arguments: []
