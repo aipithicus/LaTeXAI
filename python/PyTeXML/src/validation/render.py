@@ -113,10 +113,12 @@ def stage_project(source: Path, main: str, destination: Path, *, excluded_dirs=(
 
 
 def render_one(source: Path, main: str, label: str, output: Path, work: Path,
-               config: RenderConfig, env: dict) -> dict:
+               config: RenderConfig, env: dict, *, dependency_audit=False, hidden_inputs=(), output_format="pdf") -> dict:
+    if output_format not in {"pdf", "xdv"}:
+        raise ValueError("Validation output must be pdf or xdv")
     stage = work / label
     result = {"status": "failed", "source": str(source), "main": main, "pdf": None,
-              "log": label + ".log"}
+              "log": label + ".log", "format": output_format}
     log_path = output / result["log"]
     try:
         result["inputs"] = stage_project(source, main, stage / "source", excluded_dirs=[output])
@@ -125,30 +127,49 @@ def render_one(source: Path, main: str, label: str, output: Path, work: Path,
         build.mkdir()
         command = [str(config.tectonic.resolve()), "-X", "compile", "--untrusted", "--keep-logs",
                    "--print", "--outdir", str(build)]
+        if output_format != "pdf":
+            command.extend(["--outfmt", output_format])
         if config.only_cached:
             command.append("--only-cached")
         if config.bundle:
             command.extend(["--bundle", config.bundle])
+        rules = build / "inputs.mk"
+        if dependency_audit:
+            command.extend(["--makefile-rules", str(rules)])
+            for path in hidden_inputs:
+                command.extend(["--hide", str(path)])
         command.append(str(main_path))
         with log_path.open("wb") as log:
             process = subprocess.run(command, cwd=main_path.parent, env=env, stdout=log,
                                      stderr=subprocess.STDOUT, timeout=config.timeout_seconds, check=False)
         result["returncode"] = process.returncode
-        pdf = build / (main_path.stem + ".pdf")
+        pdf = build / (main_path.stem + "." + output_format)
         if process.returncode != 0:
             result["error"] = "Compiler returned an error; inspect the retained log"
-        elif not pdf.is_file():
-            result["error"] = "Compiler did not produce a PDF"
+        elif not pdf.is_file() or not pdf.stat().st_size:
+            result["error"] = f"Compiler did not produce a nonempty {output_format.upper()}"
         else:
-            import pymupdf
+            if output_format == "pdf":
+                import pymupdf
 
-            with pymupdf.open(pdf) as document:
-                if not document.is_pdf or document.needs_pass or len(document) == 0:
-                    raise ValueError("Compiler output is not a readable, nonempty PDF")
-                result["pages"] = len(document)
-            result["status"] = "rendered"
-            result["pdf"] = label + ".pdf"
-            shutil.move(str(pdf), str(output / result["pdf"]))
+                with pymupdf.open(pdf) as document:
+                    if not document.is_pdf or document.needs_pass or len(document) == 0:
+                        raise ValueError("Compiler output is not a readable, nonempty PDF")
+                    result["pages"] = len(document)
+                result["status"] = "rendered"
+                result["pdf"] = label + ".pdf"
+                shutil.move(str(pdf), str(output / result["pdf"]))
+            else:
+                with pdf.open("rb") as compiled:
+                    if compiled.read(2) != b"\xf7\x07":
+                        raise ValueError("Compiler output is not an XDV stream")
+                result.update(status="compiled", compiled_bytes=pdf.stat().st_size)
+            if dependency_audit:
+                from .relocation import audit_dependencies
+                result["dependencies"] = audit_dependencies(rules, main_path.parent, stage / "source", build)
+                if result["dependencies"]["status"] != "qualified":
+                    result["status"] = "unqualified"
+                    result["error"] = "Compiler output did not pass the relocated filesystem dependency audit"
     except subprocess.TimeoutExpired:
         result.update(status="timeout", error=f"Compiler exceeded {config.timeout_seconds:g} seconds")
     except (OSError, ValueError, RuntimeError, ET.ParseError) as error:
