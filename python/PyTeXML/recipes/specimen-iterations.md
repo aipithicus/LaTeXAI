@@ -91,6 +91,26 @@ Results are linked into the batch page; temporary rendering inputs are removed b
 the adapter. The manuscript's original render is not duplicated until rendering
 is explicitly requested for that checkpoint.
 
+To qualify relocation across an existing batch:
+
+```text
+python -B -m src.validation.specimens --runs <run-collection> qualify --batch 20261023-baseline --name relocation --tectonic <executable> --font-dir <font-directory>
+```
+
+Use repeatable `--specimen` options for a subset. Only prepared files are staged;
+raw specimen paths are hidden from the compiler and never deleted or renamed.
+The dependency receipt must resolve to staged files or temporary build products.
+Engine bundle/cache resources and configured fonts remain allowed. The default
+uses the existing compiler cache; `--allow-downloads` permits the optional renderer
+to fetch missing engine resources without adding them to preparation or its payload.
+`--format xdv` qualifies TeX compilation when PDF font embedding needs separate
+attention. It does not certify PDF rendering or visual fidelity.
+
+Per-paper evidence lands in `qualifications/<name>/`, with a combined receipt in
+the batch's `qualifications/<name>.json`. Both successful and incomplete outcomes
+remain visible. A partial preparation result can pass a particular rendered route;
+an apparently complete preparation still needs independent qualification.
+
 Rebuild generated navigation after adding rendering evidence or restoring receipts:
 
 ```text

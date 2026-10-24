@@ -11,7 +11,7 @@ expansion and XML interpretation belong to later development.
 | [`src/reading/`](src/reading) | Reusable N/M/S reader and cursor, structural dispatcher, literal/definition scanners, source intervals and coverage queries, regex catcode rules, mouth profiles, and scoped document state |
 | [`src/bindings/`](src/bindings) | Reusable binding catalog and document-local resolution/package activation |
 | [`src/prepare/`](src/prepare) | Cached source traversal, dependency resolution, emission, bibliography, assets, provenance, and publication |
-| [`src/validation/`](src/validation) | Optional paired rendering in disposable workspaces; independent of preparation |
+| [`src/validation/`](src/validation) | Optional paired rendering and relocation qualification in disposable workspaces; independent of preparation |
 | [`src/source_io.py`](src/source_io.py) | Run-scoped source cache, strict decoding and malformed-byte diagnostics |
 | [`src/bibtex.py`](src/bibtex.py) | Reusable BibTeX parser and data model |
 | [`src/assets.py`](src/assets.py) | Image inspection and individual asset conversion |
@@ -36,6 +36,17 @@ character intervals and occurrence identity, including mixed-source lines.
 directly to units and requirements; using them does not require the provenance sidecar.
 The old regex discovery, inliner, pruner, normalizer and implicit-graphics scanner
 have been removed.
+
+[Publication](src/prepare/publication.py) builds the complete payload in a sibling
+staging directory before replacing the output. Failed preparation leaves the last
+good master, manifest and assets intact, with the attempted run appended to the log.
+Successful replacement removes stale payload files. Existing-directory replacement
+uses backup/publish renames with rollback on error: on Windows there can be a brief
+interval where the destination directory is absent, but it never contains a mixed
+generation. A process crash during that interval may leave the backup in the named
+staging directory; this is exception-safe publication, not a crash-atomic directory
+exchange. EOF cursors travel as zero-width emission pieces, so their final addresses
+remain correct after trailing discards, inlining and asset/bibliography edits.
 
 Import components through their owning modules, for example:
 
@@ -159,21 +170,45 @@ and character-mode literal parsing inside captured argument tokens remain deferr
 Unbound environments also retain `DeferredRegion.observations`: direct command
 headers scanned using existing YAML argument grammars. Preparation can resolve
 literal image filenames from these observations and emit their SVG derivatives
-without expanding the environment or executing its body. Captured filenames alone
-are rewritten; the surrounding environment source stays exact. The manifest keeps
+without expanding the environment or executing its body. Captured filenames and page
+selections are rewritten; the surrounding environment source stays exact. The manifest keeps
 these in `candidate_dependencies` and `candidate_images`, separately from established
 active dependencies. A candidate shared with an active image is converted once.
 Prepared candidates record their payload paths and retain the unresolved reading
 context; they do not establish full dependency closure.
 
-Comments, known literals, stored bodies, math and opaque command arguments do not
-supply image observations. Missing/computed filenames, ambiguous matches and
-unsupported pages remain located requirements. An unexecuted graphics search-path
+Captured command arguments and stored bodies can also supply literal asset
+headers, without executing their enclosing code. The same asset plan rewrites
+inlined source and retained local files. Comments, known literal regions and
+diagnostic/data arguments do not supply dependencies. A raw literal encountered
+inside already captured tokens stops that argument's observational scan; its
+reading behavior remains deferred. Missing/computed filenames, ambiguous matches
+and nonliteral/invalid page options remain located requirements. An unexecuted graphics search-path
 or extension declaration prevents later candidates from using stale search settings.
 Reading effects and conditional flow inside an unbound environment still require
 resolution. This discovery uses the existing dispatcher cursor and source cache;
 it adds no package-specific Python, YAML exception for an author's environment,
 or compiler dependency.
+
+Each image use has its own PDF page selection. Explicit `page=N` uses a
+`figure_pN.svg` derivative; repeated uses of the same file/page share one conversion.
+An extracted page is rebased to `page=1` in the retained graphics options, while
+width, clipping and other authored options remain intact. Invalid PDF page indices
+fail conversion rather than falling back to page one. Destination collisions are
+disambiguated by source extension where possible, otherwise reported.
+
+Multiple declared BibTeX databases are read together in declaration order, with
+shared strings and cross-file parent references. Identical duplicate keyed records
+can be selected once even when field order differs; conflicting records remain in
+the canonical bibliography and require later resolution. Uncited metadata is kept
+for enrichment. Multiple bibliography sites and BibLaTeX formatting remain separate
+unfinished contracts.
+
+The YAML contracts for `\providecommand`, `\renewenvironment`, `\AtBeginDocument`
+and `\AtEndDocument` only capture their signatures and stored bodies. Preparation
+preserves these blocks, does not test target existence, install replacements,
+evaluate booleans in their bodies, or run/schedule hooks. No package-specific
+implementation for these declarations is added to the dispatcher.
 
 Unresolved predicates with a bounded source-operand recipe now use the reusable
 [conditional scanner](src/reading/conditional_scanner.py). It retains both branches
@@ -638,6 +673,17 @@ shared by both renders. Alternatively, `--fontconfig` selects an existing config
 Without either option, both inherit the caller's font environment. Configuring
 Fontconfig does not guarantee that the manuscript's selected fonts contain every
 glyph. Compiler warnings remain in the logs.
+
+Relocation qualification is available independently through
+`python -B -m src.validation.relocation <prepared> <new-output> --tectonic <executable>`
+or the specimen harness's `qualify` command. Only prepared files are staged; optional
+`--raw-source` paths are hidden from the compiler, and inherited TeX input search
+variables are removed. A successful engine result also needs a filesystem dependency
+receipt resolving entirely to the disposable payload/driver or build products.
+Compiler bundle/cache resources and fonts are allowed validation dependencies.
+`--format xdv` checks compilation separately from PDF font embedding; its report
+does not claim PDF rendering. These checks qualify the exercised document route,
+not every possible conditional configuration or semantic equivalence to the original.
 
 The initial adapter targets Tectonic's XeTeX/LaTeX graphics route, not arbitrary
 engines or SVG packages. SVG conversion warnings and external-resource failures
