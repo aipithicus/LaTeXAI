@@ -426,13 +426,13 @@ class TraversalTests(unittest.TestCase):
         self.assertIn("\\includegraphics{plot.png.svg}", text)
         self.assertNotEqual((out / "plot.svg.svg").read_bytes(), (out / "plot.png.svg").read_bytes())
 
-    def test_failed_rerun_invalidates_prior_master_and_appends_log(self):
+    def test_failed_rerun_preserves_prior_master_and_appends_log(self):
         self.document("OK")
         _, _, out, _ = self.prepare()
         self.document("\\input{missing}")
         with self.assertRaises(PreparationUnresolved):
             self.prepare()
-        self.assertFalse((out / "master.tex").exists())
+        self.assertIn("OK", (out / "master.tex").read_text())
         log = (out / "preparation.log").read_text()
         self.assertIn("SUCCESS", log)
         self.assertIn("FAILED", log)

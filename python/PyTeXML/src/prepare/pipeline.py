@@ -8,6 +8,7 @@ from .provenance import ProvenanceLedger
 from .bibliography import prepare_bibliography
 from .assets import prepare_assets
 from .locations import finalize_locations
+from .publication import OutputTransaction
 
 
 def preprocess_paper(
@@ -27,6 +28,38 @@ def preprocess_paper(
     emit_provenance: bool = True,
     policy: str = "prepare",
 ) -> Tuple[str, PreflightManifest, Path, Optional[ProvenanceLedger]]:
+    """Build in isolation and publish a complete payload, with failure rollback."""
+    arguments = dict(locals())
+    project = Path(project_dir).resolve()
+    destination = Path(output_dir).resolve() if output_dir else project / "extracted"
+    if not project.is_dir():
+        raise FileNotFoundError(f"Project directory not found: {project_dir}")
+    if project.is_relative_to(destination):
+        raise ValueError("Output directory must not contain or equal the source project")
+    if output_file:
+        secondary = Path(output_file).resolve()
+        if secondary.is_relative_to(project) and not secondary.is_relative_to(destination):
+            raise ValueError("An additional output inside the project must stay in the output directory")
+    with OutputTransaction(destination) as transaction:
+        arguments.update(output_dir=str(transaction.stage), output_file=None,
+                         excluded_dirs=[destination, transaction.workspace])
+        try:
+            text, manifest, _, ledger = _prepare_paper(**arguments)
+            if output_file:
+                transaction.secondary(secondary, text)
+            transaction.publish()
+        except Exception as error:
+            transaction.failure(error)
+            raise
+    return text, manifest, destination, ledger
+
+
+def _prepare_paper(
+    project_dir, output_dir=None, output_file=None, root_tex=None, execute_probe=False,
+    engine="pytexml", drop_commands=None, keep_content_commands=None, drop_environments=None,
+    convert_images_to_svg=True, copy_local_dependencies=True, clean_styles=False,
+    emit_manifest_json=True, emit_provenance=True, policy="prepare", *, excluded_dirs=(),
+):
     """Publish prepared source, with explicit partial status when knowledge is missing.
 
     Dependency discovery, input insertion and protected spans share one traversal.
@@ -54,9 +87,8 @@ def preprocess_paper(
         log.write("STARTED\n")
         log.flush()
         try:
-            # Invalidate the previous entrypoint before a rerun can fail.
-            (out_dir / "master.tex").unlink(missing_ok=True)
-            session = PreparationSession(p_dir, root_tex=root_tex, engine=engine, excluded_dirs=[out_dir], policy=policy)
+            session = PreparationSession(p_dir, root_tex=root_tex, engine=engine,
+                                         excluded_dirs=[out_dir, *excluded_dirs], policy=policy)
             if output_file:
                 secondary = Path(output_file).resolve()
                 if session.store.contains(secondary):
