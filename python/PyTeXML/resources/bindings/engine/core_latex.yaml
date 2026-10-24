@@ -13,6 +13,44 @@ identity:
 
 reading:
   commands:
+    # Capture-only boundaries (base/ltdefns.dtx, base/ltmiscen.dtx).
+    # Preparation neither checks target existence nor installs replacements,
+    # evaluates their bodies, or schedules/runs hook code.
+    - name: "\\providecommand"
+      family: source_command
+      action: opaque
+      grammar:
+        handler: source_arguments
+        arguments:
+          - {name: star, kind: star}
+          - {name: target, kind: control_sequence, role: data}
+          - {name: count, kind: optional, role: data}
+          - {name: default, kind: optional, role: stored}
+          - {name: body, kind: braced, role: stored}
+    - name: "\\renewenvironment"
+      family: source_command
+      action: opaque
+      grammar:
+        handler: source_arguments
+        arguments:
+          - {name: star, kind: star}
+          - {name: name, kind: braced, role: data}
+          - {name: count, kind: optional, role: data}
+          - {name: default, kind: optional, role: stored}
+          - {name: begin, kind: braced, role: stored}
+          - {name: end, kind: braced, role: stored}
+    - name: "\\AtBeginDocument"
+      family: source_command
+      action: opaque
+      grammar:
+        handler: source_arguments
+        arguments: [{name: body, kind: braced, role: stored}]
+    - name: "\\AtEndDocument"
+      family: source_command
+      action: opaque
+      grammar:
+        handler: source_arguments
+        arguments: [{name: body, kind: braced, role: stored}]
     # latex2e base/ltclass.dtx v1.5o, @ifl@aded; no binding-availability test.
     # https://github.com/latex3/latex2e/blob/develop/base/ltclass.dtx
     - name: "\\@ifpackageloaded"
