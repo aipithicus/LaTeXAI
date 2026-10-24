@@ -8,6 +8,10 @@ specimens:
     title: Transformers Represent Belief State Geometry in their Residual Stream
     source: 2405.15943v3-tex
     main: fractals_in_residual_stream.tex
+  2412.11340v4:
+    title: Fast Bayesian Functional Principal Components Analysis
+    source: 2412.11340v4-tex
+    main: Main.tex
   2512.18792v1:
     title: The Dead Salmons of AI Interpretability
     source: 2512.18792v1-tex
