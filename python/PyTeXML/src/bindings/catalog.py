@@ -140,10 +140,18 @@ class BindingCatalog:
                             or grammar.get("body_start", "after_header") not in {"after_header", "next_physical_line"}):
                         raise ProfileError(f"{path}: invalid physical-line literal grammar for {name}")
                 if spec.get("family") == "stored_definition":
-                    if (set(grammar) != {"handler", "expansion"}
-                            or grammar.get("handler") != "primitive_definition"
-                            or grammar.get("expansion") not in ("none", "full")
-                            or spec.get("scope") not in ("local", "global")):
+                    if grammar.get("handler") == "command_definition":
+                        if (set(grammar) != {"handler", "expansion", "target_requirement", "forbidden_names", "forbidden_prefixes"}
+                                or grammar.get("expansion") != "none" or spec.get("scope") != "local"
+                                or grammar.get("target_requirement") not in ("absent", "present")
+                                or any(not isinstance(grammar.get(key), list)
+                                       or any(not isinstance(value, str) or not value for value in grammar[key])
+                                       for key in ("forbidden_names", "forbidden_prefixes"))):
+                            raise ProfileError(f"{path}: {name} requires a local command definition recipe")
+                    elif (set(grammar) != {"handler", "expansion"}
+                          or grammar.get("handler") != "primitive_definition"
+                          or grammar.get("expansion") not in ("none", "full")
+                          or spec.get("scope") not in ("local", "global")):
                         raise ProfileError(f"{path}: {name} requires a primitive definition grammar, expansion and scope")
                 if spec.get("family") == "conditional_factory":
                     setters = grammar.get("setters")

@@ -327,7 +327,7 @@ possible mutations invalidate option state. Replay is transactional in memory
 and restores context on failure. It does not expand arbitrary macros or execute
 file dependencies, literal grammars, parameter-bearing bodies, or cross-body
 groups/conditionals. Those remain located boundaries. Timed hooks and general
-definition wrappers are still separate increments.
+definition factories are still separate increments.
 The resolver does not expand macros, scan environments, or perform rewrites. Its
 source-capture metadata preserves reading evidence without committing to an XML
 schema. Preparation consumes supported role actions from policy; the remaining
@@ -351,8 +351,15 @@ outer meanings that a global effect could change. A later use preserves unresolv
 source rather than selecting a branch from stale state. This bounded guard does
 not infer arbitrary macro effects or supply persisted per-unit context.
 Computed/global assignments, other predicates and unsupported literal grammars still
-produce reading boundaries. Hooks, definition wrappers and subfile preamble
+produce reading boundaries. Hooks, other definition factories and subfile preamble
 stripping need additional handlers.
+Bounded `\newcommand`/`\renewcommand` capture now records authored signatures,
+defaults and body tokens without expanding or executing them. The dispatcher
+registers scoped meanings; unverified target-existence checks remain located
+interpretation requirements. This avoids treating ordinary declarations as
+unknown executions that invalidate unrelated booleans. It does not establish
+what a future invocation will do, implement general factories, or prove the
+whole LaTeX namespace complete from the available bindings.
 Literal/definition/argument scans that exhaust their physical input are boundaries;
 continuation across input EOF is not implemented. Active groups and evaluated
 conditionals can cross input boundaries.

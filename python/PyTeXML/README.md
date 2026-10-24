@@ -219,7 +219,24 @@ is a located boundary, including redefined literal commands and environment
 entry/exit commands; it cannot silently invoke the previous binding. This increment
 captures declarations, without classifying their eventual reading effects or
 expanding their invocations. Expanding/global forms (`\edef`, `\xdef`, `\gdef`),
-prefixes, and LaTeX wrappers such as `\newcommand` remain unsupported boundaries.
+prefixes and other declaration factories remain unsupported boundaries.
+
+The same scanner captures bounded `\newcommand` and `\renewcommand` declarations:
+starred or unstarred, a literal control-sequence target (braced or unbraced), a
+literal argument count 0–9, an optional first-argument default, and a braced body.
+`CommandDefinition` retains that authored signature, exact spans and frozen tokens;
+it does not synthesize primitive parameter patterns or optional-argument helpers.
+Bodies and defaults do not execute or invalidate unrelated boolean state. YAML
+specifies the handler, target requirement and reserved names. Registration and
+scope restoration remain in the dispatcher. Known new-command collisions are
+diagnosed; an unbound target does not prove undefinedness. Unverified existence
+checks become interpretation requirements with final prepared-artifact locations,
+including declarations captured during bounded option replay. Missing binding
+knowledge does not prevent capturing a renewal such as `\renewcommand{\rmdefault}{ptm}`.
+Inside an already deferred environment, a stored invocation retains its protected
+argument envelope without executing it or reusing the shadowed binding. The
+environment's pending reading contract remains explicit, and traversal can reach
+later inputs, assets and bibliographies.
 
 The dispatcher delegates kernel `\verb`, `\verb*`, `verbatim`, and `verbatim*`
 to [LiteralScanner](src/reading/literal_scanner.py). Literal scanners have no
@@ -241,8 +258,8 @@ are scoped and do not execute inside stored definitions or skipped branches.
 Included comment bodies are captured by physical lines and read again through an
 in-memory window of the same source basis; their wrappers introduce no scope.
 This replay can resolve child inputs and reading effects before preparation
-unwraps the container. Other environment factories and author declaration wrappers
-remain future work.
+unwraps the container. Other environment factories and declaration wrappers
+beyond the bounded command forms remain future work.
 
 External literal commands (`\verbatiminput`, `\VerbatimInput`, `\lstinputlisting`)
 use the shared source cache. Safe bodies are inlined with exact source provenance;

@@ -17,7 +17,7 @@ from ..reading.dispatcher import StructuralDispatcher, InputRecovery
 from ..reading.argument_scanner import key_values
 from ..reading.coverage import ReadingCoverage
 from ..reading.contracts import (SourceCommand, SourceEnd, ReadingBoundary, ReadingIssue,
-                                StoredDefinition, SkippedRegion, DeferredRegion, LiteralRegion)
+                                StoredDefinition, CommandDefinition, SkippedRegion, DeferredRegion, LiteralRegion)
 from ..reading.tex_reader import TexReader, ReadEvent, TokenKind, CatCode
 from ..reading.edit_map import EditMap
 from ..reading.units import UnitRegistry
@@ -364,9 +364,16 @@ class PreparationSession:
             self.require(command.span, "package_binding", f"No reading binding for package {name!r}", stage="binding", unit_id=command.unit_id)
             self.dispatcher.defer_effects(command.span)
 
+    def _definition_check(self, unit_id, declaration, target, requirement):
+        self.require(self.units.records[unit_id].span, "definition_precondition",
+                     f"Captured {declaration} for {target!r}; target must be {requirement}, "
+                     "but available reading knowledge cannot verify that", unit_id=unit_id)
+
     def _command(self, command):
         frame, action = self.frames[-1], command.action
         self.commands.append(command)
+        for check in command.metadata.get("definition_checks", ()):
+            self._definition_check(**check)
         if action == "pass_options":
             name = command.value("name")
             if not name or "," in name:
@@ -611,6 +618,8 @@ class PreparationSession:
                             self.require(item.span, "policy_action", f"Literal role does not support {action!r}", stage="preparation", unit_id=item.unit_id)
                 else:
                     self._emit(item.span)
+                    if isinstance(item, CommandDefinition) and item.target_check == "unverified":
+                        self._definition_check(item.unit_id, item.declaration, item.target.value, item.target_requirement)
                     if isinstance(item, StoredDefinition) and self.frames[-1].path in self.styles:
                         self.styles[self.frames[-1].path].declared_commands.append(item.target.value)
             except (ReadingIssue, _DeferredCommand) as error:

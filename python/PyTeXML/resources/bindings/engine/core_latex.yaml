@@ -13,6 +13,27 @@ identity:
 
 reading:
   commands:
+    # latex2e base/ltdefns.dtx: capture the authored signature and replacement
+    # tokens; do not synthesize the kernel's optional-argument helper macros.
+    - name: "\\newcommand"
+      family: stored_definition
+      scope: local
+      grammar:
+        handler: command_definition
+        expansion: none
+        target_requirement: absent
+        forbidden_names: [relax]
+        forbidden_prefixes: [end]
+    - name: "\\renewcommand"
+      family: stored_definition
+      scope: local
+      grammar:
+        handler: command_definition
+        expansion: none
+        target_requirement: present
+        forbidden_names: []
+        forbidden_prefixes: []
+
     # latex2e base/ltclass.dtx: captured option code runs at processing time.
     # The dispatcher executes only bounded reading effects from stored tokens.
     - name: "\\DeclareOption"

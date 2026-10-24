@@ -232,6 +232,24 @@ class ScannedArgument:
         return "".join(t.value for t in self.tokens).strip()
 
 
+@dataclass(frozen=True, slots=True, kw_only=True)
+class CommandDefinition(StoredDefinition):
+    """A LaTeX command declaration with its authored signature kept intact.
+
+    No synthetic primitive parameter pattern or optional-argument helper macro
+    is created: parameter_tokens is empty and parameter_text covers the authored
+    header after the target. Defaults, like bodies, retain lexical tokens only.
+    target_check records knowledge, not a complete TeX definedness test.
+    """
+    declaration: str
+    starred: bool
+    target_argument: ScannedArgument
+    argument_count: ScannedArgument | None
+    optional_default: ScannedArgument | None
+    target_requirement: str
+    target_check: str = "unchecked"
+
+
 @dataclass(frozen=True, slots=True)
 class SourceCommand:
     """An established active command; the preparation owner resolves resources."""

@@ -199,7 +199,7 @@ without implicit grouping, as specified in the
 The dispatcher replays a bounded window over the same buffer and source basis,
 without temporary files. This separates boundary capture from body execution.
 
-## 7. Stored primitive definitions
+## 7. Stored definitions
 
 Commands in the `stored_definition` family declare `scope: local|global` and
 `grammar: {handler: primitive_definition, expansion: none|full}`. The catalog
@@ -239,7 +239,46 @@ Preparation instead captures it without expansion and records the need for later
 interpretation. It does not establish that the invocation is reading-neutral.
 This is lexical capture and scoped
 shadowing, not complete TeX meaning validation: prefix/outer/protected semantics,
-LaTeX declaration wrappers, global assignments and expansion remain future work.
+other declaration factories, global assignments and expansion remain future work.
+
+The `command_definition` handler captures the bounded LaTeX command forms from
+[ltdefns.dtx](https://github.com/latex3/latex2e/blob/main/base/ltdefns.dtx):
+
+```yaml
+- name: "\\newcommand"
+  family: stored_definition
+  scope: local
+  grammar:
+    handler: command_definition
+    expansion: none
+    target_requirement: absent
+    forbidden_names: [relax]
+    forbidden_prefixes: [end]
+```
+
+The renewal recipe uses `target_requirement: present` and empty forbidden lists.
+Only local, non-expanding recipes are valid. The grammar accepts an optional star,
+a single literal control sequence (braced or unbraced), an optional literal digit
+0–9, an optional default when the count is positive, and a braced replacement.
+Computed targets/counts and other factories need separate resolution.
+
+`CommandDefinition` extends `StoredDefinition` with the declaration identity,
+star flag, target/count/default arguments and target-check status. It records the
+logical authored signature, not the kernel's generated helper definitions.
+`parameter_tokens` is empty; `parameter_text` spans the authored header after the
+target. Bodies and defaults retain definition-time tokens. Body parameter checks
+reuse primitive scanning; default parameter markers must be doubled because the
+kernel stores the default in a parameterless helper. The star is metadata for
+later invocation argument scanning, not an instruction to execute the body now.
+
+The scanner returns `target_check: unchecked`. Active dispatch checks available
+local meanings and bindings, rejects a known new-command collision, then marks the
+capture `known_present` or `unverified` before registration. These are knowledge
+states, not a complete implementation of LaTeX's definedness tests. No binding is
+not proof of no command. Preparation emits an interpretation requirement for each
+unverified precondition, including selected option-body declarations, without
+blocking the master. Deferred-environment scanning captures syntax only and never
+performs this active registration. Invocation expansion remains out of scope.
 
 ## 8. Bounded conditionals and skipped text
 

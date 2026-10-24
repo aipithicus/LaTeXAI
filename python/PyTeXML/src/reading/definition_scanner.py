@@ -1,4 +1,4 @@
-"""Non-expanding primitive definition capture over the shared mouth cursor.
+"""Non-expanding definition capture over the shared mouth cursor.
 
 This scanner never resolves command meanings, dispatches bodies, installs a
 definition, or opens execution scopes. The dispatcher owns those decisions.
@@ -9,7 +9,9 @@ they are not TeX's compiled match/out_param token representation.
 from __future__ import annotations
 
 from .context import ExecutionMode, ReaderContext
-from .contracts import EffectiveReadingProfile, ReadingIssue, StateManagementRule, StoredDefinition
+from .argument_scanner import ArgumentScanner
+from .contracts import (CommandDefinition, EffectiveReadingProfile, ReadingIssue,
+                        ScannedArgument, StateManagementRule, StoredDefinition)
 from .tex_reader import CatCode, TexReader, Token, TokenKind
 
 
@@ -37,22 +39,29 @@ class DefinitionScanner:
         return None
 
     def read(self, start: int, profile: EffectiveReadingProfile) -> StoredDefinition:
-        """Capture one local primitive definition after its command token was read."""
+        """Capture a supported local declaration after its command token was read."""
         self._require(self.context.mode == ExecutionMode.ACTIVE_EXECUTION,
                       "inactive_context", "Definition scanning requires an active declaration")
         self._require(self.reader.catcodes is self.context.catcodes
                       and self.reader.endline_char == self.context.endlinechar,
                       "context_changed", "Definition scanner and reader must share reading state")
-        self._require(profile.family == "stored_definition"
-                      and profile.grammar == {"handler": "primitive_definition", "expansion": "none"}
+        primitive = profile.grammar == {"handler": "primitive_definition", "expansion": "none"}
+        wrapper = (profile.grammar.get("handler") == "command_definition"
+                   and set(profile.grammar) == {"handler", "expansion", "target_requirement", "forbidden_names", "forbidden_prefixes"}
+                   and profile.grammar.get("expansion") == "none"
+                   and profile.grammar.get("target_requirement") in ("absent", "present")
+                   and all(isinstance(profile.grammar[key], list)
+                           and all(isinstance(value, str) and value for value in profile.grammar[key])
+                           for key in ("forbidden_names", "forbidden_prefixes")))
+        self._require(profile.family == "stored_definition" and (primitive or wrapper)
                       and profile.state_management == StateManagementRule()
                       and profile.action is None and not profile.catcode_layers
                       and not profile.catcode_overrides and not profile.reader_parameters
                       and not profile.interpolations and not profile.active_options
                       and profile.terminator is None and not profile.tex_mechanics,
-                      "unsupported_definition", "Only local, unexpanded primitive definitions are supported")
+                      "unsupported_definition", "Only supported local, unexpanded definitions are captured")
         with self.context.stored_definition():
-            return self._read(start, profile.binding_id)
+            return self._command(start, profile) if wrapper else self._read(start, profile.binding_id)
 
     def _read(self, start: int, binding_id: str) -> StoredDefinition:
         target = self._token()
@@ -81,6 +90,15 @@ class DefinitionScanner:
                 parameters.append(following)
                 count += 1
 
+        body, closing = self._body(count)
+        span = self.reader.source_span
+        return StoredDefinition(
+            span(start, closing.span.end), span(start, opening.span.end),
+            span(target.span.end, opening.span.start),
+            span(opening.span.end, closing.span.start), closing.span, target,
+            tuple(parameters), body, count, hash_brace, binding_id)
+
+    def _body(self, count: int):
         body: list[Token] = []
         depth = 1
         while True:
@@ -101,9 +119,62 @@ class DefinitionScanner:
                               "invalid_definition_parameter", "Replacement text requires a declared parameter or doubled marker")
                 body.append(following)
 
+        return tuple(body), closing
+
+    def _command(self, start: int, profile: EffectiveReadingProfile) -> CommandDefinition:
+        args = ArgumentScanner(self.reader, self.context)
+        first = args._nonspace()
+        starred = (first is not None and first.kind == TokenKind.CHARACTER
+                   and first.catcode == CatCode.OTHER and first.value == "*")
+        if starred:
+            first = args._nonspace()
+        self._require(first is not None, "unclosed_definition", "Missing command target")
+        if first.catcode == CatCode.BEGIN_GROUP:
+            tokens = []
+            while (token := self._token()).catcode != CatCode.END_GROUP:
+                self._require(token.catcode != CatCode.BEGIN_GROUP, "invalid_definition_target",
+                              "Command target must be a single literal control sequence")
+                tokens.append(token)
+            target_argument = ScannedArgument("target", self.reader.source_span(first.span.end, token.span.start), tuple(tokens))
+            targets = [t for t in tokens if t.catcode != CatCode.SPACE]
+        else:
+            target_argument = ScannedArgument("target", first.span, (first,))
+            targets = [first]
+        self._require(len(targets) == 1 and targets[0].kind == TokenKind.CONTROL_SEQUENCE,
+                      "invalid_definition_target", "Command target must be a single literal control sequence")
+        target = targets[0]
+        self._require(target.value not in profile.grammar["forbidden_names"]
+                      and not any(target.value.startswith(p) for p in profile.grammar["forbidden_prefixes"]),
+                      "invalid_definition_target", "Command target is reserved by this declaration recipe")
+        target_end = self.reader.position
+        count_argument = args.group("argument_count", optional=True)
+        count = 0
+        if count_argument is not None:
+            digits = [t for t in count_argument.tokens if t.catcode != CatCode.SPACE]
+            self._require(len(digits) == 1 and digits[0].kind == TokenKind.CHARACTER
+                          and digits[0].catcode == CatCode.OTHER and digits[0].value in "0123456789",
+                          "unsupported_definition_count", "Argument count must be a literal digit from 0 to 9")
+            count = int(digits[0].value)
+        default = args.group("optional_default", optional=True) if count_argument is not None else None
+        if default is not None:
+            self._require(count > 0, "invalid_definition_default", "An optional default requires at least one argument")
+            # The kernel stores the default in a parameterless helper definition.
+            # It may contain doubled markers, but cannot reference outer parameters.
+            tokens = iter(default.tokens)
+            for token in tokens:
+                if token.catcode == CatCode.PARAMETER:
+                    following = next(tokens, None)
+                    self._require(following is not None and following.catcode == CatCode.PARAMETER,
+                                  "invalid_definition_parameter", "Default text requires doubled parameter markers")
+        opening = args._nonspace()
+        self._require(opening is not None and opening.catcode == CatCode.BEGIN_GROUP,
+                      "argument_required", "Command replacement text must be braced")
+        body, closing = self._body(count)
         span = self.reader.source_span
-        return StoredDefinition(
+        return CommandDefinition(
             span(start, closing.span.end), span(start, opening.span.end),
-            span(target.span.end, opening.span.start),
-            span(opening.span.end, closing.span.start), closing.span, target,
-            tuple(parameters), tuple(body), count, hash_brace, binding_id)
+            span(target_end, opening.span.start), span(opening.span.end, closing.span.start),
+            closing.span, target, (), body, count, None, profile.binding_id,
+            declaration=profile.name, starred=starred, target_argument=target_argument,
+            argument_count=count_argument, optional_default=default,
+            target_requirement=profile.grammar["target_requirement"])

@@ -15,7 +15,7 @@ from .context import ExecutionMode, ReaderContext
 from .contracts import (
     ConditionalRule, EffectiveReadingProfile, LiteralRegion, ReadingBoundary, ReadingIssue,
     ReadingKnowledge, SkippedRegion, StoredDefinition, SourceCommand, SourceEnd, require_resolved,
-    DeferredRegion, UnresolvedBindingResult, UnresolvedReason, BooleanMeaning,
+    DeferredRegion, UnresolvedBindingResult, UnresolvedReason, BooleanMeaning, CommandDefinition,
 )
 from .boolean_scanner import declaration as boolean_declaration
 from .argument_scanner import ArgumentScanner, key_values
@@ -370,7 +370,17 @@ class StructuralDispatcher:
                 self._conditional(profile.conditional, event.span)
                 return event
             if profile.family == "stored_definition":
-                definition = self._identify(self.definitions.read(event.span.start, profile))
+                definition = self.definitions.read(event.span.start, profile)
+                if isinstance(definition, CommandDefinition):
+                    known = (context.lookup_meaning(definition.target.value) is not None
+                             or isinstance(self.knowledge.resolve_command(definition.target.value), EffectiveReadingProfile))
+                    self._require(not known or definition.target_requirement != "absent",
+                                  "definition_conflict", f"{definition.target.value!r} already has an established meaning")
+                    # An incomplete binding inventory cannot prove undefinedness.
+                    # Registration records a source declaration, not validation of
+                    # its precondition or execution of its replacement text.
+                    definition = replace(definition, target_check="known_present" if known else "unverified")
+                definition = self._identify(definition)
                 context.record_definition(definition)
                 return definition
             if profile.action is not None:
@@ -449,6 +459,7 @@ class StructuralDispatcher:
             order = command.metadata["starred_order" if command.argument("star") else "order"]
             plan = scope.plan(order)
         saved = self.context.copy()
+        definition_checks = []
         try:
             for name, body in plan:
                 self._require(not any(t.catcode == CatCode.PARAMETER for t in body.argument.tokens),
@@ -459,6 +470,9 @@ class StructuralDispatcher:
                     if isinstance(item, ReadingBoundary):
                         raise ReadingIssue("option_body", f"Option {name!r} requires {item.reason} at "
                                            f"{item.span.basis.source_id}:{item.span.start}: {item.detail}")
+                    if isinstance(item, CommandDefinition) and item.target_check == "unverified":
+                        definition_checks.append({"unit_id": item.unit_id, "declaration": item.declaration,
+                                                  "target": item.target.value, "requirement": item.target_requirement})
         except ReadingIssue:
             # Failed bounded resolution publishes no partly applied option state.
             self.context.restore_from(saved)
@@ -467,7 +481,8 @@ class StructuralDispatcher:
             self.reader.endline_char = self.context.endlinechar
         if command.action == "process_options":
             scope.processed = True
-        return replace(command, metadata={**command.metadata, "selected_options": [name for name, _ in plan]})
+        return replace(command, metadata={**command.metadata, "selected_options": [name for name, _ in plan],
+                                          "definition_checks": definition_checks})
 
     def _boolean_value(self, name: str) -> bool:
         rule = self.context.conditional_rule(name.removeprefix("\\"), self.knowledge)
@@ -504,8 +519,15 @@ class StructuralDispatcher:
         if token.value in shadowed:
             return DeferredScanner(self.reader, self.context).command(
                 token, "stored_macro", "Unexecuted definition shadows the entry grammar")
-        if self.context.lookup_meaning(token.value) is not None:
-            raise ReadingIssue("environment_reading", "A stored invocation inside an unbound environment needs reading resolution")
+        meaning = self.context.lookup_meaning(token.value)
+        if isinstance(meaning, StoredDefinition):
+            # Observing an invocation inside an already deferred body requires
+            # no more execution than observing an unknown command there. Keep
+            # its envelope protected; do not dispatch the old binding or body.
+            return DeferredScanner(self.reader, self.context).command(
+                token, "stored_macro", "Stored invocation inside an unbound environment remains unexpanded")
+        if meaning is not None:
+            raise ReadingIssue("environment_reading", "A conditional or setter inside an unbound environment needs reading resolution")
         profile = self.knowledge.resolve_command(token.value)
         if isinstance(profile, UnresolvedBindingResult):
             if profile.reason == UnresolvedReason.PACKAGE_NOT_LOADED:
