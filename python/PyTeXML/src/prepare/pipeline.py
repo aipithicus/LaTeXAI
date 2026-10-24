@@ -6,7 +6,7 @@ from .session import PreparationSession
 from .manifest import PreflightManifest
 from .provenance import ProvenanceLedger
 from .bibliography import prepare_bibliography
-from .assets import batch_convert_assets_to_svg, rewrite_image_references
+from .assets import prepare_assets
 from .locations import finalize_locations
 
 
@@ -68,11 +68,10 @@ def preprocess_paper(
             if images and not convert_images_to_svg:
                 raise ValueError("Referenced images require SVG conversion for a standalone extraction package")
             if images:
-                mapping = batch_convert_assets_to_svg([Path(i.abs_path) for i in images], out_dir, p_dir)
-                pieces = rewrite_image_references(pieces, mapping)
+                pieces, mapping = prepare_assets(session, pieces, out_dir)
                 for candidate in manifest.candidate_dependencies:
-                    if candidate.get("target") in mapping:
-                        candidate.update(payload=mapping[candidate["target"]], status="prepared")
+                    if candidate.get("unit_id") in mapping:
+                        candidate.update(payload=mapping[candidate["unit_id"]], status="prepared")
                 prepared = {c["unit_id"] for c in manifest.candidate_dependencies if c["status"] == "prepared"}
                 for requirement in manifest.requirements:
                     if requirement["reason"] == "observed_asset" and requirement["unit_id"] in prepared:

@@ -30,7 +30,7 @@ from .emission import SourcePiece, event_text
 from .survey import survey_sources
 from .policy import load_policy
 from .resources import prepare_external_literal
-from .assets import observe_environment_assets
+from .assets import observe_environment_assets, observe_asset, register_asset, surviving_asset_uses
 from .deferred import emit_observed_region
 from .provenance import Tombstone
 from .manifest import PreflightManifest, BibliographyInfo, PackageUsage, StyleFileInfo, ImplicitGraphicInfo
@@ -80,6 +80,7 @@ class PreparationSession:
         self.styles: dict[Path, StyleFileInfo] = {}
         self.images: set[Path] = set()
         self.candidate_images: set[Path] = set()
+        self.asset_uses = {}
         self.candidate_sources: set[Path] = set()
         self._implicit = []
         self.code: set[Path] = set()
@@ -212,14 +213,17 @@ class PreparationSession:
         self.manifest.preserved_source_spans = [{"source": span.basis.source_id,
             "occurrence": span.basis.occurrence_id, "start": span.start, "end": span.end}]
         # Only convert assets whose references survived this emission rollback.
-        targets = {target for p in self.pieces for _, target in p.image_references}
+        surviving = surviving_asset_uses(self, self.pieces)
+        identifiers = {u.command.unit_id for u in surviving}
+        targets = {self.name(u.path) for u in surviving}
         self.images = {p for p in self.images if self.name(p) in targets}
         self.candidate_images = {p for p in self.candidate_images if self.name(p) in targets}
         retained_contexts = {(p.deferred.span.basis.source_id, p.deferred.span.basis.occurrence_id,
                               p.deferred.span.start, p.deferred.span.end)
                              for p in self.pieces if p.deferred is not None}
         self.manifest.candidate_dependencies = [d for d in self.manifest.candidate_dependencies
-            if (d["source"], d["occurrence"], *d["context_span"]) in retained_contexts]
+            if (d["unit_id"] in identifiers if d["kind"] == "asset" else
+                (d["source"], d["occurrence"], *d["context_span"]) in retained_contexts)]
         self.manifest.active_images = [i for i in self.manifest.active_images if i.rel_path in targets]
         retained_resources = {(p.command.span.basis.source_id, p.command.span.basis.occurrence_id,
                                p.command.span.start, p.command.span.end)
@@ -344,9 +348,18 @@ class PreparationSession:
             self._observe_argument(arg, identifier)
 
     def _observe_argument(self, argument, parent_id, *, excluded=()):
-        for token, identifier, action, role in observe_dependencies(argument,
+        observations = observe_dependencies(argument,
                 self.documents[argument.span.basis].text, self.context, self.resolver,
-                self.units, parent_id, excluded=excluded):
+                self.units, parent_id, excluded=excluded)
+        search_changed = False
+        for token, identifier, action, role, command in sorted(observations, key=lambda item: item[0].span.start):
+            if action in {"asset_search_paths", "asset_extensions"}:
+                search_changed = True
+                continue
+            if command is not None and action == "asset_reference":
+                observe_asset(self, command, argument.span, "argument_" + role,
+                              binding=command.metadata.get("binding_id"), search_changed=search_changed)
+                continue
             self.require(token.span, "deferred_dependency", "Possible dependency; its owning context has not dispatched this request",
                 stage="interpretation" if role == "stored" else "preparation", unit_id=identifier,
                 dependency="possible", next_step="macro_invocation" if role == "stored" else
@@ -383,9 +396,6 @@ class PreparationSession:
 
     def image_path(self, command, *, provisional=False):
         """Resolve the literal image header against the current search context."""
-        options = key_values(command.argument("options"))
-        if options.get("page", "1").strip() != "1":
-            raise ReadingIssue("asset_page", "Only first-page PDF conversion is currently qualified")
         name = command.value("target")
         paths = next((self.graphic_paths[d] for d in sorted(self.graphic_paths, reverse=True)
                       if d <= self.context.scope_depth), [])
@@ -542,9 +552,8 @@ class PreparationSession:
             self._neutral(command)
             # Widths/captions can contain unexpanded TeX without making the
             # filename or PDF page computed. Inspect only options we consume.
-            if not frame.emit:
-                self.defer(command.span, "package_asset", "Asset emission from local package code needs a payload rewrite contract")
             path = self.image_path(command)
+            register_asset(self, command, path)
             self.images.add(path)
             for candidate in self._implicit:
                 candidate[1] = True

@@ -116,10 +116,10 @@ class ArgumentScanner:
                              profile.action, tuple(arguments), {**profile.tex_mechanics, "binding_id": profile.binding_id})
 
 
-def key_values(argument: ScannedArgument | None) -> dict[str, str]:
-    """Split a captured key/value list at top-level commas, without expansion."""
+def key_value_items(argument: ScannedArgument | None):
+    """Yield keys and original value tokens, retaining duplicates and positions."""
     if argument is None:
-        return {}
+        return
     entries, current, depth = [], [], 0
     for token in argument.tokens:
         if token.catcode == CatCode.BEGIN_GROUP:
@@ -132,7 +132,6 @@ def key_values(argument: ScannedArgument | None) -> dict[str, str]:
         else:
             current.append(token)
     entries.append(current)
-    result = {}
     for entry in entries:
         if not entry or all(t.catcode == CatCode.SPACE for t in entry):
             continue
@@ -145,6 +144,11 @@ def key_values(argument: ScannedArgument | None) -> dict[str, str]:
         key = "".join(t.value for t in key_tokens).strip()
         if not key:
             raise ReadingIssue("computed_option", "Option names require literal characters")
-        result[key] = ("".join(("\\" if t.kind == TokenKind.CONTROL_SEQUENCE else "") + t.value
-                              for t in entry[separator + 1:]).strip() if separator is not None else "true")
-    return result
+        yield key, tuple(entry[separator + 1:]) if separator is not None else None
+
+
+def key_values(argument: ScannedArgument | None) -> dict[str, str]:
+    """Split a captured key/value list at top-level commas, without expansion."""
+    return {key: "".join(("\\" if t.kind == TokenKind.CONTROL_SEQUENCE else "") + t.value
+                        for t in tokens).strip() if tokens is not None else "true"
+            for key, tokens in key_value_items(argument)}

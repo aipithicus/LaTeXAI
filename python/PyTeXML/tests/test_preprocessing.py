@@ -13,7 +13,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from src.prepare.bibliography import BibliographyPreparationError
 from src.bibtex import Database, BibTeXError
 from src.prepare.bibliography import extraction_bbl
-from src.prepare.assets import batch_convert_assets_to_svg
+from src.prepare.assets import batch_convert_assets_to_svg, AssetUse
 from src.assets import raster_to_svg_wrapper
 from src.prepare.session import PreparationSession, PreparationUnresolved
 from src.prepare.pipeline import preprocess_paper
@@ -257,7 +257,7 @@ class PreparationTests(unittest.TestCase):
         out = self.root / "extracted"
         out.mkdir()
         with self.assertRaises(RuntimeError):
-            batch_convert_assets_to_svg([asset], out, self.root)
+            batch_convert_assets_to_svg([AssetUse(None, asset)], out, self.root)
         self.assertEqual(list(out.iterdir()), [])
 
     def test_nested_conditionals_preserve_only_executed_text(self):

@@ -187,7 +187,9 @@ class ManifestLocationTests(unittest.TestCase):
         basis = session._root_reader.basis
         start = source.index("CAPTION")
         caption = session.require(basis.span(start, start + 7), "caption_test", "Tracked interior interest")
-        pieces = rewrite_image_references(session.pieces, {"a.png": "much/longer-name.svg", "b.png": "b.svg"})
+        pieces = rewrite_image_references(session.pieces, {u.command.unit_id:
+            "much/longer-name.svg" if u.path.name == "a.png" else "b.svg"
+            for u in session.asset_uses.values()}, list(session.asset_uses.values()))
         master = ''.join(p.text for p in pieces)
         finalize_locations(session, pieces, master, {})
         location, = caption["locations"]

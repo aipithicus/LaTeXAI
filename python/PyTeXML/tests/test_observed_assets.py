@@ -116,7 +116,9 @@ class ObservedAssetTests(unittest.TestCase):
         self.assertIn(protected, text)
         self.assertIn("TAIL", text)
         self.assertNotIn("skipped.png", text)
-        self.assertEqual([d["target"] for d in manifest.candidate_dependencies], ["real.png"])
+        self.assertEqual([d["target"] for d in manifest.candidate_dependencies if d["status"] == "prepared"], ["real.png"])
+        self.assertTrue(all(d.get("reason") == "missing_dependency"
+                            for d in manifest.candidate_dependencies if d["status"] != "prepared"))
         self.assertEqual([p.name for p in out.glob("*.svg")], ["real.svg"])
 
     def test_missing_computed_ambiguous_and_unsupported_page_observations_stay_local(self):

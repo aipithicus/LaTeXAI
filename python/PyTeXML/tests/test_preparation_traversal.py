@@ -413,12 +413,8 @@ class TraversalTests(unittest.TestCase):
     def test_nonfirst_pdf_page_is_not_silently_converted_as_page_one(self):
         self.document("\\includegraphics[page=2]{plot.pdf}", "\\usepackage{graphicx}")
         self.put("plot.pdf", "PDF")
-        text, manifest, out, _ = self.prepare()
-        self.assertIn("\\includegraphics[page=2]{plot.pdf}", text)
-        self.assertEqual(manifest.unresolved[0]["reason"], "asset_page")
-        self.assertEqual(manifest.active_images, [])
-        self.assertFalse((out / "plot.svg").exists())
-        self.assertFalse((out / "plot.pdf").exists())
+        with self.assertRaisesRegex(RuntimeError, "Failed to convert PDF"):
+            self.prepare()
 
     def test_explicit_assets_with_same_stem_have_distinct_derivatives(self):
         from PIL import Image

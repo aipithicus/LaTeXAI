@@ -167,12 +167,10 @@ def pdf_to_svg(pdf_path: Path, svg_path: Path, page_index: int = 0) -> bool:
         raise ImportError("PyMuPDF (fitz) is required for vector PDF to SVG conversion. Run 'pip install pymupdf'.")
 
     try:
-        doc = fitz.open(str(pdf_path))
-        if page_index >= len(doc):
-            page_index = 0
-        page = doc[page_index]
-        svg_text = page.get_svg_image()
-        doc.close()
+        with fitz.open(str(pdf_path)) as doc:
+            if not 0 <= page_index < len(doc):
+                raise ValueError(f"Requested page {page_index + 1}; PDF has {len(doc)} pages")
+            svg_text = doc[page_index].get_svg_image()
 
         svg_path.parent.mkdir(parents=True, exist_ok=True)
         with open(svg_path, "w", encoding="utf-8") as f:
@@ -217,9 +215,11 @@ def raster_to_svg_wrapper(img_path: Path, svg_path: Path) -> bool:
         raise RuntimeError(f"Failed to wrap raster {img_path} in SVG: {e}") from e
 
 
-def convert_asset_to_svg(src_path: Path, dst_svg_path: Path) -> bool:
+def convert_asset_to_svg(src_path: Path, dst_svg_path: Path, *, page_index: int = 0) -> bool:
     """Converts any supported asset (PDF, PNG, JPG, EPS) to SVG."""
     ext = src_path.suffix.lower()
+    if page_index != 0 and ext != ".pdf":
+        raise ValueError("Page selection is supported only for PDF assets")
 
     if ext == ".svg":
         # Already SVG, copy directly
@@ -229,7 +229,7 @@ def convert_asset_to_svg(src_path: Path, dst_svg_path: Path) -> bool:
         return True
 
     if ext == ".pdf":
-        return pdf_to_svg(src_path, dst_svg_path)
+        return pdf_to_svg(src_path, dst_svg_path, page_index)
 
     if ext in MIME_MAP:
         return raster_to_svg_wrapper(src_path, dst_svg_path)
