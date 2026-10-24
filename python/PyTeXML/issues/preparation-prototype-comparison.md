@@ -96,10 +96,10 @@ expands arbitrary macros nor establishes the future XML/async binding contract.
   more source and requirement detail. Compact repeated diagnostics without losing
   occurrence coordinates; do not treat shorter sidecars as evidence of correctness.
 
-The run is reported as **partial** because reading/interpretation requirements
-remain. The next comparison task is an optional rendering adapter for the SVG
-payload and a consistent font configuration. Broader author-environment contracts
-and general package execution remain separate work.
+The preparation run is reported as **partial** because reading/interpretation
+requirements remain. The optional rendering adapter now supplies separate
+validation evidence, described below. Broader author-environment contracts and
+general package execution remain separate work.
 
 ## Verification
 
@@ -126,12 +126,39 @@ in the master. The other seven derivatives, all 33 inlined references, and the
 canonical bibliography are unchanged. All 1,060 provenance segments still cover
 the master continuously, and the 412 identity segments match their source slices.
 
-The editor's optional PDF validation failed inside XeTeX, reporting
+The earlier editor PDF validation failed inside XeTeX, reporting
 `Fontconfig error: Cannot load default config file` and
 `unable to read an entire line (buf_size=200000)`. This is not a successful PDF
 validation. It did not change the preparation result or add a runtime compiler
 dependency; the rerun's master bytes are identical before and after the final
 diagnostic refinement.
+
+The separate [rendering adapter](../src/validation/render.py) now compiles both
+original and prepared sources with the explicitly selected Tectonic
+`0.16.9+20260504`. The first cached-only attempt exposed a missing `environ.sty`;
+the subsequent run explicitly allowed compiler resource downloads. Both sides
+use one temporary Fontconfig configuration pointing to the system font directory.
+The SVG route uses temporary PDF derivatives and bounding-box sidecars, preventing
+the graphics driver from reading long embedded-image lines. Neither the Fontconfig
+error nor the line-buffer failure occurs in this paired run.
+
+The original has **16 pages**, the prepared document **19**. Each has **nine raster
+image occurrences**, with all nine decoded image digests matching. Visual inspection
+of the first figure page and supplemental figure pages confirms both supplemental
+figures and their captions appear. The canonical bibliography occupies more space,
+and citation numbering and some body line breaks differ; the report is not a claim
+of identical pagination or complete content fidelity. Both logs retain the same
+four missing Unicode glyph identities in legacy fonts (U+2019, U+2014, U+201C and
+U+201D). A working Fontconfig setup does not repair those font choices.
+
+Only the two PDFs, two logs and a JSON comparison report are retained. Independent
+temporary source trees, SVG derivatives, compiler auxiliaries and the temporary
+font cache are removed. Preparation and its published payload are unchanged.
+All 31 staged input hashes still match their source files after the paired run.
+The full suite passes **422 tests**, including thirteen adapter tests. The optional
+live compiler test was enabled: nested-main rendering and SVG scaling, clipping
+and rotation agree with the original PNG render. Failure/timeout tests verify
+cleanup and reject missing, corrupt or unsuccessful compiler outputs.
 
 The physical-line replay behavior follows the
 [comment 3.8 manual](https://mirrors.ctan.org/macros/latex/contrib/comment/comment.pdf):

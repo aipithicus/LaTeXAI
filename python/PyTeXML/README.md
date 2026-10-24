@@ -11,6 +11,7 @@ expansion and XML interpretation belong to later development.
 | [`src/reading/`](src/reading) | Reusable N/M/S reader and cursor, structural dispatcher, literal/definition scanners, source intervals and coverage queries, regex catcode rules, mouth profiles, and scoped document state |
 | [`src/bindings/`](src/bindings) | Reusable binding catalog and document-local resolution/package activation |
 | [`src/prepare/`](src/prepare) | Cached source traversal, dependency resolution, emission, bibliography, assets, provenance, and publication |
+| [`src/validation/`](src/validation) | Optional paired rendering in disposable workspaces; independent of preparation |
 | [`src/source_io.py`](src/source_io.py) | Run-scoped source cache, strict decoding and malformed-byte diagnostics |
 | [`src/bibtex.py`](src/bibtex.py) | Reusable BibTeX parser and data model |
 | [`src/assets.py`](src/assets.py) | Image inspection and individual asset conversion |
@@ -364,6 +365,53 @@ python -B -m src.prepare.pipeline <source-project> [output-directory] [root-tex]
 python -B -m src.prepare.inventory <source-project> [root-tex]
 python -B -m unittest discover -s tests -p 'test_*.py' -v
 ```
+
+### Optional rendering comparison
+
+Rendering is a separate command with an explicitly supplied Tectonic executable:
+
+```text
+python -B -m src.validation.render <original-project> <original-main.tex> <prepared-directory> <new-comparison-directory> --tectonic <executable> --font-dir <font-directory>
+```
+
+The original main path is relative to its project; the prepared entry is
+`master.tex`. The comparison directory must be new and outside both input trees.
+No compiler is located on PATH, installed, or called by preparation. The default
+uses only Tectonic's cached bundle resources; `--allow-downloads` explicitly permits
+missing resources to enter that compiler's cache. `--bundle` selects a bundle,
+and `--timeout` bounds each compiler invocation (120 seconds by default).
+
+Each source tree is staged independently. SVGs become temporary PDF derivatives
+plus small bounding-box sidecars, using the existing PyMuPDF dependency. A graphics
+driver hook in the temporary main makes `graphicx` read those derivatives without
+changing the canonical master, its filenames, or its assets. Original sources,
+including a supplied BBL and the original jobname, are preserved. The adapter
+does not supply the prepared render with assets from the original tree.
+
+Only `original.pdf`, `prepared.pdf`, their logs, and `comparison.json` survive.
+Temporary source copies, derived assets, compiler byproducts and generated font
+caches are removed on success and failure. Failed renders retain their logs and
+status, not partial PDFs. One failed side does not prevent attempting the other.
+The report records input hashes, compiler version/configuration, conversion
+warnings, page counts, word overlap and matching decoded raster images. These
+are comparison observations, not a certification of manuscript equivalence.
+
+`--font-dir` may be repeated; it creates one temporary Fontconfig configuration
+shared by both renders. Alternatively, `--fontconfig` selects an existing config.
+Without either option, both inherit the caller's font environment. Configuring
+Fontconfig does not guarantee that the manuscript's selected fonts contain every
+glyph. Compiler warnings remain in the logs.
+
+The initial adapter targets Tectonic's XeTeX/LaTeX graphics route, not arbitrary
+engines or SVG packages. SVG conversion warnings and external-resource failures
+are explicit. Text in vector SVGs and engine/package differences still require
+inspection; no claim of universal rendering fidelity is made.
+
+Unit tests use a controlled compiler stand-in plus real PDF/image conversion.
+Set `PYTEXML_TEST_TECTONIC` to an explicit executable to also run the optional live
+graphics test; `PYTEXML_TEST_FONT_DIR` optionally configures its fonts. That test
+uses cached compiler resources and checks scaling, clipping, rotation, nested
+entry paths and cleanup.
 
 See the [preparation contract](issues/DESIGN.md) and
 [native processing/dependency note](issues/external-toolchains.md) for scope and

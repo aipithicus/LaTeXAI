@@ -11,7 +11,8 @@ the architectural direction, including the work still to be implemented.
 
 - PyYAML loads the declarative profiles, bindings and policies.
 - Pillow supplies raster image inspection, including dimensions.
-- PyMuPDF supplies PDF-page export to SVG.
+- PyMuPDF supplies PDF-page export to SVG, and SVG-to-PDF conversion and PDF
+  observations for optional rendering validation.
 
 These are library dependencies, including native implementations where supplied
 by those packages. The preparation path does not invoke `pdflatex`, `latexmk`,
@@ -20,6 +21,27 @@ recorder-file discovery have been removed from the discovery/inventory path, now
 organized as [discovery.py](../src/prepare/discovery.py) and
 [inventory.py](../src/prepare/inventory.py).
 `engine` is descriptive metadata; `execute_probe=True` is explicitly rejected.
+
+## Optional validation boundary
+
+[validation/render.py](../src/validation/render.py) provides a separate paired
+rendering command. It requires an explicit Tectonic executable and does not
+discover dependencies for preparation, resolve missing bindings, or decide
+whether `master.tex` may be published. Preparation does not import it.
+
+Both sides render from independent temporary copies under the same compiler and
+font configuration. SVG assets are adapted to temporary PDFs through PyMuPDF;
+the canonical payload is unchanged. Temporary derivatives, source copies and
+compiler byproducts are removed even after a failed render. Retained outputs
+are the two validation PDFs where successful, logs and a comparison report.
+There are no permanently retained individual asset copies.
+
+Compiler resource downloads are disabled by default. Opting in can populate
+Tectonic's cache; this is distinct from retaining manuscript assets. A supplied
+font directory creates temporary Fontconfig settings/cache, or an existing
+Fontconfig file can be selected. Rendering and its warnings remain independent
+evidence: page counts, text overlap and image digests do not establish source or
+mathematical equivalence. See the [command documentation](../README.md#optional-rendering-comparison).
 
 ## Implemented foundations
 
