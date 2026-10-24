@@ -187,8 +187,11 @@ reading:
       evaluation: always_false
     # Preparation observes these source operands without expanding/evaluating them.
     # A capture remains conditional on the entry meanings and reading state.
-    - {name: "\\if", role: opener, evaluation: deferred, capture_operands: 2}
-    - {name: "\\ifcat", role: opener, evaluation: deferred, capture_operands: 2}
+    - {name: "\\if", role: opener, evaluation: deferred, capture_operands: 2, predicate: character_equal}
+    - {name: "\\ifcat", role: opener, evaluation: deferred, capture_operands: 2, predicate: category_equal}
+    # LaTeX kernel conditional meaning; class options determine its value.
+    # Knowing the nesting role does not assert either branch is selected.
+    - {name: "\\if@twoside", role: opener, evaluation: deferred, capture_operands: 0}
     - {name: "\\ifnum", role: opener, evaluation: deferred}
     - {name: "\\ifdim", role: opener, evaluation: deferred}
     - {name: "\\ifodd", role: opener, evaluation: deferred}

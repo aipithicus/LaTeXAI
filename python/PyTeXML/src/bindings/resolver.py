@@ -158,7 +158,7 @@ class BindingResolver:
         clean = name if name.startswith("\\") else f"\\{name}"
         for _, _, section, spec in self._command_specs(clean):
             if section == "conditionals":
-                return ConditionalRule(spec["role"], spec.get("evaluation"), spec.get("capture_operands"))
+                return ConditionalRule(spec["role"], spec.get("evaluation"), spec.get("capture_operands"), spec.get("predicate"))
         return None
 
     def source_command_syntax(self, name: str) -> EffectiveReadingProfile | None:
@@ -202,7 +202,7 @@ class BindingResolver:
                                             "Conditional commands have no resolved options", opts)
                 return EffectiveReadingProfile(
                     clean, "conditional", binding_id=origin,
-                    conditional=ConditionalRule(spec["role"], spec.get("evaluation"), spec.get("capture_operands")))
+                    conditional=ConditionalRule(spec["role"], spec.get("evaluation"), spec.get("capture_operands"), spec.get("predicate")))
             if section == "catcode_mutators":
                 if action == "assign_catcode_dynamic":
                     return EffectiveReadingProfile(clean, "catcode_assignment", action=action,

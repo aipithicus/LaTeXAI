@@ -122,6 +122,19 @@ returns to its immediate caller, allowing subsequent source-visible declarations
 to be discovered under the recorded entry-state assumptions. Recovery preserves
 the child and reports its missing effects; it does not execute its unread suffix.
 
+YAML conditional rules may select `character_equal` or `category_equal` predicates
+with two source operands. The reusable predicate reader admits literal characters
+and captured, argument-free, single-token definition chains. Categories come from
+definition time; scopes and redefinitions come from the current reader context.
+Cycles, arguments, empty/multi-token replacements and unknown meanings defer the
+test without consuming operands. The dispatcher alone selects/skips branches.
+Definitions and test headers remain source-preserved; no substituted macro body
+is written to the master. `conditional_decisions` links each result to its unit
+and supporting definition units. These are source-visible decisions under the
+manifest's reading assumptions, not proof about hidden effects of arbitrary code.
+The kernel `if@twoside` rule supplies nesting without guessing its class-dependent
+truth. General `let` aliases, numeric predicates and hook execution remain deferred.
+
 Unbound environments also retain `DeferredRegion.observations`: direct command
 headers scanned using existing YAML argument grammars. Preparation can resolve
 literal image filenames from these observations and emit their SVG derivatives

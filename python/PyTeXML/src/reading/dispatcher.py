@@ -29,6 +29,7 @@ from .deferred_scanner import DeferredScanner
 from .literal_scanner import LiteralScanner
 from .skipped_scanner import SkippedBranchScanner, SkippedScan
 from .conditional_scanner import ConditionalScanner
+from .predicates import compare_characters
 from .spans import SourceSpan
 from .units import UnitRegistry
 from .options import OptionBody, OptionScope, option_names
@@ -369,7 +370,18 @@ class StructuralDispatcher:
             if profile.family == "source_command":
                 self._require(self.source_commands or profile.action in {"reading_noop", "capture_setting"},
                               "unsupported_operation", "Source commands require an input owner")
-                command = ArgumentScanner(reader, context).read(event.span, profile)
+                checkpoint = reader.checkpoint()
+                try:
+                    command = ArgumentScanner(reader, context).read(event.span, profile)
+                except ReadingIssue:
+                    if not self.preparation or profile.action not in {"opaque", "metadata", "citation"}:
+                        raise
+                    # Source packages may overload a data command's signature.
+                    # Preserve the complete observational envelope without applying
+                    # the mismatched argument grammar or hiding later source.
+                    reader.restore(checkpoint)
+                    return self._deferred(deferred.command(token, "argument_behavior",
+                        "Entry argument grammar does not match this reached data command"))
                 if command.action == "capture_setting":
                     value = command.argument("value")
                     if command.metadata["value_kind"] == "tokens":
@@ -401,6 +413,10 @@ class StructuralDispatcher:
                               and not profile.interpolations and not profile.active_options
                               and profile.terminator is None and profile.state_management is None,
                               "unsupported_conditional", "Conditional requires a standalone nesting/evaluation rule")
+                command = compare_characters(reader, context, token, profile.conditional)
+                if command is not None:
+                    self._conditional(ConditionalRule("opener", "always_true" if command.metadata["truth"] else "always_false"), command.span)
+                    return command
                 if (self.preparation and profile.conditional.role == "opener"
                         and profile.conditional.evaluation == "deferred"):
                     return self._capture_conditional(token, profile.conditional)

@@ -47,8 +47,8 @@ handlers:
     description: Capture a literal file reference for cached transclusion or retained payload emission
   bounded_conditional:
     status: scanner
-    description: StructuralDispatcher evaluates constant and established boolean predicates and routes delimiters;
-      a mouth-based scanner skips inactive branches
+    description: StructuralDispatcher routes constant and established boolean predicates; YAML-selected character/category
+      comparisons admit literal operands or captured argument-free single-token constants. A mouth-based scanner skips inactive branches.
   boolean_declaration:
     status: scanner
     description: Capture a literal boolean target; the dispatcher installs scoped conditional and setter meanings

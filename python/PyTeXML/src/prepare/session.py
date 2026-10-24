@@ -109,8 +109,9 @@ class PreparationSession:
         self.dispatcher = StructuralDispatcher(first, self.context, self.resolver,
             source_commands=True, preparation=True, units=self.units)
         self.manifest.reading_assumptions = [
-            "Source-visible preparation does not expand macros. Unbound commands and packages are not assumed to generate inputs or change entry catcodes.",
-            "Uninterpreted math, environments and adjacent command groups retain their source; their contents are not executed."]
+            "Source-visible preparation does not generally expand manuscript macros; bounded reading predicates may resolve captured single-token constants. Unbound commands and packages are not assumed to generate inputs or change entry catcodes.",
+            "Uninterpreted math, environments and adjacent command groups retain their source; their contents are not executed.",
+            "Bounded predicate substitution uses current captured single-token constants; hidden redefinitions by unbound expressions are not inferred. Definitions observed in unresolved conditionals invalidate prior meanings."]
 
     def name(self, path):
         return path.relative_to(self.store.root).as_posix()
@@ -398,6 +399,10 @@ class PreparationSession:
     def _command(self, command):
         frame, action = self.frames[-1], command.action
         self.commands.append(command)
+        if action == "conditional_test":
+            self.manifest.conditional_decisions.append({"unit_id": command.unit_id,
+                "predicate": command.metadata["predicate"], "truth": command.metadata["truth"],
+                "definition_unit_ids": command.metadata["definition_unit_ids"]})
         for check in command.metadata.get("definition_checks", ()):
             self._definition_check(**check)
         if action == "pass_options":
@@ -539,7 +544,8 @@ class PreparationSession:
             self._ended_document = True
         # No-argument commands need a lexical separator after a control word.
         if (not command.arguments and action in {"opaque", "biblatex_print", "reading_noop", "process_options"}
-                or action == "boolean_declaration" and command.metadata["unbraced"]):
+                or action == "boolean_declaration" and command.metadata["unbraced"]
+                or action == "conditional_test" and command.metadata["trailing_control_word"]):
             self._emit(command.span.basis.span(command.span.end, command.span.end), " ", operation="SYNTHETIC_SEPARATOR")
 
     def run(self):

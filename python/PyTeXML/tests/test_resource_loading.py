@@ -212,6 +212,22 @@ class ResourceLoadingTests(unittest.TestCase):
                 self.assertIsInstance(resolver.resolve_command(spec["name"], {"extra": True}), UnresolvedBindingResult)
         self.assertIsNone(resolver.resolve_conditional("if_not_declared"))
 
+    def test_bounded_predicate_recipe_is_validated_and_resolved(self):
+        from src.bindings.resolver import BindingResolver
+        spec = {"name": r"\compare", "role": "opener", "evaluation": "deferred",
+                "capture_operands": 2, "predicate": "character_equal"}
+        self.core["reading"] = {"conditionals": [spec]}
+        self.write("engine/core.yaml", self.core)
+        self.assertEqual(BindingResolver(BindingCatalog(self.bindings)).resolve_conditional("compare").predicate,
+                         "character_equal")
+        for changes in ({"predicate": "python_eval"}, {"predicate": []}, {"capture_operands": 0},
+                        {"evaluation": "always_true"}, {"role": "terminator"}):
+            with self.subTest(changes=changes):
+                self.core["reading"]["conditionals"] = [{**spec, **changes}]
+                self.write("engine/core.yaml", self.core)
+                with self.assertRaises(ProfileError):
+                    BindingCatalog(self.bindings)
+
     def test_newif_is_a_factory_without_a_conditional_nesting_role(self):
         from src.bindings.resolver import BindingResolver
         from src.reading.contracts import EffectiveReadingProfile

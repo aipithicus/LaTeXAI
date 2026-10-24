@@ -78,6 +78,7 @@ class ConditionalRule:
     role: str
     evaluation: str | None = None
     capture_operands: int | None = None
+    predicate: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
