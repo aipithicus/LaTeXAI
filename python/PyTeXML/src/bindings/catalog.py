@@ -145,6 +145,19 @@ class BindingCatalog:
                             or grammar.get("expansion") not in ("none", "full")
                             or spec.get("scope") not in ("local", "global")):
                         raise ProfileError(f"{path}: {name} requires a primitive definition grammar, expansion and scope")
+                if spec.get("family") == "conditional_factory":
+                    setters = grammar.get("setters")
+                    if (set(grammar) != {"handler", "target_prefix", "initial", "setters"}
+                            or grammar.get("handler") != "boolean_declaration"
+                            or spec.get("scope") != "local"
+                            or not isinstance(grammar.get("target_prefix"), str) or not grammar["target_prefix"]
+                            or not isinstance(grammar.get("initial"), str) or not grammar["initial"].startswith("\\")
+                            or len(grammar["initial"]) < 2
+                            or not isinstance(setters, dict) or not setters
+                            or any(not isinstance(suffix, str) or not suffix
+                                   or not isinstance(source, str) or not source.startswith("\\") or len(source) < 2
+                                   for suffix, source in setters.items())):
+                        raise ProfileError(f"{path}: {name} requires a local boolean declaration recipe")
                 if spec.get("action") == "assign_catcode_dynamic":
                     if grammar != {"handler": "literal_catcode_assignment"} or spec.get("scope") != "local":
                         raise ProfileError(f"{path}: {name} requires the local literal assignment scanner")

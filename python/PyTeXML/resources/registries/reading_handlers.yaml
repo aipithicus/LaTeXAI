@@ -13,8 +13,11 @@ handlers:
     description: Capture a literal file reference for cached transclusion or retained payload emission
   bounded_conditional:
     status: scanner
-    description: StructuralDispatcher evaluates constant predicates and routes delimiters;
+    description: StructuralDispatcher evaluates constant and established boolean predicates and routes delimiters;
       a mouth-based scanner skips inactive branches
+  boolean_declaration:
+    status: scanner
+    description: Capture a literal boolean target; the dispatcher installs scoped conditional and setter meanings
   primitive_definition:
     status: scanner
     description: Capture local unexpanded primitive definitions; global and expanding

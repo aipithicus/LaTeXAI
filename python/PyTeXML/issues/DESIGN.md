@@ -328,7 +328,15 @@ are captured under entry catcodes, not interpreted. Unbound command envelopes
 protect adjacent balanced groups without claiming to know the command's arity.
 The manifest states the assumption that unbound behavior does not change reading
 outside those envelopes. This is not a proof about arbitrary author macros.
-Computed/global assignments, predicates and unsupported literal grammars still
+Literal `\newif` declarations and their local true/false setters now share scoped
+command meanings with stored definitions; established boolean tests use the same
+conditional router and skipped scanner as constant predicates. All source remains
+available through spans, and preparation retains declaration/setter commands.
+Unexecuted possible mutations invalidate boolean knowledge, including suspended
+outer meanings that a global effect could change. A later use preserves unresolved
+source rather than selecting a branch from stale state. This bounded guard does
+not infer arbitrary macro effects or supply persisted per-unit context.
+Computed/global assignments, other predicates and unsupported literal grammars still
 produce reading boundaries. Hooks, definition wrappers and subfile preamble
 stripping need additional handlers.
 Literal/definition/argument scans that exhaust their physical input are boundaries;

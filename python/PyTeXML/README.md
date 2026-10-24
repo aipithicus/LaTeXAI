@@ -248,8 +248,9 @@ delimiter collisions or unsupported options retain one rebased payload resource.
 No original manuscript file is modified.
 
 The dispatcher also owns a conditional stack independent of lexical groups.
-YAML separates conditional nesting roles from predicate evaluation. Only constant
-true/false predicates (`\iftrue`, `\iffalse` and declared equivalents) execute;
+YAML separates conditional nesting roles from predicate evaluation. Constant
+true/false predicates (`\iftrue`, `\iffalse` and declared equivalents) and
+established document-local boolean tests execute;
 other declared TeX82 predicates can nest inside skipped text but stop an active
 scan before their arguments. `\else` and `\fi` route through the dispatcher.
 [SkippedBranchScanner](src/reading/skipped_scanner.py) advances the same mouth
@@ -257,6 +258,24 @@ cursor without expansion, literal dispatch, definition publication or effects.
 Thus `\iffalse\verb|\fi|LIVE` ends skipping at that first `\fi`. Comments and
 current catcodes still affect tokenization. Stored author macros shadow binding
 meanings, including conditional-looking names; they do not expand while skipped.
+
+The bounded `\newif` handler captures a literal control-sequence target (optionally
+in one brace group) and installs local conditional/setter meanings. The naming
+prefix, initial meaning and setter recipes live in `core_latex.yaml`, following
+[the LaTeX kernel's newif/@if definitions](https://github.com/latex3/latex2e/blob/main/base/ltdefns.dtx).
+The dispatcher owns installation, setter execution and branch routing. Setters
+copy the current true/false source meaning; they do not expand a stored body.
+Boolean meanings and author definitions share one scope journal, including
+shadowing, redeclaration, input handoffs and restoration. Declaration headers,
+setters and conditional delimiters retain their source spans. Preparation keeps
+those commands while omitting only established inactive branch contents.
+
+Unexecuted commands, environments, opaque argument effects and unresolved package
+code can make these booleans uncertain. A later test or setter then produces a
+located reading boundary rather than using a stale value; preparation preserves
+the unresolved source and can still publish a partial master. Potential global
+effects also invalidate saved outer meanings. This conservative guard is not
+general macro-effect inference or a persisted context snapshot contract.
 
 A `SkippedRegion` covers only the discarded branch text, including any nested
 conditional tokens. Its owning conditional opener is retained as a source span;
@@ -292,8 +311,8 @@ Reading after catalog bootstrap performs no filesystem I/O.
 Conditional classification assumes established binding and author-meaning context.
 It uses explicit declarations, never an `if` name prefix. The initial nesting
 inventory is TeX82; extension/package conditional primitives and dynamic aliases
-need their own declarations or future meaning support. `\newif`, `\let`, predicate
-evaluation, outer-command checks and TeX's error-recovery repairs remain outside
+need their own declarations or future meaning support. General `\let`, computed
+predicates, global prefixes, option/hook execution, outer-command checks and TeX's error-recovery repairs remain outside
 this increment. Production preparation consumes this bounded dispatcher through its source owner.
 
 ## Source intervals and coverage

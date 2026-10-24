@@ -298,8 +298,10 @@ class PreparationSession:
             baseline = self.resolver.catalog.engine_bindings["source_traversal"]["reading"]["baseline_classes"]
             if name not in baseline:
                 self.require(command.span, "class_binding", f"No reading contract for class {name!r}", stage="binding")
+                self.context.invalidate_booleans(command.span)
         elif not self.resolver.load_package(name):
             self.require(command.span, "package_binding", f"No reading binding for package {name!r}", stage="binding")
+            self.context.invalidate_booleans(command.span)
 
     def _command(self, command):
         frame, action = self.frames[-1], command.action
@@ -429,7 +431,8 @@ class PreparationSession:
         if action == "environment_end" and command.metadata.get("document"):
             self._ended_document = True
         # No-argument commands need a lexical separator after a control word.
-        if not command.arguments and action in {"opaque", "biblatex_print"}:
+        if (not command.arguments and action in {"opaque", "biblatex_print"}
+                or action == "boolean_declaration" and command.metadata["unbraced"]):
             self._emit(command.span.basis.span(command.span.end, command.span.end), " ")
 
     def run(self):
@@ -477,6 +480,7 @@ class PreparationSession:
                         f"Retained {self.name(frame.path)!r}; caller resumes with its entry reading state. "
                         "This file's reading effects and dependencies still require resolution.", stage="preparation")
                     self.dispatcher.resume_input(frame.recovery)
+                    self.context.invalidate_booleans(item.span)
                     del self.frames[recoverable:]
                     continue
                 raise _PreserveRemainder

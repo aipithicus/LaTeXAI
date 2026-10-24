@@ -1,14 +1,16 @@
 """Document-local execution mode, lexical state, and stored definitions."""
 from __future__ import annotations
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import Enum
 from typing import Iterator
-from .contracts import EffectiveReadingProfile, MouthBaseline, StoredDefinition, EnvironmentDeclaration
+from .contracts import (EffectiveReadingProfile, MouthBaseline, StoredDefinition,
+                        EnvironmentDeclaration, BooleanMeaning, ConditionalRule, ReadingIssue)
 from .tex_reader import CatCode, CatcodeTable, TokenKind
 
 
 DefinitionKey = tuple[TokenKind, str]
+LocalMeaning = StoredDefinition | BooleanMeaning
 
 
 class ExecutionMode(str, Enum):
@@ -51,10 +53,10 @@ class ReaderContext:
         self.expl3_saved_catcodes: dict[str, CatCode] = {}
         self.expl3_saved_endlinechar = self.endlinechar
         self._scope_stack: list[_ScopeSnapshot] = []
-        self._definitions: dict[DefinitionKey, StoredDefinition] = {}
+        self._meanings: dict[DefinitionKey, LocalMeaning] = {}
         # Journal only changed meanings, avoiding a copy of every definition at
         # each group (including temporary literal scopes).
-        self._definition_scopes: list[dict[DefinitionKey, StoredDefinition | None]] = []
+        self._meaning_scopes: list[dict[DefinitionKey, LocalMeaning | None]] = []
         self._environments: dict[str, EnvironmentDeclaration] = {}
         self._environment_scopes: list[dict[str, EnvironmentDeclaration | None]] = []
 
@@ -74,8 +76,8 @@ class ReaderContext:
         ctx = ReaderContext(baseline=self.baseline, mode=self.mode)
         ctx._restore(self._snapshot())
         ctx._scope_stack = [saved.copy() for saved in self._scope_stack]
-        ctx._definitions = dict(self._definitions)
-        ctx._definition_scopes = [dict(saved) for saved in self._definition_scopes]
+        ctx._meanings = dict(self._meanings)
+        ctx._meaning_scopes = [dict(saved) for saved in self._meaning_scopes]
         ctx._environments = dict(self._environments)
         ctx._environment_scopes = [dict(saved) for saved in self._environment_scopes]
         return ctx
@@ -87,8 +89,8 @@ class ReaderContext:
         self._restore(saved._snapshot())
         self.mode = saved.mode
         self._scope_stack = [state.copy() for state in saved._scope_stack]
-        self._definitions = dict(saved._definitions)
-        self._definition_scopes = [dict(state) for state in saved._definition_scopes]
+        self._meanings = dict(saved._meanings)
+        self._meaning_scopes = [dict(state) for state in saved._meaning_scopes]
         self._environments = dict(saved._environments)
         self._environment_scopes = [dict(state) for state in saved._environment_scopes]
 
@@ -104,24 +106,55 @@ class ReaderContext:
         self._environments[name] = declaration
         for command in (name, "end" + name):
             key = (TokenKind.CONTROL_SEQUENCE, command)
-            if self._definition_scopes:
-                self._definition_scopes[-1].setdefault(key, self._definitions.get(key))
-            self._definitions.pop(key, None)
+            if self._meaning_scopes:
+                self._meaning_scopes[-1].setdefault(key, self._meanings.get(key))
+            self._meanings.pop(key, None)
 
     def lookup_definition(self, name: str, kind: TokenKind = TokenKind.CONTROL_SEQUENCE) -> StoredDefinition | None:
         """Active characters and same-spelled control symbols have distinct meanings."""
-        return self._definitions.get((kind, name))
+        meaning = self.lookup_meaning(name, kind)
+        return meaning if isinstance(meaning, StoredDefinition) else None
+
+    def lookup_meaning(self, name: str, kind: TokenKind = TokenKind.CONTROL_SEQUENCE) -> LocalMeaning | None:
+        return self._meanings.get((kind, name))
+
+    def conditional_rule(self, name: str, knowledge) -> ConditionalRule | None:
+        """Resolve nesting from the current meaning, including local shadows."""
+        meaning = self.lookup_meaning(name)
+        if isinstance(meaning, BooleanMeaning):
+            if meaning.uncertain is not None:
+                # Even its nesting meaning may have changed, not just its value.
+                raise ReadingIssue("uncertain_boolean", f"Meaning of {name!r} may have changed at "
+                                   f"{meaning.uncertain.basis.source_id}:{meaning.uncertain.start}")
+            if meaning.target is not None:
+                return None  # A setter has macro meaning; it does not nest while skipping.
+            return ConditionalRule("opener", "always_true" if meaning.truth else "always_false")
+        return None if meaning is not None else knowledge.resolve_conditional(name)
+
+    def invalidate_booleans(self, span) -> None:
+        """Keep unexecuted effects explicit; no inference of arbitrary macro purity.
+
+        Unknown code can make global assignments, so suspended outer meanings are
+        also uncertain. A later fresh declaration can establish a new local meaning.
+        This is a bounded guard, not a general context dependency analysis.
+        """
+        for meanings in (self._meanings, *self._meaning_scopes):
+            for key, meaning in list(meanings.items()):
+                if isinstance(meaning, BooleanMeaning) and meaning.uncertain is None:
+                    meanings[key] = replace(meaning, uncertain=span)
+
+    def record_meaning(self, name: str, meaning: LocalMeaning,
+                       kind: TokenKind = TokenKind.CONTROL_SEQUENCE) -> None:
+        if self.mode != ExecutionMode.ACTIVE_EXECUTION:
+            raise ValueError("Meanings can only be installed in active execution")
+        key = (kind, name)
+        if self._meaning_scopes:
+            self._meaning_scopes[-1].setdefault(key, self._meanings.get(key))
+        self._meanings[key] = meaning
 
     def record_definition(self, definition: StoredDefinition) -> None:
         """Publish a completed local definition, called by active execution routing."""
-        if self.mode != ExecutionMode.ACTIVE_EXECUTION:
-            raise ValueError("Definitions can only be installed in active execution")
-        key = (definition.target.kind, definition.target.value)
-        if self._definition_scopes:
-            saved = self._definition_scopes[-1]
-            if key not in saved:
-                saved[key] = self._definitions.get(key)
-        self._definitions[key] = definition
+        self.record_meaning(definition.target.value, definition, definition.target.kind)
 
     @contextmanager
     def execution_mode(self, mode: ExecutionMode) -> Iterator[None]:
@@ -149,7 +182,7 @@ class ReaderContext:
 
     def push_scope(self) -> None:
         self._scope_stack.append(self._snapshot())
-        self._definition_scopes.append({})
+        self._meaning_scopes.append({})
         self._environment_scopes.append({})
 
     @property
@@ -161,11 +194,11 @@ class ReaderContext:
         if not self._scope_stack:
             return False
         self._restore(self._scope_stack.pop())
-        for key, previous in self._definition_scopes.pop().items():
+        for key, previous in self._meaning_scopes.pop().items():
             if previous is None:
-                self._definitions.pop(key, None)
+                self._meanings.pop(key, None)
             else:
-                self._definitions[key] = previous
+                self._meanings[key] = previous
         for name, previous in self._environment_scopes.pop().items():
             if previous is None:
                 self._environments.pop(name, None)

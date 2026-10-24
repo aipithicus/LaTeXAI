@@ -80,6 +80,20 @@ class ConditionalRule:
 
 
 @dataclass(frozen=True, slots=True)
+class BooleanMeaning:
+    """A locally assigned conditional or setter, never an expanded macro body.
+
+    Setters copy the current meaning of ``source`` into ``target`` when invoked.
+    An uncertainty anchor prevents dispatch after unexecuted possible mutations.
+    """
+    span: SourceSpan
+    truth: bool | None = None
+    target: str | None = None
+    source: str | None = None
+    uncertain: SourceSpan | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class EffectiveReadingProfile:
     """Resolved data for one occurrence; applying it is not argument/body execution."""
     name: str

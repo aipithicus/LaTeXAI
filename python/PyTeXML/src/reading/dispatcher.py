@@ -2,7 +2,7 @@
 
 Execute only resolved local reading effects in an established active context.
 Literal, stored-definition and skipped-branch scanning is delegated to dedicated
-scanners. Only constant conditionals execute here. Package discovery, expansion
+scanners. Constant and established boolean conditionals execute here. Package discovery, expansion
 and master.tex assembly remain outside this slice. Unsupported behavior leaves
 a located boundary and unchanged residue.
 """
@@ -15,8 +15,9 @@ from .context import ExecutionMode, ReaderContext
 from .contracts import (
     ConditionalRule, EffectiveReadingProfile, LiteralRegion, ReadingBoundary, ReadingIssue,
     ReadingKnowledge, SkippedRegion, StoredDefinition, SourceCommand, SourceEnd, require_resolved,
-    DeferredRegion, UnresolvedBindingResult, UnresolvedReason,
+    DeferredRegion, UnresolvedBindingResult, UnresolvedReason, BooleanMeaning,
 )
+from .boolean_scanner import declaration as boolean_declaration
 from .argument_scanner import ArgumentScanner, key_values
 from .assignment_scanner import AssignmentScanner
 from .environment_registry import declarations, resolve_environment
@@ -202,6 +203,7 @@ class StructuralDispatcher:
         if event.token is None:
             return event
         token = event.token
+        meaning = context.lookup_meaning(token.value, token.kind)
         definition = context.lookup_definition(token.value, token.kind)
         if definition is not None and not self.preparation:
             return self._boundary(event.span, "stored_macro",
@@ -218,13 +220,23 @@ class StructuralDispatcher:
                                   "Math and alignment require their own mode and scope handling")
         try:
             deferred = DeferredScanner(reader, context)
+            if isinstance(meaning, BooleanMeaning):
+                self._require(meaning.uncertain is None, "uncertain_boolean",
+                              f"Meaning of {token.value!r} may have changed in unexecuted source at "
+                              f"{meaning.uncertain}")
+                if meaning.target is not None:
+                    truth = self._boolean_value(meaning.source)
+                    context.record_meaning(meaning.target, BooleanMeaning(event.span, truth))
+                else:
+                    self._conditional(context.conditional_rule(token.value, self.knowledge), event.span)
+                return event
             if definition is not None:
-                return deferred.command(token, "stored_macro", f"Unexpanded {token.value!r}; definition at "
-                    f"{definition.span.basis.source_id}:{definition.span.start}")
+                return self._deferred(deferred.command(token, "stored_macro", f"Unexpanded {token.value!r}; definition at "
+                    f"{definition.span.basis.source_id}:{definition.span.start}"))
             if token.kind == TokenKind.ACTIVE_CHARACTER:
-                return DeferredRegion(event.span, "active_character", "Active character retained without expansion", (token,))
+                return self._deferred(DeferredRegion(event.span, "active_character", "Active character retained without expansion", (token,)))
             if self.preparation and token.catcode == CatCode.MATH_SHIFT:
-                return deferred.math(token)
+                return self._deferred(deferred.math(token))
             if self.preparation and token.catcode == CatCode.ALIGNMENT_TAB:
                 return DeferredRegion(event.span, "alignment_interpretation", "Alignment retained without interpretation", (token,))
             if token.catcode in {CatCode.BEGIN_GROUP, CatCode.END_GROUP}:
@@ -240,18 +252,32 @@ class StructuralDispatcher:
             resolved = self.knowledge.resolve_command(token.value)
             if self.preparation and isinstance(resolved, UnresolvedBindingResult):
                 if resolved.reason == UnresolvedReason.UNKNOWN_CONSTRUCT:
-                    return deferred.command(token, resolved.reason.value, resolved.detail)
+                    return self._deferred(deferred.command(token, resolved.reason.value, resolved.detail))
                 if resolved.reason == UnresolvedReason.PACKAGE_NOT_LOADED:
                     inspect = getattr(self.knowledge, "source_command_syntax", None)
                     syntax = inspect(token.value) if inspect else None
                     if syntax is not None:
                         command = ArgumentScanner(reader, context).read(event.span, syntax)
-                        return DeferredRegion(command.span, resolved.reason.value, resolved.detail,
+                        return self._deferred(DeferredRegion(command.span, resolved.reason.value, resolved.detail,
                                               (token,) + tuple(t for arg in command.arguments for t in arg.tokens),
-                                              command, syntax.binding_id)
+                                              command, syntax.binding_id))
                     # An inactive literal binding can require a different mouth.
                     # Do not treat its body as ordinary executed TeX.
             profile = require_resolved(resolved)
+            if profile.family == "conditional_factory":
+                self._require(profile.grammar.get("handler") == "boolean_declaration"
+                              and profile.state_management is not None
+                              and profile.state_management.scope == "local",
+                              "unsupported_boolean_declaration", "Boolean declaration needs a local recipe")
+                command = boolean_declaration(reader, context, event.span, profile)
+                # Resolve before publishing any of the generated meanings.
+                truth = self._boolean_value(profile.grammar["initial"])
+                target = command.metadata["target"]
+                stem = target[len(profile.grammar["target_prefix"]):]
+                context.record_meaning(target, BooleanMeaning(command.span, truth))
+                for suffix, source in profile.grammar["setters"].items():
+                    context.record_meaning(stem + suffix, BooleanMeaning(command.span, target=target, source=source))
+                return command
             if profile.family == "environment_factory":
                 command = ArgumentScanner(reader, context).read(event.span, profile)
                 for declaration in declarations(command, self.knowledge):
@@ -267,6 +293,10 @@ class StructuralDispatcher:
             if profile.family == "source_command":
                 self._require(self.source_commands, "unsupported_operation", "Source commands require an input owner")
                 command = ArgumentScanner(reader, context).read(event.span, profile)
+                if command.action in {"opaque", "metadata", "citation"} and any(
+                        t.kind in {TokenKind.CONTROL_SEQUENCE, TokenKind.ACTIVE_CHARACTER}
+                        for arg in command.arguments for t in arg.tokens):
+                    context.invalidate_booleans(command.span)
                 if command.action == "end_input":
                     reader.end_input_after_line()
                 elif command.action == "environment_end":
@@ -307,13 +337,13 @@ class StructuralDispatcher:
                 # The direct environment route must respect author redefinitions
                 # of the entry/exit commands as well as of the opener itself.
                 for command in (name, "end" + name):
-                    meaning = context.lookup_definition(command)
+                    meaning = context.lookup_meaning(command)
                     self._require(meaning is None, "stored_macro",
                                   f"Environment command {command!r} has a stored definition")
                 resolved = resolve_environment(name, None, context, self.knowledge)
                 if (self.preparation and isinstance(resolved, UnresolvedBindingResult)
                         and resolved.reason == UnresolvedReason.UNKNOWN_CONSTRUCT):
-                    return deferred.environment(event.span, name, protect=self._protect_deferred_environment)
+                    return self._deferred(deferred.environment(event.span, name, protect=self._protect_deferred_environment))
                 profile = require_resolved(resolved)
                 if profile.grammar.get("has_optional_arguments"):
                     with context.argument_scanning():
@@ -346,6 +376,21 @@ class StructuralDispatcher:
         except InvalidCharacterError as error:
             return self._boundary(event.span, "invalid_character", str(error))
 
+    def _boolean_value(self, name: str) -> bool:
+        rule = self.context.conditional_rule(name.removeprefix("\\"), self.knowledge)
+        self._require(rule is not None and rule.role == "opener"
+                      and rule.evaluation in {"always_true", "always_false"},
+                      "unsupported_boolean_meaning", f"{name!r} has no established boolean value")
+        return rule.evaluation == "always_true"
+
+    def _deferred(self, region: DeferredRegion) -> DeferredRegion:
+        # Bare arithmetic/text math cannot assign meanings. Other unexecuted
+        # expressions may redefine a boolean or its setter, even globally.
+        if region.reason != "math_interpretation" or any(
+                t.kind in {TokenKind.CONTROL_SEQUENCE, TokenKind.ACTIVE_CHARACTER} for t in region.tokens):
+            self.context.invalidate_booleans(region.span)
+        return region
+
     def _protect_deferred_environment(self, token, *, shadowed=()) -> bool | DeferredRegion | StoredDefinition:
         """Locate known protected syntax without executing an unbound body.
 
@@ -359,7 +404,7 @@ class StructuralDispatcher:
         if token.value in shadowed:
             return DeferredScanner(self.reader, self.context).command(
                 token, "stored_macro", "Unexecuted definition shadows the entry grammar")
-        if self.context.lookup_definition(token.value) is not None:
+        if self.context.lookup_meaning(token.value) is not None:
             raise ReadingIssue("environment_reading", "A stored invocation inside an unbound environment needs reading resolution")
         profile = self.knowledge.resolve_command(token.value)
         if isinstance(profile, UnresolvedBindingResult):
@@ -375,7 +420,7 @@ class StructuralDispatcher:
             return DeferredScanner(self.reader, self.context).command(token, profile.reason.value, profile.detail)
         if profile.family == "stored_definition":
             return self.definitions.read(token.span.start, profile)  # capture, never install
-        if profile.family in {"conditional", "catcode_mutator", "catcode_assignment", "grouping", "environment_factory"}:
+        if profile.family in {"conditional", "conditional_factory", "catcode_mutator", "catcode_assignment", "grouping", "environment_factory"}:
             raise ReadingIssue("environment_reading", "Control flow or reading effects inside an unbound environment require resolution")
         if profile.family == "source_command" and profile.action != "environment_end":
             command = ArgumentScanner(self.reader, self.context).read(token.span, profile)

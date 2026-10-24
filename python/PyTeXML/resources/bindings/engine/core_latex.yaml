@@ -39,12 +39,17 @@ reading:
         handler: environment_name
         argument: braced_literal_name
 
-    # A factory is not itself a nesting conditional. Dynamic boolean meanings
-    # remain outside the bounded dispatcher.
+    # latex2e base/ltdefns.dtx (newif/@if): local aliases and setter macros.
+    # The factory is not itself a nesting conditional. Only literal targets
+    # with the conventional prefix are supported; source stays unexpanded.
     - name: "\\newif"
       family: conditional_factory
-      syntax: "\\if{name}"
-      registers: boolean_switch
+      scope: local
+      grammar:
+        handler: boolean_declaration
+        target_prefix: if
+        initial: "\\iffalse"
+        setters: {"true": "\\iftrue", "false": "\\iffalse"}
 
   # ---------------------------------------------------------------------------
   # Lexical and Catcode Mutators

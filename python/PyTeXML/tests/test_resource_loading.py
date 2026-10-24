@@ -214,11 +214,15 @@ class ResourceLoadingTests(unittest.TestCase):
 
     def test_newif_is_a_factory_without_a_conditional_nesting_role(self):
         from src.bindings.resolver import BindingResolver
-        from src.reading.contracts import UnresolvedBindingResult
+        from src.reading.contracts import EffectiveReadingProfile
 
         resolver = BindingResolver()
         self.assertIsNone(resolver.resolve_conditional("newif"))
-        self.assertIsInstance(resolver.resolve_command("newif"), UnresolvedBindingResult)
+        profile = resolver.resolve_command("newif")
+        self.assertIsInstance(profile, EffectiveReadingProfile)
+        self.assertEqual(profile.family, "conditional_factory")
+        self.assertEqual(profile.grammar["handler"], "boolean_declaration")
+        self.assertIsNone(profile.conditional)
 
     def test_registry_identity_must_match_filename(self):
         path = self.root / "renamed.yaml"

@@ -103,7 +103,7 @@ class ResourcePreparationTests(unittest.TestCase):
         self.assertTrue(any("author_notes" in t.reason for t in ledger.tombstones))
 
     def test_retained_style_boundary_does_not_block_later_inputs(self):
-        style = r"\makeatletter{\def\input#1{WRONG}\newif\ifdraft \input{unresolved}}"
+        style = r"\makeatletter{\def\input#1{WRONG}\newif\ifdraft \catcode\unknown=11 \input{unresolved}}"
         self.put("local.sty", style)
         self.put("tail.tex", "TAIL % removed\n")
         text, manifest, out, _ = self.prepare(r"\input{tail} AFTER", "local")

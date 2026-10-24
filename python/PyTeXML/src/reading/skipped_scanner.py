@@ -45,9 +45,7 @@ class SkippedBranchScanner:
                     continue
                 # Author macros have macro meaning even if their spelling is fi
                 # or iftrue. They do not expand while skipping.
-                if context.lookup_definition(token.value, token.kind) is not None:
-                    continue
-                rule = self.knowledge.resolve_conditional(token.value)
+                rule = context.conditional_rule(token.value, self.knowledge)
                 if rule is None:
                     continue
                 if rule.role == "opener":
