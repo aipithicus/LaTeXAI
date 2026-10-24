@@ -56,8 +56,9 @@ run-collection/
 all batches. It does not copy or symlink a mutable `latest/` output directory.
 Each batch compares with the preceding attempt for each selected paper, including
 whether its source fingerprint changed. Fewer requirements or a shorter master
-are observations, not automatic improvements. The bibliography count is a lexical
-inspection metric; the preparation manifest owns actual bibliography semantics.
+are observations, not automatic improvements. The bibliography count comes from
+the preparation manifest's validated entry count; the harness does not reparse
+entry syntax. Earlier receipts can retain the original lexical count metric.
 
 Receipts record the Git commit, current Python/YAML code fingerprint, source-file
 hashes, Python and dependency versions, and output hashes. A dirty code fingerprint

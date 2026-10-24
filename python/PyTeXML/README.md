@@ -158,6 +158,14 @@ Unconfirmed missing keys remain diagnostics; missing established citations still
 report resource errors. Selected conflicting records retain the canonical-resource
 fallback. Unused duplicate keys cannot prevent formatting the selected references.
 
+For an existing BBL, the active `natbib` binding also recognizes Harvard-family
+`\harvarditem[short authors]{full authors}{year}{key}` headers. Their argument
+grammar and `bibliography_key` metadata use the same machinery as `\bibitem`;
+the original headers and body remain unexpanded in the inlined bibliography.
+This is natbib's compatibility grammar, not a complete `harvard` package binding
+or bibliography-style interpreter. The specimen index uses the manifest's validated
+entry count, so package-specific entry commands are counted consistently.
+
 All runtime YAML loaders reject duplicate keys through the shared strict loader.
 Policies validate their fields and action values. Catalog loading checks binding
 identities, current construct-list structure, engine/profile references and the

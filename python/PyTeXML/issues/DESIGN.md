@@ -130,6 +130,11 @@ citation keys. Later extraction does not need to find raw `.bib` or `.bbl` paths
 
 - A supplied classic BBL is validated and reused. Its source databases are not
   required; if available, they provide optional enrichment data.
+  With `natbib` active, this includes Harvard-family `\harvarditem` entries:
+  declarative argument metadata identifies the citation key while preserving the
+  author/year arguments and entry body. No macro expansion or style emulation is
+  needed to assemble this bibliography. Plain `harvard` package activation still
+  needs its own binding; this contract belongs to natbib's compatibility surface.
 - When a BBL is missing, `bibtex.py` parses the declared databases without an
   engine or additional dependency. It handles balanced braced/quoted values,
   concatenation, string definitions, month abbreviations, preambles, and both

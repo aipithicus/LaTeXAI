@@ -1,9 +1,9 @@
 identity:
   package: natbib
-  description: Citation-key reading only; citation rendering and package options remain downstream
+  description: Citation and existing-BBL entry reading; rendering and package options remain downstream
   source:
     version: 8.31b
-    reference: https://mirrors.ctan.org/macros/latex/contrib/natbib/natnotes.pdf
+    reference: https://mirrors.ctan.org/macros/latex/contrib/natbib/natbib.dtx
 reading:
   # The same argument grammar handles textual/parenthetical citations, the
   # capitalized variants and their starred forms. Notes are captured, not run.
@@ -47,6 +47,21 @@ reading:
     family: source_command
     action: citation
     grammar: *citation_arguments
+  # natbib defines this Harvard-compatible header as a wrapper around bibitem.
+  # Capture its arguments without expanding the wrapper or author/year values.
+  # The existing bibliography_key contract identifies the final required group,
+  # independently of whether the optional short author form is supplied.
+  - name: \harvarditem
+    family: source_command
+    action: opaque
+    metadata: {bibliography_key: key}
+    grammar:
+      handler: source_arguments
+      arguments:
+      - {name: short_authors, kind: optional}
+      - {name: authors, kind: braced}
+      - {name: year, kind: braced}
+      - {name: key, kind: braced}
   command_overrides:
   - name: \cite
     family: source_command

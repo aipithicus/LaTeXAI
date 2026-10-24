@@ -15,7 +15,7 @@ import yaml
 PROJECT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT))
 from src.validation.specimens import (identifier, load_catalog, run_batch, source_fingerprint,
-    share_resources, refresh_index, render_specimen, read_json, write_json)
+    share_resources, refresh_index, render_specimen, read_json, write_json, summarize)
 
 
 class SpecimenBatchTests(unittest.TestCase):
@@ -140,6 +140,13 @@ class SpecimenBatchTests(unittest.TestCase):
         (source / "extracted").mkdir()
         (source / "extracted/master.tex").write_text("historical output")
         self.assertEqual(source_fingerprint(source), before)
+
+    def test_summary_uses_validated_bibliography_count_instead_of_command_spelling(self):
+        prepared = self.root / "prepared"
+        prepared.mkdir()
+        (prepared / "master.tex").write_text(r"\harvarditem{Author}{2000}{key}", encoding="utf-8")
+        write_json(prepared / "manifest.json", {"bibliography": {"citations_count": 1}})
+        self.assertEqual(summarize(prepared)["bibitems"], 1)
 
     def test_catalog_rejects_escaping_main_and_duplicate_yaml_keys(self):
         self.records["one"]["main"] = "../catalog.yaml"

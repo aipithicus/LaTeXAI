@@ -212,8 +212,9 @@ def summarize(prepared):
     text = master.read_text(encoding="utf-8") if master.is_file() else ""
     return {"preparation_status": manifest.get("preparation_status", "failed"),
             "master_characters": len(text), "svg_assets": len(list(prepared.rglob("*.svg"))),
-            # An inspection metric, not a second bibliography parser.
-            "bibitems": len(re.findall(r"\\bibitem(?:\[[^\]\n]*\])?\s*\{", text)),
+            # The preparation reader owns bibliography syntax and validation;
+            # a raw bibitem search misses package-specific entry commands.
+            "bibitems": manifest.get("bibliography", {}).get("citations_count", 0),
             "requirements": dict(Counter(r["stage"] for r in manifest.get("requirements", []))),
             "unresolved": len(manifest.get("unresolved", [])),
             "source_reads": len(manifest.get("source_reads", [])),
