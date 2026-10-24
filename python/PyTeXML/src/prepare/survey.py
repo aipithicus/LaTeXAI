@@ -6,7 +6,7 @@ source store supplies bytes already read by traversal; no output copies are made
 """
 from ..bindings.resolver import BindingResolver
 from ..source_io import SourceDecodingError
-from ..reading.contracts import (CommandDefinition, DeferredRegion, LiteralRegion, ReadingBoundary,
+from ..reading.contracts import (CommandDefinition, EnvironmentDefinition, DeferredRegion, LiteralRegion, ReadingBoundary,
                                 SourceCommand, SourceEnd, StoredDefinition, SkippedRegion, ReadingIssue)
 from ..reading.dispatcher import StructuralDispatcher
 from ..reading.tex_reader import TexReader, TokenKind, InvalidCharacterError
@@ -78,10 +78,13 @@ def survey_sources(store, catalog):
                 if item.action == "environment_end" and item.metadata.get("document"):
                     residue(reader.source_span(reader.position, len(doc.text)), "excluded_tail")
                     break
-            elif isinstance(item, StoredDefinition):
-                if isinstance(item, CommandDefinition) and item.optional_default is not None:
+            elif isinstance(item, (StoredDefinition, EnvironmentDefinition)):
+                if isinstance(item, (CommandDefinition, EnvironmentDefinition)) and item.optional_default is not None:
                     tokens(item.optional_default.tokens, "stored_definition_default")
                 tokens(item.body_tokens, "stored_definition")
+                if isinstance(item, EnvironmentDefinition) and item.final_code is not None:
+                    if item.final_code.span.basis is item.span.basis and item.span.start <= item.final_code.span.start < item.span.end:
+                        tokens(item.final_code.tokens, "stored_definition_final")
                 report["protected"].append({"start": item.span.start, "end": item.span.end, "kind": "definition"})
             elif isinstance(item, DeferredRegion):
                 tokens(item.tokens, "deferred")

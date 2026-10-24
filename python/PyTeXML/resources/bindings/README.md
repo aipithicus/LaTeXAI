@@ -280,6 +280,40 @@ unverified precondition, including selected option-body declarations, without
 blocking the master. Deferred-environment scanning captures syntax only and never
 performs this active registration. Invocation expansion remains out of scope.
 
+### Collecting-environment declarations
+
+[environ.yaml](packages/environ.yaml) is grounded in the package's v0.3 TeX source,
+with source URL and SHA-256 recorded in its identity. It uses the generic
+`collected_environment_definition` family and handler, `scope: local`, and the
+same expansion/target/reserved-name fields as command declarations. Its metadata
+selects `balanced_environment_tokens`, names the begin/end control sequences,
+and supplies scoped setting keys plus initial body-name and final-code defaults.
+There are no package-specific Python implementations or executed YAML templates.
+
+`EnvironmentDefinition` keeps the authored count/default, processing-body tokens,
+final-code tokens, body-command name, source spans, target-check status and unit ID.
+Its opening/body/closing partition includes an authored optional final-code suffix
+in closing. An inherited final-code setting retains that setting's source span;
+binding defaults are named commands, not fabricated source tokens. These captures
+are not compiled helper macros. `capture_setting` is a generic action over one
+literal control sequence or a braced token list; the context journals it locally.
+
+`StructuralDispatcher` installs declarations and owns all scope and routing
+decisions. `EnvironmentScanner` only scans. At an established invocation it
+collects under entry catcodes, respecting brace depth and counting ungrouped
+begin/end tokens. Only the outer closing name is checked at collection time,
+as in the package's collector; nested environment validation is later work.
+Closing names must be braced and the outer name must be literal. Arguments remain
+inside the frozen body until interpretation, and no literal/conditional handler
+runs while collecting. A `CollectedEnvironment` remains a deferred region, linked
+to its declaration; preparation exposes `definition_unit_id` on its requirement.
+Its source is not trimmed or substituted. The package's trimspaces dependency is
+relevant to future interpretation, not a native fallback during preparation.
+
+Unknown execution still carries the existing entry-state assumptions. These
+bounded handlers do not establish arbitrary macro effects, compile replacement
+lists, execute processing/final code, or support the low-level collector APIs.
+
 ## 8. Bounded conditionals and skipped text
 
 `reading.conditionals` describes command meanings with a small validated schema:

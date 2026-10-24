@@ -10,7 +10,8 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Iterable, Literal
 
-from .contracts import LiteralRegion, ReadingBoundary, SkippedRegion, StoredDefinition, SourceCommand, SourceEnd, DeferredRegion
+from .contracts import (LiteralRegion, ReadingBoundary, SkippedRegion, StoredDefinition,
+                        EnvironmentDefinition, SourceCommand, SourceEnd, DeferredRegion)
 from .spans import SourceBasis, SourceSpan, SpanSet
 from .tex_reader import ReadEvent
 
@@ -93,7 +94,7 @@ class Coverage:
         return tuple(sorted(segments, key=lambda segment: segment.span.start))
 
 
-ReadingItem = ReadEvent | LiteralRegion | StoredDefinition | SkippedRegion | ReadingBoundary | SourceCommand | SourceEnd | DeferredRegion
+ReadingItem = ReadEvent | LiteralRegion | StoredDefinition | EnvironmentDefinition | SkippedRegion | ReadingBoundary | SourceCommand | SourceEnd | DeferredRegion
 
 
 @dataclass(frozen=True, slots=True, init=False)
@@ -109,7 +110,7 @@ class ReadingCoverage:
     observed: SpanSet
     unknown: SpanSet
     literal_regions: tuple[LiteralRegion, ...]
-    stored_definitions: tuple[StoredDefinition, ...]
+    stored_definitions: tuple[StoredDefinition | EnvironmentDefinition, ...]
     skipped_regions: tuple[SkippedRegion, ...]
     diagnostics: tuple[ReadingBoundary, ...]
     deferred_regions: tuple[DeferredRegion, ...]
@@ -123,7 +124,7 @@ class ReadingCoverage:
         for item in items:
             if diagnostics:
                 raise ValueError("A reading boundary must be the last item")
-            if not isinstance(item, (ReadEvent, LiteralRegion, StoredDefinition, SkippedRegion, ReadingBoundary, SourceCommand, SourceEnd, DeferredRegion)):
+            if not isinstance(item, (ReadEvent, LiteralRegion, StoredDefinition, EnvironmentDefinition, SkippedRegion, ReadingBoundary, SourceCommand, SourceEnd, DeferredRegion)):
                 raise TypeError("Expected a dispatcher reading item")
             basis.require(item.span)
             if isinstance(item, ReadingBoundary):
@@ -138,7 +139,7 @@ class ReadingCoverage:
             if isinstance(item, DeferredRegion):
                 deferred.append(item)
                 continue  # Captured source is not established structural coverage.
-            if isinstance(item, (LiteralRegion, StoredDefinition)):
+            if isinstance(item, (LiteralRegion, StoredDefinition, EnvironmentDefinition)):
                 parts = (item.opening, item.body, item.closing)
                 for part in parts:
                     basis.require(part)

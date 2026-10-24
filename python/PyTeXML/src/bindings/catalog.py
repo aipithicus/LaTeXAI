@@ -139,15 +139,19 @@ class BindingCatalog:
                     if (set(grammar) - {"handler", "arity", "body_start"} or grammar.get("arity") != 0
                             or grammar.get("body_start", "after_header") not in {"after_header", "next_physical_line"}):
                         raise ProfileError(f"{path}: invalid physical-line literal grammar for {name}")
-                if spec.get("family") == "stored_definition":
-                    if grammar.get("handler") == "command_definition":
+                if spec.get("family") in ("stored_definition", "collected_environment_definition"):
+                    environment = spec.get("family") == "collected_environment_definition"
+                    if grammar.get("handler") == "command_definition" or environment:
                         if (set(grammar) != {"handler", "expansion", "target_requirement", "forbidden_names", "forbidden_prefixes"}
+                                or grammar.get("handler") != ("collected_environment_definition" if environment else "command_definition")
                                 or grammar.get("expansion") != "none" or spec.get("scope") != "local"
                                 or grammar.get("target_requirement") not in ("absent", "present")
                                 or any(not isinstance(grammar.get(key), list)
                                        or any(not isinstance(value, str) or not value for value in grammar[key])
                                        for key in ("forbidden_names", "forbidden_prefixes"))):
                             raise ProfileError(f"{path}: {name} requires a local command definition recipe")
+                        if environment:
+                            self._validate_collector(spec.get("metadata"), path)
                     elif (set(grammar) != {"handler", "expansion"}
                           or grammar.get("handler") != "primitive_definition"
                           or grammar.get("expansion") not in ("none", "full")
@@ -183,7 +187,7 @@ class BindingCatalog:
                     for arg in arguments:
                         if (not isinstance(arg, dict) or set(arg) != {"name", "kind"}
                                 or not isinstance(arg.get("name"), str) or not arg["name"]
-                                or arg["name"] in arg_names or arg.get("kind") not in ("braced", "optional", "star", "filename")):
+                                or arg["name"] in arg_names or arg.get("kind") not in ("braced", "optional", "star", "filename", "control_sequence")):
                             raise ProfileError(f"{path}: invalid source argument for {name}")
                         arg_names.add(arg["name"])
                     if spec.get("family") in ("source_command", "environment_factory", "option_control") and spec.get("action") not in self.reading_handlers:
@@ -198,6 +202,13 @@ class BindingCatalog:
                         if (arguments != [{"name": "options", "kind": "braced"}, {"name": "name", "kind": "braced"}]
                                 or spec.get("metadata") not in ({"target_kind": "package"}, {"target_kind": "class"})):
                             raise ProfileError(f"{path}: {name} requires literal forwarding arguments and a target kind")
+                    if spec.get("action") == "capture_setting":
+                        metadata = spec.get("metadata", {})
+                        kind = metadata.get("value_kind")
+                        if (set(metadata) != {"key", "value_kind"} or kind not in ("control_sequence", "tokens")
+                                or not isinstance(metadata.get("key"), str) or not metadata["key"]
+                                or arguments != [{"name": "value", "kind": "control_sequence" if kind == "control_sequence" else "braced"}]):
+                            raise ProfileError(f"{path}: invalid capture setting recipe for {name}")
                     if spec.get("family") == "environment_factory":
                         self._validate_factory(spec, arg_names, path)
                     if spec.get("family") == "option_control":
@@ -215,6 +226,22 @@ class BindingCatalog:
                     if not isinstance(profile, str):
                         raise ProfileError(f"{path}: {name} profile must be a name")
                     self.mouth.profile(profile)
+
+    @staticmethod
+    def _validate_collector(metadata, path):
+        keys = {"collector", "body_name_setting", "default_body_name", "final_code_setting", "default_final_commands"}
+        if (not isinstance(metadata, dict) or set(metadata) != keys
+                or any(not isinstance(metadata[k], str) or not metadata[k] for k in
+                       ("body_name_setting", "default_body_name", "final_code_setting"))
+                or not isinstance(metadata["default_final_commands"], list)
+                or any(not isinstance(s, str) or not s for s in metadata["default_final_commands"])):
+            raise ProfileError(f"{path}: invalid collecting-environment defaults")
+        collector = metadata["collector"]
+        if (not isinstance(collector, dict) or set(collector) != {"handler", "begin_command", "end_command"}
+                or collector["handler"] != "balanced_environment_tokens"
+                or any(not isinstance(collector[k], str) or not collector[k] for k in ("begin_command", "end_command"))
+                or collector["begin_command"] == collector["end_command"]):
+            raise ProfileError(f"{path}: invalid environment token collector")
 
     @staticmethod
     def _validate_options(spec, path):

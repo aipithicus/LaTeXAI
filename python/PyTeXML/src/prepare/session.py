@@ -17,7 +17,8 @@ from ..reading.dispatcher import StructuralDispatcher, InputRecovery
 from ..reading.argument_scanner import key_values
 from ..reading.coverage import ReadingCoverage
 from ..reading.contracts import (SourceCommand, SourceEnd, ReadingBoundary, ReadingIssue,
-                                StoredDefinition, CommandDefinition, SkippedRegion, DeferredRegion, LiteralRegion)
+                                StoredDefinition, CommandDefinition, EnvironmentDefinition, CollectedEnvironment,
+                                SkippedRegion, DeferredRegion, LiteralRegion)
 from ..reading.tex_reader import TexReader, ReadEvent, TokenKind, CatCode
 from ..reading.edit_map import EditMap
 from ..reading.units import UnitRegistry
@@ -584,8 +585,10 @@ class PreparationSession:
                     checkpoint = (len(self.pieces), len(self.tombstones))
                     self._command(item)
                 elif isinstance(item, DeferredRegion):
-                    self.require(item.span, item.reason, item.detail,
-                                 stage="preparation" if item.reason == "package_not_loaded" else "interpretation", unit_id=item.unit_id)
+                    requirement = self.require(item.span, item.reason, item.detail,
+                                               stage="preparation" if item.reason == "package_not_loaded" else "interpretation", unit_id=item.unit_id)
+                    if isinstance(item, CollectedEnvironment):
+                        requirement["definition_unit_id"] = item.definition_id
                     image_references = observe_environment_assets(self, item)
                     self._deferred_dependencies(item.tokens, observed=(o.command for o in item.observations
                         if o.command.action == "asset_reference"), parent_id=item.unit_id)
@@ -620,6 +623,11 @@ class PreparationSession:
                     self._emit(item.span)
                     if isinstance(item, CommandDefinition) and item.target_check == "unverified":
                         self._definition_check(item.unit_id, item.declaration, item.target.value, item.target_requirement)
+                    if isinstance(item, EnvironmentDefinition):
+                        if item.target_check == "unverified":
+                            self._definition_check(item.unit_id, item.declaration, item.name, item.target_requirement)
+                        if self.frames[-1].path in self.styles:
+                            self.styles[self.frames[-1].path].declared_commands.extend((item.name, "end" + item.name))
                     if isinstance(item, StoredDefinition) and self.frames[-1].path in self.styles:
                         self.styles[self.frames[-1].path].declared_commands.append(item.target.value)
             except (ReadingIssue, _DeferredCommand) as error:

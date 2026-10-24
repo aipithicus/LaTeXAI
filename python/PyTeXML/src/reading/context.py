@@ -5,12 +5,13 @@ from dataclasses import dataclass, replace
 from enum import Enum
 from typing import Iterator
 from .contracts import (EffectiveReadingProfile, MouthBaseline, StoredDefinition,
-                        EnvironmentDeclaration, BooleanMeaning, ConditionalRule, ReadingIssue)
+                        EnvironmentDeclaration, EnvironmentDefinition, ScannedArgument,
+                        BooleanMeaning, ConditionalRule, ReadingIssue)
 from .tex_reader import CatCode, CatcodeTable, TokenKind
 
 
 DefinitionKey = tuple[TokenKind, str]
-LocalMeaning = StoredDefinition | BooleanMeaning
+LocalMeaning = StoredDefinition | EnvironmentDefinition | BooleanMeaning
 
 
 class ExecutionMode(str, Enum):
@@ -57,8 +58,10 @@ class ReaderContext:
         # Journal only changed meanings, avoiding a copy of every definition at
         # each group (including temporary literal scopes).
         self._meaning_scopes: list[dict[DefinitionKey, LocalMeaning | None]] = []
-        self._environments: dict[str, EnvironmentDeclaration] = {}
-        self._environment_scopes: list[dict[str, EnvironmentDeclaration | None]] = []
+        self._environments: dict[str, EnvironmentDeclaration | EnvironmentDefinition] = {}
+        self._environment_scopes: list[dict[str, EnvironmentDeclaration | EnvironmentDefinition | None]] = []
+        self._capture_settings: dict[str, ScannedArgument] = {}
+        self._capture_setting_scopes: list[dict[str, ScannedArgument | None]] = []
 
     def _snapshot(self) -> _ScopeSnapshot:
         return _ScopeSnapshot(self.catcodes.copy(), self.endlinechar,
@@ -80,6 +83,8 @@ class ReaderContext:
         ctx._meaning_scopes = [dict(saved) for saved in self._meaning_scopes]
         ctx._environments = dict(self._environments)
         ctx._environment_scopes = [dict(saved) for saved in self._environment_scopes]
+        ctx._capture_settings = dict(self._capture_settings)
+        ctx._capture_setting_scopes = [dict(saved) for saved in self._capture_setting_scopes]
         return ctx
 
     def restore_from(self, saved: ReaderContext) -> None:
@@ -93,11 +98,13 @@ class ReaderContext:
         self._meaning_scopes = [dict(state) for state in saved._meaning_scopes]
         self._environments = dict(saved._environments)
         self._environment_scopes = [dict(state) for state in saved._environment_scopes]
+        self._capture_settings = dict(saved._capture_settings)
+        self._capture_setting_scopes = [dict(state) for state in saved._capture_setting_scopes]
 
-    def lookup_environment(self, name: str) -> EnvironmentDeclaration | None:
+    def lookup_environment(self, name: str) -> EnvironmentDeclaration | EnvironmentDefinition | None:
         return self._environments.get(name)
 
-    def record_environment(self, declaration: EnvironmentDeclaration) -> None:
+    def record_environment(self, declaration: EnvironmentDeclaration | EnvironmentDefinition) -> None:
         if self.mode != ExecutionMode.ACTIVE_EXECUTION:
             raise ValueError("Environment registration requires active execution")
         name = declaration.name
@@ -110,10 +117,25 @@ class ReaderContext:
                 self._meaning_scopes[-1].setdefault(key, self._meanings.get(key))
             self._meanings.pop(key, None)
 
-    def lookup_definition(self, name: str, kind: TokenKind = TokenKind.CONTROL_SEQUENCE) -> StoredDefinition | None:
+    def lookup_definition(self, name: str, kind: TokenKind = TokenKind.CONTROL_SEQUENCE) -> StoredDefinition | EnvironmentDefinition | None:
         """Active characters and same-spelled control symbols have distinct meanings."""
         meaning = self.lookup_meaning(name, kind)
-        return meaning if isinstance(meaning, StoredDefinition) else None
+        return meaning if isinstance(meaning, (StoredDefinition, EnvironmentDefinition)) else None
+
+    def record_collected_environment(self, definition: EnvironmentDefinition) -> None:
+        self.record_environment(definition)
+        for name in (definition.name, "end" + definition.name):
+            self.record_meaning(name, definition)
+
+    def lookup_capture_setting(self, name: str) -> ScannedArgument | None:
+        return self._capture_settings.get(name)
+
+    def record_capture_setting(self, name: str, value: ScannedArgument) -> None:
+        if self.mode != ExecutionMode.ACTIVE_EXECUTION:
+            raise ValueError("Capture settings require active execution")
+        if self._capture_setting_scopes:
+            self._capture_setting_scopes[-1].setdefault(name, self._capture_settings.get(name))
+        self._capture_settings[name] = value
 
     def lookup_meaning(self, name: str, kind: TokenKind = TokenKind.CONTROL_SEQUENCE) -> LocalMeaning | None:
         return self._meanings.get((kind, name))
@@ -184,6 +206,7 @@ class ReaderContext:
         self._scope_stack.append(self._snapshot())
         self._meaning_scopes.append({})
         self._environment_scopes.append({})
+        self._capture_setting_scopes.append({})
 
     @property
     def scope_depth(self) -> int:
@@ -204,6 +227,11 @@ class ReaderContext:
                 self._environments.pop(name, None)
             else:
                 self._environments[name] = previous
+        for name, previous in self._capture_setting_scopes.pop().items():
+            if previous is None:
+                self._capture_settings.pop(name, None)
+            else:
+                self._capture_settings[name] = previous
         return True
 
     @contextmanager

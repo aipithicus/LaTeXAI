@@ -70,6 +70,20 @@ class ArgumentScanner:
         arg.literal()
         return arg
 
+    def control_sequence(self, name: str) -> ScannedArgument:
+        checkpoint = self.reader.checkpoint()
+        first = self._nonspace()
+        if first is not None and first.catcode == CatCode.BEGIN_GROUP:
+            self.reader.restore(checkpoint)
+            argument = self.group(name)
+        elif first is not None:
+            argument = ScannedArgument(name, first.span, (first,))
+        else:
+            raise ReadingIssue("argument_required", f"Missing {name}")
+        if len(argument.tokens) != 1 or argument.tokens[0].kind != TokenKind.CONTROL_SEQUENCE:
+            raise ReadingIssue("computed_argument", f"{name} requires one literal control sequence")
+        return argument
+
     def read(self, opening, profile) -> SourceCommand:
         arguments = []
         with self.context.argument_scanning():
@@ -88,7 +102,12 @@ class ArgumentScanner:
                         token = self.reader.next_token()
                         arguments.append(ScannedArgument(name, token.span, (token,)))
                     continue
-                arg = self.filename(name) if kind == "filename" else self.group(name, optional=kind == "optional")
+                if kind == "filename":
+                    arg = self.filename(name)
+                elif kind == "control_sequence":
+                    arg = self.control_sequence(name)
+                else:
+                    arg = self.group(name, optional=kind == "optional")
                 if arg is not None:
                     arguments.append(arg)
         return SourceCommand(self.reader.source_span(opening.start, self.reader.position), profile.name,

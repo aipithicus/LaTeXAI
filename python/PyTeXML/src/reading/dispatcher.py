@@ -16,11 +16,13 @@ from .contracts import (
     ConditionalRule, EffectiveReadingProfile, LiteralRegion, ReadingBoundary, ReadingIssue,
     ReadingKnowledge, SkippedRegion, StoredDefinition, SourceCommand, SourceEnd, require_resolved,
     DeferredRegion, UnresolvedBindingResult, UnresolvedReason, BooleanMeaning, CommandDefinition,
+    EnvironmentDefinition,
 )
 from .boolean_scanner import declaration as boolean_declaration
 from .argument_scanner import ArgumentScanner, key_values
 from .assignment_scanner import AssignmentScanner
 from .environment_registry import declarations, resolve_environment
+from .environment_scanner import EnvironmentScanner
 from .definition_scanner import DefinitionScanner
 from .deferred_scanner import DeferredScanner
 from .literal_scanner import LiteralScanner
@@ -75,6 +77,7 @@ class StructuralDispatcher:
                  options: OptionScope | None = None):
         self.literals = LiteralScanner(reader, context, knowledge)
         self.definitions = DefinitionScanner(reader, context)
+        self.environments = EnvironmentScanner(reader, context)
         self.skipped = SkippedBranchScanner(reader, context, knowledge)
         self.reader, self.context, self.knowledge = reader, context, knowledge
         self._base_scope_depth = context.scope_depth
@@ -141,6 +144,7 @@ class StructuralDispatcher:
         reader.endline_char = self.context.endlinechar
         self.literals = LiteralScanner(reader, self.context, self.knowledge)
         self.definitions = DefinitionScanner(reader, self.context)
+        self.environments = EnvironmentScanner(reader, self.context)
         self.skipped = SkippedBranchScanner(reader, self.context, self.knowledge)
 
     def enter_source(self, reader: TexReader, *, catcode_overrides: dict[str, int] | None = None,
@@ -169,7 +173,7 @@ class StructuralDispatcher:
         if not condition:
             raise ReadingIssue(reason, detail)
 
-    def next_item(self) -> ReadEvent | LiteralRegion | StoredDefinition | SkippedRegion | ReadingBoundary | SourceCommand | SourceEnd | DeferredRegion | None:
+    def next_item(self) -> ReadEvent | LiteralRegion | StoredDefinition | EnvironmentDefinition | SkippedRegion | ReadingBoundary | SourceCommand | SourceEnd | DeferredRegion | None:
         item = self._next_item()
         return self._identify(item) if item is not None and not isinstance(item, ReadEvent) else item
 
@@ -307,6 +311,19 @@ class StructuralDispatcher:
                     # An inactive literal binding can require a different mouth.
                     # Do not treat its body as ordinary executed TeX.
             profile = require_resolved(resolved)
+            if profile.family == "collected_environment_definition":
+                definition = self.environments.definition(event.span.start, profile)
+                known = (context.lookup_environment(definition.name) is not None
+                         or context.lookup_meaning(definition.name) is not None
+                         or isinstance(self.knowledge.resolve_environment(definition.name), EffectiveReadingProfile)
+                         or isinstance(self.knowledge.resolve_command(definition.name), EffectiveReadingProfile))
+                end_known = (context.lookup_meaning("end" + definition.name) is not None
+                             or isinstance(self.knowledge.resolve_command("end" + definition.name), EffectiveReadingProfile))
+                self._require(not (known or end_known) or definition.target_requirement != "absent",
+                              "definition_conflict", f"{definition.name!r} already has an established meaning")
+                definition = self._identify(replace(definition, target_check="known_present" if known else "unverified"))
+                context.record_collected_environment(definition)
+                return definition
             if profile.family == "option_control":
                 self._require(not isinstance(reader, TokenCursor), "option_body",
                               "Nested option declarations/processing require further resolution")
@@ -339,9 +356,15 @@ class StructuralDispatcher:
                 context.catcodes[command.metadata["character"]] = command.metadata["category"]
                 return command
             if profile.family == "source_command":
-                self._require(self.source_commands or profile.action == "reading_noop",
+                self._require(self.source_commands or profile.action in {"reading_noop", "capture_setting"},
                               "unsupported_operation", "Source commands require an input owner")
                 command = ArgumentScanner(reader, context).read(event.span, profile)
+                if command.action == "capture_setting":
+                    value = command.argument("value")
+                    if command.metadata["value_kind"] == "tokens":
+                        self.environments.validate_final(value)
+                    context.record_capture_setting(command.metadata["key"], value)
+                    return command
                 if command.action in {"opaque", "metadata", "citation"} and any(
                         t.kind in {TokenKind.CONTROL_SEQUENCE, TokenKind.ACTIVE_CHARACTER}
                         for arg in command.arguments for t in arg.tokens):
@@ -395,12 +418,15 @@ class StructuralDispatcher:
                               "unsupported_literal_grammar", "Only literal braced environment names are supported")
                 with context.argument_scanning():
                     name = self._environment_name()
+                declaration = context.lookup_environment(name)
                 # The direct environment route must respect author redefinitions
                 # of the entry/exit commands as well as of the opener itself.
                 for command in (name, "end" + name):
                     meaning = context.lookup_meaning(command)
-                    self._require(meaning is None, "stored_macro",
+                    self._require(meaning is None or (isinstance(declaration, EnvironmentDefinition) and meaning is declaration), "stored_macro",
                                   f"Environment command {command!r} has a stored definition")
+                if isinstance(declaration, EnvironmentDefinition):
+                    return self._deferred(self.environments.collect(event.span, declaration))
                 resolved = resolve_environment(name, None, context, self.knowledge)
                 if (self.preparation and isinstance(resolved, UnresolvedBindingResult)
                         and resolved.reason == UnresolvedReason.UNKNOWN_CONSTRUCT):
@@ -467,12 +493,13 @@ class StructuralDispatcher:
                 cursor = TokenCursor(body.argument, body.text, self.context)
                 replay = StructuralDispatcher(cursor, self.context, self.knowledge, units=self.units)
                 for item in replay:
-                    if isinstance(item, ReadingBoundary):
+                    if isinstance(item, (ReadingBoundary, DeferredRegion)):
                         raise ReadingIssue("option_body", f"Option {name!r} requires {item.reason} at "
                                            f"{item.span.basis.source_id}:{item.span.start}: {item.detail}")
-                    if isinstance(item, CommandDefinition) and item.target_check == "unverified":
+                    if isinstance(item, (CommandDefinition, EnvironmentDefinition)) and item.target_check == "unverified":
                         definition_checks.append({"unit_id": item.unit_id, "declaration": item.declaration,
-                                                  "target": item.target.value, "requirement": item.target_requirement})
+                                                  "target": item.name if isinstance(item, EnvironmentDefinition) else item.target.value,
+                                                  "requirement": item.target_requirement})
         except ReadingIssue:
             # Failed bounded resolution publishes no partly applied option state.
             self.context.restore_from(saved)
@@ -506,7 +533,7 @@ class StructuralDispatcher:
             if scope is not None and scope.uncertain is None:
                 scope.uncertain = span
 
-    def _protect_deferred_environment(self, token, *, shadowed=()) -> bool | DeferredRegion | StoredDefinition:
+    def _protect_deferred_environment(self, token, *, shadowed=()) -> bool | DeferredRegion | StoredDefinition | EnvironmentDefinition:
         """Locate known protected syntax without executing an unbound body.
 
         Routing remains here, not in the envelope scanner. Reading effects and
@@ -520,7 +547,7 @@ class StructuralDispatcher:
             return DeferredScanner(self.reader, self.context).command(
                 token, "stored_macro", "Unexecuted definition shadows the entry grammar")
         meaning = self.context.lookup_meaning(token.value)
-        if isinstance(meaning, StoredDefinition):
+        if isinstance(meaning, (StoredDefinition, EnvironmentDefinition)):
             # Observing an invocation inside an already deferred body requires
             # no more execution than observing an unknown command there. Keep
             # its envelope protected; do not dispatch the old binding or body.
@@ -542,6 +569,8 @@ class StructuralDispatcher:
             return DeferredScanner(self.reader, self.context).command(token, profile.reason.value, profile.detail)
         if profile.family == "stored_definition":
             return self.definitions.read(token.span.start, profile)  # capture, never install
+        if profile.family == "collected_environment_definition":
+            return self.environments.definition(token.span.start, profile)  # capture, never install
         if profile.family in {"conditional", "conditional_factory", "catcode_mutator", "catcode_assignment", "grouping", "environment_factory", "option_control"}:
             raise ReadingIssue("environment_reading", "Control flow or reading effects inside an unbound environment require resolution")
         if profile.family == "source_command" and profile.action != "environment_end":
@@ -556,6 +585,13 @@ class StructuralDispatcher:
             checkpoint = self.reader.checkpoint()
             with self.context.argument_scanning():
                 name = self._environment_name()
+            self._require(name not in shadowed and "end" + name not in shadowed,
+                          "environment_reading", "Unexecuted definition may change this environment's reading behavior")
+            declaration = self.context.lookup_environment(name)
+            if isinstance(declaration, EnvironmentDefinition):
+                self._require(all(self.context.lookup_meaning(n) is declaration for n in (name, "end" + name)),
+                              "environment_reading", "Collected environment entry or exit was redefined")
+                return self.environments.collect(token.span, declaration)
             nested = resolve_environment(name, None, self.context, self.knowledge)
             if isinstance(nested, EffectiveReadingProfile) and nested.grammar.get("handler") in {"token_delimited", "physical_line_literal"}:
                 if nested.grammar.get("has_optional_arguments"):

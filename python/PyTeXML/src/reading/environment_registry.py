@@ -3,7 +3,7 @@ from dataclasses import replace
 import re
 
 from .argument_scanner import key_values
-from .contracts import EnvironmentDeclaration, ReadingIssue, SpanClassification, require_resolved
+from .contracts import EnvironmentDeclaration, EnvironmentDefinition, ReadingIssue, SpanClassification, require_resolved
 
 
 def declarations(command, knowledge):
@@ -33,6 +33,8 @@ def resolve_environment(name, options, context, knowledge):
     declaration = context.lookup_environment(name)
     if declaration is None:
         return knowledge.resolve_environment(name, options)
+    if isinstance(declaration, EnvironmentDefinition):
+        raise ReadingIssue("environment_collector", "Collected environment requires token collection, not a literal profile")
     profile = require_resolved(knowledge.resolve_environment(declaration.base, {**declaration.options, **(options or {})}))
     if profile.binding_id != declaration.binding_id:
         raise ReadingIssue("factory_base", "Base environment binding changed after factory registration")

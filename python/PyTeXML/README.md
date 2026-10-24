@@ -261,6 +261,24 @@ This replay can resolve child inputs and reading effects before preparation
 unwraps the container. Other environment factories and declaration wrappers
 beyond the bounded command forms remain future work.
 
+The `environ` binding adds bounded `\NewEnviron` / `\RenewEnviron` declarations
+through [EnvironmentScanner](src/reading/environment_scanner.py). A declaration
+retains the literal name, optional count/default, processing code, body-command
+name and final code. The dispatcher registers its scoped entry/exit meanings.
+`\environbodyname` and `\environfinalcode` capture scoped defaults; each declaration
+keeps the defaults in force at its source position. Known conflicts and unverified
+existence checks use the same diagnostic distinction as command declarations.
+
+An invocation is collected as tokens before its arguments or authored code are
+interpreted. Grouped delimiter tokens are protected; ungrouped begin/end tokens
+control nesting. Apparent verbatim commands and conditionals do not execute during
+collection. `CollectedEnvironment` preserves opening/body/closing spans, token
+categories and the declaration's unit ID. Preparation retains its complete source
+and emits an interpretation requirement linked to that definition's final artifact
+location. No `\BODY` substitution, trimming, final-code execution or generic macro
+expansion occurs. Low-level `\Collect@Body` calls, computed declaration signatures,
+and collecting across physical input EOF remain explicit limits.
+
 External literal commands (`\verbatiminput`, `\VerbatimInput`, `\lstinputlisting`)
 use the shared source cache. Safe bodies are inlined with exact source provenance;
 delimiter collisions or unsupported options retain one rebased payload resource.

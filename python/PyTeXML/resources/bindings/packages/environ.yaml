@@ -1,0 +1,50 @@
+identity:
+  package: environ
+  version: '0.3'
+  tier: ctan_package
+  source_reference: https://ctan.math.illinois.edu/macros/latex/contrib/environ/environ.dtx
+  source_sha256: 2b4d9052666686410c6fb8483dc932619d823458f205c51e4f5a6e01407c2ccd
+  description: Capture collecting-environment declarations and invocation tokens;
+    authored code, body substitution and final code await interpretation
+
+reading:
+  commands:
+    - name: '\NewEnviron'
+      family: collected_environment_definition
+      scope: local
+      grammar:
+        handler: collected_environment_definition
+        expansion: none
+        target_requirement: absent
+        forbidden_names: [relax]
+        forbidden_prefixes: [end]
+      metadata: &capture
+        collector: {handler: balanced_environment_tokens, begin_command: begin, end_command: end}
+        body_name_setting: packages/environ/body_name
+        default_body_name: BODY
+        final_code_setting: packages/environ/final_code
+        default_final_commands: [ignorespacesafterend]
+    - name: '\RenewEnviron'
+      family: collected_environment_definition
+      scope: local
+      grammar:
+        handler: collected_environment_definition
+        expansion: none
+        target_requirement: present
+        forbidden_names: []
+        forbidden_prefixes: []
+      metadata: *capture
+    - name: '\environbodyname'
+      family: source_command
+      action: capture_setting
+      grammar: {handler: source_arguments, arguments: [{name: value, kind: control_sequence}]}
+      metadata: {key: packages/environ/body_name, value_kind: control_sequence}
+    - name: '\environfinalcode'
+      family: source_command
+      action: capture_setting
+      grammar: {handler: source_arguments, arguments: [{name: value, kind: braced}]}
+      metadata: {key: packages/environ/final_code, value_kind: tokens}
+
+# trimspaces is used by the TeX package when interpreting the collected body.
+# Preparation preserves surrounding source space and does not execute that code.
+# Low-level Collect@Body/collect@body entry points are outside this bounded API.

@@ -2,6 +2,15 @@ identity:
   registry: reading_handlers
   description: Reading actions and their current implementation boundary
 handlers:
+  collected_environment_definition:
+    status: scanner
+    description: Capture a named environment's signature, processing body and final code without execution
+  balanced_environment_tokens:
+    status: scanner
+    description: Collect unexpanded tokens using group-aware begin/end nesting; no literal or conditional dispatch
+  capture_setting:
+    status: context_effect
+    description: Store scoped declaration defaults as frozen tokens or a literal control-sequence name
   command_definition:
     status: scanner
     description: Capture local starred or unstarred command declarations with a literal

@@ -147,6 +147,23 @@ class DefinitionScanner:
                       and not any(target.value.startswith(p) for p in profile.grammar["forbidden_prefixes"]),
                       "invalid_definition_target", "Command target is reserved by this declaration recipe")
         target_end = self.reader.position
+        count_argument, count, default = self.signature()
+        opening = args._nonspace()
+        self._require(opening is not None and opening.catcode == CatCode.BEGIN_GROUP,
+                      "argument_required", "Command replacement text must be braced")
+        body, closing = self._body(count)
+        span = self.reader.source_span
+        return CommandDefinition(
+            span(start, closing.span.end), span(start, opening.span.end),
+            span(target_end, opening.span.start), span(opening.span.end, closing.span.start),
+            closing.span, target, (), body, count, None, profile.binding_id,
+            declaration=profile.name, starred=starred, target_argument=target_argument,
+            argument_count=count_argument, optional_default=default,
+            target_requirement=profile.grammar["target_requirement"])
+
+    def signature(self):
+        """Capture the shared bounded [count][default] declaration signature."""
+        args = ArgumentScanner(self.reader, self.context)
         count_argument = args.group("argument_count", optional=True)
         count = 0
         if count_argument is not None:
@@ -166,15 +183,4 @@ class DefinitionScanner:
                     following = next(tokens, None)
                     self._require(following is not None and following.catcode == CatCode.PARAMETER,
                                   "invalid_definition_parameter", "Default text requires doubled parameter markers")
-        opening = args._nonspace()
-        self._require(opening is not None and opening.catcode == CatCode.BEGIN_GROUP,
-                      "argument_required", "Command replacement text must be braced")
-        body, closing = self._body(count)
-        span = self.reader.source_span
-        return CommandDefinition(
-            span(start, closing.span.end), span(start, opening.span.end),
-            span(target_end, opening.span.start), span(opening.span.end, closing.span.start),
-            closing.span, target, (), body, count, None, profile.binding_id,
-            declaration=profile.name, starred=starred, target_argument=target_argument,
-            argument_count=count_argument, optional_default=default,
-            target_requirement=profile.grammar["target_requirement"])
+        return count_argument, count, default

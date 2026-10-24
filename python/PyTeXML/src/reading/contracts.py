@@ -269,6 +269,48 @@ class SourceCommand:
 
 
 @dataclass(frozen=True, slots=True)
+class EnvironmentDefinition:
+    """Authored collecting-environment declaration; no generated helper macros.
+
+    closing includes the replacement's closing brace and any authored final-code
+    argument. A final_code inherited from a setting keeps that setting's span.
+    Missing final_code uses the binding's default_final_commands, not fake tokens.
+    """
+    span: SourceSpan
+    opening: SourceSpan
+    body: SourceSpan
+    closing: SourceSpan
+    name_argument: ScannedArgument
+    argument_count: ScannedArgument | None
+    parameter_count: int
+    optional_default: ScannedArgument | None
+    body_tokens: tuple[Token, ...]
+    final_code: ScannedArgument | None
+    body_name: str
+    default_final_commands: tuple[str, ...]
+    collector: dict[str, str]
+    declaration: str
+    target_requirement: str
+    binding_id: str
+    target_check: str = "unchecked"
+    unit_id: str | None = field(default=None, compare=False)
+
+    @property
+    def name(self):
+        return self.name_argument.literal()
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class CollectedEnvironment(DeferredRegion):
+    """Frozen invocation body, awaiting argument processing and authored code."""
+    name: str
+    opening: SourceSpan
+    body: SourceSpan
+    closing: SourceSpan
+    definition_id: str | None
+
+
+@dataclass(frozen=True, slots=True)
 class SourceEnd:
     """Completion of an input occurrence, with any deliberately unread suffix."""
     span: SourceSpan

@@ -360,6 +360,13 @@ interpretation requirements. This avoids treating ordinary declarations as
 unknown executions that invalidate unrelated booleans. It does not establish
 what a future invocation will do, implement general factories, or prove the
 whole LaTeX namespace complete from the available bindings.
+The `environ` binding now selects a reusable collecting-environment scanner.
+Bounded declarations and their scoped defaults are captured without executing
+processing code. Invocations collect tokens with group-aware begin/end nesting;
+their arguments, body substitution, trimming and final code remain interpretation
+work. The requirement links to the declaration unit, whose locations identify
+the finalized master or retained local code. Apparent literal commands and
+conditionals inside the collecting phase are tokens, not dispatched operations.
 Literal/definition/argument scans that exhaust their physical input are boundaries;
 continuation across input EOF is not implemented. Active groups and evaluated
 conditionals can cross input boundaries.

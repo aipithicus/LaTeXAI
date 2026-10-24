@@ -222,13 +222,14 @@ class BindingResolver:
                     span_classification=SpanClassification("lexical_directive", "catcode_mutation"))
             if section == "grouping":
                 return self._build_group(clean, spec, origin)
-            if section in {"commands", "command_overrides"} and spec.get("family") in {"stored_definition", "conditional_factory"}:
+            if section in {"commands", "command_overrides"} and spec.get("family") in {"stored_definition", "conditional_factory", "collected_environment_definition"}:
                 if opts:
                     return self._unresolved(clean, UnresolvedReason.UNSUPPORTED_READING_OPTION,
                                             "Definition declarations have no resolved options", opts)
                 return EffectiveReadingProfile(
                     clean, spec["family"], binding_id=origin,
                     grammar=deepcopy(spec["grammar"]),
+                    tex_mechanics=deepcopy(spec.get("metadata", {})),
                     state_management=StateManagementRule(scope=spec["scope"]))
             if section in {"commands", "command_overrides"} and spec.get("family") == "environment_open":
                 if opts:

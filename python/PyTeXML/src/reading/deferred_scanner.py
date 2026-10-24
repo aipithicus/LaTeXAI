@@ -1,6 +1,6 @@
 """Bounded source capture for preparation; no expansion or effect execution."""
 from .argument_scanner import ArgumentScanner
-from .contracts import DeferredRegion, ReadingIssue, StoredDefinition
+from .contracts import DeferredRegion, EnvironmentDefinition, ReadingIssue, StoredDefinition
 from .tex_reader import CatCode, TokenKind
 
 
@@ -72,6 +72,8 @@ class DeferredScanner:
                     # Do not install definitions from an unexecuted body. Their
                     # presence still invalidates later use of the old grammar.
                     shadowed.add(protected.target.value)
+                if isinstance(protected, EnvironmentDefinition):
+                    shadowed.update((protected.name, "end" + protected.name))
                 if isinstance(protected, DeferredRegion):
                     tokens.extend(protected.tokens)
                     if protected.command is not None and token.value not in shadowed:
