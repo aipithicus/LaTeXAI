@@ -350,6 +350,13 @@ Unexecuted possible mutations invalidate boolean knowledge, including suspended
 outer meanings that a global effect could change. A later use preserves unresolved
 source rather than selecting a branch from stale state. This bounded guard does
 not infer arbitrary macro effects or supply persisted per-unit context.
+Configured physical-line literals now resolve scoped ordered key/value settings
+and named styles through YAML-selected generic machinery. Listings style
+definitions are global; its settings and per-occurrence overrides respect their
+package scopes. Preparation captures TeX escapes as deferred child units under
+entry reading state, preserving their source and recording visible dependencies;
+it does not execute interpolation. Unknown keys, computed values, dialect/aspect
+loading and math/combined modes remain explicit limits.
 Computed/global assignments, other predicates and unsupported literal grammars still
 produce reading boundaries. Hooks, other definition factories and subfile preamble
 stripping need additional handlers.

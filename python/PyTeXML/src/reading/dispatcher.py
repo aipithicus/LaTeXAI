@@ -20,6 +20,7 @@ from .contracts import (
 )
 from .boolean_scanner import declaration as boolean_declaration
 from .argument_scanner import ArgumentScanner, key_values
+from .configuration import entries, configured_options
 from .assignment_scanner import AssignmentScanner
 from .environment_registry import declarations, resolve_environment
 from .environment_scanner import EnvironmentScanner
@@ -187,6 +188,8 @@ class StructuralDispatcher:
             # A captured command is another view of the same observed unit.
             item = replace(item, command=replace(item.command, unit_id=identifier) if item.command else None,
                            observations=tuple(self._identify(o, identifier) for o in item.observations))
+        if isinstance(item, LiteralRegion):
+            item = replace(item, interpolations=tuple(self._identify(o, identifier) for o in item.interpolations))
         return item
 
     def _next_item(self):
@@ -311,6 +314,8 @@ class StructuralDispatcher:
                     # An inactive literal binding can require a different mouth.
                     # Do not treat its body as ordinary executed TeX.
             profile = require_resolved(resolved)
+            if profile.family == "configuration_command":
+                return self._configuration(event.span, profile)
             if profile.family == "collected_environment_definition":
                 definition = self.environments.definition(event.span.start, profile)
                 known = (context.lookup_environment(definition.name) is not None
@@ -435,7 +440,9 @@ class StructuralDispatcher:
                 if profile.grammar.get("has_optional_arguments"):
                     with context.argument_scanning():
                         options = ArgumentScanner(reader, context).group("options", optional=True)
-                    profile = require_resolved(resolve_environment(name, key_values(options), context, self.knowledge))
+                    profile = require_resolved(resolve_environment(name, configured_options(profile, options, context), context, self.knowledge))
+                elif profile.configuration:
+                    profile = require_resolved(resolve_environment(name, configured_options(profile, None, context), context, self.knowledge))
                 if profile.family == "structural_environment" and self.source_commands:
                     header = ArgumentScanner(reader, context).read(event.span, profile)
                     context.push_scope()
@@ -445,7 +452,9 @@ class StructuralDispatcher:
                 self._require(profile.grammar.get("handler") in {"token_delimited", "physical_line_literal"}
                               and profile.grammar.get("arity") == 0,
                               "unsupported_literal_grammar", "Environment requires an unsupported header or body handler")
-            region = self.literals.read(event.span.start, profile)
+            region = self.literals.read(event.span.start, profile, defer_interpolation=self.preparation)
+            for interpolation in region.interpolations:
+                self.defer_effects(interpolation.span)
             if region.classification.category == "transparent_block":
                 self._require(profile.grammar.get("body_start") == "next_physical_line"
                               and profile.terminator.requires_column_zero
@@ -462,6 +471,30 @@ class StructuralDispatcher:
             return self._boundary(event.span, error.reason, error.detail)
         except InvalidCharacterError as error:
             return self._boundary(event.span, "invalid_character", str(error))
+
+    def _configuration(self, opening, profile):
+        # Some package headers establish catcodes before collecting arguments.
+        # A replay cursor already contains frozen tokens, so it is never retokenized.
+        with self.context.lexical_scope():
+            if not isinstance(self.reader, TokenCursor):
+                for char, code in profile.tex_mechanics["header_catcodes"].items():
+                    self.context.catcodes[char] = code
+            command = ArgumentScanner(self.reader, self.context).read(opening, profile)
+        for name in profile.tex_mechanics.get("unsupported_arguments", ()):
+            if command.argument(name) is not None:
+                raise ReadingIssue("configuration_header", f"Configuration argument {name!r} requires further resolution")
+        contract, state = profile.configuration, self.context.configurations
+        namespace = contract["namespace"]
+        captured = entries(command.argument("options"))
+        if command.action == "define_configuration":
+            name = state.name(command.value("name"), contract)
+            self._require(bool(name), "configuration_name", "Configuration name must be nonempty")
+            state.store("styles", (namespace, name), captured, contract["definition_scope"])
+        else:
+            resolved = state.resolve(namespace, captured, contract)
+            self.knowledge.check_configuration(command.name, state.reading_values(resolved, contract), contract)
+            state.store("values", namespace, resolved, contract["assignment_scope"])
+        return command
 
     def _options(self, command: SourceCommand) -> SourceCommand:
         """Capture first, select later, then reuse strict dispatch over frozen tokens.
@@ -571,7 +604,7 @@ class StructuralDispatcher:
             return self.definitions.read(token.span.start, profile)  # capture, never install
         if profile.family == "collected_environment_definition":
             return self.environments.definition(token.span.start, profile)  # capture, never install
-        if profile.family in {"conditional", "conditional_factory", "catcode_mutator", "catcode_assignment", "grouping", "environment_factory", "option_control"}:
+        if profile.family in {"conditional", "conditional_factory", "catcode_mutator", "catcode_assignment", "grouping", "environment_factory", "option_control", "configuration_command"}:
             raise ReadingIssue("environment_reading", "Control flow or reading effects inside an unbound environment require resolution")
         if profile.family == "source_command" and profile.action != "environment_end":
             command = ArgumentScanner(self.reader, self.context).read(token.span, profile)
@@ -597,7 +630,11 @@ class StructuralDispatcher:
                 if nested.grammar.get("has_optional_arguments"):
                     with self.context.argument_scanning():
                         options = ArgumentScanner(self.reader, self.context).group("options", optional=True)
-                    nested = require_resolved(resolve_environment(name, key_values(options), self.context, self.knowledge))
+                    nested = require_resolved(resolve_environment(name, configured_options(nested, options, self.context), self.context, self.knowledge))
+                elif nested.configuration:
+                    nested = require_resolved(resolve_environment(name, configured_options(nested, None, self.context), self.context, self.knowledge))
+                self._require(not nested.interpolations, "environment_reading",
+                              "Interpolation inside an unbound environment requires further reading resolution")
                 self.literals.read(token.span.start, nested)
                 return True
             if isinstance(nested, UnresolvedBindingResult) and nested.reason != UnresolvedReason.UNKNOWN_CONSTRUCT:

@@ -147,6 +147,14 @@ class ReadingCoverage:
                         or parts[0].end != parts[1].start or parts[1].end != parts[2].start):
                     raise ValueError("Region parts must partition the region extent")
                 (literals if isinstance(item, LiteralRegion) else definitions).append(item)
+                if isinstance(item, LiteralRegion):
+                    previous = item.body.start
+                    for child in item.interpolations:
+                        basis.require(child.span)
+                        if not previous <= child.span.start <= child.span.end <= item.body.end:
+                            raise ValueError("Interpolation extents must be ordered inside the literal body")
+                        previous = child.span.end
+                        deferred.append(child)
             if isinstance(item, SkippedRegion):
                 if ((item.conditional.basis is basis and item.conditional.end > item.span.start)
                         or item.branch not in ("then", "else")):
@@ -158,7 +166,7 @@ class ReadingCoverage:
                 observed[-1] = basis.span(observed[-1].start, item.span.end)
             else:
                 observed.append(item.span)
-        coverage = SpanSet(basis, observed)
+        coverage = SpanSet(basis, observed).difference(SpanSet(basis, (r.span for r in deferred)))
         object.__setattr__(self, "basis", basis)
         object.__setattr__(self, "observed", coverage)
         object.__setattr__(self, "unknown", coverage.complement(basis.whole))
@@ -178,5 +186,5 @@ class ReadingCoverage:
         self.basis.require(window)
         records = {"literal": self.literal_regions, "definition": self.stored_definitions,
                    "skipped": self.skipped_regions}[kind]
-        matches = SpanSet(self.basis, (getattr(record, part) for record in records)).clip(window)
+        matches = SpanSet(self.basis, (getattr(record, part) for record in records)).clip(window).difference(self.unknown)
         return Coverage(window, matches, self.unknown.clip(window))

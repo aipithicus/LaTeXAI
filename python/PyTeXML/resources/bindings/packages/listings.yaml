@@ -16,6 +16,17 @@ identity:
   description: "Typesetting source code environments with syntax highlighting and escape delimiters"
 
 reading:
+  # listings.sty:294-319 defines named styles globally; lstset:402-404
+  # applies keyval assignments in the caller's scope. Names are normalized by
+  # lst@NormedDef. Style bodies are stored and applied only when selected.
+  configuration:
+    namespace: packages/listings
+    style_key: style
+    name_normalization: lowercase_no_spaces
+    definition_scope: global
+    assignment_scope: local
+    exclusive_keys: [[escapeinside, escapechar]] # Both replace lst@DefEsc.
+    bare_defaults: {mathescape: true}
   # ---------------------------------------------------------------------------
   # Option Resolution: Reading-Affecting Configuration Parameters
   # ---------------------------------------------------------------------------
@@ -34,7 +45,29 @@ reading:
         effect: "toggle_math_mode_on_dollar"
         syntax: "boolean"                     # mathescape=true
     unsupported_options_behavior: "report_unresolved"
-    non_reading_options: [language, caption, label, numbers, frame]
+    # These affect presentation; values remain stored tokens, never executed.
+    # Language selection here does not claim language-driver interpretation.
+    non_reading_options:
+      - language
+      - caption
+      - label
+      - numbers
+      - frame
+      - backgroundcolor
+      - commentstyle
+      - keywordstyle
+      - numberstyle
+      - stringstyle
+      - basicstyle
+      - breakatwhitespace
+      - breaklines
+      - captionpos
+      - keepspaces
+      - numbersep
+      - showspaces
+      - showstringspaces
+      - showtabs
+      - tabsize
 
   # ---------------------------------------------------------------------------
   # Environments
@@ -83,6 +116,26 @@ reading:
         inline_environment: lstlisting
 
     - name: "\\lstset"
-      syntax: "{key_vals}"
       family: configuration_command
-      affects_subsequent_reading: true
+      action: apply_configuration
+      grammar:
+        handler: source_arguments
+        arguments: [{name: options, kind: braced}]
+      metadata:
+        header_catcodes: {"@": 11, "=": 12}
+        unsupported_arguments: []
+
+    - name: "\\lstdefinestyle"
+      family: configuration_command
+      action: define_configuration
+      grammar:
+        handler: source_arguments
+        arguments:
+          - {name: dialect, kind: optional}
+          - {name: name, kind: braced}
+          - {name: parent_dialect, kind: optional}
+          - {name: options, kind: braced}
+          - {name: aspects, kind: optional}
+      metadata:
+        header_catcodes: {"@": 11, "=": 12}
+        unsupported_arguments: [dialect, parent_dialect, aspects]

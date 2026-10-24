@@ -155,6 +155,32 @@ knowledge; it does not, by itself, prove that a runtime handler supports it.
 
 ## 6. Grouping and immediate effects
 
+### Ordered literal configuration
+
+A binding may declare `reading.configuration` alongside `option_resolution`.
+It names the state namespace, style-reference key, name normalization, separate
+definition/assignment scopes, mutually exclusive reading keys, and bare-key
+defaults. The existing `reading_affecting_keys` and `non_reading_options` classify
+values. A configuration command selects `define_configuration` or
+`apply_configuration`, a `source_arguments` grammar and temporary header catcodes.
+No Python command names or package imports are encoded in this mechanism.
+
+`ConfigurationState` keeps immutable ordered token recipes, scoped effective
+values, and scope journals. Application expands only named configuration recipes,
+with cycle/missing-name diagnostics; it never expands TeX macros. Styles resolve
+at use, assignments apply in source order, and literal-local options do not mutate
+document defaults. Definitions and assignments return their original source span.
+For listings, definitions are global and settings are local, as specified by the
+vendored package; escapeinside and escapechar replace the same effect.
+
+Preparation can capture one TeX interpolation mode in physical-line literals.
+`LiteralRegion.interpolations` contains deferred child units, not executed TeX.
+Those children have unknown structural coverage and final artifact locations.
+Entry-state capture does not establish arbitrary macro effects inside escapes.
+Strict execution, math/combined modes, dialect/aspect loading and inline listing
+grammar remain explicit limits. Formatting values and language selection are
+retained as tokens; this does not implement the language driver or typography.
+
 The structural dispatcher routes `assign_catcode`, `expl3_lexical_enter`,
 `expl3_lexical_exit`, `push_lexical_scope` and `pop_lexical_scope`. It uses resolved
 data without hardcoded command spellings. These are local effects applied before

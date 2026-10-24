@@ -112,6 +112,7 @@ class EffectiveReadingProfile:
     action: str | None = None
     binding_id: str = ""
     conditional: ConditionalRule | None = None
+    configuration: dict[str, Any] = field(default_factory=dict)
 
 
 class ReadingKnowledge(Protocol):
@@ -120,6 +121,7 @@ class ReadingKnowledge(Protocol):
     def resolve_environment(self, name: str, options: dict[str, Any] | None = None) -> EffectiveReadingProfile | UnresolvedBindingResult: ...
     def resolve_group(self, catcode: int) -> EffectiveReadingProfile | UnresolvedBindingResult: ...
     def resolve_conditional(self, name: str) -> ConditionalRule | None: ...
+    def check_configuration(self, name: str, options: dict[str, Any], contract: dict[str, Any]) -> None: ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -178,6 +180,7 @@ class LiteralRegion:
     classification: SpanClassification | None = None
     warnings: tuple[str, ...] = ()
     unit_id: str | None = field(default=None, compare=False)
+    interpolations: tuple[DeferredRegion, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)

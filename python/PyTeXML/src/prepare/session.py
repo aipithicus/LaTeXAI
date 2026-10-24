@@ -617,6 +617,10 @@ class PreparationSession:
                         self._omit(item.span, "Policy eliminated " + item.classification.semantic_role)
                     else:
                         self._emit(item.span)
+                        for interpolation in item.interpolations:
+                            self.require(interpolation.span, interpolation.reason, interpolation.detail,
+                                         stage="interpretation", unit_id=interpolation.unit_id)
+                            self._deferred_dependencies(interpolation.tokens, parent_id=interpolation.unit_id)
                         if action != "preserve":
                             self.require(item.span, "policy_action", f"Literal role does not support {action!r}", stage="preparation", unit_id=item.unit_id)
                 else:

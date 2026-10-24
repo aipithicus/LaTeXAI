@@ -2,6 +2,12 @@ identity:
   registry: reading_handlers
   description: Reading actions and their current implementation boundary
 handlers:
+  define_configuration:
+    status: scanner
+    description: Capture a named ordered key/value recipe without applying it; binding declares its scope
+  apply_configuration:
+    status: context_effect
+    description: Resolve named recipes and ordered options into scoped reading configuration without macro expansion
   collected_environment_definition:
     status: scanner
     description: Capture a named environment's signature, processing body and final code without execution

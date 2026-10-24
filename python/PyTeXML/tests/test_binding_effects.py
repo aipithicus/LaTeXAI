@@ -154,7 +154,10 @@ class ResolvedEffectTests(unittest.TestCase):
         self.assertEqual(unloaded.reason, UnresolvedReason.PACKAGE_NOT_LOADED)
         self.resolver.load_package("listings")
         config = self.resolver.resolve_command(r"\lstset")
-        self.assertEqual(config.reason, UnresolvedReason.UNSUPPORTED_OPERATION)
+        self.assertIsInstance(config, EffectiveReadingProfile)
+        self.assertEqual(config.action, "apply_configuration")
+        with self.assertRaisesRegex(ValueError, "argument scanning"):
+            self.resolver.new_context().apply_profile(config)
 
     def test_reloading_preserves_package_precedence(self):
         self.resolver.load_package("verbatim")

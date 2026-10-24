@@ -95,6 +95,8 @@ class BindingCatalog:
         return handlers
 
     def _validate_reading(self, reading: dict[str, Any], path: Path) -> None:
+        if "configuration" in reading:
+            self._validate_configuration(reading, path)
         if "package_input_catcodes" in reading:
             assignments = reading["package_input_catcodes"]
             if (not isinstance(assignments, dict) or any(not isinstance(c, str) or len(c) != 1
@@ -173,7 +175,7 @@ class BindingCatalog:
                 if spec.get("action") == "assign_catcode_dynamic":
                     if grammar != {"handler": "literal_catcode_assignment"} or spec.get("scope") != "local":
                         raise ProfileError(f"{path}: {name} requires the local literal assignment scanner")
-                if spec.get("family") in ("source_command", "structural_environment", "environment_factory", "option_control"):
+                if spec.get("family") in ("source_command", "structural_environment", "environment_factory", "option_control", "configuration_command"):
                     if not isinstance(spec.get("metadata", {}), dict):
                         raise ProfileError(f"{path}: {name} metadata must be a mapping")
                     arguments = grammar.get("arguments")
@@ -209,6 +211,19 @@ class BindingCatalog:
                                 or not isinstance(metadata.get("key"), str) or not metadata["key"]
                                 or arguments != [{"name": "value", "kind": "control_sequence" if kind == "control_sequence" else "braced"}]):
                             raise ProfileError(f"{path}: invalid capture setting recipe for {name}")
+                    if spec.get("family") == "configuration_command":
+                        metadata = spec.get("metadata", {})
+                        if ("configuration" not in reading
+                                or spec.get("action") not in ("define_configuration", "apply_configuration")
+                                or set(metadata) != {"header_catcodes", "unsupported_arguments"}
+                                or not isinstance(metadata["header_catcodes"], dict)
+                                or any(not isinstance(c, str) or len(c) != 1 or type(n) is not int or not 0 <= n <= 15
+                                       for c, n in metadata["header_catcodes"].items())
+                                or not isinstance(metadata["unsupported_arguments"], list)
+                                or any(a not in arg_names for a in metadata["unsupported_arguments"])
+                                or {"name": "options", "kind": "braced"} not in arguments
+                                or (spec["action"] == "define_configuration" and {"name": "name", "kind": "braced"} not in arguments)):
+                            raise ProfileError(f"{path}: invalid named configuration recipe for {name}")
                     if spec.get("family") == "environment_factory":
                         self._validate_factory(spec, arg_names, path)
                     if spec.get("family") == "option_control":
@@ -226,6 +241,29 @@ class BindingCatalog:
                     if not isinstance(profile, str):
                         raise ProfileError(f"{path}: {name} profile must be a name")
                     self.mouth.profile(profile)
+
+    @staticmethod
+    def _validate_configuration(reading, path):
+        config, options = reading["configuration"], reading.get("option_resolution", {})
+        expected = {"namespace", "style_key", "name_normalization", "definition_scope", "assignment_scope", "exclusive_keys", "bare_defaults"}
+        if (not isinstance(config, dict) or set(config) != expected
+                or any(not isinstance(config.get(k), str) or not config[k] for k in ("namespace", "style_key"))
+                or config.get("name_normalization") not in ("literal", "lowercase_no_spaces")
+                or any(config.get(k) not in ("local", "global") for k in ("definition_scope", "assignment_scope"))
+                or not isinstance(options, dict) or not isinstance(options.get("reading_affecting_keys"), dict)
+                or not isinstance(options.get("non_reading_options"), list)
+                or any(not isinstance(k, str) or not k for k in options["non_reading_options"])
+                or not isinstance(config.get("exclusive_keys"), list)
+                or not isinstance(config.get("bare_defaults"), dict)):
+            raise ProfileError(f"{path}: invalid configuration contract")
+        keys = set(options["reading_affecting_keys"])
+        neutral = set(options["non_reading_options"])
+        groups = config["exclusive_keys"]
+        if (keys & neutral or config["style_key"] in keys | neutral
+                or any(not isinstance(g, list) or len(g) < 2 or any(not isinstance(k, str) or k not in keys for k in g) for g in groups)
+                or len([k for g in groups for k in g]) != len({k for g in groups for k in g})
+                or any(k not in keys or not isinstance(v, (str, bool)) for k, v in config["bare_defaults"].items())):
+            raise ProfileError(f"{path}: conflicting configuration keys or defaults")
 
     @staticmethod
     def _validate_collector(metadata, path):

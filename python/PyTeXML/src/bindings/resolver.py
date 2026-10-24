@@ -11,7 +11,7 @@ from .catalog import BindingCatalog
 from ..reading.context import ReaderContext
 from ..reading.contracts import (
     ConditionalRule, EffectiveReadingProfile, InterpolationRule, SpanClassification,
-    StateManagementRule, TerminatorRule, UnresolvedBindingResult, UnresolvedReason,
+    StateManagementRule, TerminatorRule, UnresolvedBindingResult, UnresolvedReason, ReadingIssue,
 )
 
 
@@ -188,6 +188,10 @@ class BindingResolver:
         opts = dict(options or {})
         for origin, reading, section, spec in self._command_specs(clean):
             action = spec.get("action")
+            if spec.get("family") == "configuration_command":
+                return EffectiveReadingProfile(clean, spec["family"], action=action,
+                    grammar=deepcopy(spec["grammar"]), tex_mechanics=deepcopy(spec["metadata"]), binding_id=origin,
+                    configuration=_merge(reading["option_resolution"], reading["configuration"]))
             if spec.get("family") in {"source_command", "environment_factory", "option_control"}:
                 return EffectiveReadingProfile(clean, spec["family"], action=spec["action"],
                     grammar=deepcopy(spec["grammar"]), tex_mechanics=deepcopy(spec.get("metadata", {})), binding_id=origin)
@@ -276,6 +280,11 @@ class BindingResolver:
 
     def _profile(self, name: str) -> dict[str, Any]:
         return self.catalog.mouth.profile(name)
+
+    def check_configuration(self, name, options, contract):
+        result = self._resolve_options(name, options, contract)
+        if isinstance(result, UnresolvedBindingResult):
+            raise ReadingIssue(result.reason.value, result.detail)
 
     def _resolve_options(self, name: str, options: dict[str, Any], contract: dict[str, Any]
                          ) -> tuple[dict[str, Any], dict[str, int], tuple[InterpolationRule, ...]] | UnresolvedBindingResult:
@@ -382,4 +391,5 @@ class BindingResolver:
             source_capture=deepcopy(lex.get("source_capture", {})),
             terminator=terminator,
             span_classification=SpanClassification(category, classification["semantic_role"]),
-            active_options=active, grammar=grammar, interpolations=interpolations)
+            active_options=active, grammar=grammar, interpolations=interpolations,
+            configuration=_merge(contract, reading["configuration"]) if "configuration" in reading else {})

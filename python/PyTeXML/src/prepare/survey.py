@@ -94,6 +94,9 @@ def survey_sources(store, catalog):
                 # turned into a false dependency merely to increase the census.
                 report["protected"].append({"start": item.span.start, "end": item.span.end,
                     "kind": "literal" if isinstance(item, LiteralRegion) else "skipped"})
+                if isinstance(item, LiteralRegion):
+                    for interpolation in item.interpolations:
+                        tokens(interpolation.tokens, "literal_interpolation")
             elif isinstance(item, SourceEnd) and item.span.end > item.span.start:
                 residue(item.span, "excluded_tail")
         report["commands"].sort(key=lambda c: (c["start"], c["end"]))

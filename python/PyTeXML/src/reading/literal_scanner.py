@@ -7,7 +7,7 @@ import re
 
 from .context import ExecutionMode, ReaderContext
 from .contracts import (
-    EffectiveReadingProfile, LiteralRegion, ReadingIssue, ReadingKnowledge, require_resolved,
+    EffectiveReadingProfile, LiteralRegion, ReadingIssue, ReadingKnowledge, require_resolved, DeferredRegion,
 )
 from .tex_reader import (
     CatCode, TexReader, Token, TokenKind,
@@ -36,7 +36,7 @@ class LiteralScanner:
         if not condition:
             raise ReadingIssue("unsupported_literal_grammar", detail)
 
-    def read(self, start: int, profile: EffectiveReadingProfile) -> LiteralRegion:
+    def read(self, start: int, profile: EffectiveReadingProfile, *, defer_interpolation=False) -> LiteralRegion:
         """Enter at the current cursor, retaining the original occurrence start."""
         reader = self.reader
         if self.context.mode != ExecutionMode.ACTIVE_EXECUTION:
@@ -45,12 +45,14 @@ class LiteralScanner:
             handler = profile.grammar.get("handler")
             self._require(handler in {"inline_character", "token_delimited", "physical_line_literal"},
                           "No initial literal handler is selected by this binding")
-            self._require(not profile.interpolations and profile.action is None,
+            self._require((not profile.interpolations or defer_interpolation) and profile.action is None,
                           "Literal options, actions and interpolation require further dispatch")
             if handler == "physical_line_literal":
-                self._require(profile.span_classification.category in {"opaque_literal", "editorial_comment_block", "transparent_block"}
+                self._require(profile.span_classification.category in {"opaque_literal", "editorial_comment_block", "transparent_block", "interpolated_literal"}
                               and not profile.catcode_overrides,
                               "Reading-affecting options need a further literal handler")
+                self._require(len(profile.interpolations) <= 1 and all(r.mode == "tex" for r in profile.interpolations),
+                              "Combined or math interpolation needs another reading contract")
                 return self._physical_lines(start, profile)
             self._require(not profile.active_options, "Literal options require further dispatch")
             with self.context.lexical_scope():
@@ -79,14 +81,30 @@ class LiteralScanner:
         line_start = (body_start if profile.grammar.get("body_start") == "next_physical_line"
                       else self.reader.current_line.span.start)
         source = self.reader.text
+        interpolations, cursor = [], body_start
         while line_start < self.reader.limit:
             newline = _NEWLINE.search(source, line_start, self.reader.limit)
             content_end = newline.start() if newline else self.reader.limit
             line_end = newline.end() if newline else self.reader.limit
             line = source[line_start:content_end].rstrip(" ")
-            match = pattern.search(line, max(0, body_start - line_start))
-            if (match and (not rule.requires_column_zero or match.start() == 0)
+            matches = pattern.finditer(line, max(0, body_start - line_start))
+            for match in matches:
+                if profile.interpolations:
+                    interpolation = profile.interpolations[0]
+                    candidate = line_start + match.start()
+                    while cursor < candidate:
+                        opening = source.find(interpolation.opening, cursor, candidate)
+                        if opening < 0:
+                            cursor = candidate
+                            break
+                        captured = self._interpolation(opening, interpolation, profile)
+                        interpolations.append(captured)
+                        cursor = captured.span.end
+                    if cursor > candidate:
+                        continue
+                if not ((not rule.requires_column_zero or match.start() == 0)
                     and (rule.trailing_content_allowed or match.end() == len(line))):
+                    continue
                 end = line_start + match.end()
                 if rule.trailing_line_behavior == "discard_with_warning" or not rule.trailing_content_allowed:
                     end = line_end
@@ -97,19 +115,43 @@ class LiteralScanner:
                 actual = ReaderContext(baseline=self.context.baseline, catcodes=self.context.catcodes,
                                        endlinechar=self.context.endlinechar)
                 expected = ReaderContext(baseline=self.context.baseline)
-                actual.apply_profile(profile)
-                expected.apply_profile(profile)
+                literal_profile = replace(profile, interpolations=())
+                actual.apply_profile(literal_profile)
+                expected.apply_profile(literal_profile)
                 self._require(actual.endlinechar == expected.endlinechar
                               and all(actual.catcodes[c] == expected.catcodes[c]
                                       for c in set(source[body_start:end]) if c not in "\r\n"),
                               "Live reading state differs from the physical-line literal contract")
                 self.reader.consume_raw_to(end)
                 region = self._region(start, body_start, closing, profile)
+                region = replace(region, interpolations=tuple(interpolations))
                 if rule.trailing_line_behavior == "discard_with_warning" and line[match.end():].strip():
                     region = replace(region, warnings=("Package discards content following the literal terminator on this line",))
                 return region
             line_start = line_end
         raise ReadingIssue("unclosed_literal", "No matching physical-line literal terminator")
+
+    def _interpolation(self, start, rule, profile):
+        """Capture unexpanded escape tokens under entry state, including comments.
+
+        Active closing characters are recognized by token identity, not a raw
+        substring search through TeX comments/control sequences. Execution that
+        could change this reading is an explicit downstream requirement.
+        """
+        reader = self.reader
+        reader.consume_raw_to(start + len(rule.opening))
+        tokens, recent = [], deque(maxlen=len(rule.closing))
+        with self.context.lexical_scope():
+            self.context.catcodes[rule.closing[0]] = CatCode.ACTIVE
+            expected = tuple((c, self.context.catcodes[c]) for c in rule.closing)
+            while (token := reader.next_token()) is not None:
+                tokens.append(token)
+                recent.append((token.value, token.catcode))
+                if tuple(recent) == expected:
+                    return DeferredRegion(reader.source_span(start, token.span.end),
+                        "literal_interpolation", "Unexpanded TeX escape captured under entry reading state; its effects remain unresolved",
+                        tuple(tokens[:-len(expected)]), binding_id=profile.binding_id)
+        raise ReadingIssue("unclosed_interpolation", "No closing escape delimiter under entry reading state")
 
     def _check_body_token(self, token: Token, definition: ReaderContext) -> None:
         # A block first scans unexpanded tokens, but subsequently executes its

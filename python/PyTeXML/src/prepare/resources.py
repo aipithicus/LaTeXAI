@@ -2,7 +2,7 @@
 from pathlib import Path
 import re
 
-from ..reading.argument_scanner import key_values
+from ..reading.configuration import configured_options
 from ..reading.contracts import EffectiveReadingProfile, LiteralRegion, ReadingIssue
 
 
@@ -18,7 +18,10 @@ def prepare_external_literal(session, command):
     reason = None
     if action == "inline":
         try:
-            profile = session.resolver.resolve_environment(environment, key_values(command.argument("options")))
+            profile = session.resolver.resolve_environment(environment)
+            if isinstance(profile, EffectiveReadingProfile):
+                profile = session.resolver.resolve_environment(environment,
+                    configured_options(profile, command.argument("options"), session.context))
             if not isinstance(profile, EffectiveReadingProfile):
                 raise ReadingIssue(profile.reason.value, profile.detail)
             if (profile.interpolations or profile.catcode_overrides

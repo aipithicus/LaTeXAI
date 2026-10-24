@@ -141,6 +141,27 @@ source declarations and argument shapes live in
 [source_traversal.yaml](resources/bindings/engine/source_traversal.yaml);
 package-specific discovery shapes live in their package binding.
 
+Scoped literal configuration uses the reusable
+[configuration machinery](src/reading/configuration.py). The `listings` binding
+declares `\lstset` as a local ordered assignment and `\lstdefinestyle` as a global
+named recipe, matching the package source. Style references resolve when applied;
+local listing options overlay current defaults without changing them. Key/value
+splitting uses captured tokens and group depth, retaining repeated-key order and
+formatting tokens without executing them. Unknown keys, computed reading values,
+missing/cyclic styles and unsupported dialect/aspect syntax remain located limits.
+
+In preparation, a physical-line listing can capture one declared TeX escape mode
+(`escapeinside` or `escapechar`). Closing delimiters are matched through the mouth,
+so TeX comments and escaped control symbols do not create false closers. Escape
+contents remain unexpanded under entry reading state, with child unit IDs,
+unknown coverage and final manifest locations. Their possible effects invalidate
+bounded boolean knowledge; visible dependency commands get preparation requirements.
+This is not execution of interpolated TeX, language drivers or formatting macros.
+Strict dispatch still stops before interpolation. Math/combined interpolation,
+inline-listing grammar and effectful code that changes escape reading remain
+outside this bounded contract. External listings consult the same scoped options;
+reading-affecting external resources retain the existing payload fallback.
+
 Bibliography preparation selects source-visible citation keys across all emitted
 input occurrences, including citations after the bibliography declaration. The
 initial [natbib contract](resources/bindings/packages/natbib.yaml) supplies citation

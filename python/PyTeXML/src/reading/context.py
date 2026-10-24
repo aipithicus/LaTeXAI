@@ -8,6 +8,7 @@ from .contracts import (EffectiveReadingProfile, MouthBaseline, StoredDefinition
                         EnvironmentDeclaration, EnvironmentDefinition, ScannedArgument,
                         BooleanMeaning, ConditionalRule, ReadingIssue)
 from .tex_reader import CatCode, CatcodeTable, TokenKind
+from .configuration import ConfigurationState
 
 
 DefinitionKey = tuple[TokenKind, str]
@@ -62,6 +63,7 @@ class ReaderContext:
         self._environment_scopes: list[dict[str, EnvironmentDeclaration | EnvironmentDefinition | None]] = []
         self._capture_settings: dict[str, ScannedArgument] = {}
         self._capture_setting_scopes: list[dict[str, ScannedArgument | None]] = []
+        self.configurations = ConfigurationState()
 
     def _snapshot(self) -> _ScopeSnapshot:
         return _ScopeSnapshot(self.catcodes.copy(), self.endlinechar,
@@ -85,6 +87,7 @@ class ReaderContext:
         ctx._environment_scopes = [dict(saved) for saved in self._environment_scopes]
         ctx._capture_settings = dict(self._capture_settings)
         ctx._capture_setting_scopes = [dict(saved) for saved in self._capture_setting_scopes]
+        ctx.configurations = self.configurations.copy()
         return ctx
 
     def restore_from(self, saved: ReaderContext) -> None:
@@ -100,6 +103,7 @@ class ReaderContext:
         self._environment_scopes = [dict(state) for state in saved._environment_scopes]
         self._capture_settings = dict(saved._capture_settings)
         self._capture_setting_scopes = [dict(state) for state in saved._capture_setting_scopes]
+        self.configurations = saved.configurations.copy()
 
     def lookup_environment(self, name: str) -> EnvironmentDeclaration | EnvironmentDefinition | None:
         return self._environments.get(name)
@@ -207,6 +211,7 @@ class ReaderContext:
         self._meaning_scopes.append({})
         self._environment_scopes.append({})
         self._capture_setting_scopes.append({})
+        self.configurations.push()
 
     @property
     def scope_depth(self) -> int:
@@ -217,6 +222,7 @@ class ReaderContext:
         if not self._scope_stack:
             return False
         self._restore(self._scope_stack.pop())
+        self.configurations.pop()
         for key, previous in self._meaning_scopes.pop().items():
             if previous is None:
                 self._meanings.pop(key, None)
@@ -256,6 +262,8 @@ class ReaderContext:
             raise ValueError("Interpolation requires a literal dispatcher")
         if profile.action == "assign_catcode_dynamic":
             raise ValueError("Assignment requires argument scanning and execution routing")
+        if profile.family == "configuration_command":
+            raise ValueError("Configuration requires argument scanning and execution routing")
         if profile.state_management and profile.state_management.scope != "local":
             raise ValueError("Global assignments require the execution dispatcher")
         unknown = set(profile.reader_parameters) - {"endlinechar"}
