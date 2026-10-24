@@ -6,13 +6,13 @@ from enum import Enum
 from typing import Iterator
 from .contracts import (EffectiveReadingProfile, MouthBaseline, StoredDefinition,
                         EnvironmentDeclaration, EnvironmentDefinition, ScannedArgument,
-                        BooleanMeaning, ConditionalRule, ReadingIssue)
+                        BooleanMeaning, ConditionalRule, ReadingIssue, UncertainMeaning)
 from .tex_reader import CatCode, CatcodeTable, TokenKind
 from .configuration import ConfigurationState
 
 
 DefinitionKey = tuple[TokenKind, str]
-LocalMeaning = StoredDefinition | EnvironmentDefinition | BooleanMeaning
+LocalMeaning = StoredDefinition | EnvironmentDefinition | BooleanMeaning | UncertainMeaning
 
 
 class ExecutionMode(str, Enum):
@@ -147,6 +147,8 @@ class ReaderContext:
     def conditional_rule(self, name: str, knowledge) -> ConditionalRule | None:
         """Resolve nesting from the current meaning, including local shadows."""
         meaning = self.lookup_meaning(name)
+        if isinstance(meaning, UncertainMeaning):
+            raise ReadingIssue("uncertain_meaning", f"Meaning of {name!r} depends on retained source at {meaning.span}")
         if isinstance(meaning, BooleanMeaning):
             if meaning.uncertain is not None:
                 # Even its nesting meaning may have changed, not just its value.
@@ -154,7 +156,7 @@ class ReaderContext:
                                    f"{meaning.uncertain.basis.source_id}:{meaning.uncertain.start}")
             if meaning.target is not None:
                 return None  # A setter has macro meaning; it does not nest while skipping.
-            return ConditionalRule("opener", "always_true" if meaning.truth else "always_false")
+            return ConditionalRule("opener", "always_true" if meaning.truth else "always_false", 0)
         return None if meaning is not None else knowledge.resolve_conditional(name)
 
     def invalidate_booleans(self, span) -> None:
@@ -181,6 +183,19 @@ class ReaderContext:
     def record_definition(self, definition: StoredDefinition) -> None:
         """Publish a completed local definition, called by active execution routing."""
         self.record_meaning(definition.target.value, definition, definition.target.kind)
+
+    def invalidate_meanings(self, names, span) -> None:
+        """Observed declarations are not installed; neither may old meanings win.
+
+        Possible global prefixes are uninterpreted, so outer journals are also
+        invalidated. A later established declaration can replace this uncertainty.
+        """
+        for name in names:
+            key = (TokenKind.CONTROL_SEQUENCE, name)
+            self._meanings[key] = UncertainMeaning(span)
+            for saved in self._meaning_scopes:
+                if key in saved:
+                    saved[key] = UncertainMeaning(span)
 
     @contextmanager
     def execution_mode(self, mode: ExecutionMode) -> Iterator[None]:

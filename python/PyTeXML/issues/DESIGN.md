@@ -357,8 +357,24 @@ package scopes. Preparation captures TeX escapes as deferred child units under
 entry reading state, preserving their source and recording visible dependencies;
 it does not execute interpolation. Unknown keys, computed values, dialect/aspect
 loading and math/combined modes remain explicit limits.
-Computed/global assignments, other predicates and unsupported literal grammars still
-produce reading boundaries. Hooks, other definition factories and subfile preamble
+Preparation now captures unresolved conditionals whose YAML source-operand recipe
+is bounded. Independent protected-active and skipped-token scans must agree on
+conditional markers, and branch groups must balance. Both branches remain in the
+master; later inputs, bibliography and assets continue through normal preparation.
+Literal inputs inside a captured conditional have a narrower observational route:
+no execution, independent context, shared source cache, explicit candidate status,
+and no conditional tokens exposed to skipped reading by insertion. Unsupported
+candidates remain localized requirements. Definitions observed in retained branches
+invalidate affected meanings instead of installing their bodies or reusing stale
+bindings. This supplies conditional recovery under entry-state assumptions, not
+predicate evaluation, effect merging or a general symbolic interpreter.
+The generic retained-region handoff also exposes source-visible bibliography
+sites to canonical preparation. BBL envelope/entry inspection uses an independent
+context; it does not execute the enclosing environment. Generated bibliography
+content must pass the same bounded insertion gate before replacing a retained site.
+Computed/global assignments, unsupported predicate headers, conflicting active/skipped
+boundaries and unsupported literal grammars still produce reading boundaries.
+Hooks, other definition factories and subfile preamble
 stripping need additional handlers.
 Bounded `\newcommand`/`\renewcommand` capture now records authored signatures,
 defaults and body tokens without expanding or executing them. The dispatcher

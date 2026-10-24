@@ -185,19 +185,21 @@ reading:
     - name: "\\iffalse"
       role: opener
       evaluation: always_false
-    - {name: "\\if", role: opener, evaluation: deferred}
-    - {name: "\\ifcat", role: opener, evaluation: deferred}
+    # Preparation observes these source operands without expanding/evaluating them.
+    # A capture remains conditional on the entry meanings and reading state.
+    - {name: "\\if", role: opener, evaluation: deferred, capture_operands: 2}
+    - {name: "\\ifcat", role: opener, evaluation: deferred, capture_operands: 2}
     - {name: "\\ifnum", role: opener, evaluation: deferred}
     - {name: "\\ifdim", role: opener, evaluation: deferred}
     - {name: "\\ifodd", role: opener, evaluation: deferred}
-    - {name: "\\ifvmode", role: opener, evaluation: deferred}
-    - {name: "\\ifhmode", role: opener, evaluation: deferred}
-    - {name: "\\ifmmode", role: opener, evaluation: deferred}
-    - {name: "\\ifinner", role: opener, evaluation: deferred}
+    - {name: "\\ifvmode", role: opener, evaluation: deferred, capture_operands: 0}
+    - {name: "\\ifhmode", role: opener, evaluation: deferred, capture_operands: 0}
+    - {name: "\\ifmmode", role: opener, evaluation: deferred, capture_operands: 0}
+    - {name: "\\ifinner", role: opener, evaluation: deferred, capture_operands: 0}
     - {name: "\\ifvoid", role: opener, evaluation: deferred}
     - {name: "\\ifhbox", role: opener, evaluation: deferred}
     - {name: "\\ifvbox", role: opener, evaluation: deferred}
-    - {name: "\\ifx", role: opener, evaluation: deferred}
+    - {name: "\\ifx", role: opener, evaluation: deferred, capture_operands: 2}
     - {name: "\\ifeof", role: opener, evaluation: deferred}
     - {name: "\\ifcase", role: opener, evaluation: deferred}
     - name: "\\else"

@@ -14,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from src.bindings.catalog import BindingCatalog
 from src.bindings.resolver import BindingResolver
 from src.reading.character_rules import ProfileError
-from src.reading.contracts import LiteralRegion, ReadingBoundary
+from src.reading.contracts import LiteralRegion, ReadingBoundary, ConditionalRegion
 from src.reading.coverage import ReadingCoverage
 from src.reading.dispatcher import StructuralDispatcher
 from src.reading.tex_reader import CatCode, TexReader
@@ -224,7 +224,8 @@ class LiteralConfigurationTests(unittest.TestCase):
     def test_interpolation_is_not_executed_and_invalidates_boolean_knowledge(self):
         source = r'\newif\ifkeep\keeptrue\lstset{escapechar=|}' + listing(r'|\keepfalse\input{missing}|') + r'\ifkeep A\fi'
         items = self.read(source)
-        self.assertEqual(items[-1].reason, 'uncertain_boolean')
+        self.assertTrue(any(isinstance(i, ConditionalRegion) for i in items))
+        self.assertIsNotNone(self.context.lookup_meaning('ifkeep').uncertain)
         self.assertTrue(self.context.lookup_meaning('ifkeep').truth)
 
     def test_strict_dispatch_does_not_claim_interpolation_execution(self):

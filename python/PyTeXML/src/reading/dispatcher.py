@@ -16,7 +16,7 @@ from .contracts import (
     ConditionalRule, EffectiveReadingProfile, LiteralRegion, ReadingBoundary, ReadingIssue,
     ReadingKnowledge, SkippedRegion, StoredDefinition, SourceCommand, SourceEnd, require_resolved,
     DeferredRegion, UnresolvedBindingResult, UnresolvedReason, BooleanMeaning, CommandDefinition,
-    EnvironmentDefinition,
+    EnvironmentDefinition, UncertainMeaning,
 )
 from .boolean_scanner import declaration as boolean_declaration
 from .argument_scanner import ArgumentScanner, key_values
@@ -28,6 +28,7 @@ from .definition_scanner import DefinitionScanner
 from .deferred_scanner import DeferredScanner
 from .literal_scanner import LiteralScanner
 from .skipped_scanner import SkippedBranchScanner, SkippedScan
+from .conditional_scanner import ConditionalScanner
 from .spans import SourceSpan
 from .units import UnitRegistry
 from .options import OptionBody, OptionScope, option_names
@@ -267,10 +268,14 @@ class StructuralDispatcher:
                                   "Math and alignment require their own mode and scope handling")
         try:
             deferred = DeferredScanner(reader, context)
+            if isinstance(meaning, UncertainMeaning):
+                raise ReadingIssue("uncertain_meaning", f"{token.value!r} may have been redefined at {meaning.span}")
             if (isinstance(reader, TokenCursor) and token.kind == TokenKind.CHARACTER
                     and token.catcode not in {CatCode.SPACE, CatCode.BEGIN_GROUP, CatCode.END_GROUP}):
                 raise ReadingIssue("option_body", "Option text requires interpretation beyond reading effects")
             if isinstance(meaning, BooleanMeaning):
+                if self.preparation and meaning.uncertain is not None and meaning.target is None:
+                    return self._capture_conditional(token, ConditionalRule("opener", "deferred", 0))
                 self._require(meaning.uncertain is None, "uncertain_boolean",
                               f"Meaning of {token.value!r} may have changed in unexecuted source at "
                               f"{meaning.uncertain}")
@@ -395,6 +400,9 @@ class StructuralDispatcher:
                               and not profile.interpolations and not profile.active_options
                               and profile.terminator is None and profile.state_management is None,
                               "unsupported_conditional", "Conditional requires a standalone nesting/evaluation rule")
+                if (self.preparation and profile.conditional.role == "opener"
+                        and profile.conditional.evaluation == "deferred"):
+                    return self._capture_conditional(token, profile.conditional)
                 self._conditional(profile.conditional, event.span)
                 return event
             if profile.family == "stored_definition":
@@ -566,7 +574,28 @@ class StructuralDispatcher:
             if scope is not None and scope.uncertain is None:
                 scope.uncertain = span
 
-    def _protect_deferred_environment(self, token, *, shadowed=()) -> bool | DeferredRegion | StoredDefinition | EnvironmentDefinition:
+    def _capture_conditional(self, token, rule):
+        region = ConditionalScanner(self.reader, self.context).read(token, rule, classify=self._observed_conditional,
+            protect=lambda t, **kw: self._protect_deferred_environment(t, conditional=True, **kw))
+        self.context.invalidate_meanings(region.changed_meanings, region.span)
+        return self._deferred(region)
+
+    def _observed_conditional(self, candidate):
+        if candidate.kind != TokenKind.CONTROL_SEQUENCE:
+            return None
+        meaning = self.context.lookup_meaning(candidate.value)
+        if isinstance(meaning, BooleanMeaning):
+            # Retain its declared nesting role as an explicit assumption;
+            # uncertainty prohibits choosing a branch, not source capture.
+            return ConditionalRule("opener", "deferred", 0) if meaning.target is None else None
+        return self.context.conditional_rule(candidate.value, self.knowledge)
+
+    def observe_conditional_input(self):
+        """Capture a candidate file, never dispatch it as an active input."""
+        return ConditionalScanner(self.reader, self.context).source(classify=self._observed_conditional,
+            protect=lambda t, **kw: self._protect_deferred_environment(t, conditional=True, **kw))
+
+    def _protect_deferred_environment(self, token, *, shadowed=(), conditional=False) -> bool | DeferredRegion | StoredDefinition | EnvironmentDefinition:
         """Locate known protected syntax without executing an unbound body.
 
         Routing remains here, not in the envelope scanner. Reading effects and
@@ -580,6 +609,9 @@ class StructuralDispatcher:
             return DeferredScanner(self.reader, self.context).command(
                 token, "stored_macro", "Unexecuted definition shadows the entry grammar")
         meaning = self.context.lookup_meaning(token.value)
+        if conditional and isinstance(meaning, BooleanMeaning) and meaning.target is not None:
+            return DeferredScanner(self.reader, self.context).command(token, "conditional_interpretation",
+                "Boolean setter retained without selecting or executing a branch")
         if isinstance(meaning, (StoredDefinition, EnvironmentDefinition)):
             # Observing an invocation inside an already deferred body requires
             # no more execution than observing an unknown command there. Keep
@@ -607,7 +639,17 @@ class StructuralDispatcher:
         if profile.family in {"conditional", "conditional_factory", "catcode_mutator", "catcode_assignment", "grouping", "environment_factory", "option_control", "configuration_command"}:
             raise ReadingIssue("environment_reading", "Control flow or reading effects inside an unbound environment require resolution")
         if profile.family == "source_command" and profile.action != "environment_end":
-            command = ArgumentScanner(self.reader, self.context).read(token.span, profile)
+            checkpoint = self.reader.checkpoint()
+            try:
+                command = ArgumentScanner(self.reader, self.context).read(token.span, profile)
+            except ReadingIssue:
+                if not conditional or profile.action not in {"opaque", "metadata", "citation"}:
+                    raise
+                # An unexecuted package may overload a data command's signature.
+                # Preserve its adjacent groups; do not invent a resolved header.
+                self.reader.restore(checkpoint)
+                return DeferredScanner(self.reader, self.context).command(token, "argument_behavior",
+                    "Entry argument grammar does not match this retained command")
             return DeferredRegion(command.span, "environment_binding", "Source command inside an unbound environment",
                                   (token,) + tuple(t for arg in command.arguments for t in arg.tokens), command, profile.binding_id)
         handler = profile.grammar.get("handler")

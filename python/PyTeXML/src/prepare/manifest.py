@@ -113,6 +113,7 @@ class PreflightManifest:
 
     # TeX and Code Source Topology
     active_tex_files: List[str] = field(default_factory=list)
+    candidate_tex_files: List[str] = field(default_factory=list)
     dormant_tex_files: List[str] = field(default_factory=list)
 
     # Package & Style Architecture

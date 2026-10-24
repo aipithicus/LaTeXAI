@@ -122,8 +122,35 @@ resolution. This discovery uses the existing dispatcher cursor and source cache;
 it adds no package-specific Python, YAML exception for an author's environment,
 or compiler dependency.
 
-Genuine reading boundaries, including computed catcode assignments, predicates
-and literal grammars, still limit emission. The unfinished root operation and
+Unresolved predicates with a bounded source-operand recipe now use the reusable
+[conditional scanner](src/reading/conditional_scanner.py). It retains both branches
+and resumes after the closing delimiter when protected active reading and TeX-style
+skipped reading agree on every conditional marker. It does not choose a truth
+value or expand the operands. Each branch must return to its entry group depth.
+The region has its own unit, unknown coverage, interpretation requirement and
+final artifact locations. Unexecuted declarations invalidate affected meanings;
+branch setters do not run. Entry catcodes and conditional meanings remain explicit
+preparation assumptions, not a proof about arbitrary macro expansion.
+
+Literal input and image headers inside these regions remain candidate dependencies.
+Admitted inputs are inserted with separate occurrence/provenance records and cached
+reads, including repeated inputs. Their contents must meet the bounded observational
+contract and introduce no conditional tokens in either active or skipped reading.
+Unsupported, computed, missing or cyclic candidates retain their command and a
+located preparation requirement, while later source continues. Inputs hidden in
+opaque arguments remain deferred. `candidate_tex_files` distinguishes prepared
+conditional inputs from established active inputs. No branch's effects are executed
+or merged into the caller, and inlining preserves the input's final line boundary.
+The same observation handoff admits literal inputs and bibliography sites inside
+retained environments. An existing BBL is inspected in an independent context;
+its complete envelope and entry headers feed the existing bibliography pipeline,
+including canonical BibTeX enrichment. Native bibliography output destined for an
+unresolved region must also pass the insertion check. Unsupported bibliography
+candidates preserve their declaration and a located requirement without hiding
+the source that follows the enclosing region.
+
+Genuine reading boundaries, including computed catcode assignments, unsupported
+predicate headers, conflicting branch boundaries and literal grammars, still limit emission. The unfinished root operation and
 following suffix are preserved in that case, with `partial` status. The survey
 continues inspecting the source under an explicitly independent profile. There
 is no legacy-regex or compiler fallback. Any future executable prototype

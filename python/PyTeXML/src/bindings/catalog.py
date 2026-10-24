@@ -125,6 +125,10 @@ class BindingCatalog:
                 if section == "conditionals":
                     role = spec.get("role")
                     fields = {"name", "role", "evaluation"} if role == "opener" else {"name", "role"}
+                    if role == "opener" and "capture_operands" in spec:
+                        fields.add("capture_operands")
+                        if type(spec["capture_operands"]) is not int or spec["capture_operands"] not in (0, 2):
+                            raise ProfileError(f"{path}: {name} capture_operands must be 0 or 2")
                     if (set(spec) != fields
                             or role not in ("opener", "alternative", "case_alternative", "terminator")
                             or (role == "opener" and spec.get("evaluation") not in

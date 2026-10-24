@@ -101,6 +101,20 @@ def prepare_bibliography(pieces, session, output_dir: Path):
             raise BibliographyPreparationError(str(error)) from error
         backend = "native-bibtex"
         manifest.bibliography.preparation_warnings = database.diagnostics
+        if session.bibliography_observed:
+            context = session.bibliography_context.copy()
+            reader = TexReader(bbl, catcodes=context.catcodes, endline_char=context.endlinechar)
+            try:
+                StructuralDispatcher(reader, context, session.bibliography_knowledge,
+                    preparation=True, source_commands=True).observe_conditional_input()
+            except ReadingIssue as error:
+                (output_dir / "bibliography.bib").write_text(canonical, encoding="utf-8", newline="\n")
+                manifest.bibliography.canonical_bib = "bibliography.bib"
+                manifest.bibliography.preparation_backend = "deferred-reading"
+                retained = _preserve_declarations(pieces, session, command, error.reason, error.detail)
+                arg = command.argument("names")
+                return [p.edit_source(arg.span, "bibliography", "REBASE_BIBLIOGRAPHY") if p is declaration else p
+                        for p in retained]
         # The formatter knows the emitted envelope and selected keys. Missing
         # reading knowledge about field values cannot veto that serialization.
         entry_keys = {entry.key for entry in database.selected(keys)}

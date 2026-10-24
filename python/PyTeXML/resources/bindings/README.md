@@ -114,6 +114,15 @@ declared environment factories route to scanners. Unimplemented configuration
 commands and factories return explicit unresolved results rather than successful empty profiles.
 There is no macro expansion or native-engine fallback here.
 
+Conditional entries separate nesting `role`, predicate `evaluation`, and optional
+`capture_operands` (currently zero or two source tokens). The latter admits a
+preparation-only envelope when evaluation is deferred; it does not evaluate or
+expand the operands. The dispatcher owns that routing. The generic conditional
+scanner checks protected-active versus skipped-token marker agreement before
+resuming, while the resulting region retains an entry-state assumption. Missing
+capture recipes remain explicit boundaries. Command spellings and operand counts
+belong in YAML, not scanner switches.
+
 `resolver.new_context("latex_ascii")` constructs a context from the loaded YAML
 baseline. `ReaderContext` applies immediate local effects and restores scoped catcodes,
 `endlinechar`, expl3 saved state, and stored local definitions. Repeated `\ExplSyntaxOn` reapplies its

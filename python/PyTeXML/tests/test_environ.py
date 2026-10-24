@@ -16,7 +16,7 @@ from src.bindings.catalog import BindingCatalog
 from src.bindings.resolver import BindingResolver
 from src.prepare.pipeline import preprocess_paper
 from src.reading.character_rules import ProfileError
-from src.reading.contracts import CollectedEnvironment, EnvironmentDefinition, ReadingBoundary
+from src.reading.contracts import CollectedEnvironment, EnvironmentDefinition, ReadingBoundary, ConditionalRegion
 from src.reading.coverage import ReadingCoverage
 from src.reading.dispatcher import StructuralDispatcher
 from src.reading.options import OptionScope
@@ -188,7 +188,8 @@ class EnvironReadingTests(unittest.TestCase):
     def test_invocation_invalidates_boolean_knowledge_but_declaration_does_not(self):
         self.setup_reader(r"\newif\ifflag\NewEnviron{box}{\flagtrue}\begin{box}body\end{box}\ifflag X\fi")
         items = list(self.dispatcher)
-        self.assertEqual(items[-1].reason, "uncertain_boolean")
+        self.assertTrue(any(isinstance(i, ConditionalRegion) for i in items))
+        self.assertIsNotNone(self.context.lookup_meaning("ifflag").uncertain)
 
     def test_stored_skipped_and_deferred_declarations_do_not_install(self):
         self.setup_reader(r"\def\stored{\NewEnviron{a}{\BODY}}\iffalse\NewEnviron{b}{\BODY}\fi"

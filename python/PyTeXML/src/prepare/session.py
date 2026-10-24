@@ -18,7 +18,7 @@ from ..reading.argument_scanner import key_values
 from ..reading.coverage import ReadingCoverage
 from ..reading.contracts import (SourceCommand, SourceEnd, ReadingBoundary, ReadingIssue,
                                 StoredDefinition, CommandDefinition, EnvironmentDefinition, CollectedEnvironment,
-                                SkippedRegion, DeferredRegion, LiteralRegion)
+                                SkippedRegion, DeferredRegion, LiteralRegion, ConditionalRegion)
 from ..reading.tex_reader import TexReader, ReadEvent, TokenKind, CatCode
 from ..reading.edit_map import EditMap
 from ..reading.units import UnitRegistry
@@ -30,6 +30,7 @@ from .survey import survey_sources
 from .policy import load_policy
 from .resources import prepare_external_literal
 from .assets import observe_environment_assets
+from .deferred import emit_observed_region
 from .provenance import Tombstone
 from .manifest import PreflightManifest, BibliographyInfo, PackageUsage, StyleFileInfo, ImplicitGraphicInfo
 
@@ -77,6 +78,7 @@ class PreparationSession:
         self.styles: dict[Path, StyleFileInfo] = {}
         self.images: set[Path] = set()
         self.candidate_images: set[Path] = set()
+        self.candidate_sources: set[Path] = set()
         self._implicit = []
         self.code: set[Path] = set()
         self.payload_edits: dict[Path, dict[tuple[int, int], str]] = {}
@@ -96,6 +98,7 @@ class PreparationSession:
         self.bibliography_pieces = None
         self.bibliography_context = None
         self.bibliography_knowledge = None
+        self.bibliography_observed = False
         self._ran = False
         self._ended_document = False
         self._observations = {}
@@ -124,15 +127,22 @@ class PreparationSession:
         occurrence = len(self.manifest.input_occurrences)
         reader = TexReader(doc.text, source_id=doc.name, occurrence_id=occurrence,
                            catcodes=self.context.catcodes, endline_char=self.context.endlinechar)
+        self.register_reader(path, reader)
+        return reader
+
+    def register_reader(self, path, reader, *, candidate=False, parent=None):
+        doc = self.store.document(path)
         self.documents[reader.basis] = doc
         self.readers[reader.basis] = reader
         self._observations[reader.basis] = []
         if path not in self.line_starts:
             self.line_starts[path] = [0] + [m.end() for m in re.finditer(r"\r\n|\r|\n", doc.text)]
-        self.active.add(path)
-        self.manifest.input_occurrences.append({"id": occurrence, "source": doc.name,
-            "parent": self.frames[-1].reader.basis.occurrence_id if self.frames else None})
-        return reader
+        (self.candidate_sources if candidate else self.active).add(path)
+        occurrence = {"id": reader.basis.occurrence_id, "source": doc.name,
+            "parent": parent if candidate else self.frames[-1].reader.basis.occurrence_id if self.frames else None}
+        if candidate:
+            occurrence["activation"] = "unresolved"
+        self.manifest.input_occurrences.append(occurrence)
 
     def line(self, span):
         if span.basis in self.generated_sources:
@@ -191,7 +201,8 @@ class PreparationSession:
         targets = {target for p in self.pieces for _, target in p.image_references}
         self.images = {p for p in self.images if self.name(p) in targets}
         self.candidate_images = {p for p in self.candidate_images if self.name(p) in targets}
-        retained_contexts = {(p.span.basis.source_id, p.span.basis.occurrence_id, p.span.start, p.span.end)
+        retained_contexts = {(p.deferred.span.basis.source_id, p.deferred.span.basis.occurrence_id,
+                              p.deferred.span.start, p.deferred.span.end)
                              for p in self.pieces if p.deferred is not None}
         self.manifest.candidate_dependencies = [d for d in self.manifest.candidate_dependencies
             if (d["source"], d["occurrence"], *d["context_span"]) in retained_contexts]
@@ -589,6 +600,10 @@ class PreparationSession:
                                                stage="preparation" if item.reason == "package_not_loaded" else "interpretation", unit_id=item.unit_id)
                     if isinstance(item, CollectedEnvironment):
                         requirement["definition_unit_id"] = item.definition_id
+                    if self.frames[-1].emit and (isinstance(item, ConditionalRegion) or any(
+                            o.command.action in {"source_input", "bibliography"} for o in item.observations)):
+                        emit_observed_region(self, item)
+                        continue
                     image_references = observe_environment_assets(self, item)
                     self._deferred_dependencies(item.tokens, observed=(o.command for o in item.observations
                         if o.command.action == "asset_reference"), parent_id=item.unit_id)
@@ -654,13 +669,14 @@ class PreparationSession:
     def _inventory(self):
         m = self.manifest
         m.active_tex_files = sorted(self.name(p) for p in self.active if p.suffix.lower() == ".tex")
+        m.candidate_tex_files = sorted(self.name(p) for p in self.candidate_sources - self.active if p.suffix.lower() == ".tex")
         m.local_styles = list(self.styles.values())
         m.code_inputs = sorted(self.name(p) for p in self.code)
         m.active_images = [characterize_image(self.name(p), str(p)) for p in sorted(self.images)]
         m.candidate_images = [characterize_image(self.name(p), str(p))
                               for p in sorted(self.candidate_images - self.images)]
         for path in self.store.files:
-            if path not in self.active and path not in self.images and path not in self.candidate_images:
+            if path not in self.active and path not in self.candidate_sources and path not in self.images and path not in self.candidate_images:
                 if m.unresolved or m.requirements:
                     m.unclassified_files.append(self.name(path))
                     continue

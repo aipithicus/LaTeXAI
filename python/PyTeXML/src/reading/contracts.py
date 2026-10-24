@@ -77,6 +77,13 @@ class ConditionalRule:
     """Nesting meaning is independent of whether its predicate can be evaluated."""
     role: str
     evaluation: str | None = None
+    capture_operands: int | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class UncertainMeaning:
+    """An observed, unexecuted declaration may replace an earlier meaning."""
+    span: SourceSpan
 
 
 @dataclass(frozen=True, slots=True)
@@ -167,6 +174,13 @@ class DeferredRegion:
     # These remain observations, never execution events or expanded arguments.
     observations: tuple[DeferredRegion, ...] = ()
     unit_id: str | None = field(default=None, compare=False)
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ConditionalRegion(DeferredRegion):
+    """Both branches retained under entry reading assumptions, without a truth value."""
+    markers: tuple[SourceSpan, ...]
+    changed_meanings: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)

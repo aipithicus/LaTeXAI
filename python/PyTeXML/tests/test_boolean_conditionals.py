@@ -17,7 +17,7 @@ from src.bindings.catalog import BindingCatalog
 from src.bindings.resolver import BindingResolver
 from src.prepare.pipeline import preprocess_paper
 from src.reading.context import ExecutionMode
-from src.reading.contracts import BooleanMeaning, ReadingBoundary, SourceCommand, SkippedRegion
+from src.reading.contracts import BooleanMeaning, ReadingBoundary, SourceCommand, SkippedRegion, ConditionalRegion
 from src.reading.coverage import ReadingCoverage
 from src.reading.dispatcher import StructuralDispatcher
 from src.reading.mouth_profiles import ProfileError
@@ -161,15 +161,17 @@ class BooleanConditionalTests(unittest.TestCase):
                      r"\begin{unknown}BODY\end{unknown}", r"$\flagtrue$"):
             with self.subTest(code=code):
                 items = self.read(r"\newif\ifflag" + code + r"\ifflag YES\else NO\fi",
-                                  preparation=True, complete=False)
-                self.assertEqual(items[-1].reason, "uncertain_boolean")
+                                  preparation=True)
+                self.assertTrue(any(isinstance(i, ConditionalRegion) for i in items))
+                self.assertIsNotNone(self.context.lookup_meaning("ifflag").uncertain)
                 self.assertNotIn("YES", self.chars(items))
                 self.assertNotIn("NO", self.chars(items))
         # Unknown code could assign globally; restoring an outer group cannot
         # re-establish a known value. Known setters remain strictly local.
         items = self.read(r"\newif\ifflag{\flagtrue\unknown}\ifflag A\else B\fi",
-                          preparation=True, complete=False)
-        self.assertEqual(items[-1].reason, "uncertain_boolean")
+                          preparation=True)
+        self.assertTrue(any(isinstance(i, ConditionalRegion) for i in items))
+        self.assertIsNotNone(self.context.lookup_meaning("ifflag").uncertain)
 
     def test_context_copy_and_restore_keep_independent_boolean_scope_journals(self):
         self.read(r"\newif\ifflag")
@@ -266,8 +268,10 @@ class BooleanPreparationTests(unittest.TestCase):
         source = r"\documentclass{article}\newif\ifflag\begin{document}\unknown" + suffix
         text, manifest, out, _ = self.prepare(source)
         self.assertTrue((out / "master.tex").is_file())
-        self.assertIn(suffix, text)
-        self.assertTrue(any(d["reason"] == "uncertain_boolean" for d in manifest.unresolved))
+        self.assertIn(suffix.replace(r"\fi\end", r"\fi \end"), text)
+        self.assertFalse(manifest.unresolved)
+        self.assertTrue(any(d["reason"] == "conditional_interpretation" for d in manifest.requirements))
+        self.assertEqual({d["reason"] for d in manifest.candidate_dependencies}, {"missing_dependency"})
         self.assertEqual((self.root / "main.tex").read_text(), source)
 
     def test_input_can_open_an_evaluated_boolean_conditional_closed_by_caller(self):
@@ -284,7 +288,8 @@ class BooleanPreparationTests(unittest.TestCase):
                 text, manifest, _, _ = self.prepare(r"\documentclass{article}\newif\ifflag\usepackage{" +
                     package + r"}\ifflag YES\else NO\fi")
                 self.assertIn(r"\ifflag YES\else NO\fi", text)
-                self.assertTrue(any(d["reason"] == "uncertain_boolean" for d in manifest.unresolved))
+                self.assertTrue(any(d["reason"] == "conditional_interpretation" for d in manifest.requirements))
+                self.assertFalse(any(d["reason"] == "uncertain_boolean" for d in manifest.unresolved))
 
 
 if __name__ == "__main__":
