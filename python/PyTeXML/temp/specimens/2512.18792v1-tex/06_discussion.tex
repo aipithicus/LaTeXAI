@@ -1,0 +1,114 @@
+The systematic failures documented in Section~\ref{sec:description} demanded an explanation. We have argued that these pathologies share a common root cause: \textbf{non-identifiability}. Most current interpretability tasks attempt to infer explanatory structures that are not uniquely determined by available computational traces.
+% 
+To trace a path forward, we proposed one formalization of interpretability as statistical-causal inference. This framework is tentative rather than definitive; we encourage the community to improve upon it. The important aspect is the \emph{methodological commitment} to making assumptions explicit and quantifying uncertainty rigorously.
+
+\subsection{Advantages of the Statistical-Causal Perspective}
+Drawing on the philosophy of science~\citep{chang2004inventing,Woodward2003-WOOMTH,potochnik2017idealization} and recent calls for a pragmatic approach to interpretability~\citep{davies2024cognitiverevolutioninterpretabilityexplaining,williams2025mechanisticinterpretabilityneedsphilosophy}, the framework naturally distinguishes the \emph{explanandum} (what is to be explained, encoded in $\mu$) from the \emph{explanans} (what does the explaining, encoded in $\mathcal{E}$). Researchers and practitioners have substantial freedom in choosing both. There is no single ``correct'' explanation of a neural network. The appropriate type of description depends on one's purposes~\citep{potochnik2017idealization}. Descriptive understanding corresponds to queries about observational distributions; predictive goals involve queries requiring surrogates to generalize to new input distributions; control and intervention require queries about counterfactual or interventional distributions.
+
+However, once the explanatory project is specified, i.e., once $(\mu, \mathcal{E}, D)$ are fixed, the explanation becomes an \textbf{objective inference problem}. The best surrogate $e^* \in \mathcal{E}$ is the one minimizing $L_\mu(e)$, and is a property of the system itself and the interpretability task. If the task is identifiable, this explanation is unique (up to permissible symmetries, e.g., rotation invariance in representation space). This reconciles pluralism about explanatory goals with rigor about explanatory claims.
+
+Perhaps most critically, the statistical framing demands that interpretability methods report not just point estimates but \emph{confidence sets} or \emph{posterior distributions} over explanations (in case of Bayesian framing). Just as we would not trust a clinical trial reporting effect sizes without confidence intervals, we may not trust interpretability claims without uncertainty quantification. When explanations are non-identifiable, this uncertainty will be large; when they are identifiable with finite data, uncertainty shrinks as observations accumulate. 
+
+\subsection{Towards Useful and Identifiable Interpretability Tasks}
+
+Identifiability is not an intrinsic property of the model under study but of the interaction between $\mu$, $\mathcal{E}, D$, the model $f_{NN}$, and the behavior of interest $P_{\bU}$. We might wonder what choices to make in order to improve the identifiability and usefulness of interpretability queries.
+
+\textbf{Query richness.} The queries in the support of $\mu$ must be sufficiently discriminative to distinguish candidate explanations in $\mathcal{E}$. There is a fundamental trade-off between discriminative power and sample efficiency. If $\mu$ spreads probability mass over a large support, accurately estimating $L_\mu$ may require prohibitive amounts of interventional data. Conversely, concentrating $\mu$ on too few queries risks not singling out one explanation in $\mathcal{E}$.
+
+\textbf{Expressivity vs. parsimony in $\mathcal{E}$}. Conversely, the hypothesis class must have sufficient capacity to approximate the queries well (low bias) but not so much flexibility that many distinct explanations all achieve low error (large equivalence classes, high variance, non-identifiability). This is akin to the classical bias-variance tradeoff, pointing toward standard fixes like regularization of the hypothesis class~\citep{belinkov-2022-probing}.
+
+\textbf{Human cognitive constraints.} Interpretability is meant to facilitate \emph{human understanding}. Empirical studies suggest people can mentally simulate models with only a handful of interacting components~\citep{lombrozo2006structure,wilkenfeld2013understanding,keil2006explanation,hassija2024interpreting}. Explanations exceeding these structural limits may be technically \textit{correct} yet fail to provide insight. Designing $\mathcal{E}$ with human simulability in mind ensures that understanding remains the end goal.
+
+\subsection{Opportunities for Future Work}
+
+\paragraph{Characterizing identifiability conditions.}
+A systematic theoretical program could characterize when specific $(\mu, \mathcal{E}, D)$ triplets are identifiable, mirroring similar efforts in causal inference~\citep{Shpitser2008} and unsupervised learning~\citep{Locatello2019,Khemakhem2020}. What symmetries and invariances are unavoidable in representation space, and when is identifiability up to such equivalences acceptable? Constructing a taxonomy of identifiable interpretability tasks would provide actionable guidance for practical scenarios.
+
+\paragraph{Bayesian interpretability and uncertainty quantification.}
+Bayesian approaches offer an elegant framework for handling non-identifiability and quantifying uncertainty~\citep{gelman2013bayesian}. Specifically, one could specify a \textbf{prior distribution} $\pi(e)$ over the explanation class $\mathcal{E}$, encoding structural preferences (e.g., sparsity, modularity) or incorporating prior information from related studies. Then, the \textbf{likelihood model} $P(\mathcal{T}_n \mid e)$ describes how computational traces are generated given explanation $e$. Finally, the \textbf{posterior updates} via Bayes' rule: $\pi(e \mid \mathcal{T}_n) \propto P(\mathcal{T}_n \mid e) \pi(e)$, refines beliefs as observations accumulate. Then, \textbf{credible sets} can quantify uncertainty.
+% 
+When explanations are non-identifiable, the posterior remains diffuse across an equivalence class; uncertainty quantification naturally reflects this fundamental ambiguity. Conversely, as more discriminative queries are observed, the posterior concentrates. This further provides a principled framework for active setup: strategically selecting queries from $\mu$ that maximally reduce posterior uncertainty.
+
+\paragraph{Meta-analysis and cumulative science.}
+Meta-analytic methods~\citep{borenstein2021introduction} could coherently aggregate evidence across studies, accounting for heterogeneity in $\mu$, $\mathcal{E}$, and experimental conditions. Standardized effect size measures, pre-registration of analyses, and open sharing of collected computational traces would enable interpretability to become a cumulative science where knowledge systematically builds over time. In general, the solutions proposed by other fields~\citep{poldrack2017scanning,korbmacher2023replication} discussed in the introduction now become available for interpretability.
+
+
+
+
+
+
+
+% Following the neuroscience dead salmon paper and the methodological critics that followed, clear issues emerged mainly driven by inappropriate reverse inference, small sample size, reduced pragmatism and statistical  pitfalls. In response, the field adopted reforms emphasizing transparency, preregistration, data sharing, and standardized analytic practices~\citep{poldrack2017scanning}. These critiques highlighted the risks that arise when sophisticated methods diffuse faster than researchers training or established collaborations require to use them with full understanding. As AI methods now spread through different scientific domains, this history offers a cautionary parallel: without careful attention to statistical validity and interpretability, advanced AI tools can generate results that appear compelling yet rest on fragile or misleading foundations. While open access to data and code, and small sample size are not an issue in the AI field, other critical aspects can be addressed. We list below some crucial points following the previous prove of the present paper.
+
+
+% The systematic failures documented in Section~\ref{sec:description} demanded an explanation. We have argued that these pathologies share a common root cause: \textbf{non-identifiability}. Most current interpretability tasks attempt to infer explanatory structures that are not uniquely determined by available computational traces.
+% % 
+% To trace a path forward, we proposed one formalization of interpretability as statistical-causal inference. This framework is tentative rather than definitive, we encourage the community to improve upon it. The important aspect is the \emph{methodological commitment} to making assumptions explicit, treating explanations as \textit{estimands}, and quantifying uncertainty rigorously.
+
+% \subsection{Advantages of the Statistical-Causal Perspective}
+
+% \paragraph{Universality.}
+% The framework naturally accommodates the diverse goals. Descriptive understanding corresponds to queries about observational distributions; predictive goals involve queries about generalization to new input distributions; control and intervention require queries about counterfactual or interventional behavior. By varying $\mu$, researchers can instantiate different explanatory targets. The framework does not privilege any particular goal but ensures that each is precisely specified.
+
+% \paragraph{Pragmatism.}
+% Drawing on the philosophy of science~\citep{chang2004inventing,Woodward2003-WOOMTH,potochnik2017idealization} and recent calls for a pragmatic approach to interpretability~\citep{davies2024cognitiverevolutioninterpretabilityexplaining,williams2025mechanisticinterpretabilityneedsphilosophy}, the framework can distinguish the \emph{explanandum} (what is to be explained, encoded in $\mu$) from the \emph{explanans} (what does the explaining, encoded in $\mathcal{E}$). Researchers and practitioners have substantial freedom in choosing both. There is no single ``correct'' explanation of a neural network. The appropriate type of description depends on one's purposes~\citep{potochnik2017idealization}.
+% % 
+% However, once the explanatory project is specified, i.e., once $(\mu, \mathcal{E}, D)$ are fixed, the explanation becomes an \textbf{objective inference problem}. The best surrogate $e^* \in \mathcal{E}$ is the one minimizing $L_\mu(e)$, determined by the computational system itself. If the task is identifiable, this explanation is unique up to permissible symmetries (e.g., rotation invariance in representation space). This reconciles pluralism about explanatory goals with rigor about explanatory claims.
+
+% \paragraph{Enabling rigorous uncertainty quantification.}
+% Perhaps most critically, the statistical framing demands that interpretability methods report not just point estimates but \emph{confidence sets} or \emph{posterior distributions} over explanations. Just as we would not trust a clinical trial reporting effect sizes without confidence intervals, we should not trust interpretability claims without uncertainty quantification. When explanations are non-identifiable, this uncertainty will be large; when they are identifiable with finite data, uncertainty shrinks as evidence accumulates. 
+
+% \subsection{Towards Useful and Identifiable Interpretability Tasks}
+
+% Identifiability is not an intrinsic property of the model under study but of the interaction between $\mu$, $\mathcal{E}, D$, and the model. 
+
+% \textbf{Query richness.} The queries in the support of $\mu$ must be sufficiently discriminative to distinguish candidate explanations in $\mathcal{E}$. This parallels classical results in experimental design~\citep{lindley1956measure}: experimental conditions should elicit differential responses. There is a fundamental trade-off between discriminative power and sample efficiency. If $\mu$ spreads probability mass over a large support, accurately estimating $L_\mu$ may require prohibitive amounts of interventional data. Conversely, concentrating $\mu$ on too few queries risks underspecification.
+
+% \textbf{Expressivity vs. parsimony in $\mathcal{E}$.} The hypothesis class must have sufficient capacity to approximate the queries well (low bias) but not so much flexibility that many distinct explanations all achieve low error (large equivalence classes, high variance, non-identifiability). This is the classical bias-variance tradeoff, pointing toward standard fixes like regularization~\cite{belinkov2021probingclassifierspromisesshortcomings}.
+
+% \textbf{Human cognitive constraints.} Interpretability is meant to facilitate \emph{human understanding}. Empirical studies suggest people can mentally simulate models with only a handful of interacting components~\citep{lombrozo2006structure,wilkenfeld2013understanding,keil2006explanation,hassija2024interpreting}. Explanations exceeding these structural limits may be technically \textit{correct} yet fail to provide insight. Designing $\mathcal{E}$ with human simulability in mind ensures that understanding remains the end goal.
+
+% \subsection{Opportunities for Future Work}
+
+% \paragraph{Characterizing identifiability conditions.}
+
+% A systematic theoretical program should characterize when specific $(\mu, \mathcal{E}, D)$ triplets are identifiable, mirroring foundational results in causal inference~\citep{Shpitser2008} and unsupervised learning~\citep{Locatello2019,Khemakhem2020}. What symmetries and invariances are unavoidable in representation space, and when is identifiability up to such equivalences acceptable? Constructing a taxonomy of identifiable interpretability tasks would provide actionable guidance for method design.
+
+% \paragraph{Bayesian interpretability and uncertainty quantification.}
+% Bayesian approaches offer an elegant framework for handling non-identifiability and quantifying uncertainty~\citep{gelman2013bayesian}. Specifically, one could specify a \textbf{prior distribution} $\pi(e)$ over the explanation class $\mathcal{E}$, encoding structural preferences (e.g., sparsity, modularity) or incorporating prior information from related studies. Then, the \textbf{likelihood model} $P(\mathcal{T}_n \mid e)$ describes how computational traces are generated given explanation $e$. Finally, the \textbf{posterior updates} via Bayes' rule: $\pi(e \mid \mathcal{T}_n) \propto P(\mathcal{T}_n \mid e) \pi(e)$, refines beliefs as evidence accumulates. \textbf{Credible sets} can quantify uncertainty.
+% % 
+% When explanations are non-identifiable, the posterior remains diffuse across an equivalence class, uncertainty quantification naturally reflects this fundamental ambiguity. Conversely, as more discriminative queries are observed, the posterior concentrates. This provides a principled framework for active setup: strategically chooses queries from $\mu$ that maximally reduce posterior entropy.
+
+% \paragraph{Meta-analysis and cumulative science.}
+% Meta-analytic methods~\citep{borenstein2021introduction} could coherently aggregate evidence across studies, accounting for heterogeneity in $\mu$, $\mathcal{E}$, and experimental conditions. Standardized effect size measures, pre-registration of analyses, and open sharing of computational traces would enable interpretability to become a cumulative science where knowledge systematically builds over time.
+
+% \section{Conclusion: Toward a Mature Science of Interpretability}
+
+% These proposed directions suggest that interpretability can mature from a heterogeneous collection of techniques into a principled empirical discipline.
+% % 
+% Examples like the dead salmon study or the replication crisis in psychology and subsequent reforms offer both cautionary tales and a roadmap. Interpretability faces analogous challenges but can learn from these precedents. The shift from informal intuitions to statistical rigor is essential if interpretability is to fulfill its promise: enabling humans to reliably understand, predict, and control modern AI systems.
+
+
+% \paragraph{Algorithmic advances: consistency and approximation.}
+% Many desirable interpretability queries are computationally intractable (e.g., enumerating all minimal circuits, exhaustive mediation analysis). Principled relaxations—approximate inference, variational methods, or restricting $\mu$ to tractable query families—could broaden the range of feasible investigations. Developing estimators with provable consistency guarantees (convergence to the population minimizer of $L_\mu$ as $n \to \infty$) would provide theoretical foundations analogous to classical statistical learning theory.
+
+
+% The statistical--causal framing is motivated by the widely spread problem of non-identifiability in interpretability.
+% While the statistical framing provides the tool to study identifiability properties, it merely explain why current methods face such systematic failures as the ones documented in Section~\ref{sec:description} but it does not specify which alternative interpretability tasks should be pursued in virtue of displaying better identifiability properties.
+
+% The question remains open of what type of meaningful and useful questions can be asked where the answer can be uniquely and reliably inferred from computational traces.
+% Under this view proposed above, identifiability is not solely a property of the model under study, but of the interaction between three components: the distribution of queries we use to probe the model ($\mu$), the hypothesis class of explanations we consider plausible ($\mathcal{E}$), and the error measure ($D$).
+
+% For interpretability to be possible, the queries in the support of $\mu$ must be sufficiently rich to hope to single-out a candidate explanation. This parallels classical results in experimental design: conclusions can only be drawn if the experimental conditions elicit differential responses. There is a trade-off between discriminative power and sample efficiency. If $\mu$ spreads probability mass over a large support of possible queries, accurately estimating expectations under $\mu$ may demand prohibitive amounts of interventions on the system. 
+
+% Then, the hypothesis class $\mathcal{E}$ must have sufficient expressive capacity to approximate well the queries in $\mu$ (having low bias). Conversely, $\mathcal{E}$ should not be so expressive that it can mimic behavior in arbitrarily many ways: such flexibility creates large equivalence classes, overfitting and non-identifiability. Good hypothesis classes provide just enough expressivity to capture relevant phenomena encoding in $\mu$, but not so much that they invite unresolvable ambiguity. Human cognitive constraints tighten this requirement further. Empirical studies suggest people can manipulate mental models with only a handful of interacting components at once~\citep{lombrozo2006structure,wilkenfeld2013understanding,keil2006explanation}. Explanations that exceed these structural limits may be formally correct but uninsightful. Designing $\mathcal{E}$ with human simulability and preferences in mind ensures that \textit{understanding} remains a meaningful target, not just a formal property. Thus, explanations must compress the network meaningfully. This perspective connects naturally to the vision of interpretability as an information communication game between computational traces and an external observer. 
+
+
+% \subsection{Opportunities for Future Work}
+% This perspective suggests many research directions. On the theoretical side, a systematic effort to characterize when specific triplets $(\mu,\mathcal{E},D)$ are identifiable would mirror foundational results in causal inference and experimental design~\citep{Shpitser2008}. Symmetries and invariances in representation space deserve careful study: identifiability up to such equivalence classes may be both unavoidable and acceptable. 
+
+% On the algorithmic side, there is room to design estimation procedures that are consistent (converging as evidence accumulates). Many desirable interpretability queries are computationally difficult (e.g., exhaustive causal mediation analyses); principled relaxations and approximate inference could broaden the range of tractable investigations. Active query selection, borrowed from optimal experimental design, offers a promising path toward maximizing informativeness under a fixed computational budget. Moreover, articulating meaningful null hypotheses would enable rigorous hypothesis testing.
+
+% Finally, a statistical framing points toward a cumulative interpretability science. Bayesian approaches could quantify uncertainty over candidate explanations following prior information acquired in previous studies, enabling evidence to be aggregated across studies. Meta-analysis methods would allow heterogeneous results to be coherently combined.
+
+% Taken together, these directions suggest that interpretability can mature from a collection of heterogeneous techniques into a principled empirical discipline. By grounding normative choices in explicit formal assumptions, and by relating hypotheses systematically to observation, the field gains tools for comparison, critique, and cumulative progress. The role of researchers becomes not merely to discover mechanisms, but to articulate, test, and refine the conditions under which explanations can be meaningfully inferred from computational traces.

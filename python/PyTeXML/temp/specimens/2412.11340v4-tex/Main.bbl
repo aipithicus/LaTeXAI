@@ -1,0 +1,309 @@
+\begin{thebibliography}{}
+
+\bibitem[Bagyan and Richards, 2024]{bagyan_complete_2024}
+Bagyan, A. and Richards, D. (2024).
+\newblock Complete {Asymptotic} {Expansions} for the {Normalizing} {Constants} of {High}-{Dimensional} {Matrix} {Bingham} and {Matrix} {Langevin} {Distributions}.
+\newblock {\em Symmetry, Integrability and Geometry: Methods and Applications}.
+\newblock arXiv:2402.08663 [math].
+
+\bibitem[Bartle, 1995]{bartle_product_1995}
+Bartle, R. (1995).
+\newblock Product {Measures}.
+\newblock In {\em The {Elements} of {Integration} and {Lebesgue} {Measure}}, pages 113--124. John Wiley \& Sons, Ltd.
+\newblock Section: 10 \_eprint: https://onlinelibrary.wiley.com/doi/pdf/10.1002/9781118164471.ch10.
+
+\bibitem[Barua et~al., 2022]{barua_discordance_2022}
+Barua, S., A~Wierzchowska-McNew, R., Deutz, N. E.~P., and Sabharwal, A. (2022).
+\newblock Discordance between postprandial plasma glucose measurement and continuous glucose monitoring.
+\newblock {\em The American Journal of Clinical Nutrition}, 116(4):1059--1069.
+
+\bibitem[Betancourt, 2018]{betancourt_conceptual_2018}
+Betancourt, M. (2018).
+\newblock A {Conceptual} {Introduction} to {Hamiltonian} {Monte} {Carlo}.
+\newblock arXiv:1701.02434 [stat].
+
+\bibitem[Boland et~al., 2023]{boland_central_2023}
+Boland, J., Telesca, D., Sugar, C., Jeste, S., Dickinson, A., DiStefano, C., and Şentürk, D. (2023).
+\newblock Central {Posterior} {Envelopes} for {Bayesian} {Functional} {Principal} {Component} {Analysis}.
+\newblock {\em Journal of data science : JDS}, 21(4):715--734.
+
+\bibitem[Brumback et~al., 1999]{brumback1999}
+Brumback, B., Ruppert, D., and Wand, M. (1999).
+\newblock Comment on variable selection and function estimation in additive nonparametric regression using data–based prior by {S}hively, {K}ohn, and {W}ood.
+\newblock {\em Journal of the American Statistical Association}, 94(447):794–797.
+
+\bibitem[Carpenter et~al., 2017]{carpenter_stan_2017}
+Carpenter, B., Gelman, A., Hoffman, M.~D., Lee, D., Goodrich, B., Betancourt, M., Brubaker, M., Guo, J., Li, P., and Riddell, A. (2017).
+\newblock Stan: {A} {Probabilistic} {Programming} {Language}.
+\newblock {\em Journal of Statistical Software}, 76:1--32.
+
+\bibitem[Chikuse, 2003]{chikuse_statistics_2003}
+Chikuse, Y. (2003).
+\newblock {\em Statistics on {Special} {Manifolds}}, volume 174 of {\em Lecture {Notes} in {Statistics}}.
+\newblock Springer, New York, NY.
+\newblock Edited by Bickel, P. and Diggle, P. and Fienberg, S. and Krickeberg, K. and Olkin, I. and Wermuth, N. and Zeger, S.
+
+\bibitem[Crainiceanu et~al., 2005]{crainiceanuwinbugs}
+Crainiceanu, C., Ruppert, D., and Wand, M. (2005).
+\newblock Bayesian analysis for penalized spline regression using winbugs.
+\newblock {\em Journal of Statistical Software}, 14(14):1–24.
+
+\bibitem[Crainiceanu and Goldsmith, 2010]{crainiceanu_bayesian_2010}
+Crainiceanu, C.~M. and Goldsmith, A.~J. (2010).
+\newblock Bayesian {Functional} {Data} {Analysis} {Using} {WinBUGS}.
+\newblock {\em Journal of Statistical Software}, 32:1--33.
+
+\bibitem[Crainiceanu et~al., 2024]{crainiceanu2024book}
+Crainiceanu, C.~M., Goldsmith, J., Leroux, A., and Cui, E. (2024).
+\newblock {\em {Functional Data Analysis with R}}.
+\newblock Chapman and Hall/CRC.
+
+\bibitem[Craven and Wahba, 1979]{cravenwahba1979}
+Craven, P. and Wahba, G. (1979).
+\newblock Smoothing noisy data with spline functions.
+\newblock {\em Numerische Mathematik}, 1:377--403.
+
+\bibitem[Cui et~al., 2023]{cui_fast_2023}
+Cui, E., Li, R., Crainiceanu, C.~M., and Xiao, L. (2023).
+\newblock Fast {Multilevel} {Functional} {Principal} {Component} {Analysis}.
+\newblock {\em Journal of computational and graphical statistics : a joint publication of American Statistical Association, Institute of Mathematical Statistics, Interface Foundation of North America}, 32(2):366--377.
+
+\bibitem[Di et~al., 2009]{di_multilevel_2009}
+Di, C.-Z., Crainiceanu, C.~M., Caffo, B.~S., and Punjabi, N.~M. (2009).
+\newblock Multilevel functional principal component analysis.
+\newblock {\em The Annals of Applied Statistics}, 3(1):458--488.
+
+\bibitem[Fang et~al., 2025]{fang_dash4d_2025}
+Fang, M., Wang, D., Rebholz, C.~M., Echouffo-Tcheugui, J.~B., Tang, O., Wang, N.-Y., Mitchell, C.~M., Pilla, S.~J., Appel, L.~J., and Selvin, E. (2025).
+\newblock {DASH4D} diet for glycemic control and glucose variability in type 2 diabetes: a randomized crossover trial.
+\newblock {\em Nature Medicine}.
+\newblock Status: In press.
+
+\bibitem[Faraut and Korányi, 1994]{faraut_analysis_1994}
+Faraut, 1940, J. and Korányi, A. (1994).
+\newblock {\em Analysis on symmetric cones}.
+\newblock Oxford : Clarendon Press ; New York : Oxford University Press, England, United Kingdom.
+
+\bibitem[Garber, 2012]{garber_postprandial_2012}
+Garber, A.~J. (2012).
+\newblock Postprandial {Dysmetabolism} and the {Heart}.
+\newblock {\em Heart Failure Clinics}, 8(4):563--573.
+
+\bibitem[Gelman and Rubin, 1992]{gelman_inference_1992}
+Gelman, A. and Rubin, D.~B. (1992).
+\newblock Inference from {Iterative} {Simulation} {Using} {Multiple} {Sequences}.
+\newblock {\em Statistical Science}, 7(4):457--472.
+\newblock Publisher: Institute of Mathematical Statistics.
+
+\bibitem[Goldsmith et~al., 2013]{goldsmith_PCA_2013}
+Goldsmith, J., Greven, S., and Crainiceanu, C. (2013).
+\newblock Corrected confidence bands for functional data using principal components.
+\newblock {\em Biometrics}, 69(1):41--51.
+
+\bibitem[Goldsmith et~al., 2015]{goldsmith_generalized_2015}
+Goldsmith, J., Zipunnikov, V., and Schrack, J. (2015).
+\newblock Generalized {Multilevel} {Function}-on-{Scalar} {Regression} and {Principal} {Component} {Analysis}.
+\newblock {\em Biometrics}, 71(2):344--353.
+
+\bibitem[Greven et~al., 2010]{greven_longitudinal_2010}
+Greven, S., Crainiceanu, C., Caffo, B., and Reich, D. (2010).
+\newblock Longitudinal functional principal component analysis.
+\newblock {\em Electronic journal of statistics}, 4:1022--1054.
+
+\bibitem[Hershon et~al., 2019]{hershon_importance_2019}
+Hershon, K.~S., Hirsch, B.~R., and Odugbesan, O. (2019).
+\newblock Importance of {Postprandial} {Glucose} in {Relation} to {A1C} and {Cardiovascular} {Disease}.
+\newblock {\em Clinical Diabetes : A Publication of the American Diabetes Association}, 37(3):250--259.
+
+\bibitem[Hoff, 2009]{hoff_simulation_2009}
+Hoff, P.~D. (2009).
+\newblock Simulation of the {Matrix} {Bingham}–von {Mises}–{Fisher} {Distribution}, {With} {Applications} to {Multivariate} and {Relational} {Data}.
+\newblock {\em Journal of Computational and Graphical Statistics}, 18(2):438--456.
+
+\bibitem[James et~al., 2000]{james_principal_2000}
+James, G., Hastie, T., and Sugar, C. (2000).
+\newblock Principal component models for sparse functional data.
+\newblock {\em Biometrika}, 87(3):587--602.
+
+\bibitem[James, 1976]{james1976}
+James, I. (1976).
+\newblock {\em The Topology of Stiefel Manifolds}.
+\newblock Cambridge University Press.
+
+\bibitem[Jauch et~al., 2021]{jauch_monte_2021}
+Jauch, M., Hoff, P.~D., and Dunson, D.~B. (2021).
+\newblock Monte {Carlo} {Simulation} on the {Stiefel} {Manifold} via {Polar} {Expansion}.
+\newblock {\em Journal of Computational and Graphical Statistics}, 30(3):622--631.
+
+\bibitem[Karhunen, 1947]{karhunen_uber_1947}
+Karhunen, K. (1947).
+\newblock Uber lineare {Methoden} in der {Wahrscheinlichkeitsrechnung}.
+\newblock {\em Annals of the Academy of Science Fennicae}, 37(Series A. I. Mathematics-Physics):1--79.
+
+\bibitem[Kimeldorf and Wahba, 1970]{kimeldorfwahba1970}
+Kimeldorf, G. and Wahba, G. (1970).
+\newblock A correspondence between bayesian estimation on stochastic processes and smoothing by splines.
+\newblock {\em The Annals of Mathematical Statistics}, 41(2):495--502.
+
+\bibitem[Kosambi, 1943]{kosambi_statistics_1943}
+Kosambi, D. (1943).
+\newblock Statistics in function space.
+\newblock {\em Journal of the Indian Mathematical Society}, 7:77--88.
+
+\bibitem[Li et~al., 2013]{li_selecting_2013}
+Li, Y., Wang, N., and Carroll, R.~J. (2013).
+\newblock Selecting the {Number} of {Principal} {Components} in {Functional} {Data}.
+\newblock {\em Journal of the American Statistical Association}, 108(504):1284--1294.
+\newblock Publisher: ASA Website \_eprint: https://doi.org/10.1080/01621459.2013.788980.
+
+\bibitem[Liu et~al., 2020]{liu_splinets_2020}
+Liu, X., Nassar, H., and PodgÓrski, K. (2020).
+\newblock Splinets -- efficient orthonormalization of the {B}-splines.
+\newblock arXiv:1910.07341.
+
+\bibitem[Liu and Guo, 2012]{liu_functional_2012}
+Liu, Z. and Guo, W. (2012).
+\newblock Functional mixed effects models.
+\newblock {\em WIREs Computational Statistics}, 4(6):527--534.
+
+\bibitem[Loève, 1978]{loeve_probability_1978}
+Loève, M. (1978).
+\newblock {\em Probability {Theory}}, volume~II of {\em Graduate {Texts} in {Mathematics}}.
+\newblock Springer-Verlag, 4th edition.
+
+\bibitem[Mardia and Khatri, 1977]{MARDIA1977468}
+Mardia, K. and Khatri, C. (1977).
+\newblock Uniform distribution on a stiefel manifold.
+\newblock {\em Journal of Multivariate Analysis}, 7(3):468--473.
+
+\bibitem[Meng and Bouchard, 2024]{meng_bayesian_2024}
+Meng, R. and Bouchard, K.~E. (2024).
+\newblock Bayesian inference of structured latent spaces from neural population activity with the orthogonal stochastic linear mixing model.
+\newblock {\em PLOS Computational Biology}, 20(4):e1011975.
+
+\bibitem[Nolan et~al., 2023]{nolan_bayesian_2023}
+Nolan, T.~H., Goldsmith, J., and Ruppert, D. (2023).
+\newblock Bayesian {Functional} {Principal} {Components} {Analysis} via {Variational} {Message} {Passing} with {Multilevel} {Extensions}.
+\newblock {\em Bayesian Analysis}, -1(-1):1--27.
+
+\bibitem[O’Sullivan, 1986]{osullivan1986}
+O’Sullivan, F. (1986).
+\newblock A statistical perspective on ill-posed inverse problems (with discussion).
+\newblock {\em Statistical Science}, 1(4):505–527.
+
+\bibitem[Park, 2025]{park_bayesian_2025}
+Park, H.~G. (2025).
+\newblock Bayesian estimation of covariate assisted principal regression for brain functional connectivity.
+\newblock {\em Biostatistics}, 26(1):kxae023.
+
+\bibitem[Peng and Paul, 2009]{peng_geometric_2009}
+Peng, J. and Paul, D. (2009).
+\newblock A {Geometric} {Approach} to {Maximum} {Likelihood} {Estimation} of the {Functional} {Principal} {Components} {From} {Sparse} {Longitudinal} {Data}.
+\newblock {\em Journal of Computational and Graphical Statistics}, 18(4):995--1015.
+
+\bibitem[Pilla et~al., 2025]{pilla_dietary_2025}
+Pilla, S.~J., Yeh, H.-C., et~al. (2025).
+\newblock Dietary {Patterns}, {Sodium} {Reduction}, and {Blood} {Pressure} in {Type} 2 {Diabetes}: {The} {DASH4D} {Randomized} {Clinical} {Trial}.
+\newblock {\em JAMA Internal Medicine}.
+
+\bibitem[Reiss and Ogden, 2007]{reiss_functional_2007}
+Reiss, P.~T. and Ogden, R.~T. (2007).
+\newblock Functional {Principal} {Component} {Regression} and {Functional} {Partial} {Least} {Squares}.
+\newblock {\em Journal of the American Statistical Association}, 102(479):984--996.
+
+\bibitem[Rice and Wu, 2001]{rice_nonparametric_2001}
+Rice, J.~A. and Wu, C.~O. (2001).
+\newblock Nonparametric {Mixed} {Effects} {Models} for {Unequally} {Sampled} {Noisy} {Curves}.
+\newblock {\em Biometrics}, 57(1):253--259.
+
+\bibitem[Ruppert, 2002]{ruppert_selecting_2002}
+Ruppert, D. (2002).
+\newblock Selecting the {Number} of {Knots} for {Penalized} {Splines}.
+\newblock {\em Journal of Computational and Graphical Statistics}, 11(4):735--757.
+
+\bibitem[Ruppert et~al., 2003]{ruppert2003semiparametric}
+Ruppert, D., Wand, M., and Carroll, R. (2003).
+\newblock {\em Semiparametric Regression}.
+\newblock Cambridge Series in Statistical and Probabilistic Mathematics. Cambridge University Press.
+
+\bibitem[Röhling et~al., 2019]{rohling_determination_2019}
+Röhling, M., Martin, T., Wonnemann, M., Kragl, M., Klein, H.~H., Heinemann, L., Martin, S., and Kempf, K. (2019).
+\newblock Determination of {Postprandial} {Glycemic} {Responses} by {Continuous} {Glucose} {Monitoring} in a {Real}-{World} {Setting}.
+\newblock {\em Nutrients}, 11(10):2305.
+
+\bibitem[Shi et~al., 1996]{shi_analysis_1996}
+Shi, M., Weiss, R.~E., and Taylor, J. M.~G. (1996).
+\newblock An {Analysis} of {Paediatric} {CD4} {Counts} for {Acquired} {Immune} {Deficiency} {Syndrome} {Using} {Flexible} {Random} {Curves}.
+\newblock {\em Journal of the Royal Statistical Society Series C: Applied Statistics}, 45(2):151--163.
+
+\bibitem[Shou et~al., 2015]{shou_structured_2015}
+Shou, H., Zipunnikov, V., Crainiceanu, C.~M., and Greven, S. (2015).
+\newblock Structured {Functional} {Principal} {Component} {Analysis}.
+\newblock {\em Biometrics}, 71(1):247--257.
+
+\bibitem[Staniswalis et~al., 1998]{staniswalis_nonparametric_1998}
+Staniswalis, J.~G., , and Lee, J.~J. (1998).
+\newblock Nonparametric {Regression} {Analysis} of {Longitudinal} {Data}.
+\newblock {\em Journal of the American Statistical Association}, 93(444):1403--1418.
+
+\bibitem[Suarez and Ghosal, 2017]{suarez_bayesian_2017}
+Suarez, A.~J. and Ghosal, S. (2017).
+\newblock Bayesian {Estimation} of {Principal} {Components} for {Functional} {Data}.
+\newblock {\em Bayesian Analysis}, 12(2):311--333.
+\newblock Publisher: International Society for Bayesian Analysis.
+
+\bibitem[Team, 2025]{team_constraint}
+Team, S.~D. (2025).
+\newblock Stan modeling language users guide and reference manual 2.36.
+
+\bibitem[Wahba, 1983]{Wahba1983}
+Wahba, G. (1983).
+\newblock {Bayesian “Confidence Intervals” for the Cross-Validated Smoothing Spline}.
+\newblock {\em Journal of the Royal Statistical Society: Series B}, 45(1):133--150.
+
+\bibitem[Wang et~al., 2025]{wang_design_2025}
+Wang, D., Mu, S.~Z., Tang, O., Echouffo-Tcheugui, J.~B., Mitchell, C.~M., Fang, M., Rooney, M.~R., Yeh, H.-C., Rebholz, C.~M., Pilla, S.~J., Appel, L.~J., and Selvin, E. (2025).
+\newblock Design of the {Continuous} {Glucose} {Monitoring} ({CGM}) {Study} in the {Dietary} {Approaches} to {Stop} {Hypertension} for {Diabetes} {Trial} ({DASH4D}-{CGM}).
+\newblock {\em Contemporary Clinical Trials}, 151:107845.
+
+\bibitem[Wood, 2006]{wood2006}
+Wood, S. (2006).
+\newblock {\em Generalized Additive Models: An Introduction with R}.
+\newblock Chapman and Hall/CRC.
+
+\bibitem[Xiao et~al., 2016]{xiao_fast_2016}
+Xiao, L., Zipunnikov, V., Ruppert, D., and Crainiceanu, C. (2016).
+\newblock Fast {Covariance} {Estimation} for {High}-dimensional {Functional} {Data}.
+\newblock {\em Statistics and computing}, 26(1):409--421.
+
+\bibitem[Yao et~al., 2005]{yao_functional_2005}
+Yao, F., Müller, H.-G., and Wang, J.-L. (2005).
+\newblock Functional {Data} {Analysis} for {Sparse} {Longitudinal} {Data}.
+\newblock {\em Journal of the American Statistical Association}, 100(470):577--590.
+
+\bibitem[Ye, 2024]{ye_functional_2024}
+Ye, J. (2024).
+\newblock Functional principal component models for sparse and irregularly spaced data by {Bayesian} inference.
+\newblock {\em Journal of Applied Statistics}, 51(7):1287--1317.
+
+\bibitem[Zhang et~al., 2025]{zhang_robust_2025}
+Zhang, J., Cao, J., and Wang, L. (2025).
+\newblock Robust {Bayesian} functional principal component analysis.
+\newblock {\em Statistics and Computing}, 35(2):46.
+
+\bibitem[Zhou et~al., 2010]{zhou_reduced_2010}
+Zhou, L., Huang, J.~Z., Martinez, J.~G., Maity, A., Baladandayuthapani, V., and Carroll, R.~J. (2010).
+\newblock Reduced {Rank} {Mixed} {Effects} {Models} for {Spatially} {Correlated} {Hierarchical} {Functional} {Data}.
+\newblock {\em Journal of the American Statistical Association}, 105(489):390--400.
+
+\bibitem[Zhou et~al., 2025]{zhou_prediction_2025}
+Zhou, X., Cui, E., Sartini, J., and Crainiceanu, C. (2025).
+\newblock Prediction {Inference} {Using} {Generalized} {Functional} {Mixed} {Effects} {Models}.
+\newblock arXiv:2501.07842.
+
+\bibitem[Zipunnikov et~al., 2011]{Zipunnikov_HDMFPCA}
+Zipunnikov, V., Caffo, B., Yousem, D., Davatzikos, C., Schwartz, B., and Crainiceanu, C. (2011).
+\newblock Multilevel functional principal component analysis for high-dimensional data.
+\newblock {\em Journal of Computational and Graphical Statistics}, 20(4):852--873.
+
+\end{thebibliography}

@@ -1,0 +1,343 @@
+\begin{thebibliography}{xx}
+
+\harvarditem{Alhamzawi \harvardand\ Yu}{2015}{alhamzawi2015}
+Alhamzawi, R. \harvardand\ Yu, K.  \harvardyearleft 2015\harvardyearright ,
+  `Bayesian tobit quantile regression using g-prior distribution with ridge
+  parameter', {\em Journal of Statistical Computation and Simulation} {\bf
+  85}(14),~2903--2918.
+
+\harvarditem{Andersen}{2008}{andersen2008modern}
+Andersen, R.  \harvardyearleft 2008\harvardyearright , {\em Modern methods for
+  robust regression}, number 152, Sage.
+
+\harvarditem[Baker et~al.]{Baker, Barbillon, Fadikar, Gramacy, Herbei, Higdon,
+  Huang, Johnson, Ma, Mondal et~al.}{2022}{baker2022analyzing}
+Baker, E., Barbillon, P., Fadikar, A., Gramacy, R.~B., Herbei, R., Higdon, D.,
+  Huang, J., Johnson, L.~R., Ma, P., Mondal, A. et~al.  \harvardyearleft
+  2022\harvardyearright , `Analyzing stochastic computer models: A review with
+  opportunities', {\em Statistical Science} {\bf 37}(1),~64--89.
+
+\harvarditem[Baker et~al.]{Baker, Challenor \harvardand\
+  Eames}{2020}{baker2020predicting}
+Baker, E., Challenor, P. \harvardand\ Eames, M.  \harvardyearleft
+  2020\harvardyearright , `Predicting the output from a stochastic computer
+  model when a deterministic approximation is available', {\em Journal of
+  Computational and Graphical Statistics} {\bf 29}(4),~786--797.
+
+\harvarditem{Barndorff-Nielsen}{1977}{barndorff1977exponentially}
+Barndorff-Nielsen, O.  \harvardyearleft 1977\harvardyearright , `Exponentially
+  decreasing distributions for the logarithm of particle size', {\em
+  Proceedings of the Royal Society of London. A. Mathematical and Physical
+  Sciences} {\bf 353}(1674),~401--419.
+
+\harvarditem{Barndorff-Nielsen}{1997}{barndorff1997normal}
+Barndorff-Nielsen, O.~E.  \harvardyearleft 1997\harvardyearright , `Normal
+  inverse gaussian distributions and stochastic volatility modelling', {\em
+  Scandinavian Journal of statistics} {\bf 24}(1),~1--13.
+
+\harvarditem[Barndorff-Nielsen et~al.]{Barndorff-Nielsen, Kent \harvardand\
+  S{\o}rensen}{1982}{barndorff1982normal}
+Barndorff-Nielsen, O., Kent, J. \harvardand\ S{\o}rensen, M.  \harvardyearleft
+  1982\harvardyearright , `Normal variance-mean mixtures and z distributions',
+  {\em International Statistical Review/Revue Internationale de Statistique}
+  pp.~145--159.
+
+\harvarditem{Ben-Ari \harvardand\ Steinberg}{2007}{ben2007modeling}
+Ben-Ari, E.~N. \harvardand\ Steinberg, D.~M.  \harvardyearleft
+  2007\harvardyearright , `Modeling data from computer experiments: an
+  empirical comparison of kriging with mars and projection pursuit regression',
+  {\em Quality Engineering} {\bf 19}(4),~327--338.
+
+\harvarditem[Carvalho et~al.]{Carvalho, Polson \harvardand\
+  Scott}{2009}{carvalho2009}
+Carvalho, C.~M., Polson, N.~G. \harvardand\ Scott, J.~G.  \harvardyearleft
+  2009\harvardyearright , Handling sparsity via the horseshoe, {\em in}
+  `Artificial Intelligence and Statistics', pp.~73--80.
+
+\harvarditem[Chakraborty et~al.]{Chakraborty, Mallick, Mcclarren, Kuranz,
+  Bingham, Grosskopf, Rutter, Stripling \harvardand\
+  Drake}{2013}{chakraborty2013}
+Chakraborty, A., Mallick, B.~K., Mcclarren, R.~G., Kuranz, C.~C., Bingham, D.,
+  Grosskopf, M.~J., Rutter, E.~M., Stripling, H.~F. \harvardand\ Drake, R.~P.
+  \harvardyearleft 2013\harvardyearright , `Spline-based emulators for
+  radiative shock experiments with measurement error', {\em Journal of the
+  American Statistical Association} {\bf 108}(502),~411--428.
+
+\harvarditem[Chou et~al.]{Chou, Lee, Shao \harvardand\
+  Chen}{2004}{chou2004mining}
+Chou, S.-M., Lee, T.-S., Shao, Y.~E. \harvardand\ Chen, I.-F.  \harvardyearleft
+  2004\harvardyearright , `Mining the breast cancer pattern using artificial
+  neural networks and multivariate adaptive regression splines', {\em Expert
+  systems with applications} {\bf 27}(1),~133--142.
+
+\harvarditem[Collins et~al.]{Collins, Francom \harvardand\
+  Rumsey}{2022}{collins2022bayesian}
+Collins, G., Francom, D. \harvardand\ Rumsey, K.  \harvardyearleft
+  2022\harvardyearright , `Bayesian projection pursuit regression', {\em arXiv
+  preprint arXiv:2210.09181} .
+
+\harvarditem[De~Andres et~al.]{De~Andres, Lorca, de~Cos~Juez \harvardand\
+  S{\'a}nchez-Lasheras}{2011}{de2011bankruptcy}
+De~Andres, J., Lorca, P., de~Cos~Juez, F.~J. \harvardand\ S{\'a}nchez-Lasheras,
+  F.  \harvardyearleft 2011\harvardyearright , `Bankruptcy forecasting: A
+  hybrid approach using fuzzy c-means clustering and multivariate adaptive
+  regression splines (mars)', {\em Expert Systems with Applications} {\bf
+  38}(3),~1866--1875.
+
+\harvarditem[Denison et~al.]{Denison, Mallick \harvardand\
+  Smith}{1998}{denison1998}
+Denison, D.~G., Mallick, B.~K. \harvardand\ Smith, A.~F.  \harvardyearleft
+  1998\harvardyearright , `Bayesian mars', {\em Statistics and Computing} {\bf
+  8}(4),~337--346.
+
+\harvarditem{Devroye}{2014}{devroye2014random}
+Devroye, L.  \harvardyearleft 2014\harvardyearright , `Random variate
+  generation for the generalized inverse gaussian distribution', {\em
+  Statistics and Computing} {\bf 24}(2),~239--246.
+
+\harvarditem{Fern{\'a}ndez \harvardand\ Steel}{1998}{fernandez1998bayesian}
+Fern{\'a}ndez, C. \harvardand\ Steel, M.~F.  \harvardyearleft
+  1998\harvardyearright , `On bayesian modeling of fat tails and skewness',
+  {\em Journal of the american statistical association} {\bf
+  93}(441),~359--371.
+
+\harvarditem{Fog}{2008}{fog2008calculation}
+Fog, A.  \harvardyearleft 2008\harvardyearright , `Calculation methods for
+  wallenius' noncentral hypergeometric distribution', {\em Communications in
+  Statistics—Simulation and Computation{\textregistered}} {\bf
+  37}(2),~258--273.
+
+\harvarditem{Francom \harvardand\ Sans{\'o}}{2020{\em a}}{francom2020}
+Francom, D. \harvardand\ Sans{\'o}, B.  \harvardyearleft 2020{\em
+  a}\harvardyearright , `Bass: An r package for fitting and performing
+  sensitivity analysis of bayesian adaptive spline surfaces', {\em Journal of
+  Statistical Software} {\bf 94}(1),~1--36.
+
+\harvarditem{Francom \harvardand\ Sans{\'o}}{2020{\em b}}{francom2020BASS}
+Francom, D. \harvardand\ Sans{\'o}, B.  \harvardyearleft 2020{\em
+  b}\harvardyearright , `Bass: An r package for fitting and performing
+  sensitivity analysis of bayesian adaptive spline surfaces', {\em Journal of
+  Statistical Software} {\bf 94}(1),~1--36.
+
+\harvarditem[Francom et~al.]{Francom, Sans{\'o}, Bulaevskaya, Lucas
+  \harvardand\ Simpson}{2019}{francom2019}
+Francom, D., Sans{\'o}, B., Bulaevskaya, V., Lucas, D. \harvardand\ Simpson, M.
+   \harvardyearleft 2019\harvardyearright , `Inferring atmospheric release
+  characteristics in a large computer experiment using bayesian adaptive
+  splines', {\em Journal of the American Statistical Association} {\bf
+  114}(528),~1450--1465.
+
+\harvarditem[Francom et~al.]{Francom, Sans{\'o}, Kupresanin \harvardand\
+  Johannesson}{2018{\em a}}{francom2018}
+Francom, D., Sans{\'o}, B., Kupresanin, A. \harvardand\ Johannesson, G.
+  \harvardyearleft 2018{\em a}\harvardyearright , `Sensitivity analysis and
+  emulation for functional data using bayesian adaptive splines', {\em
+  Statistica Sinica} pp.~791--816.
+
+\harvarditem[Francom et~al.]{Francom, Sans{\'o}, Kupresanin \harvardand\
+  Johannesson}{2018{\em b}}{francom2018sensitivity}
+Francom, D., Sans{\'o}, B., Kupresanin, A. \harvardand\ Johannesson, G.
+  \harvardyearleft 2018{\em b}\harvardyearright , `Sensitivity analysis and
+  emulation for functional data using bayesian adaptive splines', {\em
+  Statistica Sinica} pp.~791--816.
+
+\harvarditem{Friedman}{1991}{friedman1991}
+Friedman, J.~H.  \harvardyearleft 1991\harvardyearright , `Multivariate
+  adaptive regression splines', {\em The annals of statistics} pp.~1--67.
+
+\harvarditem{Gelman et~al.}{2006}{gelman2006prior}
+Gelman, A. et~al.  \harvardyearleft 2006\harvardyearright , `Prior
+  distributions for variance parameters in hierarchical models (comment on
+  article by browne and draper)', {\em Bayesian analysis} {\bf 1}(3),~515--534.
+
+\harvarditem{Gramacy}{2016}{gramacy2016lagp}
+Gramacy, R.~B.  \harvardyearleft 2016\harvardyearright , `lagp: large-scale
+  spatial modeling via local approximate gaussian processes in r', {\em Journal
+  of Statistical Software} {\bf 72},~1--46.
+
+\harvarditem{Green}{1995}{green1995}
+Green, P.~J.  \harvardyearleft 1995\harvardyearright , `Reversible jump markov
+  chain monte carlo computation and bayesian model determination', {\em
+  Biometrika} {\bf 82}(4),~711--732.
+
+\harvarditem{He}{1997}{he1997quantile}
+He, X.  \harvardyearleft 1997\harvardyearright , `Quantile curves without
+  crossing', {\em The American Statistician} {\bf 51}(2),~186--192.
+
+\harvarditem{Hlavac}{2018}{hlavac2018stargazer}
+Hlavac, M.  \harvardyearleft 2018\harvardyearright , `Stargazer: Well-formatted
+  regression and summary statistics tables', {\em R package version} {\bf
+  5}(2),~2.
+
+\harvarditem{Holmes \harvardand\ Denison}{2003}{holmes2003classification}
+Holmes, C.~C. \harvardand\ Denison, D.  \harvardyearleft 2003\harvardyearright
+  , `Classification with bayesian mars', {\em Machine Learning} {\bf
+  50}(1-2),~159--173.
+
+\harvarditem{H{\"o}rmann \harvardand\ Leydold}{2014}{hormann2014generating}
+H{\"o}rmann, W. \harvardand\ Leydold, J.  \harvardyearleft
+  2014\harvardyearright , `Generating generalized inverse gaussian random
+  variates', {\em Statistics and Computing} {\bf 24}(4),~547--557.
+
+\harvarditem[Hutchings et~al.]{Hutchings, Sans{\'o}, Gattiker, Francom
+  \harvardand\ Pasqualini}{2023}{hutchings2023comparing}
+Hutchings, G., Sans{\'o}, B., Gattiker, J., Francom, D. \harvardand\
+  Pasqualini, D.  \harvardyearleft 2023\harvardyearright , `Comparing emulation
+  methods for a high-resolution storm surge model', {\em Environmetrics} {\bf
+  34}(3),~e2796.
+
+\harvarditem[Jenness et~al.]{Jenness, Goodreau \harvardand\
+  Morris}{2018}{jenness2018epimodel}
+Jenness, S.~M., Goodreau, S.~M. \harvardand\ Morris, M.  \harvardyearleft
+  2018\harvardyearright , `Epimodel: an r package for mathematical modeling of
+  infectious disease over networks', {\em Journal of statistical software} {\bf
+  84}.
+
+\harvarditem{Jorgensen}{2012}{jorgensen2012}
+Jorgensen, B.  \harvardyearleft 2012\harvardyearright , {\em Statistical
+  properties of the generalized inverse Gaussian distribution}, Vol.~9,
+  Springer Science \& Business Media.
+
+\harvarditem[Kotz et~al.]{Kotz, Kozubowski \harvardand\
+  Podgorski}{2012}{kotz2012}
+Kotz, S., Kozubowski, T. \harvardand\ Podgorski, K.  \harvardyearleft
+  2012\harvardyearright , {\em The Laplace distribution and generalizations: a
+  revisit with applications to communications, economics, engineering, and
+  finance}, Springer Science \& Business Media.
+
+\harvarditem[Kutner et~al.]{Kutner, Nachtsheim, Neter, Li
+  et~al.}{2005}{kutner2005applied}
+Kutner, M.~H., Nachtsheim, C.~J., Neter, J., Li, W. et~al.  \harvardyearleft
+  2005\harvardyearright , {\em Applied linear statistical models}, Vol.~5,
+  McGraw-Hill Irwin Boston.
+
+\harvarditem[Leydold et~al.]{Leydold, Hormann \harvardand\
+  Leydold}{2017}{leydold2017package}
+Leydold, J., Hormann, W. \harvardand\ Leydold, M.~J.  \harvardyearleft
+  2017\harvardyearright , `Package ‘gigrvg’', {\em R Package Documentation}
+  .
+
+\harvarditem{Li}{1985}{li1985robust}
+Li, G.  \harvardyearleft 1985\harvardyearright , `Robust regression', {\em
+  Exploring data tables, trends, and shapes} {\bf 281},~U340.
+
+\harvarditem[Mallick et~al.]{Mallick, Denison \harvardand\
+  Smith}{1999}{mallick1999}
+Mallick, B.~K., Denison, D.~G. \harvardand\ Smith, A.~F.  \harvardyearleft
+  1999\harvardyearright , `Bayesian survival analysis using a mars model', {\em
+  Biometrics} {\bf 55}(4),~1071--1077.
+
+\harvarditem[McClarren et~al.]{McClarren, Ryu, Drake, Grosskopf, Bingham, Chou,
+  Fryxell, Van~der Holst, Holloway, Kuranz et~al.}{2011}{mcclarren2011}
+McClarren, R.~G., Ryu, D., Drake, R.~P., Grosskopf, M., Bingham, D., Chou,
+  C.-C., Fryxell, B., Van~der Holst, B., Holloway, J.~P., Kuranz, C.~C. et~al.
+  \harvardyearleft 2011\harvardyearright , `A physics informed emulator for
+  laser-driven radiating shock simulations', {\em Reliability Engineering \&
+  System Safety} {\bf 96}(9),~1194--1207.
+
+\harvarditem[McCulloch et~al.]{McCulloch, Sparapani, Gramacy, Spanbauer
+  \harvardand\ Pratola}{2018}{mcculloch2018bart}
+McCulloch, R., Sparapani, R., Gramacy, R., Spanbauer, C. \harvardand\ Pratola,
+  M.  \harvardyearleft 2018\harvardyearright , `Bart: Bayesian additive
+  regression trees', {\em R package version} {\bf 1}.
+
+\harvarditem{McDonald \harvardand\ Xu}{1995}{mcdonald1995generalization}
+McDonald, J.~B. \harvardand\ Xu, Y.~J.  \harvardyearleft 1995\harvardyearright
+  , `A generalization of the beta distribution with applications', {\em Journal
+  of Econometrics} {\bf 66}(1-2),~133--152.
+
+\harvarditem[Nott et~al.]{Nott, Kuk \harvardand\ Duc}{2005}{nott2005}
+Nott, D.~J., Kuk, A.~Y. \harvardand\ Duc, H.  \harvardyearleft
+  2005\harvardyearright , `Efficient sampling schemes for bayesian mars models
+  with many predictors', {\em Statistics and Computing} {\bf 15}(2),~93--101.
+
+\harvarditem{Plumlee \harvardand\ Tuo}{2014}{plumlee2014building}
+Plumlee, M. \harvardand\ Tuo, R.  \harvardyearleft 2014\harvardyearright ,
+  `Building accurate emulators for stochastic simulations via quantile
+  kriging', {\em Technometrics} {\bf 56}(4),~466--473.
+
+\harvarditem{Rasmussen}{2003}{rasmussen2003gaussian}
+Rasmussen, C.~E.  \harvardyearleft 2003\harvardyearright , Gaussian processes
+  in machine learning, {\em in} `Summer School on Machine Learning', Springer,
+  pp.~63--71.
+
+\harvarditem[Roy et~al.]{Roy, Roy \harvardand\ Balas}{2018}{roy2018estimating}
+Roy, S.~S., Roy, R. \harvardand\ Balas, V.~E.  \harvardyearleft
+  2018\harvardyearright , `Estimating heating load in buildings using
+  multivariate adaptive regression splines, extreme learning machine, a hybrid
+  model of mars and elm', {\em Renewable and Sustainable Energy Reviews} {\bf
+  82},~4256--4268.
+
+\harvarditem{Rydberg}{1997}{rydberg1997normal}
+Rydberg, T.~H.  \harvardyearleft 1997\harvardyearright , `The normal inverse
+  gaussian l{\'e}vy process: simulation and approximation', {\em Communications
+  in statistics. Stochastic models} {\bf 13}(4),~887--910.
+
+\harvarditem[Saltelli et~al.]{Saltelli, Ratto, Andres, Campolongo, Cariboni,
+  Gatelli, Saisana \harvardand\ Tarantola}{2008}{saltelli2008global}
+Saltelli, A., Ratto, M., Andres, T., Campolongo, F., Cariboni, J., Gatelli, D.,
+  Saisana, M. \harvardand\ Tarantola, S.  \harvardyearleft
+  2008\harvardyearright , {\em Global sensitivity analysis: the primer}, John
+  Wiley \& Sons.
+
+\harvarditem{Silverman}{1985}{silverman1985}
+Silverman, B.~W.  \harvardyearleft 1985\harvardyearright , `Some aspects of the
+  spline smoothing approach to non-parametric regression curve fitting', {\em
+  Journal of the Royal Statistical Society: Series B (Methodological)} {\bf
+  47}(1),~1--21.
+
+\harvarditem{Sobol}{2001}{sobol2001global}
+Sobol, I.~M.  \harvardyearleft 2001\harvardyearright , `Global sensitivity
+  indices for nonlinear mathematical models and their monte carlo estimates',
+  {\em Mathematics and computers in simulation} {\bf 55}(1-3),~271--280.
+
+\harvarditem[Sun et~al.]{Sun, Kong \harvardand\ Pal}{2021}{sun2021modified}
+Sun, J., Kong, M. \harvardand\ Pal, S.  \harvardyearleft 2021\harvardyearright
+  , `The modified-half-normal distribution: Properties and an efficient
+  sampling scheme', {\em Communications in Statistics-Theory and Methods}
+  pp.~1--23.
+
+\harvarditem{Surjanovic \harvardand\ Bingham}{2013}{surjanovic2013virtual}
+Surjanovic, S. \harvardand\ Bingham, D.  \harvardyearleft 2013\harvardyearright
+  , `Virtual library of simulation experiments: test functions and datasets',
+  {\em Simon Fraser University, Burnaby, BC, Canada, accessed May} {\bf
+  13},~2015.
+
+\harvarditem[Takeuchi et~al.]{Takeuchi, Le, Sears, Smola
+  et~al.}{2006}{takeuchi2006nonparametric}
+Takeuchi, I., Le, Q., Sears, T., Smola, A. et~al.  \harvardyearleft
+  2006\harvardyearright , `Nonparametric quantile estimation'.
+
+\harvarditem{Wilensky}{1999}{wilensky1999netlogo}
+Wilensky, U.  \harvardyearleft 1999\harvardyearright , `Netlogo. evanston, il:
+  Center for connected learning and computer-based modeling, northwestern
+  university'.
+
+\harvarditem{Yeh}{1998}{yeh1998modeling}
+Yeh, I.-C.  \harvardyearleft 1998\harvardyearright , `Modeling of strength of
+  high-performance concrete using artificial neural networks', {\em Cement and
+  Concrete research} {\bf 28}(12),~1797--1808.
+
+\harvarditem{Yu \harvardand\ Moyeed}{2001}{yu2001bayesian}
+Yu, K. \harvardand\ Moyeed, R.~A.  \harvardyearleft 2001\harvardyearright ,
+  `Bayesian quantile regression', {\em Statistics \& Probability Letters} {\bf
+  54}(4),~437--447.
+
+\harvarditem{Zacks}{1998}{zacks1998modern}
+Zacks, S.  \harvardyearleft 1998\harvardyearright , {\em Modern industrial
+  statistics: design and control of quality and reliability}, Cengage Learning.
+
+\harvarditem{Zhang \harvardand\ Goh}{2016}{zhang2016multivariate}
+Zhang, W. \harvardand\ Goh, A.~T.  \harvardyearleft 2016\harvardyearright ,
+  `Multivariate adaptive regression splines and neural network models for
+  prediction of pile drivability', {\em Geoscience Frontiers} {\bf
+  7}(1),~45--52.
+
+\harvarditem[Zhu et~al.]{Zhu, Byrd, Lu \harvardand\
+  Nocedal}{1997}{zhu1997algorithm}
+Zhu, C., Byrd, R.~H., Lu, P. \harvardand\ Nocedal, J.  \harvardyearleft
+  1997\harvardyearright , `Algorithm 778: L-bfgs-b: Fortran subroutines for
+  large-scale bound-constrained optimization', {\em ACM Transactions on
+  mathematical software (TOMS)} {\bf 23}(4),~550--560.
+
+\end{thebibliography}

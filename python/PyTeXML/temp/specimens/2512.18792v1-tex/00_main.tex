@@ -1,0 +1,210 @@
+
+\documentclass{article} % For LaTeX2e
+
+\usepackage{atbegshi} % safer than eso-pic overlay for iclr style
+% Add logo to first page only (use atbegshi)
+\AtBeginShipoutNext{%
+\AtBeginShipoutUpperLeft{%
+  \put(\dimexpr\paperwidth-0.12cm\relax,-4cm){%
+    \makebox[0pt][r]{\includegraphics[width=4.5cm,angle=-30]{images/dead_salmom_illus.png}}%
+  }%
+}%
+}
+
+\usepackage{iclr2026_conference,times}
+\iclrfinalcopy
+
+
+
+% Optional math commands from https://github.com/goodfeli/dlbook_notation.
+\input{math_commands.tex}
+
+\usepackage{amssymb}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage[table]{xcolor}
+
+
+\usepackage{wrapfig}
+\usepackage{tabularx}
+ \usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{enumitem}
+
+\usepackage{hyperref}
+% \hypersetup{
+%   colorlinks   = true,
+%   linkcolor    = blue!70!black,
+%   citecolor    = red!70!black,
+%   urlcolor     = teal,
+%   filecolor    = gray
+% }
+\hypersetup{
+  colorlinks   = true,
+  linkcolor    = red!70!black,
+  citecolor    = teal!70!black,
+  urlcolor     = red!70!black,
+  filecolor    = gray
+}
+
+
+% \usepackage{eso-pic}
+
+% \AddToShipoutPictureBG*{%
+%   \AtPageUpperRight{%
+%     \raisebox{-1.5cm}{% vertical offset from the top
+%       \hspace*{-2.5cm}% horizontal offset from the right
+%       \includegraphics[width=2.5cm]{images/dead_salmom_illus.png}%
+%     }%
+%   }%
+% }
+
+
+
+% --- helper suit commands (adjust scale / raise if you want different size) ---
+\newcommand{\SuitDiamond}{\raisebox{0.22ex}{\scalebox{0.85}{$\blacklozenge$}}}
+\newcommand{\SuitClub   }{\raisebox{0.22ex}{\scalebox{0.85}{$\clubsuit$}}}
+\newcommand{\SuitHeart  }{\raisebox{0.22ex}{\scalebox{0.85}{$\heartsuit$}}}
+\newcommand{\SuitSpade  }{\raisebox{0.22ex}{\scalebox{0.85}{$\spadesuit$}}}
+
+% \newcommand{\denselist}{ \itemsep -2pt\topsep-10pt\partopsep-10pt \leftmargin 3em }
+
+\newcommand{\bv}{\mathbf{v}}
+\newcommand{\bU}{\mathbf{U}}
+\newcommand{\bW}{\mathbf{W}}
+\newcommand{\cV}{\mathcal{V}}
+\newcommand{\cU}{\mathcal{U}}
+\newcommand{\cW}{\mathcal{W}}
+\newcommand{\cM}{\mathcal{M}}
+\newcommand{\frC}{\mathfrak{C}}
+\newcommand{\frD}{\mathfrak{D}}
+
+
+\newcommand{\bA}{\mathbf{A}}
+\newcommand{\bV}{\mathbf{V}}
+\newcommand{\bE}{\mathbf{E}}
+\newcommand{\bN}{\mathbf{N}}
+\newcommand{\be}{\mathbf{e}}
+\newcommand{\bn}{\mathbf{n}}
+\newcommand{\bX}{\mathbf{X}}
+\newcommand{\bY}{\mathbf{Y}}
+\newcommand{\bZ}{\mathbf{Z}}
+\newcommand{\bx}{\mathbf{x}}
+\newcommand{\bF}{\mathbf{F}}
+\newcommand{\bI}{\mathbf{I}}
+\newcommand{\bL}{\mathbf{L}}
+\newcommand{\bi}{\mathbf{i}}
+\newcommand{\bPA}{\mathbf{PA}}
+\newcommand{\bpa}{\mathbf{pa}}
+\newcommand{\bDE}{\mathbf{DE}}
+\newcommand{\bAN}{\mathbf{AN}}
+\DeclareMathOperator{\DO}{do}
+
+
+\title{
+The Dead Salmons of AI Interpretability 
+% The Need for Statistical Inference
+}
+
+% Authors must not appear in the submitted version. They should be hidden
+% as long as the \iclrfinalcopy macro remains commented out below.
+% Non-anonymous submissions will be rejected without review.
+
+\author{
+        Maxime Méloux\textsuperscript{$\diamondsuit$},\quad 
+        Giada Dirupo\textsuperscript{$\clubsuit$},\quad 
+        François Portet\textsuperscript{$\diamondsuit$},\quad 
+        Maxime Peyrard\textsuperscript{$\diamondsuit$} \\[6pt]
+        \normalfont
+        \textsuperscript{$\diamondsuit$}Université Grenoble Alpes, CNRS, Grenoble INP, LIG \\ 
+        \normalfont
+        \textsuperscript{$\clubsuit$}Icahn School of Medicine at Mount Sinai \\[4pt]
+        \normalfont
+        \texttt{\{melouxm, peyrardm\}@univ-grenoble-alpes.fr}
+}
+% \vspace{1cm}
+% \makebox[\textwidth][c]{%
+%     \begin{tabular}{c}
+%         Maxime Méloux\textsuperscript{$\diamondsuit$},\quad 
+%         Giada Dirupo\textsuperscript{$\clubsuit$},\quad 
+%         François Portet\textsuperscript{$\diamondsuit$},\quad 
+%         Maxime Peyrard\textsuperscript{$\diamondsuit$} \\[6pt]
+%         \normalfont
+%         \textsuperscript{$\diamondsuit$}Université Grenoble Alpes, CNRS, Grenoble INP, LIG \\ 
+%         \normalfont
+%         \textsuperscript{$\clubsuit$}Icahn School of Medicine at Mount Sinai \\[4pt]
+%         \normalfont
+%         \texttt{\{melouxm, peyrardm\}@univ-grenoble-alpes.fr}
+%     \end{tabular}%
+% }
+% }
+
+% The \author macro works with any number of authors. There are two commands
+% used to separate the names and addresses of multiple authors: \And and \AND.
+%
+% Using \And between authors leaves it to \LaTeX{} to determine where to break
+% the lines. Using \AND forces a linebreak at that point. So, if \LaTeX{}
+% puts 3 of 4 authors names on the first line, and the last on the second
+% line, try using \AND instead of \And before the third author name.
+
+\newcommand{\fix}{\marginpar{FIX}}
+\newcommand{\new}{\marginpar{NEW}}
+
+%\iclrfinalcopy % Uncomment for camera-ready version, but NOT for submission.
+\begin{document}
+
+
+\maketitle
+
+\begin{abstract}
+In a striking neuroscience study, the authors placed a dead salmon in an MRI scanner and showed it images of humans in social situations. Astonishingly, standard analyses of the time reported brain regions \textit{predictive} of social emotions. The explanation, of course, was not supernatural cognition but a cautionary tale about misapplied statistical inference.
+In AI interpretability, reports of similar ``dead salmon'' artifacts abound: feature attribution, probing, sparse auto-encoding, and even causal analyses can produce plausible-looking explanations for randomly initialized neural networks. 
+In this work, we examine this phenomenon and argue for a pragmatic \textbf{statistical--causal reframing}: explanations of computational systems should be treated as parameters of a (statistical) model, inferred from computational traces. This perspective goes beyond simply measuring statistical variability of explanations due to finite sampling of input data; interpretability methods become statistical estimators, and findings should be tested against explicit and meaningful \textbf{alternative computational hypotheses}, with uncertainty quantified with respect to the postulated statistical model. It also highlights important theoretical issues, such as the identifiability of common interpretability queries, which we argue is critical to understand the field’s susceptibility to false discoveries, poor generalizability, and high variance. More broadly, situating interpretability within the standard toolkit of statistical inference opens promising avenues for future work aimed at turning AI interpretability into a pragmatic and rigorous science.
+% A striking neuroscience study once placed a dead salmon in an fMRI scanner and showed it images of humans in social situations. Astonishingly, standard analyses reported brain regions \textit{predictive} of social emotions. The explanation, of course, was not supernatural cognition but a cautionary tale about misapplied statistical inference.
+% In AI interpretability, reports of similar ``dead salmon'' artifacts abound: feature attribution, probing, sparse auto-encoding, and even causal analyses can produce plausible-looking explanations for randomly initialized neural networks. These observations reveal a troubling reality: current interpretability methods operate in a pre-scientific era, relying on heuristics rather than rigorous inference principles.
+% In this article, we advocate a fundamental reframing: explanations of computational systems should be treated as parameters of a statistical model, inferred from computational traces. In this case, the statistical model encodes the assumptions we make about how the explanation will manifest in the computational traces. This perspective goes beyond simply measuring statistical variability of explanations due to finite sampling of input data; interpretability findings must be anchored in explicit hypotheses about the underlying computations and tested against meaningful \textbf{computational alternatives}. It also foregrounds critical theoretical considerations, such as identifiability of the explanations under the postulated statistical model.
+% We illustrate this reframing through toy experiments, showing how probing can be recast as hypothesis testing against a null distribution derived from random computation. Our proposal opens a pathway toward transforming AI interpretability from a collection of heuristics into a rigorous science of explanation inference.
+\end{abstract}
+
+
+\section{Introduction}
+\label{sec:introduction}
+\input{01_introduction}
+
+\section{The Statistical Fragility of AI Interpretability}
+\label{sec:description}
+\input{02_description}
+
+% \section{An Easy Fix: Hypothesis Testing}
+% \label{sec:hyp_test}
+% \input{03_hyp_test}
+
+\section{The Deeper Statistical Issue}
+\label{sec:issue}
+\input{04_issue}
+
+\section{The Statistical--Causal Inference Perspective}
+\label{sec:stats_inf_view}
+\input{05_stats_inf}
+
+% \section{A Toy Example: Hypothesis Testing}
+% \label{sec:illustration}
+% \input{05_experiments}
+
+\section{Discussion}
+\label{sec:discussion}
+\input{06_discussion}
+
+\section*{Acknowledgments}
+This work was partly conducted within the French research unit UMR 5217 and was supported by CNRS (grant ANR-22-CPJ2-0036-01) and by MIAI@Grenoble-Alpes (grant ANR-19-P3IA-0003). It was granted access to the HPC resources of IDRIS under the allocation 2025-AD011014834 made by GENCI.
+
+\bibliography{anthology,main}
+\bibliographystyle{iclr2026_conference}
+\clearpage
+
+\appendix
+\input{10_appendix}
+% You may include other additional sections here.
+
+
+\end{document}
