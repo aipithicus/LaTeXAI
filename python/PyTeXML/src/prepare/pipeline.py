@@ -1,5 +1,6 @@
 """Prepare master.tex from one cached, reading-aware source traversal."""
 from __future__ import annotations
+from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional, Tuple
 from uuid import uuid4
@@ -12,6 +13,19 @@ from .assets import prepare_assets
 from .locations import finalize_locations
 from .publication import OutputTransaction
 from .events import JOURNAL, RETAINED_HISTORY, log_manifest
+
+
+@dataclass(frozen=True, slots=True)
+class _PreparationRequest:
+    """Validated public settings used by the builder; publication paths stay outside."""
+    project: Path
+    root_tex: str | None
+    engine: str
+    convert_images_to_svg: bool
+    copy_local_dependencies: bool
+    emit_manifest_json: bool
+    emit_provenance: bool | None
+    policy: str | Path
 
 
 def preprocess_paper(
@@ -37,15 +51,14 @@ def preprocess_paper(
     emit_provenance=None follows policy.provenance.emit_ledger; an explicit bool
     overrides it. Manifest locations are always finalized, independently of it.
     """
-    arguments = dict(locals())
     project = Path(project_dir).resolve()
     destination = Path(output_dir).resolve() if output_dir else project / "extracted"
     if not project.is_dir():
         raise FileNotFoundError(f"Project directory not found: {project_dir}")
     if project.is_relative_to(destination):
         raise ValueError("Output directory must not contain or equal the source project")
-    if output_file:
-        secondary = Path(output_file).resolve()
+    secondary = Path(output_file).resolve() if output_file else None
+    if secondary is not None:
         if secondary.is_relative_to(project) and not secondary.is_relative_to(destination):
             raise ValueError("An additional output inside the project must stay in the output directory")
     previous_payload = (destination / "master.tex").is_file()
@@ -56,14 +69,23 @@ def preprocess_paper(
             stage="preparation", attempt_id=attempt, output_dir=str(destination))
         published = False
         manifest = None
-        arguments.update(output_dir=str(transaction.stage), output_file=None,
-                         excluded_dirs=[destination, transaction.workspace], logger=log)
         try:
             log.emit("attempt.started", "Preparation started", flush=True)
-            text, manifest, _, ledger = _prepare_paper(**arguments)
+            # Preserve attempt history for rejected legacy requests, without
+            # forwarding unsupported knobs into the preparation machinery.
+            if execute_probe:
+                raise ValueError("External execution probes are not part of preparation")
+            if drop_commands or keep_content_commands or drop_environments or clean_styles:
+                raise ValueError("Custom cleanup requires reading-aware policy contracts; regex cleanup is retired")
+            request = _PreparationRequest(
+                project=project, root_tex=root_tex, engine=engine,
+                convert_images_to_svg=convert_images_to_svg, copy_local_dependencies=copy_local_dependencies,
+                emit_manifest_json=emit_manifest_json, emit_provenance=emit_provenance, policy=policy)
+            text, manifest, ledger = _prepare_paper(
+                request, transaction.stage, excluded_dirs=(destination, transaction.workspace), logger=log)
             log.emit("payload.prepared", "Payload built in staging",
                      data={"preparation_status": manifest.preparation_status}, flush=True)
-            if output_file:
+            if secondary is not None:
                 transaction.secondary(secondary, text)
             log.emit("publication.started", "Publishing prepared payload", flush=True)
             transaction.publish()
@@ -99,44 +121,22 @@ def preprocess_paper(
     return text, manifest, destination, ledger
 
 
-def _prepare_paper(
-    project_dir, output_dir=None, output_file=None, root_tex=None, execute_probe=False,
-    engine="pytexml", drop_commands=None, keep_content_commands=None, drop_environments=None,
-    convert_images_to_svg=True, copy_local_dependencies=True, clean_styles=False,
-    emit_manifest_json=True, emit_provenance=None, policy="prepare", *, excluded_dirs=(), logger,
-):
-    """Publish prepared source, with explicit partial status when knowledge is missing.
+def _prepare_paper(request: _PreparationRequest, out_dir: Path, *,
+                   excluded_dirs: tuple[Path, ...], logger: EventLogger):
+    """Build in an owned staging directory; the caller alone publishes outputs.
 
     Dependency discovery, input insertion and protected spans share one traversal.
-    Unresolved reading limits edits, not publication. Legacy regex cleanup options require
-    future declarative contracts and are rejected when explicitly requested.
+    Unresolved reading limits edits, not publication. Settings and destination
+    confinement are checked at the public boundary; source-dependent checks stay here.
     """
-    p_dir = Path(project_dir).resolve()
-    if not p_dir.is_dir():
-        raise FileNotFoundError(f"Project directory not found: {project_dir}")
-    out_dir = Path(output_dir).resolve() if output_dir else p_dir / "extracted"
-    if p_dir.is_relative_to(out_dir):
-        raise ValueError("Output directory must not contain or equal the source project")
-    if execute_probe:
-        raise ValueError("External execution probes are not part of preparation")
-    if drop_commands or keep_content_commands or drop_environments or clean_styles:
-        raise ValueError("Custom cleanup requires reading-aware policy contracts; regex cleanup is retired")
-    if output_file:
-        secondary = Path(output_file).resolve()
-        if secondary.is_relative_to(p_dir) and not secondary.is_relative_to(out_dir):
-            raise ValueError("An additional output inside the project must stay in the output directory")
-    out_dir.mkdir(parents=True, exist_ok=True)
+    p_dir = request.project
     session = None
     try:
         logger.emit("phase.started", data={"phase": "reading"})
-        session = PreparationSession(p_dir, root_tex=root_tex, engine=engine,
-                                     excluded_dirs=[out_dir, *excluded_dirs], policy=policy)
-        if emit_provenance is None:
-            emit_provenance = session.policy.provenance.emit_ledger
-        if output_file:
-            secondary = Path(output_file).resolve()
-            if session.store.contains(secondary):
-                raise ValueError("output_file must not overwrite an original source")
+        session = PreparationSession(p_dir, root_tex=request.root_tex, engine=request.engine,
+                                     excluded_dirs=(out_dir, *excluded_dirs), policy=request.policy)
+        emit_provenance = (session.policy.provenance.emit_ledger if request.emit_provenance is None
+                           else request.emit_provenance)
         session.run()
         manifest = session.manifest
         logger.emit("phase.completed", data={"phase": "reading", "source_reads": len(session.store.read_paths)})
@@ -145,7 +145,7 @@ def _prepare_paper(
         logger.emit("phase.completed", data={"phase": "bibliography"})
         logger.emit("phase.started", data={"phase": "assets"}, flush=True)
         images = manifest.active_images + manifest.candidate_images
-        if images and not convert_images_to_svg:
+        if images and not request.convert_images_to_svg:
             raise ValueError("Referenced images require SVG conversion for a standalone extraction package")
         if images:
             pieces, mapping = prepare_assets(session, pieces, out_dir)
@@ -157,7 +157,7 @@ def _prepare_paper(
             prepared_bbl = ''.join(p.text for p in pieces if p.key in keys)
             (out_dir / "bibliography.bbl").write_text(prepared_bbl, encoding="utf-8", newline="\n")
         dependencies = [Path(s.abs_path) for s in manifest.local_styles] + [p_dir / p for p in manifest.code_inputs]
-        if (dependencies or session.literal_payloads) and not copy_local_dependencies:
+        if (dependencies or session.literal_payloads) and not request.copy_local_dependencies:
             raise ValueError("Local code dependencies must be emitted for a standalone extraction package")
         # Local code remains source-preserving until its own emission contract
         # exists. The cache also supplies payload bytes; no reopen/copy pass.
@@ -191,22 +191,19 @@ def _prepare_paper(
             manifest.dormant_styles = []
             manifest.dormant_images = []
         manifest.source_reads = list(session.store.read_paths)
-        if emit_manifest_json:
+        if request.emit_manifest_json:
             (out_dir / "manifest.json").write_text(manifest.to_json(), encoding="utf-8", newline="\n")
         (out_dir / "master.tex").write_text(master_tex_content, encoding="utf-8", newline="\n")
-        if output_file:
-            secondary.parent.mkdir(parents=True, exist_ok=True)
-            secondary.write_text(master_tex_content, encoding="utf-8", newline="\n")
         logger.emit("phase.completed", data={"phase": "emission"})
         log_manifest(logger, manifest)
-        return master_tex_content, manifest, out_dir, ledger
+        return master_tex_content, manifest, ledger
     except BaseException as exc:
         if session is not None:
             session.manifest.source_reads = list(session.store.read_paths)
             session.pending_units()
             session.manifest.mark_failed()
             try:
-                if emit_manifest_json:
+                if request.emit_manifest_json:
                     (out_dir / "manifest.json").write_text(session.manifest.to_json(), encoding="utf-8", newline="\n")
             except Exception as diagnostic_error:
                 if diagnostic_error is not exc:
