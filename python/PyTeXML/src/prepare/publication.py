@@ -25,11 +25,20 @@ def _replace(source, destination):
 
 
 class OutputTransaction:
-    def __init__(self, destination):
+    def __init__(self, destination, *, retained=()):
         self.destination = Path(destination).resolve()
         self.temporary = []
         self.targets = []
         self.recovery_needed = False
+        if any(Path(name).name != name or name in {"", ".", ".."} for name in retained):
+            raise ValueError("Retained bookkeeping must use plain filenames")
+        self.retained_paths = {name: self.destination / name for name in retained}
+
+    def _move(self, source, destination):
+        _replace(source, destination)
+        for name, path in self.retained_paths.items():
+            if path.is_relative_to(source):
+                self.retained_paths[name] = destination / path.relative_to(source)
 
     def _workspace(self, parent):
         parent.mkdir(parents=True, exist_ok=True)
@@ -38,16 +47,11 @@ class OutputTransaction:
         return directory
 
     def __enter__(self):
+        self.existed = self.destination.exists()
         self.workspace = self._workspace(self.destination.parent)
         self.stage = self.workspace / "payload"
         self.stage.mkdir()
         self.targets.append((self.destination, self.stage, self.workspace / "previous"))
-        log = self.destination / "preparation.log"
-        self.log_start = 0
-        if log.is_file():
-            data = log.read_bytes()
-            self.log_start = len(data)
-            (self.stage / log.name).write_bytes(data)
         return self
 
     def secondary(self, destination, text):
@@ -62,45 +66,50 @@ class OutputTransaction:
         target.write_text(text, encoding="utf-8", newline="\n")
 
     def publish(self):
-        committed, displaced = [], []
+        committed, displaced, carried = [], [], []
         try:
             for destination, stage, backup in self.targets:
                 if destination.exists():
-                    _replace(destination, backup)
+                    self._move(destination, backup)
                     displaced.append((destination, backup))
-                _replace(stage, destination)
+                    if destination == self.destination:
+                        # Journals have their own append-only lifetime. Carry
+                        # them by rename, without reading/copying their history.
+                        for name in self.retained_paths:
+                            old, new = backup / name, stage / name
+                            if old.exists():
+                                if new.exists():
+                                    raise ValueError(f"Prepared payload collides with retained journal: {name}")
+                                self._move(old, new)
+                                carried.append((old, new))
+                self._move(stage, destination)
                 committed.append((destination, stage))
         except BaseException as error:
             # Move newly published products back into owned staging directories
             # before restoring old products. Never recursively delete a target.
             try:
                 for destination, stage in reversed(committed):
-                    _replace(destination, stage)
+                    self._move(destination, stage)
+                for old, new in reversed(carried):
+                    self._move(new, old)
                 for destination, backup in reversed(displaced):
-                    _replace(backup, destination)
+                    self._move(backup, destination)
             except OSError as recovery:
                 self.recovery_needed = True
                 raise RuntimeError(f"Publication rollback failed: {recovery}; retained recovery data in "
                                    + ", ".join(str(d) for d in self.temporary)) from error
             raise
 
-    def failure(self, error):
+    def failure(self):
         # A failed first attempt still gets diagnostics. A failed rerun must not
         # replace the last good manifest or any of its resources.
         if self.recovery_needed:
             return
-        existed = self.destination.exists()
-        if not existed:
-            self.destination.mkdir()
-            for name in ("manifest.json", "preparation.log"):
-                source = self.stage / name
-                if source.is_file():
-                    os.replace(source, self.destination / name)
-        elif (self.stage / "preparation.log").is_file():
-            with (self.destination / "preparation.log").open("ab") as log:
-                log.write((self.stage / "preparation.log").read_bytes()[self.log_start:])
-        with (self.destination / "preparation.log").open("a", encoding="utf-8", newline="\n") as log:
-            log.write(f"FAILED ATTEMPT (previous payload preserved)\n{type(error).__name__}: {error}\n")
+        if not self.existed:
+            self.destination.mkdir(exist_ok=True)
+            source = self.stage / "manifest.json"
+            if source.is_file():
+                os.replace(source, self.destination / source.name)
 
     def __exit__(self, kind, error, traceback):
         if not self.recovery_needed:

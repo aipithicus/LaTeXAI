@@ -31,7 +31,7 @@ class PublicationTests(unittest.TestCase):
 
     def snapshot(self):
         return {p.relative_to(self.out).as_posix(): p.read_bytes() for p in self.out.rglob("*")
-                if p.is_file() and p.name != "preparation.log"}
+                if p.is_file() and p.name != "preparation.jsonl"}
 
     def test_write_error_after_manifest_keeps_every_previous_artifact(self):
         self.prepare()

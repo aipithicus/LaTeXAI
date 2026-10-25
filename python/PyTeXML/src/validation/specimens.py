@@ -298,7 +298,7 @@ def run_batch(catalog, runs, name, note, selected=(), timeout=180):
                 if proc.returncode == 0 and item["master"] and item["summary"]["preparation_status"] in {"partial", "complete"}:
                     item["status"] = item["summary"]["preparation_status"]
                 else:
-                    item["error"] = "Preparation did not publish a successful master; inspect console.log and preparation.log"
+                    item["error"] = "Preparation did not publish a successful master; inspect console.log and preparation.jsonl"
                 item["storage"] = share_resources(prepared, runs)
                 item["outputs"] = fingerprint(prepared, (p for p in prepared.rglob("*") if p.is_file()))
                 record_changes(runs, name, specimen, item, previous.get(specimen))

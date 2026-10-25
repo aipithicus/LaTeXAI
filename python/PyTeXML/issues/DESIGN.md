@@ -88,7 +88,7 @@ accounted for at final materialization.
 | Local styles/code | Discovered local dependencies needed by the master |
 | `manifest.json` | Discovery results, requirements linked to reader units, final prepared-artifact locations/hashes, bibliography and asset diagnostics |
 | `master.provenance.json` | Version 3 diagnostic character intervals, occurrence-aware tombstones, replacement relations and source coverage |
-| `preparation.log` | `STARTED`, `SUCCESS`, `PARTIAL`, or `FAILED`, with located diagnostics |
+| `preparation.jsonl` | Append-only structured attempt/phase events and diagnostics, with run IDs and explicit source/artifact locations |
 
 Complete preparation uses SVG derivatives only. A missing active image, conversion
 failure, or unavailable raster dimensions is an error, not permission to
@@ -98,10 +98,12 @@ preserved in a partial master and diagnosed; it is never converted as page one.
 The current converter supports raster wrapping and PDF/SVG conversion. EPS needs
 a functioning converter; raw EPS bytes must not be mislabeled as PNG.
 
-Preparation writes the master only after its preceding phases succeed. A rerun invalidates its previous master before traversal; `preparation.log` appends the new attempt and result. Callers must check the exception/exit status. Atomic replacement of an
-entire existing output package remains future work. Knowledge gaps are successful
-partial emissions, not exceptions; callers must inspect `preparation_status` and
-`dependency_closure` before treating output as a complete payload.
+Preparation stages the payload before publication. A failed rerun preserves its
+previous master and manifest; `preparation.jsonl` appends the attempt and result.
+Publication uses backup/publish renames with rollback, not a crash-atomic directory
+exchange. Callers must check the exception/exit status. Knowledge gaps are
+successful partial emissions, not exceptions; callers must inspect
+`preparation_status` and `dependency_closure` before treating output as complete.
 
 ## Current stages
 
@@ -142,7 +144,8 @@ partial emissions, not exceptions; callers must inspect `preparation_status` and
    artifact locations to units/requirements, then write master, dependency payload,
    manifest and optional character-span provenance. The location index uses cached
    source spans and composed edits, not a search or diff against reread files.
-   Publication is not yet a transactional directory swap.
+   Staging is published with rollback on error; successful replacement removes
+   obsolete payload files while carrying journal history forward by rename.
 
 Input lookup uses the root document directory then the project root, with an
 explicit import directory when present. It never guesses by basename. Repeated
@@ -257,9 +260,12 @@ Image references resolve before conversion; argument spans own their rewrites.
 Explicit image extensions sharing a stem get distinct SVG names; any remaining
 destination collision fails rather than overwriting.
 
-preparation.log appends start/outcome/error records. A reusable structured logger
-remains future work. Resource writes can precede master publication; transactional
-publication and obsolete-derivative cleanup remain open.
+The reusable [structured logger](../recipes/structured-logging.md) provides bound
+context, run/event IDs, explicit coordinate bases, exception chains and buffered
+JSONL sinks. Preparation is its first consumer; downstream stages can reference
+final `master.tex` locations without the raw-source sidecar. The active journal
+is `preparation.jsonl`; any older text journal is retained unchanged as evidence.
+Resource writes take place in staging before transactional publication.
 
 ## Reusable lexical reader
 

@@ -106,7 +106,7 @@ class ContinuationTests(unittest.TestCase):
         report = next(r for r in manifest.source_survey if r["source"] == "bad.sty")
         self.assertEqual(report["status"], "unreadable")
         self.assertIn("byte 0: ff", report["error"])
-        self.assertIn("bad.sty", (output / "preparation.log").read_text())
+        self.assertIn("bad.sty", (output / "preparation.jsonl").read_text())
 
     def test_unbound_environment_keeps_fake_closers_inside_known_protected_syntax(self):
         environment = (r"\begin{unknown}\verb|\end{unknown}\input{fake}|"

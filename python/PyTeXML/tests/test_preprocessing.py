@@ -63,7 +63,7 @@ class PreparationTests(unittest.TestCase):
         self.put("sections/part.tex", "").write_bytes(b"\xff")
         with self.assertRaises(SourceDecodingError):
             preprocess_paper(str(self.root))
-        self.assertIn("sections", (self.root / "extracted/preparation.log").read_text())
+        self.assertIn("sections", (self.root / "extracted/preparation.jsonl").read_text())
 
     def test_nested_discovered_and_explicit_roots(self):
         self.document(name="src/paper.tex")
@@ -142,7 +142,7 @@ class PreparationTests(unittest.TestCase):
         with self.assertRaisesRegex(BibliographyPreparationError, "key"):
             preprocess_paper(str(self.root))
         self.assertFalse((self.root / "extracted/master.tex").exists())
-        self.assertIn("FAILED", (self.root / "extracted/preparation.log").read_text())
+        self.assertIn("attempt.failed", (self.root / "extracted/preparation.jsonl").read_text())
 
     def test_native_bibliography_never_invokes_a_compiler(self):
         self.bib_project(existing=False)
@@ -193,7 +193,7 @@ class PreparationTests(unittest.TestCase):
         (self.root / "main.tex").write_bytes(b"\\documentclass{article}\n\xff\n")
         with self.assertRaises(SourceDecodingError):
             preprocess_paper(str(self.root))
-        log = (self.root / "extracted/preparation.log").read_text()
+        log = (self.root / "extracted/preparation.jsonl").read_text()
         self.assertIn("main.tex", log)
         self.assertIn("byte 24", log)
         self.assertFalse((self.root / "extracted/master.tex").exists())
@@ -217,14 +217,14 @@ class PreparationTests(unittest.TestCase):
         (self.root / "main.bbl").write_bytes(b"\xff")
         with self.assertRaises(SourceDecodingError):
             preprocess_paper(str(self.root))
-        self.assertIn("main.bbl", (self.root / "extracted/preparation.log").read_text())
+        self.assertIn("main.bbl", (self.root / "extracted/preparation.jsonl").read_text())
 
     def test_local_style_decoding_failure_is_logged(self):
         self.document("\\usepackage{customstyle}")
         self.put("customstyle.sty", "").write_bytes(b"\xff")
         with self.assertRaises(SourceDecodingError):
             preprocess_paper(str(self.root))
-        self.assertIn("customstyle.sty", (self.root / "extracted/preparation.log").read_text())
+        self.assertIn("customstyle.sty", (self.root / "extracted/preparation.jsonl").read_text())
 
     def test_conversion_failure_is_logged_without_master_or_raw_copy(self):
         self.document("\\usepackage{graphicx}\\includegraphics{bad.png}")
@@ -232,7 +232,7 @@ class PreparationTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             preprocess_paper(str(self.root))
         out = self.root / "extracted"
-        self.assertIn("bad.png", (out / "preparation.log").read_text())
+        self.assertIn("bad.png", (out / "preparation.jsonl").read_text())
         self.assertFalse((out / "master.tex").exists())
         self.assertFalse((out / "bad.png").exists())
 
@@ -309,7 +309,7 @@ class PreparationTests(unittest.TestCase):
         self.assertIn("{One}", text)
         self.assertIn("{Two}", text)
         self.assertIn("Repeated field", manifest.bibliography.preparation_warnings[0])
-        self.assertIn("Repeated field", (out / "preparation.log").read_text())
+        self.assertIn("Repeated field", (out / "preparation.jsonl").read_text())
 
     def test_undefined_strings_only_block_selected_content(self):
         db = Database()

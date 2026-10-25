@@ -12,6 +12,7 @@ sys.path.insert(0, str(PROJECT))
 from src.prepare.pipeline import preprocess_paper
 from src.prepare.session import PreparationUnresolved
 from src.prepare.provenance import ProvenanceLedger
+from src.event_log import read_events
 from src.source_io import SourceStore
 
 
@@ -238,7 +239,7 @@ class TraversalTests(unittest.TestCase):
                 self.assertTrue(manifest.requirements)
                 self.assertIn("later-file.tex", manifest.active_tex_files)
                 self.assertEqual(manifest.dormant_tex_files, [])
-                self.assertIn("DEFERRED", (out / "preparation.log").read_text())
+                self.assertIn("requirement.deferred", (out / "preparation.jsonl").read_text())
                 for segment in ledger.segments:
                     if segment["operation"] == "DEFER_INTERPRETATION":
                         a, b = segment["generated"]
@@ -256,7 +257,7 @@ class TraversalTests(unittest.TestCase):
                 self.assertEqual(text.count(declaration), 1)
                 self.assertEqual(manifest.requirements[0]["reason"], reason)
                 self.assertEqual(manifest.entrypoint, "master.tex")
-                self.assertIn(reason, (out / "preparation.log").read_text())
+                self.assertIn(reason, (out / "preparation.jsonl").read_text())
 
     def test_unexpanded_nested_expression_does_not_undo_splices(self):
         self.document("\\input{done}\\input{outer}% retain\nTAIL")
@@ -365,10 +366,10 @@ class TraversalTests(unittest.TestCase):
         self.assertEqual(manifest.unresolved, [])
         self.assertEqual(manifest.preserved_source_spans, [])
         self.assertNotIn("\\unknown", text)
-        log = (out / "preparation.log").read_text()
-        self.assertEqual(log.count("STARTED"), 2)
-        self.assertIn("PARTIAL", log)
-        self.assertTrue(log.endswith("SUCCESS\n"))
+        log = (out / "preparation.jsonl").read_text()
+        self.assertEqual(sum(e["code"] == "attempt.started" for e in read_events(out / "preparation.jsonl")), 2)
+        self.assertIn('"preparation_status":"partial"', log)
+        self.assertEqual(list(read_events(out / "preparation.jsonl"))[-1]["data"]["preparation_status"], "complete")
 
     def test_cache_remembers_strict_decode_failure(self):
         path = self.put("bad.tex", "")
@@ -433,10 +434,10 @@ class TraversalTests(unittest.TestCase):
         with self.assertRaises(PreparationUnresolved):
             self.prepare()
         self.assertIn("OK", (out / "master.tex").read_text())
-        log = (out / "preparation.log").read_text()
-        self.assertIn("SUCCESS", log)
-        self.assertIn("FAILED", log)
-        self.assertEqual(log.count("STARTED"), 2)
+        log = (out / "preparation.jsonl").read_text()
+        self.assertIn("attempt.published", log)
+        self.assertIn("attempt.failed", log)
+        self.assertEqual(sum(e["code"] == "attempt.started" for e in read_events(out / "preparation.jsonl")), 2)
 
     def test_includeonly_and_include_page_boundaries(self):
         self.document("A\\include{one}B\\include{two}C", "\\includeonly{one}")

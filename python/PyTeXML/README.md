@@ -13,6 +13,7 @@ expansion and XML interpretation belong to later development.
 | [`src/prepare/`](src/prepare) | Cached source traversal, dependency resolution, emission, bibliography, assets, provenance, and publication |
 | [`src/validation/`](src/validation) | Optional paired rendering and relocation qualification in disposable workspaces; independent of preparation |
 | [`src/source_io.py`](src/source_io.py) | Run-scoped source cache, strict decoding and malformed-byte diagnostics |
+| [`src/event_log.py`](src/event_log.py) | Reusable structured events, bound context, explicit locations and buffered JSONL sinks |
 | [`src/bibtex.py`](src/bibtex.py) | Reusable BibTeX parser and data model |
 | [`src/assets.py`](src/assets.py) | Image inspection and individual asset conversion |
 | [`src/yaml_io.py`](src/yaml_io.py) | Strict YAML mapping loading, with schema validation left to each consumer |
@@ -40,6 +41,9 @@ have been removed.
 [Publication](src/prepare/publication.py) builds the complete payload in a sibling
 staging directory before replacing the output. Failed preparation leaves the last
 good master, manifest and assets intact, with the attempted run appended to the log.
+New events go to `preparation.jsonl`; existing text logs remain historical evidence.
+The [structured logging contract](recipes/structured-logging.md) describes the
+shared primitives and how later stages can log against finalized `master.tex`.
 Successful replacement removes stale payload files. Existing-directory replacement
 uses backup/publish renames with rollback on error: on Windows there can be a brief
 interval where the destination directory is absent, but it never contains a mixed

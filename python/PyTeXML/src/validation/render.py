@@ -27,7 +27,7 @@ from .assessment import render_status, summarize
 
 DRIVER_NAME = "__pytexml_svg_driver__.tex"
 BOOTSTRAP = ("\\AddToHook{package/graphics/after}{\\input{" + DRIVER_NAME + "}}\n").encode("ascii")
-BOOKKEEPING = {"manifest.json", "master.provenance.json", "preparation.log"}
+BOOKKEEPING = {"manifest.json", "master.provenance.json", "preparation.jsonl", "preparation.log"}
 BYPRODUCTS = {".aux", ".log", ".out", ".toc", ".lof", ".lot", ".blg", ".fls", ".synctex"}
 
 
