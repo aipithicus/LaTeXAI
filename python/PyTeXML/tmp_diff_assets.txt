@@ -1,0 +1,244 @@
+diff --git a/python/PyTeXML/src/prepare/assets.py b/python/PyTeXML/src/prepare/assets.py
+index 9d5edbe..54697ba 100644
+--- a/python/PyTeXML/src/prepare/assets.py
++++ b/python/PyTeXML/src/prepare/assets.py
+@@ -3,8 +3,82 @@ from __future__ import annotations
+ from pathlib import Path
+ from typing import Dict, List
+ from collections import Counter
++from dataclasses import dataclass
+ from ..assets import convert_asset_to_svg
+-from ..reading.contracts import ReadingIssue
++from ..reading.contracts import ReadingIssue, SourceCommand
++from ..reading.spans import SourceSpan
++from ..reading.argument_scanner import key_value_items
++from ..reading.tex_reader import CatCode, TokenKind
++
++
++@dataclass(frozen=True)
++class AssetUse:
++    command: SourceCommand
++    path: Path
++    page: int = 1
++    page_spans: tuple[SourceSpan, ...] = ()
++
++    def edits(self, destination):
++        yield self.command.argument("target").span, destination
++        # A page derivative contains just one page, including when the optional
++        # rendering adapter converts the SVG back to a temporary PDF.
++        for span in self.page_spans:
++            yield span, "1"
++
++
++def register_asset(session, command, path):
++    page, spans = 1, []
++    for key, tokens in key_value_items(command.argument("options")):
++        if key != "page":
++            continue
++        tokens = tuple(tokens or ())
++        def trimmed(value):
++            start, end = 0, len(value)
++            while start < end and value[start].catcode == CatCode.SPACE:
++                start += 1
++            while end > start and value[end - 1].catcode == CatCode.SPACE:
++                end -= 1
++            return value[start:end]
++        tokens = trimmed(tokens)
++        while len(tokens) >= 2 and tokens[0].catcode == CatCode.BEGIN_GROUP and tokens[-1].catcode == CatCode.END_GROUP:
++            tokens = trimmed(tokens[1:-1])
++        if not tokens or any(t.kind != TokenKind.CHARACTER or t.value not in "0123456789" for t in tokens):
++            raise ReadingIssue("asset_page", "PDF page requires a positive literal integer")
++        page = int("".join(t.value for t in tokens))
++        if page < 1 or (page != 1 and path.suffix.lower() != ".pdf"):
++            raise ReadingIssue("asset_page", "Page must be positive; multiple pages require a PDF asset")
++        spans.append(command.span.basis.span(tokens[0].span.start, tokens[-1].span.end))
++    use = AssetUse(command, path, page, tuple(spans))
++    session.asset_uses[command.unit_id] = use
++    return use
++
++
++def observe_asset(session, command, context_span, reason, *, binding=None, search_changed=False):
++    record = {"source": command.span.basis.source_id, "occurrence": command.span.basis.occurrence_id,
++              "start": command.span.start, "end": command.span.end, "kind": "asset",
++              "context_span": [context_span.start, context_span.end],
++              "context": reason, "basis": "entry_reading_and_search_state",
++              "binding": binding, "status": "unresolved", "unit_id": command.unit_id}
++    unit = session.units.records[command.unit_id]
++    record.update(activity=unit.activity, activity_evidence=dict(unit.activity_evidence))
++    session.manifest.candidate_dependencies.append(record)
++    try:
++        if search_changed:
++            raise ReadingIssue("asset_search_context", "An unexecuted search-path/extension declaration precedes this image")
++        path = session.image_path(command, provisional=True)
++        use = register_asset(session, command, path)
++    except ReadingIssue as error:
++        record["reason"] = error.reason
++        session.require(command.span, error.reason, error.detail, stage="preparation", unit_id=command.unit_id,
++                        dependency="possible", next_step="resource_resolution")
++        return None
++    target = session.name(path)
++    record.update(target=target, page=use.page, status="resolved")
++    session.candidate_images.add(path)
++    session.require(command.span, "observed_asset",
++        "Literal image resolved under entry reading/search state; its owning context remains uninterpreted",
++        stage="interpretation", unit_id=command.unit_id, materialization="pending", next_step="asset_conversion")
++    return command, target
+ 
+ 
+ def observe_environment_assets(session, region):
+@@ -15,6 +89,10 @@ def observe_environment_assets(session, region):
+     tokenizer is involved. The environment and its reading assumptions survive.
+     """
+     references = []
++    if region.command is not None and region.command.action == "asset_reference":
++        reference = observe_asset(session, region.command, region.span, region.reason, binding=region.binding_id)
++        if reference is not None:
++            references.append(reference)
+     search_changed = False
+     for observation in region.observations:
+         command = observation.command
+@@ -22,36 +100,14 @@ def observe_environment_assets(session, region):
+             search_changed = True
+         if command.action != "asset_reference":
+             continue
+-        record = {"source": command.span.basis.source_id, "occurrence": command.span.basis.occurrence_id,
+-                  "start": command.span.start, "end": command.span.end, "kind": "asset",
+-                  "context_span": [region.span.start, region.span.end],
+-                  "context": region.reason, "basis": "entry_reading_and_search_state",
+-                  "binding": observation.binding_id, "status": "unresolved"}
+-        record["unit_id"] = command.unit_id
+-        session.manifest.candidate_dependencies.append(record)
+-        try:
+-            if not session.frames[-1].emit:
+-                raise ReadingIssue("package_asset", "Observed asset in retained code needs a payload rewrite contract")
+-            if search_changed:
+-                raise ReadingIssue("asset_search_context", "An unexecuted search-path/extension declaration precedes this image")
+-            path = session.image_path(command, provisional=True)
+-        except ReadingIssue as error:
+-            record["reason"] = error.reason
+-            session.require(command.span, error.reason, error.detail, stage="preparation", unit_id=command.unit_id,
+-                            dependency="possible", next_step="resource_resolution")
+-            continue
+-        target = session.name(path)
+-        record.update(target=target, status="resolved")
+-        session.candidate_images.add(path)
+-        references.append((command, target))
+-        session.require(command.span, "observed_asset",
+-            "Literal image resolved for the payload under entry reading/search state; "
+-            "its enclosing environment remains uninterpreted", stage="interpretation", unit_id=command.unit_id,
+-            materialization="pending", next_step="asset_conversion")
++        reference = observe_asset(session, command, region.span, region.reason,
++                                  binding=observation.binding_id, search_changed=search_changed)
++        if reference is not None:
++            references.append(reference)
+     return tuple(references)
+ 
+ 
+-def rewrite_image_references(pieces, mapping):
++def rewrite_image_references(pieces, mapping, uses):
+     """Apply captured filename edits; preserve all surrounding source exactly.
+ 
+     Multiple observations can share one deferred envelope. Edits are applied from
+@@ -60,60 +116,71 @@ def rewrite_image_references(pieces, mapping):
+     """
+     result = []
+     for piece in pieces:
+-        if piece.image_references:
+-            boundary = piece.span.end
+-            for command, target in sorted(piece.image_references, key=lambda ref: ref[0].span.start, reverse=True):
+-                arg = command.argument("target")
+-                if arg.span.basis is not piece.span.basis or not piece.span.start <= arg.span.start <= arg.span.end <= boundary:
+-                    raise ValueError("Image filename edits must be disjoint and contained in their source piece")
+-                piece = piece.edit_source(arg.span, mapping[target], "REWRITE_IMAGE")
+-                boundary = arg.span.start
++        for use in uses:
++            span = use.command.span
++            if (span.basis is piece.span.basis and piece.span.start <= span.start <= span.end <= piece.span.end
++                    and piece.operation != "PRESERVE_UNRESOLVED"):
++                for target, replacement in sorted(use.edits(mapping[use.command.unit_id]), key=lambda e: e[0].start, reverse=True):
++                    piece = piece.edit_source(target, replacement, "REWRITE_IMAGE")
+         result.append(piece)
+     return result
+ 
+ 
+ def batch_convert_assets_to_svg(
+-    active_image_paths: List[Path],
++    uses: List[AssetUse],
+     output_dir: Path,
+     project_dir: Path
+ ) -> Dict[str, str]:
+     """
+-    Converts all active images to .svg and writes them into output_dir.
+-    Returns a mapping of {original_relative_path: new_svg_relative_path}.
++    Convert each distinct (file, page) once. Return unit id to payload path.
+     """
+-    path_mapping: Dict[str, str] = {}
+-
+-    active_image_paths = list(dict.fromkeys(active_image_paths))
+-    stems = Counter(p.relative_to(project_dir).with_suffix(".svg").as_posix().casefold() for p in active_image_paths)
++    variants = list(dict.fromkeys((u.path, u.page) for u in uses))
++    explicit = {(u.path, u.page) for u in uses if u.page_spans}
++    def name(path, page, *, qualified=False):
++        rel = path.relative_to(project_dir)
++        stem = rel.as_posix() if qualified else rel.with_suffix("").as_posix()
++        return stem + (f"_p{page}" if (path, page) in explicit else "") + ".svg"
++    stems = Counter(name(p, page).casefold() for p, page in variants)
+     destinations = {}
+     occupied = set()
+-    for p in active_image_paths:
+-        rel = p.relative_to(project_dir)
+-        target = rel.with_suffix(".svg").as_posix()
++    for p, page in variants:
++        target = name(p, page)
+         if stems[target.casefold()] > 1:
+-            target = rel.as_posix() + ".svg"
++            target = name(p, page, qualified=True)
+         if target.casefold() in occupied:
+             raise ValueError(f"Asset output collision: {target}")
+-        destinations[p] = target
++        destinations[p, page] = target
+         occupied.add(target.casefold())
+ 
+-    for src_path in active_image_paths:
++    for src_path, page in variants:
+         if not src_path.exists():
+             raise FileNotFoundError(f"Active image not found: {src_path}")
+ 
+-        try:
+-            rel = src_path.relative_to(project_dir).as_posix()
+-        except ValueError:
+-            rel = src_path.name
+-
+         # Create output destination preserving relative subdirectory
+-        rel_svg = destinations[src_path]
++        rel_svg = destinations[src_path, page]
+         dest_svg_path = (output_dir / rel_svg).resolve()
+ 
+-        success = convert_asset_to_svg(src_path, dest_svg_path)
++        success = convert_asset_to_svg(src_path, dest_svg_path, page_index=page - 1)
+         if not success:
+             raise RuntimeError(f"SVG conversion failed for {src_path}; package preparation is incomplete")
+-        if success:
+-            path_mapping[rel] = rel_svg
++    return {use.command.unit_id: destinations[use.path, use.page] for use in uses}
+ 
+-    return path_mapping
++
++def surviving_asset_uses(session, pieces):
++    """Select admitted uses whose owning source survived emission rollback."""
++    retained = set(session.styles) | session.code
++    return [u for u in session.asset_uses.values() if session.documents[u.command.span.basis].path in retained or any(
++        p.operation != "PRESERVE_UNRESOLVED" and p.span.basis is u.command.span.basis
++        and p.span.start <= u.command.span.start <= u.command.span.end <= p.span.end for p in pieces)]
++
++
++def prepare_assets(session, pieces, output_dir):
++    """Apply the same per-use edits to inlined source and retained local code."""
++    retained = set(session.styles) | session.code
++    uses = surviving_asset_uses(session, pieces)
++    mapping = batch_convert_assets_to_svg(uses, output_dir, session.store.root)
++    for use in uses:
++        if session.documents[use.command.span.basis].path in retained:
++            for span, replacement in use.edits(mapping[use.command.unit_id]):
++                session._payload_edit(span, replacement)
++    return rewrite_image_references(pieces, mapping, uses), mapping
