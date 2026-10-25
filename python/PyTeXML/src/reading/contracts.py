@@ -123,6 +123,15 @@ class EffectiveReadingProfile:
     configuration: dict[str, Any] = field(default_factory=dict)
 
 
+@dataclass(frozen=True, slots=True)
+class BoundMeaning:
+    """A meaning copied at assignment time, independent of later donor changes."""
+    span: SourceSpan
+    profile: EffectiveReadingProfile | None = None
+    token: Token | None = None
+    uncertain: SourceSpan | None = None
+
+
 class ReadingKnowledge(Protocol):
     """Already loaded knowledge; package activation and loading stay outside."""
     def resolve_command(self, name: str, options: dict[str, Any] | None = None) -> EffectiveReadingProfile | UnresolvedBindingResult: ...
@@ -161,6 +170,7 @@ class ReadingBoundary:
     reason: str
     detail: str
     unit_id: str | None = field(default=None, compare=False)
+    causes: tuple[SourceSpan, ...] = field(default=(), kw_only=True)
 
 
 @dataclass(frozen=True, slots=True)
@@ -182,6 +192,7 @@ class DeferredRegion:
     # These remain observations, never execution events or expanded arguments.
     observations: tuple[DeferredRegion, ...] = ()
     unit_id: str | None = field(default=None, compare=False)
+    causes: tuple[SourceSpan, ...] = field(default=(), kw_only=True)
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -348,9 +359,10 @@ class SourceEnd:
 
 class ReadingIssue(Exception):
     """A scanner cannot establish further reading; routing locates the boundary."""
-    def __init__(self, reason: str, detail: str):
+    def __init__(self, reason: str, detail: str, *, causes=()):
         super().__init__(detail)
         self.reason, self.detail = reason, detail
+        self.causes = tuple(causes)
 
 
 def require_resolved(result: EffectiveReadingProfile | UnresolvedBindingResult) -> EffectiveReadingProfile:

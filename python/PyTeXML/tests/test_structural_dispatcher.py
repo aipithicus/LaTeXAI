@@ -257,7 +257,7 @@ class StructuralDispatcherTests(unittest.TestCase):
 
     def test_dynamic_assignment_and_global_prefix_remain_unresolved(self):
         for source, reason in ((r"\catcode`\@=\computed", "computed_assignment"),
-                               (r"\global\makeatletter", "unknown_construct")):
+                               (r"\global\makeatletter", "assignment_prefix")):
             with self.subTest(source=source):
                 self.setup_reader(source)
                 item = self.dispatcher.next_item()

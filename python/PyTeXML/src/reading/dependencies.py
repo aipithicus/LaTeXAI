@@ -7,6 +7,7 @@ The explicit stack shares source buffers and avoids recursive macro evaluation.
 from dataclasses import replace
 
 from .argument_scanner import ArgumentScanner
+from .assignment_scanner import AssignmentScanner
 from .contracts import EffectiveReadingProfile, ReadingIssue, ReadingKnowledge, ScannedArgument, StoredDefinition
 from .definition_scanner import DefinitionScanner
 from .token_cursor import TokenCursor
@@ -71,6 +72,13 @@ def observe_dependencies(argument, text, context, knowledge: ReadingKnowledge, u
                                   evidence={"reason": "stored_definition"})
                 shadowed.add(definition.target.value)
                 pending.append((ScannedArgument("body", definition.body, definition.body_tokens, "stored"), child, set(shadowed)))
+                continue
+            if profile.family == "meaning_assignment":
+                try:
+                    assignment = AssignmentScanner(cursor, context).let(token.span, profile)
+                except ReadingIssue:
+                    break
+                shadowed.add(assignment.argument("target").tokens[0].value)
                 continue
             if profile.action in DEPENDENCY_ACTIONS and profile.action != "asset_reference" and token.span.start not in excluded:
                 identifier = units.add(token.span, "possible_dependency", owner,

@@ -1,6 +1,6 @@
 """Bounded, non-expanding scanners for source-visible reading assignments."""
 from .argument_scanner import ArgumentScanner
-from .contracts import ReadingIssue, SourceCommand
+from .contracts import ReadingIssue, ScannedArgument, SourceCommand
 from .tex_reader import CatCode, TokenKind
 
 
@@ -10,6 +10,27 @@ class AssignmentScanner(ArgumentScanner):
     The final decimal must end at space, relax or EOF. Other terminators need
     TeX's frozen token pushback/expansion rules and are not guessed here.
     """
+
+    def let(self, opening, profile):
+        """TeX82 prefixed_command/let: get_r_token, optional equals, one donor.
+
+        Neither operand is expanded. After an equals TeX consumes at most one
+        space token (the mouth has already coalesced ordinary source spaces).
+        """
+        with self.context.argument_scanning():
+            target = self.next_nonspace()
+            if target is None or target.kind not in {TokenKind.CONTROL_SEQUENCE, TokenKind.ACTIVE_CHARACTER}:
+                raise ReadingIssue("assignment_target", "let needs a control sequence or active-character target")
+            donor = self.next_nonspace()
+            if donor is not None and donor.kind == TokenKind.CHARACTER and donor.value == "=" and donor.catcode == CatCode.OTHER:
+                donor = self.reader.next_token()
+                if donor is not None and donor.catcode == CatCode.SPACE:
+                    donor = self.reader.next_token()
+            if donor is None:
+                raise ReadingIssue("assignment_donor", "EOF before the let donor token")
+        return SourceCommand(self.reader.source_span(opening.start, self.reader.position), profile.name,
+            "meaning_assignment", tuple(ScannedArgument(name, t.span, (t,), "data")
+                                        for name, t in (("target", target), ("donor", donor))))
 
     @staticmethod
     def _digit(token):

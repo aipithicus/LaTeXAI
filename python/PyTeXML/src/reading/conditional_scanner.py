@@ -5,7 +5,7 @@ scanner neither executes branches nor invents truth values. Two linear reads
 must agree on every conditional marker before the cursor may resume after fi.
 """
 from .contracts import (ConditionalRegion, DeferredRegion, EnvironmentDefinition,
-                        ReadingIssue, StoredDefinition)
+                        ReadingIssue, SourceCommand, StoredDefinition)
 from .tex_reader import CatCode, TokenKind
 
 
@@ -31,6 +31,8 @@ class ConditionalScanner:
             if captured:
                 if isinstance(captured, StoredDefinition):
                     changed.add(captured.target.value)
+                elif isinstance(captured, SourceCommand) and captured.action == "meaning_assignment":
+                    changed.add(captured.argument("target").tokens[0].value)
                 elif isinstance(captured, EnvironmentDefinition):
                     changed.update((captured.name, "end" + captured.name))
                 elif isinstance(captured, DeferredRegion):
@@ -104,6 +106,8 @@ class ConditionalScanner:
             if captured:
                 if isinstance(captured, StoredDefinition):
                     changed.add(captured.target.value)
+                elif isinstance(captured, SourceCommand) and captured.action == "meaning_assignment":
+                    changed.add(captured.argument("target").tokens[0].value)
                 elif isinstance(captured, EnvironmentDefinition):
                     changed.update((captured.name, "end" + captured.name))
                 elif isinstance(captured, DeferredRegion):

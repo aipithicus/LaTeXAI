@@ -6,13 +6,13 @@ from enum import Enum
 from typing import Iterator
 from .contracts import (EffectiveReadingProfile, MouthBaseline, StoredDefinition,
                         EnvironmentDeclaration, EnvironmentDefinition, ScannedArgument,
-                        BooleanMeaning, ConditionalRule, ReadingIssue, UncertainMeaning)
+                        BooleanMeaning, BoundMeaning, ConditionalRule, ReadingIssue, UncertainMeaning)
 from .tex_reader import CatCode, CatcodeTable, TokenKind
 from .configuration import ConfigurationState
 
 
 DefinitionKey = tuple[TokenKind, str]
-LocalMeaning = StoredDefinition | EnvironmentDefinition | BooleanMeaning | UncertainMeaning
+LocalMeaning = StoredDefinition | EnvironmentDefinition | BooleanMeaning | BoundMeaning | UncertainMeaning
 
 
 class ExecutionMode(str, Enum):
@@ -148,28 +148,35 @@ class ReaderContext:
         """Resolve nesting from the current meaning, including local shadows."""
         meaning = self.lookup_meaning(name)
         if isinstance(meaning, UncertainMeaning):
-            raise ReadingIssue("uncertain_meaning", f"Meaning of {name!r} depends on retained source at {meaning.span}")
+            raise ReadingIssue("uncertain_meaning", f"Meaning of {name!r} depends on retained source at {meaning.span}", causes=(meaning.span,))
         if isinstance(meaning, BooleanMeaning):
             if meaning.uncertain is not None:
                 # Even its nesting meaning may have changed, not just its value.
                 raise ReadingIssue("uncertain_boolean", f"Meaning of {name!r} may have changed at "
-                                   f"{meaning.uncertain.basis.source_id}:{meaning.uncertain.start}")
+                                   f"{meaning.uncertain.basis.source_id}:{meaning.uncertain.start}", causes=(meaning.uncertain,))
             if meaning.target is not None:
                 return None  # A setter has macro meaning; it does not nest while skipping.
             return ConditionalRule("opener", "always_true" if meaning.truth else "always_false", 0)
+        if isinstance(meaning, BoundMeaning):
+            if meaning.uncertain is not None:
+                raise ReadingIssue("uncertain_meaning", f"Copied meaning may have changed at {meaning.uncertain}", causes=(meaning.uncertain,))
+            return meaning.profile.conditional if meaning.profile else None
         return None if meaning is not None else knowledge.resolve_conditional(name)
 
-    def invalidate_booleans(self, span) -> None:
+    def invalidate_booleans(self, span) -> bool:
         """Keep unexecuted effects explicit; no inference of arbitrary macro purity.
 
         Unknown code can make global assignments, so suspended outer meanings are
         also uncertain. A later fresh declaration can establish a new local meaning.
         This is a bounded guard, not a general context dependency analysis.
         """
+        changed = False
         for meanings in (self._meanings, *self._meaning_scopes):
             for key, meaning in list(meanings.items()):
-                if isinstance(meaning, BooleanMeaning) and meaning.uncertain is None:
+                if isinstance(meaning, (BooleanMeaning, BoundMeaning)) and meaning.uncertain is None:
                     meanings[key] = replace(meaning, uncertain=span)
+                    changed = True
+        return changed
 
     def record_meaning(self, name: str, meaning: LocalMeaning,
                        kind: TokenKind = TokenKind.CONTROL_SEQUENCE) -> None:

@@ -17,7 +17,7 @@ from .contracts import (
     ConditionalRule, EffectiveReadingProfile, LiteralRegion, ReadingBoundary, ReadingIssue,
     ReadingKnowledge, SkippedRegion, StoredDefinition, SourceCommand, SourceEnd, require_resolved,
     DeferredRegion, UnresolvedBindingResult, UnresolvedReason, BooleanMeaning, CommandDefinition,
-    EnvironmentDefinition, UncertainMeaning, ScannedArgument,
+    EnvironmentDefinition, UncertainMeaning, BoundMeaning, ScannedArgument,
 )
 from .boolean_scanner import declaration as boolean_declaration
 from .argument_scanner import ArgumentScanner, key_values
@@ -191,10 +191,10 @@ class StructuralDispatcher:
         self._set_reader(reader)
 
     def _boundary(self, span: SourceSpan, reason: str, detail: str,
-                  *, remainder_start: int | None = None) -> ReadingBoundary:
+                  *, remainder_start: int | None = None, causes=()) -> ReadingBoundary:
         self.halted = True
         start = span.start if remainder_start is None else remainder_start
-        return ReadingBoundary(span, self.reader.source_span(start, len(self.reader.text)), reason, detail)
+        return ReadingBoundary(span, self.reader.source_span(start, len(self.reader.text)), reason, detail, causes=tuple(causes))
 
     @staticmethod
     def _require(condition: bool, reason: str, detail: str) -> None:
@@ -302,7 +302,7 @@ class StructuralDispatcher:
                 self._conditional(pending.rule, pending.terminator.span)
                 return pending.terminator
             except ReadingIssue as error:
-                return self._boundary(pending.terminator.span, error.reason, error.detail)
+                return self._boundary(pending.terminator.span, error.reason, error.detail, causes=error.causes)
         try:
             event = reader.next_event()
         except InvalidCharacterError as error:
@@ -363,16 +363,20 @@ class StructuralDispatcher:
         try:
             deferred = DeferredScanner(reader, context)
             if isinstance(meaning, UncertainMeaning):
-                raise ReadingIssue("uncertain_meaning", f"{token.value!r} may have been redefined at {meaning.span}")
+                raise ReadingIssue("uncertain_meaning", f"{token.value!r} may have been redefined at {meaning.span}", causes=(meaning.span,))
+            if isinstance(meaning, BoundMeaning):
+                if meaning.uncertain is not None:
+                    raise ReadingIssue("uncertain_meaning", f"Copied meaning of {token.value!r} may have changed at {meaning.uncertain}", causes=(meaning.uncertain,))
+                self._require(meaning.profile is not None, "character_meaning",
+                              "A character meaning is captured; its execution needs a downstream token interpreter")
             if (isinstance(reader, TokenCursor) and reader not in self._branch_replays and token.kind == TokenKind.CHARACTER
                     and token.catcode not in {CatCode.SPACE, CatCode.BEGIN_GROUP, CatCode.END_GROUP}):
                 raise ReadingIssue("option_body", "Option text requires interpretation beyond reading effects")
             if isinstance(meaning, BooleanMeaning):
                 if self.preparation and meaning.uncertain is not None and meaning.target is None:
-                    return self._capture_conditional(token, ConditionalRule("opener", "deferred", 0))
-                self._require(meaning.uncertain is None, "uncertain_boolean",
-                              f"Meaning of {token.value!r} may have changed in unexecuted source at "
-                              f"{meaning.uncertain}")
+                    return self._capture_conditional(token, ConditionalRule("opener", "deferred", 0), causes=(meaning.uncertain,))
+                if meaning.uncertain is not None:
+                    raise ReadingIssue("uncertain_boolean", f"Meaning of {token.value!r} may have changed in unexecuted source at {meaning.uncertain}", causes=(meaning.uncertain,))
                 if meaning.target is not None:
                     truth = self._boolean_value(meaning.source)
                     context.record_meaning(meaning.target, BooleanMeaning(event.span, truth))
@@ -399,7 +403,7 @@ class StructuralDispatcher:
                 return event
             if token.kind != TokenKind.CONTROL_SEQUENCE:
                 return event
-            resolved = self.knowledge.resolve_command(token.value)
+            resolved = meaning.profile if isinstance(meaning, BoundMeaning) else self.knowledge.resolve_command(token.value)
             if self.preparation and isinstance(resolved, UnresolvedBindingResult):
                 if resolved.reason == UnresolvedReason.UNKNOWN_CONSTRUCT:
                     return self._deferred(deferred.command(token, resolved.reason.value, resolved.detail))
@@ -413,6 +417,28 @@ class StructuralDispatcher:
                     # An inactive literal binding can require a different mouth.
                     # Do not treat its body as ordinary executed TeX.
             profile = require_resolved(resolved)
+            if profile.family == "assignment_prefix":
+                raise ReadingIssue("assignment_prefix", "Prefixed assignments require explicit scope and prefix resolution")
+            if profile.family == "meaning_assignment":
+                command = AssignmentScanner(reader, context).let(event.span, profile)
+                target, donor = (a.tokens[0] for a in command.arguments)
+                copied = context.lookup_meaning(donor.value, donor.kind)
+                if copied is None:
+                    if donor.kind == TokenKind.CHARACTER:
+                        copied = BoundMeaning(command.span, token=donor)
+                    else:
+                        donor_profile = self.knowledge.resolve_command(donor.value)
+                        copied = (BoundMeaning(command.span, profile=donor_profile)
+                                  if isinstance(donor_profile, EffectiveReadingProfile) else UncertainMeaning(command.span))
+                        if (isinstance(donor_profile, EffectiveReadingProfile) and donor_profile.conditional is not None
+                                and donor_profile.conditional.evaluation in {"always_true", "always_false"}):
+                            copied = BooleanMeaning(command.span, donor_profile.conditional.evaluation == "always_true")
+                context.record_meaning(target.value, copied, target.kind)
+                if isinstance(copied, UncertainMeaning):
+                    self.units.uncertainty_cause(command.span, "assignment_donor", "The donor's current meaning is not established")
+                return replace(command, metadata={"donor_resolved": not isinstance(copied, UncertainMeaning),
+                    "trailing_control_word": donor.kind == TokenKind.CONTROL_SEQUENCE and bool(donor.value)
+                        and context.catcodes[donor.value[-1]] == CatCode.LETTER})
             if profile.family == "configuration_command":
                 return self._configuration(event.span, profile)
             if profile.family == "collected_environment_definition":
@@ -590,7 +616,7 @@ class StructuralDispatcher:
                 return SourceCommand(region.opening, region.name, "transparent_begin", (), metadata)
             return region
         except ReadingIssue as error:
-            return self._boundary(event.span, error.reason, error.detail)
+            return self._boundary(event.span, error.reason, error.detail, causes=error.causes)
         except InvalidCharacterError as error:
             return self._boundary(error.span, "invalid_character", str(error), remainder_start=event.span.start)
 
@@ -651,7 +677,7 @@ class StructuralDispatcher:
                 for item in replay:
                     if isinstance(item, (ReadingBoundary, DeferredRegion)):
                         raise ReadingIssue("option_body", f"Option {name!r} requires {item.reason} at "
-                                           f"{item.span.basis.source_id}:{item.span.start}: {item.detail}")
+                                           f"{item.span.basis.source_id}:{item.span.start}: {item.detail}", causes=item.causes)
                     if isinstance(item, (CommandDefinition, EnvironmentDefinition)) and item.target_check == "unverified":
                         definition_checks.append({"unit_id": item.unit_id, "declaration": item.declaration,
                                                   "target": item.name if isinstance(item, EnvironmentDefinition) else item.target.value,
@@ -679,19 +705,26 @@ class StructuralDispatcher:
         # expressions may redefine a boolean or its setter, even globally.
         if region.reason != "math_interpretation" or any(
                 t.kind in {TokenKind.CONTROL_SEQUENCE, TokenKind.ACTIVE_CHARACTER} for t in region.tokens):
-            self.defer_effects(region.span)
+            self.defer_effects(region.span, reason=region.reason, detail=region.detail)
         return region
 
-    def defer_effects(self, span):
+    def defer_effects(self, span, *, reason="unresolved_reading", detail="Reading effects remain unresolved"):
         """Unknown execution can invalidate live and suspended bounded state."""
-        self.context.invalidate_booleans(span)
+        changed = self.context.invalidate_booleans(span)
         for scope in (self.options, *(parent[2] for parent in self._parents)):
             if scope is not None and scope.uncertain is None:
                 scope.uncertain = span
+                changed = True
+        if changed:
+            self.units.uncertainty_cause(span, reason, detail, evidence=self._activity_evidence())
 
-    def _capture_conditional(self, token, rule):
-        region = ConditionalScanner(self.reader, self.context).read(token, rule, classify=self._observed_conditional,
-            protect=lambda t, **kw: self._protect_deferred_environment(t, conditional=True, **kw))
+    def _capture_conditional(self, token, rule, *, causes=()):
+        try:
+            region = ConditionalScanner(self.reader, self.context).read(token, rule, classify=self._observed_conditional,
+                protect=lambda t, **kw: self._protect_deferred_environment(t, conditional=True, **kw))
+        except ReadingIssue as error:
+            raise ReadingIssue(error.reason, error.detail, causes=tuple(dict.fromkeys((*causes, *error.causes)))) from error
+        region = replace(region, causes=tuple(causes))
         self.context.invalidate_meanings(region.changed_meanings, region.span)
         return self._deferred(region)
 
@@ -733,9 +766,12 @@ class StructuralDispatcher:
             # its envelope protected; do not dispatch the old binding or body.
             return DeferredScanner(self.reader, self.context).command(
                 token, "stored_macro", "Stored invocation inside an unbound environment remains unexpanded")
-        if meaning is not None:
+        if meaning is not None and not isinstance(meaning, BoundMeaning):
             raise ReadingIssue("environment_reading", "A conditional or setter inside an unbound environment needs reading resolution")
-        profile = self.knowledge.resolve_command(token.value)
+        if isinstance(meaning, BoundMeaning):
+            self._require(meaning.uncertain is None and meaning.profile is not None,
+                          "environment_reading", "Copied meaning requires further resolution")
+        profile = meaning.profile if isinstance(meaning, BoundMeaning) else self.knowledge.resolve_command(token.value)
         if isinstance(profile, UnresolvedBindingResult):
             if profile.reason == UnresolvedReason.PACKAGE_NOT_LOADED:
                 syntax = self.knowledge.source_command_syntax(token.value)
@@ -748,9 +784,11 @@ class StructuralDispatcher:
             return DeferredScanner(self.reader, self.context).command(token, profile.reason.value, profile.detail)
         if profile.family == "stored_definition":
             return self.definitions.read(token.span.start, profile)  # capture, never install
+        if profile.family == "meaning_assignment":
+            return AssignmentScanner(self.reader, self.context).let(token.span, profile)
         if profile.family == "collected_environment_definition":
             return self.environments.definition(token.span.start, profile)  # capture, never install
-        if profile.family in {"conditional", "conditional_factory", "catcode_mutator", "catcode_assignment", "grouping", "environment_factory", "option_control", "configuration_command"}:
+        if profile.family in {"conditional", "conditional_factory", "catcode_mutator", "catcode_assignment", "grouping", "environment_factory", "option_control", "configuration_command", "assignment_prefix"}:
             raise ReadingIssue("environment_reading", "Control flow or reading effects inside an unbound environment require resolution")
         if profile.family == "source_command" and profile.action != "environment_end":
             checkpoint = self.reader.checkpoint()
@@ -871,7 +909,7 @@ class StructuralDispatcher:
         try:
             scanned = self.skipped.read(stop_at_alternative=not frame.in_alternative)
         except ReadingIssue as error:
-            return self._boundary(frame.opening, error.reason, error.detail, remainder_start=self._skip_start)
+            return self._boundary(frame.opening, error.reason, error.detail, remainder_start=self._skip_start, causes=error.causes)
         except InvalidCharacterError as error:
             return self._boundary(error.span, "invalid_character", str(error), remainder_start=self._skip_start)
         self._skip_start = None

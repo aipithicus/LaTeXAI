@@ -20,6 +20,14 @@ class ReadingUnit:
                            "start": self.span.start, "end": self.span.end}}
 
 
+@dataclass(frozen=True, slots=True)
+class UncertaintyCause:
+    id: str
+    unit_id: str
+    reason: str
+    detail: str
+
+
 class UnitRegistry:
     """One namespace per traversal; callers may share it across input readers.
 
@@ -29,6 +37,15 @@ class UnitRegistry:
     def __init__(self):
         self.records: dict[str, ReadingUnit] = {}
         self.children: dict[str, list[str]] = {}
+        self.uncertainty: dict[SourceSpan, UncertaintyCause] = {}
+        self._by_span: dict[SourceSpan, str] = {}
+
+    def uncertainty_cause(self, span, reason="unresolved_reading", detail="Reading effects remain unresolved", *, evidence=None):
+        """Retain the first witnessed cause for this exact source occurrence."""
+        if span not in self.uncertainty:
+            unit_id = self._by_span.get(span) or self.add(span, "uncertainty_origin", activity="reached", evidence=evidence)
+            self.uncertainty[span] = UncertaintyCause(f"cause-{len(self.uncertainty) + 1}", unit_id, reason, detail)
+        return self.uncertainty[span]
 
     def add(self, span: SourceSpan, kind: str, parent_id: str | None = None, *, activity: str | None = None,
             evidence: dict | None = None) -> str:
@@ -46,6 +63,7 @@ class UnitRegistry:
                 raise ValueError("Unknown activity evidence unit")
         identifier = f"unit-{len(self.records) + 1}"
         self.records[identifier] = ReadingUnit(identifier, span, kind, parent_id, activity, evidence)
+        self._by_span.setdefault(span, identifier)
         if parent_id:
             self.children.setdefault(parent_id, []).append(identifier)
         return identifier

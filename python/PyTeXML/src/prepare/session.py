@@ -522,6 +522,9 @@ class PreparationSession:
     def _command(self, command):
         frame, action = self.frames[-1], command.action
         self.commands.append(command)
+        if action == "meaning_assignment" and not command.metadata.get("donor_resolved", False):
+            self.require(command.span, "assignment_donor", "Donor meaning needs interpretation; assignment retained without expansion",
+                         stage="interpretation", unit_id=command.unit_id)
         for check in command.metadata.get("definition_checks", ()):
             self._definition_check(**check)
         if action == "pass_options":
@@ -667,7 +670,7 @@ class PreparationSession:
         # No-argument commands need a lexical separator after a control word.
         if (not command.arguments and action in {"opaque", "biblatex_print", "reading_noop", "process_options"}
                 or action == "boolean_declaration" and command.metadata["unbraced"]
-                or action == "conditional_test" and command.metadata["trailing_control_word"]):
+                or action in {"conditional_test", "meaning_assignment"} and command.metadata["trailing_control_word"]):
             self.emit(command.span.basis.span(command.span.end, command.span.end), " ", operation="SYNTHETIC_SEPARATOR")
 
     def run(self):

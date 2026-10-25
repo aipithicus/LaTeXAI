@@ -42,7 +42,7 @@ class OptionScope:
     def require_known(self):
         if self.uncertain is not None:
             raise ReadingIssue("uncertain_options", "Unexecuted source may have changed option state at "
-                               f"{self.uncertain.basis.source_id}:{self.uncertain.start}")
+                               f"{self.uncertain.basis.source_id}:{self.uncertain.start}", causes=(self.uncertain,))
 
     def declare(self, name, body):
         if self.processed:

@@ -2,6 +2,12 @@ identity:
   registry: reading_handlers
   description: Reading actions and their current implementation boundary
 handlers:
+  let_assignment:
+    status: scanner
+    description: Capture two unexpanded tokens; dispatcher copies established local meanings or records an unresolved donor
+  assignment_prefix:
+    status: scanner
+    description: Stop before prefixed assignments; global and other prefix semantics are not inferred from a following local declaration
   branch_test:
     status: scanner
     description: Select a braced branch from ordered source-visible class/package load facts; dispatch frozen tokens without general macro expansion

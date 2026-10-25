@@ -155,7 +155,8 @@ class BooleanConditionalTests(unittest.TestCase):
         self.assertEqual(self.chars(items), "Y")
         items = self.read(r"\newif\ifflag\global\flagtrue\ifflag X\else Y\fi",
                           preparation=True, complete=False)
-        self.assertEqual(items[-1].reason, "uncertain_boolean")
+        self.assertEqual(items[-1].reason, "assignment_prefix")
+        self.assertFalse(self.context.lookup_meaning("ifflag").truth)
 
     def test_unexecuted_commands_never_route_using_a_stale_boolean(self):
         for code in (r"\unknown", r"\def\enable{\flagtrue}\enable",

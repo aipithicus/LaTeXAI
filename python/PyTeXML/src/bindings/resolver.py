@@ -222,7 +222,7 @@ class BindingResolver:
                     span_classification=SpanClassification("lexical_directive", "catcode_mutation"))
             if section == "grouping":
                 return self._build_group(clean, spec, origin)
-            if section in {"commands", "command_overrides"} and spec.get("family") in {"stored_definition", "conditional_factory", "collected_environment_definition"}:
+            if section in {"commands", "command_overrides"} and spec.get("family") in {"stored_definition", "conditional_factory", "collected_environment_definition", "meaning_assignment", "assignment_prefix"}:
                 if opts:
                     return self._unresolved(clean, UnresolvedReason.UNSUPPORTED_READING_OPTION,
                                             "Definition declarations have no resolved options", opts)

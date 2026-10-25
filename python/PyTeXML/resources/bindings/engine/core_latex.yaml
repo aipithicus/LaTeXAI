@@ -13,6 +13,31 @@ identity:
 
 reading:
   commands:
+    # TeX82 tex.web, prefixed_command (let). Prefixes are explicit boundaries.
+    - name: '\let'
+      family: meaning_assignment
+      scope: local
+      grammar: {handler: let_assignment}
+    - name: '\global'
+      family: assignment_prefix
+      scope: local
+      grammar: {handler: assignment_prefix}
+    - name: '\long'
+      family: assignment_prefix
+      scope: local
+      grammar: {handler: assignment_prefix}
+    - name: '\outer'
+      family: assignment_prefix
+      scope: local
+      grammar: {handler: assignment_prefix}
+    - name: '\protected'
+      family: assignment_prefix
+      scope: local
+      grammar: {handler: assignment_prefix}
+    - name: '\globaldefs'
+      family: assignment_prefix
+      scope: local
+      grammar: {handler: assignment_prefix}
     # Capture-only boundaries (base/ltdefns.dtx, base/ltmiscen.dtx).
     # Preparation neither checks target existence nor installs replacements,
     # evaluates their bodies, or schedules/runs hook code.
