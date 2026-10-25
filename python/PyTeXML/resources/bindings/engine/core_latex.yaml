@@ -13,6 +13,37 @@ identity:
 
 reading:
   commands:
+    # TeX82 eqtb integer parameters: these assignments change line/page breaking,
+    # not mouth categories, option declarations, or conditional meanings.
+    - name: '\widowpenalty'
+      family: parameter_assignment
+      scope: local
+      grammar: {handler: literal_integer_assignment}
+      metadata: {source_reference: 'TeX82 tex.web: widow_penalty_code, assign_int, scan_int'}
+    - name: '\clubpenalty'
+      family: parameter_assignment
+      scope: local
+      grammar: {handler: literal_integer_assignment}
+      metadata: {source_reference: 'TeX82 tex.web: club_penalty_code, assign_int, scan_int'}
+    # https://github.com/latex3/latex2e/blob/develop/base/ltpage.dtx
+    # These summaries preserve the actual local meaning writes. They are not
+    # blanket exemptions for author macros bearing formatting-looking names.
+    - name: '\flushbottom'
+      family: source_command
+      action: declared_effects
+      grammar: {handler: source_arguments, arguments: []}
+      metadata:
+        source_reference: 'latex2e base/ltpage.dtx v1.0o: flushbottom'
+        requires_unshadowed: [relax]
+        meaning_copies: {'@textbottom': relax, '@texttop': relax}
+    - name: '\sloppy'
+      family: source_command
+      action: declared_effects
+      grammar: {handler: source_arguments, arguments: []}
+      metadata:
+        source_reference: 'latex2e base/ltpage.dtx v1.0o: sloppy assigns tolerance, emergencystretch, hfuzz, vfuzz'
+        requires_unshadowed: [tolerance, emergencystretch, hfuzz, vfuzz, 'p@']
+        meaning_copies: {}
     # TeX82 tex.web, prefixed_command (let). Prefixes are explicit boundaries.
     - name: '\let'
       family: meaning_assignment

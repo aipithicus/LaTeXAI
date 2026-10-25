@@ -513,6 +513,14 @@ class PreparationSession:
             self.dispatcher.defer_effects(command.span)
         else:
             usage.binding_activated = True
+            effects = self.resolver.catalog.package_bindings[name].get("reading", {}).get("load_effects")
+            if effects is not None:
+                record = self.require(command.span, "package_load_effects", effects["detail"],
+                    stage="binding", unit_id=command.unit_id, dependency="possible" if effects["optional_inputs"] else "none")
+                record["evidence"] = {"binding": name, "source_reference": effects["source_reference"],
+                    "optional_inputs": [{"name": n, "in_source_inventory": self.store.contains(self.root.parent / n),
+                        "external_search": "unresolved"} for n in effects["optional_inputs"]]}
+                self.dispatcher.defer_effects(command.span, reason="package_load_effects", detail=effects["detail"])
 
     def _definition_check(self, unit_id, declaration, target, requirement):
         self.require(self.units.records[unit_id].span, "definition_precondition",
@@ -683,7 +691,7 @@ class PreparationSession:
         if action == "environment_end" and command.metadata.get("document"):
             self._ended_document = True
         # No-argument commands need a lexical separator after a control word.
-        if (not command.arguments and action in {"opaque", "biblatex_print", "reading_noop", "process_options"}
+        if (not command.arguments and action in {"opaque", "biblatex_print", "reading_noop", "process_options", "declared_effects"}
                 or action == "boolean_declaration" and command.metadata["unbraced"]
                 or action in {"conditional_test", "meaning_assignment"} and command.metadata["trailing_control_word"]):
             self.emit(command.span.basis.span(command.span.end, command.span.end), " ", operation="SYNTHETIC_SEPARATOR")

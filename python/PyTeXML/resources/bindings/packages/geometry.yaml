@@ -1,0 +1,16 @@
+identity:
+  package: geometry
+  description: Witnessed package-load obligations; layout and load effects are not yet implemented
+  source:
+    version: '6.0'
+    reference: https://github.com/LaTeX-Package-Repositories/geometry/blob/main/geometry.dtx
+reading:
+  load_effects:
+    status: unresolved
+    source_reference: 'geometry.dtx v6.0: Gm@processconfig, ProcessOptionsKV, Gm@process, AtBeginDocument'
+    optional_inputs: [geometry.cfg]
+    detail: >-
+      Geometry loads optional geometry.cfg before class/package key processing,
+      computes layout, and registers begin-document work. Configuration contents,
+      key-value expansion and load-time effects require a fuller reading contract;
+      this binding does not establish preservation of caller booleans or options.

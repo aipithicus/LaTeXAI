@@ -167,6 +167,14 @@ class BindingCatalog:
         return handlers
 
     def _validate_reading(self, reading: dict[str, Any], path: Path) -> None:
+        if "load_effects" in reading:
+            effect = reading["load_effects"]
+            if (not isinstance(effect, dict) or set(effect) != {"status", "detail", "optional_inputs", "source_reference"}
+                    or effect["status"] != "unresolved"
+                    or any(not isinstance(effect[k], str) or not effect[k] for k in ("detail", "source_reference"))
+                    or not isinstance(effect["optional_inputs"], list)
+                    or any(not isinstance(n, str) or not n for n in effect["optional_inputs"])):
+                raise ProfileError(f"{path}: invalid unresolved package load effects")
         if "option_resolution" in reading:
             self._validate_literal_options(reading["option_resolution"], path)
         if "configuration" in reading:
@@ -246,6 +254,10 @@ class BindingCatalog:
                     handler = "let_assignment" if spec["family"] == "meaning_assignment" else "assignment_prefix"
                     if grammar != {"handler": handler} or spec.get("scope") != "local":
                         raise ProfileError(f"{path}: {name} requires the bounded local {handler} recipe")
+                if spec.get("family") == "parameter_assignment":
+                    if (grammar != {"handler": "literal_integer_assignment"} or spec.get("scope") != "local"
+                            or not isinstance(spec.get("metadata", {}).get("source_reference"), str)):
+                        raise ProfileError(f"{path}: {name} requires a sourced literal integer assignment")
                 if spec.get("family") == "conditional_factory":
                     setters = grammar.get("setters")
                     if (set(grammar) != {"handler", "target_prefix", "initial", "setters"}
@@ -297,6 +309,16 @@ class BindingCatalog:
                         wildcard = spec.get("metadata", {}).get("allow_wildcard", False)
                         if type(wildcard) is not bool:
                             raise ProfileError(f"{path}: {name} allow_wildcard must be boolean")
+                    if spec.get("action") == "declared_effects":
+                        effect = spec.get("metadata", {})
+                        if (arguments or set(effect) != {"requires_unshadowed", "meaning_copies", "source_reference"}
+                                or not isinstance(effect["requires_unshadowed"], list)
+                                or any(not isinstance(n, str) or not n for n in effect["requires_unshadowed"])
+                                or not isinstance(effect["meaning_copies"], dict)
+                                or any(not isinstance(n, str) or not n or not isinstance(d, str)
+                                    or d not in effect["requires_unshadowed"] for n, d in effect["meaning_copies"].items())
+                                or not isinstance(effect["source_reference"], str) or not effect["source_reference"]):
+                            raise ProfileError(f"{path}: {name} requires sourced bounded reading effects")
                     if spec.get("action") == "pass_options":
                         if ([{k: a[k] for k in ("name", "kind")} for a in arguments] != [{"name": "options", "kind": "braced"}, {"name": "name", "kind": "braced"}]
                                 or spec.get("metadata") not in ({"target_kind": "package"}, {"target_kind": "class"})):

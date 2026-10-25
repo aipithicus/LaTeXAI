@@ -23,6 +23,7 @@ from .boolean_scanner import declaration as boolean_declaration
 from .argument_scanner import ArgumentScanner, key_values
 from .configuration import entries, configured_options
 from .assignment_scanner import AssignmentScanner
+from .effects import declared_effects
 from .environment_registry import declarations, resolve_environment
 from .environment_scanner import EnvironmentScanner
 from .definition_scanner import DefinitionScanner
@@ -419,6 +420,8 @@ class StructuralDispatcher:
             profile = require_resolved(resolved)
             if profile.family == "assignment_prefix":
                 raise ReadingIssue("assignment_prefix", "Prefixed assignments require explicit scope and prefix resolution")
+            if profile.family == "parameter_assignment":
+                return AssignmentScanner(reader, context).integer_parameter(event.span, profile)
             if profile.family == "meaning_assignment":
                 command = AssignmentScanner(reader, context).let(event.span, profile)
                 target, donor = (a.tokens[0] for a in command.arguments)
@@ -508,6 +511,8 @@ class StructuralDispatcher:
                     return command
                 if command.action == "branch_test":
                     return self._branch_test(command)
+                if command.action == "declared_effects":
+                    declared_effects(command, context, self.knowledge)
                 if command.action in {"opaque", "metadata", "citation"} and any(
                         t.kind in {TokenKind.CONTROL_SEQUENCE, TokenKind.ACTIVE_CHARACTER}
                         for arg in command.arguments if arg.role not in {"data", "diagnostic", "stored"} for t in arg.tokens):
@@ -788,7 +793,7 @@ class StructuralDispatcher:
             return AssignmentScanner(self.reader, self.context).let(token.span, profile)
         if profile.family == "collected_environment_definition":
             return self.environments.definition(token.span.start, profile)  # capture, never install
-        if profile.family in {"conditional", "conditional_factory", "catcode_mutator", "catcode_assignment", "grouping", "environment_factory", "option_control", "configuration_command", "assignment_prefix"}:
+        if profile.family in {"conditional", "conditional_factory", "catcode_mutator", "catcode_assignment", "grouping", "environment_factory", "option_control", "configuration_command", "assignment_prefix", "parameter_assignment"}:
             raise ReadingIssue("environment_reading", "Control flow or reading effects inside an unbound environment require resolution")
         if profile.family == "source_command" and profile.action != "environment_end":
             checkpoint = self.reader.checkpoint()

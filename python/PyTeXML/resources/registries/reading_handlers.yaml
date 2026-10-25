@@ -2,6 +2,12 @@ identity:
   registry: reading_handlers
   description: Reading actions and their current implementation boundary
 handlers:
+  literal_integer_assignment:
+    status: scanner
+    description: Capture a literal signed decimal parameter assignment without expansion; preserve its layout value for later interpretation
+  declared_effects:
+    status: context_effect
+    description: Apply sourced local meaning copies with explicit unshadowed prerequisites; leave layout computation downstream
   optional_source_input:
     status: scanner
     description: Capture filename and both branches; resolve only present local files with empty branches, otherwise retain a located dependency candidate

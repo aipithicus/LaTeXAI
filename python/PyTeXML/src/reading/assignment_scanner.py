@@ -37,6 +37,35 @@ class AssignmentScanner(ArgumentScanner):
         return (token is not None and token.kind == TokenKind.CHARACTER
                 and token.catcode == CatCode.OTHER and token.value in "0123456789")
 
+    def integer_parameter(self, opening, profile):
+        """Literal integer parameter assignment, with no expansion or pushback."""
+        with self.context.argument_scanning():
+            checkpoint = self.reader.checkpoint()
+            token = self.next_nonspace()
+            if not (token is not None and token.kind == TokenKind.CHARACTER
+                    and token.catcode == CatCode.OTHER and token.value == "="):
+                self.reader.restore(checkpoint)
+            sign = 1
+            while True:
+                checkpoint = self.reader.checkpoint()
+                token = self.next_nonspace()
+                if token is not None and token.kind == TokenKind.CHARACTER and token.catcode == CatCode.OTHER and token.value in "+-":
+                    sign *= -1 if token.value == "-" else 1
+                else:
+                    self.reader.restore(checkpoint)
+                    break
+            value = sign * self._integer()
+            if abs(value) > 2147483647:
+                raise ReadingIssue("invalid_assignment", "Integer parameter value exceeds TeX's range")
+            token = self._peek()
+            if token is not None:
+                if token.catcode == CatCode.SPACE:
+                    self.reader.next_token()
+                else:
+                    raise ReadingIssue("assignment_terminator", "Literal integer assignment needs space or EOF")
+        return SourceCommand(self.reader.source_span(opening.start, self.reader.position), profile.name,
+                             "layout_assignment", metadata={"value": value, "source_reference": profile.tex_mechanics["source_reference"]})
+
     def _integer(self, *, character=False):
         token = self.next_nonspace()
         if (character and token is not None and token.kind == TokenKind.CHARACTER
