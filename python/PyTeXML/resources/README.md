@@ -9,6 +9,7 @@ configuration; they are loaded deliberately at bootstrap, then reused in memory.
 | [profiles/mouth/](profiles/mouth/README.md) | MouthProfiles and the reusable reader | Baseline catcodes, regex character classes, profile inheritance and local reading settings |
 | [registries/reading_handlers.yaml](registries/reading_handlers.yaml) | Binding catalog | Current core reading-action vocabulary and capability status |
 | [policies/prepare.yaml](policies/prepare.yaml) | Preparation policy loader | Role/event actions for preparing `master.tex` |
+| [lint/preparation.yaml](lint/preparation.yaml) | Bounded preparation lint | Diagnostic vocabulary and remediation for witnessed reader/load evidence; policy separately authorizes repairs |
 | [experimental/](experimental/README.md) | Explicit inspection and conformance tests | Alternative policy ideas and provisional output projections |
 
 There is one package binding identity across stages. The current bindings contain

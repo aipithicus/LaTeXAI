@@ -48,3 +48,8 @@ structural_normalization:
 provenance:
   emit_ledger: true
   rle_compression: true
+
+# Diagnostics are enabled; repairs require an explicit mode and allow-list.
+linting:
+  mode: report
+  repairs: []

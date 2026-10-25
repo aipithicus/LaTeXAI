@@ -78,6 +78,7 @@ class EventKind(Enum):
     IGNORED_CHARACTER = "ignored_character"
     END_OF_LINE = "end_of_line"
     DISABLED_ENDLINE = "disabled_endline"
+    RECOVERED_INVALID = "recovered_invalid"
 
 
 @dataclass(frozen=True, slots=True)
@@ -496,6 +497,19 @@ class TexReader:
         else:
             self._position = self.limit
         return event
+
+    def discard_invalid_character(self, error: InvalidCharacterError) -> ReadEvent:
+        """Explicitly recover the exact failed character, without changing state.
+
+        This is a cursor primitive, not permission to edit source. Its owner must
+        justify and record the emitted repair. Ordinary reads remain sticky failures.
+        """
+        if error is not self._failure:
+            raise ValueError("Recovery requires this reader's current invalid-character failure")
+        self._failure = None
+        self._position = error.span.end
+        self.discarded.append((error.span, EventKind.RECOVERED_INVALID.value))
+        return ReadEvent(EventKind.RECOVERED_INVALID, error.span, self.state, self.state)
 
     def _next_event(self) -> ReadEvent | None:
         if self._failure is not None:

@@ -204,6 +204,24 @@ class StructuralDispatcher:
         item = self._next_item()
         return self._identify(item) if item is not None and not isinstance(item, ReadEvent) else item
 
+    def lexical_failure(self, boundary):
+        """Expose only a failure at the ordinary token-fetch boundary.
+
+        A scanner may have consumed a partial header/body before failing. Those
+        failures cannot resume through this handoff.
+        """
+        saved = getattr(self, "_lexical_failure", None)
+        return saved[1] if self.halted and saved and saved[0] == boundary else None
+
+    def discard_invalid_character(self, boundary):
+        error = self.lexical_failure(boundary)
+        if error is None:
+            raise ValueError("No resumable ordinary lexical failure at this boundary")
+        event = self.reader.discard_invalid_character(error)
+        self._lexical_failure = None
+        self.halted = False
+        return event
+
     def _activity_evidence(self):
         guards = [(f.unit_id, "else" if f.in_alternative else "then") for f in self._conditionals]
         guards.extend(self._active_branches)
@@ -282,7 +300,9 @@ class StructuralDispatcher:
         try:
             event = reader.next_event()
         except InvalidCharacterError as error:
-            return self._boundary(error.span, "invalid_character", str(error))
+            boundary = self._boundary(error.span, "invalid_character", str(error))
+            self._lexical_failure = (boundary, error)
+            return boundary
         if event is None:
             if reader in self._branch_replays:
                 parent, after = self._branch_replays.pop(reader)
@@ -567,7 +587,7 @@ class StructuralDispatcher:
         except ReadingIssue as error:
             return self._boundary(event.span, error.reason, error.detail)
         except InvalidCharacterError as error:
-            return self._boundary(event.span, "invalid_character", str(error))
+            return self._boundary(error.span, "invalid_character", str(error), remainder_start=event.span.start)
 
     def _configuration(self, opening, profile):
         # Some package headers establish catcodes before collecting arguments.

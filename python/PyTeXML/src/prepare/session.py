@@ -29,6 +29,7 @@ from .discovery import select_root
 from .emission import SourcePiece, MouthEmitter
 from .survey import survey_sources
 from .policy import load_policy
+from .lint import PreparationLint
 from .resources import prepare_external_literal
 from .assets import observe_environment_assets, observe_asset, register_asset, surviving_asset_uses
 from .deferred import emit_observed_region
@@ -74,6 +75,8 @@ class PreparationSession:
         self.literal_payloads = {}
         self.manifest = PreflightManifest(self.name(self.root), self.root.stem, str(self.store.root), engine,
             BibliographyInfo("NONE", None, None, False, False))
+        self.lint = PreparationLint(self.policy.linting)
+        self.manifest.lint = self.lint.report
         self.pieces: list[SourcePiece] = []
         self.tombstones = []
         self.frames: list[_Input] = []
@@ -159,7 +162,7 @@ class PreparationSession:
     def raw(self, span):
         return self.documents[span.basis].text[span.start:span.end]
 
-    def diagnose(self, span, reason, detail, *, unit_id=None, dependency="none"):
+    def diagnose(self, span, reason, detail, *, unit_id=None, dependency="none", evidence=None):
         unit_id = unit_id or self.units.add(span, "diagnostic")
         self.units.require(unit_id, span)
         diagnostic = {"source": span.basis.source_id, "occurrence": span.basis.occurrence_id,
@@ -170,6 +173,7 @@ class PreparationSession:
                       **work_classification(reason, "preparation", dependency=dependency),
                       "location_status": "pending", "locations": []}
         self.manifest.unresolved.append(diagnostic)
+        self.lint.record(self, span, reason, detail, unit_id, evidence=evidence)
         return diagnostic
 
     def fail(self, span, reason, detail):
@@ -193,8 +197,8 @@ class PreparationSession:
         self.manifest.requirements.append(requirement)
         return requirement
 
-    def defer(self, span, reason, detail):
-        self.diagnose(span, reason, detail)
+    def defer(self, span, reason, detail, *, evidence=None):
+        self.diagnose(span, reason, detail, evidence=evidence)
         raise _DeferredCommand
 
     def _preserve_remainder(self, checkpoint):
@@ -429,8 +433,13 @@ class PreparationSession:
         path = self.resolve(name, [".cls" if is_class else ".sty"], command.span, required=False)
         if key in self.loaded_packages:
             if not set(options) <= set(self.package_options[key]):
+                first_id = self.dispatcher.loads.loaded[("class" if is_class else "package", name)]
                 self.diagnose(command.span, "option_clash", f"{name!r} was already requested with different options",
-                              unit_id=command.unit_id)
+                    unit_id=command.unit_id, evidence={"target": name, "kind": "class" if is_class else "package",
+                        "initial_options": list(self.package_options[key]), "requested_options": options,
+                        "added_options": sorted(set(options) - set(self.package_options[key])),
+                        "comparison": "source_visible_requests", "automatic_repair": False,
+                        "related": [self.lint.related(self, first_id)]})
                 self.dispatcher.defer_effects(command.span)
             return
         self.loaded_packages.add(key)
@@ -476,7 +485,12 @@ class PreparationSession:
                 self.defer(command.span, "option_target", "Option forwarding requires one literal package/class name")
             key = command.metadata["target_kind"] + ":" + name
             if key in self.loaded_packages:
-                self.defer(command.span, "option_lifecycle", "Option forwarding after the target was loaded requires further resolution")
+                first_id = self.dispatcher.loads.loaded[(command.metadata["target_kind"], name)]
+                self.defer(command.span, "option_lifecycle",
+                    "Option forwarding after the target was loaded requires further resolution",
+                    evidence={"target": name, "kind": command.metadata["target_kind"],
+                        "requested_options": list(option_names(command.argument("options"))),
+                        "automatic_repair": False, "related": [self.lint.related(self, first_id)]})
             self.forwarded_options[key] = self.forwarded_options.get(key, ()) + option_names(command.argument("options"))
             self._emit(command.span, command=command)
             return
@@ -645,6 +659,10 @@ class PreparationSession:
             if item is None:
                 break
             if isinstance(item, ReadingBoundary):
+                recovery = self.lint.repair_boundary(self, item)
+                if recovery is not None:
+                    self._observations[item.span.basis].append(recovery)
+                    continue
                 # An EOF diagnostic can point to an opener in another input.
                 # Keep that anchor in diagnostics; do not misattribute coverage.
                 if len(self.frames) == 1:

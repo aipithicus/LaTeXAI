@@ -1,0 +1,50 @@
+schema: pytexml-lint-rules/1
+identity: {name: preparation, version: 1}
+# These rules consume reader/session evidence, not regex matches over raw TeX.
+rules:
+  - code: source.invalid_character
+    reasons: [invalid_character]
+    severity: error
+    repair: drop_invalid_character
+    # tex.web: "Decry the invalid character and goto restart"; see the recipe's source link.
+    remediation: Inspect the located catcode-15 character. A lexical deletion needs the bounded token-equivalence check; never transcode or scrub arbitrary Unicode.
+  - code: source.group_structure
+    reasons: [unclosed_group, unmatched_group, mismatched_group]
+    severity: error
+    repair: null
+    remediation: Inspect the group opener and execution context. Do not synthesize or delete grouping tokens automatically.
+  - code: source.conditional_structure
+    reasons: [unclosed_conditional, unmatched_conditional, unexpected_case_alternative]
+    severity: error
+    repair: null
+    remediation: Inspect the conditional nesting under the recorded reading assumptions. Do not choose a branch or invent a terminator.
+  - code: source.environment_structure
+    reasons: [unclosed_environment, mismatched_environment]
+    severity: error
+    repair: null
+    remediation: Inspect the environment delimiters and any custom declaration or binding before changing them.
+  - code: source.literal_structure
+    reasons: [unclosed_literal, unclosed_interpolation]
+    severity: error
+    repair: null
+    remediation: Inspect the literal profile and exact delimiter. Literal contents are not repairable as ordinary TeX.
+  - code: source.argument_structure
+    reasons: [unclosed_argument, unclosed_header, unclosed_definition]
+    severity: error
+    repair: null
+    remediation: Inspect the command signature and captured source. Missing arguments or closing braces require author intent.
+  - code: source.math_structure
+    reasons: [unclosed_math]
+    severity: error
+    repair: null
+    remediation: Inspect the observed math opener and retained remainder. Do not infer a math delimiter from punctuation alone.
+  - code: source.package_option_clash
+    reasons: [option_clash]
+    severity: error
+    repair: null
+    remediation: Compare the first load with the later options and retained local code. Resolve intended options before proposing forwarding or relocation; validate against the original rendering afterward.
+  - code: source.late_option_forwarding
+    reasons: [option_lifecycle]
+    severity: warning
+    repair: null
+    remediation: The target was already requested before these options were forwarded. Inspect load order and package behavior; do not move the declaration automatically.

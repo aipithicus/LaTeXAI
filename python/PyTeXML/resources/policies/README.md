@@ -62,6 +62,8 @@ stored definitions and unresolved effects require their own context checks.
 | `structural_normalization.trailing_whitespace` | `strip` | Drop input_ln tails and ignored whitespace where established by reader events. Required spaces remain. |
 | `provenance.emit_ledger` | `true`, `false` | Default for optional ledger output. An explicit `emit_provenance` API argument overrides this value. |
 | `provenance.rle_compression` | `true`, `false` | Merge adjacent identity segments, or retain individual emission segments. Text, unit locations, and source accounting are unaffected. |
+| `linting.mode` | `off`, `report`, `repair` | Disable lint, report findings (default), or permit explicitly selected checked repairs. |
+| `linting.repairs` | List containing `drop_invalid_character`, or empty | Allow-list; empty by default. Each repair still requires its applicability and token/state checks. |
 
 The emitter is applied only to admitted reader events in the master stream.
 Captured command headers/bodies, definitions, literals, deferred regions and
@@ -118,7 +120,14 @@ structural_normalization:
 provenance:
   emit_ledger: bool                   # Whether to emit master.provenance.json
   rle_compression: bool               # Whether to merge adjacent identity segments
+
+linting:
+  mode: report                       # 'off' | 'report' | 'repair'
+  repairs: []                         # Supported: drop_invalid_character
 ```
+
+See the [bounded lint contract](../../recipes/preparation-lint.md) for repair
+eligibility, evidence, output locations and package diagnostics.
 
 ---
 

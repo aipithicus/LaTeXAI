@@ -21,6 +21,11 @@ def record_locations(record, artifacts):
 def log_manifest(logger, manifest):
     """Record diagnostics with ids and declared coordinate bases, not full copies."""
     artifacts = {a["path"]: a["sha256"] for a in manifest.prepared_artifacts}
+    for finding in manifest.lint.get("findings", []):
+        logger.emit("lint.finding", finding["detail"],
+            level="info" if finding["repair"]["status"] == "applied" else finding["severity"],
+            data={key: finding[key] for key in ("id", "unit_id", "code", "reason", "repair", "remediation", "evidence")},
+            locations=record_locations(finding, artifacts))
     for image in manifest.active_images + manifest.candidate_images:
         if image.dimension_error:
             logger.emit("asset.dimensions_unavailable", image.dimension_error, level="warning",

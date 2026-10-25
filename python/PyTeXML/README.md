@@ -38,6 +38,12 @@ directly to units and requirements; using them does not require the provenance s
 The old regex discovery, inliner, pruner, normalizer and implicit-graphics scanner
 have been removed.
 
+[Bounded preparation lint](recipes/preparation-lint.md) projects established
+reader and source-load diagnostics into `manifest.lint` and the structured log.
+The default policy reports findings. An explicit repair policy can discard an
+isolated catcode-15 character only after a local token/state check; structural
+repairs and package declaration reordering remain review work.
+
 [Publication](src/prepare/publication.py) builds the complete payload in a sibling
 staging directory before replacing the output. Failed preparation leaves the last
 good master, manifest and assets intact, with the attempted run appended to the log.

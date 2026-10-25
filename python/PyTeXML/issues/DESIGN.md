@@ -504,11 +504,13 @@ binding protocol can expose concrete missing capabilities as the implementation
 reaches them; fixture providers can exercise that boundary before YAML migration.
 The cleanup checkpoint specifies this implementation sequence and its invariants.
 
-Linting should first produce diagnostics. Repair should be a separate explicit
-operation with a recognized precondition, recorded edit and postcondition check.
+The [bounded lint layer](../recipes/preparation-lint.md) projects reader and
+source-visible load evidence into located findings. The default is report-only.
+An explicit policy can select the isolated invalid-character deletion, with a
+recognized precondition, recorded edit and token/state postcondition check.
 Compilation, lint, rendered output and source-map checks provide different
 evidence; a clean lint run cannot establish semantic equivalence. General
-automatic lint/repair is not implemented in this patch.
+automatic syntax/package repair remains outside this bounded contract.
 
 ## Verification
 

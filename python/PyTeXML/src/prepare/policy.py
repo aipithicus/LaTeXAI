@@ -55,6 +55,12 @@ class ProvenancePolicy:
 
 
 @dataclass(frozen=True, slots=True)
+class LintPolicy:
+    mode: str = "report"
+    repairs: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
 class ExtractionPolicy:
     name: str
     target: str
@@ -63,6 +69,7 @@ class ExtractionPolicy:
     lexical_events: LexicalEventsPolicy
     normalization: StructuralNormalizationPolicy
     provenance: ProvenancePolicy
+    linting: LintPolicy = field(default_factory=LintPolicy)
     raw_config: Dict[str, Any] = field(default_factory=dict, repr=False)
     source: str = "<policy>"
 
@@ -149,6 +156,8 @@ def load_policy(policy_identifier_or_path: Union[str, Path]) -> ExtractionPolicy
         lexical_events=lexical_events,
         normalization=normalization,
         provenance=provenance,
+        linting=LintPolicy(raw.get("linting", {}).get("mode", "report"),
+                          tuple(raw.get("linting", {}).get("repairs", ()))),
         raw_config=raw,
         source=str(path),
     )
@@ -156,7 +165,7 @@ def load_policy(policy_identifier_or_path: Union[str, Path]) -> ExtractionPolicy
 
 def _validate_policy(raw: Dict[str, Any], path: Path) -> None:
     """Validate current policy fields without defining future rewrite semantics."""
-    allowed = {"identity", "role_actions", "lexical_events", "structural_normalization", "provenance"}
+    allowed = {"identity", "role_actions", "lexical_events", "structural_normalization", "provenance", "linting"}
     def fail(message: str) -> None:
         raise ValueError(f"{path}: {message}")
 
@@ -195,3 +204,10 @@ def _validate_policy(raw: Dict[str, Any], path: Path) -> None:
     for key, value in raw.get("provenance", {}).items():
         if key not in {"emit_ledger", "rle_compression"} or type(value) is not bool:
             fail(f"provenance.{key} must be a known boolean field")
+    lint = raw.get("linting", {})
+    if set(lint) - {"mode", "repairs"} or lint.get("mode", "report") not in ("off", "report", "repair"):
+        fail("invalid linting mode or fields")
+    repairs = lint.get("repairs", [])
+    if (not isinstance(repairs, list) or any(r != "drop_invalid_character" for r in repairs)
+            or len(repairs) != len(set(repairs))):
+        fail("linting.repairs must list distinct supported repair names")

@@ -114,6 +114,7 @@ class PreflightManifest:
     preserved_source_spans: List[Dict[str, Any]] = field(default_factory=list)
     unclassified_files: List[str] = field(default_factory=list)
     source_reads: List[str] = field(default_factory=list)
+    lint: Dict[str, Any] = field(default_factory=dict)
 
     # Assets
     active_images: List[ImageAssetInfo] = field(default_factory=list)
