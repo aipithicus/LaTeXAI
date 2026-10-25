@@ -13,6 +13,7 @@ from ..yaml_io import load_mapping, overlay, validate_resource_identity
 from ..reading.character_rules import CatcodeLayer, ProfileError, compile_layer
 from ..reading.contracts import EffectiveReadingProfile, SpanClassification, TerminatorRule
 from ..reading.mouth_profiles import MouthProfiles
+from ..reading.effect_summary import EffectSummary
 
 RESOURCE_DIR = Path(__file__).resolve().parents[2] / "resources"
 BINDINGS_DIR = RESOURCE_DIR / "bindings"
@@ -166,15 +167,25 @@ class BindingCatalog:
                 raise ProfileError(f"{self.handlers_path}: invalid handler {name!r}")
         return handlers
 
+    @staticmethod
+    def _validate_effect_summary(summary, path):
+        try:
+            return EffectSummary.parse(summary)
+        except ValueError as error:
+            raise ProfileError(f"{path}: {error}") from error
+
     def _validate_reading(self, reading: dict[str, Any], path: Path) -> None:
         if "load_effects" in reading:
             effect = reading["load_effects"]
-            if (not isinstance(effect, dict) or set(effect) != {"status", "detail", "optional_inputs", "source_reference"}
+            if (not isinstance(effect, dict) or set(effect) - {"status", "detail", "optional_inputs", "source_reference", "summary"}
+                    or not {"status", "detail", "optional_inputs", "source_reference"} <= set(effect)
                     or effect["status"] != "unresolved"
                     or any(not isinstance(effect[k], str) or not effect[k] for k in ("detail", "source_reference"))
                     or not isinstance(effect["optional_inputs"], list)
                     or any(not isinstance(n, str) or not n for n in effect["optional_inputs"])):
                 raise ProfileError(f"{path}: invalid unresolved package load effects")
+            if "summary" in effect:
+                self._validate_effect_summary(effect["summary"], path)
         if "option_resolution" in reading:
             self._validate_literal_options(reading["option_resolution"], path)
         if "configuration" in reading:
@@ -311,7 +322,7 @@ class BindingCatalog:
                             raise ProfileError(f"{path}: {name} allow_wildcard must be boolean")
                     if spec.get("action") == "declared_effects":
                         effect = spec.get("metadata", {})
-                        if (arguments or set(effect) != {"requires_unshadowed", "meaning_copies", "source_reference"}
+                        if (arguments or set(effect) != {"requires_unshadowed", "meaning_copies", "source_reference", "effect_summary"}
                                 or not isinstance(effect["requires_unshadowed"], list)
                                 or any(not isinstance(n, str) or not n for n in effect["requires_unshadowed"])
                                 or not isinstance(effect["meaning_copies"], dict)
@@ -319,6 +330,21 @@ class BindingCatalog:
                                     or d not in effect["requires_unshadowed"] for n, d in effect["meaning_copies"].items())
                                 or not isinstance(effect["source_reference"], str) or not effect["source_reference"]):
                             raise ProfileError(f"{path}: {name} requires sourced bounded reading effects")
+                    if spec.get("action") in {"declared_effects", "summarized_effects"}:
+                        metadata = spec.get("metadata", {})
+                        if (not isinstance(metadata.get("source_reference"), str) or not metadata["source_reference"]
+                                or not isinstance(metadata.get("requires_unshadowed"), list)
+                                or any(not isinstance(n, str) or not n for n in metadata["requires_unshadowed"])
+                                or any(a.get("role") != "data" for a in arguments)):
+                            raise ProfileError(f"{path}: {name} needs sourced effects and literal data arguments")
+                        summary = self._validate_effect_summary(metadata.get("effect_summary"), path)
+                        if any(not summary.meanings.contains(n) for n in metadata.get("meaning_copies", {})):
+                            raise ProfileError(f"{path}: {name} summary must include its explicit meaning copies")
+                        if (spec["action"] == "summarized_effects" and
+                                set(metadata) != {"source_reference", "requires_unshadowed", "effect_summary"}):
+                            raise ProfileError(f"{path}: {name} has unknown summary metadata")
+                    elif "effect_summary" in spec.get("metadata", {}):
+                        raise ProfileError(f"{path}: {name} action has no effect-summary consumer")
                     if spec.get("action") == "pass_options":
                         if ([{k: a[k] for k in ("name", "kind")} for a in arguments] != [{"name": "options", "kind": "braced"}, {"name": "name", "kind": "braced"}]
                                 or spec.get("metadata") not in ({"target_kind": "package"}, {"target_kind": "class"})):

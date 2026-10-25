@@ -36,6 +36,7 @@ from .deferred import emit_observed_region
 from .provenance import Tombstone
 from .manifest import PreflightManifest, BibliographyInfo, PackageUsage, StyleFileInfo, ImplicitGraphicInfo
 from .records import source_reference, pending_location
+from ..reading.effect_summary import EffectSummary
 
 
 class PreparationUnresolved(ValueError):
@@ -526,12 +527,17 @@ class PreparationSession:
             usage.binding_activated = True
             effects = self.resolver.catalog.package_bindings[name].get("reading", {}).get("load_effects")
             if effects is not None:
+                summary = EffectSummary.parse(effects["summary"]) if "summary" in effects else None
+                if summary is not None and effects["optional_inputs"]:
+                    summary = summary.union(EffectSummary.unknown("Optional input contents/search are unresolved"))
                 record = self.require(command.span, "package_load_effects", effects["detail"],
                     stage="binding", unit_id=command.unit_id, dependency="possible" if effects["optional_inputs"] else "none")
                 record["evidence"] = {"binding": name, "source_reference": effects["source_reference"],
                     "optional_inputs": [{"name": n, "in_source_inventory": self.store.contains(self.root.parent / n),
                         "external_search": "unresolved"} for n in effects["optional_inputs"]]}
-                self.dispatcher.defer_effects(command.span, reason="package_load_effects", detail=effects["detail"])
+                if summary is not None:
+                    record["effect_summary"] = summary.record()
+                self.dispatcher.defer_effects(command.span, reason="package_load_effects", detail=effects["detail"], summary=summary)
 
     def _definition_check(self, unit_id, declaration, target, requirement):
         self.require(self.units.records[unit_id].span, "definition_precondition",
@@ -792,6 +798,8 @@ class PreparationSession:
                             "branch_selection" if item.reason == "branch_selection" else None, causes=item.causes)
                     if isinstance(item, CollectedEnvironment):
                         requirement["definition_unit_id"] = item.definition_id
+                    if item.effect_summary is not None:
+                        requirement["effect_summary"] = item.effect_summary.record()
                     if self.frames[-1].emit and (isinstance(item, ConditionalRegion) or any(
                             o.command.action in {"source_input", "bibliography"} for o in item.observations)):
                         emit_observed_region(self, item)

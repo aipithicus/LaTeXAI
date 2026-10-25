@@ -9,6 +9,7 @@ from .contracts import (EffectiveReadingProfile, MouthBaseline, StoredDefinition
                         BooleanMeaning, BoundMeaning, ConditionalRule, ReadingIssue, UncertainMeaning)
 from .tex_reader import CatCode, CatcodeTable, TokenKind
 from .configuration import ConfigurationState
+from .spans import SourceSpan
 
 
 DefinitionKey = tuple[TokenKind, str]
@@ -29,11 +30,12 @@ class _ScopeSnapshot:
     expl3_active: bool
     expl3_saved_catcodes: dict[str, CatCode]
     expl3_saved_endlinechar: int
+    uncertain_prefixes: dict[str, SourceSpan]
 
     def copy(self) -> _ScopeSnapshot:
         return _ScopeSnapshot(self.catcodes.copy(), self.endlinechar,
                               self.expl3_active, dict(self.expl3_saved_catcodes),
-                              self.expl3_saved_endlinechar)
+                              self.expl3_saved_endlinechar, dict(self.uncertain_prefixes))
 
 
 class ReaderContext:
@@ -54,6 +56,7 @@ class ReaderContext:
         self.expl3_active = False
         self.expl3_saved_catcodes: dict[str, CatCode] = {}
         self.expl3_saved_endlinechar = self.endlinechar
+        self._uncertain_prefixes = {}
         self._scope_stack: list[_ScopeSnapshot] = []
         self._meanings: dict[DefinitionKey, LocalMeaning] = {}
         # Journal only changed meanings, avoiding a copy of every definition at
@@ -68,7 +71,7 @@ class ReaderContext:
     def _snapshot(self) -> _ScopeSnapshot:
         return _ScopeSnapshot(self.catcodes.copy(), self.endlinechar,
                               self.expl3_active, dict(self.expl3_saved_catcodes),
-                              self.expl3_saved_endlinechar)
+                              self.expl3_saved_endlinechar, dict(self._uncertain_prefixes))
 
     def _restore(self, saved: _ScopeSnapshot) -> None:
         self.catcodes.restore_from(saved.catcodes)
@@ -76,6 +79,7 @@ class ReaderContext:
         self.expl3_active = saved.expl3_active
         self.expl3_saved_catcodes = dict(saved.expl3_saved_catcodes)
         self.expl3_saved_endlinechar = saved.expl3_saved_endlinechar
+        self._uncertain_prefixes = dict(saved.uncertain_prefixes)
 
     def copy(self) -> ReaderContext:
         ctx = ReaderContext(baseline=self.baseline, mode=self.mode)
@@ -142,7 +146,56 @@ class ReaderContext:
         self._capture_settings[name] = value
 
     def lookup_meaning(self, name: str, kind: TokenKind = TokenKind.CONTROL_SEQUENCE) -> LocalMeaning | None:
-        return self._meanings.get((kind, name))
+        meaning = self._meanings.get((kind, name))
+        if meaning is None and kind == TokenKind.CONTROL_SEQUENCE:
+            for prefix, span in self._uncertain_prefixes.items():
+                if name.startswith(prefix):
+                    return UncertainMeaning(span)
+        return meaning
+
+    def invalidate_writes(self, summary, span) -> bool:
+        """Invalidate named meanings, including fallback knowledge, with TeX scope.
+
+        Namespace barriers also cover meanings not yet queried. A fresh explicit
+        declaration overrides the barrier; local barriers disappear on group exit.
+        """
+        names = summary.meanings
+        global_ = summary.scope != "local"
+        keys = {key for key in self._meanings if key[0] == TokenKind.CONTROL_SEQUENCE and names.contains(key[1])}
+        keys.update((TokenKind.CONTROL_SEQUENCE, name) for name in names.names)
+        if global_:
+            keys.update(key for saved in self._meaning_scopes for key in saved
+                        if key[0] == TokenKind.CONTROL_SEQUENCE and names.contains(key[1]))
+
+        def uncertain(value):
+            if isinstance(value, (BooleanMeaning, BoundMeaning)):
+                return value if value.uncertain is not None else replace(value, uncertain=span)
+            return value if isinstance(value, UncertainMeaning) else UncertainMeaning(span)
+
+        changed = False
+        for key in keys:
+            previous = self._meanings.get(key)
+            if not global_ and self._meaning_scopes:
+                self._meaning_scopes[-1].setdefault(key, previous)
+            self._meanings[key] = uncertain(previous)
+            changed |= self._meanings[key] != previous
+            if global_:
+                for saved in self._meaning_scopes:
+                    outer = saved.get(key, previous)
+                    saved[key] = uncertain(outer)
+                    changed |= saved[key] != outer
+        for prefix in names.prefixes:
+            changed |= prefix not in self._uncertain_prefixes
+            self._uncertain_prefixes.setdefault(prefix, span)
+            if global_:
+                for saved in self._scope_stack:
+                    changed |= prefix not in saved.uncertain_prefixes
+                    saved.uncertain_prefixes.setdefault(prefix, span)
+        return changed
+
+    def meaning_names(self):
+        """Names whose current author meaning can affect structural observation."""
+        return {name for kind, name in self._meanings if kind == TokenKind.CONTROL_SEQUENCE}
 
     def conditional_rule(self, name: str, knowledge) -> ConditionalRule | None:
         """Resolve nesting from the current meaning, including local shadows."""

@@ -158,6 +158,12 @@ class BindingResolver:
                 return ConditionalRule(spec["role"], spec.get("evaluation"), spec.get("capture_operands"), spec.get("predicate"))
         return None
 
+    def reading_names(self) -> set[str]:
+        names = {name.lstrip("\\") for name in self.catalog.commands}
+        for name in self.catalog.environments:
+            names.update((name, "end" + name))
+        return names
+
     def source_command_syntax(self, name: str) -> EffectiveReadingProfile | None:
         """Inspect a unique inactive package's source-argument grammar.
 

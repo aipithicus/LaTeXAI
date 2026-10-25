@@ -40,7 +40,7 @@ def log_manifest(logger, manifest):
         for record in records:
             logger.emit(code, record["detail"], level=level,
                 data={key: record[key] for key in ("id", "unit_id", "reason", "stage", "activity",
-                    "dependency", "materialization", "next_step", "location_status", "cause_ids") if key in record},
+                    "dependency", "materialization", "next_step", "location_status", "cause_ids", "effect_summary") if key in record},
                 locations=record_locations(record, artifacts))
     for cause in manifest.uncertainty_causes:
         logger.emit("reading.uncertainty_cause", cause["detail"], level="info",

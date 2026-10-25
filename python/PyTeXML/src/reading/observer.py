@@ -11,6 +11,7 @@ from .contracts import EffectiveReadingProfile, ReadingIssue, SourceCommand
 from .definition_scanner import DefinitionScanner
 from .literal_scanner import LiteralScanner
 from .tex_reader import TokenKind
+from .effects import observed_write_names
 
 
 def observe_source(reader, context, knowledge):
@@ -53,8 +54,7 @@ def observe_source(reader, context, knowledge):
                         continue
                 if profile.grammar.get("handler") == "source_arguments":
                     command = arguments.read(token.span, profile)
-                    if command.action == "declared_effects":
-                        shadowed.update(command.metadata["meaning_copies"])
+                    shadowed.update(observed_write_names(command, context, knowledge))
                     yield command
                     continue
         except ReadingIssue:

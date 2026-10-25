@@ -5,6 +5,7 @@ from enum import Enum
 from typing import Any, Protocol
 from .character_rules import CatcodeLayer
 from .spans import SourceSpan
+from .effect_summary import EffectSummary
 from .tex_reader import CatcodeTable, Token
 
 
@@ -138,6 +139,9 @@ class ReadingKnowledge(Protocol):
     def resolve_environment(self, name: str, options: dict[str, Any] | None = None) -> EffectiveReadingProfile | UnresolvedBindingResult: ...
     def resolve_group(self, catcode: int) -> EffectiveReadingProfile | UnresolvedBindingResult: ...
     def resolve_conditional(self, name: str) -> ConditionalRule | None: ...
+    def reading_names(self) -> set[str]:
+        """Inventory of declared names, without activating their providers."""
+        ...
     def source_command_syntax(self, name: str) -> EffectiveReadingProfile | None:
         """Return a unique source-command grammar, or None when unavailable.
 
@@ -193,6 +197,7 @@ class DeferredRegion:
     observations: tuple[DeferredRegion, ...] = ()
     unit_id: str | None = field(default=None, compare=False)
     causes: tuple[SourceSpan, ...] = field(default=(), kw_only=True)
+    effect_summary: EffectSummary | None = field(default=None, kw_only=True)
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

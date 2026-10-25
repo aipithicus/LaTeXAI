@@ -2,6 +2,9 @@ identity:
   registry: reading_handlers
   description: Reading actions and their current implementation boundary
 handlers:
+  summarized_effects:
+    status: context_effect
+    description: Preserve the invocation and invalidate only a complete declared write set; unknown closure keeps conservative invalidation
   literal_integer_assignment:
     status: scanner
     description: Capture a literal signed decimal parameter assignment without expansion; preserve its layout value for later interpretation

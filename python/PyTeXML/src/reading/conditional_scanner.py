@@ -38,8 +38,7 @@ class ConditionalScanner:
                 elif isinstance(captured, DeferredRegion):
                     tokens.extend(captured.tokens)
                     if captured.command is not None:
-                        if captured.command.action == "declared_effects":
-                            changed.update(captured.command.metadata["meaning_copies"])
+                        changed.update(captured.command.metadata.get("observed_write_names", ()))
                         if captured.command.action == "end_input":
                             raise ReadingIssue("conditional_input", "endinput requires an input-boundary lowering rule")
                         if token.value not in changed:
@@ -114,8 +113,8 @@ class ConditionalScanner:
                     changed.update((captured.name, "end" + captured.name))
                 elif isinstance(captured, DeferredRegion):
                     tokens.extend(captured.tokens)
-                    if captured.command is not None and captured.command.action == "declared_effects":
-                        changed.update(captured.command.metadata["meaning_copies"])
+                    if captured.command is not None:
+                        changed.update(captured.command.metadata.get("observed_write_names", ()))
                     if captured.command is not None and token.value not in changed:
                         observations.append(captured)
                 continue

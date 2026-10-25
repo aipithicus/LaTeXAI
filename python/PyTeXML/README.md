@@ -206,6 +206,16 @@ Geometry's binding currently records unresolved load effects and the optional
 `geometry.cfg` lookup. Its presence is explicitly **not** evidence of load purity:
 configuration, key expansion and begin-document work still need implementation.
 
+Complete [effect summaries](resources/bindings/effect-summaries.md) now limit
+invalidation to declared names/namespaces and option scopes. Local meaning writes
+restore with their group; global or unknown-scope writes also affect suspended
+state. Captured argument-free author bodies can derive a summary from bounded
+operations at invocation without expanding or executing the body. Unknown
+callees, computed targets and unsupported reading surfaces retain conservative
+invalidation, and the manifest records the specific unresolved effect dependency.
+Geometry's source is pinned through the existing CTAN provenance infrastructure;
+its configuration and transitive effects are still unresolved.
+
 The YAML `branch_test` recipe also supports literal class/package-loaded queries.
 The reader uses ordered source-visible load facts, independently of binding
 availability; it never looks ahead to activate a later package. Observed possible

@@ -36,6 +36,11 @@ reading:
         source_reference: 'latex2e base/ltpage.dtx v1.0o: flushbottom'
         requires_unshadowed: [relax]
         meaning_copies: {'@textbottom': relax, '@texttop': relax}
+        effect_summary:
+          complete: true
+          scope: local
+          writes:
+            meanings: {names: ['@textbottom', '@texttop']}
     - name: '\sloppy'
       family: source_command
       action: declared_effects
@@ -44,6 +49,11 @@ reading:
         source_reference: 'latex2e base/ltpage.dtx v1.0o: sloppy assigns tolerance, emergencystretch, hfuzz, vfuzz'
         requires_unshadowed: [tolerance, emergencystretch, hfuzz, vfuzz, 'p@']
         meaning_copies: {}
+        effect_summary:
+          complete: true
+          scope: local
+          writes:
+            registers: [tolerance, emergencystretch, hfuzz, vfuzz]
     # TeX82 tex.web, prefixed_command (let). Prefixes are explicit boundaries.
     - name: '\let'
       family: meaning_assignment

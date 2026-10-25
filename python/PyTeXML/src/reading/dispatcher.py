@@ -23,7 +23,7 @@ from .boolean_scanner import declaration as boolean_declaration
 from .argument_scanner import ArgumentScanner, key_values
 from .configuration import entries, configured_options
 from .assignment_scanner import AssignmentScanner
-from .effects import declared_effects
+from .effects import declared_effects, command_summary, definition_summary, observed_write_names
 from .environment_registry import declarations, resolve_environment
 from .environment_scanner import EnvironmentScanner
 from .definition_scanner import DefinitionScanner
@@ -386,8 +386,13 @@ class StructuralDispatcher:
                                       metadata={"predicate": "established_boolean"})
                 return event
             if definition is not None:
-                return self._deferred(deferred.command(token, "stored_macro", f"Unexpanded {token.value!r}; definition at "
-                    f"{definition.span.basis.source_id}:{definition.span.start}"))
+                summary = definition_summary(definition, context, self.knowledge)
+                detail = f"Unexpanded {token.value!r}; definition at {definition.span.basis.source_id}:{definition.span.start}"
+                # A completely bounded argument-free body consumes no following
+                # groups. Those groups still belong to ordinary source execution.
+                region = (DeferredRegion(event.span, "stored_macro", detail, (token,)) if summary.selective
+                          else deferred.command(token, "stored_macro", detail))
+                return self._deferred(replace(region, effect_summary=summary))
             if token.kind == TokenKind.ACTIVE_CHARACTER:
                 return self._deferred(DeferredRegion(event.span, "active_character", "Active character retained without expansion", (token,)))
             if self.preparation and token.catcode == CatCode.MATH_SHIFT:
@@ -513,6 +518,12 @@ class StructuralDispatcher:
                     return self._branch_test(command)
                 if command.action == "declared_effects":
                     declared_effects(command, context, self.knowledge)
+                if command.action == "summarized_effects":
+                    for argument in command.arguments:
+                        argument.literal()
+                    return self._deferred(DeferredRegion(command.span, "summarized_effects",
+                        "Bounded writes retained without computing the operation's values", command=command,
+                        binding_id=profile.binding_id, effect_summary=command_summary(command.metadata, context)))
                 if command.action in {"opaque", "metadata", "citation"} and any(
                         t.kind in {TokenKind.CONTROL_SEQUENCE, TokenKind.ACTIVE_CHARACTER}
                         for arg in command.arguments if arg.role not in {"data", "diagnostic", "stored"} for t in arg.tokens):
@@ -710,14 +721,17 @@ class StructuralDispatcher:
         # expressions may redefine a boolean or its setter, even globally.
         if region.reason != "math_interpretation" or any(
                 t.kind in {TokenKind.CONTROL_SEQUENCE, TokenKind.ACTIVE_CHARACTER} for t in region.tokens):
-            self.defer_effects(region.span, reason=region.reason, detail=region.detail)
+            self.defer_effects(region.span, reason=region.reason, detail=region.detail, summary=region.effect_summary)
         return region
 
-    def defer_effects(self, span, *, reason="unresolved_reading", detail="Reading effects remain unresolved"):
+    def defer_effects(self, span, *, reason="unresolved_reading", detail="Reading effects remain unresolved", summary=None):
         """Unknown execution can invalidate live and suspended bounded state."""
-        changed = self.context.invalidate_booleans(span)
+        selective = summary is not None and summary.selective
+        changed = (self.context.invalidate_writes(summary, span) if selective
+                   else self.context.invalidate_booleans(span))
         for scope in (self.options, *(parent[2] for parent in self._parents)):
-            if scope is not None and scope.uncertain is None:
+            if (scope is not None and scope.uncertain is None
+                    and (not selective or summary.options.contains(scope.name))):
                 scope.uncertain = span
                 changed = True
         if changed:
@@ -807,6 +821,9 @@ class StructuralDispatcher:
                 self.reader.restore(checkpoint)
                 return DeferredScanner(self.reader, self.context).command(token, "argument_behavior",
                     "Entry argument grammar does not match this retained command")
+            if "effect_summary" in command.metadata:
+                command = replace(command, metadata={**command.metadata,
+                    "observed_write_names": observed_write_names(command, self.context, self.knowledge)})
             return DeferredRegion(command.span, "environment_binding", "Source command inside an unbound environment",
                                   (token,) + tuple(t for arg in command.arguments for t in arg.tokens), command, profile.binding_id)
         handler = profile.grammar.get("handler")

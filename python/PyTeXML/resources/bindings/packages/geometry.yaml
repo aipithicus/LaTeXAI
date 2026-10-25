@@ -12,6 +12,19 @@ reading:
     status: unresolved
     source_reference: 'lib-ctan/geometry/provenance.json, TeX Live r78315; geometry.sty:31-32, 750-814, 986-1124'
     optional_inputs: [geometry.cfg]
+    summary:
+      complete: false
+      scope: unknown
+      writes:
+        meanings: {prefixes: ['Gm@', 'ifGm@', 'KV@Gm@']}
+        registers: [paperwidth, paperheight, textwidth, textheight]
+        hooks: [begindocument, endpackage]
+        loads: true
+      unresolved:
+        - Optional geometry.cfg search and contents
+        - Transitive keyval and ifvtex effects
+        - Key expansion and engine callbacks
+        - Deferred hook execution
     detail: >-
       Geometry loads optional geometry.cfg before class/package key processing,
       computes layout, and registers begin-document work. Configuration contents,

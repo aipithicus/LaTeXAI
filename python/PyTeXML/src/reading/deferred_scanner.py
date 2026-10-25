@@ -78,8 +78,8 @@ class DeferredScanner:
                     shadowed.add(protected.argument("target").tokens[0].value)
                 if isinstance(protected, DeferredRegion):
                     tokens.extend(protected.tokens)
-                    if protected.command is not None and protected.command.action == "declared_effects":
-                        shadowed.update(protected.command.metadata["meaning_copies"])
+                    if protected.command is not None:
+                        shadowed.update(protected.command.metadata.get("observed_write_names", ()))
                     if protected.command is not None and token.value not in shadowed:
                         observations.append(protected)
                 continue
