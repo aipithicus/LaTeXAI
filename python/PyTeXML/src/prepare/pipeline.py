@@ -9,7 +9,7 @@ from .session import PreparationSession
 from .manifest import PreflightManifest
 from .provenance import ProvenanceLedger
 from .bibliography import prepare_bibliography
-from .assets import prepare_assets
+from .assets import batch_convert_assets_to_svg, rewrite_image_references
 from .locations import finalize_locations
 from .publication import OutputTransaction
 from .events import JOURNAL, RETAINED_HISTORY, log_manifest
@@ -148,7 +148,10 @@ def _prepare_paper(request: _PreparationRequest, out_dir: Path, *,
         if images and not request.convert_images_to_svg:
             raise ValueError("Referenced images require SVG conversion for a standalone extraction package")
         if images:
-            pieces, mapping = prepare_assets(session, pieces, out_dir)
+            uses = session.surviving_assets(pieces)
+            mapping = batch_convert_assets_to_svg(uses, out_dir, p_dir)
+            session.rebase_asset_payloads(uses, mapping)
+            pieces = rewrite_image_references(pieces, mapping, uses)
             manifest.record_asset_payloads(mapping)
         logger.emit("phase.completed", data={"phase": "assets"})
         logger.emit("phase.started", data={"phase": "emission"}, flush=True)

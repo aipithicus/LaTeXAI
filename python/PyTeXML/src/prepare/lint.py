@@ -10,7 +10,7 @@ from pathlib import Path
 
 from ..yaml_io import load_mapping, validate_resource_identity
 from ..reading.tex_reader import CatCode, EventKind, InvalidCharacterError, ReadEvent, TexReader, TokenKind
-from .emission import SourcePiece
+from ..reading.units import ReadingUnit
 from .records import assign_locations, pending_location, source_reference
 
 
@@ -103,17 +103,17 @@ class PreparationLint:
             "scope": "source_visible_reading_evidence", "findings": []}
         self._records, self._repairs = {}, {}
 
-    def record(self, session, span, reason, detail, unit_id, *, evidence=None):
+    def record(self, unit: ReadingUnit, line: int, reason, detail, *, evidence=None):
+        """Describe an established unit; the caller owns registry validation."""
         if self.policy.mode == "off" or reason not in self.rules:
             return None
-        key = (unit_id, reason, (evidence or {}).get("target"))
+        key = (unit.id, reason, (evidence or {}).get("target"))
         if key in self._records:
             return self._records[key]
         rule = self.rules[reason]
-        session.units.require(unit_id, span)
-        record = {"id": f"lint-{len(self._records) + 1}", **source_reference(session.units.records[unit_id]),
+        record = {"id": f"lint-{len(self._records) + 1}", **source_reference(unit),
             "code": rule["code"], "severity": rule["severity"], "reason": reason, "detail": detail,
-            "line": session.line(span), **pending_location(),
+            "line": line, **pending_location(),
             "remediation": rule["remediation"], "evidence": evidence or {},
             "repair": {"name": rule["repair"], "status": "not_available"}}
         self._records[key] = record
@@ -125,9 +125,10 @@ class PreparationLint:
         if boundary.reason != "invalid_character" or self.policy.mode == "off":
             return None
         span = boundary.span
-        record = self.record(session, span, boundary.reason, boundary.detail, boundary.unit_id)
+        session.units.require(boundary.unit_id, span)
+        record = self.record(session.units.records[boundary.unit_id], session.line(span), boundary.reason, boundary.detail)
         reader = session.dispatcher.reader
-        previous = session._observations[span.basis][-1] if session._observations[span.basis] else None
+        previous = session.previous_observation(span.basis)
         # Earlier unknown behavior can change catcodes or consume later input.
         # This first repair does not attempt to prove through those dependencies.
         failure = session.dispatcher.lexical_failure(boundary)
@@ -153,9 +154,8 @@ class PreparationLint:
         if self.policy.mode != "repair" or "drop_invalid_character" not in self.policy.repairs:
             return None
         event = session.dispatcher.discard_invalid_character(boundary)
-        piece = SourcePiece("", span, session.line(span), "LINT_REPAIR")
-        session.pieces.append(piece)
-        session._omit(span, f"Checked lint repair {record['id']}: drop_invalid_character")
+        piece = session.emit(span, "", operation="LINT_REPAIR")
+        session.omit(span, f"Checked lint repair {record['id']}: drop_invalid_character")
         record["repair"]["status"] = "applied_in_memory"
         text = session.raw(span.basis.whole)
         self._repairs[record["id"]] = (piece.key, text[span.start - 1] + text[span.end])
@@ -181,6 +181,5 @@ class PreparationLint:
                 assign_locations(record, {"location_status": "mapped", "locations": [{"artifact": "master.tex",
                     "start": position, "end": position, "precision": "exact"}]})
 
-    def related(self, session, unit_id):
-        return {**source_reference(session.units.records[unit_id]),
-                "span_id": "unit:" + unit_id, **pending_location()}
+    def related(self, unit: ReadingUnit):
+        return {**source_reference(unit), "span_id": "unit:" + unit.id, **pending_location()}

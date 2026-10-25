@@ -27,7 +27,8 @@ class AssetUse:
             yield span, "1"
 
 
-def register_asset(session, command, path):
+def parse_asset_use(command: SourceCommand, path: Path) -> AssetUse:
+    """Read a captured asset header without registering or resolving anything."""
     page, spans = 1, []
     for key, tokens in key_value_items(command.argument("options")):
         if key != "page":
@@ -49,9 +50,7 @@ def register_asset(session, command, path):
         if page < 1 or (page != 1 and path.suffix.lower() != ".pdf"):
             raise ReadingIssue("asset_page", "Page must be positive; multiple pages require a PDF asset")
         spans.append(command.span.basis.span(tokens[0].span.start, tokens[-1].span.end))
-    use = AssetUse(command, path, page, tuple(spans))
-    session.asset_uses[command.unit_id] = use
-    return use
+    return AssetUse(command, path, page, tuple(spans))
 
 
 def observe_asset(session, command, context_span, reason, *, binding=None, search_changed=False):
@@ -66,7 +65,7 @@ def observe_asset(session, command, context_span, reason, *, binding=None, searc
         if search_changed:
             raise ReadingIssue("asset_search_context", "An unexecuted search-path/extension declaration precedes this image")
         path = session.image_path(command, provisional=True)
-        use = register_asset(session, command, path)
+        use = session.register_asset(command, path)
     except ReadingIssue as error:
         record["reason"] = error.reason
         session.require(command.span, error.reason, error.detail, stage="preparation", unit_id=command.unit_id,
@@ -166,21 +165,8 @@ def batch_convert_assets_to_svg(
     return {use.command.unit_id: destinations[use.path, use.page] for use in uses}
 
 
-def surviving_asset_uses(session, pieces):
+def surviving_asset_uses(uses, pieces, *, retained_bases):
     """Select admitted uses whose owning source survived emission rollback."""
-    retained = set(session.styles) | session.code
-    return [u for u in session.asset_uses.values() if session.documents[u.command.span.basis].path in retained or any(
+    return [u for u in uses if u.command.span.basis in retained_bases or any(
         p.operation != "PRESERVE_UNRESOLVED" and p.span.basis is u.command.span.basis
         and p.span.start <= u.command.span.start <= u.command.span.end <= p.span.end for p in pieces)]
-
-
-def prepare_assets(session, pieces, output_dir):
-    """Apply the same per-use edits to inlined source and retained local code."""
-    retained = set(session.styles) | session.code
-    uses = surviving_asset_uses(session, pieces)
-    mapping = batch_convert_assets_to_svg(uses, output_dir, session.store.root)
-    for use in uses:
-        if session.documents[use.command.span.basis].path in retained:
-            for span, replacement in use.edits(mapping[use.command.unit_id]):
-                session._payload_edit(span, replacement)
-    return rewrite_image_references(pieces, mapping, uses), mapping

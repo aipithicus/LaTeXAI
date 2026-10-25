@@ -21,7 +21,7 @@ def emit_observed_region(session, region, *, chain=()):
     references = observe_environment_assets(session, region)
     observed = [o.command for o in region.observations
                 if o.command.action in {"asset_reference", "source_input", "bibliography", "bibliography_style"}]
-    session._deferred_dependencies(region.tokens, observed=observed, parent_id=region.unit_id,
+    session.require_deferred_dependencies(region.tokens, observed=observed, parent_id=region.unit_id,
                                    observations=region.observations,
                                    role="branch" if isinstance(region, ConditionalRegion) else "unknown")
     cursor = region.span.start
@@ -31,7 +31,7 @@ def emit_observed_region(session, region, *, chain=()):
         nonlocal cursor
         span = region.span.basis.span(cursor, end)
         refs = tuple((c, p) for c, p in references if cursor <= c.span.start and c.span.end <= end)
-        session._emit(span, operation="DEFER_INTERPRETATION", deferred=region, image_references=refs)
+        session.emit(span, operation="DEFER_INTERPRETATION", deferred=region, image_references=refs)
         cursor = end
 
     for observation in region.observations:
@@ -40,7 +40,7 @@ def emit_observed_region(session, region, *, chain=()):
             search_changed = True
         if command.action == "bibliography_style":
             emit_slice(command.span.start)
-            session._emit(command.span, command=command, deferred=observation)
+            session.emit(command.span, command=command, deferred=observation)
             cursor = command.span.end
             continue
         if command.action == "bibliography":
@@ -80,7 +80,7 @@ def emit_observed_region(session, region, *, chain=()):
             continue
         session.register_reader(path, reader, candidate=True, parent=command.span.basis.occurrence_id)
         captured = observer.identify(captured, command.unit_id)
-        session._observations[reader.basis].append(captured)
+        session.observe(captured)
         session.require(captured.span, "conditional_input", captured.detail, unit_id=captured.unit_id)
         session.context.invalidate_meanings(changed, captured.span)
         emit_slice(command.span.start)
@@ -89,17 +89,15 @@ def emit_observed_region(session, region, *, chain=()):
         # Each input has its own final physical line. A synthetic newline keeps
         # a trailing comment/control word from swallowing/merging caller text.
         if doc.text and not doc.text.endswith(("\r", "\n")):
-            session._emit(reader.basis.span(reader.basis.length, reader.basis.length), "\n", operation="INPUT_BOUNDARY")
+            session.emit(reader.basis.span(reader.basis.length, reader.basis.length), "\n", operation="INPUT_BOUNDARY")
         if len(session.pieces) == start:
-            session._omit(command.span, "Empty conditional input")
-        for i in range(start, len(session.pieces)):
-            piece = session.pieces[i]
-            session.pieces[i] = replace(piece, replaces=piece.replaces + (command.span,))
+            session.omit(command.span, "Empty conditional input")
+        session.link_replacement(start, command.span)
         record.update(status="prepared", payload="master.tex")
         cursor = command.span.end
     emit_slice(region.span.end)
     if isinstance(region, ConditionalRegion) and session.context.catcodes[region.tokens[-1].value[0]] == CatCode.LETTER:
-        session._emit(region.span.basis.span(region.span.end, region.span.end), " ", operation="SYNTHETIC_SEPARATOR")
+        session.emit(region.span.basis.span(region.span.end, region.span.end), " ", operation="SYNTHETIC_SEPARATOR")
 
 
 def emit_bibliography(session, observation, owner):
@@ -144,18 +142,16 @@ def emit_bibliography(session, observation, owner):
     except (ReadingIssue, SourceDecodingError, OSError, InvalidCharacterError) as error:
         session.require(command.span, getattr(error, "reason", "bibliography_reading"), str(error),
                         stage="preparation", unit_id=command.unit_id, dependency="possible", next_step="bibliography_resolution")
-        session._emit(command.span, deferred=observation)
+        session.emit(command.span, deferred=observation)
         return
     session.commands.append(command)
-    session._emit(command.span, command=command, deferred=observation)
-    session.bibliography_context = session.context.copy()
-    session.bibliography_knowledge = knowledge
-    session.bibliography_observed = True
+    session.emit(command.span, command=command, deferred=observation)
+    session.capture_bibliography(observed=True, knowledge=knowledge)
     if reader is None:
         return  # The native formatter can use the emitted canonical BibTeX resource.
     session.register_reader(path, reader, candidate=True, parent=command.span.basis.occurrence_id)
     captured = session.dispatcher.identify(captured, command.unit_id)
-    session._observations[reader.basis].append(captured)
+    session.observe(captured)
     session.require(captured.span, "observed_bibliography", captured.detail, unit_id=captured.unit_id)
     session.manifest.candidate_dependencies.append({**source_reference(session.units.records[command.unit_id]),
         "kind": "formatted_bibliography", "target": session.name(path), "context": owner.reason,
@@ -164,8 +160,8 @@ def emit_bibliography(session, observation, owner):
     start, cursor = len(session.pieces), 0
     for header in captured.observations:
         cmd = header.command
-        session._emit(reader.basis.span(cursor, cmd.span.start), deferred=captured)
-        session._emit(cmd.span, command=cmd, deferred=header)
+        session.emit(reader.basis.span(cursor, cmd.span.start), deferred=captured)
+        session.emit(cmd.span, command=cmd, deferred=header)
         cursor = cmd.span.end
-    session._emit(reader.basis.span(cursor, reader.basis.length), deferred=captured)
-    session.bibliography_pieces = session.pieces[start:]
+    session.emit(reader.basis.span(cursor, reader.basis.length), deferred=captured)
+    session.finish_bibliography(start)

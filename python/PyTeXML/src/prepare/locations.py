@@ -100,22 +100,23 @@ class PreparedLocations:
             status = "omitted" if complete and span.start < span.end else "unmapped"
         return {"location_status": status, "locations": locations}
 
-    def account(self, session):
+    def account(self, sources, *, generated_sources, tombstones, readers, line):
         """Subtract actual output before accepting discard evidence as deletion.
 
         Scanner lookahead and preserved literal/definition bodies can contain
         discard observations without losing those characters from the artifact.
         Unknown gaps remain explicit; they are never classified from their text.
+        Inputs are occurrence bases and discard evidence; no session is mutated.
         """
         represented = {basis: SpanSet(basis, (e.run.source for e in entries if e.run.start < e.run.end))
                        for basis, entries in self._runs.items()}
-        by_origin = {(b.source_id, b.occurrence_id): b for b in (*session.documents, *session.generated_sources)}
+        by_origin = {(b.source_id, b.occurrence_id): b for b in (*sources, *generated_sources)}
         candidates = defaultdict(list)
-        for t in session.tombstones:
+        for t in tombstones:
             basis = by_origin.get((t.src_file, t.occurrence))
             if basis is not None:
                 candidates[basis].append((basis.span(t.src_start, t.src_end), t.reason))
-        for basis, reader in session.readers.items():
+        for basis, reader in readers.items():
             candidates[basis].extend(reader.discarded)
         for basis, entries in self._runs.items():
             candidates[basis].extend((e.run.source, "Emission edit removed text") for e in entries
@@ -139,11 +140,11 @@ class PreparedLocations:
                     if span.end > lost.start and reason not in reasons:
                         reasons.append(reason)
                 self.tombstones.append(Tombstone(basis.source_id, lost.start, lost.end, "OMIT", "; ".join(reasons),
-                    basis.occurrence_id, (session.line(lost), session.line(basis.span(lost.end - 1, lost.end)))))
+                    basis.occurrence_id, (line(lost), line(basis.span(lost.end - 1, lost.end)))))
                 self._runs[basis].append(_LocatedRun(None, MappingRun(lost, 0, 0, "replace")))
             unknown = covered.union(deleted).complement(basis.whole)
             self.source_coverage.append({"source": basis.source_id, "occurrence": basis.occurrence_id,
-                "length": basis.length, "origin_kind": "generated" if basis in session.generated_sources else "source",
+                "length": basis.length, "origin_kind": "generated" if basis in generated_sources else "source",
                 "unaccounted": [[s.start, s.end] for s in unknown]})
         self._index.clear()
 
@@ -159,6 +160,7 @@ def finalize_locations(session, pieces, master, payloads):
         if not bases:
             locations.artifacts[artifact] = {"path": artifact, "sha256": sha256(text.encode("utf-8")).hexdigest(),
                                              "length": len(text)}
-    locations.account(session)
+    locations.account(session.documents, generated_sources=session.generated_sources,
+                      tombstones=session.tombstones, readers=session.readers, line=session.line)
     session.manifest.finalize_locations(session.units.records.values(), locations.project, locations.artifacts.values())
     return locations

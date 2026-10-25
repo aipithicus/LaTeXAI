@@ -20,9 +20,7 @@ def _preserve_declarations(pieces, session, command, reason, detail):
     session.diagnose(command.span, reason, detail)
     # A traversed BBL must not remain alongside the original declaration if
     # formatting is deferred. Undo that insertion, retaining the request.
-    inserted = {p.key for p in session.bibliography_pieces or ()}
-    session.bibliography_pieces = None
-    return [p for p in pieces if p.key not in inserted]
+    return session.discard_bibliography(pieces)
 
 
 def prepare_bibliography(pieces, session, output_dir: Path):
@@ -64,7 +62,14 @@ def prepare_bibliography(pieces, session, output_dir: Path):
     manifest.bibliography.bib_files = [session.name(p) for p in resources]
     texts = [store.document(path).text for path in resources]
     canonical = "\n".join(text.rstrip() + "\n" for text in texts)
-    selection = discover_citations(pieces, session)
+    selection = discover_citations(pieces, session.resolver, line=session.line)
+    info = manifest.bibliography
+    info.citation_keys = selection.keys
+    info.citation_gaps = selection.gaps
+    info.citation_deferred_contexts = selection.deferred_contexts
+    info.citation_discovery = selection.discovery
+    for requirement in selection.requirements:
+        session.require(requirement.span, requirement.reason, requirement.detail, stage="preparation")
     keys = selection.keys
     if existing:
         bbl = ''.join(p.text for p in session.bibliography_pieces or ())
@@ -151,7 +156,7 @@ def prepare_bibliography(pieces, session, output_dir: Path):
                     source_end_line=1 + len(re.findall(r"\r\n|\r|\n", bbl.rstrip("\r\n"))),
                     mapping=EditMap.copied(basis.whole), replaces=declaration.replaces + (command.span,)))
         elif piece.command and piece.command.action == "bibliography_style":
-            session._omit(piece.span, "Bibliography style superseded by prepared bibliography")
+            session.omit(piece.span, "Bibliography style superseded by prepared bibliography")
         else:
             result.append(replace(piece, replaces=piece.replaces + (command.span,)) if piece.key in inserted else piece)
     return result
@@ -167,9 +172,7 @@ def _audit_generated(text, session):
     context = session.bibliography_context.copy()
     reader = TexReader(text, source_id="bibliography.bbl", catcodes=context.catcodes,
                        endline_char=context.endlinechar, occurrence_id=len(session.manifest.input_occurrences))
-    session.generated_sources[reader.basis] = text
-    session.manifest.input_occurrences.append({"id": reader.basis.occurrence_id, "source": "bibliography.bbl",
-                                              "parent": None, "generated": True})
+    session.register_generated_source(reader)
     dispatcher = StructuralDispatcher(reader, context, session.bibliography_knowledge,
         source_commands=True, preparation=True, units=session.units)
     def report(span, reason, detail, *, preparation=False, unit_id=None, parent_id=None):

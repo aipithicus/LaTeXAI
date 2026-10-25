@@ -44,16 +44,16 @@ def prepare_external_literal(session, command):
         header = "\\begin{" + environment + "}"
         if options is not None:
             header += "[" + session.raw(options.span) + "]"
-        session._omit(command.span, "External literal reference transcluded")
-        session._emit(command.span, header + "\n", command=command, operation="LITERAL_OPEN")
-        reader = session._reader(path)
+        session.omit(command.span, "External literal reference transcluded")
+        session.emit(command.span, header + "\n", command=command, operation="LITERAL_OPEN")
+        reader = session.open_source(path)
         body = reader.source_span(0, len(document.text))
         empty = reader.source_span(0, 0)
         end = reader.source_span(len(document.text), len(document.text))
-        session._observations[reader.basis].append(LiteralRegion(body, empty, body, end, environment, profile.binding_id))
-        session._emit(body, operation="IDENTITY")
+        session.observe(LiteralRegion(body, empty, body, end, environment, profile.binding_id))
+        session.emit(body, operation="IDENTITY")
         separator = "" if document.text.endswith(("\r", "\n")) else "\n"
-        session._emit(command.span, separator + "\\end{" + environment + "}\n", command=command, operation="LITERAL_CLOSE")
+        session.emit(command.span, separator + "\\end{" + environment + "}\n", command=command, operation="LITERAL_CLOSE")
         record["disposition"] = "inlined"
     else:
         # An external file can contain the block terminator or reading options.
@@ -65,10 +65,10 @@ def prepare_external_literal(session, command):
         raw = session.raw(command.span)
         replacement = raw[:a] + target + raw[b:]
         if session.frames[-1].emit:
-            session._emit(command.span, replacement, command=command, operation="REBASE_LITERAL_RESOURCE",
+            session.emit(command.span, replacement, command=command, operation="REBASE_LITERAL_RESOURCE",
                           source_edits=((arg.span, target),))
         else:
-            session._payload_edit(arg.span, target)
+            session.edit_payload(arg.span, target)
         record.update(disposition="retained", payload=target)
         if reason:
             session.require(command.span, reason.reason, reason.detail, stage="preparation", unit_id=command.unit_id)

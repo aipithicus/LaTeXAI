@@ -31,7 +31,7 @@ from .survey import survey_sources
 from .policy import load_policy
 from .lint import PreparationLint
 from .resources import prepare_external_literal
-from .assets import observe_environment_assets, observe_asset, register_asset, surviving_asset_uses
+from .assets import observe_environment_assets, observe_asset, parse_asset_use, surviving_asset_uses
 from .deferred import emit_observed_region
 from .provenance import Tombstone
 from .manifest import PreflightManifest, BibliographyInfo, PackageUsage, StyleFileInfo, ImplicitGraphicInfo
@@ -116,7 +116,7 @@ class PreparationSession:
         self._ended_document = False
         self._observations = {}
         self.coverage = {}
-        first = self._reader(self.root)
+        first = self.open_source(self.root)
         self._root_reader = first
         self.frames.append(_Input(self.root, first, True))
         self.dispatcher = StructuralDispatcher(first, self.context, self.resolver,
@@ -134,7 +134,8 @@ class PreparationSession:
         self.manifest.reset_locations(self.units.records.values())
         self.manifest.conditional_decisions = list(self.dispatcher.decisions)
 
-    def _reader(self, path):
+    def open_source(self, path):
+        """Open a new occurrence from cached text and register its provenance."""
         doc = self.store.document(path)
         occurrence = len(self.manifest.input_occurrences)
         reader = TexReader(doc.text, source_id=doc.name, occurrence_id=occurrence,
@@ -157,6 +158,19 @@ class PreparationSession:
             occurrence["activation"] = "unresolved"
         self.manifest.input_occurrences.append(occurrence)
 
+    def observe(self, item):
+        """Record coverage only against an already registered occurrence."""
+        self._observations[item.span.basis].append(item)
+
+    def previous_observation(self, basis):
+        items = self._observations[basis]
+        return items[-1] if items else None
+
+    def register_generated_source(self, reader):
+        self.generated_sources[reader.basis] = reader.text
+        self.manifest.input_occurrences.append({"id": reader.basis.occurrence_id,
+            "source": reader.basis.source_id, "parent": None, "generated": True})
+
     def line(self, span):
         if span.basis in self.generated_sources:
             return 1 + len(re.findall(r"\r\n|\r|\n", self.generated_sources[span.basis][:span.start]))
@@ -170,7 +184,7 @@ class PreparationSession:
         self.units.require(unit_id, span)
         diagnostic = self.manifest.add_diagnostic(self.units.records[unit_id], self.line(span), reason, detail,
                                                   dependency=dependency, materialization=materialization)
-        self.lint.record(self, span, reason, detail, unit_id, evidence=evidence)
+        self.lint.record(self.units.records[unit_id], self.line(span), reason, detail, evidence=evidence)
         return diagnostic
 
     def fail(self, span, reason, detail):
@@ -205,7 +219,7 @@ class PreparationSession:
         self.manifest.preserved_source_spans = [{"source": span.basis.source_id,
             "occurrence": span.basis.occurrence_id, "start": span.start, "end": span.end}]
         # Only convert assets whose references survived this emission rollback.
-        surviving = surviving_asset_uses(self, self.pieces)
+        surviving = self.surviving_assets(self.pieces)
         identifiers = {u.command.unit_id for u in surviving}
         targets = {self.name(u.path) for u in surviving}
         self.images = {p for p in self.images if self.name(p) in targets}
@@ -262,7 +276,7 @@ class PreparationSession:
         if any(frame.path == path for frame in self.frames):
             chain = " -> ".join(self.name(f.path) for f in self.frames) + " -> " + self.name(path)
             self.fail(command.span, "input_cycle", chain)
-        reader = self._reader(path)
+        reader = self.open_source(path)
         overrides = self.resolver.catalog.engine_bindings["source_traversal"]["reading"]["package_input_catcodes"] if package else None
         recovery = self.dispatcher.input_recovery() if not emit else None
         self.frames.append(_Input(path, reader, emit, import_dir, include=include, recovery=recovery,
@@ -270,18 +284,19 @@ class PreparationSession:
             emission_start=len(self.pieces)))
         self.dispatcher.enter_source(reader, catcode_overrides=overrides, options=options)
 
-    def _emit(self, span, text=None, *, command=None, target=None, operation=None, deferred=None,
+    def emit(self, span, text=None, *, command=None, target=None, operation=None, deferred=None,
               image_references=(), source_edits=()):
+        """Append an edit-aware piece only while the current input is inlined."""
         if not self.frames[-1].emit:
             return
         raw = self.raw(span)
         text = raw if text is None else text
         if raw and text == raw + " " and not source_edits:
-            self._emit(span, command=command, target=target, operation=operation, deferred=deferred,
+            self.emit(span, command=command, target=target, operation=operation, deferred=deferred,
                        image_references=image_references)
-            self._emit(span.basis.span(span.end, span.end), " ", operation="SYNTHETIC_SEPARATOR")
+            self.emit(span.basis.span(span.end, span.end), " ", operation="SYNTHETIC_SEPARATOR")
             return
-        if text or operation == "SOURCE_END":
+        if text or operation in {"SOURCE_END", "LINT_REPAIR"}:
             piece = SourcePiece(raw if source_edits else text, span, self.line(span), operation or
                               ("IDENTITY" if text == raw else "MOUTH_EMISSION"), command,
                               ((command, target),) if target is not None else image_references,
@@ -292,8 +307,15 @@ class PreparationSession:
             if piece.text != text:
                 raise ValueError("Declared emission edits do not produce the emitted text")
             self.pieces.append(piece)
+            return piece
 
-    def _omit(self, span, reason):
+    def link_replacement(self, start, original):
+        """Link every piece emitted for an insertion to its original command."""
+        for i in range(start, len(self.pieces)):
+            piece = self.pieces[i]
+            self.pieces[i] = replace(piece, replaces=piece.replaces + (original,))
+
+    def omit(self, span, reason):
         if span.start != span.end:
             self.tombstones.append(Tombstone(span.basis.source_id, span.start, span.end, "OMIT", reason,
                 occurrence=span.basis.occurrence_id,
@@ -303,24 +325,43 @@ class PreparationSession:
         if not self.frames[-1].emit:
             return  # Separately retained local code has no normalization contract.
         result = self.emitter.emit(event, self.documents[event.span.basis].text)
-        self._emit(result.kept_span or event.span, result.text)
+        self.emit(result.kept_span or event.span, result.text)
         if result.suffix:
-            self._emit(event.span.basis.span(event.span.end, event.span.end), result.suffix,
+            self.emit(event.span.basis.span(event.span.end, event.span.end), result.suffix,
                        operation="SYNTHETIC_COMMENT_END")
         if not result.text or result.kept_span is not None:
-            self._omit(event.span, "Mouth/policy discarded comment, spacing or ignored character")
+            self.omit(event.span, "Mouth/policy discarded comment, spacing or ignored character")
         if result.metadata:
             identifier = self.units.add(event.span, "source_metadata", activity="data",
                                         evidence={"reason": "reader_comment"})
             self.manifest.source_metadata.append({"unit_id": identifier, **result.metadata})
 
-    def _payload_edit(self, span, replacement):
+    def edit_payload(self, span, replacement):
+        """Keep one edit per retained-file range, rejecting occurrence conflicts."""
         path = self.documents[span.basis].path
         edits = self.payload_edits.setdefault(path, {})
         key = (span.start, span.end)
         if key in edits and edits[key] != replacement:
             self.fail(span, "context_dependent_payload", "One local code file resolves differently across occurrences")
         edits[key] = replacement
+
+    def register_asset(self, command, path):
+        use = parse_asset_use(command, path)
+        self.asset_uses[command.unit_id] = use
+        return use
+
+    def surviving_assets(self, pieces):
+        retained = set(self.styles) | self.code
+        bases = {basis for basis, doc in self.documents.items() if doc.path in retained}
+        return surviving_asset_uses(self.asset_uses.values(), pieces, retained_bases=bases)
+
+    def rebase_asset_payloads(self, uses, mapping):
+        """Apply converted asset references to retained code, checking occurrences."""
+        retained = set(self.styles) | self.code
+        for use in uses:
+            if self.documents[use.command.span.basis].path in retained:
+                for span, replacement in use.edits(mapping[use.command.unit_id]):
+                    self.edit_payload(span, replacement)
 
     def payload_text(self, path):
         text = self.store.document(path).text
@@ -333,6 +374,24 @@ class PreparationSession:
         for (start, end), replacement in sorted(self.payload_edits.get(path, {}).items(), reverse=True):
             piece = piece.edit_source(basis.span(start, end), replacement, "REBASE_PAYLOAD")
         return piece
+
+    def capture_bibliography(self, *, observed=False, knowledge=None):
+        """Freeze reading knowledge at the accepted bibliography site."""
+        self.bibliography_context = self.context.copy()
+        if knowledge is None:
+            knowledge = BindingResolver(self.resolver.catalog)
+            knowledge.active_packages = list(self.resolver.active_packages)
+        self.bibliography_knowledge = knowledge
+        self.bibliography_observed = observed
+
+    def finish_bibliography(self, start):
+        self.bibliography_pieces = self.pieces[start:]
+
+    def discard_bibliography(self, pieces):
+        """Retract an inserted BBL while retaining its original declaration."""
+        inserted = {p.key for p in self.bibliography_pieces or ()}
+        self.bibliography_pieces = None
+        return [p for p in pieces if p.key not in inserted]
 
     def _neutral(self, command):
         # Capturing a bounded header does not require interpreting its contents.
@@ -373,7 +432,7 @@ class PreparationSession:
             if action in {"package_load", "document_class"} and role != "stored":
                 self.dispatcher.loads.invalidate(identifier)
 
-    def _deferred_dependencies(self, tokens, *, observed=(), observations=(), parent_id=None, command=None, role="unknown"):
+    def require_deferred_dependencies(self, tokens, *, observed=(), observations=(), parent_id=None, command=None, role="unknown"):
         starts = {command.span.start for command in observed}
         envelopes = sorted((o.command for o in observations), key=lambda c: c.span.start)
         if envelopes:
@@ -425,7 +484,7 @@ class PreparationSession:
                         "initial_options": list(self.package_options[key]), "requested_options": options,
                         "added_options": sorted(set(options) - set(self.package_options[key])),
                         "comparison": "source_visible_requests", "automatic_repair": False,
-                        "related": [self.lint.related(self, first_id)]})
+                        "related": [self.lint.related(self.units.records[first_id])]})
                 self.dispatcher.defer_effects(command.span)
             return
         self.loaded_packages.add(key)
@@ -476,9 +535,9 @@ class PreparationSession:
                     "Option forwarding after the target was loaded requires further resolution",
                     evidence={"target": name, "kind": command.metadata["target_kind"],
                         "requested_options": list(option_names(command.argument("options"))),
-                        "automatic_repair": False, "related": [self.lint.related(self, first_id)]})
+                        "automatic_repair": False, "related": [self.lint.related(self.units.records[first_id])]})
             self.forwarded_options[key] = self.forwarded_options.get(key, ()) + option_names(command.argument("options"))
-            self._emit(command.span, command=command)
+            self.emit(command.span, command=command)
             return
         if action == "external_literal":
             prepare_external_literal(self, command)
@@ -487,14 +546,14 @@ class PreparationSession:
             role = command.metadata["semantic_role"]
             role_action = self.policy.get_role_action(role)
             if role_action == "unwrap":
-                self._omit(command.span, "Policy unwrapped " + role)
+                self.omit(command.span, "Policy unwrapped " + role)
                 return
             if action == "transparent_begin" and role_action != "preserve":
                 self.require(command.span, "policy_action", f"Transparent role does not support {role_action!r}", stage="preparation", unit_id=command.unit_id)
         if action == "environment_begin":
             self._neutral(command)
         if action in {"source_input", "source_include", "source_import", "source_subimport"}:
-            self._omit(command.span, "Input directive replaced by its ordered occurrence")
+            self.omit(command.span, "Input directive replaced by its ordered occurrence")
             name = command.value("target")
             imported = frame.import_dir
             if action in {"source_import", "source_subimport"}:
@@ -504,7 +563,7 @@ class PreparationSession:
                     self.fail(command.span, "dependency_path", "Import directory is outside source inventory")
             include = action == "source_include"
             if include:
-                self._emit(command.span, "\\clearpage ", operation="INCLUDE_BOUNDARY")
+                self.emit(command.span, "\\clearpage ", operation="INCLUDE_BOUNDARY")
                 if self.includeonly is not None and name not in self.includeonly:
                     return
             path = self.resolve(name, [""] if Path(name).suffix else [".tex", ""], command.span,
@@ -517,13 +576,13 @@ class PreparationSession:
                     self.defer(command.span, "package_import", "Import rebasing inside retained local code needs a payload contract")
                 replacement = "\\include{" + self.name(path.with_suffix("")) + "}" if include else "\\input{" + self.name(path) + "}"
                 if frame.emit:
-                    self._emit(command.span, replacement, operation="REBASE_CODE_INPUT")
+                    self.emit(command.span, replacement, operation="REBASE_CODE_INPUT")
                 else:
-                    self._payload_edit(command.span, replacement)
+                    self.edit_payload(command.span, replacement)
             self._enter(path, command, emit=emit, import_dir=imported, include=include and emit)
             return
         if action == "end_input":
-            self._omit(command.span, "Endinput resolved at physical-line boundary")
+            self.omit(command.span, "Endinput resolved at physical-line boundary")
             return  # Dispatcher already scheduled this file's physical-line EOF.
         if action == "include_selection":
             self.includeonly = {s.strip() for s in command.value("names").split(",")}
@@ -532,10 +591,8 @@ class PreparationSession:
             if self.bibliography_context is not None:
                 self.defer(command.span, "bibliography_sites", "Multiple bibliography sites need separate preparation")
             self._neutral(command)
-            self._emit(command.span, command=command)
-            self.bibliography_context = self.context.copy()
-            self.bibliography_knowledge = BindingResolver(self.resolver.catalog)
-            self.bibliography_knowledge.active_packages = list(self.resolver.active_packages)
+            self.emit(command.span, command=command)
+            self.capture_bibliography()
             bbl = self.root.with_suffix(".bbl")
             if self.store.contains(bbl):
                 self.edge(command, bbl, "formatted_bibliography")
@@ -559,22 +616,22 @@ class PreparationSession:
             a, b = arg.span.start - command.span.start, arg.span.end - command.span.start
             replacement = raw[:a] + ",".join(resolved_names) + raw[b:]
             if frame.emit:
-                self._emit(command.span, replacement, command=command,
+                self.emit(command.span, replacement, command=command,
                            source_edits=((arg.span, ",".join(resolved_names)),))
             else:
-                self._payload_edit(arg.span, ",".join(resolved_names))
+                self.edit_payload(arg.span, ",".join(resolved_names))
             return
         if action == "asset_reference":
             self._neutral(command)
             # Widths/captions can contain unexpanded TeX without making the
             # filename or PDF page computed. Inspect only options we consume.
             path = self.image_path(command)
-            register_asset(self, command, path)
+            self.register_asset(command, path)
             self.images.add(path)
             for candidate in self._implicit:
                 candidate.has_image = True
             self.edge(command, path, "asset")
-            self._emit(command.span, command=command, target=self.name(path))
+            self.emit(command.span, command=command, target=self.name(path))
             return
         if action == "asset_search_paths":
             paths, current, depth = [], [], 0
@@ -604,14 +661,14 @@ class PreparationSession:
                     opening.metadata.get("floating", False), False, self.raw(opening.span), opening.name))
         elif action in {"opaque", "metadata", "citation", "bibliography", "bibliography_style", "biblatex_resource", "biblatex_print"}:
             self._neutral(command)
-        self._emit(command.span, command=command)
+        self.emit(command.span, command=command)
         if action == "environment_end" and command.metadata.get("document"):
             self._ended_document = True
         # No-argument commands need a lexical separator after a control word.
         if (not command.arguments and action in {"opaque", "biblatex_print", "reading_noop", "process_options"}
                 or action == "boolean_declaration" and command.metadata["unbraced"]
                 or action == "conditional_test" and command.metadata["trailing_control_word"]):
-            self._emit(command.span.basis.span(command.span.end, command.span.end), " ", operation="SYNTHETIC_SEPARATOR")
+            self.emit(command.span.basis.span(command.span.end, command.span.end), " ", operation="SYNTHETIC_SEPARATOR")
 
     def run(self):
         if self._ran:
@@ -648,7 +705,7 @@ class PreparationSession:
             if isinstance(item, ReadingBoundary):
                 recovery = self.lint.repair_boundary(self, item)
                 if recovery is not None:
-                    self._observations[item.span.basis].append(recovery)
+                    self.observe(recovery)
                     continue
                 # An EOF diagnostic can point to an opener in another input.
                 # Keep that anchor in diagnostics; do not misattribute coverage.
@@ -671,21 +728,19 @@ class PreparationSession:
                     del self.frames[recoverable:]
                     continue
                 raise _PreserveRemainder
-            self._observations[item.span.basis].append(item)
+            self.observe(item)
             if isinstance(item, SourceEnd):
-                self._omit(item.span, "Unread remainder after endinput")
+                self.omit(item.span, "Unread remainder after endinput")
                 # Carry a zero-width cursor through the same ordered emission
                 # list as text. Later rewrites/splices move it automatically.
-                self._emit(item.span.basis.span(item.span.end, item.span.end), "", operation="SOURCE_END")
+                self.emit(item.span.basis.span(item.span.end, item.span.end), "", operation="SOURCE_END")
                 finished = self.frames.pop()
                 if finished.replacement is not None:
-                    for i in range(finished.emission_start, len(self.pieces)):
-                        piece = self.pieces[i]
-                        self.pieces[i] = replace(piece, replaces=piece.replaces + (finished.replacement,))
+                    self.link_replacement(finished.emission_start, finished.replacement)
                 if finished.bibliography_start is not None:
-                    self.bibliography_pieces = self.pieces[finished.bibliography_start:]
+                    self.finish_bibliography(finished.bibliography_start)
                 if finished.include and self.frames:
-                    self._emit(item.span, "\\clearpage ", operation="INCLUDE_BOUNDARY")
+                    self.emit(item.span, "\\clearpage ", operation="INCLUDE_BOUNDARY")
                 continue
             try:
                 if isinstance(item, SourceCommand):
@@ -705,7 +760,7 @@ class PreparationSession:
                         emit_observed_region(self, item)
                         continue
                     image_references = observe_environment_assets(self, item)
-                    self._deferred_dependencies(item.tokens, observed=(o.command for o in item.observations
+                    self.require_deferred_dependencies(item.tokens, observed=(o.command for o in item.observations
                         if o.command.action == "asset_reference"), parent_id=item.unit_id, command=item.command,
                         observations=item.observations, role="branch" if isinstance(item, ConditionalRegion) else "unknown")
                     raw = self.raw(item.span)
@@ -714,12 +769,12 @@ class PreparationSession:
                     if (len(item.tokens) == 1 and item.tokens[0].kind == TokenKind.CONTROL_SEQUENCE
                             and item.span.end == item.tokens[0].span.end):
                         raw += " "
-                    self._emit(item.span, raw, operation="DEFER_INTERPRETATION", deferred=item,
+                    self.emit(item.span, raw, operation="DEFER_INTERPRETATION", deferred=item,
                                image_references=image_references)
                 elif isinstance(item, ReadEvent):
                     self._emit_event(item)
                 elif isinstance(item, SkippedRegion):
-                    self._omit(item.span, "Inactive conditional branch")
+                    self.omit(item.span, "Inactive conditional branch")
                 elif isinstance(item, LiteralRegion) and item.classification:
                     for detail in item.warnings:
                         self.manifest.warnings.append({"source": item.span.basis.source_id,
@@ -727,17 +782,17 @@ class PreparationSession:
                             "line": self.line(item.closing), "detail": detail})
                     action = self.policy.get_role_action(item.classification.semantic_role)
                     if action == "eliminate":
-                        self._omit(item.span, "Policy eliminated " + item.classification.semantic_role)
+                        self.omit(item.span, "Policy eliminated " + item.classification.semantic_role)
                     else:
-                        self._emit(item.span)
+                        self.emit(item.span)
                         for interpolation in item.interpolations:
                             self.require(interpolation.span, interpolation.reason, interpolation.detail,
                                          stage="interpretation", unit_id=interpolation.unit_id)
-                            self._deferred_dependencies(interpolation.tokens, parent_id=interpolation.unit_id)
+                            self.require_deferred_dependencies(interpolation.tokens, parent_id=interpolation.unit_id)
                         if action != "preserve":
                             self.require(item.span, "policy_action", f"Literal role does not support {action!r}", stage="preparation", unit_id=item.unit_id)
                 else:
-                    self._emit(item.span)
+                    self.emit(item.span)
                     if isinstance(item, (StoredDefinition, EnvironmentDefinition)):
                         body_id = next(i for i in self.units.children.get(item.unit_id, ())
                                        if self.units.records[i].kind == "stored_body")
@@ -758,15 +813,15 @@ class PreparationSession:
                 # children and subsequent source remain part of the new master.
                 del self.pieces[checkpoint[0]:]
                 del self.tombstones[checkpoint[1]:]
-                self._emit(item.span, command=item, operation="DEFER_RESOLUTION")
+                self.emit(item.span, command=item, operation="DEFER_RESOLUTION")
             depth = self.context.scope_depth
             self.graphic_paths = {k: v for k, v in self.graphic_paths.items() if k <= depth}
             self.graphic_extensions = {k: v for k, v in self.graphic_extensions.items() if k <= depth}
         if self._ended_document:
             for frame in self.frames:
                 remainder = frame.reader.source_span(frame.reader.position, len(frame.reader.text))
-                self._observations[remainder.basis].append(SourceEnd(remainder, "end_document"))
-                self._omit(remainder, "Unread remainder after end of document")
+                self.observe(SourceEnd(remainder, "end_document"))
+                self.omit(remainder, "Unread remainder after end of document")
 
     def _inventory(self):
         m = self.manifest

@@ -7,22 +7,38 @@ Unobserved keys remain available in the canonical bibliography resource.
 """
 from dataclasses import dataclass
 from ..reading.contracts import ReadingIssue
+from ..reading.spans import SourceSpan
 from ..reading.tex_reader import TokenKind
+
+
+@dataclass(frozen=True)
+class CitationRequirement:
+    span: SourceSpan
+    reason: str
+    detail: str
 
 
 @dataclass(frozen=True)
 class CitationSelection:
     keys: list[str]
     established_keys: set[str]
+    gaps: list[dict]
+    deferred_contexts: int
+    requirements: list[CitationRequirement]
+
+    @property
+    def discovery(self):
+        return "partial" if self.gaps or self.deferred_contexts else "complete"
 
 
-def discover_citations(pieces, session):
-    info = session.manifest.bibliography
+def discover_citations(pieces, resolver, *, line):
+    """Return observations and requests; the caller owns manifest/unit updates."""
     keys, established, gaps, deferred_contexts = [], set(), [], 0
+    requirements = []
 
     def gap(span, reason, detail, **extra):
         gaps.append(dict(source=span.basis.source_id, occurrence=span.basis.occurrence_id,
-                         start=span.start, end=span.end, line=session.line(span),
+                         start=span.start, end=span.end, line=line(span),
                          reason=reason, detail=detail, **extra))
 
     for piece in pieces:
@@ -40,7 +56,7 @@ def discover_citations(pieces, session):
                     raise ReadingIssue("bibliography_keys", "Citation keys need expansion or a richer key grammar")
             except ReadingIssue as error:
                 gap(command.span, error.reason, error.detail)
-                session.require(command.span, error.reason, error.detail, stage="preparation")
+                requirements.append(CitationRequirement(command.span, error.reason, error.detail))
             else:
                 keys.extend(observed)
                 if deferred is None:
@@ -63,14 +79,10 @@ def discover_citations(pieces, session):
         for token in tokens:
             if token.kind != TokenKind.CONTROL_SEQUENCE:
                 continue
-            profile = session.resolver.resolve_command(token.value)
+            profile = resolver.resolve_command(token.value)
             if getattr(profile, "action", None) != "citation":
-                profile = session.resolver.source_command_syntax(token.value)
+                profile = resolver.source_command_syntax(token.value)
             if getattr(profile, "action", None) == "citation":
                 gap(token.span, "nested_citation", "Citation inside an uninterpreted argument or region needs its owning context")
 
-    info.citation_keys = list(dict.fromkeys(keys))
-    info.citation_gaps = gaps
-    info.citation_deferred_contexts = deferred_contexts
-    info.citation_discovery = "partial" if gaps or deferred_contexts else "complete"
-    return CitationSelection(info.citation_keys, established)
+    return CitationSelection(list(dict.fromkeys(keys)), established, gaps, deferred_contexts, requirements)
