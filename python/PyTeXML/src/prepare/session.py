@@ -26,7 +26,7 @@ from ..reading.units import UnitRegistry
 from ..reading.options import OptionScope, option_names
 from ..reading.spans import SourceSpan
 from .discovery import select_root
-from .emission import SourcePiece, event_text
+from .emission import SourcePiece, MouthEmitter
 from .survey import survey_sources
 from .policy import load_policy
 from .resources import prepare_external_literal
@@ -65,11 +65,12 @@ class _Input:
 
 class PreparationSession:
     def __init__(self, project_dir: Path, *, root_tex=None, excluded_dirs=(), engine="pytexml", catalog=None, policy="prepare"):
+        self.policy = load_policy(policy)
+        self.emitter = MouthEmitter(self.policy)
         self.store = SourceStore(project_dir, excluded_dirs)
         self.resolver = BindingResolver(catalog)
         self.root = select_root(self.store, root_tex, catalog=self.resolver.catalog)
         self.context = self.resolver.new_context()
-        self.policy = load_policy(policy)
         self.literal_payloads = {}
         self.manifest = PreflightManifest(self.name(self.root), self.root.stem, str(self.store.root), engine,
             BibliographyInfo("NONE", None, None, False, False))
@@ -307,6 +308,21 @@ class PreparationSession:
             self.tombstones.append(Tombstone(span.basis.source_id, span.start, span.end, "OMIT", reason,
                 occurrence=span.basis.occurrence_id,
                 source_lines=(self.line(span), self.line(span.basis.span(span.end - 1, span.end)))))
+
+    def _emit_event(self, event):
+        if not self.frames[-1].emit:
+            return  # Separately retained local code has no normalization contract.
+        result = self.emitter.emit(event, self.documents[event.span.basis].text)
+        self._emit(result.kept_span or event.span, result.text)
+        if result.suffix:
+            self._emit(event.span.basis.span(event.span.end, event.span.end), result.suffix,
+                       operation="SYNTHETIC_COMMENT_END")
+        if not result.text or result.kept_span is not None:
+            self._omit(event.span, "Mouth/policy discarded comment, spacing or ignored character")
+        if result.metadata:
+            identifier = self.units.add(event.span, "source_metadata", activity="data",
+                                        evidence={"reason": "reader_comment"})
+            self.manifest.source_metadata.append({"unit_id": identifier, **result.metadata})
 
     def _payload_edit(self, span, replacement):
         path = self.documents[span.basis].path
@@ -696,10 +712,7 @@ class PreparationSession:
                     self._emit(item.span, raw, operation="DEFER_INTERPRETATION", deferred=item,
                                image_references=image_references)
                 elif isinstance(item, ReadEvent):
-                    text = event_text(item, self.raw(item.span))
-                    self._emit(item.span, text)
-                    if not text:
-                        self._omit(item.span, "Mouth discarded comment, spacing or ignored character")
+                    self._emit_event(item)
                 elif isinstance(item, SkippedRegion):
                     self._omit(item.span, "Inactive conditional branch")
                 elif isinstance(item, LiteralRegion) and item.classification:

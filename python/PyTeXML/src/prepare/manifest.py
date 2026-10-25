@@ -104,6 +104,7 @@ class PreflightManifest:
     location_contract: Dict[str, Any] = field(default_factory=dict)
     source_survey: List[Dict[str, Any]] = field(default_factory=list)
     resources: List[Dict[str, Any]] = field(default_factory=list)
+    source_metadata: List[Dict[str, Any]] = field(default_factory=list)
     reading_assumptions: List[str] = field(default_factory=list)
     input_occurrences: List[Dict[str, Any]] = field(default_factory=list)
     dependencies: List[Dict[str, Any]] = field(default_factory=list)

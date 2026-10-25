@@ -99,6 +99,9 @@ class ReadEvent:
     state_before: ReaderState
     state_after: ReaderState
     token: Token | None = None
+    # Exact introducer spelling (including ^^ conversion), supplied by the
+    # mouth so consumers need not guess where a comment's payload starts.
+    comment_marker: SourceSpan | None = None
 
 
 class InvalidCharacterError(ValueError):
@@ -523,7 +526,8 @@ class TexReader:
         if category == CatCode.COMMENT:
             consumed = self._span(unit.start, self._line_end)
             self._finish_line()
-            return ReadEvent(EventKind.COMMENT, consumed, before, self.state)
+            return ReadEvent(EventKind.COMMENT, consumed, before, self.state,
+                             comment_marker=span)
         if category == CatCode.END_OF_LINE:
             consumed = self._span(unit.start, self._line_end)
             self._finish_line()

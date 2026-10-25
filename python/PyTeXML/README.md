@@ -249,8 +249,24 @@ and missing effects remain in the payload/manifest; this is preparation recovery
 not a claim of completed package execution.
 
 The policy now controls supported literal-role elimination/preservation, external
-literal inlining, and transparent-wrapper unwrapping. Other policy fields and
-projection YAMLs remain provisional.
+literal inlining, transparent-wrapper unwrapping, and the reusable
+[mouth emitter](src/prepare/emission.py). Full-line and inline comments can be
+retained independently; `!TeX key=value` comments can be retained, removed, or
+captured as inert `source_metadata` linked to located units. The reader supplies
+the comment introducer span, including alternative catcodes and `^^` spellings.
+Protected bodies and separately retained local code keep their existing contracts.
+
+Emission preserves every paragraph token and comment-suppressed endline. At EOF,
+a stripped comment may retain its marker to avoid introducing an endline token;
+its payload is still accounted for as removed. Ignored spaces and input-line tails
+are stripped only where the reader established that behavior. Paragraph coalescing,
+physical trailing-space preservation, comment sidecars, and elimination of endline
+suppression are rejected before source reads, rather than silently ignored.
+See the [policy contract](resources/policies/README.md) for the supported settings.
+`provenance.emit_ledger` supplies the default; an explicit `emit_provenance` API
+argument overrides it. `rle_compression` controls merging adjacent identity segments.
+Final manifest locations do not depend on ledger emission or compression.
+Experimental projection YAMLs remain provisional.
 The handler registry is vocabulary, not an executable plugin loader. Core
 source declarations and argument shapes live in
 [source_traversal.yaml](resources/bindings/engine/source_traversal.yaml);

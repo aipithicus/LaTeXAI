@@ -379,7 +379,7 @@ class ProvenanceLedger:
         }
 
     @classmethod
-    def build_from_pieces(cls, pieces, tombstones=None, *, source_coverage=(), artifact=None):
+    def build_from_pieces(cls, pieces, tombstones=None, *, source_coverage=(), artifact=None, rle_compression=True):
         """Character intervals support mixed-source lines and repeated inputs.
 
         A rewritten segment relates whole extents; it does not claim an affine
@@ -417,7 +417,7 @@ class ProvenanceLedger:
                     ranges[-1][1] = offset + len(p.text)
                 else:
                     ranges.append([offset, offset + len(p.text)])
-            if ledger.segments and p.operation == 'IDENTITY':
+            if rle_compression and ledger.segments and p.operation == 'IDENTITY':
                 previous = ledger.segments[-1]
                 if (previous['operation'] == 'IDENTITY' and previous['source_file'] == segment['source_file']
                     and previous['occurrence'] == segment['occurrence'] and previous['source'][1] == span.start):

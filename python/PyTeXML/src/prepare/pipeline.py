@@ -25,10 +25,14 @@ def preprocess_paper(
     copy_local_dependencies: bool = True,
     clean_styles: bool = False,
     emit_manifest_json: bool = True,
-    emit_provenance: bool = True,
+    emit_provenance: Optional[bool] = None,
     policy: str = "prepare",
 ) -> Tuple[str, PreflightManifest, Path, Optional[ProvenanceLedger]]:
-    """Build in isolation and publish a complete payload, with failure rollback."""
+    """Build in isolation and publish a complete payload, with failure rollback.
+
+    emit_provenance=None follows policy.provenance.emit_ledger; an explicit bool
+    overrides it. Manifest locations are always finalized, independently of it.
+    """
     arguments = dict(locals())
     project = Path(project_dir).resolve()
     destination = Path(output_dir).resolve() if output_dir else project / "extracted"
@@ -58,7 +62,7 @@ def _prepare_paper(
     project_dir, output_dir=None, output_file=None, root_tex=None, execute_probe=False,
     engine="pytexml", drop_commands=None, keep_content_commands=None, drop_environments=None,
     convert_images_to_svg=True, copy_local_dependencies=True, clean_styles=False,
-    emit_manifest_json=True, emit_provenance=True, policy="prepare", *, excluded_dirs=(),
+    emit_manifest_json=True, emit_provenance=None, policy="prepare", *, excluded_dirs=(),
 ):
     """Publish prepared source, with explicit partial status when knowledge is missing.
 
@@ -89,6 +93,8 @@ def _prepare_paper(
         try:
             session = PreparationSession(p_dir, root_tex=root_tex, engine=engine,
                                          excluded_dirs=[out_dir, *excluded_dirs], policy=policy)
+            if emit_provenance is None:
+                emit_provenance = session.policy.provenance.emit_ledger
             if output_file:
                 secondary = Path(output_file).resolve()
                 if session.store.contains(secondary):
@@ -134,7 +140,8 @@ def _prepare_paper(
             master_tex_content = "".join(p.text for p in pieces)
             locations = finalize_locations(session, pieces, master_tex_content, payloads)
             ledger = ProvenanceLedger.build_from_pieces(pieces, locations.tombstones,
-                source_coverage=locations.source_coverage, artifact=locations.artifacts['master.tex']) if emit_provenance else None
+                source_coverage=locations.source_coverage, artifact=locations.artifacts['master.tex'],
+                rle_compression=session.policy.provenance.rle_compression) if emit_provenance else None
             if ledger:
                 ledger.save(out_dir / "master.provenance.json")
             manifest.entrypoint = "master.tex"

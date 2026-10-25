@@ -13,4 +13,6 @@ loading. No production code recursively discovers this directory.
 To inspect an experimental policy, pass its explicit path to `load_policy(path)`.
 It receives the same strict field/action validation as the preparation policy;
 validation does not demonstrate that its requested rewrites are implemented or
-that a "lossless" run would preserve bytes.
+that a "lossless" run would preserve bytes. Preparation separately validates its
+emission capabilities and rejects unsupported settings in these sketches before
+reading manuscript sources.

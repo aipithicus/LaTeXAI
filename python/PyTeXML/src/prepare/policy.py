@@ -1,8 +1,8 @@
 """
 Preparation policy configuration for PyTeXML.
 
-Loads declarative role/event actions from resources/policies. Preparation consumes
-supported role actions; lexical/event and projection settings remain provisional.
+Loads declarative role/event actions from resources/policies. Syntax validation
+also permits experimental sketches; executable consumers validate capabilities.
 """
 
 from __future__ import annotations
@@ -44,7 +44,7 @@ class LexicalEventsPolicy:
 
 @dataclass(frozen=True, slots=True)
 class StructuralNormalizationPolicy:
-    paragraph_breaks: str = "coalesce"
+    paragraph_breaks: str = "preserve"
     trailing_whitespace: str = "strip"
 
 
@@ -64,6 +64,7 @@ class ExtractionPolicy:
     normalization: StructuralNormalizationPolicy
     provenance: ProvenancePolicy
     raw_config: Dict[str, Any] = field(default_factory=dict, repr=False)
+    source: str = "<policy>"
 
     def get_role_action(self, role: str) -> str:
         """Returns the configured action for a semantic role, defaulting to 'preserve'."""
@@ -129,7 +130,7 @@ def load_policy(policy_identifier_or_path: Union[str, Path]) -> ExtractionPolicy
     # 3. Structural Normalization
     norm_cfg = raw.get("structural_normalization", {})
     normalization = StructuralNormalizationPolicy(
-        paragraph_breaks=norm_cfg.get("paragraph_breaks", "coalesce"),
+        paragraph_breaks=norm_cfg.get("paragraph_breaks", "preserve"),
         trailing_whitespace=norm_cfg.get("trailing_whitespace", "strip"),
     )
 
@@ -149,6 +150,7 @@ def load_policy(policy_identifier_or_path: Union[str, Path]) -> ExtractionPolicy
         normalization=normalization,
         provenance=provenance,
         raw_config=raw,
+        source=str(path),
     )
 
 

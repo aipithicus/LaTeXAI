@@ -101,7 +101,7 @@ class PolicyLoaderTests(unittest.TestCase):
         self.assertEqual(policy.lexical_events.magic_directive, "extract_metadata")
 
         # Structural normalization
-        self.assertTrue(policy.should_coalesce_paragraphs())
+        self.assertFalse(policy.should_coalesce_paragraphs())
         self.assertTrue(policy.should_strip_trailing_whitespace())
 
         # Provenance

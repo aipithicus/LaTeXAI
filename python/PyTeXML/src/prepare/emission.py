@@ -5,6 +5,7 @@ from ..reading.spans import SourceSpan
 from ..reading.edit_map import EditMap
 from ..reading.contracts import DeferredRegion, SourceCommand
 from ..reading.tex_reader import ReadEvent, TokenKind, CatCode, EventKind, ReaderState
+from .policy import ExtractionPolicy
 
 
 @dataclass(frozen=True, slots=True)
@@ -50,7 +51,83 @@ class SourcePiece:
         return self.edited(ranges[0].start, ranges[-1].end, text, operation)
 
 
-def event_text(event: ReadEvent, raw: str) -> str:
+@dataclass(frozen=True, slots=True)
+class EventEmission:
+    """A pure emission decision; the source owner records edits and metadata."""
+    text: str
+    suffix: str = ""
+    metadata: dict | None = None
+    kept_span: SourceSpan | None = None
+
+
+class MouthEmitter:
+    """Serialize established reader events under a validated preparation policy.
+
+    No filesystem access, execution, or scanning inside protected slices. Comment
+    suppression is preserved by joining lines without manufacturing an endline
+    token. Kept comments retain their physical terminator, including at input EOF.
+    """
+
+    def __init__(self, policy: ExtractionPolicy):
+        unsupported = []
+        if policy.lexical_events.comment_line == "route_to_sidecar":
+            unsupported.append("lexical_events.comment_line=route_to_sidecar (no comment-sidecar contract)")
+        if policy.lexical_events.line_continuation != "preserve":
+            unsupported.append("lexical_events.line_continuation=eliminate (would change endline suppression)")
+        if policy.normalization.paragraph_breaks != "preserve":
+            unsupported.append("structural_normalization.paragraph_breaks=coalesce (paragraph tokens may have observable meanings)")
+        if policy.normalization.trailing_whitespace != "strip":
+            unsupported.append("structural_normalization.trailing_whitespace=preserve (requires physical-line emission)")
+        if unsupported:
+            raise ValueError(f"{policy.source}: unsupported preparation settings: " + "; ".join(unsupported))
+        self.policy = policy
+
+    def emit(self, event: ReadEvent, source: str) -> EventEmission:
+        raw = source[event.span.start:event.span.end]
+        if event.kind != EventKind.COMMENT:
+            return EventEmission(_token_text(event, raw))
+        # N means this line has not produced a token. Whitespace-like source
+        # characters with other catcodes cannot fool a character-prefix test.
+        whole_line = event.state_before == ReaderState.NEW_LINE
+        directive = comment_directive(event, source) if whole_line else None
+        action = (self.policy.lexical_events.magic_directive if directive else
+                  self.policy.lexical_events.comment_line if whole_line else
+                  self.policy.lexical_events.comment_inline)
+        if action == "preserve":
+            return EventEmission(raw, "" if raw.endswith(("\r", "\n")) else "\n")
+        metadata = directive if action == "extract_metadata" else None
+        marker = event.comment_marker
+        if (marker is not None and event.span.end == len(source)
+                and event.state_before != ReaderState.SKIP_BLANKS):
+            spelling = source[marker.start:marker.end]
+            if spelling and not any(c in spelling for c in "\r\n"):
+                # At file EOF, deleting the suppression itself can create a
+                # space (or a paragraph for an otherwise empty file). Keep only
+                # the proven marker; the payload still receives a tombstone.
+                return EventEmission(spelling, "\n", metadata, marker)
+        return EventEmission("", metadata=metadata)
+
+
+def comment_directive(event: ReadEvent, source: str) -> dict | None:
+    """Read !TeX key=value metadata only after a mouth-proven comment marker.
+
+    Unknown keys are data. Values never configure execution or output paths.
+    This also works with alternative comment characters and ^^ spellings.
+    """
+    if event.kind != EventKind.COMMENT or event.comment_marker is None:
+        return None
+    payload = source[event.comment_marker.end:event.span.end].strip()
+    # split handles tabs and repeated whitespace in editor metadata.
+    parts = payload.split(None, 1)
+    if len(parts) != 2 or parts[0].casefold() != "!tex":
+        return None
+    key, equals, value = parts[1].partition("=")
+    if not equals or not key.strip():
+        return None
+    return {"kind": "tex_directive", "key": " ".join(key.casefold().split()), "value": value.strip()}
+
+
+def _token_text(event: ReadEvent, raw: str) -> str:
     """Serialize bounded mouth events without accidental input-join paragraphs.
 
     Literal and definition bodies never enter this function. Control-word

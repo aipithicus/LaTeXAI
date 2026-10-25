@@ -158,7 +158,7 @@ class PreparedLocations:
             records[unit.id] = record
         manifest.units = list(records.values())
         for target in (*manifest.requirements, *manifest.unresolved, *manifest.dependencies,
-                       *manifest.candidate_dependencies, *manifest.resources):
+                       *manifest.candidate_dependencies, *manifest.resources, *manifest.source_metadata):
             unit = records[target["unit_id"]]
             target.update(location_status=unit["location_status"], locations=unit["locations"])
 

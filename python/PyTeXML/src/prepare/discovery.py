@@ -6,6 +6,7 @@ from ..bindings.resolver import BindingResolver
 from ..reading.dispatcher import StructuralDispatcher
 from ..reading.contracts import SourceCommand, ReadingBoundary
 from ..reading.tex_reader import TexReader, ReadEvent, EventKind
+from .emission import comment_directive
 
 
 def select_root(store: SourceStore, explicit: str | None = None, *, catalog=None) -> Path:
@@ -37,11 +38,11 @@ def select_root(store: SourceStore, explicit: str | None = None, *, catalog=None
                     candidates.append(path)
                 break
             if isinstance(item, ReadEvent) and item.kind == EventKind.COMMENT:
-                # Editor metadata is recognized only inside a reader comment.
-                comment = doc.text[item.span.start + 1:item.span.end].strip()
-                key, separator, value = comment.partition("=")
-                if separator and " ".join(key.upper().split()) == "!TEX ROOT":
-                    target = (path.parent / value.strip()).resolve()
+                # Use the mouth's introducer span, including ^^ spelling.
+                directive = comment_directive(item, doc.text)
+                if directive and directive["key"] == "root":
+                    value = directive["value"]
+                    target = (path.parent / value).resolve()
                     if not store.contains(target):
                         raise ValueError(f"Invalid root hint in {doc.name}: {value}")
                     hints.add(target)

@@ -1,6 +1,6 @@
 # resources/policies/prepare.yaml
 # =============================================================================
-# Preparation Policy (bounded role actions integrated; event settings provisional)
+# Preparation Policy (bounded roles, mouth emission and provenance)
 #
 # Maps semantic roles (from bindings/AST) and lexical event classifications
 # to pipeline actions for compiling a clean, compact, canonical master.tex.
@@ -32,15 +32,15 @@ role_actions:
 lexical_events:
   comment_line: eliminate             # Discard lines containing only comments and whitespace
   comment_inline: strip_payload       # Strip comment text while preserving necessary token boundary
-  line_continuation: preserve         # Retain trailing '%' suppressing newline whitespace
+  line_continuation: preserve         # Preserve suppression of endline tokens; '%' spelling may be removed
   magic_directive: extract_metadata   # Extract % !TeX directives to manifest, omit from source
 
 # -----------------------------------------------------------------------------
 # 3. Structural Normalization
 # -----------------------------------------------------------------------------
 structural_normalization:
-  paragraph_breaks: coalesce          # Coalesce 2+ empty lines into a single canonical \par break
-  trailing_whitespace: strip          # Trim trailing whitespace outside opaque literals
+  paragraph_breaks: preserve          # Serialize every paragraph token; do not assume repeated \par is redundant
+  trailing_whitespace: strip          # Discard input_ln tails and ignored spaces only in admitted reader events
 
 # -----------------------------------------------------------------------------
 # 4. Provenance
