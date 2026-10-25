@@ -9,6 +9,7 @@ from ..reading.contracts import ReadingIssue, SourceCommand
 from ..reading.spans import SourceSpan
 from ..reading.argument_scanner import key_value_items
 from ..reading.tex_reader import CatCode, TokenKind
+from .records import source_reference
 
 
 @dataclass(frozen=True)
@@ -54,12 +55,11 @@ def register_asset(session, command, path):
 
 
 def observe_asset(session, command, context_span, reason, *, binding=None, search_changed=False):
-    record = {"source": command.span.basis.source_id, "occurrence": command.span.basis.occurrence_id,
-              "start": command.span.start, "end": command.span.end, "kind": "asset",
+    unit = session.units.records[command.unit_id]
+    record = {**source_reference(unit), "kind": "asset",
               "context_span": [context_span.start, context_span.end],
               "context": reason, "basis": "entry_reading_and_search_state",
-              "binding": binding, "status": "unresolved", "unit_id": command.unit_id}
-    unit = session.units.records[command.unit_id]
+              "binding": binding, "status": "unresolved"}
     record.update(activity=unit.activity, activity_evidence=dict(unit.activity_evidence))
     session.manifest.candidate_dependencies.append(record)
     try:

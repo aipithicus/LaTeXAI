@@ -1,5 +1,6 @@
 """Prepared addresses and source accounting through the actual preparation API."""
 from collections import Counter
+from copy import deepcopy
 from hashlib import sha256
 import json
 from pathlib import Path
@@ -117,6 +118,93 @@ class ManifestLocationTests(unittest.TestCase):
             self.assertEqual(requirement["location_status"], "pending")
             self.assertEqual(requirement["locations"], [])
         self.assertEqual(manifest.prepared_artifacts, [])
+
+    def test_location_lifecycle_preserves_records_and_related_source_evidence(self):
+        self.put("main.tex", "\\documentclass{article}\n% !TeX program = xelatex\n"
+                 r"\usepackage{verbatim,wrapper}\usepackage[b]{xcolor}"
+                 r"\input{child}\input{child}\if0\blind\input{candidate}\fi"
+                 r"\verbatiminput{code.txt}\usepackage{broken}")
+        self.put("wrapper.sty", r"\RequirePackage[a]{xcolor}")
+        self.put("broken.sty", r"\catcode\computed=12")
+        self.put("child.tex", r"\mystery{body}")
+        self.put("candidate.tex", "CANDIDATE")
+        self.put("code.txt", "CODE\n")
+        session = PreparationSession(self.root, root_tex="main.tex").run()
+        manifest = session.manifest
+        collections = ("requirements", "unresolved", "dependencies", "candidate_dependencies",
+                       "resources", "source_metadata")
+        for name in collections:
+            self.assertTrue(getattr(manifest, name), name)
+        records = [r for name in collections for r in getattr(manifest, name)]
+        findings = manifest.lint["findings"]
+        related = [r for f in findings for r in f["evidence"].get("related", [])]
+        self.assertTrue(related)
+        records += findings + related
+        # Drop only addresses, including nested lint evidence, for the comparison.
+        def source_evidence(value):
+            if isinstance(value, dict):
+                return {k: source_evidence(v) for k, v in value.items()
+                        if k not in {"locations", "location_status"}}
+            if isinstance(value, list):
+                return [source_evidence(v) for v in value]
+            return value
+        before = source_evidence(records)
+        self.assertTrue(all(r.get("location_status", "pending") == "pending" for r in records))
+        master = ''.join(p.text for p in session.pieces)
+        payloads = {self.root / name: (name, session.payload_text(self.root / name))
+                    for name in ("wrapper.sty", "broken.sty")}
+        finalize_locations(session, session.pieces, master, payloads)
+        finalized = deepcopy(records)
+        units = {u["id"]: u for u in manifest.units}
+        for record in records:
+            self.assertEqual(record["locations"], units[record["unit_id"]]["locations"])
+            self.assertNotEqual(record["location_status"], "pending")
+        self.assertEqual(source_evidence(records), before)
+        # A caller inspecting one record must not change its unit or its peers.
+        requirement = next(r for r in manifest.requirements if r["source"] == "child.tex")
+        location = requirement["locations"][0]
+        start = location["start"]
+        location["start"] = start + 1
+        self.assertEqual(units[requirement["unit_id"]]["locations"][0]["start"], start)
+        session.pending_units()
+        self.assertEqual(manifest.prepared_artifacts, [])
+        self.assertEqual(manifest.location_contract, {})
+        for record in records:
+            self.assertEqual((record["location_status"], record["locations"]), ("pending", []))
+        self.assertEqual(source_evidence(records), before)
+        finalize_locations(session, session.pieces, master, payloads)
+        self.assertEqual(records, finalized)
+        # Serializing the manifest produces ordinary JSON values and an isolated copy.
+        encoded = json.loads(manifest.to_json())
+        self.assertEqual(encoded, manifest.to_dict())
+        encoded["requirements"][0]["locations"].clear()
+        self.assertTrue(manifest.requirements[0]["locations"])
+        manifest.mark_failed()
+        failed = manifest.to_dict()
+        manifest.mark_failed()
+        self.assertEqual(manifest.to_dict(), failed)
+        for record in records:
+            self.assertEqual((record["location_status"], record["locations"]), ("pending", []))
+        self.assertEqual(source_evidence(records), before)
+
+    def test_work_record_json_contract_and_unit_span_validation(self):
+        self.put("main.tex", r"\documentclass{article}\mystery{body}")
+        session = PreparationSession(self.root, root_tex="main.tex").run()
+        requirement, = session.manifest.requirements
+        unit = session.units.records[requirement["unit_id"]]
+        diagnostic = session.diagnose(unit.span, "test_issue", "Observed failure", unit_id=unit.id)
+        shared = {"unit_id", "source", "occurrence", "start", "end", "line", "reason", "detail",
+                  "activity", "activity_evidence", "dependency", "materialization", "next_step",
+                  "location_status", "locations"}
+        self.assertEqual(set(diagnostic), shared)
+        self.assertEqual(set(requirement), shared | {"id", "stage"})
+        self.assertEqual(diagnostic["activity_evidence"], requirement["activity_evidence"])
+        self.assertEqual(diagnostic["next_step"], "reading_resolution")
+        self.assertEqual(requirement["next_step"], "interpretation")
+        other = unit.span.basis.span(0, 0)
+        with self.assertRaisesRegex(ValueError, "Unit does not identify"):
+            session.require(other, "bad_link", "Different span", unit_id=unit.id)
+        self.assertEqual(len(session.manifest.requirements), 1)
 
     def test_discard_extents_and_occurrences_cover_comments_and_scanner_whitespace(self):
         self.put("main.tex", "\\documentclass{article}\n\\input child\n\\input child\n")

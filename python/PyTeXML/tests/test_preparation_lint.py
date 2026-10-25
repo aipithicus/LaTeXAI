@@ -1,6 +1,7 @@
 """Reader-backed lint, narrowly justified repairs, and ordered load evidence."""
 from pathlib import Path
 import json
+import os
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -194,12 +195,35 @@ class PreparationLintTests(unittest.TestCase):
         self.assertEqual(finding["repair"]["status"], "not_published")
         self.assertEqual(finding["locations"], [])
 
+    def test_publication_failure_clears_repair_cursors_and_related_load_locations(self):
+        self.put("wrapper.sty", r"\RequirePackage[a]{xcolor}")
+        rename = os.replace
+        def fail(source, target):
+            if Path(source).name == "payload":
+                raise OSError("publication fault")
+            return rename(source, target)
+        with patch("src.prepare.publication.os.replace", fail), self.assertRaisesRegex(OSError, "publication fault"):
+            self.prepare("alpha\x7fbeta" + r"\usepackage{wrapper}\usepackage[b]{xcolor}", mode="repair")
+        manifest = json.loads((self.output / "manifest.json").read_text())
+        findings = manifest["lint"]["findings"]
+        repair = next(f for f in findings if f["reason"] == "invalid_character")
+        clash = next(f for f in findings if f["reason"] == "option_clash")
+        related, = clash["evidence"]["related"]
+        self.assertEqual(repair["repair"]["status"], "not_published")
+        self.assertTrue(repair["repair"]["postcondition_verified"])
+        self.assertEqual(related["source"], "wrapper.sty")
+        self.assertNotEqual(related["unit_id"], clash["unit_id"])
+        for record in [repair, clash, related]:
+            self.assertEqual((record["location_status"], record["locations"]), ("pending", []))
+        self.assertEqual(manifest["prepared_artifacts"], [])
+        self.assertFalse((self.output / "master.tex").exists())
+
     def test_final_postcondition_is_checked_before_publication(self):
         from src.prepare.lint import PreparationLint
-        finalize = PreparationLint.finalize
-        def changed(lint, pieces, locations, master):
-            return finalize(lint, pieces, locations, master.replace("ab", "xy"))
-        with patch.object(PreparationLint, "finalize", changed), self.assertRaisesRegex(ValueError, "postcondition"):
+        finalize = PreparationLint.finalize_repairs
+        def changed(lint, pieces, master):
+            return finalize(lint, pieces, master.replace("ab", "xy"))
+        with patch.object(PreparationLint, "finalize_repairs", changed), self.assertRaisesRegex(ValueError, "postcondition"):
             self.prepare("a\x7fb", mode="repair")
         self.assertFalse((self.output / "master.tex").exists())
 

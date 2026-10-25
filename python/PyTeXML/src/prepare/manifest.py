@@ -3,8 +3,14 @@ from __future__ import annotations
 import dataclasses
 from dataclasses import dataclass, field
 import json
+from collections.abc import Callable, Iterable, Iterator
+from itertools import chain
 from typing import Any, Dict, List, Optional
 from ..assets import ImageAssetInfo
+from ..reading.spans import SourceSpan
+from ..reading.units import ReadingUnit
+from .records import (LocationRecord, RequirementRecord, WorkRecord,
+                      assign_locations, pending_location, work_record)
 
 
 @dataclass
@@ -96,7 +102,7 @@ class PreflightManifest:
     activity_scope: str = "source_visible_under_reading_assumptions"
     dependency_closure: str = "unresolved"
     source_dependency_closure: str = "unresolved"
-    requirements: List[Dict[str, Any]] = field(default_factory=list)
+    requirements: list[RequirementRecord] = field(default_factory=list)
     units: List[Dict[str, Any]] = field(default_factory=list)
     conditional_decisions: List[Dict[str, Any]] = field(default_factory=list)
     remaining_work: Dict[str, int] = field(default_factory=dict)
@@ -109,7 +115,7 @@ class PreflightManifest:
     input_occurrences: List[Dict[str, Any]] = field(default_factory=list)
     dependencies: List[Dict[str, Any]] = field(default_factory=list)
     candidate_dependencies: List[Dict[str, Any]] = field(default_factory=list)
-    unresolved: List[Dict[str, Any]] = field(default_factory=list)
+    unresolved: list[WorkRecord] = field(default_factory=list)
     warnings: List[Dict[str, Any]] = field(default_factory=list)
     preserved_source_spans: List[Dict[str, Any]] = field(default_factory=list)
     unclassified_files: List[str] = field(default_factory=list)
@@ -143,6 +149,75 @@ class PreflightManifest:
     has_tikz_external: bool = False
     has_minted: bool = False
     has_listings: bool = False
+
+    def add_diagnostic(self, unit: ReadingUnit, line: int, reason: str, detail: str,
+                       *, dependency="none", materialization=None) -> WorkRecord:
+        record = work_record(unit, line, reason, detail, "preparation",
+                             dependency=dependency, materialization=materialization)
+        self.unresolved.append(record)
+        return record
+
+    def add_requirement(self, unit: ReadingUnit, line: int, reason: str, detail: str,
+                        *, stage="interpretation", dependency=None, materialization=None,
+                        next_step=None) -> RequirementRecord:
+        record: RequirementRecord = {"id": f"requirement-{len(self.requirements) + 1}", "stage": stage,
+            **work_record(unit, line, reason, detail, stage,
+                dependency=dependency or ("required" if materialization == "pending" else "none"),
+                materialization=materialization, next_step=next_step)}
+        self.requirements.append(record)
+        return record
+
+    def _unit_records(self) -> Iterator[dict]:
+        """All records whose prepared address comes from an explicit unit link."""
+        yield from chain(self.requirements, self.unresolved, self.dependencies,
+                         self.candidate_dependencies, self.resources, self.source_metadata)
+        for finding in self.lint.get("findings", []):
+            yield finding
+            yield from finding["evidence"].get("related", [])
+
+    def reset_locations(self, units: Iterable[ReadingUnit] | None = None) -> None:
+        """Return to unlocated inventory without losing identities or source evidence."""
+        self.prepared_artifacts = []
+        self.location_contract = {}
+        if units is not None:
+            self.units = [{**unit.to_dict(), **pending_location()} for unit in units]
+        for record in chain(self.units, self._unit_records(), self.warnings):
+            # Some inventory records acquire location fields only at finalization.
+            if "locations" in record:
+                record.update(pending_location())
+
+    def finalize_locations(self, units: Iterable[ReadingUnit],
+                           project: Callable[[SourceSpan], LocationRecord], artifacts: Iterable[dict]) -> None:
+        """Attach staged addresses; publication failure invalidates them together."""
+        records = {unit.id: {**unit.to_dict(), **project(unit.span)} for unit in units}
+        self.units = list(records.values())
+        for target in self._unit_records():
+            assign_locations(target, records[target["unit_id"]])
+        self.prepared_artifacts = list(artifacts)
+        self.location_contract = {"version": 1, "coordinate_domain": "decoded_unicode_codepoints",
+            "intervals": "zero_based_half_open", "encoding": "utf-8", "newline_translation": "none",
+            "id_scope": "preparation_run"}
+
+    def mark_failed(self) -> None:
+        """Failure diagnostics must not advertise unpublished artifact addresses."""
+        self.reset_locations()
+        self.entrypoint = None
+        self.preparation_status = "failed"
+        self.materialization_status = "failed"
+        self.dependency_closure = "unresolved"
+        for finding in self.lint.get("findings", []):
+            if finding["repair"]["status"] in {"applied", "applied_in_memory"}:
+                finding["repair"]["status"] = "not_published"
+
+    def record_asset_payloads(self, mapping: dict[str, str]) -> None:
+        """Materialization completes a file request, not its deferred interpretation."""
+        for candidate in self.candidate_dependencies:
+            if candidate.get("unit_id") in mapping:
+                candidate.update(payload=mapping[candidate["unit_id"]], status="prepared")
+        prepared = {c["unit_id"] for c in self.candidate_dependencies if c["status"] == "prepared"}
+        for requirement in self.requirements:
+            if requirement["reason"] == "observed_asset" and requirement["unit_id"] in prepared:
+                requirement.update(materialization="prepared", next_step="interpretation")
 
     def refresh_status(self):
         """Keep payload delivery, reading completion and full semantics distinct."""

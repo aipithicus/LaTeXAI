@@ -35,7 +35,7 @@ from .assets import observe_environment_assets, observe_asset, register_asset, s
 from .deferred import emit_observed_region
 from .provenance import Tombstone
 from .manifest import PreflightManifest, BibliographyInfo, PackageUsage, StyleFileInfo, ImplicitGraphicInfo
-from .requirements import work_classification
+from .records import source_reference
 
 
 class PreparationUnresolved(ValueError):
@@ -131,11 +131,8 @@ class PreparationSession:
 
     def pending_units(self):
         """Inventory/failure output has identities, but no finalized artifact yet."""
-        self.manifest.units = [dict(u.to_dict(), location_status="pending", locations=[])
-                               for u in self.units.records.values()]
+        self.manifest.reset_locations(self.units.records.values())
         self.manifest.conditional_decisions = list(self.dispatcher.decisions)
-        for record in (*self.manifest.requirements, *self.manifest.unresolved):
-            record.update(location_status="pending", locations=[])
 
     def _reader(self, path):
         doc = self.store.document(path)
@@ -168,17 +165,11 @@ class PreparationSession:
     def raw(self, span):
         return self.documents[span.basis].text[span.start:span.end]
 
-    def diagnose(self, span, reason, detail, *, unit_id=None, dependency="none", evidence=None):
+    def diagnose(self, span, reason, detail, *, unit_id=None, dependency="none", materialization=None, evidence=None):
         unit_id = unit_id or self.units.add(span, "diagnostic")
         self.units.require(unit_id, span)
-        diagnostic = {"source": span.basis.source_id, "occurrence": span.basis.occurrence_id,
-                      "start": span.start, "end": span.end, "line": self.line(span),
-                      "reason": reason, "detail": detail, "unit_id": unit_id,
-                      "activity": self.units.records[unit_id].activity,
-                      "activity_evidence": dict(self.units.records[unit_id].activity_evidence),
-                      **work_classification(reason, "preparation", dependency=dependency),
-                      "location_status": "pending", "locations": []}
-        self.manifest.unresolved.append(diagnostic)
+        diagnostic = self.manifest.add_diagnostic(self.units.records[unit_id], self.line(span), reason, detail,
+                                                  dependency=dependency, materialization=materialization)
         self.lint.record(self, span, reason, detail, unit_id, evidence=evidence)
         return diagnostic
 
@@ -190,18 +181,8 @@ class PreparationSession:
                 materialization=None, activity=None, dependency=None, next_step=None):
         unit_id = unit_id or self.units.add(span, "requirement_target", parent_id, activity=activity)
         self.units.require(unit_id, span)
-        requirement = {"id": f"requirement-{len(self.manifest.requirements) + 1}", "unit_id": unit_id,
-            "source": span.basis.source_id,
-            "occurrence": span.basis.occurrence_id, "start": span.start, "end": span.end,
-            "line": self.line(span), "reason": reason, "detail": detail, "stage": stage,
-            "activity": self.units.records[unit_id].activity,
-            "activity_evidence": dict(self.units.records[unit_id].activity_evidence),
-            **work_classification(reason, stage,
-                dependency=dependency or ("required" if materialization == "pending" else "none"),
-                materialization=materialization, next_step=next_step),
-            "location_status": "pending", "locations": []}
-        self.manifest.requirements.append(requirement)
-        return requirement
+        return self.manifest.add_requirement(self.units.records[unit_id], self.line(span), reason, detail,
+            stage=stage, dependency=dependency, materialization=materialization, next_step=next_step)
 
     def defer(self, span, reason, detail, *, evidence=None):
         self.diagnose(span, reason, detail, evidence=evidence)
@@ -274,9 +255,8 @@ class PreparationSession:
         return None
 
     def edge(self, command, path, kind):
-        self.manifest.dependencies.append({"source": command.span.basis.source_id,
-            "occurrence": command.span.basis.occurrence_id, "start": command.span.start,
-            "end": command.span.end, "kind": kind, "target": self.name(path), "unit_id": command.unit_id})
+        self.manifest.dependencies.append({**source_reference(self.units.records[command.unit_id]),
+                                           "kind": kind, "target": self.name(path)})
 
     def _enter(self, path, command, *, emit, import_dir=None, package=False, include=False, options=None):
         if any(frame.path == path for frame in self.frames):
@@ -675,13 +655,13 @@ class PreparationSession:
                 if len(self.frames) == 1:
                     start, pieces, tombstones, commands = self._checkpoint
                     self._checkpoint = (min(start, item.remainder.start), pieces, tombstones, commands)
-                diagnostic = self.diagnose(item.span, item.reason, item.detail, unit_id=item.unit_id)
-                self.dispatcher.loads.invalidate(item.unit_id)
                 recoverable = next((i for i in reversed(range(len(self.frames)))
                                     if self.frames[i].recovery is not None), None)
+                self.diagnose(item.span, item.reason, item.detail, unit_id=item.unit_id,
+                              materialization="prepared" if recoverable is not None else None)
+                self.dispatcher.loads.invalidate(item.unit_id)
                 if recoverable is not None:
                     frame = self.frames[recoverable]
-                    diagnostic["materialization"] = "prepared"
                     self.require(item.span, "retained_code_reading",
                         f"Retained {self.name(frame.path)!r}; immediate caller resumes with its entry reading state. "
                         "This file's reading effects and dependencies still require resolution.", stage="preparation", unit_id=item.unit_id,

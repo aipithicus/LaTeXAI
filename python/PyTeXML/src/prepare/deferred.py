@@ -8,6 +8,7 @@ from ..reading.dispatcher import StructuralDispatcher
 from ..reading.tex_reader import TexReader, InvalidCharacterError, CatCode
 from ..source_io import SourceDecodingError
 from .assets import observe_environment_assets
+from .records import source_reference
 
 
 def emit_observed_region(session, region, *, chain=()):
@@ -49,11 +50,10 @@ def emit_observed_region(session, region, *, chain=()):
             continue
         if command.action != "source_input":
             continue
-        record = {"source": command.span.basis.source_id, "occurrence": command.span.basis.occurrence_id,
-            "start": command.span.start, "end": command.span.end, "kind": "input",
+        record = {**source_reference(session.units.records[command.unit_id]), "kind": "input",
             "context_span": [region.span.start, region.span.end], "context": region.reason,
             "basis": "entry_reading_and_search_state", "binding": observation.binding_id,
-            "unit_id": command.unit_id, "status": "unresolved"}
+            "status": "unresolved"}
         session.manifest.candidate_dependencies.append(record)
         try:
             if search_changed:
@@ -157,11 +157,10 @@ def emit_bibliography(session, observation, owner):
     captured = session.dispatcher.identify(captured, command.unit_id)
     session._observations[reader.basis].append(captured)
     session.require(captured.span, "observed_bibliography", captured.detail, unit_id=captured.unit_id)
-    session.manifest.candidate_dependencies.append({"source": command.span.basis.source_id,
-        "occurrence": command.span.basis.occurrence_id, "start": command.span.start, "end": command.span.end,
+    session.manifest.candidate_dependencies.append({**source_reference(session.units.records[command.unit_id]),
         "kind": "formatted_bibliography", "target": session.name(path), "context": owner.reason,
         "context_span": [owner.span.start, owner.span.end], "basis": "entry_reading_and_search_state",
-        "unit_id": command.unit_id, "status": "prepared", "payload": "master.tex"})
+        "status": "prepared", "payload": "master.tex"})
     start, cursor = len(session.pieces), 0
     for header in captured.observations:
         cmd = header.command

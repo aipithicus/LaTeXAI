@@ -35,6 +35,13 @@ command arguments. [Provenance](src/prepare/provenance.py) records emitted
 character intervals and occurrence identity, including mixed-source lines.
 [Final locations](src/prepare/locations.py) attach prepared-artifact addresses
 directly to units and requirements; using them does not require the provenance sidecar.
+[Manifest records](src/prepare/records.py) share typed JSON shapes and derive their
+source references from reader units. The [manifest](src/prepare/manifest.py) owns
+requirement IDs, location finalization and reset, and publication-failure state.
+Its unit-linked traversal includes dependencies, resources, metadata, lint findings
+and related evidence. Lint separately verifies emitted repairs and pins deletion
+cursors. Finalizing or clearing locations preserves source evidence and activity;
+materializing an asset does not resolve its deferred interpretation.
 The old regex discovery, inliner, pruner, normalizer and implicit-graphics scanner
 have been removed.
 

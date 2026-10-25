@@ -11,8 +11,9 @@ from dataclasses import dataclass
 from hashlib import sha256
 
 from ..reading.edit_map import MappingRun, project_run
-from ..reading.spans import SpanSet
+from ..reading.spans import SourceSpan, SpanSet
 from .provenance import Tombstone
+from .records import LocationRecord
 
 
 @dataclass(frozen=True, slots=True)
@@ -69,7 +70,7 @@ class PreparedLocations:
                 ends.append(maximum)
             self._index[basis] = (ordered, ends)
 
-    def project(self, span):
+    def project(self, span: SourceSpan) -> LocationRecord:
         if not self._index:
             self._build_index()
         entries, ends = self._index.get(span.basis, ((), ()))
@@ -146,22 +147,6 @@ class PreparedLocations:
                 "unaccounted": [[s.start, s.end] for s in unknown]})
         self._index.clear()
 
-    def publish(self, session):
-        manifest = session.manifest
-        manifest.location_contract = {"version": 1, "coordinate_domain": "decoded_unicode_codepoints",
-            "intervals": "zero_based_half_open", "encoding": "utf-8", "newline_translation": "none",
-            "id_scope": "preparation_run"}
-        manifest.prepared_artifacts = list(self.artifacts.values())
-        records = {}
-        for unit in session.units.records.values():
-            record = {**unit.to_dict(), **self.project(unit.span)}
-            records[unit.id] = record
-        manifest.units = list(records.values())
-        for target in (*manifest.requirements, *manifest.unresolved, *manifest.dependencies,
-                       *manifest.candidate_dependencies, *manifest.resources, *manifest.source_metadata):
-            unit = records[target["unit_id"]]
-            target.update(location_status=unit["location_status"], locations=unit["locations"])
-
 
 def finalize_locations(session, pieces, master, payloads):
     """No original file reads, and no dependency on provenance-sidecar emission."""
@@ -175,5 +160,5 @@ def finalize_locations(session, pieces, master, payloads):
             locations.artifacts[artifact] = {"path": artifact, "sha256": sha256(text.encode("utf-8")).hexdigest(),
                                              "length": len(text)}
     locations.account(session)
-    locations.publish(session)
+    session.manifest.finalize_locations(session.units.records.values(), locations.project, locations.artifacts.values())
     return locations

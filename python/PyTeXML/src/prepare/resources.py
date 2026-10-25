@@ -4,6 +4,7 @@ import re
 
 from ..reading.configuration import configured_options
 from ..reading.contracts import EffectiveReadingProfile, LiteralRegion, ReadingIssue
+from .records import source_reference
 
 
 def prepare_external_literal(session, command):
@@ -35,8 +36,8 @@ def prepare_external_literal(session, command):
             reason = error
     elif action != "preserve":
         reason = ReadingIssue("policy_action", f"Unsupported external literal action {action!r}")
-    record = {"source": command.span.basis.source_id, "occurrence": command.span.basis.occurrence_id, "start": command.span.start,
-              "end": command.span.end, "target": session.name(path), "kind": "external_literal", "unit_id": command.unit_id}
+    record = {**source_reference(session.units.records[command.unit_id]),
+              "target": session.name(path), "kind": "external_literal"}
     session.manifest.resources.append(record)
     if action == "inline" and reason is None:
         options = command.argument("options")

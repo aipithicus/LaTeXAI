@@ -11,6 +11,7 @@ from pathlib import Path
 from ..yaml_io import load_mapping, validate_resource_identity
 from ..reading.tex_reader import CatCode, EventKind, InvalidCharacterError, ReadEvent, TexReader, TokenKind
 from .emission import SourcePiece
+from .records import assign_locations, pending_location, source_reference
 
 
 RULE_PATH = Path(__file__).resolve().parents[2] / "resources/lint/preparation.yaml"
@@ -100,7 +101,7 @@ class PreparationLint:
         self.report = {"schema": "pytexml-lint/1", "mode": policy.mode,
             "catalog": {**catalog["identity"], "sha256": sha256(json.dumps(catalog, sort_keys=True).encode()).hexdigest()},
             "scope": "source_visible_reading_evidence", "findings": []}
-        self._records, self._spans, self._repairs = {}, {}, {}
+        self._records, self._repairs = {}, {}
 
     def record(self, session, span, reason, detail, unit_id, *, evidence=None):
         if self.policy.mode == "off" or reason not in self.rules:
@@ -109,15 +110,13 @@ class PreparationLint:
         if key in self._records:
             return self._records[key]
         rule = self.rules[reason]
-        record = {"id": f"lint-{len(self._records) + 1}", "unit_id": unit_id,
+        session.units.require(unit_id, span)
+        record = {"id": f"lint-{len(self._records) + 1}", **source_reference(session.units.records[unit_id]),
             "code": rule["code"], "severity": rule["severity"], "reason": reason, "detail": detail,
-            "source": span.basis.source_id, "occurrence": span.basis.occurrence_id,
-            "start": span.start, "end": span.end, "line": session.line(span),
-            "location_status": "pending", "locations": [],
+            "line": session.line(span), **pending_location(),
             "remediation": rule["remediation"], "evidence": evidence or {},
             "repair": {"name": rule["repair"], "status": "not_available"}}
         self._records[key] = record
-        self._spans[record["id"]] = span
         self.report["findings"].append(record)
         return record
 
@@ -162,13 +161,13 @@ class PreparationLint:
         self._repairs[record["id"]] = (piece.key, text[span.start - 1] + text[span.end])
         return event
 
-    def finalize(self, pieces, locations, master):
+    def finalize_repairs(self, pieces, master):
+        """Check emitted repairs and pin their deletion cursors after unit projection."""
         offsets, offset = {}, 0
         for piece in pieces:
             offsets[piece.key] = offset
             offset += len(piece.text)
         for record in self.report["findings"]:
-            record.update(locations.project(self._spans[record["id"]]))
             if record["id"] in self._repairs:
                 key, expected = self._repairs[record["id"]]
                 if key not in offsets:
@@ -179,15 +178,9 @@ class PreparationLint:
                     raise ValueError(f"Lint repair {record['id']} failed its final emission postcondition")
                 record["repair"]["status"] = "applied"
                 record["repair"]["postcondition_verified"] = True
-                record.update(location_status="mapped", locations=[{"artifact": "master.tex",
-                    "start": position, "end": position, "precision": "exact"}])
-            for related in record["evidence"].get("related", []):
-                related.update(locations.project(self._spans[related["span_id"]]))
+                assign_locations(record, {"location_status": "mapped", "locations": [{"artifact": "master.tex",
+                    "start": position, "end": position, "precision": "exact"}]})
 
     def related(self, session, unit_id):
-        span = session.units.records[unit_id].span
-        key = "unit:" + unit_id
-        self._spans[key] = span
-        return {"unit_id": unit_id, "span_id": key, "source": span.basis.source_id,
-                "occurrence": span.basis.occurrence_id, "start": span.start, "end": span.end,
-                "location_status": "pending", "locations": []}
+        return {**source_reference(session.units.records[unit_id]),
+                "span_id": "unit:" + unit_id, **pending_location()}

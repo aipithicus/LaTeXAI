@@ -76,7 +76,7 @@ def preprocess_paper(
             if not published:
                 try:
                     if manifest is not None and emit_manifest_json and not transaction.recovery_needed:
-                        _mark_failed(manifest)
+                        manifest.mark_failed()
                         (transaction.stage / "manifest.json").write_text(
                             manifest.to_json(), encoding="utf-8", newline="\n")
                     transaction.failure()
@@ -97,27 +97,6 @@ def preprocess_paper(
                     error.add_note(f"Could not append failure event: {logging_error}")
             raise
     return text, manifest, destination, ledger
-
-
-def _mark_failed(manifest):
-    """Failure diagnostics must not advertise unpublished artifact addresses."""
-    manifest.entrypoint = None
-    manifest.preparation_status = "failed"
-    manifest.materialization_status = "failed"
-    manifest.dependency_closure = "unresolved"
-    manifest.prepared_artifacts = []
-    manifest.location_contract = {}
-    for record in (*manifest.units, *manifest.requirements, *manifest.unresolved, *manifest.warnings,
-                   *manifest.dependencies, *manifest.candidate_dependencies,
-                   *manifest.resources, *manifest.source_metadata):
-        if "locations" in record:
-            record.update(location_status="pending", locations=[])
-    for finding in manifest.lint.get("findings", []):
-        finding.update(location_status="pending", locations=[])
-        if finding["repair"]["status"] in {"applied", "applied_in_memory"}:
-            finding["repair"]["status"] = "not_published"
-        for related in finding["evidence"].get("related", []):
-            related.update(location_status="pending", locations=[])
 
 
 def _prepare_paper(
@@ -170,14 +149,7 @@ def _prepare_paper(
             raise ValueError("Referenced images require SVG conversion for a standalone extraction package")
         if images:
             pieces, mapping = prepare_assets(session, pieces, out_dir)
-            for candidate in manifest.candidate_dependencies:
-                if candidate.get("unit_id") in mapping:
-                    candidate.update(payload=mapping[candidate["unit_id"]], status="prepared")
-            prepared = {c["unit_id"] for c in manifest.candidate_dependencies if c["status"] == "prepared"}
-            for requirement in manifest.requirements:
-                if requirement["reason"] == "observed_asset" and requirement["unit_id"] in prepared:
-                    requirement["materialization"] = "prepared"
-                    requirement["next_step"] = "interpretation"
+            manifest.record_asset_payloads(mapping)
         logger.emit("phase.completed", data={"phase": "assets"})
         logger.emit("phase.started", data={"phase": "emission"}, flush=True)
         if session.bibliography_pieces is not None:
@@ -204,7 +176,7 @@ def _prepare_paper(
             target.write_text(payload, encoding="utf-8", newline="")
         master_tex_content = "".join(p.text for p in pieces)
         locations = finalize_locations(session, pieces, master_tex_content, payloads)
-        session.lint.finalize(pieces, locations, master_tex_content)
+        session.lint.finalize_repairs(pieces, master_tex_content)
         ledger = ProvenanceLedger.build_from_pieces(pieces, locations.tombstones,
             source_coverage=locations.source_coverage, artifact=locations.artifacts['master.tex'],
             rle_compression=session.policy.provenance.rle_compression) if emit_provenance else None
@@ -232,7 +204,7 @@ def _prepare_paper(
         if session is not None:
             session.manifest.source_reads = list(session.store.read_paths)
             session.pending_units()
-            _mark_failed(session.manifest)
+            session.manifest.mark_failed()
             try:
                 if emit_manifest_json:
                     (out_dir / "manifest.json").write_text(session.manifest.to_json(), encoding="utf-8", newline="\n")
