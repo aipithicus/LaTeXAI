@@ -73,3 +73,4 @@ The cleanup sequence I recommend is:
 Several existing boundaries are worth retaining: `reading` does not import `prepare`; source caching separates shared text from occurrence-specific readers; edit-aware spans already provide reusable machinery; and the logger’s sink/context/event primitives are independent of preparation. Downstream work can build on those foundations.
 
 For these batches, use focused tests for each changed contract, followed by the full suite and specimen comparisons at the integration checkpoints. No source or configuration files were changed during this review, and I did not rerun the suite. Your audit-document move remains untouched.
+
