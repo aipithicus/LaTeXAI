@@ -107,7 +107,9 @@ def _mark_failed(manifest):
     manifest.dependency_closure = "unresolved"
     manifest.prepared_artifacts = []
     manifest.location_contract = {}
-    for record in (*manifest.units, *manifest.requirements, *manifest.unresolved, *manifest.warnings):
+    for record in (*manifest.units, *manifest.requirements, *manifest.unresolved, *manifest.warnings,
+                   *manifest.dependencies, *manifest.candidate_dependencies,
+                   *manifest.resources, *manifest.source_metadata):
         if "locations" in record:
             record.update(location_status="pending", locations=[])
     for finding in manifest.lint.get("findings", []):

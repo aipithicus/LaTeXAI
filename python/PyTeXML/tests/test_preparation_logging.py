@@ -102,23 +102,41 @@ class PreparationLoggingTests(unittest.TestCase):
         self.assertEqual(self.events()[-1]["code"], "attempt.failed")
         self.assertIn("OLD", (self.output / "master.tex").read_text())
 
-    def test_failed_first_publication_has_failure_manifest_without_final_addresses(self):
-        self.put("$x$")
-        original = os.replace
-        def fail(source, target):
-            if Path(source).name == "payload":
-                raise OSError("publication fault")
-            return original(source, target)
-        with patch("src.prepare.publication.os.replace", side_effect=fail), self.assertRaises(OSError):
-            self.prepare()
-        manifest = json.loads((self.output / "manifest.json").read_text())
-        self.assertEqual(manifest["preparation_status"], "failed")
-        self.assertIsNone(manifest["entrypoint"])
-        self.assertEqual(manifest["prepared_artifacts"], [])
-        self.assertTrue(manifest["requirements"])
-        self.assertTrue(all(not r["locations"] for r in manifest["requirements"]))
-        self.assertFalse((self.output / "master.tex").exists())
-        self.assertEqual(self.events()[-1]["code"], "attempt.failed")
+    def test_failed_first_attempt_clears_all_finalized_locations(self):
+        self.put("% !TeX program = xelatex\n"
+                 r"\usepackage{verbatim}\input{part}\if0\blind\input{candidate}\fi"
+                 r"\verbatiminput{code.txt}$x$")
+        for name, text in {"part.tex": "ACTIVE", "candidate.tex": "CANDIDATE", "code.txt": "CODE\n"}.items():
+            (self.source / name).write_text(text, encoding="utf-8")
+        write, rename = Path.write_text, os.replace
+        for phase in ("emission", "publication"):
+            with self.subTest(phase=phase):
+                output = self.root / phase
+                def fail_write(path, *args, **kwargs):
+                    if phase == "emission" and path.name == "master.tex":
+                        raise OSError("emission fault")
+                    return write(path, *args, **kwargs)
+                def fail_rename(source, target):
+                    if phase == "publication" and Path(source).name == "payload":
+                        raise OSError("publication fault")
+                    return rename(source, target)
+                with patch.object(Path, "write_text", fail_write), \
+                        patch("src.prepare.publication.os.replace", side_effect=fail_rename), \
+                        self.assertRaisesRegex(OSError, f"{phase} fault"):
+                    preprocess_paper(str(self.source), str(output), root_tex="main.tex")
+                manifest = json.loads((output / "manifest.json").read_text())
+                self.assertEqual(manifest["preparation_status"], "failed")
+                self.assertIsNone(manifest["entrypoint"])
+                self.assertEqual(manifest["prepared_artifacts"], [])
+                self.assertEqual(manifest["location_contract"], {})
+                for name in ("units", "requirements", "dependencies", "candidate_dependencies",
+                             "resources", "source_metadata"):
+                    self.assertTrue(manifest[name], name)
+                    for record in manifest[name]:
+                        self.assertEqual(record["locations"], [], name)
+                        self.assertEqual(record["location_status"], "pending", name)
+                self.assertFalse((output / "master.tex").exists())
+                self.assertEqual(list(read_events(output / "preparation.jsonl"))[-1]["code"], "attempt.failed")
 
     def test_failed_rollback_logs_at_retained_recovery_location(self):
         self.prepare()
