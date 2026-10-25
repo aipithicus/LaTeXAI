@@ -1,7 +1,8 @@
 # PyTeXML cleanup and development handoff
 
-Recorded 2026-10-24 after Batch 4; updated 2026-10-25 for Batches 5A and 5B on `main`.
-The later development sequence remains a plan, not authorization to implement it all.
+Recorded 2026-10-24 after Batch 4; updated 2026-10-25 for Batches 5A and 5B and
+the four authorized reading/dependency increments on `main`. Broader interpretation
+and binding-design work below remains a plan, not authorization to implement it all.
 
 ## Where we are
 
@@ -14,7 +15,7 @@ The five-batch cleanup plan is in [astra-refactor-plans-part1.md](astra-refactor
 | 3 | Manifest record construction and lifecycle ownership | `6a7da8d` |
 | 4 | YAML option consumers/validation, declaration indexes, cached literal templates | `a382b5a` |
 | 5A | Explicit preparation request; one publication and rollback owner | `f8cf250` |
-| 5B | Explicit inspection inputs; session-owned emission, observations and payload edits | This update |
+| 5B | Explicit inspection inputs; session-owned emission, observations and payload edits | `0aac97c` |
 
 Batch 4 validation: dedicated-venv suite ran 771 tests, with 769 passing and two
 optional compiler tests skipped. The first full run reached its 600-second limit;
@@ -132,7 +133,193 @@ error in a final consistency edit; it was corrected and both gates were rerun.
 The failed iteration and successful verification have separate receipts. These
 comparisons qualify refactor equivalence, not new rendering or preparation coverage.
 
-## After Batch 5: proposed sequence, not settled implementation scope
+## After Batch 5: evidence, implementation, and remaining sequence
+
+### Evidence review, 2026-10-25
+
+Reviewed commit `0aac97c` and the successful specimen iteration
+`20261025-cleanup-batch5b-verified`. This review changes no runtime code. A fresh
+in-memory traversal traced state invalidation for the two partial specimens;
+it did not convert assets, publish a payload, or invoke a TeX engine.
+
+| Specimen | Preparation | Bibliography entries / SVGs | Remaining preparation witness |
+| --- | --- | --- | --- |
+| Bayesian MARS, 2306.01911v1 | Complete under recorded assumptions | 58 / 10 | None recorded |
+| Fractal, 2405.15943v3 | Partial | 33 / 9 | `requirement-68`: possible `lineno` package load in retained `neurips_2024.sty:350` |
+| FPCA, 2412.11340v4 | Complete under recorded assumptions | 60 / 24 | None recorded |
+| DeadSalmons, 2512.18792v1 | Partial | 154 / 5 | `requirement-128`: retained-code reading boundary at `natbib.sty:350` |
+
+All four report completed materialization of known requests. The 3,256 requirement
+records comprise 3,151 interpretation, 103 binding, and two preparation records.
+The natbib boundary also has an unresolved diagnostic; these are two records for
+one obstruction, not two independent failures. None of the 12,223 unit records has
+an unmapped/partial location, and no recorded source-coverage interval is unaccounted
+for. Coverage accounting does not prove interpretation or dependency closure.
+
+The earlier discussion in `astra-preparation-outstanding-items.md` is historical:
+its proposed declaration, image-page, logging and publication work is substantially
+implemented. In particular, the current natbib trigger is **not** `providecommand`,
+and the previously observed shipout image is now materialized. Preserve that earlier
+discussion as history rather than reuse its recommendation as the current backlog.
+
+#### Ranked next increments
+
+1. **Bounded `let` capture and scoped meaning assignment.**
+
+   Witness: `natbib.sty:210`, `\let\bibstyle@egu=\bibstyle@copernicus`.
+   Current unit `unit-298` covers only `\let`; its destination and donor become
+   separate unknown/stored-macro obligations. The first option-state uncertainty
+   is therefore recorded at offset 10031, and `\ProcessOptions` at line 350 stops
+   bounded reading. There are 21 reached unknown `let` records across this specimen,
+   including retained `fancyhdr.sty` and manuscript `math_commands.tex`.
+
+   Implement a reusable scanner with a core YAML declaration. Capture the complete
+   assignment without expanding or dispatching either operand. Copy an established
+   meaning at assignment time and respect scope; keep an unknown donor explicit at
+   the assigned target. Known assignment to an unrelated name must not by itself
+   invalidate every boolean or option scope. Conversely, aliases of reading commands,
+   predicates or setters must participate in resolution and shadowing correctly.
+
+   Acceptance: optional equals/spacing/comments, donor subsequently redefined,
+   nested scope restoration, known/unknown donors, aliases of booleans and reading
+   handlers, repeated inputs, and exact source/emission locations. Explicitly bound
+   unsupported prefixes or computed constructions; do not swallow them as a local
+   assignment. `futurelet`, expansion-based name construction, hook execution and
+   general expansion remain separate contracts. Rerun the specimen and expose the
+   next witnessed limit; this increment does not promise to finish natbib.
+
+2. **Structured dependency observation beyond retained-code reading barriers.**
+
+   Witness: the independent survey of `natbib.sty` meets `option_context` at offset
+   11473. It still inventories the remaining tokens, but the later
+   `\InputIfFileExists{natbib.cfg}` at line 1241 appears only as a command-name span
+   (`after_reading_boundary`, 44994:45012), without filename or branch metadata.
+   This command currently has no reading declaration. No `natbib.cfg` exists in
+   this specimen root, so this is a discovery limitation, not a demonstrated lost file.
+
+   Add its bounded syntax/optional-resource knowledge and preserve structurally
+   captured headers when execution cannot proceed. Reuse protected literal,
+   definition and argument scanning; do not turn the fallback token census into
+   active dependency edges. Record filename, owning context, search assumptions,
+   optionality and materialization separately. Missing within a project is not
+   proof of absence from every possible TeX search environment.
+
+   Acceptance: present/absent local optional files, nested/repeated inputs,
+   stored/skipped/literal decoys, computed names, changed reading/search context,
+   retained-style rebasing and cached reads. Materialize only when the captured
+   syntax and resolution context justify it; otherwise retain a located candidate.
+
+3. **Evidence-based reading effects for the NeurIPS path.**
+
+   Witness: the manuscript requests `[final]`; the early boolean tests resolve
+   final=true and preprint=false. The trace identifies `\usepackage[verbose=true,
+   letterpaper]{geometry}` at `neurips_2024.sty:75` (2082:2129, `unit-54`) as the
+   first invalidator, because its reading binding is absent. Later unsupported
+   `widowpenalty`, `clubpenalty`, `flushbottom`, `sloppy`, and a captured `normalsize`
+   invocation are additional obstacles to proving the state at line 328.
+
+   The nested `lineno` branch is expected to be inactive if those intervening
+   operations preserve the established booleans, but the current reader has not
+   proved that premise. Audit package/core source and encode the bounded effects
+   through reusable machinery. Do not introduce an empty geometry shim, exempt
+   arbitrary formatting-looking names, or disable uncertainty globally. This is
+   more investigation than the first increment and may require several small contracts.
+
+4. **Carry the reason for uncertainty into the retained-unit records.**
+
+   The Fractal conditional record describes capture assumptions but drops the
+   original reason its boolean became uncertain. The natbib diagnostic embeds an
+   upstream source offset in text. Retain a structured cause reference when a
+   known state becomes uncertain and link the later requirement to it. Use current
+   unit identities and final artifact locations; avoid parsing message strings or
+   requiring a future scheduler/context-snapshot implementation. Test repeated
+   occurrences and causes inherited across input/scope boundaries.
+
+No new bibliography or converted-asset failure was witnessed in this review.
+BibLaTeX, multiple bibliography sites and broader subfile/resource cases remain
+candidate extensions, to be prioritized with specimens rather than inferred from
+the large interpretation count. Opaque `providecommand`/`renewenvironment` and hook
+bodies remain preserved and unexecuted. XML construction, general expansion,
+counters/labels, async scheduling and full binding migration remain downstream.
+
+The latest iteration contains preparation evidence, not a fresh rendering or
+relocation qualification. Historical font/xcolor outcomes must stay separate from
+this ranking and be reassessed with paired receipts when optional validation resumes.
+
+### Four authorized increments: implementation and verification
+
+The earlier review above records the starting state. The following work implements
+its four bounded increments; it does not claim full package-effect resolution.
+
+1. **Scoped meaning assignment.** `AssignmentScanner` captures unexpanded `let`
+   operands, and the dispatcher copies the donor's current meaning into the local
+   scope. Boolean, setter, stored-definition and resolved-handler aliases share
+   the existing scope machinery. Unknown donors remain explicit; character
+   meanings are captured but their invocation remains deferred. Assignment prefixes
+   stop before an unsupported assignment can be treated as local. Stored, skipped
+   and deferred observations protect operands without executing them.
+2. **Structured dependency observations.** The independent source survey now uses
+   `SourceObserver` after a reading barrier. It retains declaration/literal/header
+   structure under a stated entry-profile assumption without activating those
+   candidates. `InputIfFileExists` captures its filename and both branches. A known
+   local file with empty branches can use the ordinary cached input path. Computed
+   names, nonempty branches and external-search uncertainty retain a requirement.
+   Source inventory now includes local `.cfg` files. A missing inventory entry is
+   not a proof of absence from an external TeX search path.
+3. **Sourced reading effects.** Reusable handlers admit bounded literal integer
+   assignments and YAML-declared meaning copies/layout effects. The initial
+   declarations cover `widowpenalty`, `clubpenalty`, `flushbottom` and `sloppy`,
+   with guards against shadowed prerequisites. LaTeX kernel sources, rather than
+   names that look like formatting commands, justify these summaries. Geometry's
+   source-backed declaration explicitly records unresolved configuration, key
+   expansion and deferred-hook effects, including `geometry.cfg`. It is not a
+   purity shim and still invalidates tracked state. General macro expansion and
+   hook execution remain outside preparation.
+4. **Linked uncertainty origins.** The reader registers an origin when tracked
+   state becomes uncertain. Requirements and diagnostics carry `cause_ids`, and
+   the manifest/journal carry the corresponding unit IDs, reasons and final
+   payload locations. Repeated occurrences are distinct, scope restoration and
+   option replay retain the cause, and failed publication clears locations through
+   the existing record lifecycle. Dependency observations can link through their
+   parent conditional unit; not every child duplicates the parent's cause IDs.
+
+The dedicated-venv full suite ran **803 tests in 1236.514 seconds: 801 passed and
+two optional compiler tests were skipped**. Final review added two regression
+cases and tightened deferred-assignment operand protection and option-replay cause
+propagation while that run was in progress. The updated assignment (10),
+continuation (11), asset-fidelity (8), and uncertainty-cause (5) focused suites all
+passed. Thus the full run plus these focused checks cover the final changes; this
+is not a claim that a fresh 805-test full run was performed. Receipts are named
+`20261025-reading-increments-suite`, `20261025-final-assignment-review`, and
+`20261025-cause-replay-review` in the existing local receipt collection.
+
+Specimen iteration **`20261025-reading-increments`** completed all four papers with
+a 900-second per-paper budget. Its run began before the two final guard fixes
+above; it is specimen evidence for the main increment, supplemented by the final
+focused regressions, not an exact-final-revision rendering qualification.
+
+| Specimen | Preparation | Bibliography entries / SVGs | Remaining preparation witness |
+| --- | --- | --- | --- |
+| Bayesian MARS | Complete under recorded assumptions | 58 / 10 | None recorded |
+| Fractal | Partial | 33 / 9 | Possible `lineno` load; its parent conditional links to the geometry load-effect cause |
+| FPCA | Complete under recorded assumptions | 60 / 24 | None recorded |
+| DeadSalmons | Partial | 154 / 5 | Retained `fancyhdr.sty` and `natbib.sty` reading boundaries, with linked upstream causes |
+
+All four materialized their known requests. Bibliography and figure counts match
+the starting iteration; every recorded source occurrence has zero unaccounted
+coverage, and all 14 uncertainty causes have mapped payload locations. Each source
+file appears only once in its run's read ledger. Enclosing and intentionally
+omitted unit locations remain distinct from missing locations.
+
+The natbib survey now captures the entire `InputIfFileExists` header at
+44994:45079, including `natbib.cfg`, the nonempty found branch, and empty missing
+branch. It reports `not_in_inventory` with `external_search: unresolved`. The
+retained-code requirements link to a captured unknown donor in `fancyhdr` and
+uncertain load history in `natbib`, rather than hiding those origins in prose.
+Fractal still cannot prove the `lineno` branch inactive: geometry load effects
+and the captured `normalsize` invocation need more knowledge. The earlier
+`20261025-bounded-let` attempt hit DeadSalmons' 180-second budget and remains as
+timeout evidence; it is not counted as a successful four-paper run.
 
 ### 1. Reassess preparation from witnessed remaining work
 

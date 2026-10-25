@@ -104,6 +104,7 @@ class PreflightManifest:
     source_dependency_closure: str = "unresolved"
     requirements: list[RequirementRecord] = field(default_factory=list)
     units: List[Dict[str, Any]] = field(default_factory=list)
+    uncertainty_causes: List[Dict[str, Any]] = field(default_factory=list)
     conditional_decisions: List[Dict[str, Any]] = field(default_factory=list)
     remaining_work: Dict[str, int] = field(default_factory=dict)
     prepared_artifacts: List[Dict[str, Any]] = field(default_factory=list)
@@ -170,7 +171,7 @@ class PreflightManifest:
     def _unit_records(self) -> Iterator[dict]:
         """All records whose prepared address comes from an explicit unit link."""
         yield from chain(self.requirements, self.unresolved, self.dependencies,
-                         self.candidate_dependencies, self.resources, self.source_metadata)
+                         self.candidate_dependencies, self.resources, self.source_metadata, self.uncertainty_causes)
         for finding in self.lint.get("findings", []):
             yield finding
             yield from finding["evidence"].get("related", [])

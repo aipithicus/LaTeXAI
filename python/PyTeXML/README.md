@@ -131,6 +131,25 @@ entry-catcode assumptions used for unbound behavior; `source_survey` records
 independent per-file observations, not execution. Deferred spans remain unknown
 in structural coverage even though their text has been captured.
 
+After a reading barrier, the independent survey uses the reusable
+[source observer](src/reading/observer.py) to retain structured headers under its
+declared entry-profile assumption. It captures option/definition headers and known
+literals without running them. These candidates have unresolved activity; they
+never become active dependency edges merely because their syntax was recognized.
+`\InputIfFileExists` captures the filename and both branches. Present local files
+with empty branches use the ordinary cached input path. Other cases remain located
+requirements: absence from the source inventory does not establish absence from
+TeX's external search path, and a nonempty found branch must run before the input.
+
+`uncertainty_causes` records witnessed invalidations of tracked reading state.
+Requirements and diagnostics link through `cause_ids`; each cause has its own
+unit reference and finalized payload locations, including retained code artifacts.
+Repeated source occurrences remain distinct. No raw-source sidecar is needed to
+follow these links downstream, and publication failure clears their artifact
+locations along with all other unit-linked records. The journal emits the same
+ids and cause records. Ordinary deferred expressions do not grow this table when
+there is no tracked state to invalidate.
+
 Activity, binding availability and payload delivery are independent. Reader units
 and their requirements carry `activity`: `reached` identifies an encountered
 declaration/invocation (not execution of its stored body), `skipped` identifies a
@@ -172,7 +191,20 @@ is written to the master. `conditional_decisions` links each result to its unit
 and supporting definition units. These are source-visible decisions under the
 manifest's reading assumptions, not proof about hidden effects of arbitrary code.
 The kernel `if@twoside` rule supplies nesting without guessing its class-dependent
-truth. General `let` aliases, numeric predicates and hook execution remain deferred.
+truth. Bounded `\let` copies current local meanings without expanding the donor:
+stored definitions, booleans/setters and resolved reading handlers can be aliased.
+Unknown donors and character meanings are captured explicitly; their invocation
+requires further interpretation. Assignment prefixes (including `globaldefs`)
+stop before a potentially mis-scoped assignment. Numeric predicates and hook
+execution remain deferred.
+
+The integer-assignment scanner admits literal signed decimal `widowpenalty` and
+`clubpenalty` values. YAML summaries for `flushbottom` and `sloppy` preserve bounded
+reading state and leave layout computation downstream; `flushbottom` also installs
+its real scoped meaning copies. Shadowed prerequisites invalidate a summary.
+Geometry's binding currently records unresolved load effects and the optional
+`geometry.cfg` lookup. Its presence is explicitly **not** evidence of load purity:
+configuration, key expansion and begin-document work still need implementation.
 
 The YAML `branch_test` recipe also supports literal class/package-loaded queries.
 The reader uses ordered source-visible load facts, independently of binding
@@ -544,9 +576,9 @@ Reading after catalog bootstrap performs no filesystem I/O.
 
 Conditional classification assumes established binding and author-meaning context.
 It uses explicit declarations, never an `if` name prefix. The initial nesting
-inventory is TeX82; extension/package conditional primitives and dynamic aliases
-need their own declarations or future meaning support. General `\let`, computed
-predicates, global prefixes, option/hook execution, outer-command checks and TeX's error-recovery repairs remain outside
+inventory is TeX82; extension/package conditional primitives need declarations,
+and aliases are bounded by their captured donor meaning. General expansion, computed
+predicates, global prefixes, unrestricted option/hook execution, outer-command checks and TeX's error-recovery repairs remain outside
 this increment. Production preparation consumes this bounded dispatcher through its source owner.
 
 ## Source intervals and coverage

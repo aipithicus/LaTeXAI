@@ -35,7 +35,7 @@ from .assets import observe_environment_assets, observe_asset, parse_asset_use, 
 from .deferred import emit_observed_region
 from .provenance import Tombstone
 from .manifest import PreflightManifest, BibliographyInfo, PackageUsage, StyleFileInfo, ImplicitGraphicInfo
-from .records import source_reference
+from .records import source_reference, pending_location
 
 
 class PreparationUnresolved(ValueError):
@@ -131,6 +131,10 @@ class PreparationSession:
 
     def pending_units(self):
         """Inventory/failure output has identities, but no finalized artifact yet."""
+        self.manifest.uncertainty_causes = [
+            {"id": cause.id, **source_reference(self.units.records[cause.unit_id]),
+             "reason": cause.reason, "detail": cause.detail, **pending_location()}
+            for cause in self.units.uncertainty.values()]
         self.manifest.reset_locations(self.units.records.values())
         self.manifest.conditional_decisions = list(self.dispatcher.decisions)
 
@@ -179,11 +183,12 @@ class PreparationSession:
     def raw(self, span):
         return self.documents[span.basis].text[span.start:span.end]
 
-    def diagnose(self, span, reason, detail, *, unit_id=None, dependency="none", materialization=None, evidence=None):
+    def diagnose(self, span, reason, detail, *, unit_id=None, dependency="none", materialization=None, evidence=None, causes=()):
         unit_id = unit_id or self.units.add(span, "diagnostic")
         self.units.require(unit_id, span)
         diagnostic = self.manifest.add_diagnostic(self.units.records[unit_id], self.line(span), reason, detail,
                                                   dependency=dependency, materialization=materialization)
+        self.link_causes(diagnostic, causes)
         self.lint.record(self.units.records[unit_id], self.line(span), reason, detail, evidence=evidence)
         return diagnostic
 
@@ -192,11 +197,17 @@ class PreparationSession:
         raise PreparationUnresolved(f"{diagnostic['source']}:{diagnostic['line']} [{reason}] {detail}")
 
     def require(self, span, reason, detail, *, stage="interpretation", unit_id=None, parent_id=None,
-                materialization=None, activity=None, dependency=None, next_step=None):
+                materialization=None, activity=None, dependency=None, next_step=None, causes=()):
         unit_id = unit_id or self.units.add(span, "requirement_target", parent_id, activity=activity)
         self.units.require(unit_id, span)
-        return self.manifest.add_requirement(self.units.records[unit_id], self.line(span), reason, detail,
+        record = self.manifest.add_requirement(self.units.records[unit_id], self.line(span), reason, detail,
             stage=stage, dependency=dependency, materialization=materialization, next_step=next_step)
+        self.link_causes(record, causes)
+        return record
+
+    def link_causes(self, record, spans):
+        if spans:
+            record["cause_ids"] = list(dict.fromkeys(self.units.uncertainty_cause(span).id for span in spans))
 
     def defer(self, span, reason, detail, *, evidence=None):
         self.diagnose(span, reason, detail, evidence=evidence)
@@ -485,7 +496,7 @@ class PreparationSession:
                         "added_options": sorted(set(options) - set(self.package_options[key])),
                         "comparison": "source_visible_requests", "automatic_repair": False,
                         "related": [self.lint.related(self.units.records[first_id])]})
-                self.dispatcher.defer_effects(command.span)
+                self.dispatcher.defer_effects(command.span, reason="option_clash", detail="Package/class options conflict with an earlier load")
             return
         self.loaded_packages.add(key)
         self.dispatcher.loads.record("class" if is_class else "package", name, command.unit_id)
@@ -507,10 +518,10 @@ class PreparationSession:
             baseline = self.resolver.catalog.engine_bindings["source_traversal"]["reading"]["baseline_classes"]
             if name not in baseline:
                 self.require(command.span, "class_binding", f"No reading contract for class {name!r}", stage="binding", unit_id=command.unit_id)
-                self.dispatcher.defer_effects(command.span)
+                self.dispatcher.defer_effects(command.span, reason="class_binding", detail=f"No reading contract for class {name!r}")
         elif not self.resolver.load_package(name):
             self.require(command.span, "package_binding", f"No reading binding for package {name!r}", stage="binding", unit_id=command.unit_id)
-            self.dispatcher.defer_effects(command.span)
+            self.dispatcher.defer_effects(command.span, reason="package_binding", detail=f"No reading binding for package {name!r}")
         else:
             usage.binding_activated = True
             effects = self.resolver.catalog.package_bindings[name].get("reading", {}).get("load_effects")
@@ -741,16 +752,16 @@ class PreparationSession:
                 recoverable = next((i for i in reversed(range(len(self.frames)))
                                     if self.frames[i].recovery is not None), None)
                 self.diagnose(item.span, item.reason, item.detail, unit_id=item.unit_id,
-                              materialization="prepared" if recoverable is not None else None)
+                              materialization="prepared" if recoverable is not None else None, causes=item.causes)
                 self.dispatcher.loads.invalidate(item.unit_id)
                 if recoverable is not None:
                     frame = self.frames[recoverable]
                     self.require(item.span, "retained_code_reading",
                         f"Retained {self.name(frame.path)!r}; immediate caller resumes with its entry reading state. "
                         "This file's reading effects and dependencies still require resolution.", stage="preparation", unit_id=item.unit_id,
-                        materialization="prepared")
+                        materialization="prepared", causes=item.causes)
                     self.dispatcher.resume_input(frame.recovery)
-                    self.dispatcher.defer_effects(item.span)
+                    self.dispatcher.defer_effects(item.span, reason=item.reason, detail=item.detail)
                     del self.frames[recoverable:]
                     continue
                 raise _PreserveRemainder
@@ -778,7 +789,7 @@ class PreparationSession:
                         stage="binding" if item.reason == "package_not_loaded" else "interpretation", unit_id=item.unit_id,
                         dependency="possible" if dependency else "none",
                         next_step="binding_knowledge" if item.reason == "package_not_loaded" else
-                            "branch_selection" if item.reason == "branch_selection" else None)
+                            "branch_selection" if item.reason == "branch_selection" else None, causes=item.causes)
                     if isinstance(item, CollectedEnvironment):
                         requirement["definition_unit_id"] = item.definition_id
                     if self.frames[-1].emit and (isinstance(item, ConditionalRegion) or any(
