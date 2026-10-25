@@ -12,7 +12,8 @@ from pathlib import Path
 import tempfile
 
 from ..source_io import SourceStore
-from .render import RenderConfig, compiler_environment, render_one
+from .render import RenderConfig, compiler_environment, execution_identity, render_one
+from .assessment import qualified, summarize
 
 
 def _words(text):
@@ -40,10 +41,10 @@ def _words(text):
 
 def audit_dependencies(rules, cwd, staged, build):
     if not rules.is_file():
-        return {"status": "missing_receipt", "inputs": [], "outside": []}
+        return {"status": "missing_receipt", "inputs": [], "outside": [], "missing": []}
     text = rules.read_text(encoding="utf-8")
     if " : " not in text:
-        return {"status": "unsupported_receipt", "inputs": [], "outside": [], "raw": text}
+        return {"status": "unsupported_receipt", "inputs": [], "outside": [], "missing": [], "raw": text}
     inputs, outside, missing = [], [], []
     for name in dict.fromkeys(_words(text.split(" : ", 1)[1])):
         path = (cwd / name).resolve()
@@ -67,16 +68,18 @@ def audit_dependencies(rules, cwd, staged, build):
             "inputs": inputs, "outside": outside, "missing": missing}
 
 
-def qualify_relocation(prepared_dir, output_dir, config, *, raw_dirs=(), output_format="pdf"):
+def qualify_relocation(prepared_dir, output_dir, config, *, raw_dirs=(), output_format="pdf",
+                       diagnose=False, baseline=None):
     config.validate()
     prepared, output = Path(prepared_dir).resolve(), Path(output_dir).resolve()
     raw_dirs = tuple(Path(p).resolve() for p in raw_dirs)
-    for source in (prepared, *raw_dirs):
+    baseline = (Path(baseline[0]).resolve(), baseline[1]) if baseline else None
+    for source in (prepared, *raw_dirs, *([baseline[0]] if baseline else [])):
         if output.is_relative_to(source) or source.is_relative_to(output):
             raise ValueError("Qualification output must be separate from input trees")
     hidden = sorted({p for root in raw_dirs for p in SourceStore(root, [prepared]).files})
     output.mkdir(parents=True, exist_ok=False)
-    report = {"schema": "pytexml-relocation/1", "status": "failed",
+    report = {"schema": "pytexml-relocation/2",
               "raw_source_staged": False, "hidden_raw_files": len(hidden),
               "compiler": str(config.tectonic.resolve()), "only_cached": config.only_cached,
               "bundle": config.bundle, "format": output_format,
@@ -84,11 +87,23 @@ def qualify_relocation(prepared_dir, output_dir, config, *, raw_dirs=(), output_
     with tempfile.TemporaryDirectory(prefix=".relocated-", dir=output) as directory:
         work = Path(directory)
         env, report["fonts"] = compiler_environment(config, work)
+        report["execution_context"] = execution_identity(config, report["fonts"])
         for variable in ("TEXINPUTS", "BIBINPUTS", "BSTINPUTS", "TEXMFHOME", "TEXMFOUTPUT"):
             env.pop(variable, None)
         report["render"] = render_one(prepared, "master.tex", "prepared", output, work, config, env,
                                       dependency_audit=True, hidden_inputs=hidden, output_format=output_format)
-        report["status"] = "qualified" if report["render"]["status"] in {"rendered", "compiled"} else "incomplete"
+        failed = report["render"]["status"] in {"failed", "timeout"}
+        if diagnose and failed:
+            # Each explicitly requested probe has the same finite timeout.
+            # A known TeX failure does not need a second TeX-only attempt.
+            if output_format == "pdf" and report["render"]["checks"]["tex_compilation"]["outcome"] != "failed":
+                report["xdv_check"] = render_one(prepared, "master.tex", "xdv", output, work, config, env,
+                    dependency_audit=True, hidden_inputs=hidden, output_format="xdv")
+            if baseline:
+                report["original"] = render_one(*baseline, "original", output, work, config, env,
+                                                output_format=output_format)
+                report["paired_configuration"] = True
+        report["status"] = "qualified" if qualified(report["render"]) else "incomplete"
     report["temporary_inputs_removed"] = True
     (output / "relocation.json").write_text(json.dumps(report, indent=2), encoding="utf-8", newline="\n")
     return report
@@ -104,11 +119,16 @@ def main():
     parser.add_argument("--bundle")
     parser.add_argument("--font-dir", type=Path, action="append", default=[])
     parser.add_argument("--format", choices=("pdf", "xdv"), default="pdf")
+    parser.add_argument("--diagnose", action="store_true", help="On failure, run bounded XDV and optional original-source checks")
+    parser.add_argument("--baseline-main", help="Main file relative to a single --raw-source, used only with --diagnose")
     args = parser.parse_args()
+    if args.baseline_main and (not args.diagnose or len(args.raw_source) != 1):
+        parser.error("--baseline-main requires --diagnose and exactly one --raw-source")
     report = qualify_relocation(args.prepared, args.output, RenderConfig(args.tectonic,
         timeout_seconds=args.timeout, bundle=args.bundle, font_dirs=tuple(args.font_dir)),
-        raw_dirs=args.raw_source, output_format=args.format)
-    print(json.dumps({"status": report["status"], "report": str(args.output / "relocation.json")}))
+        raw_dirs=args.raw_source, output_format=args.format, diagnose=args.diagnose,
+        baseline=(args.raw_source[0], args.baseline_main) if args.baseline_main else None)
+    print(json.dumps({"status": report["status"], "summary": summarize(report), "report": str(args.output / "relocation.json")}))
     return 0 if report["status"] == "qualified" else 1
 
 

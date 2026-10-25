@@ -1,5 +1,7 @@
 """Relocation needs a readable PDF AND a local filesystem dependency receipt."""
 import os
+import json
+import hashlib
 from pathlib import Path
 import subprocess
 import sys
@@ -13,6 +15,7 @@ PROJECT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT))
 from src.validation.render import RenderConfig
 from src.validation.relocation import audit_dependencies, qualify_relocation
+from src.validation.assessment import summarize
 
 
 class RelocationTests(unittest.TestCase):
@@ -108,6 +111,74 @@ class RelocationTests(unittest.TestCase):
         self.assertEqual(report["render"]["status"], "compiled")
         self.assertIsNone(report["render"]["pdf"])
         self.assertFalse(list((self.root / "xdv").glob("*.xdv")))
+
+    def test_diagnosis_links_font_failure_to_separate_xdv_and_original_evidence(self):
+        fixture = (Path(__file__).parent / "fixtures/validation/font-unavailable.txt").read_bytes()
+        calls = []
+        def compiler(command, **kwargs):
+            calls.append(command)
+            entry = Path(command[-1])
+            build = Path(command[command.index("--outdir") + 1])
+            if "--outfmt" in command:
+                (build / "master.xdv").write_bytes(b"\xf7\x07XDV fixture")
+                Path(command[command.index("--makefile-rules") + 1]).write_text(f"master.xdv : {entry}\n")
+                return subprocess.CompletedProcess(command, 0)
+            kwargs["stdout"].write(fixture)
+            return subprocess.CompletedProcess(command, 1)
+        with patch("src.validation.render.subprocess.run", side_effect=compiler):
+            report = qualify_relocation(self.prepared, self.root / "diagnosis", self.config,
+                raw_dirs=[self.raw], diagnose=True, baseline=(self.raw, "main.tex"))
+        self.assertEqual(len(calls), 3)
+        summary = summarize(report)
+        self.assertEqual(summary["classification"], "ENVIRONMENT_LIMITATION")
+        self.assertEqual(summary["compilation_isolation"], "qualified")
+        self.assertFalse(summary["pdf_qualified"])
+        self.assertEqual(summary["baseline_comparison"]["outcome"], "same_failure")
+        persisted = json.loads((self.root / "diagnosis/relocation.json").read_text())
+        self.assertNotIn("summary", persisted)
+        self.assertNotIn("baseline_comparison", persisted)
+        self.assertEqual(summarize(persisted), summary)
+        self.assertFalse(any(p.is_dir() for p in (self.root / "diagnosis").iterdir()))
+
+    def test_source_failure_is_reproduced_without_redundant_xdv_probe(self):
+        fixture = (Path(__file__).parent / "fixtures/validation/option-clash.txt").read_bytes()
+        def compiler(command, **kwargs):
+            self.assertNotIn("--outfmt", command)
+            text = fixture if Path(command[-1]).name == "master.tex" else fixture.replace(b"master.tex:8", b"main.tex:27")
+            kwargs["stdout"].write(text)
+            return subprocess.CompletedProcess(command, 1)
+        with patch("src.validation.render.subprocess.run", side_effect=compiler) as compile:
+            report = qualify_relocation(self.prepared, self.root / "baseline", self.config,
+                raw_dirs=[self.raw], diagnose=True, baseline=(self.raw, "main.tex"))
+        self.assertEqual(compile.call_count, 2)
+        self.assertEqual(summarize(report)["classification"], "BASELINE_REPRODUCED")
+        self.assertEqual(summarize(report)["compilation_isolation"], "not_established")
+        diag = next(d for d in report["render"]["diagnostics"] if d["code"] == "tex.package_option_clash")
+        self.assertEqual(diag["evidence"][1]["location"], {"file": "master.tex", "line": 7, "basis": "input_artifact"})
+
+    def test_failed_or_timed_out_run_still_captures_diagnostics_and_partial_audit(self):
+        fixture = (Path(__file__).parent / "fixtures/validation/option-clash.txt").read_bytes()
+        for mode in ("error", "timeout"):
+            def compiler(command, **kwargs):
+                entry = Path(command[-1])
+                Path(command[command.index("--makefile-rules") + 1]).write_text(f"master.pdf : {entry}\n")
+                kwargs["stdout"].write(fixture)
+                if mode == "timeout":
+                    raise subprocess.TimeoutExpired(command, 7)
+                return subprocess.CompletedProcess(command, 1)
+            with self.subTest(mode=mode), patch("src.validation.render.subprocess.run", side_effect=compiler):
+                report = qualify_relocation(self.prepared, self.root / mode, self.config, raw_dirs=[self.raw])
+            self.assertTrue(report["render"]["diagnostics"])
+            retained = (self.root / mode / "prepared.log").read_bytes()
+            self.assertEqual(report["render"]["log_evidence"]["sha256"], hashlib.sha256(retained).hexdigest())
+            self.assertEqual(report["render"]["log_evidence"]["parsed_bytes"], len(fixture))
+            for diagnostic in report["render"]["diagnostics"]:
+                for evidence in diagnostic["evidence"]:
+                    if "byte_start" in evidence:
+                        self.assertEqual(retained[evidence["byte_start"]:evidence["byte_end"]].decode(), evidence["raw"])
+            self.assertEqual(report["render"]["checks"]["dependency_audit"]["outcome"], "inconclusive")
+            self.assertEqual(summarize(report)["classification"], "INDETERMINATE")
+            self.assertFalse(summarize(report)["pdf_qualified"])
 
     @unittest.skipUnless(os.environ.get("PYTEXML_TEST_TECTONIC"), "explicit optional compiler not configured")
     def test_live_relocated_payload_survives_deleted_disposable_raw_tree(self):

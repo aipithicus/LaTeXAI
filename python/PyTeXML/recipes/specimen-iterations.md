@@ -106,6 +106,14 @@ to fetch missing engine resources without adding them to preparation or its payl
 `--format xdv` qualifies TeX compilation when PDF font embedding needs separate
 attention. It does not certify PDF rendering or visual fidelity.
 
+Add `--diagnose` to enable bounded diagnostic attempts after a failed render:
+an XDV check when useful and an independently staged original-source comparison.
+The configured timeout applies to each attempt. Existing prepared payloads remain
+unchanged. New receipts carry structured check and diagnostic evidence; the batch
+index derives classifications when regenerated, rather than storing a separate
+editable verdict. See [qualification diagnostics](qualification-diagnostics.md)
+for catalog ownership, wrapping rules, and the limits of each classification.
+
 Per-paper evidence lands in `qualifications/<name>/`, with a combined receipt in
 the batch's `qualifications/<name>.json`. Both successful and incomplete outcomes
 remain visible. A partial preparation result can pass a particular rendered route;

@@ -1,0 +1,77 @@
+schema: pytexml-diagnostics/1
+identity: {name: tectonic, version: 1}
+normalization:
+  wrap_columns: 79
+  # Reconstruct hard wraps, never insert a space into a split filename/token.
+  # Retain strong record boundaries even after a line exactly at the limit.
+  boundary: '^(?:! |(?:error|warning|note|caused by): |ADAPTER: |l\.\d+ |Type  |See the |Transcript written|No pages of output\.)'
+  # Tectonic can prefix a message that was already wrapped by TeX.
+  wrapped_prefix: '^(?:error|warning): (?:.+:\d+: )?'
+  diagnostic_start: '^(?:! |(?:error|warning|caused by): )'
+  location: '^error: (?P<file>.+):(?P<line>\d+): '
+rules:
+  - code: tex.package_option_clash
+    phase: tex_compilation
+    component: latex
+    severity: error
+    role: primary
+    category: source_diagnostic
+    patterns: ['LaTeX Error: Option clash for package (?P<package>[^\s.]+)\.']
+    signature: [package]
+    witnesses: [specimen:2512.18792v1]
+    remediation:
+      area: source_or_preparation
+      action: Inspect package load order and option declarations; compare the same diagnostic on the original.
+      verify: Repeat the paired compile after an intentional correction; do not rewrite author options automatically.
+  - code: pdf.font_resource_unavailable
+    phase: pdf_generation
+    component: xdvipdfmx
+    severity: warning
+    role: primary
+    category: environment_limitation
+    patterns: ['Could not locate a virtual/physical font for TFM "(?P<font>[^"]+)"\.']
+    signature: [font]
+    witnesses: [specimen:2412.11340v4]
+    remediation:
+      area: renderer_environment
+      action: Check the named TeX font resource, its lookup configuration, and the renderer's font-generation capability.
+      verify: Repeat PDF qualification; a separate successful XDV audit remains compilation evidence only.
+  - code: pdf.pk_font_generation_failed
+    phase: pdf_generation
+    component: tectonic
+    severity: warning
+    role: supporting
+    category: environment_limitation
+    patterns: ['Tectonic unable to generate PK font "(?P<font>[^"]+)" \(dpi (?P<dpi>\d+)\) on-the-fly']
+    signature: [font, dpi]
+    witnesses: [specimen:2412.11340v4]
+    remediation:
+      area: renderer_environment
+      action: Inspect support and resources for generating the requested PK font.
+      verify: Repeat PDF generation with the required font available.
+  - code: tex.engine_failure
+    phase: tex_compilation
+    component: xetex
+    severity: error
+    role: terminal
+    category: unclassified
+    patterns: ['^error: the XeTeX engine had an unrecoverable error$']
+    signature: []
+    witnesses: [specimen:2512.18792v1]
+    remediation:
+      area: investigation
+      action: Inspect preceding diagnostics; the terminal engine message alone does not identify the cause.
+      verify: Re-run after addressing the evidenced cause.
+  - code: pdf.driver_failure
+    phase: pdf_generation
+    component: xdvipdfmx
+    severity: error
+    role: terminal
+    category: unclassified
+    patterns: ['^error: the xdvipdfmx engine had an unrecoverable error$']
+    signature: []
+    witnesses: [specimen:2412.11340v4]
+    remediation:
+      area: investigation
+      action: Inspect preceding PDF-driver diagnostics; keep TeX compilation separate from PDF generation.
+      verify: Re-run PDF qualification after addressing the evidenced cause.

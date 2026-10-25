@@ -1,0 +1,7 @@
+warning: Tectonic unable to generate PK font "bbm12" (dpi 600) on-the-fly
+warning: Tectonic unable to generate PK font "bbm12" (dpi 600) on-the-fly
+warning: Could not locate a virtual/physical font for TFM "bbm12".
+warning: Could not locate a virtual/physical font for TFM "bbm12".
+error: something bad happened inside xdvipdfmx, but no output was logged
+error: the xdvipdfmx engine had an unrecoverable error
+caused by: Cannot proceed without .vf or "physical" font for PDF output...

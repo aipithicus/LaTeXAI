@@ -685,6 +685,13 @@ Compiler bundle/cache resources and fonts are allowed validation dependencies.
 does not claim PDF rendering. These checks qualify the exercised document route,
 not every possible conditional configuration or semantic equivalence to the original.
 
+Version 2 qualification receipts include independent check records and structured,
+source-linked diagnostics. Their [diagnostic taxonomy](recipes/qualification-diagnostics.md)
+uses a small witnessed YAML catalog, evidence-preserving log unwrapping, and a
+pure summary projection. `--diagnose` enables bounded XDV/original-source checks
+after a failure; a baseline-reproduced error or successful XDV does not certify PDF
+output. Unrecognized errors stay visible for later catalog growth.
+
 The initial adapter targets Tectonic's XeTeX/LaTeX graphics route, not arbitrary
 engines or SVG packages. SVG conversion warnings and external-resource failures
 are explicit. Text in vector SVGs and engine/package differences still require

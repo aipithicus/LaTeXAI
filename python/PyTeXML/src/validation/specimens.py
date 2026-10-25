@@ -127,6 +127,7 @@ def md(value):
 
 def refresh_index(runs):
     """Rebuild navigational views from receipts; preserve user NOTES.md files."""
+    from .assessment import summarize
     records = batch_records(runs)
     latest = {}
     for batch in records:
@@ -154,13 +155,15 @@ def refresh_index(runs):
             for render in sorted((runs / name / specimen / "renders").glob("*/comparison.json")):
                 receipt = read_json(render)
                 relative = render.parent.relative_to(runs / name).as_posix()
+                diagnosis = f" ({summarize(receipt)['classification']})" if receipt.get("schema", "").endswith("/2") else ""
                 renders.append(f"Render `{specimen}/{render.parent.name}`: **{receipt['status']}** — "
-                               f"[report]({relative}/comparison.json).")
+                               f"[report]({relative}/comparison.json){diagnosis}.")
             for qualification in sorted((runs / name / specimen / "qualifications").glob("*/relocation.json")):
                 receipt = read_json(qualification)
                 relative = qualification.relative_to(runs / name).as_posix()
+                diagnosis = f" ({summarize(receipt)['classification']})" if receipt.get("schema", "").endswith("/2") else ""
                 renders.append(f"Relocation `{specimen}/{qualification.parent.name}`: **{receipt['status']}** — "
-                               f"[report]({relative}).")
+                               f"[report]({relative}){diagnosis}.")
         if renders:
             lines += ["", *renders]
         lines += ["", "Partial means a master was emitted with outstanding preparation requirements; it is not a failed run.",
@@ -340,9 +343,10 @@ def render_specimen(runs, batch_name, specimen, render_name, config):
     return result
 
 
-def qualify_batch(runs, batch_name, name, config, selected=(), *, output_format="pdf"):
+def qualify_batch(runs, batch_name, name, config, selected=(), *, output_format="pdf", diagnose=False):
     """Exercise every selected prepared checkpoint without staging raw sources."""
     from .relocation import qualify_relocation
+    from .assessment import summarize
 
     runs = Path(runs).resolve()
     identifier(batch_name)
@@ -354,7 +358,8 @@ def qualify_batch(runs, batch_name, name, config, selected=(), *, output_format=
     receipt = runs / batch_name / "qualifications" / (name + ".json")
     if receipt.exists() or any((runs / batch_name / s / "qualifications" / name).exists() for s in chosen):
         raise FileExistsError("Qualification name already exists")
-    report = {"schema": "pytexml-relocation-batch/1", "batch": batch_name, "name": name, "results": {}}
+    report = {"schema": "pytexml-relocation-batch/2", "batch": batch_name, "name": name,
+              "validation_code": code_identity(), "results": {}}
     for specimen in chosen:
         item = batch["results"][specimen]
         folder = runs / batch_name / specimen
@@ -363,11 +368,15 @@ def qualify_batch(runs, batch_name, name, config, selected=(), *, output_format=
                 raise ValueError("This attempt has no prepared master")
             if fingerprint(folder / "prepared", (p for p in (folder / "prepared").rglob("*") if p.is_file()))["sha256"] != item["outputs"]["sha256"]:
                 raise ValueError("Prepared checkpoint changed; create a new iteration")
+            if diagnose and source_fingerprint(Path(item["source"]))["sha256"] != item["source_fingerprint"]["sha256"]:
+                raise ValueError("Original source changed; create a new iteration before baseline diagnosis")
             report["results"][specimen] = qualify_relocation(folder / "prepared",
-                folder / "qualifications" / name, config, raw_dirs=[Path(item["source"])], output_format=output_format)
+                folder / "qualifications" / name, config, raw_dirs=[Path(item["source"])], output_format=output_format,
+                diagnose=diagnose, baseline=(Path(item["source"]), item["main"]) if diagnose else None)
         except (OSError, ValueError) as error:
             report["results"][specimen] = {"status": "failed", "error": str(error)}
-        print(f"{specimen}: relocation {report['results'][specimen]['status']}", flush=True)
+        print(f"{specimen}: relocation {report['results'][specimen]['status']} "
+              f"({summarize(report['results'][specimen])['classification']})", flush=True)
     report["status"] = "qualified" if all(r["status"] == "qualified" for r in report["results"].values()) else "incomplete"
     receipt.parent.mkdir(parents=True, exist_ok=True)
     write_json(receipt, report)
@@ -395,6 +404,7 @@ def main():
     qualify.add_argument("--name", required=True)
     qualify.add_argument("--specimen", action="append", default=[])
     qualify.add_argument("--format", choices=("pdf", "xdv"), default="pdf")
+    qualify.add_argument("--diagnose", action="store_true", help="On failure, run bounded XDV/original-source diagnostic checks")
     for command in (render, qualify):
         command.add_argument("--tectonic", type=Path, required=True)
         command.add_argument("--timeout", type=float, default=120)
@@ -417,7 +427,7 @@ def main():
         from .render import RenderConfig
         result = qualify_batch(args.runs, args.batch, args.name,
             RenderConfig(args.tectonic, args.timeout, args.bundle, not args.allow_downloads,
-                         args.fontconfig, tuple(args.font_dir)), args.specimen, output_format=args.format)
+                         args.fontconfig, tuple(args.font_dir)), args.specimen, output_format=args.format, diagnose=args.diagnose)
         return 0 if result["status"] == "qualified" else 1
     refresh_index(args.runs)
     return 0

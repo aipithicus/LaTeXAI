@@ -1,0 +1,38 @@
+schema: pytexml-diagnostics/1
+identity: {name: relocation, version: 1}
+events:
+  external_input:
+    code: audit.external_input
+    category: payload_dependency_failure
+    remediation:
+      area: preparation_or_adapter
+      action: Inspect the recorded external path and make the required manuscript resource available within the prepared payload.
+      verify: Re-run with raw sources hidden and require a successful dependency audit.
+  missing_input:
+    code: audit.missing_input
+    category: payload_dependency_failure
+    remediation:
+      area: preparation_or_adapter
+      action: Inspect the named receipt path and the compiler's path convention before concluding that an asset is missing.
+      verify: Require the recorded input to resolve to a staged file or build product.
+  missing_receipt:
+    code: audit.missing_receipt
+    category: insufficient_evidence
+    remediation:
+      area: validation_harness
+      action: Obtain the compiler dependency receipt; an absent receipt proves neither isolation nor a leak.
+      verify: Require a complete successful compile and a supported nonempty receipt.
+  unsupported_receipt:
+    code: audit.unsupported_receipt
+    category: insufficient_evidence
+    remediation:
+      area: validation_harness
+      action: Inspect the retained receipt and extend its parser with a fixture for the witnessed syntax.
+      verify: Re-run the audit against the exact receipt.
+  empty_receipt:
+    code: audit.empty_receipt
+    category: insufficient_evidence
+    remediation:
+      area: validation_harness
+      action: Investigate why the compiler did not record any filesystem inputs.
+      verify: Require evidence of the staged entrypoint and its exercised inputs.

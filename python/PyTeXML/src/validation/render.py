@@ -21,6 +21,8 @@ import xml.etree.ElementTree as ET
 
 from ..source_io import SourceStore
 from .assets import SVG_DRIVER, stage_svg
+from .diagnostics import parse_log, audit_diagnostics
+from .assessment import render_status, summarize
 
 
 DRIVER_NAME = "__pytexml_svg_driver__.tex"
@@ -76,6 +78,16 @@ def compiler_environment(config: RenderConfig, work: Path) -> tuple[dict, dict]:
     return env, info
 
 
+def execution_identity(config, fonts):
+    """Record the configured instrument, not a claim to snapshot its whole cache."""
+    with config.tectonic.open("rb") as executable:
+        digest = hashlib.file_digest(executable, "sha256").hexdigest()
+    return {"compiler_sha256": digest, "bundle": config.bundle, "only_cached": config.only_cached,
+            "fonts": fonts, "timeout_seconds": config.timeout_seconds,
+            "driver_sha256": hashlib.sha256(BOOTSTRAP + SVG_DRIVER.encode("ascii")).hexdigest(),
+            "scope": "Configured environment shared by these attempts; engine cache and font directory contents are not snapshotted."}
+
+
 def stage_project(source: Path, main: str, destination: Path, *, excluded_dirs=()) -> dict:
     """Stage each side from its own files, with no access to the other side."""
     store = SourceStore(source, excluded_dirs)
@@ -117,11 +129,19 @@ def render_one(source: Path, main: str, label: str, output: Path, work: Path,
     if output_format not in {"pdf", "xdv"}:
         raise ValueError("Validation output must be pdf or xdv")
     stage = work / label
-    result = {"status": "failed", "source": str(source), "main": main, "pdf": None,
+    result = {"schema": "pytexml-render-attempt/2", "source": str(source), "main": main, "pdf": None,
               "log": label + ".log", "format": output_format}
+    checks = {name: {"outcome": "not_run"} for name in
+              ("staging", "execution", "tex_compilation", "pdf_generation", "output_inspection")}
+    checks["dependency_audit"] = {"outcome": "not_run" if dependency_audit else "not_requested"}
+    result["checks"] = checks
     log_path = output / result["log"]
+    phase, rules, build, main_path = "staging", None, None, None
     try:
         result["inputs"] = stage_project(source, main, stage / "source", excluded_dirs=[output])
+        result["input_fingerprint"] = hashlib.sha256(json.dumps(
+            sorted(result["inputs"]["files"], key=lambda f: f["path"]), sort_keys=True).encode()).hexdigest()
+        checks["staging"] = {"outcome": "passed"}
         main_path = stage / "source" / result["inputs"]["main"]
         build = stage / "build"
         build.mkdir()
@@ -139,16 +159,23 @@ def render_one(source: Path, main: str, label: str, output: Path, work: Path,
             for path in hidden_inputs:
                 command.extend(["--hide", str(path)])
         command.append(str(main_path))
+        phase = "execution"
         with log_path.open("wb") as log:
             process = subprocess.run(command, cwd=main_path.parent, env=env, stdout=log,
                                      stderr=subprocess.STDOUT, timeout=config.timeout_seconds, check=False)
         result["returncode"] = process.returncode
+        checks["execution"] = {"outcome": "passed" if process.returncode == 0 else "failed",
+                               "returncode": process.returncode}
         pdf = build / (main_path.stem + "." + output_format)
         if process.returncode != 0:
             result["error"] = "Compiler returned an error; inspect the retained log"
-        elif not pdf.is_file() or not pdf.stat().st_size:
-            result["error"] = f"Compiler did not produce a nonempty {output_format.upper()}"
         else:
+            checks["tex_compilation"] = {"outcome": "passed", "evidence": "execution"}
+            if output_format == "pdf":
+                checks["pdf_generation"] = {"outcome": "passed", "evidence": "execution"}
+            phase = "output_inspection"
+            if not pdf.is_file() or not pdf.stat().st_size:
+                raise ValueError(f"Compiler did not produce a nonempty {output_format.upper()}")
             if output_format == "pdf":
                 import pymupdf
 
@@ -156,27 +183,60 @@ def render_one(source: Path, main: str, label: str, output: Path, work: Path,
                     if not document.is_pdf or document.needs_pass or len(document) == 0:
                         raise ValueError("Compiler output is not a readable, nonempty PDF")
                     result["pages"] = len(document)
-                result["status"] = "rendered"
                 result["pdf"] = label + ".pdf"
                 shutil.move(str(pdf), str(output / result["pdf"]))
             else:
                 with pdf.open("rb") as compiled:
                     if compiled.read(2) != b"\xf7\x07":
                         raise ValueError("Compiler output is not an XDV stream")
-                result.update(status="compiled", compiled_bytes=pdf.stat().st_size)
-            if dependency_audit:
-                from .relocation import audit_dependencies
-                result["dependencies"] = audit_dependencies(rules, main_path.parent, stage / "source", build)
-                if result["dependencies"]["status"] != "qualified":
-                    result["status"] = "unqualified"
-                    result["error"] = "Compiler output did not pass the relocated filesystem dependency audit"
+                result["compiled_bytes"] = pdf.stat().st_size
+            checks["output_inspection"] = {"outcome": "passed", "format": output_format}
     except subprocess.TimeoutExpired:
-        result.update(status="timeout", error=f"Compiler exceeded {config.timeout_seconds:g} seconds")
+        checks["execution"] = {"outcome": "timeout", "seconds": config.timeout_seconds}
+        result["error"] = f"Compiler exceeded {config.timeout_seconds:g} seconds"
     except (OSError, ValueError, RuntimeError, ET.ParseError) as error:
         result["error"] = f"{type(error).__name__}: {error}"
+        checks[phase] = {"outcome": "failed", "error_type": type(error).__name__, "message": str(error)}
+    # Inspect partial logs and receipts even on error/timeout. A partial receipt
+    # is useful evidence but can never establish successful route closure.
+    log_bytes = log_path.read_bytes() if log_path.exists() else b""
+    parsed = parse_log(log_bytes, log_name=result["log"])
+    result["log_evidence"] = {key: value for key, value in parsed.items() if key != "diagnostics"}
+    result["diagnostics"] = parsed["diagnostics"]
+    for diagnostic in result["diagnostics"]:
+        if diagnostic["severity"] == "error" and diagnostic["phase"] in {"tex_compilation", "pdf_generation"}:
+            check = checks[diagnostic["phase"]]
+            check.update(outcome="failed")
+            check.setdefault("diagnostics", []).append(diagnostic["id"])
+        for evidence in diagnostic["evidence"]:
+            location = evidence.get("location")
+            if location and main_path is not None and location["file"] in {main_path.name, str(main_path)}:
+                evidence["location"] = {**location, "basis": "input_artifact", "file": main,
+                                        "line": location["line"] - 1} if location["line"] > 1 else {
+                                            **location, "basis": "validation_bootstrap"}
+    if dependency_audit and rules is not None:
+        from .relocation import audit_dependencies
+        try:
+            audit = audit_dependencies(rules, main_path.parent, stage / "source", build)
+            result["dependencies"] = audit
+            complete = checks["execution"]["outcome"] == "passed"
+            outcome = ("failed" if audit.get("outside") or audit.get("missing") else
+                       "passed" if audit["status"] == "qualified" and complete else "inconclusive")
+            checks["dependency_audit"] = {"outcome": outcome, "receipt_status": audit["status"],
+                                          "complete_execution": complete}
+            result["diagnostics"].extend(audit_diagnostics(audit))
+        except (OSError, UnicodeError, ValueError) as error:
+            checks["dependency_audit"] = {"outcome": "inconclusive", "error_type": type(error).__name__, "message": str(error)}
+    result["status"] = render_status(checks, output_format)
+    if result["status"] == "unqualified":
+        result["error"] = "Compiler output did not pass the relocated filesystem dependency audit"
     if "error" in result:
-        with log_path.open("a", encoding="utf-8", newline="\n") as log:
-            log.write("\nADAPTER: " + result["error"] + "\n")
+        suffix = ("\nADAPTER: " + result["error"] + "\n").encode("utf-8", errors="backslashreplace")
+        with log_path.open("ab") as log:
+            log.write(suffix)
+        # The retained file includes this adapter footer; parsed_bytes records
+        # the compiler-log prefix to which the diagnostic offsets refer.
+        result["log_evidence"]["sha256"] = hashlib.sha256(log_bytes + suffix).hexdigest()
     return result
 
 
@@ -218,17 +278,19 @@ def render_comparison(original_dir: Path, original_main: str, prepared_dir: Path
         if output.is_relative_to(source) or source.is_relative_to(output):
             raise ValueError("Comparison output must be separate from both source trees")
     output.mkdir(parents=True, exist_ok=False)  # never mistake an older PDF for success
-    report = {"schema": "pytexml-render-comparison/1", "compiler": str(config.tectonic.resolve()),
+    report = {"schema": "pytexml-render-comparison/2", "compiler": str(config.tectonic.resolve()),
               "bundle": config.bundle, "only_cached": config.only_cached, "status": "failed"}
     with tempfile.TemporaryDirectory(prefix=".render-", dir=output) as directory:
         work = Path(directory)
         env, report["fonts"] = compiler_environment(config, work)
+        report["execution_context"] = execution_identity(config, report["fonts"])
         try:
             version = subprocess.run([str(config.tectonic.resolve()), "--version"], env=env,
                 capture_output=True, timeout=config.timeout_seconds, check=True)
             report["compiler_version"] = version.stdout.decode("utf-8", errors="replace").strip()
             for label, source, main in (("original", original, original_main), ("prepared", prepared, "master.tex")):
                 report[label] = render_one(source, main, label, output, work, config, env)
+            report["paired_configuration"] = True
             if all(report[label]["status"] == "rendered" for label in ("original", "prepared")):
                 report["comparison"] = compare_pdfs(output / "original.pdf", output / "prepared.pdf")
                 report["status"] = "rendered"
@@ -258,7 +320,8 @@ def main():
     report = render_comparison(args.original_dir, args.original_main, args.prepared_dir, args.output_dir,
         RenderConfig(args.tectonic, args.timeout, args.bundle, not args.allow_downloads,
                      args.fontconfig, tuple(args.font_dir)))
-    print(json.dumps({"status": report["status"], "report": str(args.output_dir / "comparison.json")}, indent=2))
+    print(json.dumps({"status": report["status"], "summary": summarize(report),
+                      "report": str(args.output_dir / "comparison.json")}, indent=2))
     return 0 if report["status"] == "rendered" else 1
 
 
