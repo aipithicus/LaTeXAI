@@ -13,6 +13,7 @@ from unittest.mock import patch
 PROJECT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT))
 from src.bindings.catalog import BindingCatalog
+from reader_support import reload_catalog
 from src.bindings.resolver import BindingResolver
 from src.prepare.pipeline import preprocess_paper
 from src.reading.character_rules import ProfileError
@@ -231,7 +232,7 @@ class CommandDefinitionTests(unittest.TestCase):
         catalog = deepcopy(self.catalog)
         spec = next(c for c in catalog.engine_bindings["core_latex"]["reading"]["commands"] if c["name"] == r"\newcommand")
         spec["name"] = r"\declarelocal"
-        self.setup_reader(r"\declarelocal\x{body}", catalog=catalog)
+        self.setup_reader(r"\declarelocal\x{body}", catalog=reload_catalog(self, catalog))
         self.assertEqual(self.complete()[0].declaration, r"\declarelocal")
 
     def test_selected_option_captures_frozen_tokens_and_reports_pending_check(self):

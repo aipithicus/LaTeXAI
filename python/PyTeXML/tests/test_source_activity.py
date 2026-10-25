@@ -8,6 +8,7 @@ from unittest.mock import patch
 PROJECT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT))
 from src.bindings.catalog import BindingCatalog
+from reader_support import reload_catalog
 from src.bindings.resolver import BindingResolver
 from src.reading.contracts import ConditionalRegion, ReadingBoundary, SourceCommand, StoredDefinition, SkippedRegion
 from src.reading.dispatcher import StructuralDispatcher
@@ -103,7 +104,7 @@ class PredicateTests(unittest.TestCase):
         catalog = BindingCatalog()
         spec = next(s for s in catalog.engine_bindings["core_latex"]["reading"]["conditionals"] if s["name"] == r"\if")
         catalog.engine_bindings["core_latex"]["reading"]["conditionals"].append({**spec, "name": r"\samechar"})
-        _, _, items = self.scan(r"\samechar aa YES\else NO\fi", resolver=BindingResolver(catalog))
+        _, _, items = self.scan(r"\samechar aa YES\else NO\fi", resolver=BindingResolver(reload_catalog(self, catalog)))
         self.assertEqual([d.metadata["truth"] for d in self.decisions(items)], [True])
 
     def test_kernel_conditional_role_does_not_invent_its_truth(self):

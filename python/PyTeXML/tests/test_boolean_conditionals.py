@@ -14,6 +14,7 @@ from unittest.mock import patch
 PROJECT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT))
 from src.bindings.catalog import BindingCatalog
+from reader_support import reload_catalog
 from src.bindings.resolver import BindingResolver
 from src.prepare.pipeline import preprocess_paper
 from src.reading.context import ExecutionMode
@@ -136,7 +137,7 @@ class BooleanConditionalTests(unittest.TestCase):
         spec["name"] = r"\switch"
         spec["grammar"] = {"handler": "boolean_declaration", "target_prefix": "when",
                            "initial": r"\iftrue", "setters": {"off": r"\iffalse", "on": r"\iftrue"}}
-        items = self.read(r"\switch\whenready\whenready A\fi\readyoff\whenready X\else B\fi", catalog=catalog)
+        items = self.read(r"\switch\whenready\whenready A\fi\readyoff\whenready X\else B\fi", catalog=reload_catalog(self, catalog))
         self.assertEqual(self.chars(items), "AB")
 
     def test_invalid_or_computed_targets_publish_nothing(self):

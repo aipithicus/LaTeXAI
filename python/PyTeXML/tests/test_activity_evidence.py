@@ -8,6 +8,7 @@ import unittest
 PROJECT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT))
 from src.bindings.catalog import BindingCatalog
+from reader_support import reload_catalog
 from src.bindings.resolver import BindingResolver
 from src.prepare.pipeline import preprocess_paper
 from src.reading.contracts import ReadingBoundary, SourceCommand, SkippedRegion
@@ -215,7 +216,7 @@ class DeclarativeActivityTests(unittest.TestCase):
         catalog = BindingCatalog()
         spec = next(s for s in catalog.engine_bindings["core_latex"]["reading"]["commands"] if s["name"] == r"\@ifclassloaded")
         catalog.engine_bindings["core_latex"]["reading"]["commands"].append({**deepcopy(spec), "name": r"\isclass"})
-        resolver = BindingResolver(catalog)
+        resolver = BindingResolver(reload_catalog(self, catalog))
         context = resolver.new_context()
         reader = TexReader(r"\isclass{article}{YES}{NO}", catcodes=context.catcodes, endline_char=context.endlinechar)
         loads = SourceLoadState()

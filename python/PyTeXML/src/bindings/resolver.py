@@ -5,15 +5,23 @@ interpolation bodies, or dynamic TeX assignments.
 """
 from __future__ import annotations
 from copy import deepcopy
-import re
+from dataclasses import dataclass, field, replace
 from typing import Any, Iterator
-from .catalog import BindingCatalog
+from .catalog import BindingCatalog, ReadingDeclaration
 from ..yaml_io import overlay
 from ..reading.context import ReaderContext
 from ..reading.contracts import (
     ConditionalRule, EffectiveReadingProfile, InterpolationRule, SpanClassification,
-    StateManagementRule, TerminatorRule, UnresolvedBindingResult, UnresolvedReason, ReadingIssue,
+    StateManagementRule, UnresolvedBindingResult, UnresolvedReason, ReadingIssue,
 )
+
+
+@dataclass(slots=True)
+class LiteralOptions:
+    active: dict[str, Any] = field(default_factory=dict)
+    catcodes: dict[str, int] = field(default_factory=dict)
+    interpolations: list[InterpolationRule] = field(default_factory=list)
+    profiles: list[str] = field(default_factory=list)
 
 
 def _characters(value: Any, count: int) -> tuple[str, ...] | None:
@@ -102,41 +110,40 @@ class BindingResolver:
     def is_package_active(self, package_name: str) -> bool:
         return package_name.strip() in self.active_packages
 
-    def _active_bindings(self) -> Iterator[tuple[str, dict[str, Any]]]:
+    def _active_origins(self) -> Iterator[str]:
         for name in reversed(self.active_packages):
-            yield f"packages/{name}", self.catalog.package_bindings[name]["reading"]
-        for name, data in self.catalog.engine_bindings.items():
-            yield f"engine/{name}", data["reading"]
+            yield f"packages/{name}"
+        for name in self.catalog.engine_bindings:
+            yield f"engine/{name}"
+
+    def _declaration(self, name, index) -> ReadingDeclaration | None:
+        providers = index.get(name, {})
+        for origin in self._active_origins():
+            if origin in providers:
+                return providers[origin][0]
+        return None
 
     @staticmethod
     def _unresolved(name: str, reason: UnresolvedReason, detail: str,
                     options: dict[str, Any]) -> UnresolvedBindingResult:
         return UnresolvedBindingResult(name, reason, detail, deepcopy(options))
 
-    def _missing(self, name: str, sections: tuple[str, ...],
+    def _missing(self, name: str, index,
                  options: dict[str, Any]) -> UnresolvedBindingResult:
-        for pkg, data in self.catalog.package_bindings.items():
-            if pkg in self.active_packages:
-                continue
-            if any(spec.get("name", spec.get("command")) == name
-                   for section in sections for spec in data["reading"].get(section, [])):
+        for origin in index.get(name, {}):
+            tier, pkg = origin.split("/", 1)
+            if tier == "packages" and pkg not in self.active_packages:
                 return self._unresolved(name, UnresolvedReason.PACKAGE_NOT_LOADED,
                                         f"Reading grammar for '{name}' is known from inactive binding '{pkg}'; "
                                         "the source provider is not established", options)
         return self._unresolved(name, UnresolvedReason.UNKNOWN_CONSTRUCT,
                                 f"No active binding for '{name}'", options)
 
-    _command_sections = ("catcode_mutators", "grouping", "command_overrides",
-                         "commands", "factories", "inclusions", "conditionals")
-
-    def _command_specs(self, clean: str) -> Iterator[tuple[str, dict[str, Any], str, dict[str, Any]]]:
+    def _command_specs(self, clean: str) -> Iterator[ReadingDeclaration]:
         """Yield only the winning declaration, including nonconditional shadows."""
-        for origin, reading in self._active_bindings():
-            for section in self._command_sections:
-                for spec in reading.get(section, []):
-                    if spec.get("name", spec.get("command")) == clean:
-                        yield origin, reading, section, spec
-                        return
+        declaration = self._declaration(clean, self.catalog.commands)
+        if declaration is not None:
+            yield declaration
 
     def resolve_conditional(self, name: str) -> ConditionalRule | None:
         """Classify without resolving arguments/effects or expanding macros.
@@ -145,8 +152,9 @@ class BindingResolver:
         Stored author definitions take precedence at the scanner/dispatcher.
         """
         clean = name if name.startswith("\\") else f"\\{name}"
-        for _, _, section, spec in self._command_specs(clean):
-            if section == "conditionals":
+        for declaration in self._command_specs(clean):
+            spec = declaration.spec
+            if declaration.section == "conditionals":
                 return ConditionalRule(spec["role"], spec.get("evaluation"), spec.get("capture_operands"), spec.get("predicate"))
         return None
 
@@ -158,25 +166,23 @@ class BindingResolver:
         Literal/effect profiles are deliberately outside this observational API.
         """
         clean = name if name.startswith("\\") else f"\\{name}"
-        candidates = []
-        for package, data in self.catalog.package_bindings.items():
-            for section in self._command_sections:
-                for spec in data["reading"].get(section, []):
-                    if spec.get("name", spec.get("command")) == clean:
-                        candidates.append((package, spec))
-        if len(candidates) != 1 or candidates[0][1].get("family") != "source_command":
+        candidates = [declaration for origin, declarations in self.catalog.commands.get(clean, {}).items()
+                      if origin.startswith("packages/") for declaration in declarations]
+        if len(candidates) != 1 or candidates[0].spec.get("family") != "source_command":
             return None
-        package, spec = candidates[0]
+        declaration = candidates[0]
+        spec = declaration.spec
         return EffectiveReadingProfile(clean, "source_command", action=spec["action"],
             grammar=deepcopy(spec["grammar"]), tex_mechanics=deepcopy(spec.get("metadata", {})),
-            binding_id=f"packages/{package}")
+            binding_id=declaration.origin)
 
     def resolve_command(self, name: str, options: dict[str, Any] | None = None
                         ) -> EffectiveReadingProfile | UnresolvedBindingResult:
         """Resolve command identity. The caller consumes stars/arguments using grammar."""
         clean = name if name.startswith("\\") else f"\\{name}"
         opts = dict(options or {})
-        for origin, reading, section, spec in self._command_specs(clean):
+        for declaration in self._command_specs(clean):
+            origin, reading, section, spec = declaration.origin, declaration.reading, declaration.section, declaration.spec
             action = spec.get("action")
             if spec.get("family") == "configuration_command":
                 return EffectiveReadingProfile(clean, spec["family"], action=action,
@@ -234,17 +240,18 @@ class BindingResolver:
                     grammar=deepcopy(spec.get("grammar", {})))
             if section in {"commands", "command_overrides"} and spec.get("family") in {
                     "inline_verbatim", "external_verbatim_file"}:
-                return self._build_literal(clean, spec, reading, origin, opts, environment=False)
+                return self._build_literal(declaration, opts)
             return self._unresolved(clean, UnresolvedReason.UNSUPPORTED_OPERATION,
                                     "This operation requires the execution/argument dispatcher", opts)
-        return self._missing(clean, self._command_sections, opts)
+        return self._missing(clean, self.catalog.commands, opts)
 
     def resolve_group(self, catcode: int) -> EffectiveReadingProfile | UnresolvedBindingResult:
         """Category-driven lookup; argument delimiters must not call this as execution."""
-        for origin, reading in self._active_bindings():
-            for spec in reading.get("grouping", []):
-                if spec.get("trigger") == "token_category" and spec.get("catcode") == catcode:
-                    return self._build_group(spec["name"], spec, origin)
+        providers = self.catalog.groups.get(catcode, {})
+        for origin in self._active_origins():
+            if origin in providers:
+                spec = providers[origin].spec
+                return self._build_group(spec["name"], spec, origin)
         return self._unresolved(str(catcode), UnresolvedReason.UNKNOWN_CONSTRUCT,
                                 "No group action for this category", {})
 
@@ -257,19 +264,14 @@ class BindingResolver:
     def resolve_environment(self, name: str, options: dict[str, Any] | None = None
                             ) -> EffectiveReadingProfile | UnresolvedBindingResult:
         clean, opts = name.strip(), dict(options or {})
-        sections = ("environment_overrides", "environments")
-        for origin, reading in self._active_bindings():
-            for section in sections:
-                for spec in reading.get(section, []):
-                    if spec.get("name") == clean:
-                        if spec.get("family") == "structural_environment":
-                            return EffectiveReadingProfile(clean, "structural_environment", binding_id=origin,
-                                grammar=deepcopy(spec["grammar"]), tex_mechanics=deepcopy(spec.get("metadata", {})))
-                        return self._build_literal(clean, spec, reading, origin, opts, environment=True)
-        return self._missing(clean, sections, opts)
-
-    def _profile(self, name: str) -> dict[str, Any]:
-        return self.catalog.mouth.profile(name)
+        declaration = self._declaration(clean, self.catalog.environments)
+        if declaration is not None:
+            spec = declaration.spec
+            if spec.get("family") == "structural_environment":
+                return EffectiveReadingProfile(clean, "structural_environment", binding_id=declaration.origin,
+                    grammar=deepcopy(spec["grammar"]), tex_mechanics=deepcopy(spec.get("metadata", {})))
+            return self._build_literal(declaration, opts)
+        return self._missing(clean, self.catalog.environments, opts)
 
     def check_configuration(self, name, options, contract):
         result = self._resolve_options(name, options, contract)
@@ -277,10 +279,11 @@ class BindingResolver:
             raise ReadingIssue(result.reason.value, result.detail)
 
     def _resolve_options(self, name: str, options: dict[str, Any], contract: dict[str, Any]
-                         ) -> tuple[dict[str, Any], dict[str, int], tuple[InterpolationRule, ...]] | UnresolvedBindingResult:
+                         ) -> LiteralOptions | UnresolvedBindingResult:
         declarations = contract.get("reading_affecting_keys", {})
         passthrough = contract.get("non_reading_options", [])
-        active, overrides, interpolations = {}, {}, []
+        result = LiteralOptions()
+        active, overrides, interpolations = result.active, result.catcodes, result.interpolations
         # Binding order controls conflicting assignments, not order of user keys.
         unknown = set(options) - set(declarations) - set(passthrough)
         if unknown:
@@ -325,6 +328,8 @@ class BindingResolver:
                         interpolations.append(InterpolationRule("$", "$", "math"))
                 else:
                     raise ValueError(f"Unknown reading effect {effect!r}")
+                if active[key] and "profile_override" in rule and rule["profile_override"] not in result.profiles:
+                    result.profiles.append(rule["profile_override"])
             except ValueError as error:
                 return self._unresolved(name, UnresolvedReason.UNSUPPORTED_READING_OPTION,
                                         f"{key}: {error}", options)
@@ -332,54 +337,32 @@ class BindingResolver:
         if len(interpolations) > 1:
             return self._unresolved(name, UnresolvedReason.UNSUPPORTED_READING_OPTION,
                                     "Combined interpolation modes need precedence resolution", options)
-        return active, overrides, tuple(interpolations)
+        return result
 
-    def _build_literal(self, name: str, spec: dict[str, Any], reading: dict[str, Any],
-                       origin: str, options: dict[str, Any], *, environment: bool
+    def _build_literal(self, declaration: ReadingDeclaration, options: dict[str, Any]
                        ) -> EffectiveReadingProfile | UnresolvedBindingResult:
-        profile_name = spec["profile"]
-        defaults = self._profile(profile_name)
-        merged = overlay(defaults, {"lexical_mode": reading.get("lexical_mode", {})}, spec)
-        lex = merged.get("lexical_mode", {})
-        contract = reading.get("option_resolution", {})
-        resolved = self._resolve_options(name, options, contract)
+        template = declaration.literal
+        assert template is not None
+        resolved = self._resolve_options(template.name, options, declaration.reading.get("option_resolution", {}))
         if isinstance(resolved, UnresolvedBindingResult):
             return resolved
-        active, option_codes, interpolations = resolved
-        layers = self.catalog.mouth.layers(profile_name) + tuple(
-            layer for layer in (self.catalog.lexical_layers[origin], self.catalog.lexical_layers[f"{origin}/{name}"])
-            if layer.rules or layer.assignments)
-        classification = merged["span_classification"]
-        category = classification.get("default_category", classification["category"])
-        if interpolations:
-            profile_name = "interpolated_verbatim_block"
-            category = "interpolated_literal"
-        elif any(code == 0 for code in option_codes.values()):
-            profile_name = "semi_verbatim_block"
-            category = "semi_verbatim_block"
-        elif option_codes:
-            category = "comment_aware_literal"
-
-        terminator = None
-        if environment:
-            raw_term = merged.get("terminator", {})
-            exact = raw_term.get("exact_string", defaults.get(
-                "terminator_pattern", "\\end{{{name}}}").format(name=name))
-            terminator = TerminatorRule(**overlay(
-                {"exact_string": exact, "regex_pattern": re.escape(exact)}, raw_term))
-        grammar = deepcopy(merged.get("grammar", {}))
-        for key in ("syntax", "arity", "delimiter_mode", "invalid_delimiters",
-                    "multiline_allowed", "starred_variant", "visible_spaces",
-                    "has_optional_arguments", "options_syntax", "allow_nesting"):
-            if key in merged:
-                grammar[key] = deepcopy(merged[key])
-        return EffectiveReadingProfile(
-            name=name, family=profile_name, binding_id=origin,
-            catcode_overrides=option_codes, catcode_layers=layers,
-            reader_parameters=deepcopy(lex.get("reader_parameters", {})),
-            tex_mechanics=deepcopy(lex.get("tex_mechanics", {})),
-            source_capture=deepcopy(lex.get("source_capture", {})),
-            terminator=terminator,
-            span_classification=SpanClassification(category, classification["semantic_role"]),
-            active_options=active, grammar=grammar, interpolations=interpolations,
-            configuration=overlay(contract, reading["configuration"]) if "configuration" in reading else {})
+        family, layers = template.family, template.catcode_layers
+        classification = template.span_classification
+        category = "comment_aware_literal" if resolved.catcodes else classification.category
+        parameters = deepcopy(template.reader_parameters)
+        mechanics, capture = deepcopy(template.tex_mechanics), deepcopy(template.source_capture)
+        # Option profiles add lexical layers; they do not reset the base's demotions
+        # or replace the construct's argument grammar and terminator.
+        for family in resolved.profiles:
+            profile = self.catalog.literal_profiles[family]
+            layers += self.catalog.mouth.layers(family)
+            category = profile["span_classification"]["category"]
+            lex = profile.get("lexical_mode", {})
+            parameters = overlay(parameters, lex.get("reader_parameters", {}))
+            mechanics = overlay(mechanics, lex.get("tex_mechanics", {}))
+            capture = overlay(capture, lex.get("source_capture", {}))
+        return replace(template, family=family, catcode_layers=layers, catcode_overrides=resolved.catcodes,
+            reader_parameters=parameters, tex_mechanics=mechanics, source_capture=capture,
+            span_classification=SpanClassification(category, classification.semantic_role),
+            active_options=resolved.active, interpolations=tuple(resolved.interpolations),
+            grammar=deepcopy(template.grammar), configuration=deepcopy(template.configuration))

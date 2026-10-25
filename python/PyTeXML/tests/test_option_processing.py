@@ -13,6 +13,7 @@ from unittest.mock import patch
 PROJECT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT))
 from src.bindings.catalog import BindingCatalog
+from reader_support import reload_catalog
 from src.bindings.resolver import BindingResolver
 from src.prepare.pipeline import preprocess_paper
 from src.reading.contracts import ReadingBoundary, SourceCommand
@@ -181,7 +182,7 @@ class OptionProcessingTests(unittest.TestCase):
         process = next(c for c in commands if c.get("action") == "process_options")
         process["metadata"]["order"] = "request"
         self.read(r"\newif\ifflag\DeclareOption{on}{\flagtrue}\DeclareOption{off}{\flagfalse}\ProcessOptions",
-                  local=("off", "on"), catalog=catalog)
+                  local=("off", "on"), catalog=reload_catalog(self, catalog))
         self.assertTrue(self.truth())
         for mutation in ("order", "starred_arguments", "action"):
             reading = deepcopy(self.catalog.engine_bindings["core_latex"]["reading"])

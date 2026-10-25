@@ -13,6 +13,7 @@ from unittest.mock import patch
 PROJECT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT))
 from src.bindings.catalog import BindingCatalog
+from reader_support import reload_catalog
 from src.bindings.resolver import BindingResolver
 from src.prepare.pipeline import preprocess_paper
 from src.reading.character_rules import ProfileError
@@ -270,7 +271,7 @@ class EnvironReadingTests(unittest.TestCase):
         commands = catalog.package_bindings["environ"]["reading"]["commands"]
         commands[0]["name"] = r"\DeclareBox"
         commands[0]["metadata"]["default_body_name"] = "CONTENT"
-        self.setup_reader(r"\DeclareBox{box}{\CONTENT}", catalog=catalog)
+        self.setup_reader(r"\DeclareBox{box}{\CONTENT}", catalog=reload_catalog(self, catalog))
         self.assertEqual(self.complete()[0].body_name, "CONTENT")
         for key, value in (("default_body_name", None), ("default_final_commands", "bad"),
                            ("collector", {"handler": "unknown"})):

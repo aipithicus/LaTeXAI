@@ -80,6 +80,10 @@ PyTeXML XML schema.
 
 ## 4. Resolver contract
 
+The [reading-control audit](reading-controls.md) records the current consumers,
+composition order, descriptive invariants, and retained `deferred_phase2`
+knowledge. It also documents catalog indexing and occurrence ownership.
+
 [catalog.py](../../src/bindings/catalog.py) loads YAML and compiles reading knowledge
 once. A catalog can be supplied to multiple `BindingResolver(catalog)` instances;
 each resolver owns its document's package activation order and resolves occurrences
@@ -97,7 +101,8 @@ live in [contracts.py](../../src/reading/contracts.py).
 [Mouth profiles](../profiles/mouth/README.md) contain the authoritative
 regex character classes and baseline reading parameters. There is no legacy
 profile-file fallback. Resolution composes inherited profile layers, the owning
-binding's lexical settings, construct settings, and supported option effects, in
+binding's lexical settings, construct settings, enabled option profile layers,
+and concrete supported option effects, in
 that order. It returns data containing immutable compiled catcode layers,
 reader parameters, argument grammar, termination rules, source-capture mechanics,
 and classification. Lexical categories such as `opaque_literal` are distinct from

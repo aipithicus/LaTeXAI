@@ -12,6 +12,7 @@ import unittest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from src.bindings.catalog import BindingCatalog
+from reader_support import reload_catalog
 from src.bindings.resolver import BindingResolver
 from src.reading.character_rules import ProfileError
 from src.reading.contracts import LiteralRegion, ReadingBoundary, ConditionalRegion
@@ -176,13 +177,13 @@ class LiteralConfigurationTests(unittest.TestCase):
         for command in catalog.package_bindings['listings']['reading']['commands']:
             if command['name'] == r'\lstset':
                 command['name'] = r'\ConfigureCode'
-        regions = self.complete(r'\ConfigureCode{escapechar=|}' + listing('|ok|'), catalog=catalog)
+        regions = self.complete(r'\ConfigureCode{escapechar=|}' + listing('|ok|'), catalog=reload_catalog(self, catalog))
         self.assertEqual(len(regions[0].interpolations), 1)
 
     def test_definition_scope_is_selected_by_yaml(self):
         catalog = deepcopy(self.catalog)
         catalog.package_bindings['listings']['reading']['configuration']['definition_scope'] = 'local'
-        self.complete(r'{\lstdefinestyle{local}{escapechar=|}}', catalog=catalog)
+        self.complete(r'{\lstdefinestyle{local}{escapechar=|}}', catalog=reload_catalog(self, catalog))
         self.assertFalse(self.context.configurations.styles)
 
     def test_bare_boolean_and_explicit_false_are_captured(self):

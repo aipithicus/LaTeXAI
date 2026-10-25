@@ -4,17 +4,33 @@ The resolver treats catalog data as read-only. Activation and lexical state belo
 exclusively to document-local resolvers and reading contexts.
 """
 from __future__ import annotations
+from copy import deepcopy
+from dataclasses import dataclass
 from pathlib import Path
 import re
 from typing import Any
-from ..yaml_io import load_mapping, validate_resource_identity
+from ..yaml_io import load_mapping, overlay, validate_resource_identity
 from ..reading.character_rules import CatcodeLayer, ProfileError, compile_layer
+from ..reading.contracts import EffectiveReadingProfile, SpanClassification, TerminatorRule
 from ..reading.mouth_profiles import MouthProfiles
 
 RESOURCE_DIR = Path(__file__).resolve().parents[2] / "resources"
 BINDINGS_DIR = RESOURCE_DIR / "bindings"
 PROFILES_DIR = RESOURCE_DIR / "profiles"
 HANDLERS_PATH = RESOURCE_DIR / "registries" / "reading_handlers.yaml"
+COMMAND_SECTIONS = ("catcode_mutators", "grouping", "command_overrides", "commands",
+                    "factories", "inclusions", "conditionals")
+ENVIRONMENT_SECTIONS = ("environment_overrides", "environments")
+
+
+@dataclass(frozen=True, slots=True)
+class ReadingDeclaration:
+    """Catalog-owned snapshot; nested mappings are never lent to a document."""
+    origin: str
+    section: str
+    reading: dict[str, Any]
+    spec: dict[str, Any]
+    literal: EffectiveReadingProfile | None = None
 
 
 class BindingCatalog:
@@ -29,6 +45,10 @@ class BindingCatalog:
         self.engine_bindings: dict[str, dict[str, Any]] = {}
         self.package_bindings: dict[str, dict[str, Any]] = {}
         self.lexical_layers: dict[str, CatcodeLayer] = {}
+        self.commands: dict[str, dict[str, tuple[ReadingDeclaration, ...]]] = {}
+        self.environments: dict[str, dict[str, tuple[ReadingDeclaration, ...]]] = {}
+        self.groups: dict[int, dict[str, ReadingDeclaration]] = {}
+        self.literal_profiles: dict[str, dict[str, Any]] = {}
         self._load_all()
 
     @staticmethod
@@ -60,7 +80,7 @@ class BindingCatalog:
         binding_ids = engine_ids | {f"packages/{name}" for name in self.package_bindings}
         for tier, bindings in (("engine", self.engine_bindings), ("packages", self.package_bindings)):
             for name, data in bindings.items():
-                origin, reading = f"{tier}/{name}", data["reading"]
+                origin, reading = f"{tier}/{name}", deepcopy(data["reading"])
                 requires = data["identity"].get("requires_engine")
                 if requires is not None and (not isinstance(requires, str) or requires not in engine_ids):
                     raise ProfileError(f"{origin}: unknown required engine identity {requires!r}")
@@ -69,12 +89,64 @@ class BindingCatalog:
                     if (factory.get("family") == "environment_factory"
                             and factory["metadata"]["base_binding"] not in binding_ids):
                         raise ProfileError(f"{origin}: unknown factory base binding")
-                for section in ("environments", "environment_overrides", "commands", "command_overrides"):
-                    for spec in reading.get(section, []):
-                        if "profile" in spec:
-                            self.mouth.profile(spec["profile"])
-                            key = f"{origin}/{spec['name']}"
-                            self.lexical_layers[key] = compile_layer(spec.get("lexical_mode", {}), key)
+                for sections, index in ((COMMAND_SECTIONS, self.commands),
+                                        (ENVIRONMENT_SECTIONS, self.environments)):
+                    for section in sections:
+                        for spec in reading.get(section, []):
+                            literal = None
+                            if (section in ENVIRONMENT_SECTIONS and spec.get("family") != "structural_environment"
+                                    or spec.get("family") in {"inline_verbatim", "external_verbatim_file"}):
+                                literal = self._compile_literal(origin, section, reading, spec)
+                            declaration = ReadingDeclaration(origin, section, reading, spec, literal)
+                            key = spec.get("name", spec.get("command"))
+                            providers = index.setdefault(key, {})
+                            providers[origin] = (*providers.get(origin, ()), declaration)
+                            if section == "grouping" and spec.get("trigger") == "token_category":
+                                self.groups.setdefault(spec["catcode"], {}).setdefault(origin, declaration)
+
+    def _literal_profile(self, name: str, path: Path | str) -> dict[str, Any]:
+        if not isinstance(name, str) or not name:
+            raise ProfileError(f"{path}: literal profile must be a name")
+        if name not in self.literal_profiles:
+            profile = self.mouth.profile(name)
+            if "span_classification" not in profile:
+                raise ProfileError(f"{path}: {name!r} is not a literal profile")
+            self.literal_profiles[name] = profile
+        return self.literal_profiles[name]
+
+    def _compile_literal(self, origin, section, reading, spec) -> EffectiveReadingProfile:
+        name = spec["name"]
+        contract = reading.get("option_resolution", {})
+        profile_name = spec.get("profile", contract.get("default_profile"))
+        defaults = self._literal_profile(profile_name, origin)
+        merged = overlay(defaults, {"lexical_mode": reading.get("lexical_mode", {})}, spec)
+        lex = merged.get("lexical_mode", {})
+        layer = compile_layer(spec.get("lexical_mode", {}), f"{origin}/{section}/{name}")
+        layers = self.mouth.layers(profile_name) + tuple(
+            item for item in (self.lexical_layers[origin], layer) if item.rules or item.assignments)
+        classification = merged["span_classification"]
+        terminator = None
+        if section in ENVIRONMENT_SECTIONS:
+            raw_term = merged.get("terminator", {})
+            exact = raw_term.get("exact_string", defaults.get(
+                "terminator_pattern", "\\end{{{name}}}").format(name=name))
+            terminator = TerminatorRule(**overlay(
+                {"exact_string": exact, "regex_pattern": re.escape(exact)}, raw_term))
+        grammar = deepcopy(merged.get("grammar", {}))
+        for key in ("syntax", "arity", "delimiter_mode", "invalid_delimiters",
+                    "multiline_allowed", "starred_variant", "visible_spaces",
+                    "has_optional_arguments", "options_syntax", "allow_nesting"):
+            if key in merged:
+                grammar[key] = deepcopy(merged[key])
+        return EffectiveReadingProfile(
+            name, profile_name, binding_id=origin, catcode_layers=layers,
+            reader_parameters=deepcopy(lex.get("reader_parameters", {})),
+            tex_mechanics=deepcopy(lex.get("tex_mechanics", {})),
+            source_capture=deepcopy(lex.get("source_capture", {})), terminator=terminator,
+            span_classification=SpanClassification(
+                classification.get("default_category", classification["category"]), classification["semantic_role"]),
+            grammar=grammar,
+            configuration=overlay(contract, reading["configuration"]) if "configuration" in reading else {})
 
     def _load_handlers(self) -> dict[str, dict[str, str]]:
         data = self._load_yaml(self.handlers_path)
@@ -95,6 +167,8 @@ class BindingCatalog:
         return handlers
 
     def _validate_reading(self, reading: dict[str, Any], path: Path) -> None:
+        if "option_resolution" in reading:
+            self._validate_literal_options(reading["option_resolution"], path)
         if "configuration" in reading:
             self._validate_configuration(reading, path)
         if "package_input_catcodes" in reading:
@@ -267,6 +341,36 @@ class BindingCatalog:
                     if not isinstance(profile, str):
                         raise ProfileError(f"{path}: {name} profile must be a name")
                     self.mouth.profile(profile)
+
+    def _validate_literal_options(self, contract, path):
+        fields = {"default_profile", "reading_affecting_keys", "non_reading_options", "unsupported_options_behavior"}
+        if not isinstance(contract, dict) or set(contract) - fields:
+            raise ProfileError(f"{path}: unknown option_resolution fields")
+        if "default_profile" in contract:
+            self._literal_profile(contract["default_profile"], path)
+        # This is a declared invariant, not a selectable ignore/fallback policy.
+        if contract.get("unsupported_options_behavior", "report_unresolved") != "report_unresolved":
+            raise ProfileError(f"{path}: unsupported options must report_unresolved")
+        rules, passthrough = contract.get("reading_affecting_keys", {}), contract.get("non_reading_options", [])
+        if (not isinstance(rules, dict) or any(not isinstance(k, str) or not k for k in rules)
+                or not isinstance(passthrough, list)
+                or any(not isinstance(k, str) or not k for k in passthrough)
+                or len(set(passthrough)) != len(passthrough) or set(rules) & set(passthrough)):
+            raise ProfileError(f"{path}: reading and non-reading options must be distinct names")
+        effects = {"assign_command_and_group_delimiters", "enable_verbatim_comment",
+                   "define_interpolation_delimiters", "define_single_escape_char", "toggle_math_mode_on_dollar"}
+        for key, rule in rules.items():
+            if (not isinstance(rule, dict) or set(rule) - {"effect", "syntax", "profile_override", "unsupported_action"}
+                    or not isinstance(rule.get("effect"), str)
+                    or "syntax" in rule and not isinstance(rule["syntax"], str)):
+                raise ProfileError(f"{path}: invalid literal option rule {key!r}")
+            deferred = rule.get("unsupported_action") == "report_unresolved"
+            if ("unsupported_action" in rule and not deferred
+                    or rule["effect"] not in effects | {"dynamic_catcode_mutations"}
+                    or rule["effect"] == "dynamic_catcode_mutations" and not deferred):
+                raise ProfileError(f"{path}: unsupported literal option effect {key!r}")
+            if "profile_override" in rule:
+                self._literal_profile(rule["profile_override"], path)
 
     @staticmethod
     def _validate_configuration(reading, path):

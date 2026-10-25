@@ -9,6 +9,7 @@ from unittest.mock import patch
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 from src.bindings.catalog import BindingCatalog
+from reader_support import reload_catalog
 from src.bindings.resolver import BindingResolver
 from src.reading.context import ExecutionMode
 from src.reading.contracts import LiteralRegion, ReadingBoundary, ReadingIssue, SkippedRegion, StoredDefinition
@@ -24,7 +25,7 @@ class ConditionalTests(unittest.TestCase):
         cls.catalog = BindingCatalog()
 
     def setup_reader(self, source, *, catalog=None, packages=(), catcodes=None):
-        self.resolver = BindingResolver(catalog or self.catalog)
+        self.resolver = BindingResolver(reload_catalog(self, catalog) if catalog is not None else self.catalog)
         for name in packages:
             self.assertTrue(self.resolver.load_package(name))
         self.context = self.resolver.new_context()

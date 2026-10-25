@@ -47,7 +47,6 @@ reading:
     - name: Verbatim
       family: block_verbatim
       grammar: {handler: physical_line_literal, arity: 0}
-      profile: raw_block
       has_optional_arguments: true
       options_syntax: "key_val"         # \begin{Verbatim}[numbers=left,commandchars=\\\{\}]
       terminator:
@@ -63,7 +62,6 @@ reading:
     - name: BVerbatim
       family: block_verbatim
       grammar: {handler: physical_line_literal, arity: 0}
-      profile: raw_block
       has_optional_arguments: true
       options_syntax: "key_val"         # Boxed verbatim (aligned horizontally)
       terminator:
@@ -79,7 +77,6 @@ reading:
     - name: LVerbatim
       family: block_verbatim
       grammar: {handler: physical_line_literal, arity: 0}
-      profile: raw_block
       has_optional_arguments: true
       options_syntax: "key_val"         # Line-mode verbatim
       terminator:

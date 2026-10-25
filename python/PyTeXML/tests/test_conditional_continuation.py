@@ -13,6 +13,7 @@ from PIL import Image
 PROJECT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT))
 from src.bindings.catalog import BindingCatalog
+from reader_support import reload_catalog
 from src.bindings.resolver import BindingResolver
 from src.prepare.pipeline import preprocess_paper
 from src.reading.contracts import (ConditionalRegion, DeferredRegion, ReadingBoundary,
@@ -97,7 +98,7 @@ class ConditionalCaptureTests(unittest.TestCase):
         rules = catalog.engine_bindings["core_latex"]["reading"]["conditionals"]
         rule = next(r for r in rules if r["name"] == r"\ifx")
         rule["name"] = r"\compare"
-        items = self.scan(r"\compare\a\b A\fi\input{tail}", catalog=catalog)
+        items = self.scan(r"\compare\a\b A\fi\input{tail}", catalog=reload_catalog(self, catalog))
         self.assertTrue(any(isinstance(i, ConditionalRegion) for i in items))
 
     def test_unsupported_operand_grammar_is_explicit(self):

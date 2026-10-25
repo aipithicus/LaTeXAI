@@ -44,6 +44,7 @@ reading:
       mathescape:
         effect: "toggle_math_mode_on_dollar"
         syntax: "boolean"                     # mathescape=true
+        profile_override: "interpolated_verbatim_block"
     unsupported_options_behavior: "report_unresolved"
     # These affect presentation; values remain stored tokens, never executed.
     # Language selection here does not claim language-driver interpretation.
@@ -76,7 +77,6 @@ reading:
     - name: lstlisting
       family: block_verbatim
       grammar: {handler: physical_line_literal, arity: 0}
-      profile: raw_block
       has_optional_arguments: true
       options_syntax: "key_val"               # \begin{lstlisting}[language=Python,escapeinside={(*@}{@*)}]
       terminator:
