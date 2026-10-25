@@ -122,42 +122,19 @@ def load_policy(policy_identifier_or_path: Union[str, Path]) -> ExtractionPolicy
     target = ident.get("target", "unknown")
     desc = ident.get("description", "")
 
-    # 1. Role Actions
-    role_actions: Dict[str, str] = dict(raw.get("role_actions", {}))
-
-    # 2. Lexical Events
-    lex_cfg = raw.get("lexical_events", {})
-    lexical_events = LexicalEventsPolicy(
-        comment_line=lex_cfg.get("comment_line", "eliminate"),
-        comment_inline=lex_cfg.get("comment_inline", "strip_payload"),
-        line_continuation=lex_cfg.get("line_continuation", "preserve"),
-        magic_directive=lex_cfg.get("magic_directive", "extract_metadata"),
-    )
-
-    # 3. Structural Normalization
-    norm_cfg = raw.get("structural_normalization", {})
-    normalization = StructuralNormalizationPolicy(
-        paragraph_breaks=norm_cfg.get("paragraph_breaks", "preserve"),
-        trailing_whitespace=norm_cfg.get("trailing_whitespace", "strip"),
-    )
-
-    # 4. Provenance
-    prov_cfg = raw.get("provenance", {})
-    provenance = ProvenancePolicy(
-        emit_ledger=prov_cfg.get("emit_ledger", True),
-        rle_compression=prov_cfg.get("rle_compression", True),
-    )
+    lint_cfg = dict(raw.get("linting", {}))
+    if "repairs" in lint_cfg:
+        lint_cfg["repairs"] = tuple(lint_cfg["repairs"])
 
     return ExtractionPolicy(
         name=name,
         target=target,
         description=desc,
-        role_actions=role_actions,
-        lexical_events=lexical_events,
-        normalization=normalization,
-        provenance=provenance,
-        linting=LintPolicy(raw.get("linting", {}).get("mode", "report"),
-                          tuple(raw.get("linting", {}).get("repairs", ()))),
+        role_actions=dict(raw.get("role_actions", {})),
+        lexical_events=LexicalEventsPolicy(**raw.get("lexical_events", {})),
+        normalization=StructuralNormalizationPolicy(**raw.get("structural_normalization", {})),
+        provenance=ProvenancePolicy(**raw.get("provenance", {})),
+        linting=LintPolicy(**lint_cfg),
         raw_config=raw,
         source=str(path),
     )

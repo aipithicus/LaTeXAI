@@ -15,10 +15,10 @@ class DeferredScanner:
         with self.context.argument_scanning():
             while True:
                 checkpoint = self.reader.checkpoint()
-                token = scanner._nonspace()
+                token = scanner.next_nonspace()
                 self.reader.restore(checkpoint)
                 if token is not None and token.kind == TokenKind.CHARACTER and token.value == "*" and len(tokens) == 1:
-                    tokens.append(scanner._nonspace())
+                    tokens.append(scanner.next_nonspace())
                     continue
                 optional = token is not None and token.kind == TokenKind.CHARACTER and token.value == "["
                 if token is None or (token.catcode != CatCode.BEGIN_GROUP and not optional):

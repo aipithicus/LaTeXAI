@@ -67,6 +67,29 @@ class PolicyLoaderTests(unittest.TestCase):
                     with self.assertRaisesRegex(ValueError, error):
                         load_policy(path)
 
+    def test_partial_sections_override_defaults_without_mutating_raw_config(self):
+        scratch = PROJECT_ROOT / "temp/tests"
+        scratch.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=scratch) as directory:
+            path = Path(directory) / "partial.yaml"
+            path.write_text("identity: {name: partial}\n"
+                            "lexical_events: {comment_inline: preserve}\n"
+                            "structural_normalization: {paragraph_breaks: coalesce}\n"
+                            "provenance: {emit_ledger: false}\n"
+                            "linting: {repairs: [drop_invalid_character]}\n", encoding="utf-8")
+            policy = load_policy(path)
+        self.assertEqual(policy.lexical_events.comment_inline, "preserve")
+        self.assertEqual(policy.lexical_events.comment_line, "eliminate")
+        self.assertEqual(policy.lexical_events.line_continuation, "preserve")
+        self.assertEqual(policy.lexical_events.magic_directive, "extract_metadata")
+        self.assertEqual(policy.normalization.paragraph_breaks, "coalesce")
+        self.assertEqual(policy.normalization.trailing_whitespace, "strip")
+        self.assertFalse(policy.provenance.emit_ledger)
+        self.assertTrue(policy.provenance.rle_compression)
+        self.assertEqual(policy.linting.mode, "report")
+        self.assertEqual(policy.linting.repairs, ("drop_invalid_character",))
+        self.assertEqual(policy.raw_config["linting"], {"repairs": ["drop_invalid_character"]})
+
     def test_all_preset_policies_exist_and_load(self):
         presets = ["prepare"]
         for preset in presets:

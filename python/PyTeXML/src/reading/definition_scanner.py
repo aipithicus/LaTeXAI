@@ -90,7 +90,7 @@ class DefinitionScanner:
                 parameters.append(following)
                 count += 1
 
-        body, closing = self._body(count)
+        body, closing = self.read_body(count)
         span = self.reader.source_span
         return StoredDefinition(
             span(start, closing.span.end), span(start, opening.span.end),
@@ -98,7 +98,13 @@ class DefinitionScanner:
             span(opening.span.end, closing.span.start), closing.span, target,
             tuple(parameters), body, count, hash_brace, binding_id)
 
-    def _body(self, count: int):
+    def read_body(self, count: int) -> tuple[tuple[Token, ...], Token]:
+        """Capture replacement tokens after the opening group was consumed.
+
+        Validate parameter markers against count, consume the matching closing
+        token, and return it separately. The caller owns capture mode and any
+        eventual definition installation; this method executes no body effects.
+        """
         body: list[Token] = []
         depth = 1
         while True:
@@ -123,11 +129,11 @@ class DefinitionScanner:
 
     def _command(self, start: int, profile: EffectiveReadingProfile) -> CommandDefinition:
         args = ArgumentScanner(self.reader, self.context)
-        first = args._nonspace()
+        first = args.next_nonspace()
         starred = (first is not None and first.kind == TokenKind.CHARACTER
                    and first.catcode == CatCode.OTHER and first.value == "*")
         if starred:
-            first = args._nonspace()
+            first = args.next_nonspace()
         self._require(first is not None, "unclosed_definition", "Missing command target")
         if first.catcode == CatCode.BEGIN_GROUP:
             tokens = []
@@ -148,10 +154,10 @@ class DefinitionScanner:
                       "invalid_definition_target", "Command target is reserved by this declaration recipe")
         target_end = self.reader.position
         count_argument, count, default = self.signature()
-        opening = args._nonspace()
+        opening = args.next_nonspace()
         self._require(opening is not None and opening.catcode == CatCode.BEGIN_GROUP,
                       "argument_required", "Command replacement text must be braced")
-        body, closing = self._body(count)
+        body, closing = self.read_body(count)
         span = self.reader.source_span
         return CommandDefinition(
             span(start, closing.span.end), span(start, opening.span.end),

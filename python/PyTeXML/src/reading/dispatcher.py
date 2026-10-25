@@ -103,6 +103,7 @@ class StructuralDispatcher:
         self._conditionals: list[_ConditionalFrame] = []
         self._skip_start: int | None = None
         self._pending_skip: SkippedScan | None = None
+        self._lexical_failure: tuple[ReadingBoundary, InvalidCharacterError] | None = None
         self.halted = False
         self._finished = False
         self.source_commands = source_commands
@@ -202,7 +203,7 @@ class StructuralDispatcher:
 
     def next_item(self) -> ReadEvent | LiteralRegion | StoredDefinition | EnvironmentDefinition | SkippedRegion | ReadingBoundary | SourceCommand | SourceEnd | DeferredRegion | None:
         item = self._next_item()
-        return self._identify(item) if item is not None and not isinstance(item, ReadEvent) else item
+        return self.identify(item) if item is not None and not isinstance(item, ReadEvent) else item
 
     def lexical_failure(self, boundary):
         """Expose only a failure at the ordinary token-fetch boundary.
@@ -210,7 +211,7 @@ class StructuralDispatcher:
         A scanner may have consumed a partial header/body before failing. Those
         failures cannot resume through this handoff.
         """
-        saved = getattr(self, "_lexical_failure", None)
+        saved = self._lexical_failure
         return saved[1] if self.halted and saved and saved[0] == boundary else None
 
     def discard_invalid_character(self, boundary):
@@ -234,7 +235,12 @@ class StructuralDispatcher:
     def branch_in_progress(self):
         return bool(self._pending or self._branch_replays)
 
-    def _identify(self, item, parent_id=None):
+    def identify(self, item, parent_id: str | None = None):
+        """Register a captured item and nested units without reading or execution.
+
+        Parent links denote observation containment. Existing identities are
+        validated against the shared registry and returned unchanged.
+        """
         if item.unit_id is not None:
             self.units.require(item.unit_id, item.span)
             return item
@@ -260,9 +266,9 @@ class StructuralDispatcher:
         if isinstance(item, DeferredRegion):
             # A captured command is another view of the same observed unit.
             item = replace(item, command=replace(item.command, unit_id=identifier) if item.command else None,
-                           observations=tuple(self._identify(o, identifier) for o in item.observations))
+                           observations=tuple(self.identify(o, identifier) for o in item.observations))
         if isinstance(item, LiteralRegion):
-            item = replace(item, interpolations=tuple(self._identify(o, identifier) for o in item.interpolations))
+            item = replace(item, interpolations=tuple(self.identify(o, identifier) for o in item.interpolations))
         return item
 
     def _next_item(self):
@@ -398,8 +404,7 @@ class StructuralDispatcher:
                 if resolved.reason == UnresolvedReason.UNKNOWN_CONSTRUCT:
                     return self._deferred(deferred.command(token, resolved.reason.value, resolved.detail))
                 if resolved.reason == UnresolvedReason.PACKAGE_NOT_LOADED:
-                    inspect = getattr(self.knowledge, "source_command_syntax", None)
-                    syntax = inspect(token.value) if inspect else None
+                    syntax = self.knowledge.source_command_syntax(token.value)
                     if syntax is not None:
                         command = ArgumentScanner(reader, context).read(event.span, syntax)
                         return self._deferred(DeferredRegion(command.span, resolved.reason.value, resolved.detail,
@@ -420,7 +425,7 @@ class StructuralDispatcher:
                              or isinstance(self.knowledge.resolve_command("end" + definition.name), EffectiveReadingProfile))
                 self._require(not (known or end_known) or definition.target_requirement != "absent",
                               "definition_conflict", f"{definition.name!r} already has an established meaning")
-                definition = self._identify(replace(definition, target_check="known_present" if known else "unverified"))
+                definition = self.identify(replace(definition, target_check="known_present" if known else "unverified"))
                 context.record_collected_environment(definition)
                 return definition
             if profile.family == "option_control":
@@ -525,7 +530,7 @@ class StructuralDispatcher:
                     # Registration records a source declaration, not validation of
                     # its precondition or execution of its replacement text.
                     definition = replace(definition, target_check="known_present" if known else "unverified")
-                definition = self._identify(definition)
+                definition = self.identify(definition)
                 context.record_definition(definition)
                 return definition
             if profile.action is not None:
@@ -733,8 +738,7 @@ class StructuralDispatcher:
         profile = self.knowledge.resolve_command(token.value)
         if isinstance(profile, UnresolvedBindingResult):
             if profile.reason == UnresolvedReason.PACKAGE_NOT_LOADED:
-                inspect = getattr(self.knowledge, "source_command_syntax", None)
-                syntax = inspect(token.value) if inspect else None
+                syntax = self.knowledge.source_command_syntax(token.value)
                 if syntax is not None:
                     command = ArgumentScanner(self.reader, self.context).read(token.span, syntax)
                     return DeferredRegion(command.span, profile.reason.value, profile.detail,
@@ -796,7 +800,7 @@ class StructuralDispatcher:
 
     def _branch_test(self, command):
         """Route a YAML-described braced branch over its already captured tokens."""
-        command = self._identify(command)
+        command = self.identify(command)
         try:
             name = command.value("name")
             self._require(bool(name), "computed_argument", "A load query needs a nonempty literal name")

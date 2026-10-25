@@ -12,7 +12,21 @@ from src.bindings.catalog import BindingCatalog, HANDLERS_PATH
 from src.prepare.policy import load_policy
 from src.reading.character_rules import ProfileError
 from src.reading.mouth_profiles import MouthProfiles
-from src.yaml_io import load_mapping, validate_resource_identity
+from src.yaml_io import load_mapping, overlay, validate_resource_identity
+
+
+class ResourceCompositionTests(unittest.TestCase):
+    def test_overlays_replace_leaves_without_sharing_mutable_inputs(self):
+        defaults = {"grammar": {"arity": 1, "delimiters": ["{"]}, "mode": "raw"}
+        specific = {"grammar": {"delimiters": ["["]}, "mode": {"enabled": True}}
+        resolved = overlay(defaults, specific)
+        self.assertEqual(resolved, {"grammar": {"arity": 1, "delimiters": ["["]},
+                                    "mode": {"enabled": True}})
+        resolved["grammar"]["delimiters"].append("]")
+        resolved["mode"]["enabled"] = False
+        self.assertEqual(defaults["grammar"]["delimiters"], ["{"])
+        self.assertEqual(specific, {"grammar": {"delimiters": ["["]}, "mode": {"enabled": True}})
+        self.assertEqual(overlay(specific, {"mode": "raw"})["mode"], "raw")
 
 
 class ResourceLoadingTests(unittest.TestCase):

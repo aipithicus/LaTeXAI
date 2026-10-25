@@ -8,23 +8,12 @@ from copy import deepcopy
 import re
 from typing import Any, Iterator
 from .catalog import BindingCatalog
+from ..yaml_io import overlay
 from ..reading.context import ReaderContext
 from ..reading.contracts import (
     ConditionalRule, EffectiveReadingProfile, InterpolationRule, SpanClassification,
     StateManagementRule, TerminatorRule, UnresolvedBindingResult, UnresolvedReason, ReadingIssue,
 )
-
-
-def _merge(*layers: dict[str, Any]) -> dict[str, Any]:
-    """Recursive map overlay; results never alias loaded YAML or caller options."""
-    result: dict[str, Any] = {}
-    for layer in layers:
-        for key, value in layer.items():
-            if isinstance(value, dict) and isinstance(result.get(key), dict):
-                result[key] = _merge(result[key], value)
-            else:
-                result[key] = deepcopy(value)
-    return result
 
 
 def _characters(value: Any, count: int) -> tuple[str, ...] | None:
@@ -192,7 +181,7 @@ class BindingResolver:
             if spec.get("family") == "configuration_command":
                 return EffectiveReadingProfile(clean, spec["family"], action=action,
                     grammar=deepcopy(spec["grammar"]), tex_mechanics=deepcopy(spec["metadata"]), binding_id=origin,
-                    configuration=_merge(reading["option_resolution"], reading["configuration"]))
+                    configuration=overlay(reading["option_resolution"], reading["configuration"]))
             if spec.get("family") in {"source_command", "environment_factory", "option_control"}:
                 return EffectiveReadingProfile(clean, spec["family"], action=spec["action"],
                     grammar=deepcopy(spec["grammar"]), tex_mechanics=deepcopy(spec.get("metadata", {})), binding_id=origin)
@@ -350,7 +339,7 @@ class BindingResolver:
                        ) -> EffectiveReadingProfile | UnresolvedBindingResult:
         profile_name = spec["profile"]
         defaults = self._profile(profile_name)
-        merged = _merge(defaults, {"lexical_mode": reading.get("lexical_mode", {})}, spec)
+        merged = overlay(defaults, {"lexical_mode": reading.get("lexical_mode", {})}, spec)
         lex = merged.get("lexical_mode", {})
         contract = reading.get("option_resolution", {})
         resolved = self._resolve_options(name, options, contract)
@@ -376,7 +365,7 @@ class BindingResolver:
             raw_term = merged.get("terminator", {})
             exact = raw_term.get("exact_string", defaults.get(
                 "terminator_pattern", "\\end{{{name}}}").format(name=name))
-            terminator = TerminatorRule(**_merge(
+            terminator = TerminatorRule(**overlay(
                 {"exact_string": exact, "regex_pattern": re.escape(exact)}, raw_term))
         grammar = deepcopy(merged.get("grammar", {}))
         for key in ("syntax", "arity", "delimiter_mode", "invalid_delimiters",
@@ -393,4 +382,4 @@ class BindingResolver:
             terminator=terminator,
             span_classification=SpanClassification(category, classification["semantic_role"]),
             active_options=active, grammar=grammar, interpolations=interpolations,
-            configuration=_merge(contract, reading["configuration"]) if "configuration" in reading else {})
+            configuration=overlay(contract, reading["configuration"]) if "configuration" in reading else {})

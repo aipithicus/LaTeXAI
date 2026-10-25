@@ -2,7 +2,7 @@
 from __future__ import annotations
 from dataclasses import replace
 from .contracts import ReadingIssue, ScannedArgument, SourceCommand
-from .tex_reader import CatCode, TokenKind
+from .tex_reader import CatCode, Token, TokenKind
 
 
 class ArgumentScanner:
@@ -15,7 +15,12 @@ class ArgumentScanner:
         self.reader.restore(checkpoint)
         return token
 
-    def _nonspace(self):
+    def next_nonspace(self) -> Token | None:
+        """Consume SPACE-category tokens and return the next token, or EOF.
+
+        Paragraph tokens and active characters remain significant. This uses
+        the current cursor without expanding tokens or changing execution scope.
+        """
         token = self.reader.next_token()
         while token is not None and token.catcode == CatCode.SPACE:
             token = self.reader.next_token()
@@ -23,7 +28,7 @@ class ArgumentScanner:
 
     def group(self, name: str, *, optional=False) -> ScannedArgument | None:
         checkpoint = self.reader.checkpoint()
-        opening = self._nonspace()
+        opening = self.next_nonspace()
         if optional:
             is_open = opening is not None and opening.kind == TokenKind.CHARACTER and opening.value == "[" and opening.catcode == CatCode.OTHER
         else:
@@ -51,7 +56,7 @@ class ArgumentScanner:
 
     def filename(self, name: str) -> ScannedArgument:
         checkpoint = self.reader.checkpoint()
-        first = self._nonspace()
+        first = self.next_nonspace()
         if first is None:
             raise ReadingIssue("argument_required", "Missing input filename")
         if first.catcode == CatCode.BEGIN_GROUP:
@@ -73,7 +78,7 @@ class ArgumentScanner:
 
     def control_sequence(self, name: str) -> ScannedArgument:
         checkpoint = self.reader.checkpoint()
-        first = self._nonspace()
+        first = self.next_nonspace()
         if first is not None and first.catcode == CatCode.BEGIN_GROUP:
             self.reader.restore(checkpoint)
             argument = self.group(name)

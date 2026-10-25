@@ -64,6 +64,12 @@ class _Input:
     emission_start: int = 0
 
 
+@dataclass(slots=True)
+class _ImplicitGraphic:
+    opening: SourceCommand
+    has_image: bool = False
+
+
 class PreparationSession:
     def __init__(self, project_dir: Path, *, root_tex=None, excluded_dirs=(), engine="pytexml", catalog=None, policy="prepare"):
         self.policy = load_policy(policy)
@@ -86,7 +92,7 @@ class PreparationSession:
         self.candidate_images: set[Path] = set()
         self.asset_uses = {}
         self.candidate_sources: set[Path] = set()
-        self._implicit = []
+        self._implicit: list[_ImplicitGraphic] = []
         self.code: set[Path] = set()
         self.payload_edits: dict[Path, dict[tuple[int, int], str]] = {}
         self.commands: list[SourceCommand] = []
@@ -586,7 +592,7 @@ class PreparationSession:
             register_asset(self, command, path)
             self.images.add(path)
             for candidate in self._implicit:
-                candidate[1] = True
+                candidate.has_image = True
             self.edge(command, path, "asset")
             self._emit(command.span, command=command, target=self.name(path))
             return
@@ -608,10 +614,11 @@ class PreparationSession:
         elif action == "asset_extensions":
             self.graphic_extensions[self.context.scope_depth] = [s.strip() for s in command.value("extensions").split(",")]
         elif action == "environment_begin" and command.metadata.get("implicit"):
-            self._implicit.append([command, False])
+            self._implicit.append(_ImplicitGraphic(command))
         elif action == "environment_end" and command.metadata.get("implicit"):
-            opening, has_image = self._implicit.pop()
-            if not has_image:
+            candidate = self._implicit.pop()
+            if not candidate.has_image:
+                opening = candidate.opening
                 self.manifest.implicit_graphics.append(ImplicitGraphicInfo(opening.metadata["implicit"],
                     opening.metadata["category"], opening.span.basis.source_id, self.line(opening.span),
                     opening.metadata.get("floating", False), False, self.raw(opening.span), opening.name))

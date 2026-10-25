@@ -41,10 +41,10 @@ class EnvironmentScanner:
                           and not any(name.startswith(p) for p in profile.grammar["forbidden_prefixes"]),
                           "environment_name", "Environment name is reserved by this declaration recipe")
             count_argument, count, default = definitions.signature()
-            opening = args._nonspace()
+            opening = args.next_nonspace()
             self._require(opening is not None and opening.catcode == CatCode.BEGIN_GROUP,
                           "argument_required", "Environment processing code must be braced")
-            body, closing = definitions._body(count)
+            body, closing = definitions.read_body(count)
             final = args.group("final_code", optional=True)
             # Final code defines a parameterless end command. Do not compile ##.
             if final is not None:

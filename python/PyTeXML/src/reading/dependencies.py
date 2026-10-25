@@ -7,7 +7,7 @@ The explicit stack shares source buffers and avoids recursive macro evaluation.
 from dataclasses import replace
 
 from .argument_scanner import ArgumentScanner
-from .contracts import EffectiveReadingProfile, ReadingIssue, ScannedArgument, StoredDefinition
+from .contracts import EffectiveReadingProfile, ReadingIssue, ReadingKnowledge, ScannedArgument, StoredDefinition
 from .definition_scanner import DefinitionScanner
 from .token_cursor import TokenCursor
 from .tex_reader import TokenKind
@@ -22,7 +22,7 @@ def argument_activity(role):
     return "data" if role in {"data", "diagnostic"} else "stored" if role == "stored" else "unresolved"
 
 
-def observe_dependencies(argument, text, context, knowledge, units, owner_id, *, excluded=()):
+def observe_dependencies(argument, text, context, knowledge: ReadingKnowledge, units, owner_id, *, excluded=()):
     """Yield (token, unit id, action, role, captured header) without execution."""
     excluded = set(excluded)
     pending = [(argument, owner_id, set())]
@@ -41,8 +41,7 @@ def observe_dependencies(argument, text, context, knowledge, units, owner_id, *,
             if token.value in shadowed or context.lookup_meaning(token.value, token.kind) is not None:
                 continue
             if not isinstance(profile, EffectiveReadingProfile):
-                syntax = getattr(knowledge, "source_command_syntax", lambda _: None)(token.value)
-                profile = syntax
+                profile = knowledge.source_command_syntax(token.value)
             if profile is None:
                 continue
             if profile.grammar.get("handler") in {"inline_character", "token_delimited", "physical_line_literal"}:

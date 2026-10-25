@@ -1,8 +1,25 @@
-"""Strict YAML loading and resource identities; domain schemas stay with their owners."""
+"""Resource loading, identities and composition; domain schemas stay with their owners."""
 from __future__ import annotations
+from copy import deepcopy
 from pathlib import Path
 from typing import Any
 import yaml
+
+
+def overlay(*layers: dict[str, Any]) -> dict[str, Any]:
+    """Overlay mappings recursively; later leaves replace earlier ones.
+
+    Lists are replaced, not concatenated. The result never aliases input data,
+    so resolving one resource cannot mutate its defaults or another resource.
+    """
+    result: dict[str, Any] = {}
+    for layer in layers:
+        for key, value in layer.items():
+            if isinstance(value, dict) and isinstance(result.get(key), dict):
+                result[key] = overlay(result[key], value)
+            else:
+                result[key] = deepcopy(value)
+    return result
 
 
 class _UniqueLoader(yaml.SafeLoader):

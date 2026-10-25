@@ -79,7 +79,7 @@ def emit_observed_region(session, region, *, chain=()):
                             dependency="possible", next_step="resource_resolution")
             continue
         session.register_reader(path, reader, candidate=True, parent=command.span.basis.occurrence_id)
-        captured = observer._identify(captured, command.unit_id)
+        captured = observer.identify(captured, command.unit_id)
         session._observations[reader.basis].append(captured)
         session.require(captured.span, "conditional_input", captured.detail, unit_id=captured.unit_id)
         session.context.invalidate_meanings(changed, captured.span)
@@ -154,7 +154,7 @@ def emit_bibliography(session, observation, owner):
     if reader is None:
         return  # The native formatter can use the emitted canonical BibTeX resource.
     session.register_reader(path, reader, candidate=True, parent=command.span.basis.occurrence_id)
-    captured = session.dispatcher._identify(captured, command.unit_id)
+    captured = session.dispatcher.identify(captured, command.unit_id)
     session._observations[reader.basis].append(captured)
     session.require(captured.span, "observed_bibliography", captured.detail, unit_id=captured.unit_id)
     session.manifest.candidate_dependencies.append({"source": command.span.basis.source_id,

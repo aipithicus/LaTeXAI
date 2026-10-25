@@ -17,7 +17,7 @@ class AssignmentScanner(ArgumentScanner):
                 and token.catcode == CatCode.OTHER and token.value in "0123456789")
 
     def _integer(self, *, character=False):
-        token = self._nonspace()
+        token = self.next_nonspace()
         if (character and token is not None and token.kind == TokenKind.CHARACTER
                 and token.catcode == CatCode.OTHER and token.value == "`"):
             token = self.reader.next_token()
@@ -38,7 +38,7 @@ class AssignmentScanner(ArgumentScanner):
         with self.context.argument_scanning():
             character = self._integer(character=True)
             checkpoint = self.reader.checkpoint()
-            token = self._nonspace()
+            token = self.next_nonspace()
             if not (token is not None and token.kind == TokenKind.CHARACTER
                     and token.catcode == CatCode.OTHER and token.value == "="):
                 self.reader.restore(checkpoint)

@@ -3,20 +3,9 @@ from __future__ import annotations
 from copy import deepcopy
 from pathlib import Path
 from typing import Any
-from ..yaml_io import load_mapping, validate_resource_identity
+from ..yaml_io import load_mapping, overlay, validate_resource_identity
 from .character_rules import CatcodeLayer, ProfileError, compile_layer
 from .contracts import MouthBaseline
-
-
-def overlay(*layers: dict[str, Any]) -> dict[str, Any]:
-    result: dict[str, Any] = {}
-    for layer in layers:
-        for key, value in layer.items():
-            if isinstance(value, dict) and isinstance(result.get(key), dict):
-                result[key] = overlay(result[key], value)
-            else:
-                result[key] = deepcopy(value)
-    return result
 
 
 class MouthProfiles:

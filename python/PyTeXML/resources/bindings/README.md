@@ -212,6 +212,13 @@ arguments, and literal bodies never route their apparent effects or group tokens
 Reading result records and the narrow `ReadingKnowledge` protocol live in
 [contracts.py](../../src/reading/contracts.py). This remains a preparation-oriented
 execution surface, not the future expansion or asynchronous binding contract.
+Knowledge providers expose `source_command_syntax()` explicitly and return `None`
+when no unique source-command grammar is available; inspection never activates
+the provider. Shared capture operations are `ArgumentScanner.next_nonspace()`
+(consume SPACE-category tokens), `DefinitionScanner.read_body()` (capture after
+an opening group), and `StructuralDispatcher.identify()` (assign unit identities
+to already captured items). These operations do not expand or execute bodies;
+execution routing remains in the structural dispatcher.
 
 ### Scoped environment recipes
 

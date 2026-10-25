@@ -44,6 +44,21 @@ class ObservedAssetTests(unittest.TestCase):
     def prepare(self):
         return preprocess_paper(str(self.root), root_tex="main.tex")
 
+    def test_image_in_one_float_does_not_hide_a_later_assetless_float(self):
+        self.image("plot.png")
+        self.put("main.tex", r"\documentclass{article}\usepackage{graphicx}"
+                 r"\begin{figure}\input{image}\end{figure}"
+                 r"\begin{figure*}LATENT\end{figure*}")
+        self.put("image.tex", r"\includegraphics{plot.png}")
+        text, manifest, _, _ = self.prepare()
+        self.assertIn(r"\includegraphics{plot.svg}", text)
+        self.assertIn(r"\begin{figure*}LATENT\end{figure*}", text)
+        self.assertEqual(manifest.implicit_graphics_count, 1)
+        graphic, = manifest.implicit_graphics
+        self.assertEqual(graphic.kind, "assetless_float")
+        self.assertEqual(graphic.preview, r"\begin{figure*}")
+        self.assertTrue(graphic.is_floating)
+
     def test_author_environment_assets_across_repeated_cached_inputs(self):
         declaration = (r"\newenvironment{suppfigure}{\refstepcounter{supfigure}"
                        r"\renewcommand\thefigure{\thesupfigure}\begin{figure}}{\end{figure}}")
