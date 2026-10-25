@@ -1,0 +1,63 @@
+"""Non-executing syntax observations under an explicitly assumed entry profile.
+
+Used after an execution barrier: declarations and source argument grammars can
+still delimit candidates. No scope, package, catcode, or branch effects run here.
+Failure restores the cursor after the opener, so later independent headers remain
+visible. This is conditional evidence, not a substitute execution context.
+"""
+from .argument_scanner import ArgumentScanner
+from .assignment_scanner import AssignmentScanner
+from .contracts import EffectiveReadingProfile, ReadingIssue, SourceCommand
+from .definition_scanner import DefinitionScanner
+from .literal_scanner import LiteralScanner
+from .tex_reader import TokenKind
+
+
+def observe_source(reader, context, knowledge):
+    arguments = ArgumentScanner(reader, context)
+    definitions = DefinitionScanner(reader, context)
+    literals = LiteralScanner(reader, context, knowledge)
+    shadowed = set()
+    while (token := reader.next_token()) is not None:
+        if token.kind != TokenKind.CONTROL_SEQUENCE or token.value in shadowed:
+            yield token
+            continue
+        profile = knowledge.resolve_command(token.value)
+        if not isinstance(profile, EffectiveReadingProfile):
+            profile = knowledge.source_command_syntax(token.value)
+        checkpoint = reader.checkpoint()
+        try:
+            if profile is not None:
+                if profile.family == "stored_definition":
+                    definition = definitions.read(token.span.start, profile)
+                    shadowed.add(definition.target.value)
+                    yield definition
+                    continue
+                if profile.family == "meaning_assignment":
+                    assignment = AssignmentScanner(reader, context).let(token.span, profile)
+                    shadowed.add(assignment.argument("target").tokens[0].value)
+                    yield assignment
+                    continue
+                if profile.grammar.get("handler") == "inline_character":
+                    yield literals.read(token.span.start, profile)
+                    continue
+                if profile.family == "environment_open":
+                    name = arguments.group("environment").literal()
+                    environment = knowledge.resolve_environment(name)
+                    if isinstance(environment, EffectiveReadingProfile) and environment.grammar.get("handler") in {"token_delimited", "physical_line_literal"}:
+                        # Configured/optional literal headers require their own
+                        # resolution. Never claim their apparent body is active.
+                        if environment.configuration or environment.grammar.get("has_optional_arguments"):
+                            raise ReadingIssue("observation_literal", "Configured literal requires reading resolution")
+                        yield literals.read(token.span.start, environment)
+                        continue
+                if profile.grammar.get("handler") == "source_arguments":
+                    command = arguments.read(token.span, profile)
+                    if command.action == "declared_effects":
+                        shadowed.update(command.metadata["meaning_copies"])
+                    yield command
+                    continue
+        except ReadingIssue:
+            pass
+        reader.restore(checkpoint)
+        yield token

@@ -545,6 +545,21 @@ class PreparationSession:
         if action == "external_literal":
             prepare_external_literal(self, command)
             return
+        if action == "optional_source_input":
+            # Do not equate absence from author files with absence from TeX's
+            # search path. Nonempty branches also require ordered execution.
+            target = command.value("target")
+            path = self.resolve(target, [""] if Path(target).suffix else [".tex", ""], command.span, required=False)
+            if path is not None and not any(command.argument(n).tokens for n in ("then", "else")):
+                self.commands.pop()
+                return self._command(replace(command, action="source_input"))
+            self.dispatcher.defer_effects(command.span)
+            self.require(command.span, "optional_input_context",
+                "Optional input retained: branch execution or external search-path knowledge remains unresolved",
+                stage="preparation", unit_id=command.unit_id, dependency="possible")
+            self.require_deferred_dependencies((), command=command, parent_id=command.unit_id)
+            self.emit(command.span, command=command)
+            return
         if action in {"transparent_begin", "transparent_end"}:
             role = command.metadata["semantic_role"]
             role_action = self.policy.get_role_action(role)

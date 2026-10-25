@@ -16,7 +16,7 @@ from .tex_reader import TokenKind
 
 DEPENDENCY_ACTIONS = frozenset({"source_input", "source_include", "source_import", "source_subimport",
     "asset_reference", "bibliography", "biblatex_resource", "biblatex_print", "package_load",
-    "document_class", "external_literal"})
+    "document_class", "external_literal", "optional_source_input"})
 
 
 def argument_activity(role):

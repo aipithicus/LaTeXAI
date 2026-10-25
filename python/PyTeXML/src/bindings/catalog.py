@@ -301,6 +301,11 @@ class BindingCatalog:
                         if ([{k: a[k] for k in ("name", "kind")} for a in arguments] != [{"name": "options", "kind": "braced"}, {"name": "name", "kind": "braced"}]
                                 or spec.get("metadata") not in ({"target_kind": "package"}, {"target_kind": "class"})):
                             raise ProfileError(f"{path}: {name} requires literal forwarding arguments and a target kind")
+                    if spec.get("action") == "optional_source_input":
+                        if arguments != [{"name": "target", "kind": "braced", "role": "data"},
+                                         {"name": "then", "kind": "braced", "role": "branch"},
+                                         {"name": "else", "kind": "braced", "role": "branch"}]:
+                            raise ProfileError(f"{path}: {name} requires an optional input filename and two branches")
                     if spec.get("action") == "branch_test":
                         if (spec.get("metadata") not in ({"predicate": "loaded", "kind": "package"},
                                                        {"predicate": "loaded", "kind": "class"})

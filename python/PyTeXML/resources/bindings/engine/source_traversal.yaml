@@ -10,6 +10,17 @@ reading:
   - letter
   - minimal
   commands:
+  # latex2e base/ltfiles.dtx: then executes before the file input; else runs
+  # only on absence in TeX's search universe. Inventory absence is not that proof.
+  - name: \InputIfFileExists
+    family: source_command
+    action: optional_source_input
+    grammar:
+      handler: source_arguments
+      arguments:
+      - {name: target, kind: braced, role: data}
+      - {name: then, kind: braced, role: branch}
+      - {name: else, kind: braced, role: branch}
   - name: \PassOptionsToPackage
     family: source_command
     action: pass_options

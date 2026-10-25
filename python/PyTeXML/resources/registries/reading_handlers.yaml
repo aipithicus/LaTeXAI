@@ -2,6 +2,9 @@ identity:
   registry: reading_handlers
   description: Reading actions and their current implementation boundary
 handlers:
+  optional_source_input:
+    status: scanner
+    description: Capture filename and both branches; resolve only present local files with empty branches, otherwise retain a located dependency candidate
   let_assignment:
     status: scanner
     description: Capture two unexpanded tokens; dispatcher copies established local meanings or records an unresolved donor
