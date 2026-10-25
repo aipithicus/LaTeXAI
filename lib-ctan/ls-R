@@ -2092,6 +2092,9 @@ forloop.sty
 ./fvextra/tex/latex/fvextra:
 fvextra.sty
 
+./geometry/tex/latex/geometry:
+geometry.sty
+
 ./gettitlestring/tex/generic/gettitlestring:
 gettitlestring.sty
 

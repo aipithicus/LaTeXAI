@@ -1,0 +1,31 @@
+{
+   "ctan" : {
+      "api" : "https://www.ctan.org/json/2.0/pkg/geometry",
+      "date" : "2026-03-07",
+      "docs" : {
+         "kind" : "directory-zip",
+         "url" : "https://mirrors.ctan.org/macros/latex/contrib/geometry.zip"
+      },
+      "license" : "lppl1.3c",
+      "path" : "/macros/latex/contrib/geometry",
+      "version" : "6.0"
+   },
+   "fetched_at" : "2026-10-25T19:28:38Z",
+   "package" : "geometry",
+   "runfiles" : [
+      "tex/latex/geometry/geometry.sty"
+   ],
+   "styles" : [
+      "tex/latex/geometry/geometry.sty"
+   ],
+   "texlive" : {
+      "archive" : "https://mirrors.ctan.org/systems/texlive/tlnet/archive/geometry.tar.xz",
+      "bundle" : false,
+      "bytes" : 8744,
+      "filtered" : false,
+      "package" : "geometry",
+      "revision" : "78315",
+      "sha512" : "1c7120b50db68c40ae22b9cbd138189474c9c6e000742b65654097c0d9838aa23d81be3414fb621a7515d083e2d92f6b4d68e0f3a96c2073d10bf756482b6812",
+      "snapshot" : null
+   }
+}
