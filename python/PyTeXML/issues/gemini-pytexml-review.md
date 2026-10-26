@@ -761,13 +761,6 @@ Designing this bounded set of 4 YAML profiles gives you a working, end-to-end pr
 
 # and i've been doing some planning on the interface and handoff between prep and downstream, including some rethinking about bindings [pytexml-binding-ontology.md](file;file:///d%3A/aipithicus/aipithicus-issues/LaTeXAI/briefs/pytexml-binding-ontology.md)[pytexml-declarative-bindings.md](file;file:///d%3A/aipithicus/aipithicus-issues/LaTeXAI/briefs/pytexml-declarative-bindings.md)[source-span-engine.md](file;file:///d%3A/aipithicus/aipithicus-issues/LaTeXAI/briefs/source-span-engine.md) 
 
-Viewed pytexml-binding-ontology.md:1-150
-Viewed pytexml-binding-ontology.md:151-280
-Viewed source-span-engine.md:350-450
-Viewed source-span-engine.md:880-1000
-Viewed source-span-engine.md:840-880
-Viewed pytexml-declarative-bindings.md:1-100
-
 Reading through [pytexml-binding-ontology.md](file:///d:/aipithicus/aipithicus-issues/LaTeXAI/briefs/pytexml-binding-ontology.md), [pytexml-declarative-bindings.md](file:///d:/aipithicus/aipithicus-issues/LaTeXAI/briefs/pytexml-declarative-bindings.md), and [source-span-engine.md](file:///d:/aipithicus/aipithicus-issues/LaTeXAI/briefs/source-span-engine.md) makes one thing immediately clear: **your design notes already contain the exact conceptual blueprint to stop the preparation creep**. 
 
 The frustration you have been experiencing in the code is that **the implementation in `dispatcher.py` and `session.py` has been violating the very boundaries you established in these briefs**.

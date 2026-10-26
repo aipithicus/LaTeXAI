@@ -1,0 +1,1388 @@
+\raggedbottom
+
+\section{Additional Benchmark Details}
+\label{app:benchmark-details}
+
+\subsection{Benchmark composition}
+
+LoopArena contains \NumTypeI{} Type I questions and \NumTypeII{} paired Type II--Type III task instances. Each pair consists of one selected task slice for Type II and its corresponding full task for Type III. The Type III panel contains \NumTypeIII{} unique official tasks: 21 from SCBench, 29 from BeyondSWE, and 30 from LoopsBench.
+
+SCBench tasks may contain several ordered native checkpoints. The complete checkpoint sequence is executed for Type III, but the task is counted once in the benchmark.
+
+\subsection{Illustrative Type I question}
+
+The following shortened example is adapted from a scored Type I item. The source task removes unsupported Django versions and updates the supported test matrix. At the selected control point, the Evidence Packet shows that the requested matrix changes are largely complete, but an unused Django REST Framework 3.9 dependency (\texttt{drf39}) remains. The Controller chooses the best next Loop Contract from four candidates.
+
+\begin{table}[H]
+\caption{\textbf{Shortened Type I example.} The question asks which instruction should be issued next; the tested Controller does not execute code.}
+\label{tab:type-i-example}
+\centering
+\small
+\begin{tabularx}{\linewidth}{@{}c>{\raggedright\arraybackslash}Xc@{}}
+\toprule
+Candidate & Next instruction & Label \\
+\midrule
+A & Remove a dependency required by a newly supported Django configuration. & Incorrect \\
+B & Remove a dependency still used by the active latest-version environment. & Incorrect \\
+C & Keep the unused \texttt{drf39} dependency and inspect the matrix again. & Incorrect \\
+D & Remove the orphaned \texttt{drf39} dependency while preserving active configurations. & Correct \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Benchmark Construction and Quality Control}
+\label{app:construction}
+
+This appendix specifies Type II slice selection, the procedures that determine Type I answers, and the quality-control checks applied to the benchmark. Source-task construction is summarized in Section~\ref{sec:construction}.
+
+\paragraph{Type II slice selection.}
+After validating the candidate stages, we select one slice per full task. We sample slices separately within each benchmark source, balancing coverage of early, middle, and late stages according to the valid stages available in each task. The selected slices are fixed for all Controller evaluations and paired with their corresponding full tasks.
+
+\subsection{Type I candidate construction and replay}
+
+For each new Type I item, we first sample a parent trajectory containing at least one restorable, non-bootstrap control cycle and then sample one such cycle within that trajectory. Sampling parents before cycles prevents longer trajectories from receiving greater weight merely because they contain more control decisions. The recorded Loop Contract is retained as one candidate but is not assumed to be the correct option.
+
+One candidate author produces three complete and plausible alternatives to the recorded Contract. Author assignments are balanced across the designated model families. The resulting four Contracts must satisfy the same public schema and are placed in a neutral presentation order. Both the candidates and their order are frozen before any downstream execution is observed.
+
+We then execute all four candidates from the same restored state under two predeclared matched replay schedules. Within each schedule, the four candidate executions use the same Worker, execution budget, evaluator, continuation policy, stopping rules, and random seed; only the initial Loop Contract differs. If the source trajectory used seed \(S\), the primary and confirmation schedules use \(S+1{,}000{,}000\) and \(S+2{,}000{,}000\), respectively.
+
+For each question, the continuation Controller is randomly selected during benchmark construction. After the initial Contract, it guides subsequent rounds under the shared continuation policy; within each replay schedule, its configuration is held fixed across the four candidates.
+
+Terminal task success is the primary outcome. If exactly one candidate succeeds, it is the unique winner of that schedule. If multiple candidates succeed, we compare them first by the number of downstream Controller cycles and then, among candidates with the same number of cycles, by the number of downstream Worker turns. A schedule has a unique winner only when exactly one successful candidate is best under this ordering. Model-token counts and repository calls are recorded as diagnostics but do not determine the winner.
+
+An item is retained only when the primary and confirmation schedules identify the same unique winner. We reject the item if all four candidates fail, if a schedule has no unique winner under this ordering, or if the two schedules disagree. Rejected items are not repaired by replacing or rewriting candidates after their outcomes are known.
+
+The confirmed winner becomes the correct option under this replay procedure, whether it is the historical Contract or an alternative. Difficulty measurements, shortcut analyses, and human or model-based audits are performed only after the item is frozen. They characterize the resulting benchmark but do not alter its candidates, correct option, or inclusion decision.
+
+\subsection{Quality control and post-freeze audits}
+\label{app:admission}
+
+Automated checks verify the data schema, source binding, restored state, evaluator configuration, candidate schema, and matched replay setup. For Type I, executable outcomes determine the correct option; neither model review nor expert review can override the confirmed replay winner. Post-freeze LLM-assisted and expert audits examine question clarity, candidate plausibility, information leakage, and consistency between the public Packet and the frozen answer. Table~\ref{tab:admission-gates} lists the construction checks and post-freeze audits.
+
+\begin{table}[H]
+\caption{\textbf{Benchmark construction checks and audits.} Automated checks enforce the execution protocol; post-freeze review characterizes Type I quality without changing its replay-defined answer.}
+\label{tab:admission-gates}
+\centering
+\small
+\begin{tabularx}{\linewidth}{@{}l>{\raggedright\arraybackslash}p{0.25\linewidth}>{\raggedright\arraybackslash}X@{}}
+\toprule
+Setting & Check & Requirement \\
+\midrule
+All & task binding & task text, starting workspace, and evaluator refer to the same frozen source instance \\
+All & solution leakage & model-visible inputs exclude official solution code, private scoring output, and later trajectory events \\
+Type I & answer stability & the two predeclared replay schedules identify the same unique winner \\
+Type I & post-freeze audit & reviewers assess clarity, candidate plausibility, and leakage without changing the replay-defined answer \\
+Type II & task-slice validity & the prepared starting workspace fails at least one selected-stage check, while the source-provided completed state passes all requirements through that stage \\
+Type II/III & evaluator validity & the frozen evaluator distinguishes a completed source task from an incomplete state \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The benchmark definition fixes the included questions and tasks and their evaluator configurations.
+
+\section{Harness and Evaluation Details}
+\label{app:type-ii-protocol}
+
+\subsection{Roles and information flow}
+\label{app:schema}
+
+The Worker, Reporter, and Controller are model instances, whereas the Evidence Packet and Loop Contract are structured artifacts. The harness creates, validates, and renders these artifacts deterministically; it makes no additional model call when formatting Reporter output as a Packet or a continuing Contract as a Worker instruction.
+
+Only the Worker edits the repository, runs commands, and uses coding tools. At each Controller-guided handoff, the harness creates a temporary Reporter agent using the same model configuration and a copy of the accumulated Worker conversation. The Reporter can inspect a static, read-only view of the workspace but cannot modify it. It summarizes the task context, work completed so far, verification evidence, and unresolved issues, with citations to the relevant Worker turns. The Reporter interaction is not appended to the persistent Worker conversation.
+
+At each control cycle, the Controller-visible Evidence Packet contains the overall repository task, the context of the current report, and four non-empty Reporter fields: \texttt{task\_\allowbreak context\_\allowbreak and\_\allowbreak constraints}, \texttt{work\_\allowbreak history\_\allowbreak and\_\allowbreak current\_\allowbreak state}, \texttt{verification\_\allowbreak and\_\allowbreak evidence}, and \texttt{open\_\allowbreak issues\_\allowbreak and\_\allowbreak uncertainty}. It also includes the complete Worker turns cited by the Reporter and the total, used, and remaining Worker-turn budget.
+
+In Type II and Type III, the Controller returns a structured decision with an \texttt{action} in \{\texttt{advance}, \texttt{verify}, \texttt{stop}\} and a free-text \texttt{rationale}. An \texttt{advance} or \texttt{verify} decision also provides a \texttt{worker\_\allowbreak instruction} with \texttt{goal}, \texttt{context}, \texttt{required\_\allowbreak outcomes}, \texttt{prohibited\_\allowbreak actions}, and \texttt{completion\_\allowbreak condition}; a list of \texttt{protected\_\allowbreak invariants}; and a \texttt{verification\_\allowbreak acceptance\_\allowbreak condition}. A \texttt{stop} decision requires only the action and rationale. The harness validates the decision and records it as the canonical Loop Contract used for execution and for Type I candidates. The Controller has no repository or coding tools. For a continuing Contract, the harness renders the validated instruction as the next user turn in the persistent Worker conversation; for a Stop Contract, it submits the current workspace to the evaluator.
+
+\subsection{Illustrative Type II control cycle}
+
+The following shortened example is taken from one recorded Type II control cycle on an SCBench task involving watch mode and a secondary configuration store. The first Worker segment was an orientation pass. Quoted text is unchanged; ellipses mark omitted material.
+
+\begin{quote}\small
+\textbf{Reporter and Evidence Packet.}
+In \texttt{work\_history\_and\_current\_state}, the Reporter states: ``The coding agent performed an orientation-only pass as assigned. \ldots'' In \texttt{open\_issues\_and\_uncertainty}, it records: ``No implementation work has been performed; all task features remain to be added. \ldots'' The harness places these fields, the task context, and the cited Worker turns in the Evidence Packet.
+
+\textbf{Controller decision.}
+The Controller returns \texttt{action: advance} and the following \texttt{worker\_instruction.goal}: ``Implement secondary-store support for schema validation and non-watch resolution, including CLI flags and seed lookup, while preserving existing behavior.'' Its required outcomes include adding the new source at the correct priority, implementing seed lookup, and demonstrating the behavior with focused checks.
+
+\textbf{Loop Contract and next Worker assignment.}
+The harness validates the Controller's decision and records it as a Loop Contract. It then renders the same assignment as the next user turn for the Worker, without another model call.
+\end{quote}
+
+\subsection{Controller-guided execution}
+
+Every Type II or Type III repeat begins from a clean copy of the specified starting workspace and a new Worker conversation. The Worker first receives the fixed bootstrap instruction described in Appendix~\ref{app:prompts}. When that segment ends, the Reporter summarizes the run, the harness builds the Packet, and the tested Controller produces the first Contract. An Advance or Verify Contract is rendered as the next user instruction in the same Worker conversation; a Stop Contract submits the current workspace to the source evaluator. The cycle repeats until Controller Stop, budget exhaustion, a protocol failure, or another terminal runtime condition.
+
+Each main Worker episode ends after 600 ReAct turns or 7,200 seconds of main Worker wall time, whichever occurs first. At the turn limit, the final workspace is evaluated under the usual success criteria; reaching the wall-time limit counts as a task failure. Controller-guided execution allows at most 128 control cycles and 86,400 cumulative seconds, and each Reporter call has a 50-turn limit. These limits are shared across Controller models. Each Controller request allows up to 20,480 output tokens, and each Reporter request allows up to 8,192 output tokens. For multi-checkpoint SCBench tasks, the official workspace persists across checkpoints while the Worker and control conversations restart at each native boundary.
+
+\subsection{Reference policies}
+
+Type II and Type III include two shared reference policies. Under \emph{no control}, the Worker receives the task once and runs as an ordinary coding agent without Reporter or Controller calls. Under \emph{fixed control}, every nonterminal control decision is fixed to \emph{proceed}; the policy does not inspect the Packet and invokes neither a Reporter nor a model Controller. The loop ends when the Worker explicitly declares the goal complete; this declaration controls only loop termination, while the same source evaluator still determines task success or failure. Fixed control tests whether repeatedly restating the task goal is sufficient without state-dependent guidance and is not ranked as a Controller model.
+
+For a given task, the references and evaluated Controllers share the Worker configuration, tools, runtime limits, source environment, and evaluator. Their starting instructions differ because they implement different control policies. Each reference repeat set is collected once and reused across Controller comparisons.
+
+\subsection{Run outcomes and cost accounting}
+
+A run is successful only if it passes the frozen task evaluator and the machine-verifiable protocol. An invalid Controller response or a model-caused protocol violation counts as failure.
+
+BeyondSWE success requires reward one from the frozen Harbor evaluator; LoopsBench uses its source-native evaluator. Multi-checkpoint success requires all scored checkpoints to pass. Resource accounting includes every model call made by the method: Worker calls under no control and fixed control; and Worker, Reporter, and Controller calls under model control. We record per-call input and output tokens, main Worker ReAct turns, control cycles, wall-clock time, and component-level token counts.
+
+\section{Experimental Details}
+\label{app:criteria}
+
+\subsection{Controller panel and inference interfaces}
+
+The evaluated Controllers are Qwen3.6-35B-A3B, Qwen3.7-Plus, DeepSeek-V4-Flash-0731, GLM 5.2, GPT-5.5, and Claude Opus 4.8. The completed Type I runs use direct API calls. Qwen3.6-35B-A3B, Qwen3.7-Plus, DeepSeek-V4-Flash-0731, and GLM 5.2 use temperature zero, a maximum output length of 20,480 tokens, provider-default reasoning, and disabled client-library retries. GPT-5.5 and Claude Opus 4.8 use \texttt{gpt-5.5-0424-global} and \texttt{claude-opus-4-8}, respectively, with provider-default thinking, no temperature or seed parameter, and a maximum output length of 20,480 tokens.
+
+\begin{table}[H]
+\caption{\textbf{Type I inference interfaces.} Exact provider identifiers and request records are preserved with the run manifest.}
+\label{tab:type-i-inference}
+\centering
+\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.30\linewidth}>{\raggedright\arraybackslash}X@{}}
+\toprule
+Controller & Type I inference interface \\
+\midrule
+Qwen3.6-35B-A3B & API; temperature 0; maximum 20,480 output tokens \\
+Qwen3.7-Plus & API; temperature 0; maximum 20,480 output tokens \\
+DeepSeek-V4-Flash-0731 & API; temperature 0; maximum 20,480 output tokens \\
+GLM 5.2 & API; temperature 0; maximum 20,480 output tokens \\
+GPT-5.5 & API (\texttt{gpt-5.5-0424-global}); provider-default thinking; no temperature or seed; maximum 20,480 output tokens \\
+Claude Opus 4.8 & API (\texttt{claude-opus-4-8}); provider-default thinking; no temperature or seed; maximum 20,480 output tokens \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Type II and Type III evaluate the same Controllers. The completed API runs use the exact model identifiers \texttt{qwen3.6-35b-a3b}, \texttt{qwen3.7-plus}, \texttt{deepseek-v4-flash-0731}, \texttt{glm-5.2}, \texttt{gpt-5.5-0424-global}, and \texttt{claude-opus-4-8}. The Qwen, DeepSeek, and GLM Controllers use temperature zero, a maximum output length of 20,480 tokens, provider-default reasoning, and no client-library retries. GPT-5.5 and Claude Opus 4.8 use provider-default thinking, no temperature or seed parameter, and a maximum output length of 20,480 tokens. The frozen run manifest binds the exact Controller, Worker, and Reporter revisions; prompts; provider parameters; source images; evaluator versions; and runtime limits used for every result.
+
+\subsection{Run plan}
+
+\begin{table}[H]
+\caption{\textbf{Evaluation plan.} Type II and Type III use the same Controllers, repeat count, and paired full tasks.}
+\label{tab:manifest-commitments}
+\centering
+\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.28\linewidth}>{\raggedright\arraybackslash}X@{}}
+\toprule
+Quantity & Value or reporting rule \\
+\midrule
+Type I panel & \NumTypeI{} questions; one response per Controller and question \\
+Type II panel & \NumTypeII{} task slices paired with Type III \\
+Type III panel & \NumTypeIII{} unique full tasks \\
+Executable repeats & \(K=3\) separate runs for every Controller, reference policy, and task \\
+Reference reuse & one no-control set and one fixed-control set per task and Worker configuration, shared across Controllers \\
+Primary executable score & Strict Success Rate \\
+Evaluation cost & estimated end-to-end inference cost per run under the frozen no-cache price schedule; tokens, Worker turns, and control cycles reported separately \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Metric Definitions and Cost Accounting}
+\label{app:statistics}
+
+\subsection{Type I}
+
+Contract Accuracy is the fraction of questions for which the chosen candidate matches the correct option fixed during benchmark construction. Missing, multiple, out-of-range, or unparseable answers are incorrect and also contribute to the Invalid Rate.
+
+\subsection{Type II and Type III}
+
+For each executable setting, Strict Success Rate averages the binary evaluator outcome over all tasks and \(K=3\) runs, as defined in Section~\ref{sec:evaluation-metrics}. The shared no-control and fixed-control runs remain shared across Controller comparisons.
+
+Using the policy set \(\mathcal{P}\) defined in Section~\ref{sec:evaluation-metrics}, let \(\mathcal{J}^{(t)}_{p,i,r}\) be the model calls made by policy \(p\) on task \(i\) in run \(r\) of setting \(t\). For call \(j\), let \(I_j\) and \(O_j\) be its recorded input and output token counts, and let \(P^{\mathrm{in}}_j\) and \(P^{\mathrm{out}}_j\) be the corresponding public standard prices in USD per million tokens from the frozen schedule in Table~\ref{tab:price-schedule}. We estimate run cost as
+\[
+C^{(t)}_{p,i,r}
+=
+\sum_{j\in\mathcal{J}^{(t)}_{p,i,r}}
+\frac{I_jP^{\mathrm{in}}_j+O_jP^{\mathrm{out}}_j}{10^6},
+\qquad
+\overline{C}_{t}(p)
+=
+\frac{1}{N_tK}
+\sum_{i=1}^{N_t}\sum_{r=1}^{K}C^{(t)}_{p,i,r}.
+\]
+The call set contains Worker calls under no control and fixed control, and Worker, Reporter, and Controller calls under model control. For simplicity, the calculation assumes no prompt caching: every input token uses the standard input price, with no cache discount. If a provider reports reasoning tokens separately, they are included in \(O_j\) exactly once. The resulting dollar values are standardized end-to-end estimates, not measurements of realized spending or Controller-only cost. They cover model inference only; repository execution, evaluator compute, storage, and other infrastructure overhead are not monetized. Cost results are reported only when input and output usage is available for every included call.
+
+The Type II cost reduction averages the paired percentage reduction for each Controller,
+\[
+R_C
+=
+\frac{100}{|\Pi|}
+\sum_{\pi\in\Pi}
+\left(
+1-
+\frac{\overline{C}_{\mathrm{II}}(\pi)}
+{\overline{C}_{\mathrm{III}}(\pi)}
+\right).
+\]
+Total model tokens, main Worker turns, and control cycles are summarized separately.
+
+Spearman's \(\rho_{\mathrm{II},\mathrm{III}}\) is calculated only over the Controller models evaluated in both settings, excluding no control and fixed control; tied scores receive their average rank. We also report pairwise rank reversals, counting only Controller pairs that are strictly ordered in opposite directions; ties are reported separately.
+
+\section{Additional Results and Analyses}
+\label{app:additional-results}
+
+\subsection{Type I results}
+\label{app:type-i-results}
+
+Table~\ref{tab:type-i-results} reports exact Type I counts, Contract Accuracy, Invalid Rate, and estimated evaluation cost.
+
+\begin{table}[H]
+\caption{\textbf{Type I results.} Estimated cost is the standardized marginal no-cache cost of 160 Controller responses and excludes the one-time candidate-execution cost incurred during benchmark construction.}
+\label{tab:type-i-results}
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Controller & Correct & Accuracy (\%) & Invalid (\%) & \shortstack{Est. cost\\(\$/160 questions)} \\
+\midrule
+Qwen3.6-35B-A3B & 69/160 & 43.125 & 0.000 & 1.57 \\
+Qwen3.7-Plus & 97/160 & \secondresult{60.625} & 0.000 & \secondresult{1.45} \\
+DeepSeek-V4-Flash-0731 & 73/160 & 45.625 & 0.625 & \bestresult{0.56} \\
+GLM 5.2 & 87/160 & 54.375 & 1.875 & 6.81 \\
+GPT-5.5 & 99/160 & \bestresult{61.875} & 0.000 & 21.67 \\
+Claude Opus 4.8 & 90/160 & 56.250 & 0.000 & 30.56 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:type-i-source-results} reports Contract Accuracy separately for each source benchmark.
+
+\begin{table}[H]
+\caption{\textbf{Type I accuracy by source benchmark.} Parentheses show percentages.}
+\label{tab:type-i-source-results}
+\centering
+\small
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Controller & SCBench (40) & BeyondSWE (53) & LoopsBench (67) \\
+\midrule
+Qwen3.6-35B-A3B & 18/40 (45.00) & 32/53 (60.38) & 19/67 (28.36) \\
+Qwen3.7-Plus & 33/40 (82.50) & 41/53 (77.36) & 23/67 (34.33) \\
+DeepSeek-V4-Flash-0731 & 21/40 (52.50) & 32/53 (60.38) & 20/67 (29.85) \\
+GLM 5.2 & 29/40 (72.50) & 37/53 (69.81) & 21/67 (31.34) \\
+GPT-5.5 & 35/40 (87.50) & 46/53 (86.79) & 18/67 (26.87) \\
+Claude Opus 4.8 & 29/40 (72.50) & 40/53 (75.47) & 21/67 (31.34) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Executable results and cost}
+\label{app:cost-accounting}
+
+Table~\ref{tab:price-schedule} records the public standard prices used to estimate inference cost, and Table~\ref{tab:executable-cost-details} reports role-separated costs together with Worker-turn and control-cycle measurements.
+
+\begin{table}[H]
+\caption{\textbf{Frozen price schedule for inference-cost estimation.} Prices were retrieved on August 16, 2026 from the providers' public price schedules \citep{AlibabaModelStudioPricing2026,OpenAIGPT55Pricing2026,AnthropicAPIPricing2026}. Qwen list prices are the China (Beijing) rates in CNY, converted at the August 14, 2026 official central parity rate of CNY~6.7878 per USD \citep{SAFEExchangeRate2026}. We use public list prices and do not apply temporary promotions, caching, batch, priority, regional, or enterprise discounts.}
+\label{tab:price-schedule}
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}llcc@{}}
+\toprule
+Model & Input tokens per call & \shortstack{Input price\\(\$/1M tokens)} & \shortstack{Output price\\(\$/1M tokens)} \\
+\midrule
+Qwen3.6-35B-A3B & all supported & 0.2652 & 1.5911 \\
+Qwen3.7-Plus & up to 256K & 0.2946 & 1.1786 \\
+ & 256K--1M & 0.8839 & 3.5358 \\
+DeepSeek-V4-Flash-0731 & all supported & 0.1473 & 0.2946 \\
+GLM 5.2 & all supported & 1.1786 & 4.1250 \\
+GPT-5.5 & up to 272K & 5.0000 & 30.0000 \\
+ & above 272K & 10.0000 & 45.0000 \\
+Claude Opus 4.8 & all supported & 5.0000 & 25.0000 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\caption{\textbf{Mean estimated no-cache inference cost and execution length.} All reported entries are averaged over 240 scored runs per policy or Controller and setting. Worker turns count inner-loop ReAct turns; control cycles count outer-loop handoffs. A dash marks a model-call role or execution-length metric that does not apply to the policy. Fixed control uses neither a Reporter nor a model Controller. Totals may differ from displayed component sums because of rounding.}
+\label{tab:executable-cost-details}
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}lrrrrrr@{}}
+\toprule
+& \multicolumn{4}{c}{Estimated cost (\$/run)}
+& \multicolumn{2}{c}{Execution length} \\
+\cmidrule(lr){2-5}\cmidrule(l){6-7}
+& Worker & Reporter & Controller & Total
+& \shortstack{Worker\\turns} & \shortstack{Control\\cycles} \\
+\midrule
+\multicolumn{7}{@{}l}{\textit{Type II (task slice)}} \\
+\hspace{0.8em}No control & 1.62 & --- & --- & 1.62 & 68.50 & --- \\
+\hspace{0.8em}Fixed control & 5.62 & --- & --- & 5.62 & 105.82 & 2.85 \\
+\hspace{0.8em}Qwen3.6-35B-A3B & 3.86 & 0.26 & 0.10 & 4.21 & 103.37 & 4.24 \\
+\hspace{0.8em}Qwen3.7-Plus & 5.62 & 0.31 & 0.10 & 6.04 & 114.56 & 4.15 \\
+\hspace{0.8em}DeepSeek-V4-Flash-0731 & 9.29 & 0.53 & 0.06 & 9.88 & 134.35 & 4.71 \\
+\hspace{0.8em}GLM 5.2 & 2.98 & 0.20 & 0.37 & 3.54 & 86.61 & 3.55 \\
+\hspace{0.8em}GPT-5.5 & 10.59 & 0.60 & 2.60 & 13.80 & 145.30 & 5.42 \\
+\hspace{0.8em}Claude Opus 4.8 & 7.56 & 0.48 & 2.83 & 10.88 & 122.20 & 4.55 \\
+\addlinespace
+\multicolumn{7}{@{}l}{\textit{Type III (full task)}} \\
+\hspace{0.8em}No control & 2.61 & --- & --- & 2.61 & 136.17 & --- \\
+\hspace{0.8em}Fixed control & 9.47 & --- & --- & 9.47 & 211.14 & 7.16 \\
+\hspace{0.8em}Qwen3.6-35B-A3B & 10.67 & 0.71 & 0.20 & 11.58 & 224.36 & 9.70 \\
+\hspace{0.8em}Qwen3.7-Plus & 11.71 & 0.74 & 0.23 & 12.69 & 243.33 & 10.61 \\
+\hspace{0.8em}DeepSeek-V4-Flash-0731 & 30.54 & 1.96 & 0.15 & 32.66 & 330.58 & 11.44 \\
+\hspace{0.8em}GLM 5.2 & 10.58 & 0.59 & 0.81 & 11.97 & 189.41 & 8.16 \\
+\hspace{0.8em}GPT-5.5 & 26.42 & 2.08 & 6.18 & 34.68 & 355.94 & 13.45 \\
+\hspace{0.8em}Claude Opus 4.8 & 12.71 & 0.76 & 7.16 & 20.63 & 324.09 & 11.85 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Worker-side comparison}
+\label{app:worker-side-comparison}
+
+To examine whether relative Controller performance is preserved with a different Worker, we evaluate four Controllers on 20 randomly selected source tasks in both Type II and Type III. The comparison uses DeepSeek-V4-Flash-0731 in place of Qwen3.7-Plus for the Worker and its Reporter. We compare the same Controllers on the same task subset, with three repeats per task and setting, using Core as the scoring criterion.
+
+Table~\ref{tab:worker-side-comparison} reports the results. Across the two Worker configurations, Controller rankings have Spearman correlations of 0.8000 in Type II and 0.7379 in Type III. Qwen3.6 and Qwen3.7 occupy the top two positions in both settings, exchanging first and second place, and both remain ahead of DeepSeek and GLM. The relative Controller performance therefore remains broadly consistent across the two evaluated Worker configurations.
+
+\begin{table}[H]
+\caption{\textbf{Worker-side comparison on 20 source tasks.} Each entry is
+Core successes out of 60 runs (20 tasks with three repeats). Qwen denotes a
+Qwen3.7-Plus Worker and Reporter; DeepSeek denotes a
+DeepSeek-V4-Flash-0731 Worker and Reporter. The Controller named in each row
+is held fixed across the two Worker-side conditions.}
+\label{tab:worker-side-comparison}
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{@{}lrrrr@{}}
+\toprule
+& \multicolumn{2}{c}{Type II} & \multicolumn{2}{c}{Type III} \\
+\cmidrule(lr){2-3}\cmidrule(l){4-5}
+Controller & Qwen & DeepSeek & Qwen & DeepSeek \\
+\midrule
+Qwen3.6-35B-A3B & 36/60 & 34/60 & 28/60 & 20/60 \\
+Qwen3.7-Plus & 33/60 & 36/60 & 26/60 & 23/60 \\
+DeepSeek-V4-Flash-0731 & 26/60 & 27/60 & 19/60 & 15/60 \\
+GLM 5.2 & 29/60 & 31/60 & 19/60 & 12/60 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Diagnostic analyses}
+
+Type I shortcut analyses test whether simple surface cues predict the correct option without using the Evidence Packet and candidate instructions together. Table~\ref{tab:type-i-shortcuts} reports fixed rules computed on the frozen question set; randomized rules report expected accuracy, and none requires a model call.
+
+\begin{table}[H]
+\caption{\textbf{Type I shortcut analyses.} Tested baselines remain below the weakest tested Controller (43.125\%). Action-preference rules choose uniformly among candidates with the preferred action, or among all four when that action is absent.}
+\label{tab:type-i-shortcuts}
+\centering
+\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}Xc@{}}
+\toprule
+Analysis & Information retained & Accuracy (\%) \\
+\midrule
+Uniform random & none & 25.00 \\
+Majority position & answer position only & 30.625 \\
+Prefer advance & action labels only & 24.271 \\
+Prefer verify & action labels only & 28.490 \\
+Prefer stop & action labels only & 22.813 \\
+Shortest candidate & serialized candidate length & 23.125 \\
+Lexical overlap & Packet--candidate word overlap & 24.375 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\paragraph{Bounded-protocol terminations.}
+A Controller response that reaches the fixed 20,480-token output limit is recorded as \texttt{controller\_output\_limit\_exhausted}; \texttt{invalid\_contract} is recorded when a response finishes normally but cannot be parsed as a valid Loop Contract. Both count as protocol failures in the reported results. To characterize output-budget exhaustion in the 80-task experiments, we examine the 18,884 returned Controller responses issued with the 20,480-token limit. GLM 5.2 exhausts this budget in 90/769 Type II responses and 271/1,849 Type III responses; the corresponding counts for DeepSeek are 2/1,003 and 19/2,500. No exhaustion is observed for the other evaluated Controllers in this request-level diagnostic. Of GLM's 361 exhausted responses, 339 contain reasoning but no visible answer. These failures reflect generation that reaches the output limit before delivering a usable control instruction.
+
+\begin{table}[H]
+\caption{\textbf{Run-to-run outcome stability.} Entries count tasks with exactly 0, 1, 2, or 3 successful runs among the three recorded repeats.}
+\label{tab:repeat-stability}
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Method & \shortstack{Type II tasks\\0/3, 1/3, 2/3, 3/3} & \shortstack{Type III tasks\\0/3, 1/3, 2/3, 3/3} \\
+\midrule
+No control & 29, 10, 15, 26 & 51, 6, 9, 14 \\
+Fixed control & 27, 6, 15, 32 & 51, 3, 6, 20 \\
+Qwen3.6-35B-A3B & 26, 7, 14, 33 & 45, 8, 8, 19 \\
+Qwen3.7-Plus & 28, 5, 10, 37 & 46, 9, 2, 23 \\
+DeepSeek-V4-Flash-0731 & 29, 10, 11, 30 & 48, 10, 8, 14 \\
+GLM 5.2 & 30, 18, 17, 15 & 53, 5, 13, 9 \\
+GPT-5.5 & 28, 7, 6, 39 & 44, 7, 7, 22 \\
+Claude Opus 4.8 & 28, 3, 9, 40 & 47, 4, 10, 19 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\caption{\textbf{Executable success by source benchmark.} Entries are successful runs over the 63 SCBench, 87 BeyondSWE, or 90 LoopsBench runs in each method and setting.}
+\label{tab:executable-source-results}
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{@{}lcccccc@{}}
+\toprule
+Method & \shortstack{Type II\\SCBench} & \shortstack{Type II\\BeyondSWE} & \shortstack{Type II\\LoopsBench} & \shortstack{Type III\\SCBench} & \shortstack{Type III\\BeyondSWE} & \shortstack{Type III\\LoopsBench} \\
+\midrule
+No control & 34/63 & 39/87 & 45/90 & 5/63 & 21/87 & 40/90 \\
+Fixed control & 43/63 & 37/87 & 52/90 & 3/63 & 19/87 & 53/90 \\
+Qwen3.6-35B-A3B & 38/63 & 40/87 & 56/90 & 5/63 & 20/87 & 56/90 \\
+Qwen3.7-Plus & 38/63 & 39/87 & 59/90 & 6/63 & 19/87 & 57/90 \\
+DeepSeek-V4-Flash-0731 & 36/63 & 36/87 & 50/90 & 6/63 & 19/87 & 43/90 \\
+GLM 5.2 & 18/63 & 36/87 & 43/90 & 0/63 & 17/87 & 41/90 \\
+GPT-5.5 & 42/63 & 38/87 & 56/90 & 16/63 & 19/87 & 52/90 \\
+Claude Opus 4.8 & 40/63 & 39/87 & 62/90 & 10/63 & 22/87 & 49/90 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Tables~\ref{tab:repeat-stability} and~\ref{tab:executable-source-results} report run-to-run outcome stability and source-specific success rates.
+
+\section{Extended Comparison with Related Evaluation Settings}
+\label{app:positioning}
+
+Table~\ref{tab:work-lines} compares LoopArena with nearby evaluation paradigms. The central distinction is the evaluated object: LoopArena holds the coding Worker fixed and scores the model that guides it, whereas most coding-agent benchmarks score the complete coding stack.
+
+\begin{table}[H]
+\caption{\textbf{Comparison by evaluated object.} The three LoopArena settings use different amounts of execution but all target the Controller's loop-control ability.}
+\label{tab:work-lines}
+\centering
+\footnotesize
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.19\linewidth}>{\raggedright\arraybackslash}p{0.21\linewidth}>{\raggedright\arraybackslash}p{0.25\linewidth}>{\raggedright\arraybackslash}X@{}}
+\toprule
+Evaluation setting & Model output & Execution & Evaluated object \\
+\midrule
+Final-state coding benchmark & patch or repository state & evaluated coding stack & end-to-end coding ability \\
+Interactive agent benchmark & action trajectory & evaluated agent stack & agent plus scaffold \\
+Process or critique benchmark & score, label, or critique & usually no fixed downstream executor & local step quality \\
+Loop-system benchmark & loop or harness configuration & coding model inside each submitted system & complete loop system \\
+LoopArena Type I & one candidate instruction & no Worker execution during evaluation & single control decision \\
+LoopArena Type II & repeated Loop Contracts & fixed Worker on a selected task slice & runtime loop control on a selected task slice \\
+LoopArena Type III & repeated Loop Contracts & fixed Worker on the full task & full-task runtime loop control \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{Reproducibility}
+\label{app:reproducibility}
+
+The release provides the Type I questions, paired Type II and Type III task definitions, and the evaluation harness. Preparation instructions specify the required upstream repositories, dependencies, and local asset paths. The harness includes the control-setting runners, prompts, Contract validation and rendering, and evaluator adapters. Type I reference answers are withheld from model requests.
+
+\section{Prompts and Message Templates}
+\label{app:prompts}
+
+This appendix documents the prompts and message templates used in LoopArena.
+Fixed prompt text is reproduced verbatim. Placeholders written as
+\texttt{<ALL\_CAPS>} denote task- or run-specific values inserted by the
+harness, whereas lowercase XML-style tags are part of the prompt shown to the
+model. Optional sections are omitted when the corresponding field is empty.
+Type II and Type III use the same templates and differ only in the task input
+and starting workspace.
+
+\lstdefinestyle{looparenaprompt}{
+  basicstyle=\ttfamily\footnotesize,
+  breaklines=true,
+  breakatwhitespace=false,
+  breakindent=0pt,
+  breakautoindent=false,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false,
+  frame=single,
+  framerule=0.3pt,
+  rulecolor=\color{black!45},
+  backgroundcolor=\color{black!2},
+  framesep=4pt,
+  aboveskip=6pt,
+  belowskip=8pt,
+  xleftmargin=0pt,
+  xrightmargin=0pt,
+  framexleftmargin=3pt,
+  framexrightmargin=3pt,
+  framextopmargin=2pt,
+  framexbottommargin=2pt
+}
+
+\subsection{Message composition}
+
+\begin{table}[H]
+\caption{\textbf{Prompt composition in LoopArena.} Benchmark instances provide
+the task, current state, reported evidence, and candidate decisions; the
+following sections give the fixed prompts and templates.}
+\label{tab:prompt-composition}
+\centering
+\small
+\begin{tabularx}{\linewidth}{@{}p{0.18\linewidth}X@{}}
+\toprule
+Component & Prompt composition \\
+\midrule
+Worker & The shared Worker system prompt, the task instruction, and either the
+bootstrap instruction or a Controller-derived continuation. \\
+Reporter & The Reporter system prompt and a reporting request containing the
+task instruction and quoted Worker conversation. \\
+Controller & The Controller system prompt followed by successive rendered
+Evidence Packets in one persistent Controller conversation. \\
+Type I & The Controller decision policy with a selection-specific instruction,
+followed by one rendered Packet, four candidate decisions, and the answer
+instruction. \\
+Reference policies & No control uses the shared Worker prompt with an
+autonomous-start instruction. Fixed control uses the shared Worker prompt and
+a deterministic continuation at each handoff; it invokes neither a Reporter
+nor a model Controller. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Worker prompts}
+
+\paragraph{Worker system prompt.}
+\mbox{}\par\nobreak
+\begin{lstlisting}[style=looparenaprompt]
+# Coding-agent instructions
+
+## Role
+
+You are working on a user's repository task.
+
+## Information boundary
+
+You receive no background information outside this API request. The only
+information available to you is:
+
+- the messages in this conversation;
+- the tool definitions attached to the current API request; and
+- repository contents or command results returned after you call those tools.
+
+You do not see the repository automatically. Treat anything not present in the
+conversation or returned by a tool as unknown.
+
+You may use the network when repository code or tests need ordinary
+dependencies or runtime services. You may also read a URL when the user
+explicitly included it as part of the task. Do not use the network to search
+for or retrieve a solution to the task, a later version of the repository,
+hidden tests, scoring materials, or benchmark answers. Do not otherwise look
+for hidden evaluators, answer keys, reference solutions, or later work.
+
+## Roles and terms
+
+- `Overall goal` means the user's original repository request. It may appear as
+  the original user message or under an `Overall goal` heading in a later
+  context message. It defines end-to-end success and remains in force
+  throughout the conversation.
+- `Current assignment` means the work requested for this response by the latest
+  work message. During controlled work, a separate planning model called the
+  controller selects a bounded next step from reported progress. It is not a
+  replacement for the user's request or a new source of end-to-end
+  requirements. During autonomous work, the assignment covers the complete
+  overall goal.
+- `End this assignment when` is the end condition for the current assignment.
+  Meeting it means sending an ordinary assistant response with no tool call. In
+  controlled work, that hands control back and does not mean the overall goal
+  is complete. In autonomous work, the assignment and overall goal have the
+  same scope, so this condition ends both.
+
+The controller may narrow this response to one implementation or investigation
+step even when the overall goal is end-to-end; that narrowing is intentional.
+It may not remove, contradict, or silently add requirements to the overall
+goal. Follow both: make the current assignment serve the overall goal, and do
+not continue into other parts of the overall task. If an assignment genuinely
+conflicts with the overall goal or cannot be carried out from the available
+information and tools, do not guess or perform the conflicting action. Inspect
+what you safely can, then report the exact conflict or blocker and hand back.
+
+Controller-provided status, rationale, hypotheses, and context are summaries of
+reported progress, not direct repository observations. Use them to choose where
+to look, but verify consequential details with repository tools when needed. If
+tool results conflict with a summary, follow the observed repository evidence
+for this assignment and report the discrepancy.
+
+## Work modes
+
+- Autonomous work: the current assignment explicitly covers the complete
+  overall goal. Complete it without waiting for later guidance, or stop only if
+  genuinely blocked.
+- Controlled work: do only the latest `Current assignment`. Stop when its
+  end condition is met or when that assignment is genuinely blocked. A
+  later user message may provide another assignment for the same overall goal.
+- Read-only reporting: if the latest user message explicitly identifies you as
+  the read-only progress reporter, do not continue coding. Follow that reporter
+  message and use only the tools attached to that request. This reporting
+  conversation is separate from the coding conversation.
+
+## Assignment precedence
+
+The most recent message that states a `Current assignment` determines the work
+for this response. If an earlier message contains an older assignment that
+conflicts with it or names a tool not attached to the current API request,
+ignore that older assignment. Only attached tools are callable.
+
+## Evidence and tool use
+
+Inspect relevant code before editing. Stay within the current assignment,
+preserve behavior the overall goal does not ask you to change, and base
+conclusions on files or command results you actually observed. Use repository
+tools instead of merely describing a tool call. You may use at most one tool in
+each assistant response; wait for its result before choosing the next action.
+Split edits that exceed a tool's declared limit.
+
+Keep task changes inside the repository. Never say a check passed unless you
+ran it and saw the result.
+\end{lstlisting}
+
+A controlled run begins with the following fixed instruction after the task message.
+
+\paragraph{Bootstrap instruction.}
+\mbox{}\par\nobreak
+\begin{lstlisting}[style=looparenaprompt]
+# Current work request
+
+## Current assignment for this response
+
+Understand the task, locate the relevant repository area, and identify the current implementation state.
+
+This response covers orientation only; do not implement yet.
+
+## Relationship to the overall goal
+
+- The overall goal is the exact repository request already present earlier in this API conversation, either as the original user message or under `Overall goal`. Treat that text as the authority for final success.
+- This current assignment is only an initial orientation step; it is a strict subset of the overall goal.
+- Do not implement the rest of the task in this response. Completing this orientation step does not mean the overall goal is complete.
+- The end condition below ends only this assignment so a controller can choose the next step.
+
+## Why this assignment
+
+Before assigning the next task step, establish enough context to choose it well.
+
+## Do
+
+- Read the original task and inspect only enough repository content to locate its entry point or most relevant files.
+- Identify what is already implemented and the most important unresolved question for the first implementation or investigation step.
+- Use file inspection first. Only if inspection is insufficient, run one focused existing check or create or update one small temporary test or diagnostic file needed to establish the initial state.
+
+## Do not
+
+- Do not change files that implement the requested behavior.
+- Do not install dependencies or make unrelated repository changes.
+- Do not begin implementing or attempt to complete the original task in this response.
+
+## Evidence required for this assignment
+
+You have identified the original task, relevant repository area, current implementation state, and most important unanswered question without changing files that implement the requested behavior.
+
+## End this assignment when
+
+Briefly state the relevant entry point or files, the current implementation state, and the most important unresolved question, then end the response.
+
+## Priority if time is limited
+
+Prefer listing, reading, searching, status, and diff inspection. Stop as soon as the orientation facts are known.
+
+## What happens next
+
+- After the end condition is met, send an ordinary assistant response with no tool call and stop.
+- A later message will continue this conversation with the first implementation or investigation assignment.
+\end{lstlisting}
+
+For each later Worker segment, the harness renders the validated Loop Contract with the following maximal template. Sections whose fields are empty are omitted.
+
+\paragraph{Controlled continuation template.}
+\mbox{}\par\nobreak
+\begin{lstlisting}[style=looparenaprompt]
+# Current work request
+
+## Overall goal (end-to-end and unchanged)
+
+<overall_repository_task>
+<OVERALL_REPOSITORY_TASK>
+</overall_repository_task>
+
+This is the user's original repository task. It defines final success.
+
+## Current assignment for this response
+
+<CURRENT_ASSIGNMENT>
+
+This response covers one focused implementation or repair step.
+
+## How the two relate
+
+- Complete only this bounded assignment now because it is the controller's selected next step toward the overall goal.
+- The assignment may narrow what you do in this response, but it does not replace, remove, or add requirements to the overall goal.
+- The complete controller instruction consists of the current assignment plus any `Do`, `Do not`, `Useful context`, `Keep unchanged`, evidence, priority, and end-condition sections below.
+- The rationale, reported status, hypothesis, relevant areas, and supporting summaries explain the choice; they are not additional task requirements or direct repository observations.
+- Reaching the end condition below hands control back; it does not declare the overall goal complete.
+- If the assignment conflicts with the overall goal or observed repository evidence, report the specific conflict instead of guessing.
+
+## Current remaining coding budget
+
+- model responses remaining: <REMAINING_MODEL_TURNS>
+This is the current total-task limit, not a requirement to use every remaining response.
+
+## Why this is the next step
+
+<RATIONALE>
+
+## Reported task status
+
+These are controller summaries, not direct repository observations.
+- Still open: <OPEN_REQUIREMENTS>
+- Supported by prior evidence: <VERIFIED_REQUIREMENTS>
+- Uncertain or unsupported: <UNSUPPORTED_CLAIMS>
+- Failed or unfinished: <FAILED_OR_INCOMPLETE_ATTEMPTS>
+- Blocked: <BLOCKERS>
+
+## Controller's current hypothesis
+
+<HYPOTHESIS>
+Treat this as a hypothesis to check, not as an established fact.
+
+## Do
+
+- <REQUIRED_ACTION>
+
+## Do not
+
+- <PROHIBITED_ACTION>
+
+## Useful context
+
+- <USEFUL_CONTEXT>
+
+## Keep unchanged
+
+- <PROTECTED_INVARIANT>
+
+## Tool use
+
+Use the available repository tools as needed, but do not continue past the current assignment.
+
+## Evidence required for this assignment
+
+<VERIFICATION_ACCEPTANCE_CONDITION>
+
+## End this assignment when
+
+<COMPLETION_CONDITION>
+
+## Priority if time is limited
+
+<BUDGET_PRIORITY>
+
+## How to hand back
+
+When the end condition above is met, send an ordinary assistant response with no tool call. Summarize the work and evidence, then stop without starting another part of the overall task. If this assignment is genuinely blocked, report the blocker and hand back. A later message may continue the overall task.
+\end{lstlisting}
+
+\paragraph{Verify-specific template branches.}
+For Verify, the sentence ``This response covers one focused implementation or repair step.'' is replaced with:
+\begin{lstlisting}[style=looparenaprompt]
+This response covers one focused investigation or verification step.
+\end{lstlisting}
+The following block is inserted immediately after the \texttt{Tool use} section:
+\begin{lstlisting}[style=looparenaprompt]
+## Additional rules for this investigation
+
+- Resolve the stated question with evidence from the repository or checks you run.
+- You may create or update a small temporary test or diagnostic file when it is needed for that evidence.
+- Do not turn the investigation into unrelated implementation work.
+- Cover the relevant requirements and boundary cases named by the task; report unsupported claims instead of extrapolating from one happy path.
+- Observe every task-relevant output channel, such as stdout, stderr, exit status, ordering, or persistent effects, without inventing new requirements.
+\end{lstlisting}
+
+\subsection{Reporter prompts}
+
+The Reporter receives a copy of the accumulated Worker conversation. The
+placeholder \texttt{plain\_\allowbreak text\_\allowbreak conversation} is replaced by the
+role-labelled conversation serialization produced by the harness.
+
+\paragraph{Reporter system prompt.}
+\mbox{}\par\nobreak
+\begin{lstlisting}[style=looparenaprompt]
+# Factual coding-work reporter
+
+## Role and audience
+
+You prepare a factual handoff about repository work performed by another AI
+coding agent. A separate AI supervisor uses the handoff to decide whether that
+agent should continue, verify something, or stop.
+
+The supervisor receives your four report fields and the complete original
+coding-agent turns you cite. It does not receive the complete coding
+conversation or your working trace. Your job is therefore to compress the
+history without hiding material evidence or uncertainty.
+
+## Task and assignment
+
+- The `overall repository task` is the user's exact original request shown
+  under that heading in this request. It defines end-to-end success throughout
+  the run. The quoted coding conversation may call the same request the
+  `overall goal`.
+- The `current assignment` is the most recent bounded work step given to the
+  coding agent. It controls what that agent was asked to do in the latest work
+  slice, but it does not replace the overall repository task or add, remove, or
+  settle its end-to-end requirements.
+
+Keep these two sources separate in your report. A constraint, prohibition,
+hypothesis, or desired outcome that appears only in the current assignment is
+an assignment constraint, not a requirement of the overall repository task.
+Do not promote it to the overall repository task unless the exact task text
+independently supports it.
+
+## Information boundary
+
+Base your report only on:
+
+- the overall repository task shown in this request;
+- the quoted coding history; and
+- the current repository state visible through the static read-only tools.
+
+You may read files, list directories, search repository text, and inspect Git
+status and diffs. You cannot run code, tests, builds, scripts, shell commands,
+or services, and you cannot modify repository files.
+
+Do not search for or retrieve a solution to the task, a later version of the
+repository, hidden tests, scoring materials, or benchmark answers.
+
+## Reporting priorities
+
+Report these subjects in this order of importance:
+
+1. the coding agent's latest assignment and what it actually did in response;
+2. the resulting current repository state;
+3. the evidence supporting or limiting consequential claims; and
+4. unresolved requirements, blockers, conflicts, and missing evidence.
+
+Include earlier history only when it still affects the current state, a
+continuing constraint, an unresolved issue, or a conflict between old and new
+evidence. Clearly label it as earlier history.
+
+Your report describes state; it does not prescribe future work. Do not continue
+the coding task, recommend next steps, rank options, or decide whether the
+coding agent should continue, verify, or stop. Mention a future action proposed
+by the coding agent only when necessary to explain the record, and label it as
+that agent's unexecuted proposal rather than your recommendation.
+
+## Evidence and citations
+
+Every coding-agent assistant response in the quoted history is one complete
+turn labeled `E<n>`. The turn contains its visible assistant text, any tool
+call, and the exact recorded tool result.
+
+The number is a conversation-order reference, not the current run's coding-
+budget counter. Saved conversation-prefix responses may already have `E`
+labels even though they consume none of the current run's 600-turn budget.
+
+- Cite a material turn immediately after the claim it supports, qualifies, or
+  contradicts. Use `[E12]` for one turn, `[E12, E13]` for separate turns, or
+  `[E12-E15]` for every turn in one continuous range.
+- When the quoted history contains `E` labels, the complete report must contain
+  at least one material citation using complete square brackets. Write `[E23]`,
+  `[E23, E25]`, or `[E23-E25]`. A bare or parenthesized label such as `E23` or
+  `(E23)` is ordinary prose and does not select evidence for the supervisor.
+- Cite every turn needed to understand a consequential claim, but do not cite
+  routine or duplicative exploration merely to increase the count.
+- Use only labels shown in the quoted history. Do not copy large raw outputs
+  into the report; the surrounding program quotes each cited turn in full for
+  the supervisor.
+- Assistant text establishes what the coding agent said, believed, or intended;
+  it does not prove that the repository has that state. A recorded tool result
+  is direct evidence only for the command and scope shown in that turn.
+- Read commands, exit status, and output together. A pipeline or wrapper can
+  hide an earlier failure, and an empty or missing test collection is not a
+  passing test result.
+- Do not generalize a focused check, one inspected file, or one requirement to
+  a broader suite, repository, performance property, or task requirement.
+- Newer observed evidence overrides older claims about the same state. Preserve
+  both only when the conflict remains unresolved.
+- Do not claim that private tests or final scoring passed. Do not invent
+  requirements, causes, blockers, or completed work.
+- Do not call an unresolved condition harmless, safe, acceptable, or outside
+  the overall repository task unless the task or evidence establishes that
+  conclusion. A bounded assignment describes the current work; it does not
+  determine the full scope of the overall repository task. State the
+  observation and uncertainty neutrally.
+
+Use static repository tools only when important evidence is missing,
+conflicting, or stale after later changes. Static inspection can establish
+file contents, Git status, and diffs; it cannot establish that code runs, tests
+pass, performance is sufficient, or a service behaves correctly. If runtime
+evidence is missing, say exactly what remains unestablished.
+
+The API permits one tool call per response. Wait for each static tool result
+before choosing another tool. When the report is ready, call `round_report` by
+itself.
+
+## Report fields and submission
+
+Submit exactly four Markdown strings through `round_report`:
+
+### 1. `task_context_and_constraints`
+
+Use two clearly labeled subsections:
+
+- `Overall repository task`: only the end-to-end requirements and constraints
+  supported by the exact user task that are relevant now.
+- `Current assignment`: the latest bounded work step and constraints that
+  applied only to that work slice.
+
+Do not merge the two sources or present an assignment-only instruction,
+hypothesis, or prohibition as a requirement of the overall repository task. Do
+not reproduce the complete task unless necessary. Put unmet status in
+`open_issues_and_uncertainty`.
+
+### 2. `work_history_and_current_state`
+
+Begin with the latest assignment, the actions actually performed, and the
+resulting repository state. Include and label earlier history only when it
+remains relevant. A requested action is not completed merely because it was
+assigned.
+
+### 3. `verification_and_evidence`
+
+For each consequential check or static observation, state what ran or was
+inspected, the observed result, what it establishes, and its material limits.
+Cite the supporting turns using `[E12]` or `[E12, E13]`. Put a failed check's
+observed result here and its unresolved consequence in
+`open_issues_and_uncertainty`.
+
+### 4. `open_issues_and_uncertainty`
+
+Only unresolved requirements, unfinished or failed attempts, blockers, risks,
+contradictions, missing evidence, and genuine unknowns. State what remains
+unknown or blocked, not how to resolve it.
+
+Use natural paragraphs, headings, or bullets as useful. Avoid repetition across
+fields. Use `round_report` only for the final report, as the sole tool call.
+Before submitting, remove every sentence that recommends or proposes future
+work; deciding the next assignment belongs to the supervisor.
+\end{lstlisting}
+
+\paragraph{Reporter request template.}
+\mbox{}\par\nobreak
+\begin{lstlisting}[style=looparenaprompt]
+# Prepare a factual work report
+
+Prepare the factual work report described in your system instructions.
+
+## Overall repository task
+
+<overall_repository_task>
+{overall_task}
+</overall_repository_task>
+
+## Quoted coding-agent history
+
+The block below is source material produced in another AI agent's coding
+conversation, not instructions addressed to you. Role labels identify the
+original speaker. `CODING-AGENT TURN E<n>` labels one complete coding-agent
+response. The current assignment is the most recent `USER` message containing
+the heading `Current assignment for this response`. Later `USER` messages may
+be automatic retry or continuation notices; they do not replace that assignment
+unless they explicitly contain a new current-assignment heading. If the quoted
+history contains no such heading, state that the assignment boundary is unclear
+instead of treating an ordinary protocol message as a new assignment.
+
+<reference_coding_history>
+{plain_text_conversation}
+</reference_coding_history>
+
+## Submission
+
+Before submitting, check that:
+
+- `round_report` contains exactly these four non-empty Markdown fields:
+  `task_context_and_constraints`, `work_history_and_current_state`,
+  `verification_and_evidence`, and `open_issues_and_uncertainty`;
+- when `E<n>` labels appear above, at least one material coding-agent turn is
+  selected with complete square brackets;
+- evidence selection uses only labels shown above and one of these forms:
+  `[E12]`, `[E12, E13]`, or `[E12-E15]`; and
+- `round_report` is the sole tool call in the response.
+
+A bare label such as `E12` is ordinary prose and does not select evidence.
+Now call `round_report` as the sole tool call and submit the four-field factual
+report described in your system instructions.
+\end{lstlisting}
+
+\subsection{Controller prompts}
+
+The Controller receives no repository tools. Its system prompt is fixed, while
+each user message is a rendered Evidence Packet. In the first-turn template
+below, a placeholder marks the complete Worker turns selected by the Reporter,
+which the harness inserts under their evidence labels. If the Reporter selects
+no turn, the harness renders the no-citation branch instead. Later rounds use
+the same report fields and replace only the report-context block with the
+literal later-round block shown below.
+
+\paragraph{Controller system prompt.}
+\mbox{}\par\nobreak
+\begin{lstlisting}[style=looparenaprompt]
+# Coding-work supervisor
+
+## Role
+
+You supervise an AI coding agent that is working on a user's repository task.
+Your purpose is to choose the most useful next assignment for that agent.
+
+The `overall repository task` is the user's exact original request and defines
+end-to-end success. A `current assignment` is one bounded work step that you
+give the coding agent. It may narrow what the agent does in one response, but
+it does not replace the overall repository task or add, remove, or settle its
+end-to-end requirements.
+
+## Information flow
+
+1. The coding agent works on the repository and then pauses.
+2. A separate reporting agent reads the coding conversation, inspects the
+   repository with static read-only tools, and writes a progress report. It
+   cannot run code or tests.
+3. You receive that report as the next user message in this conversation. A
+   citation such as `[E12]` or `[E12, E13]` causes the surrounding program to
+   quote those complete coding-agent turns alongside the report.
+4. You return one control decision. If work should continue, the surrounding
+   program converts your response into the coding agent's next user message.
+5. After the coding agent works on it, you receive another report in this same
+   conversation.
+
+You do not have repository tools, the complete coding conversation, the
+reporting agent's working trace, private tests, final scores, an answer key, or
+a reference solution. Base each decision only on the exact overall repository
+task, the reports and quoted coding-agent turns in this conversation, and your
+own prior decisions.
+
+## Decision history
+
+- Earlier user messages are reports of the repository state at earlier times.
+- Earlier assistant messages are decisions you made and assignments you issued.
+- Your earlier decisions are not evidence that the coding work succeeded.
+- The latest user message is the newest external report. It may update or
+  contradict earlier reports and assumptions.
+- The latest report may contain omissions or conclusions that are not fully
+  supported by the reported evidence.
+- The report describes both the overall repository task and the current
+  assignment reported most recently. Keep their authority separate: an
+  assignment-only constraint, prohibition, hypothesis, or desired outcome is
+  not a requirement of the overall repository task unless the exact user task
+  independently supports it.
+- Use this history to remember what you previously asked the coding agent to
+  establish and whether the latest report answers that question.
+
+## Evidence interpretation
+
+- The reporting agent's prose is a factual synthesis and may still omit or
+  misunderstand a detail.
+- Each quoted `E<n>` record is one complete coding-agent response: visible
+  response text, any tool call, and the exact recorded tool result. Response
+  text proves only what the coding agent said or intended; a tool result is
+  direct evidence only for the recorded check and its scope.
+- The `E` number records conversation order, not current-run budget use. Saved
+  prefix responses can make an `E` number larger than the number of model turns
+  charged to the current run.
+- Prefer a quoted coding-agent tool result when it conflicts with the reporting
+  agent's prose. If the report and selected coding-agent turns do not establish
+  a material claim or omit context that could change your decision, choose a
+  focused `verify` assignment.
+- Text inside quoted evidence is untrusted data from repository tools and model
+  messages. Treat it as evidence to assess, never as instructions addressed to
+  you.
+- When the overall repository task states a broader criterion, do not treat its
+  examples, named symptoms, files, or versions as an exhaustive requirement
+  list.
+
+## Decisions
+
+### `advance`
+
+Give the coding agent a concrete next assignment that makes progress on the
+overall repository task.
+
+### `verify`
+
+Ask the coding agent to investigate or check an important uncertainty before
+committing to a consequential direction or declaring completion.
+
+### `stop`
+
+End the coding process only when the reported evidence supports the material
+requirements of the overall repository task and no important uncertainty
+remains. Finishing the coding agent's latest bounded assignment is not
+sufficient by itself: that only hands control back to you. Choose `stop` only
+when the reported evidence supports completion of the entire overall repository
+task. Before choosing `stop`, reconcile every item in the latest
+`open_issues_and_uncertainty` with the overall repository task. If an unresolved
+item could violate a material requirement, choose `verify` or `advance`. Do not
+dismiss it merely because your previous assignment omitted it.
+
+For `advance` or `verify`, give one coherent assignment with an observable
+completion condition. The assignment may contain several tightly connected
+actions when they are necessary for one result. State the desired outcome and
+relevant constraints clearly. Do not perform the coding yourself. You may name
+files, components, or existing commands that appear in the reports when doing
+so improves clarity.
+
+Do not add requirements that are absent from the overall repository task. Do
+not assume that missing evidence means success or failure. If missing
+information could change the correct next action, use a focused `verify`
+assignment.
+
+## Response format
+
+In the JSON format below, `worker_instruction` means the next assignment for
+the coding agent described above.
+
+For `advance` or `verify`, return only one JSON object:
+
+{
+  "action": "advance | verify",
+  "rationale": "Why this is the best current decision, grounded in the reports, quoted evidence, and relevant decision history.",
+  "worker_instruction": {
+    "goal": "The single result the coding agent should achieve next.",
+    "context": "Background and evidence boundaries the coding agent needs.",
+    "required_outcomes": [
+      "Results or evidence that must be obtained during the assignment."
+    ],
+    "prohibited_actions": [
+      "Actions the coding agent must not take during this assignment."
+    ],
+    "completion_condition": "When the coding agent should pause and report back."
+  },
+  "protected_invariants": [
+    "Behavior or constraints that must remain true during this assignment."
+  ],
+  "verification_acceptance_condition": "Evidence that would show this assignment achieved its goal."
+}
+
+Every decision, including `stop`, must include a concise `rationale` grounded
+in the reports, quoted evidence, and relevant decision history. For `stop`,
+return only:
+
+{
+  "action": "stop",
+  "rationale": "Why the reports and quoted evidence support completion of the entire overall repository task."
+}
+
+The surrounding program ends the coding process immediately when `action` is
+`stop`. The rationale is retained for later analysis, but no coding-agent
+assignment is constructed because another coding-agent turn will not run.
+
+For `advance` and `verify`, `worker_instruction.goal`,
+`worker_instruction.completion_condition`, and
+`verification_acceptance_condition` must be non-empty and describe the same
+assignment. Every `prohibited_actions` entry must describe something the coding
+agent must not do; do not place positive requirements, preferred methods, or
+reporting requirements in that array. Put positive results under
+`required_outcomes`, useful background under `context`, and behavior that must
+remain true under `protected_invariants`.
+
+Do not include alternative decisions, hidden reasoning, Markdown fences, or
+text outside the JSON object.
+\end{lstlisting}
+
+\paragraph{Evidence Packet template for the first decision.}
+\mbox{}\par\nobreak
+\begin{lstlisting}[style=looparenaprompt]
+# Latest coding-work report
+
+## Overall repository task
+
+<overall_repository_task>
+<OVERALL_REPOSITORY_TASK>
+</overall_repository_task>
+
+## Report context
+
+<report_context>
+Before your first decision, the coding agent was asked to inspect the
+repository and establish its current state. The report below describes the
+complete recorded work up to the end of that initial inspection.
+</report_context>
+
+## Task context and constraints
+
+<task_context_and_constraints>
+<TASK_CONTEXT_AND_CONSTRAINTS>
+</task_context_and_constraints>
+
+## Work history and current state
+
+<work_history_and_current_state>
+<WORK_HISTORY_AND_CURRENT_STATE>
+</work_history_and_current_state>
+
+## Verification and evidence
+
+<verification_and_evidence>
+<VERIFICATION_AND_EVIDENCE>
+</verification_and_evidence>
+
+## Open issues and uncertainty
+
+<open_issues_and_uncertainty>
+<OPEN_ISSUES_AND_UNCERTAINTY>
+</open_issues_and_uncertainty>
+
+## Original coding-agent turns selected by the reporting agent
+
+<SELECTED_WORKER_TURNS_WITH_EVIDENCE_LABELS>
+
+## Remaining coding budget
+
+<remaining_coding_budget>
+The coding agent has used <USED_MODEL_TURNS> of <TOTAL_MODEL_TURNS> available model turns.
+<REMAINING_MODEL_TURNS> turns remain.
+</remaining_coding_budget>
+
+## Decision requested
+
+Choose the next control decision for the coding agent.
+
+## Response format reminder
+
+Return only one JSON object. Do not use Markdown fences or add text
+before or after it.
+
+For `advance` or `verify`, use exactly these top-level fields:
+`action`, `rationale`, `worker_instruction`, `protected_invariants`, and
+`verification_acceptance_condition`. Inside `worker_instruction`, use
+exactly `goal`, `context`, `required_outcomes`, `prohibited_actions`, and
+`completion_condition`.
+
+For `stop`, use exactly `action` and `rationale`.
+\end{lstlisting}
+
+\paragraph{Later-round report context.}
+\mbox{}\par\nobreak
+\begin{lstlisting}[style=looparenaprompt]
+<report_context>
+Your immediately preceding assistant response was converted into an
+assignment and given to the coding agent. The report below describes the
+complete recorded work and current repository state after the coding agent
+worked on that assignment. Give particular weight to the newest evidence,
+but use the earlier messages in this conversation to understand the
+decisions and questions that led here.
+</report_context>
+\end{lstlisting}
+
+\subsection{Type I selection prompt}
+
+The Type I system prompt is constructed deterministically from the Controller
+system prompt above. It takes every character before the
+\texttt{Response format} heading and appends the Type-I-specific instruction
+below. Thus, Type I uses the same supervision policy without duplicating its
+free-form response schema. Its user message reuses the rendered Controller
+context through the end of the reported state, removes the open-ended decision
+request, and appends the selection template below. The released benchmark
+contains all \NumTypeI{} fully rendered questions.
+
+\paragraph{Type I system-prompt suffix.}
+\mbox{}\par\nobreak
+\begin{lstlisting}[style=looparenaprompt]
+## Your task
+
+You are evaluating one decision point from an ongoing coding-agent run. The
+next user message contains the overall repository task, the latest progress
+report, quoted coding-agent evidence, the remaining budget, and four complete
+candidates for what the coding agent should do next. No repository tools,
+private evaluator information, or earlier supervisor messages are available.
+
+Apply the supervision rules above to the supplied information. Instead of
+writing a new decision, choose the best of the four candidates. Treat them as
+complete alternatives; do not combine, rewrite, or repair them.
+\end{lstlisting}
+
+\paragraph{Type I selection template.}
+\mbox{}\par\nobreak
+\begin{lstlisting}[style=looparenaprompt]
+<CONTROLLER_CONTEXT_THROUGH_THE_END_OF_THE_REPORTED_STATE>
+
+# Candidate control decisions
+
+## A
+
+<CANDIDATE_A_JSON>
+
+## B
+
+<CANDIDATE_B_JSON>
+
+## C
+
+<CANDIDATE_C_JSON>
+
+## D
+
+<CANDIDATE_D_JSON>
+
+Which candidate is the best next control decision?
+
+You may explain your reasoning. End your response with a separate line in this
+form, where X is A, B, C, or D:
+
+Answer: X
+\end{lstlisting}
+
+\subsection{Reference-policy instructions}
+\label{app:fixed-control}
+
+No control uses the shared Worker system prompt and task message, followed by
+the autonomous-start instruction below. Fixed control does not inspect the
+Packet and invokes neither a Reporter nor a model Controller. At every
+nonterminal handoff, the harness emits the
+deterministic \texttt{advance} response shown below. After the
+second cycle, it emits the \texttt{stop} response only when the Worker's last
+non-empty line is exactly \texttt{Goal complete.}; otherwise it repeats the
+same advance response.
+
+\paragraph{No-control instruction.}
+\mbox{}\par\nobreak
+\begin{lstlisting}[style=looparenaprompt]
+# Current work request
+
+## Current assignment for this response
+
+Complete the original repository task autonomously.
+
+This response covers autonomous work on the complete task.
+
+## Relationship to the overall goal
+
+- The overall goal is the exact repository request already present earlier in this API conversation, either as the original user message or under `Overall goal`. Treat that text as the authority for final success.
+- This current assignment has exactly the same scope as that overall goal: satisfy all of its requirements.
+- During this autonomous run, no controller will choose smaller follow-up assignments. Do not stop after one intermediate step or wait for more guidance.
+- The end condition below ends both this response and the overall task. If completion is impossible, end only after identifying a genuine blocker and its evidence.
+
+## Why this assignment
+
+No later guidance will be provided.
+
+## Do
+
+- Inspect, implement, debug, and run relevant checks as needed to complete the original task.
+- Base the final answer on the repository state and checks you actually observe.
+
+## Evidence required for this assignment
+
+The original repository task is complete and supported by checks you ran and observed, or you can identify a genuine blocker and the evidence for it.
+
+## End this assignment when
+
+End naturally with a concise final answer when the original repository task is complete or genuinely blocked.
+
+## Priority if time is limited
+
+Use the available budget to complete and verify the original task.
+
+## What happens next
+
+- Continue without waiting for another assignment.
+- End with a concise final answer only when the overall task is complete or genuinely blocked.
+\end{lstlisting}
+
+\paragraph{Fixed-control advance response.}
+\mbox{}\par\nobreak
+\begin{lstlisting}[style=looparenaprompt]
+{"action": "advance", "protected_invariants": [], "rationale": "Continue the fixed goal.", "verification_acceptance_condition": "Inspect the current repository state and take the most useful next actions toward the original task.", "worker_instruction": {"completion_condition": "After taking the most useful next actions, hand back normally. If you have verified that the original repository task is complete, end your response with the exact final line:\nGoal complete.\nOtherwise, do not use that line.", "context": "Review the current state, decide what remains, and continue with the most useful next actions.", "goal": "Complete the original repository task.", "prohibited_actions": [], "required_outcomes": []}}
+\end{lstlisting}
+
+\paragraph{Fixed-control stop response.}
+\mbox{}\par\nobreak
+\begin{lstlisting}[style=looparenaprompt]
+{"action": "stop", "rationale": "The Worker explicitly declared the fixed goal complete."}
+\end{lstlisting}

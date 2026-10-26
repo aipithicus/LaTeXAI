@@ -1,8 +1,10 @@
-# PyTeXML cleanup and development handoff
+# PyTeXML development backlog and implementation record
 
 Recorded 2026-10-24 after Batch 4; updated 2026-10-25 for Batches 5A and 5B and
-the four authorized reading/dependency increments on `main`. Broader interpretation
-and binding-design work below remains a plan, not authorization to implement it all.
+the four authorized reading/dependency increments on `main`. Review findings from
+`20261025-reading-increments` were added to sections 1 and 2 on 2026-10-25. Broader
+interpretation and binding-design work below remains a plan, not authorization to
+implement it all.
 
 ## Where we are
 
@@ -339,6 +341,79 @@ relocation qualification, atomic publication, policy-driven emission, structured
 logging, bounded lint/repair, and edit-aware provenance already have implementations.
 Inspect their residual gaps; do not schedule them again as wholly unwritten systems.
 
+#### Bounded effect summaries: implemented baseline, remaining closure
+
+The shared write-set contract and selective invalidation are implemented. The
+[effect-summary contract](../resources/bindings/effect-summaries.md) describes its
+YAML fields, immutable Python records, supported scopes, call-time body analysis,
+and conservative fallbacks. Bodies remain unexpanded; the analyzer records their
+possible writes rather than executing them. Unknown callees, computed names,
+mode/hook-dependent text and analysis-budget exhaustion retain uncertainty.
+
+**Witness:** Fractal (2405.15943v3). The manuscript's `[final]` option resolves the
+NeurIPS booleans early. The possible `lineno` load at `neurips_2024.sty:350` still
+can't be resolved, because two operations invalidate all tracked state: the
+geometry load at line 75 (`unit-54`) and a later captured `\normalsize`
+invocation. Increment 1 already established, for `let`, that a known assignment to
+an unrelated name must not invalidate every boolean or option scope. This increment
+extends that principle to package loads, declared effects and bounded invocations.
+
+**Contract:**
+
+- An effect summary may declare a write set: the control-sequence names or
+  namespaces it can assign (for example, a package's internal prefix), plus the
+  registers and dimensions, catcodes, and hooks it registers.
+- When an operation with a declared write set runs, only tracked state inside that
+  set becomes uncertain. Booleans, option flags and meanings outside it keep their
+  established values.
+- Operations without a declared write set keep today's behavior.
+- Computed or expansion-built names fall back to full invalidation.
+- Deferred hook effects carry their own write sets and apply them when the hook
+  fires.
+- For a captured author or style redefinition, such as the `\normalsize` above,
+  derive the write set from the captured body, and only when every operation in
+  that body is bounded.
+
+**Evidence:** write sets come from pinned source. Geometry 6.0 is now vendored at
+TeX Live revision 78315 using `lctan --docs geometry`; its catalog/provenance JSON
+and `ls-R` entry follow the existing infrastructure. `lctan --check` passes.
+`geometry.yaml` cites that pin and explicitly keeps its closure incomplete:
+configuration search/contents, dependency effects, option expansion and deferred
+hooks remain unresolved. A namespace prefix alone is not a package-effect proof.
+
+**Acceptance:**
+
+- Fractal's `lineno` branch resolves as inactive, or the next witnessed obstruction
+  is recorded.
+- A write set that includes a tracked boolean still invalidates it.
+- Namespace prefixes don't match unrelated names.
+- Computed names fall back to full invalidation.
+- Repeated loads and scope restoration behave as they do today.
+- External-search uncertainty for `geometry.cfg` stays a recorded assumption.
+- DeadSalmons' `fancyhdr` and `natbib` boundaries may or may not reduce to the same
+  pattern. Check them rather than assuming.
+
+**Observed result:** the `20261025-bounded-effects-verified` iteration still reports partial
+preparation and complete materialization for both papers, with unchanged counts
+(Fractal 33 references/9 SVGs; DeadSalmons 154/5), no unaccounted source intervals,
+and no repeated reads. Fractal's `normalsize` now explicitly identifies its first
+unbounded callee, `@setfontsize`; its `lineno` branch remains unresolved. In
+DeadSalmons, `headwidth` aliases an unresolved register meaning and the assignment
+at `fancyhdr.sty:313` remains a boundary; `natbib.sty:350` reaches `ProcessOptions`
+with uncertain earlier load history. These are distinct remaining contracts,
+not evidence that broader namespace exemptions would resolve both.
+
+Final validation: the dedicated-venv suite ran **824 tests in 300.831 seconds**,
+with 822 passing and two optional compiler checks skipped. All 24 emitted payload
+files across the two specimens (master, retained code, bibliography and SVGs;
+excluding diagnostic/provenance records) are byte-identical to
+`20261025-reading-increments`. Both runs have zero unmapped unit locations and
+valid uncertainty links. This qualifies the preparation increment, not a new
+rendering or relocation claim.
+
+Hook timing remains deferred: current summaries inventory hook effects but fall
+back conservatively. They do not execute registration bodies or fire hooks.
+
 ### 2. Finish the preparation-to-interpretation handoff deliberately
 
 The reader is reusable, and the finalized `master.tex` becomes the downstream
@@ -356,6 +431,55 @@ Workers may interpret independent units once dependencies are resolved. Counters
 label-target changes, label keys, and scope events require an ordered fold before
 reference resolution. This is later interpretation design; preparation should not
 grow a scheduler or expand all macros to anticipate it.
+
+#### Inventory of current records (`20261025-reading-increments`)
+
+All four specimens meet the location invariants:
+
+- Emission order follows source order within each occurrence.
+- Copy segments preserve length; separators are their own `SYNTHETIC_SEPARATOR`
+  segments.
+- Source coverage has no unaccounted intervals, and replacements are linked.
+- All 3,189 requirements have exact locations, in `master.tex` or in an emitted
+  resource.
+
+Units carry `id`, `kind`, `parent_id`, `origin`, `activity`, `activity_evidence`,
+`location_status` and `locations`, and the manifest adds `uncertainty_causes`. Unit
+spans in this specimen inspection nest without crossings. This supports structural
+index fixtures; it does not prove that every future annotation forms a tree or
+that existing ownership links are containment links.
+
+What the handoff still lacks:
+
+1. **Context references and effects.** No unit carries a `ContextRef` or a
+   context-effect class. Uncertainty origins identify witnessed invalidations, not
+   every unknown producer: no cause may be minted when nothing tracked changes or
+   a value is already uncertain. Bounded summaries now describe some retained
+   invocations. A complete per-unit effect inventory and context versions remain.
+2. **Stable ids.** `location_contract` declares `id_scope: preparation_run`. Relation
+   records and a worker journal need ids that stay the same for the same
+   `master.tex` analysis. Deterministic enumeration must be scoped to an analysis
+   revision including reader/binding inputs and retained reading resources, not
+   just the master's bytes. Document identity and analysis identity are distinct.
+3. **Parent links versus containment.** `parent_id` doesn't follow span containment.
+   Many `argument` units contain other units whose parent is elsewhere, apparently
+   the owning command. Counting leaf pairs that nest without a parent link: 611 in
+   Bayesian MARS (409 of them deferred regions inside arguments), 510 in Fractal,
+   3,916 in DeadSalmons, and none in FPCA. If `parent_id` means ownership, name it
+   that way. Structural containment can be derived from the spans, since they nest
+   cleanly.
+4. **Tiling.** Leaf units cover 35.0% (Bayesian MARS), 42.7% (Fractal), 39.9% (FPCA)
+   and 97.0% (DeadSalmons) of `master.tex`, because plain text runs are not units.
+   Assembly by an in-order walk needs leaves that cover every character exactly
+   once.
+5. **Master index.** Items 3 and 4 need no new preparation records. Build a
+   structural index of `master.tex` by re-reading it with the same reader at the
+   end of preparation. It holds a containment tree derived from the spans, text-run
+   leaves filling the gaps, units, contexts, label observations and line starts.
+   The [master-index/context design](../../../../aipithicus-issues/LaTeXAI/briefs/pytexml-master-index-contexts.md)
+   refines the source-span brief (§9.6), including equal/empty/fragmented spans and
+   incomplete reading contexts. Reread qualification compares surviving deferred
+   content and reading behavior; raw preparation IDs/counts need not be identical.
 
 ### 3. Settle binding contracts before bulk adaptation
 

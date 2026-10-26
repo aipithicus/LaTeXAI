@@ -16,3 +16,7 @@ specimens:
     title: The Dead Salmons of AI Interpretability
     source: 2512.18792v1-tex
     main: 00_main.tex
+  2608.28281v2:
+    title: 'LoopArena: Benchmarking Models as Runtime Controllers for Loop Engineering'
+    source: 2608.28281v2-tex
+    main: main.tex

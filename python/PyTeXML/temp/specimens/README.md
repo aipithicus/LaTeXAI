@@ -10,6 +10,12 @@ and explicit main document. New papers can be added as new catalog records.
 | 2405.15943v3 | Transformers Represent Belief State Geometry | [fractals_in_residual_stream.tex](2405.15943v3-tex/fractals_in_residual_stream.tex) |
 | 2412.11340v4 | Fast Bayesian Functional Principal Components Analysis | [Main.tex](2412.11340v4-tex/Main.tex) |
 | 2512.18792v1 | The Dead Salmons of AI Interpretability | [00_main.tex](2512.18792v1-tex/00_main.tex) |
+| 2608.28281v2 | LoopArena: Benchmarking Models as Runtime Controllers for Loop Engineering | [main.tex](2608.28281v2-tex/main.tex) |
+
+LoopArena is a witness for recovering title, author/affiliation data, abstract and
+metadata from a class-defined TikZ title card. Preparation must preserve the
+declarations and stored abstract input needed for that later interpretation;
+rendering the surrounding box is not the extraction goal.
 
 Source directories are inputs. Do not run preparation into their `extracted/`
 directories: named iteration outputs go in the sibling `specimen-runs/` collection.

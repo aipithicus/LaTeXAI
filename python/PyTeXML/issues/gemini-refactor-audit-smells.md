@@ -1,175 +1,112 @@
 # PyTeXML Refactoring & Architectural Shape Audit
+*Post-Batch-5 Verification & Scorecard*
 
-## 1. Executive Summary: The Shape Gate vs. The Test Trap
+## 1. Executive Summary: The Refactoring Harvest
 
-The PyTeXML codebase has reached an extraordinary level of behavioral maturity: **687 tests pass across 45 test suites** (including relocation qualification, live rendering, transactional rollback, and checked repairs).
+Following the execution of Batches 1 through 5B (commits `cd468c5..0aac97c`), PyTeXML has undergone a comprehensive internal architectural consolidation:
+* **780 tests pass across 46 test suites** (0 failures, 0 errors, 2 skipped).
+* All 4 benchmark specimens ([`2306.01911v1`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/temp/specimen-runs/20261024-packaging-final/2306.01911v1), [`2405.15943v3`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/temp/specimen-runs/20261024-packaging-final/2405.15943v3), [`2412.11340v4`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/temp/specimen-runs/20261024-packaging-final/2412.11340v4), [`2512.18792v1`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/temp/specimen-runs/20261024-packaging-final/2512.18792v1)) match their qualification baselines with byte-identical payload and provenance files.
+* **4 of the 6 major smells identified in the earlier audit have been systematically resolved.**
 
-However, auditing PyTeXML through the updated lenses of **Facehugger Seam Gates**, **Beck’s Precedence**, and **C.U.P.I.D. Heuristics** reveals a critical architectural contrast between newly added modular subsystems and the two central orchestrators:
+### Audit Delta: Smells Cleared vs. Smells Remaining
 
-> **The Test Trap:** Tests check behavior, but audits check shape. PyTeXML's test suite is 100% green, yet the two central orchestrators have breached the >500 LOC **Architectural Decision Point**. New capabilities (diagnostics, relocation, transactional publishing, bounded linting) were authored with high modularity (<200 LOC each), but their glue hooks were routed through the two legacy God classes, inflating them further.
-
-| Severity | Smell / Architectural Anti-Pattern | Primary Location | Key Indicator & Calibrated Invariant |
-| :--- | :--- | :--- | :--- |
-| **Critical** | **Escaped Seam (Facehugger)** | [`dispatcher.py`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/reading/dispatcher.py) (930 LOC)<br>[`session.py`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/prepare/session.py) (816 LOC) | Both central connectors have breached the >500 LOC architectural decision point. `dispatcher.py` coordinates 6 scanners and lexical lint hooks; `session.py` coordinates 40+ lifecycle fields. |
-| **High** | **Accumulated Post-Turn Micro-Damage** | [`session.py:L623-628`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/prepare/session.py#L623-L628) | Compound `if` clause with 3 `or` branches checking raw metadata for synthetic separator emission. (*Note: Astra cleanly pruned the earlier line 545 micro-tax in commit `6d57264`*). |
-| **High** | **Primitive / Dict Obsession** | [`session.py:L164-175`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/prepare/session.py#L164-L175), [`manifest.py:L99-115`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/prepare/manifest.py#L99-L115) | Core execution traces, candidate dependencies, and diagnostics use untyped `dict[str, Any]` and coordinate tuples `(r["source"], r["start"], r["end"])`. |
-| **Medium** | **Inverted Coupler (Feature Envy)** | [`bibliography.py:L28-60`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/prepare/bibliography.py#L28-L60) | `prepare_bibliography` reaches directly into 6 internal session fields (`session.manifest`, `session.store`, `session.commands`, `session.bibliography_pieces`, etc.). |
-| **Medium** | **Scanner Cross-Calls (Inappropriate Intimacy)** | [`environment_scanner.py:L44, L47`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/reading/environment_scanner.py#L44) | Direct calls into private methods of foreign scanners (`args._nonspace()`, `definitions._body()`). |
-| **Low** | **Deprecation Fence Parameters** | [`pipeline.py:L15-30`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/prepare/pipeline.py#L15-L30) | 5 retired parameters that throw `ValueError` immediately. Confirmed as intentional caller fences, not forgotten dead code. |
-
----
-
-## 2. C.U.P.I.D. Subsystem Scorecard
-
-Evaluating PyTeXML against Dan North’s C.U.P.I.D. properties (*Composable, Unix “fits in my head”, Predictable, Idiomatic, Domain-based*):
-
-| Subsystem | C.U.P.I.D. Evaluation | Verdict |
-| :--- | :--- | :--- |
-| **[`tex_reader.py`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/reading/tex_reader.py)** (577 LOC) | **Gold Standard.** Fits in head (Knuth's 3 states N/M/S), strictly predictable, idiomatic Python with `@dataclass(frozen=True, slots=True)`, rich domain language (*CatCodes, ReadEvents*). | **Preserve untouched.** |
-| **[`validation/assessment.py`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/validation/assessment.py)** (90 LOC) | **Gold Standard.** Composable, Unix (pure projections over evidence), strictly predictable, zero mutable state. | **Preserve untouched.** |
-| **[`validation/relocation.py`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/validation/relocation.py)** (136 LOC) | **High.** Clean sandbox boundary; audits Tectonic Makefile dependency receipts with zero leak tolerance. | **Preserve untouched.** |
-| **[`prepare/publication.py`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/prepare/publication.py)** (117 LOC) | **High.** Fits in head (`OutputTransaction`), bounded Windows sharing lock retries, exception-safe rollback. | **Preserve untouched.** |
-| **[`prepare/lint.py`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/prepare/lint.py)** (193 LOC) | **High.** Declarative YAML catalog, explicit user policy gating, mathematically bounded token-equivalence proof. | **Preserve untouched.** |
-| **[`prepare/assets.py`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/prepare/assets.py)** (186 LOC) | **Good.** Extracted cleanly from `session.py`; handles multi-page `page=N` PDF extraction and rollback filtering. | **Preserve untouched.** |
-| **[`reading/context.py`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/reading/context.py)** (317 LOC) | **Passes Beck's Tie-Breaker.** Explicit scoped journal stacks. Readable and predictable. | **Do NOT over-DRY into a generic metaclass.** |
-| **[`reading/dispatcher.py`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/reading/dispatcher.py)** (930 LOC) | **Fails Unix & Composable.** Breached the 500 LOC gate. Coordinates 6 scanners, token replays, conditionals, and lexical lint recovery. | **Decompose internally; re-cut seam.** |
-| **[`prepare/session.py`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/prepare/session.py)** (816 LOC) | **Fails Unix & Predictable.** Breached the 500 LOC gate. 40+ instance fields; multi-phase lifecycle container. | **Architectural Decision Point (split plan).** |
+| Smell / Anti-Pattern | Status Post-Batch-5 | Resolution Mechanism & Verification |
+| :--- | :---: | :--- |
+| **Failure-Location Leak (Functional Defect)** |  **CLEARED** | [`manifest.mark_failed()`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/prepare/manifest.py#L201-L211) resets all locations on publication failure. Failure manifests can never claim unpublished artifact coordinates. |
+| **Primitive / Dict Obsession** |  **CLEARED** | Extracted [`src/prepare/records.py`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/prepare/records.py) with `TypedDict` models (`SourceReference`, `LocationRecord`, `WorkRecord`, `RequirementRecord`) and centralized factory constructors (`work_record`, `assign_locations`). |
+| **Inverted Couplers & Feature Envy** |  **CLEARED** | Decoupled helpers in Batch 5B. [`test_preparation_ownership.py`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/tests/test_preparation_ownership.py) verifies asset parsing/rewriting and citation discovery execute on plain data without requiring a `session` instance. |
+| **Public Pipeline Parameter Duplication** |  **CLEARED** | Introduced immutable [`_PreparationRequest`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/prepare/pipeline.py#L18-L29). Deleted `dict(locals())` and centralized argument/path validation in the outer transaction wrapper. |
+| **Scanner Cross-Calls (Inappropriate Intimacy)** |  **CLEARED** | Added [`source_command_syntax`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/reading/contracts.py#L132) to formal `ReadingKnowledge` protocol; removed `getattr` probing. |
+| **The Escaped Seams (Facehuggers)** | ⚠️ **CONTAINED / OPEN** | `StructuralDispatcher` (934 LOC) and `PreparationSession` (858 LOC) remain >500 LOC. While helper logic was pushed to satellite modules, the central routing and traversal loops remain large monolithic classes. |
+| **Accumulated Post-Turn Micro-Damage** | ⚠️ **RESIDUAL** | Line 545 package-asset smell was deleted. Line 668 compound separator check remains: 3 `or` branches checking raw command metadata. |
 
 ---
 
-## 3. Detailed Findings & Calibrated Playbooks
+## 2. Updated C.U.P.I.D. Subsystem Scorecard
 
-### A. The Escaped Seams (Facehuggers)
+Evaluating PyTeXML's revised architecture against Dan North’s C.U.P.I.D. properties (*Composable, Unix “fits in my head”, Predictable, Idiomatic, Domain-based*):
 
-#### 1. `StructuralDispatcher`: From Lexical Delimiter to Virtual Machine
-* **Location:** [`dispatcher.py:L67-590`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/reading/dispatcher.py#L67-L590) (930 lines)
+| Subsystem | LOC | C.U.P.I.D. Rating | Architectural Assessment |
+| :--- | :---: | :--- | :--- |
+| **[`tex_reader.py`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/reading/tex_reader.py)** | 577 | **Gold Standard** | Knuthian 3-state mouth physics; immutable dataclasses with slots; strictly predictable. |
+| **[`validation/assessment.py`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/validation/assessment.py)** | 90 | **Gold Standard** | Pure function; zero mutable state; derives top-level qualification status strictly from witnessed checks. |
+| **[`prepare/publication.py`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/prepare/publication.py)** | 117 | **High** | Fits in one head (`OutputTransaction`); bounded Windows lock retries (`winerror` 5, 32, 33); exception-safe rollback. |
+| **[`validation/relocation.py`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/validation/relocation.py)** | 136 | **High** | Strips environment search paths; audits Makefile dependency receipts with zero leak tolerance. |
+| **[`prepare/records.py`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/prepare/records.py)** | 90 | **High** | Idiomatic Python `TypedDict` shapes; unifies manifest record builders; keeps reader units as identity authority. |
+| **[`prepare/lint.py`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/prepare/lint.py)** | 185 | **High** | Declarative YAML catalog; explicit user policy gating; mathematically bounded proof of token equivalence. |
+| **[`prepare/assets.py`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/prepare/assets.py)** | 172 | **High** | Extracted cleanly from `session.py`; handles multi-page `page=N` PDF extraction and pure-data rollback filtering. |
+| **[`prepare/pipeline.py`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/prepare/pipeline.py)** | 231 | **High** | Clear division of labor: outer wrapper owns transaction, public API, and rollback; inner builder receives typed `_PreparationRequest`. |
+| **[`reading/context.py`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/reading/context.py)** | 317 | **Passes Beck's Tie-Breaker** | 3 journal stacks. High understandability over "Clever DRY". Protected by Beck's Rule #2. |
+| **[`reading/dispatcher.py`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/reading/dispatcher.py)** | 934 | **Fails Unix & Composable** | Monolithic router (breached 500 LOC gate). Coordinates 6 scanners, token replays, conditionals, and lexical error handoffs. |
+| **[`prepare/session.py`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/prepare/session.py)** | 858 | **Fails Unix & Predictable** | Traversal coordinator (breached 500 LOC gate). Coordinates file frames, emissions, coverage, tombstones, and option lifecycle. |
+
+---
+
+## 3. Deep Dive into Remaining Debt & Emerging Surfaces
+
+### A. The Two Persistent Facehuggers (>500 LOC)
+
+#### 1. `StructuralDispatcher` (934 LOC)
+* **Location:** [`dispatcher.py:L67-590`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/reading/dispatcher.py#L67-L590)
 * **The Diagnosis:**
-  `StructuralDispatcher` was conceived as a narrow, temporary reading seam between the lexical mouth (`TexReader`) and Phase 1 preparation. Over successive iterations, it has accumulated:
-  - Boolean register evaluation (`\newif`, `\iftrue`, `\iffalse`)
-  - Macro parameter capture and storage (`\newcommand`, `stored_definition`)
-  - Token replay through `TokenCursor`
-  - Lexical failure checkpoints and character discard recovery for `lint.py` ([`dispatcher.py:L207-224`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/reading/dispatcher.py#L207-L224))
-* **The Seam Litmus Test:**
-  > *"Does this code merely connect two components, or has it started making domain decisions and coordinating their internals?"*
-  `dispatcher.py` coordinates the internals of `LiteralScanner`, `DefinitionScanner`, `EnvironmentScanner`, and `AssignmentScanner`, and mediates error recovery.
-* **Calibrated Treat (Re-cut Seam):**
-  1. **Do NOT build a polymorphic hierarchy:** That replaces a bloated seam with an enterprise class explosion.
-  2. **Decompose internally:** Break the monolithic item loop into private handler delegates (`_handle_conditional`, `_handle_definition`, `_handle_environment`).
-  3. **Anti-Lobotomy Invariant:** Do **not** simplify lines 201–212 (reader state verification and CatCode table identity). Those checks preserve Knuthian TeX character physics.
+  `StructuralDispatcher` is the single largest class in the repository. It has successfully avoided macro-expansion creep (opaque commands and declarations are cleanly YAML-driven), but its internal `_next_item` loop remains a dense, multi-way branch coordinating:
+  - Scanners: `LiteralScanner`, `DefinitionScanner`, `EnvironmentScanner`, `AssignmentScanner`, `ConditionalScanner`, `DeferredScanner`
+  - Conditionals and alternative evaluation (`_conditionals`, `_active_branches`)
+  - Branch token replay (`_branch_replays`)
+  - Lexical failure checkpoints for lint recovery (`_lexical_failure`)
+* **Calibrated Next Step:**
+  Do **not** perform an enterprise OOP rewrite. When reading extensions (such as bounded `\let` capture) are added, extract private handler methods (`_handle_assignment`, `_handle_conditional`) to prevent the primary method from exceeding mental chunk limits.
 
-#### 2. `PreparationSession`: The God Orchestrator
-* **Location:** [`session.py:L64-125`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/prepare/session.py#L64-L125) (816 lines)
+#### 2. `PreparationSession` (858 LOC)
+* **Location:** [`session.py:L64-125`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/prepare/session.py#L64-L125)
 * **The Diagnosis:**
-  A 40-field class that acts as the container for all unresolved preparation state. While Astra did excellent work factoring out `assets.py`, `lint.py`, and `publication.py`, `PreparationSession` still owns:
-  - Input frames and file stack traversal
-  - Inlined source piece emission and synthetic separators
-  - Diagnostic and requirement ledgers
-  - Document coverage mapping
-  - Forwarded package options and class loading order
-* **Calibrated Treat (Surface Architectural Splits):**
-  1. **Do not refactor autonomously:** Splitting this class touches the entire `src/prepare/` pipeline.
-  2. **Protect Anchored Seams:** Fields like `self.manifest.reading_assumptions`, `self.manifest.candidate_dependencies`, and `self.units` are **staged architectural contracts** for downstream Phase 2 consumers. They are essential scaffolding.
-  3. **Present the split options:**
-     - *Option 1 (Domain Coordinators):* Extract `PackageOptionStore` and `EmissionJournal`.
-     - *Option 2 (Configuration vs State):* Group configuration into `PreparationConfig` and let `PreparationSession` hold only the active traversal cursor.
+  Batch 5B made massive progress: helper functions no longer reach inside `session` to mutate private collections. However, `PreparationSession` itself remains an 858-line coordinator housing:
+  - Input frame stack and replacement tracking
+  - Emitted `SourcePiece` assembly and synthetic separator injection
+  - Document coverage mapping (`self.coverage`)
+  - Package option state (`loaded_packages`, `package_options`, `forwarded_options`)
+* **Calibrated Next Step:**
+  Now that helpers operate on plain data, the session's internal state can naturally decompose:
+  - *Extract Option Store:* Group `loaded_packages`, `package_options`, and `forwarded_options` into a dedicated `PackageOptionStore`.
+  - *Extract Emission Stream:* Group `pieces`, `tombstones`, and separator injection into an `EmissionStream` or `PieceAccumulator`.
 
 ---
 
-### B. Accumulated Post-Turn Micro-Damage
+### B. Residual Micro-Tax: Synthetic Separator Sprawl
 
-#### 1. Compound Conditional Sprawl: `session.py:L623-628`
-* **Location:** [`session.py:L623-628`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/prepare/session.py#L623-L628)
+* **Location:** [`session.py:L668-671`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/prepare/session.py#L668-L671)
 * **The Code:**
   ```python
   # No-argument commands need a lexical separator after a control word.
   if (not command.arguments and action in {"opaque", "biblatex_print", "reading_noop", "process_options"}
           or action == "boolean_declaration" and command.metadata["unbraced"]
           or action == "conditional_test" and command.metadata["trailing_control_word"]):
-      self._emit(command.span.basis.span(command.span.end, command.span.end), " ", operation="SYNTHETIC_SEPARATOR")
+      self.emit(command.span.basis.span(command.span.end, command.span.end), " ", operation="SYNTHETIC_SEPARATOR")
   ```
 * **The Diagnosis:**
-  Classic agent micro-damage: each prompt that introduced a new command family patched another `or` clause onto the emission check to pass a test case.
+  A classic post-turn compound conditional: each time an agent added an action family (`opaque`, `boolean_declaration`, `conditional_test`), another `or` clause was bolted onto the emission check.
 * **Calibrated Treat:**
-  - **Extract Query Method:** Extract to a helper `command.requires_synthetic_separator()` or define a declarative property on `SourceCommand`.
+  Extract a query method `command.requires_synthetic_separator()` on `SourceCommand` or formalize the property declaratively in the binding grammar.
 
 ---
 
-### C. Primitive Obsession (Dictionary Obsession)
+### C. Beck's Precedence Applied: What to Protect Against Lobotomy
 
-#### 1. Untyped Domain Records in Manifest & Session
-* **Locations:**
-  - Diagnostics: [`session.py:L164-175`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/prepare/session.py#L164-L175)
-  - Requirements: [`session.py:L186-196`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/prepare/session.py#L186-L196)
-  - Dependencies: [`dependencies.py:L60-68`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/reading/dependencies.py#L60-L68)
-  - Manifest container: [`manifest.py:L99-115`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/prepare/manifest.py#L99-L115)
-* **The Diagnosis:**
-  While peripheral models (`BibliographyInfo`, `PackageUsage`, `AssetUse`) use `@dataclass`, the core execution trace is managed with untyped `dict[str, Any]` and coordinate tuples `(r["source"], r["start"], r["end"])`.
-* **Calibrated Treat (Idiomatic Python):**
-  1. Define flat, immutable `@dataclass(slots=True)` models: `DiagnosticRecord`, `RequirementRecord`, `DependencyEdge`.
-  2. Implement clean `.to_dict()` methods on each to ensure seamless `manifest.json` serialization.
-  3. Avoid deep inheritance trees (no `AbstractDiagnosticBase`).
+1. **Protect [`checked_character_deletion`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/prepare/lint.py#L63-L93) in `lint.py`:**
+   Contains 30 lines of detailed token and character boundary checks. It is a formal proof ensuring that dropping an invalid character between alphanumerics reproduces TeX's exact mouth state. **Never simplify this into a regex.**
+2. **Protect [`context.py`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/reading/context.py) Scoped Journals:**
+   Three journal stacks map 1-to-1 to TeX's distinct lexical namespaces. Beck's Rule #2 (*Understandable*) trumps Rule #3 (*DRY*).
+3. **Protect Catalog Command Indexing in [`catalog.py`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/bindings/catalog.py):**
+   Batch 4 indexed declarations by name. This protects runtime resolution from quadratic scans as the binding portfolio expands.
 
 ---
 
-### D. Couplers & Inappropriate Intimacy
+## 4. Architectural Guidance for Upcoming Increments
 
-#### 1. Inverted Boundary: `prepare_bibliography`
-* **Location:** [`bibliography.py:L28-60`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/prepare/bibliography.py#L28-L60)
-* **The Diagnosis:** `prepare_bibliography(pieces, session, output_dir)` reaches into 6 internal session attributes (`session.manifest`, `session.store`, `session.commands`, `session.bibliography_pieces`, `session.root`).
-* **Calibrated Treat (Narrow the Interface):**
-  - **Do NOT move it back into `session.py`** (that worsens the Large Class Facehugger).
-  - Invert the dependency by passing only what it needs:
-    `prepare_bibliography(pieces, declarations, store_root, origin_dir, existing_bbl_path)`
+Astra’s handoff ([`astra-cleanup-handoff.md`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/issues/astra-cleanup-handoff.md)) outlines the next technical milestones:
+1. **Bounded `\let` capture and scoped meaning assignment** (to resolve `natbib.sty:210`).
+2. **Structured dependency observation beyond reading barriers** (to observe `\InputIfFileExists{natbib.cfg}`).
 
-#### 2. Scanner Cross-Calls
-* **Location:** [`environment_scanner.py:L44, L47`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/reading/environment_scanner.py#L44)
-* **The Diagnosis:** Calling private methods of foreign scanners (`args._nonspace()`, `definitions._body()`).
-* **Calibrated Treat:**
-  - Promote `nonspace()` to a public method on `ArgumentScanner` or hoist it to `TexReader`.
-
----
-
-### E. Beck's Precedence Applied: What NOT to Refactor
-
-#### 1. Token Equivalence Proof in `lint.py:L63-93`
-* **Location:** [`lint.py:L63-93`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/prepare/lint.py#L63-L93)
-* **Observation:** `checked_character_deletion` contains 30 lines of detailed token and character boundary checks.
-* **Anti-Lobotomy Invariant:**
-  - An agent might be tempted to simplify this into a simple `str.replace()` or regex.
-  - **Verdict: PRESERVE UNTOUCHED.** This function is a mathematically bounded proof that dropping a specific catcode-15 invalid character reproduces TeX's exact mouth state. Simplifying it destroys verification rigor.
-
-#### 2. Scoped Journals in `context.py:L58-65`
-* **Location:** [`context.py:L58-65`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/reading/context.py#L58-L65)
-* **Observation:** Three journal stacks (`_meaning_scopes`, `_environment_scopes`, `_capture_setting_scopes`) follow similar push/pop logic.
-* **Beck's Tie-Breaker (`Understandability > DRY`):**
-  - Leave them explicit. The code is understandable, predictable, and maps 1-to-1 to TeX's distinct lexical namespaces. Deduplicating them into a generic meta-class reduces readability.
-
-#### 3. Deprecation Fences in `preprocess_paper`
-* **Location:** [`pipeline.py:L47-51`](file:///d:/aipithicus/LaTeXAI/python/PyTeXML/src/prepare/pipeline.py#L47-L51)
-* **Observation:** Parameters `execute_probe`, `drop_commands`, etc., throw `ValueError`.
-* **Verdict:** These are intentional deprecation fences protecting callers from silent failures. Verify caller migration before deleting.
-
----
-
-## 4. Pre-Flight Test Pinning & Refactoring Sequence
-
-PyTeXML now contains **687 tests across 45 test suites**. The regression test net is rock solid.
-
-### Prioritized Remediation Roadmap:
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│ STEP 1: LEAF-LEVEL CLEANUP (Zero Blast Radius)                        │
-│ • Extract `command.requires_synthetic_separator` from session.py:623.  │
-│ • Narrow `prepare_bibliography` interface (decouple from session).     │
-│ • Promote `nonspace()` in argument_scanner.py to public.               │
-├────────────────────────────────────────────────────────────────────────┤
-│ STEP 2: TYPED MODELS (Primitive Obsession Relief)                      │
-│ • Replace untyped dicts in `diagnose()` and `require()` with           │
-│   `@dataclass(frozen=True, slots=True)` records + `.to_dict()`.        │
-├────────────────────────────────────────────────────────────────────────┤
-│ STEP 3: SEAM PURIFICATION (Facehugger Relief)                          │
-│ • Decompose `StructuralDispatcher._next_item()` into private handlers.│
-│ • Extract `PackageOptionStore` from `PreparationSession`.              │
-│ • Declare Phase 1 complete; transition to Phase 2 Interpretation.      │
-└────────────────────────────────────────────────────────────────────────┘
-```
+### The Essential Guardrail for `\let` Capture:
+* **The Trap:** Attempting to implement general macro expansion or register arithmetic during `\let`.
+* **The Clean Boundary:** Treat `\let\dst=\src` strictly as an **alias assignment within `ReaderContext`**. If `\src` is an established reading command (e.g. `\iffalse`), copy the meaning reference to `\dst`. If `\src` is unknown/stored, copy the unknown reference. **Do not execute macro bodies or evaluate TeX expansion.**
