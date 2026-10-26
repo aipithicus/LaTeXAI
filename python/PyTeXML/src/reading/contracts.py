@@ -6,7 +6,7 @@ from typing import Any, Protocol
 from .character_rules import CatcodeLayer
 from .spans import SourceSpan
 from .effect_summary import EffectSummary
-from .tex_reader import CatcodeTable, Token
+from .tex_reader import CatcodeTable, Token, ReadEvent
 
 
 @dataclass(frozen=True, slots=True)
@@ -192,12 +192,14 @@ class DeferredRegion:
     # provider is not active. This is an observation, never an executed command.
     command: SourceCommand | None = None
     binding_id: str = ""
-    # Direct source-command headers captured inside an unbound environment.
-    # These remain observations, never execution events or expanded arguments.
+    # Nested deferred envelopes and source-command headers, never execution.
     observations: tuple[DeferredRegion, ...] = ()
     unit_id: str | None = field(default=None, compare=False)
     causes: tuple[SourceSpan, ...] = field(default=(), kw_only=True)
     effect_summary: EffectSummary | None = field(default=None, kw_only=True)
+    # Mouth events outside protected subregions, eligible for normalization.
+    events: tuple[ReadEvent, ...] = field(default=(), kw_only=True)
+    trailing_control_word: bool = field(default=False, kw_only=True)
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

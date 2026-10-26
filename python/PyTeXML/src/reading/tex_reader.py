@@ -31,7 +31,7 @@ Reference: https://github.com/TeX-Live/texlive-source/blob/trunk/texk/web2c/tex.
 from __future__ import annotations
 
 from collections import deque
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum, IntEnum
 import re
 from typing import Iterator, Mapping
@@ -89,6 +89,8 @@ class Token:
     span: SourceSpan
     # True when ^^ conversion or a synthetic endlinechar contributed to spelling.
     transformed: bool = False
+    # Lexical spelling fact retained when this token moves to a frozen cursor.
+    control_word: bool = field(default=False, compare=False)
 
 
 @dataclass(frozen=True, slots=True)
@@ -486,7 +488,7 @@ class TexReader:
             if following is None or self.catcodes[following.value] != CatCode.LETTER:
                 break
         return Token(TokenKind.CONTROL_SEQUENCE, "".join(name), None,
-                     self._span(escape.start, last.end), transformed)
+                     self._span(escape.start, last.end), transformed, control_word=category == CatCode.LETTER)
 
     def next_event(self) -> ReadEvent | None:
         event = self._next_event()

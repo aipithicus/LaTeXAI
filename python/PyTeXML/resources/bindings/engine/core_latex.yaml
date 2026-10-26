@@ -317,9 +317,11 @@ reading:
     - name: "\\iftrue"
       role: opener
       evaluation: always_true
+      capture_operands: 0
     - name: "\\iffalse"
       role: opener
       evaluation: always_false
+      capture_operands: 0
     # Preparation observes these source operands without expanding/evaluating them.
     # A capture remains conditional on the entry meanings and reading state.
     - {name: "\\if", role: opener, evaluation: deferred, capture_operands: 2, predicate: character_equal}

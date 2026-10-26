@@ -78,7 +78,9 @@ class MeaningAssignmentTests(unittest.TestCase):
     def test_unexecuted_assignment_shadows_old_dependency_grammar_in_environment(self):
         items = self.read(r"\begin{unknown}\let\input\saved\input{decoy}\end{unknown}")
         region = next(i for i in items if isinstance(i, DeferredRegion))
-        self.assertFalse(region.observations)
+        self.assertFalse(any(o.command and o.command.action == "source_input"
+                             for o in region.observations))
+        self.assertEqual(region.observations[0].reason, "stored_macro")
         self.assertIsNone(self.context.lookup_meaning("input"))
 
     def test_character_donor_and_malformed_or_prefixed_assignments_are_explicit(self):

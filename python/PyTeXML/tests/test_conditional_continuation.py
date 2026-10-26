@@ -110,7 +110,7 @@ class ConditionalCaptureTests(unittest.TestCase):
         self.assertFalse(any(isinstance(i, ReadingBoundary) for i in items))
         region = next(i for i in items if isinstance(i, ConditionalRegion))
         self.assertIn(r"\author[1]", source[region.span.start:region.span.end])
-        self.assertFalse(any(o.command.name == r"\author" for o in region.observations))
+        self.assertFalse(any(o.command is not None and o.command.name == r"\author" for o in region.observations))
 
 
 class ConditionalPreparationTests(unittest.TestCase):
@@ -167,7 +167,8 @@ class ConditionalPreparationTests(unittest.TestCase):
             return original(path)
         with patch.object(Path, "read_bytes", read):
             text, manifest, _, ledger = self.prepare()
-        self.assertEqual(text.count("LEAF% final comment\n"), 2)
+        self.assertEqual(text.count("LEAF%\n"), 2)
+        self.assertNotIn('final comment', text)
         self.assertIn(r"\fi TAIL", text)
         self.assertNotIn(r"\input", text)
         self.assertEqual(manifest.candidate_tex_files, ["child.tex", "leaf.tex"])

@@ -13,52 +13,6 @@ class ConditionalScanner:
     def __init__(self, reader, context):
         self.reader, self.context = reader, context
 
-    def source(self, *, classify, protect):
-        """Observe a complete input for insertion into either conditional branch.
-
-        This bounded route admits no conditional tokens, including ones hidden
-        in literal data/definitions during active reading: insertion would expose
-        them to pass_text in an unselected branch. Effects are never executed.
-        """
-        reader = self.reader
-        checkpoint = reader.checkpoint()
-        tokens, observations, changed = [], [], set()
-        groups = 0
-        while (token := reader.next_token()) is not None:
-            if classify(token) is not None:
-                raise ReadingIssue("conditional_input", "Conditional tokens in a candidate input require branch-aware resolution")
-            captured = protect(token, shadowed=changed)
-            if captured:
-                if isinstance(captured, StoredDefinition):
-                    changed.add(captured.target.value)
-                elif isinstance(captured, SourceCommand) and captured.action == "meaning_assignment":
-                    changed.add(captured.argument("target").tokens[0].value)
-                elif isinstance(captured, EnvironmentDefinition):
-                    changed.update((captured.name, "end" + captured.name))
-                elif isinstance(captured, DeferredRegion):
-                    tokens.extend(captured.tokens)
-                    if captured.command is not None:
-                        changed.update(captured.command.metadata.get("observed_write_names", ()))
-                        if captured.command.action == "end_input":
-                            raise ReadingIssue("conditional_input", "endinput requires an input-boundary lowering rule")
-                        if token.value not in changed:
-                            observations.append(captured)
-                continue
-            tokens.append(token)
-            groups += 1 if token.catcode == CatCode.BEGIN_GROUP else -1 if token.catcode == CatCode.END_GROUP else 0
-            if groups < 0:
-                raise ReadingIssue("conditional_input", "Candidate input closes a caller's group")
-        if groups:
-            raise ReadingIssue("conditional_input", "Candidate input leaves an open group")
-        reader.restore(checkpoint)
-        with self.context.skipped_branch():
-            while (token := reader.next_token()) is not None:
-                if classify(token) is not None:
-                    raise ReadingIssue("conditional_input", "Inlining would expose a conditional token while skipping")
-        return DeferredRegion(reader.basis.whole, "conditional_input",
-            "Input observed under the conditional's entry reading assumptions; no branch execution", tuple(tokens),
-            observations=tuple(observations)), tuple(sorted(changed))
-
     def read(self, opening, rule, *, classify, protect):
         reader = self.reader
         if rule.capture_operands is None:
@@ -115,7 +69,7 @@ class ConditionalScanner:
                     tokens.extend(captured.tokens)
                     if captured.command is not None:
                         changed.update(captured.command.metadata.get("observed_write_names", ()))
-                    if captured.command is not None and token.value not in changed:
+                    if captured.command is None or token.value not in changed:
                         observations.append(captured)
                 continue
             tokens.append(token)

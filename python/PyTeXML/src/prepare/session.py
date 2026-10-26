@@ -118,6 +118,7 @@ class PreparationSession:
         self.bibliography_context = None
         self.bibliography_knowledge = None
         self.bibliography_observed = False
+        self.bibliography_may_skip = False
         self._ran = False
         self._ended_document = False
         self._observations = {}
@@ -393,7 +394,7 @@ class PreparationSession:
             piece = piece.edit_source(basis.span(start, end), replacement, "REBASE_PAYLOAD")
         return piece
 
-    def capture_bibliography(self, *, observed=False, knowledge=None):
+    def capture_bibliography(self, *, observed=False, knowledge=None, may_skip=False):
         """Freeze reading knowledge at the accepted bibliography site."""
         self.bibliography_context = self.context.copy()
         if knowledge is None:
@@ -401,6 +402,7 @@ class PreparationSession:
             knowledge.active_packages = list(self.resolver.active_packages)
         self.bibliography_knowledge = knowledge
         self.bibliography_observed = observed
+        self.bibliography_may_skip = may_skip
 
     def finish_bibliography(self, start):
         self.bibliography_pieces = self.pieces[start:]
@@ -453,7 +455,7 @@ class PreparationSession:
 
     def require_deferred_dependencies(self, tokens, *, observed=(), observations=(), parent_id=None, command=None, role="unknown"):
         starts = {command.span.start for command in observed}
-        envelopes = sorted((o.command for o in observations), key=lambda c: c.span.start)
+        envelopes = sorted((o.command for o in observations if o.command is not None), key=lambda c: c.span.start)
         if envelopes:
             for header in envelopes:
                 if header.action in DEPENDENCY_ACTIONS and header.span.start not in starts:
@@ -466,9 +468,11 @@ class PreparationSession:
                     self._observe_argument(arg, header.unit_id)
             # Known headers were captured with their argument roles. Do not
             # rediscover their flattened argument tokens as free-standing code.
-            positions = [c.span.start for c in envelopes]
+        if observations:
+            spans = sorted((o.span for o in observations), key=lambda s: s.start)
+            positions = [s.start for s in spans]
             tokens = tuple(t for t in tokens if (i := bisect_right(positions, t.span.start) - 1) < 0
-                           or t.span.start >= envelopes[i].span.end)
+                           or t.span.start >= spans[i].end)
         if command is not None:
             for arg in command.arguments:
                 self._observe_argument(arg, command.metadata.get("argument_units", {}).get(arg.name, parent_id), excluded=starts)
@@ -833,19 +837,17 @@ class PreparationSession:
                         requirement["definition_unit_id"] = item.definition_id
                     if item.effect_summary is not None:
                         requirement["effect_summary"] = item.effect_summary.record()
-                    if self.frames[-1].emit and (isinstance(item, ConditionalRegion) or any(
-                            o.command.action in {"source_input", "bibliography"} for o in item.observations)):
+                    if self.frames[-1].emit and (isinstance(item, ConditionalRegion) or item.observations or item.events):
                         emit_observed_region(self, item)
                         continue
                     image_references = observe_environment_assets(self, item)
                     self.require_deferred_dependencies(item.tokens, observed=(o.command for o in item.observations
-                        if o.command.action == "asset_reference"), parent_id=item.unit_id, command=item.command,
+                        if o.command is not None and o.command.action == "asset_reference"), parent_id=item.unit_id, command=item.command,
                         observations=item.observations, role="branch" if isinstance(item, ConditionalRegion) else "unknown")
                     raw = self.raw(item.span)
                     # A bare control word needs a separator after mouth-discarded
                     # whitespace. Protected groups and math remain exact slices.
-                    if (len(item.tokens) == 1 and item.tokens[0].kind == TokenKind.CONTROL_SEQUENCE
-                            and item.span.end == item.tokens[0].span.end):
+                    if item.trailing_control_word:
                         raw += " "
                     self.emit(item.span, raw, operation="DEFER_INTERPRETATION", deferred=item,
                                image_references=image_references)

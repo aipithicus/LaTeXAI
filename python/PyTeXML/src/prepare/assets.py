@@ -95,6 +95,8 @@ def observe_environment_assets(session, region):
     search_changed = False
     for observation in region.observations:
         command = observation.command
+        if command is None:
+            continue  # Nested envelopes own their asset observations.
         if command.action in {"asset_search_paths", "asset_extensions"}:
             search_changed = True
         if command.action != "asset_reference":

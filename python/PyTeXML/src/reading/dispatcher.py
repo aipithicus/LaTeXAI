@@ -31,6 +31,7 @@ from .deferred_scanner import DeferredScanner
 from .literal_scanner import LiteralScanner
 from .skipped_scanner import SkippedBranchScanner, SkippedScan
 from .conditional_scanner import ConditionalScanner
+from .input_scanner import InputScanner
 from .predicates import compare_characters
 from .dependencies import argument_activity
 from .loads import SourceLoadState
@@ -775,16 +776,16 @@ class StructuralDispatcher:
             return ConditionalRule("opener", "deferred", 0) if meaning.target is None else None
         return self.context.conditional_rule(candidate.value, self.knowledge)
 
-    def observe_conditional_input(self):
+    def observe_input(self, *, may_skip=False):
         """Capture a candidate file, never dispatch it as an active input."""
-        return ConditionalScanner(self.reader, self.context).source(classify=self._observed_conditional,
-            protect=lambda t, **kw: self._protect_deferred_environment(t, conditional=True, **kw))
+        return InputScanner(self.reader, self.context).read(may_skip=may_skip, classify=self._observed_conditional,
+            protect=lambda t, **kw: self._protect_deferred_environment(t, conditional=may_skip, **kw))
 
     def _protect_deferred_environment(self, token, *, shadowed=(), conditional=False) -> bool | DeferredRegion | StoredDefinition | EnvironmentDefinition:
         """Locate known protected syntax without executing an unbound body.
 
-        Routing remains here, not in the envelope scanner. Reading effects and
-        conditional control flow require the environment's missing contract.
+        Routing remains here, not in the envelope scanner. Bounded conditionals
+        are captured without branch selection; reading effects still need resolution.
         """
         if token.catcode == CatCode.MATH_SHIFT:
             return DeferredScanner(self.reader, self.context).math(token)
@@ -793,8 +794,13 @@ class StructuralDispatcher:
         if token.value in shadowed:
             return DeferredScanner(self.reader, self.context).command(
                 token, "stored_macro", "Unexecuted definition shadows the entry grammar")
+        if not conditional and (rule := self._observed_conditional(token)) is not None:
+            self._require(rule.role == "opener", "conditional_structure", "Unmatched conditional delimiter in deferred source")
+            return ConditionalScanner(self.reader, self.context).read(token, rule,
+                classify=self._observed_conditional,
+                protect=lambda t, **kw: self._protect_deferred_environment(t, conditional=True, **kw))
         meaning = self.context.lookup_meaning(token.value)
-        if conditional and isinstance(meaning, BooleanMeaning) and meaning.target is not None:
+        if isinstance(meaning, BooleanMeaning) and meaning.target is not None:
             return DeferredScanner(self.reader, self.context).command(token, "conditional_interpretation",
                 "Boolean setter retained without selecting or executing a branch")
         if isinstance(meaning, (StoredDefinition, EnvironmentDefinition)):

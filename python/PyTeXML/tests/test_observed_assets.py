@@ -80,7 +80,10 @@ class ObservedAssetTests(unittest.TestCase):
                 "src.prepare.assets.convert_asset_to_svg", wraps=convert_asset_to_svg) as convert:
             text, manifest, out, ledger = self.prepare()
         expected = body.replace("LN.png", "LN.svg").replace("MSEvsloss.png", "MSEvsloss.svg")
-        self.assertEqual(text.count(expected.rstrip("\n")), 2)
+        self.assertEqual(text.count(r'\begin{suppfigure}[H]'), 2)
+        self.assertEqual(text.count(r'\includegraphics[width=.75\linewidth]{LN.svg}'), 2)
+        self.assertEqual(text.count(r'\includegraphics*{MSEvsloss.svg}'), 2)
+        self.assertNotIn('preserve this comment', text)
         self.assertIn(declaration, text)
         self.assertEqual(convert.call_count, 2)
         self.assertEqual(manifest.active_images, [])
@@ -128,7 +131,8 @@ class ObservedAssetTests(unittest.TestCase):
         self.image("real.png")
         self.put("tail.tex", "TAIL")
         text, manifest, out, _ = self.prepare()
-        self.assertIn(protected, text)
+        self.assertIn(protected.split('\n', 1)[1], text)
+        self.assertNotIn('comment.png', text)
         self.assertIn("TAIL", text)
         self.assertNotIn("skipped.png", text)
         self.assertEqual([d["target"] for d in manifest.candidate_dependencies if d["status"] == "prepared"], ["real.png"])
@@ -204,15 +208,16 @@ class ObservedAssetTests(unittest.TestCase):
         self.assertTrue((out / "real.svg").is_file())
         self.assertFalse((out / "real.png").exists())
 
-    def test_reading_boundary_does_not_certify_an_unfinished_environment(self):
+    def test_nested_conditional_does_not_stop_the_enclosing_environment(self):
         body = r"\begin{custom}\includegraphics{real.png}\iffalse hidden\fi\end{custom}"
         self.put("main.tex", r"\documentclass{article}\usepackage{graphicx}" + body)
         self.image("real.png")
         text, manifest, out, _ = self.prepare()
-        self.assertIn(body, text)
-        self.assertEqual(manifest.unresolved[0]["reason"], "environment_reading")
-        self.assertEqual(manifest.candidate_dependencies, [])
-        self.assertEqual(list(out.glob("*.svg")), [])
+        self.assertIn(r'\begin{custom}\includegraphics{real.svg}\iffalse hidden\fi', text)
+        self.assertIn(r'\end{custom}', text)
+        self.assertFalse(manifest.unresolved)
+        self.assertEqual(manifest.candidate_dependencies[0]['status'], 'prepared')
+        self.assertTrue((out / 'real.svg').is_file())
 
     def test_dispatcher_observes_headers_without_activation_execution_or_known_coverage(self):
         source = r"\begin{custom}\includegraphics[width=.5\linewidth]{real.png}\end{custom}"

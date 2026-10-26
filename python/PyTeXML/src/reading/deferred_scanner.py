@@ -1,7 +1,7 @@
 """Bounded source capture for preparation; no expansion or effect execution."""
 from .argument_scanner import ArgumentScanner
-from .contracts import DeferredRegion, EnvironmentDefinition, ReadingIssue, SourceCommand, StoredDefinition
-from .tex_reader import CatCode, TokenKind
+from .contracts import ConditionalRegion, DeferredRegion, EnvironmentDefinition, ReadingIssue, SourceCommand, StoredDefinition
+from .tex_reader import CatCode, TokenKind, EventKind
 
 
 class DeferredScanner:
@@ -12,6 +12,7 @@ class DeferredScanner:
         """Protect following balanced groups without guessing a macro's arity."""
         scanner = ArgumentScanner(self.reader, self.context)
         tokens = [opening]
+        control_word = opening.control_word
         with self.context.argument_scanning():
             while True:
                 checkpoint = self.reader.checkpoint()
@@ -25,7 +26,8 @@ class DeferredScanner:
                     break
                 tokens.extend(scanner.group("uninterpreted group", optional=optional).tokens)
         return DeferredRegion(self.reader.source_span(opening.span.start, self.reader.position),
-                              reason, detail, tuple(tokens))
+                              reason, detail, tuple(tokens), trailing_control_word=(control_word
+                                  and len(tokens) == 1 and self.reader.position == opening.span.end))
 
     def math(self, opening):
         """Preserve dollar-delimited math using entry catcodes; do not digest it."""
@@ -62,10 +64,16 @@ class DeferredScanner:
         This is an entry-catcode observation. A missing literal binding can make
         its delimiters uncertain, so the requirement explicitly retains that fact.
         """
-        tokens, observations, depth = [], [], 1
+        tokens, observations, events, depth = [], [], [], 1
         shadowed = set()
         scanner = ArgumentScanner(self.reader, self.context)
-        while (token := self.reader.next_token()) is not None:
+        while (event := self.reader.next_event()) is not None:
+            token = event.token
+            if token is None or event.kind == EventKind.END_OF_LINE:
+                events.append(event)
+                if token is not None:
+                    tokens.append(token)
+                continue
             protected = protect(token, shadowed=shadowed)
             if protected:
                 if isinstance(protected, StoredDefinition):
@@ -78,13 +86,16 @@ class DeferredScanner:
                     shadowed.add(protected.argument("target").tokens[0].value)
                 if isinstance(protected, DeferredRegion):
                     tokens.extend(protected.tokens)
+                    if isinstance(protected, ConditionalRegion):
+                        shadowed.update(protected.changed_meanings)
                     if protected.command is not None:
                         shadowed.update(protected.command.metadata.get("observed_write_names", ()))
-                    if protected.command is not None and token.value not in shadowed:
+                    if protected.command is None or token.value not in shadowed:
                         observations.append(protected)
                 continue
             tokens.append(token)
             if token.kind != TokenKind.CONTROL_SEQUENCE or token.value not in {"begin", "end"}:
+                events.append(event)
                 continue
             checkpoint = self.reader.checkpoint()
             try:
@@ -100,5 +111,5 @@ class DeferredScanner:
                 if not depth:
                     return DeferredRegion(self.reader.source_span(opening.start, self.reader.position),
                         "environment_binding", f"Environment {name!r} captured under entry catcodes; reading behavior needs a binding",
-                        tuple(tokens), observations=tuple(observations))
+                        tuple(tokens), observations=tuple(observations), events=tuple(events))
         raise ReadingIssue("unclosed_environment", f"No source-visible closing delimiter for {name!r}")

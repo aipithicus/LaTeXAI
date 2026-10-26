@@ -367,8 +367,8 @@ lists, execute processing/final code, or support the low-level collector APIs.
 
 ```yaml
 conditionals:
-  - {name: "\\iftrue", role: opener, evaluation: always_true}
-  - {name: "\\iffalse", role: opener, evaluation: always_false}
+  - {name: "\\iftrue", role: opener, evaluation: always_true, capture_operands: 0}
+  - {name: "\\iffalse", role: opener, evaluation: always_false, capture_operands: 0}
   - {name: "\\ifnum", role: opener, evaluation: deferred}
   - {name: "\\else", role: alternative}
   - {name: "\\or", role: case_alternative}

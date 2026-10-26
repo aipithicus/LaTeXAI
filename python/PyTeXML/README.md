@@ -226,11 +226,14 @@ branch, preserving capture-time categories, while preparation emits the original
 wrapper with skipped content omitted and admitted inputs inlined. General expansion
 and character-mode literal parsing inside captured argument tokens remain deferred.
 
-Unbound environments also retain `DeferredRegion.observations`: direct command
-headers scanned using existing YAML argument grammars. Preparation can resolve
+Unbound environments also retain `DeferredRegion.observations`: nested protected
+regions and direct command headers scanned using existing YAML argument grammars.
+Ordinary reading events between these spans feed the shared mouth emitter, so
+comments and whitespace can be compacted without changing literal text, stored
+definitions, math or opaque argument bodies. Preparation can resolve
 literal image filenames from these observations and emit their SVG derivatives
 without expanding the environment or executing its body. Captured filenames and page
-selections are rewritten; the surrounding environment source stays exact. The manifest keeps
+selections are rewritten; the environment wrappers remain in the master. The manifest keeps
 these in `candidate_dependencies` and `candidate_images`, separately from established
 active dependencies. A candidate shared with an active image is converted once.
 Prepared candidates record their payload paths and retain the unresolved reading
@@ -244,8 +247,9 @@ inside already captured tokens stops that argument's observational scan; its
 reading behavior remains deferred. Missing/computed filenames, ambiguous matches
 and nonliteral/invalid page options remain located requirements. An unexecuted graphics search-path
 or extension declaration prevents later candidates from using stale search settings.
-Reading effects and conditional flow inside an unbound environment still require
-resolution. This discovery uses the existing dispatcher cursor and source cache;
+Reading effects inside an unbound environment still require resolution. Bounded
+conditionals are captured with both branches retained, without evaluation.
+This discovery uses the existing dispatcher cursor and source cache;
 it adds no package-specific Python, YAML exception for an author's environment,
 or compiler dependency.
 
@@ -281,15 +285,20 @@ preparation assumptions, not a proof about arbitrary macro expansion.
 
 Literal input and image headers inside these regions remain candidate dependencies.
 Admitted inputs are inserted with separate occurrence/provenance records and cached
-reads, including repeated inputs. Their contents must meet the bounded observational
-contract and introduce no conditional tokens in either active or skipped reading.
+reads, including repeated inputs. The shared [input scanner](src/reading/input_scanner.py)
+checks the insertion context: only inputs that may land in a skipped branch must
+introduce no conditional tokens in either active or skipped reading. That constraint
+propagates through nested inputs. Ordinary deferred inputs may contain protected
+conditional tokens in literal/definition bodies and bounded unexecuted conditionals.
+Their ordinary reading events also receive mouth-based compaction.
 Unsupported, computed, missing or cyclic candidates retain their command and a
-located preparation requirement, while later source continues. Literal input
+located preparation requirement, while later inlining and compaction continue.
+Resolvable unsupported targets are retained in the payload. Literal input
 headers captured inside opaque arguments retain their target files in the payload;
 their owners remain unexecuted and their activity remains unresolved. Computed or
 missing targets keep an actionable retention detail on their dependency requirement.
 `candidate_tex_files` distinguishes prepared
-conditional inputs from established active inputs. No branch's effects are executed
+deferred inputs from established active inputs. No branch's effects are executed
 or merged into the caller, and inlining preserves the input's final line boundary.
 The same observation handoff admits literal inputs and bibliography sites inside
 retained environments. An existing BBL is inspected in an independent context;

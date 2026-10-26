@@ -111,7 +111,7 @@ def prepare_bibliography(pieces, session, output_dir: Path):
             reader = TexReader(bbl, catcodes=context.catcodes, endline_char=context.endlinechar)
             try:
                 StructuralDispatcher(reader, context, session.bibliography_knowledge,
-                    preparation=True, source_commands=True).observe_conditional_input()
+                    preparation=True, source_commands=True).observe_input(may_skip=session.bibliography_may_skip)
             except ReadingIssue as error:
                 (output_dir / "bibliography.bib").write_text(canonical, encoding="utf-8", newline="\n")
                 manifest.bibliography.canonical_bib = "bibliography.bib"

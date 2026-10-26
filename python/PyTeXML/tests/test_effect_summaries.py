@@ -134,7 +134,8 @@ class EffectSummaryTests(unittest.TestCase):
         catalog = self.contract(EffectSummary(meanings=NameSet(prefixes=("inp",))))
         items = self.read(r"\begin{unknown}\touch\input{decoy}\end{unknown}", catalog)
         region = next(i for i in items if isinstance(i, DeferredRegion))
-        self.assertFalse(any(o.command.action == "source_input" for o in region.observations))
+        self.assertFalse(any(o.command and o.command.action == "source_input"
+                             for o in region.observations))
         reader = TexReader(r"\touch\input{decoy}", catcodes=self.context.catcodes, endline_char=self.context.endlinechar)
         observations = list(observe_source(reader, self.context, self.resolver))
         self.assertFalse(any(isinstance(i, SourceCommand) and i.action == "source_input" for i in observations))
