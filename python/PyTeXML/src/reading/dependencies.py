@@ -81,22 +81,28 @@ def observe_dependencies(argument, text, context, knowledge: ReadingKnowledge, u
                     break
                 shadowed.add(assignment.argument("target").tokens[0].value)
                 continue
-            if profile.action in DEPENDENCY_ACTIONS and profile.action != "asset_reference" and token.span.start not in excluded:
+            possible = profile.action in DEPENDENCY_ACTIONS and profile.action != "asset_reference" and token.span.start not in excluded
+            if possible:
                 identifier = units.add(token.span, "possible_dependency", owner,
                     activity=argument_activity(arg.role), evidence={"reason": "dependency_in_" + arg.role,
                                                                   "argument_role": arg.role})
-                yield token, identifier, profile.action, arg.role, None
             if profile.grammar.get("handler") != "source_arguments":
+                if possible:
+                    yield token, identifier, profile.action, arg.role, None
                 continue
             checkpoint = cursor.checkpoint()
             try:
                 command = scanner.read(token.span, profile)
             except ReadingIssue:
                 cursor.restore(checkpoint)
+                if possible:
+                    yield token, identifier, profile.action, arg.role, None
                 continue
             command_id = units.add(command.span, "observed_command", owner,
                 activity=argument_activity(arg.role), evidence={"reason": "captured_argument_command"})
             shadowed.update(observed_write_names(command, context, knowledge))
+            if possible:
+                yield token, identifier, profile.action, arg.role, replace(command, unit_id=command_id)
             if profile.action in {"asset_reference", "asset_search_paths", "asset_extensions"} and token.span.start not in excluded:
                 yield token, command_id, profile.action, arg.role, replace(command, unit_id=command_id)
             for child in reversed(command.arguments):

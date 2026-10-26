@@ -33,6 +33,7 @@ from .lint import PreparationLint
 from .resources import prepare_external_literal
 from .assets import observe_environment_assets, observe_asset, parse_asset_use, surviving_asset_uses
 from .deferred import emit_observed_region
+from .preservation import retain_candidate_input, retain_source, retain_survey_inputs
 from .provenance import Tombstone
 from .manifest import PreflightManifest, BibliographyInfo, PackageUsage, StyleFileInfo, ImplicitGraphicInfo
 from .records import source_reference, pending_location
@@ -63,6 +64,9 @@ class _Input:
     recovery: InputRecovery | None = None
     replacement: SourceSpan | None = None
     emission_start: int = 0
+    command: SourceCommand | None = None
+    tombstone_start: int = 0
+    command_start: int = 0
 
 
 @dataclass(slots=True)
@@ -95,6 +99,7 @@ class PreparationSession:
         self.candidate_sources: set[Path] = set()
         self._implicit: list[_ImplicitGraphic] = []
         self.code: set[Path] = set()
+        self.retained_search_dirs: dict[Path, set[Path]] = {}
         self.payload_edits: dict[Path, dict[tuple[int, int], str]] = {}
         self.commands: list[SourceCommand] = []
         self.documents = {}
@@ -290,10 +295,11 @@ class PreparationSession:
             self.fail(command.span, "input_cycle", chain)
         reader = self.open_source(path)
         overrides = self.resolver.catalog.engine_bindings["source_traversal"]["reading"]["package_input_catcodes"] if package else None
-        recovery = self.dispatcher.input_recovery() if not emit else None
+        recovery = self.dispatcher.input_recovery()
         self.frames.append(_Input(path, reader, emit, import_dir, include=include, recovery=recovery,
             replacement=command.span if emit and command.action != "bibliography" else None,
-            emission_start=len(self.pieces)))
+            emission_start=len(self.pieces), command=command,
+            tombstone_start=len(self.tombstones), command_start=len(self.commands)))
         self.dispatcher.enter_source(reader, catcode_overrides=overrides, options=options)
 
     def emit(self, span, text=None, *, command=None, target=None, operation=None, deferred=None,
@@ -437,10 +443,11 @@ class PreparationSession:
                 observe_asset(self, command, argument.span, "argument_" + role,
                               binding=command.metadata.get("binding_id"), search_changed=search_changed)
                 continue
-            self.require(token.span, "deferred_dependency", "Possible dependency; its owning context has not dispatched this request",
+            requirement = self.require(token.span, "deferred_dependency", "Possible dependency; its owning context has not dispatched this request",
                 stage="interpretation" if role == "stored" else "preparation", unit_id=identifier,
                 dependency="possible", next_step="macro_invocation" if role == "stored" else
                     "branch_selection" if role == "branch" else "argument_behavior")
+            retain_candidate_input(self, command, argument.span, requirement)
             if action in {"package_load", "document_class"} and role != "stored":
                 self.dispatcher.loads.invalidate(identifier)
 
@@ -728,8 +735,9 @@ class PreparationSession:
             # retain those gaps explicitly instead of fabricating mappings.
             self.manifest.input_occurrences[basis.occurrence_id]["unobserved"] = [
                 [s.start, s.end] for s in coverage.unknown]
-        self._inventory()
         self.manifest.source_survey = survey_sources(self.store, self.resolver.catalog)
+        retain_survey_inputs(self)
+        self._inventory()
         self.manifest.source_reads = list(self.store.read_paths)
         self.pending_units()
         return self
@@ -762,6 +770,20 @@ class PreparationSession:
                 self.dispatcher.loads.invalidate(item.unit_id)
                 if recoverable is not None:
                     frame = self.frames[recoverable]
+                    if frame.emit:
+                        retain_source(self, frame.path, import_dir=frame.import_dir)
+                        del self.pieces[frame.emission_start:]
+                        del self.tombstones[frame.tombstone_start:]
+                        del self.commands[frame.command_start:]
+                        # Already visited descendants still occur in the retained
+                        # file. Keep their source, rather than stranding their units.
+                        for basis, doc in self.documents.items():
+                            if basis.occurrence_id >= frame.reader.basis.occurrence_id:
+                                retain_source(self, doc.path, import_dir=frame.import_dir)
+                        if self.bibliography_pieces is not None:
+                            retained = {piece.key for piece in self.pieces}
+                            if any(piece.key not in retained for piece in self.bibliography_pieces):
+                                self.bibliography_pieces = None
                     self.require(item.span, "retained_code_reading",
                         f"Retained {self.name(frame.path)!r}; immediate caller resumes with its entry reading state. "
                         "This file's reading effects and dependencies still require resolution.", stage="preparation", unit_id=item.unit_id,
@@ -769,6 +791,15 @@ class PreparationSession:
                     self.dispatcher.resume_input(frame.recovery)
                     self.dispatcher.defer_effects(item.span, reason=item.reason, detail=item.detail)
                     del self.frames[recoverable:]
+                    if frame.emit:
+                        reference = "\\input{" + self.name(frame.path) + "}"
+                        if frame.import_dir is not None:
+                            relative = frame.path.relative_to(frame.import_dir, walk_up=True).as_posix()
+                            reference = "\\import{" + self.name(frame.import_dir) + "/}{" + relative + "}"
+                        self.emit(frame.command.span, reference,
+                                  operation="PRESERVE_CODE_INPUT", command=frame.command)
+                        if frame.include:
+                            self.emit(frame.command.span, "\\clearpage ", operation="INCLUDE_BOUNDARY")
                     continue
                 raise _PreserveRemainder
             self.observe(item)
@@ -792,10 +823,12 @@ class PreparationSession:
                 elif isinstance(item, DeferredRegion):
                     dependency = item.command is not None and item.command.action in DEPENDENCY_ACTIONS
                     requirement = self.require(item.span, item.reason, item.detail,
-                        stage="binding" if item.reason == "package_not_loaded" else "interpretation", unit_id=item.unit_id,
+                        stage="binding" if item.reason in {"package_not_loaded", "literal_configuration"} else "interpretation", unit_id=item.unit_id,
                         dependency="possible" if dependency else "none",
-                        next_step="binding_knowledge" if item.reason == "package_not_loaded" else
+                        next_step="binding_knowledge" if item.reason in {"package_not_loaded", "literal_configuration"} else
                             "branch_selection" if item.reason == "branch_selection" else None, causes=item.causes)
+                    if item.binding_id:
+                        requirement["binding_id"] = item.binding_id
                     if isinstance(item, CollectedEnvironment):
                         requirement["definition_unit_id"] = item.definition_id
                     if item.effect_summary is not None:

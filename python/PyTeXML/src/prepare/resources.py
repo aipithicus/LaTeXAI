@@ -22,7 +22,7 @@ def prepare_external_literal(session, command):
             profile = session.resolver.resolve_environment(environment)
             if isinstance(profile, EffectiveReadingProfile):
                 profile = session.resolver.resolve_environment(environment,
-                    configured_options(profile, command.argument("options"), session.context))
+                    configured_options(profile, command.argument("options"), session.context).values)
             if not isinstance(profile, EffectiveReadingProfile):
                 raise ReadingIssue(profile.reason.value, profile.detail)
             if (profile.interpolations or profile.catcode_overrides

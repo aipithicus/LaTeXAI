@@ -127,7 +127,8 @@ class AssetFidelityTests(unittest.TestCase):
         self.put("child.tex", r"\catcode`\%=\computed")
         text, manifest, out, _ = self.prepare()
         self.assertIn(r"\unknown{\includegraphics{logo.svg}}", text)
-        self.assertIn(r"\input{child}TAIL", text)
+        self.assertIn(r"\input{child.tex}TAIL", text)
+        self.assertEqual((out / "child.tex").read_text(), r"\catcode`\%=\computed")
         self.assertTrue((out / "logo.svg").is_file())
         self.assertEqual(manifest.candidate_dependencies[0]["status"], "prepared")
 

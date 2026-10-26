@@ -10,12 +10,19 @@ from .tex_reader import CatCode, TokenKind
 from .argument_scanner import key_values
 
 
-def configured_options(profile, argument, context):
+@dataclass(frozen=True, slots=True)
+class ConfiguredOptions:
+    values: dict
+    unclassified: tuple[str, ...] = ()
+
+
+def configured_options(profile, argument, context, *, preserve_unclassified=False):
     if not profile.configuration:
-        return key_values(argument)
+        return ConfiguredOptions(key_values(argument))
     contract, state = profile.configuration, context.configurations
-    values = state.resolve(contract['namespace'], entries(argument), contract)
-    return state.reading_values(values, contract)
+    values = state.resolve(contract['namespace'], entries(argument), contract,
+                           preserve_unclassified=preserve_unclassified)
+    return ConfiguredOptions(state.reading_values(values, contract), state.unclassified(values, contract))
 
 
 @dataclass(frozen=True, slots=True)
@@ -145,7 +152,7 @@ class ConfigurationState:
             return ''.join(value.split()).lower()
         return value.strip()
 
-    def resolve(self, namespace, incoming, contract):
+    def resolve(self, namespace, incoming, contract, *, preserve_unclassified=False):
         """Iterative depth-first recipe application; no recursion or execution."""
         result = dict(self.values.get(namespace, {}))
         stack = [(iter(incoming), ())]
@@ -166,9 +173,9 @@ class ConfigurationState:
                     raise ReadingIssue('configuration_missing', f'No captured configuration {name!r} in {namespace}')
                 stack.append((iter(recipe), chain + (name,)))
                 continue
-            if entry.key not in keys and entry.key not in neutral:
+            if entry.key not in keys and entry.key not in neutral and not preserve_unclassified:
                 raise ReadingIssue('unsupported_reading_option', f'Unclassified option {entry.key!r}')
-            # Formatting values are stored, not executed or mistaken for literals.
+            # Non-reading and unclassified values stay tokens, never execution.
             if entry.key in keys:
                 literal_value(entry, contract)
             for group in contract.get('exclusive_keys', ()):
@@ -176,7 +183,15 @@ class ConfigurationState:
                     for old in group:
                         result.pop(old, None)
             result[entry.key] = entry
+        if not preserve_unclassified and (unknown := self.unclassified(result, contract)):
+            raise ReadingIssue('unsupported_reading_option', f'Unclassified options: {", ".join(unknown)}')
         return result
+
+    @staticmethod
+    def unclassified(values, contract):
+        """Unrecognized values stay token data, never implicit neutral settings."""
+        known = set(contract.get('reading_affecting_keys', ())) | set(contract.get('non_reading_options', ()))
+        return tuple(key for key in values if key not in known)
 
     @staticmethod
     def reading_values(values, contract):

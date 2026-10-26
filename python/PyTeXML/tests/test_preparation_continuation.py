@@ -71,6 +71,94 @@ class ContinuationTests(unittest.TestCase):
         self.assertEqual(manifest.preparation_status, "partial")
         self.assertEqual(manifest.unresolved[0]["reason"], "computed_argument")
 
+    def test_unclassified_literal_options_do_not_roll_back_nested_inputs(self):
+        source = (r'\documentclass{article}\usepackage{listings}\begin{document}'
+                  r'\input{section}\input{after}\end{document}')
+        block = ('\\begin{lstlisting}[style=future]\n'
+                 '\\input{never}\n% literal comment\n\\end{lstlisting}\n')
+        self.put('main.tex', source)
+        self.put('section.tex', r'\input{before}\lstdefinestyle{future}{unknown=x}' + block + 'SECTION END')
+        self.put('before.tex', 'BEFORE')
+        self.put('after.tex', 'AFTER')
+        text, manifest, _, ledger = self.prepare()
+        for content in ('BEFORE', block.rstrip(), 'SECTION END', 'AFTER'):
+            self.assertIn(content, text)
+        self.assertNotIn(r'\input{section}', text)
+        self.assertFalse(manifest.preserved_source_spans)
+        self.assertEqual([r['reason'] for r in manifest.requirements if r['reason'] == 'literal_configuration'],
+                         ['literal_configuration'])
+        self.assertFalse([d for d in manifest.dependencies if d['target'] == 'never.tex'])
+        self.assertFalse([u for u in manifest.units if u['location_status'] == 'unmapped'])
+        self.assertEqual((self.root / 'main.tex').read_text(), source)
+        self.assertEqual(ledger.master_length, len(text))
+
+    def test_unframeable_child_is_retained_and_caller_continues(self):
+        source = r'\documentclass{article}\input{section}\input{after}'
+        child = r'BEFORE \input{grand}\catcode`\%=\computed \input{tail}'
+        self.put('main.tex', source)
+        self.put('section.tex', child)
+        self.put('grand.tex', 'GRAND')
+        self.put('tail.tex', 'TAIL')
+        self.put('after.tex', 'AFTER')
+        text, manifest, output, ledger = self.prepare()
+        self.assertIn(r'\input{section.tex}', text)
+        self.assertIn('AFTER', text)
+        self.assertEqual((output / 'section.tex').read_text(), child)
+        self.assertEqual((output / 'grand.tex').read_text(), 'GRAND')
+        self.assertEqual((output / 'tail.tex').read_text(), 'TAIL')
+        self.assertTrue(any(r['reason'] == 'retained_code_reading' for r in manifest.requirements))
+        self.assertFalse([u for u in manifest.units if u['location_status'] == 'unmapped'])
+        self.assertFalse([s for s in ledger.source_coverage if s['unaccounted']])
+        self.assertEqual((self.root / 'main.tex').read_text(), source)
+
+    def test_literal_candidate_input_is_packaged_without_executing_its_owner(self):
+        child = r'\input{nested} ABSTRACT'
+        self.put('main.tex', r'\documentclass{article}\unknown{\input{abstract}}\input{after}')
+        self.put('abstract.tex', child)
+        self.put('nested.tex', 'NESTED')
+        self.put('after.tex', 'AFTER')
+        text, manifest, output, _ = self.prepare()
+        self.assertIn(r'\unknown{\input{abstract}}', text)
+        self.assertIn('AFTER', text)
+        self.assertNotIn('ABSTRACT', text)
+        self.assertEqual((output / 'abstract.tex').read_text(), child)
+        self.assertEqual((output / 'nested.tex').read_text(), 'NESTED')
+        self.assertEqual([d['target'] for d in manifest.dependencies], ['after.tex'])
+        requirement, = [r for r in manifest.requirements if r['reason'] == 'deferred_dependency']
+        self.assertEqual(requirement['activity'], 'unresolved')
+        self.assertEqual(requirement['materialization'], 'prepared')
+
+    def test_root_residue_retains_literal_input_closure_with_one_cached_read(self):
+        self.put('main.tex', r'\documentclass{article}\catcode`\%=\computed \input{one}')
+        self.put('one.tex', r'ONE \input{two}\input{two}')
+        self.put('two.tex', r'TWO \input{one}')
+        reads = Counter()
+        original = Path.read_bytes
+        def read(path):
+            reads[path.resolve()] += 1
+            return original(path)
+        with patch.object(Path, 'read_bytes', read):
+            text, manifest, output, ledger = self.prepare()
+        self.assertIn(r'\input{one}', text)
+        self.assertEqual(set(manifest.code_inputs), {'one.tex', 'two.tex'})
+        self.assertTrue((output / 'one.tex').is_file())
+        self.assertTrue((output / 'two.tex').is_file())
+        self.assertFalse(manifest.dependencies)
+        self.assertTrue(all(reads[self.root / name] == 1 for name in manifest.source_reads))
+        self.assertFalse([s for s in ledger.source_coverage if s['unaccounted']])
+
+    def test_import_fallback_retains_the_original_search_context(self):
+        self.put('main.tex', r'\documentclass{article}\usepackage{import}\import{parts/}{child.tex}\input{after}')
+        self.put('parts/child.tex', r'\catcode`\%=\computed \input{grand}')
+        self.put('parts/grand.tex', 'IMPORTED GRAND')
+        self.put('grand.tex', 'WRONG GRAND')
+        self.put('after.tex', 'AFTER')
+        text, manifest, output, _ = self.prepare()
+        self.assertIn(r'\import{parts/}{child.tex}', text)
+        self.assertIn('AFTER', text)
+        self.assertEqual((output / 'parts/grand.tex').read_text(), 'IMPORTED GRAND')
+        self.assertNotIn('grand.tex', manifest.code_inputs)
+
     def test_full_project_survey_keeps_candidate_and_active_dependencies_distinct(self):
         self.put("main.tex", r"\documentclass{article}\input{live}")
         self.put("live.tex", "LIVE")

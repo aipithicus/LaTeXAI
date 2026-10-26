@@ -284,8 +284,11 @@ Admitted inputs are inserted with separate occurrence/provenance records and cac
 reads, including repeated inputs. Their contents must meet the bounded observational
 contract and introduce no conditional tokens in either active or skipped reading.
 Unsupported, computed, missing or cyclic candidates retain their command and a
-located preparation requirement, while later source continues. Inputs hidden in
-opaque arguments remain deferred. `candidate_tex_files` distinguishes prepared
+located preparation requirement, while later source continues. Literal input
+headers captured inside opaque arguments retain their target files in the payload;
+their owners remain unexecuted and their activity remains unresolved. Computed or
+missing targets keep an actionable retention detail on their dependency requirement.
+`candidate_tex_files` distinguishes prepared
 conditional inputs from established active inputs. No branch's effects are executed
 or merged into the caller, and inlining preserves the input's final line boundary.
 The same observation handoff admits literal inputs and bibliography sites inside
@@ -297,8 +300,14 @@ candidates preserve their declaration and a located requirement without hiding
 the source that follows the enclosing region.
 
 Genuine reading boundaries, including computed catcode assignments, unsupported
-predicate headers, conflicting branch boundaries and literal grammars, still limit emission. The unfinished root operation and
-following suffix are preserved in that case, with `partial` status. The survey
+predicate headers, conflicting branch boundaries and literal grammars, still limit
+normalization. A child input that cannot be framed is retained as a payload file,
+including already visited descendants, and its immediate caller resumes from the
+input checkpoint. At the root, the unfinished operation and following suffix are
+preserved with `partial` status. Retained files use the existing cached source and
+edit-aware payload mappings; their units are not left pointing into discarded
+insertions. A visited worklist retains further literal input targets identified by
+the source survey, without promoting candidates to active dependencies. The survey
 continues inspecting the source under an explicitly independent profile. There
 is no legacy-regex or compiler fallback. Any future executable prototype
 comparison uses the separate restored prototype, never a fallback in this integration.
@@ -337,8 +346,14 @@ declares `\lstset` as a local ordered assignment and `\lstdefinestyle` as a glob
 named recipe, matching the package source. Style references resolve when applied;
 local listing options overlay current defaults without changing them. Key/value
 splitting uses captured tokens and group depth, retaining repeated-key order and
-formatting tokens without executing them. Unknown keys, computed reading values,
-missing/cyclic styles and unsupported dialect/aspect syntax remain located limits.
+formatting tokens without executing them. During preparation, unclassified keys
+remain token values, not presumed neutral options. The dispatcher uses the bound
+capture grammar and known reading options to preserve a complete opaque region,
+records a `literal_configuration` binding requirement, and resumes after its closer.
+It does not dispatch apparent commands in that region. Strict execution continues
+to reject unclassified keys. Computed reading values, missing/cyclic styles and
+unsupported dialect/aspect syntax still require reading resolution and use the
+source-file preservation fallback when a bounded region cannot be captured.
 
 In preparation, a physical-line listing can capture one declared TeX escape mode
 (`escapeinside` or `escapechar`). Closing delimiters are matched through the mouth,

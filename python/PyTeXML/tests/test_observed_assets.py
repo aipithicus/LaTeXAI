@@ -191,16 +191,18 @@ class ObservedAssetTests(unittest.TestCase):
         # No definition from the unexecuted body leaked into the caller context.
         self.assertIn(r"\includegraphics{real.svg}", text)
 
-    def test_rolled_back_input_does_not_publish_observed_assets(self):
+    def test_retained_input_keeps_and_rebases_its_observed_assets(self):
         self.put("main.tex", r"\documentclass{article}\usepackage{graphicx}\input{child}TAIL")
         self.put("child.tex", r"\begin{custom}\includegraphics{real.png}\end{custom}"
                  r"\catcode`\%=\computed")
         self.image("real.png")
         text, manifest, out, _ = self.prepare()
-        self.assertIn(r"\input{child}TAIL", text)
-        self.assertEqual(manifest.candidate_dependencies, [])
-        self.assertEqual(manifest.candidate_images, [])
-        self.assertEqual(list(out.glob("*.svg")), [])
+        self.assertIn(r"\input{child.tex}TAIL", text)
+        self.assertIn(r"\includegraphics{real.svg}", (out / "child.tex").read_text())
+        self.assertEqual(manifest.candidate_dependencies[0]["status"], "prepared")
+        self.assertEqual(len(manifest.candidate_images), 1)
+        self.assertTrue((out / "real.svg").is_file())
+        self.assertFalse((out / "real.png").exists())
 
     def test_reading_boundary_does_not_certify_an_unfinished_environment(self):
         body = r"\begin{custom}\includegraphics{real.png}\iffalse hidden\fi\end{custom}"

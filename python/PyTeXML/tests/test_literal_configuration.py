@@ -15,7 +15,7 @@ from src.bindings.catalog import BindingCatalog
 from reader_support import reload_catalog
 from src.bindings.resolver import BindingResolver
 from src.reading.character_rules import ProfileError
-from src.reading.contracts import LiteralRegion, ReadingBoundary, ConditionalRegion
+from src.reading.contracts import LiteralRegion, ReadingBoundary, ConditionalRegion, DeferredRegion
 from src.reading.coverage import ReadingCoverage
 from src.reading.dispatcher import StructuralDispatcher
 from src.reading.tex_reader import CatCode, TexReader
@@ -118,13 +118,34 @@ class LiteralConfigurationTests(unittest.TestCase):
                                 ('style=missing', 'configuration_missing'),
                                 ('escapechar', 'configuration_value')]:
             with self.subTest(options=options):
-                items = self.read(r'\lstset{escapechar=|}\lstset{numbers=left,' + options + '}')
+                items = self.read(r'\lstset{escapechar=|}\lstset{numbers=left,' + options + '}', preparation=False)
                 self.assertEqual(items[-1].reason, reason)
                 self.assertEqual(set(self.settings()), {'escapechar'})
 
     def test_unknown_style_keys_are_deferred_until_application(self):
         self.complete(r'\lstdefinestyle{future}{unknown=anything}')
-        self.assertEqual(self.read(r'\lstdefinestyle{future}{unknown=x}\lstset{style=future}')[-1].reason, 'unsupported_reading_option')
+        self.assertEqual(self.read(r'\lstdefinestyle{future}{unknown=x}\lstset{style=future}', preparation=False)[-1].reason, 'unsupported_reading_option')
+
+    def test_preparation_preserves_unclassified_settings_with_scoped_obligations(self):
+        source = ('{' + r'\lstset{unclassified={\input{never}},escapechar=|}'
+                  + listing('code |\\textbf{escaped}|') + '}' + listing('plain') + 'TAIL')
+        self.complete(source)
+        deferred = [i for i in self.items if isinstance(i, DeferredRegion)]
+        self.assertEqual(len(deferred), 2)
+        self.assertTrue(all(i.reason == 'literal_configuration' for i in deferred))
+        self.assertIn(r'\input{never}', self.reader.source_slice(deferred[0].span))
+        self.assertIn('escaped', self.reader.source_slice(deferred[1].span))
+        self.assertFalse(self.settings())
+        self.assertEqual(len([i for i in self.items if isinstance(i, LiteralRegion)]), 1)
+
+    def test_unclassified_style_preserves_known_escape_framing(self):
+        body = 'code (*\\textbf{\\end{lstlisting}}*) more'
+        block = listing(body, 'style=future')
+        source = r'\lstdefinestyle{future}{unknown=x,escapeinside={(*}{*)}}' + block + 'TAIL'
+        self.complete(source)
+        region, = [i for i in self.items if isinstance(i, DeferredRegion)]
+        self.assertEqual(self.reader.source_slice(region.span).rstrip(), block.rstrip())
+        self.assertEqual(region.reason, 'literal_configuration')
 
     def test_cycles_and_missing_forward_references_are_explicit(self):
         source = r'\lstdefinestyle{a}{style=b}\lstdefinestyle{b}{style=a}\lstset{style=a}'

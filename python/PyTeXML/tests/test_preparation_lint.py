@@ -185,7 +185,8 @@ class PreparationLintTests(unittest.TestCase):
         text, manifest, output, _ = self.prepare(r"\input{part}AFTER", mode="repair")
         finding = next(f for f in manifest.lint["findings"] if f["reason"] == "invalid_character")
         self.assertEqual(finding["repair"]["status"], "not_emitted")
-        self.assertIn(r"\input{part}", text)
+        self.assertIn(r"\input{part.tex}", text)
+        self.assertEqual((output / "part.tex").read_text(), "a\x7fb\\catcode\\computed=12")
 
     def test_later_failure_never_claims_a_published_repair(self):
         with self.assertRaises(PreparationUnresolved):

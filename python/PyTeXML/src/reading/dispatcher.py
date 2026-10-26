@@ -582,6 +582,7 @@ class StructuralDispatcher:
                 raise ReadingIssue("unsupported_operation", "Reading effect has no executable action")
             self._require(not isinstance(reader, TokenCursor), "option_body",
                           "Literal and environment reading requires a character-input contract")
+            configuration_gaps = ()
             if profile.grammar.get("handler") == "environment_name":
                 self._require(profile.grammar.get("argument") == "braced_literal_name",
                               "unsupported_literal_grammar", "Only literal braced environment names are supported")
@@ -604,9 +605,9 @@ class StructuralDispatcher:
                 if profile.grammar.get("has_optional_arguments"):
                     with context.argument_scanning():
                         options = ArgumentScanner(reader, context).group("options", optional=True)
-                    profile = require_resolved(resolve_environment(name, configured_options(profile, options, context), context, self.knowledge))
+                    profile, configuration_gaps = self._configured_environment(name, profile, options)
                 elif profile.configuration:
-                    profile = require_resolved(resolve_environment(name, configured_options(profile, None, context), context, self.knowledge))
+                    profile, configuration_gaps = self._configured_environment(name, profile, None)
                 if profile.family == "structural_environment" and self.source_commands:
                     header = ArgumentScanner(reader, context).read(event.span, profile)
                     context.push_scope()
@@ -617,6 +618,9 @@ class StructuralDispatcher:
                               and profile.grammar.get("arity") == 0,
                               "unsupported_literal_grammar", "Environment requires an unsupported header or body handler")
             region = self.literals.read(event.span.start, profile, defer_interpolation=self.preparation)
+            if profile.grammar.get("handler") in {"token_delimited", "physical_line_literal"} and configuration_gaps:
+                return self._deferred(DeferredRegion(region.span, "literal_configuration",
+                    self._configuration_detail(configuration_gaps), binding_id=profile.binding_id))
             for interpolation in region.interpolations:
                 self.defer_effects(interpolation.span)
             if region.classification.category == "transparent_block":
@@ -655,10 +659,24 @@ class StructuralDispatcher:
             self._require(bool(name), "configuration_name", "Configuration name must be nonempty")
             state.store("styles", (namespace, name), captured, contract["definition_scope"])
         else:
-            resolved = state.resolve(namespace, captured, contract)
+            resolved = state.resolve(namespace, captured, contract, preserve_unclassified=self.preparation)
             self.knowledge.check_configuration(command.name, state.reading_values(resolved, contract), contract)
             state.store("values", namespace, resolved, contract["assignment_scope"])
+            gaps = state.unclassified(resolved, contract)
+            if gaps:
+                return self._deferred(DeferredRegion(command.span, "literal_configuration",
+                    self._configuration_detail(gaps), command=command, binding_id=profile.binding_id))
         return command
+
+    @staticmethod
+    def _configuration_detail(keys):
+        return (f"Unclassified configuration keys: {', '.join(keys)}. Source retained using the declared "
+                "capture grammar and resolved reading options; remaining option semantics require binding knowledge.")
+
+    def _configured_environment(self, name, profile, argument):
+        options = configured_options(profile, argument, self.context, preserve_unclassified=self.preparation)
+        resolved = require_resolved(resolve_environment(name, options.values, self.context, self.knowledge))
+        return resolved, options.unclassified
 
     def _options(self, command: SourceCommand) -> SourceCommand:
         """Capture first, select later, then reuse strict dispatch over frozen tokens.
@@ -846,9 +864,9 @@ class StructuralDispatcher:
                 if nested.grammar.get("has_optional_arguments"):
                     with self.context.argument_scanning():
                         options = ArgumentScanner(self.reader, self.context).group("options", optional=True)
-                    nested = require_resolved(resolve_environment(name, configured_options(nested, options, self.context), self.context, self.knowledge))
+                    nested, _ = self._configured_environment(name, nested, options)
                 elif nested.configuration:
-                    nested = require_resolved(resolve_environment(name, configured_options(nested, None, self.context), self.context, self.knowledge))
+                    nested, _ = self._configured_environment(name, nested, None)
                 self._require(not nested.interpolations, "environment_reading",
                               "Interpolation inside an unbound environment requires further reading resolution")
                 self.literals.read(token.span.start, nested)

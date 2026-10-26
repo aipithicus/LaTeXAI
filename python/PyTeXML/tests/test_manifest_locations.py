@@ -310,15 +310,15 @@ class ManifestLocationTests(unittest.TestCase):
                 self.assertTrue(master[p["start"]:p["end"]].startswith(r"\includegraphics{"))
                 self.assertTrue(master[p["start"]:p["end"]].endswith(".svg}"))
 
-    def test_rolled_back_child_interests_are_explicitly_unmapped(self):
+    def test_retained_child_interests_map_to_the_payload_without_coverage_loss(self):
         self.put("main.tex", r"\documentclass{article}\input{child}TAIL")
         self.put("child.tex", r"\mystery{retained obligation}\catcode`\%=\computed")
         text, manifest, out, ledger = self.prepare()
-        self.assertIn(r"\input{child}TAIL", text)
+        self.assertIn(r"\input{child.tex}TAIL", text)
         child = [r for r in manifest.requirements if r["source"] == "child.tex"]
         self.assertTrue(child)
-        self.assertTrue(all(r["location_status"] == "unmapped" and r["locations"] == [] for r in child))
-        self.assertTrue(any(s["source"] == "child.tex" and s["unaccounted"] for s in ledger.source_coverage))
+        self.assertTrue(all(r["location_status"] == "mapped" and r["locations"][0]["artifact"] == "child.tex" for r in child))
+        self.assert_accounted(ledger)
         self.assert_addresses(manifest, out)
 
     def test_discard_observations_do_not_delete_preserved_literal_or_definition_text(self):
