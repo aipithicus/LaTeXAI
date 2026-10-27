@@ -111,7 +111,7 @@ in the private issues workspace) to its place in this fixture.
 | N1, N2 | Wrapper main: `\documentclass` neutralised; the inner file has its own preamble and `\begin{document}` | 1p | `master.tex:11–12` → `body/paper.tex:1–3` |
 | N3 | `\input` with an explicit `.tex` extension | 25p | `body/paper.tex:32` |
 | N4 | Save-and-wrap `\bibliographystyle` | 1p | `master.tex:15–17` |
-| N5 | File hooks set up inside a macro | 1p | `master.tex:19–23` (see the quirks section of `README.md`) |
+| N5 | File hooks set up inside a macro, named by base name though the input has a directory | 1p | `master.tex:19–23` (see the quirks section of `README.md`) |
 | N6 | Dead input of a missing file | | `body/paper.tex:68` |
 | N7 | Input inside a live conditional | 9p | `body/paper.tex:69` |
 | N8 | Parametric input paths | 15p | `body/paper.tex:45–46` |

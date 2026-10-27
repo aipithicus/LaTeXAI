@@ -4,9 +4,10 @@ The development harness in `src.validation.specimens` calls the public preparati
 and optional rendering entry points. It owns experiment organization only; it adds
 no discovery, binding or emission rules to preparation.
 
-Keep source projects in one catalog directory, and a separate run collection beside
-it. The catalog uses explicit main documents so changes in discovery heuristics do
-not silently change which manuscript is tested:
+Keep source projects in one catalog directory, and the run collection outside it.
+This project's catalog is `tests/fixtures/specimens/catalog.yaml`, and its runs go
+in the gitignored `temp/specimen-runs/`. The catalog uses explicit main documents so
+changes in discovery heuristics do not silently change which manuscript is tested:
 
 ```yaml
 schema: pytexml-specimens/1
@@ -86,7 +87,13 @@ python -B -m src.validation.specimens --runs <run-collection> render --batch 202
 
 The renderer checks that source and prepared fingerprints still match the batch.
 It requires a new rendering name and follows the standalone adapter's compiler,
-timeout, bundle and optional-download controls. It does not rerun preparation.
+timeout, bundle and optional-download controls, including its default Tectonic
+cache in the repository's `temp/tectonic-cache`. It does not rerun preparation.
+
+A batch records absolute source paths. If a source has moved since the batch ran,
+add `--catalog <catalog.yaml>` to `render` or `qualify`: the specimen is then found
+through the catalog, and used only if its main document and source fingerprint
+still match the batch.
 Results are linked into the batch page; temporary rendering inputs are removed by
 the adapter. The manuscript's original render is not duplicated until rendering
 is explicitly requested for that checkpoint.

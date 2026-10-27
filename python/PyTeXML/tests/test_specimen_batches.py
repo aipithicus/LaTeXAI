@@ -179,6 +179,23 @@ class SpecimenBatchTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Prepared checkpoint changed"):
             render_specimen(self.runs, "baseline", "one", "validation", None)
 
+    def test_moved_source_is_found_through_the_catalog_only_while_its_bytes_match(self):
+        self.run_fake("baseline")
+        (self.specimens / "one").rename(self.specimens / "moved")
+        self.records["one"]["source"] = "moved"
+        self.catalog.write_text(yaml.safe_dump({"schema": "pytexml-specimens/1", "specimens": self.records}),
+                                encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "Recorded source is missing"):
+            render_specimen(self.runs, "baseline", "one", "validation", None)
+        seen = []
+        with patch("src.validation.render.render_comparison",
+                   side_effect=lambda source, *rest: seen.append(source) or {"status": "rendered"}):
+            render_specimen(self.runs, "baseline", "one", "validation", None, catalog=self.catalog)
+        self.assertEqual([Path(p).resolve() for p in seen], [(self.specimens / "moved").resolve()])
+        (self.specimens / "moved/paper.tex").write_text("altered")
+        with self.assertRaisesRegex(ValueError, "Original source changed"):
+            render_specimen(self.runs, "baseline", "one", "validation", None, catalog=self.catalog)
+
     def test_changed_shared_resource_is_reported_not_reused(self):
         self.run_fake("first")
         resource = next((self.runs / "resources").iterdir())

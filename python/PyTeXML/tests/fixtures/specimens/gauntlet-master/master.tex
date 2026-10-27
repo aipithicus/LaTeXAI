@@ -20,5 +20,5 @@
 \newcommand{\gmfilehook}[1]{%
   \AddToHook{file/#1.tex/before}{\gmhooked{#1}}%
   \AddToHook{file/#1.tex/after}{\typeout{left #1}}}
-\gmfilehook{sections/math}
+\gmfilehook{math}% file hooks are keyed by base name: this fires for \input{sections/math}
 \input{body/paper}

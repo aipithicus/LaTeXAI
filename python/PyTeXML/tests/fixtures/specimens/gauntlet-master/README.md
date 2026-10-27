@@ -37,8 +37,14 @@ D cite the same keys, so `master-arxiv.bbl` is identical to `master.bbl`.
 
 ## Compiling
 
-Tectonic is the oracle, as in `src/validation/render.py`. Point its cache inside
-the repository so downloads don't land in `%LOCALAPPDATA%`:
+This directory is in the specimen catalog (`../catalog.yaml`) as
+`gauntlet-master-natbib`, `-biblatex`, `-plain` and `-arxiv`, one entry per root,
+so the specimen harness prepares, renders and qualifies it like the paper
+specimens.
+
+Tectonic is the oracle, as in `src/validation/render.py`. The harness keeps
+Tectonic's cache in the repository's `temp/tectonic-cache` unless
+`TECTONIC_CACHE_DIR` is already set. Set it yourself when running Tectonic by hand:
 
 ```powershell
 $env:TECTONIC_CACHE_DIR = 'D:\aipithicus\LaTeXAI\temp\tectonic-cache'
@@ -66,10 +72,12 @@ regenerated `master-arxiv.bbl` with the shipped one. They are byte-identical.
 - **Tectonic defines `\pdfoutput`.** After `\pdfoutput=1`, iftex reports PDF
   mode and hyperref would load its pdfTeX driver. `body/paper.tex` passes the
   `xetex` option under `\ifXeTeX` (case P5).
-- **File hooks don't fire under Tectonic.** The bundle's LaTeX 2021-11-15 still
-  uses the old `file/before/<name>` hook names. The `file/<name>/before` hooks in
-  `master.tex` (case N5) are accepted but never fire there; they fire on LaTeX
-  2023-06 and later.
+- **File hooks are keyed by the file's base name.** `\input{sections/math}`
+  runs `file/math.tex/before`: `\CurrentFile` is `math.tex`, and the directory is
+  in `\CurrentFilePath`. A hook named `file/sections/math.tex/before` is accepted
+  and never runs. That is why case N5 in `master.tex` hooks `math`. The old
+  (`file/before/<name>`) and new (`file/<name>/before`) spellings both work in
+  the bundle's LaTeX 2021-11-15.
 - **Tectonic's BibTeX drops spaces in `@string` values.**
   `"TeX Users Group"` comes out as `TeXUsersGroup` in both `.bbl` files.
 - **The kernel `verbatim` drops the rest of its closing line.** That is why

@@ -111,6 +111,22 @@ def load_catalog(path):
     return result
 
 
+def recorded_source(item, specimen, catalog=None):
+    """The batch's source directory, or the catalog's when it moved with the same bytes."""
+    source = Path(item["source"])
+    if source.is_dir():
+        return source
+    if catalog is None:
+        raise ValueError(f"Recorded source is missing: {source}; pass --catalog to locate a moved source")
+    record = load_catalog(catalog).get(specimen)
+    if record is None or record["main"] != item["main"]:
+        raise ValueError(f"{specimen}: the catalog has no entry with main {item['main']}")
+    moved = Path(record["source"])
+    if source_fingerprint(moved)["sha256"] != item["source_fingerprint"]["sha256"]:
+        raise ValueError("Original source changed since this batch; create a new iteration before comparing")
+    return moved
+
+
 def batch_records(runs):
     records = []
     for path in runs.glob("*/run.json"):
@@ -322,7 +338,7 @@ def run_batch(catalog, runs, name, note, selected=(), timeout=180):
     return batch
 
 
-def render_specimen(runs, batch_name, specimen, render_name, config):
+def render_specimen(runs, batch_name, specimen, render_name, config, catalog=None):
     from .render import render_comparison
 
     runs = Path(runs).resolve()
@@ -332,7 +348,7 @@ def render_specimen(runs, batch_name, specimen, render_name, config):
     item = batch["results"][specimen]
     if item["status"] not in {"partial", "complete"} or not item["master"]:
         raise ValueError("This attempt has no successfully prepared master")
-    source = Path(item["source"])
+    source = recorded_source(item, specimen, catalog)
     if source_fingerprint(source)["sha256"] != item["source_fingerprint"]["sha256"]:
         raise ValueError("Original source changed since this batch; create a new iteration before comparing")
     folder = runs / batch_name / specimen
@@ -343,7 +359,7 @@ def render_specimen(runs, batch_name, specimen, render_name, config):
     return result
 
 
-def qualify_batch(runs, batch_name, name, config, selected=(), *, output_format="pdf", diagnose=False):
+def qualify_batch(runs, batch_name, name, config, selected=(), *, output_format="pdf", diagnose=False, catalog=None):
     """Exercise every selected prepared checkpoint without staging raw sources."""
     from .relocation import qualify_relocation
     from .assessment import summarize
@@ -368,11 +384,12 @@ def qualify_batch(runs, batch_name, name, config, selected=(), *, output_format=
                 raise ValueError("This attempt has no prepared master")
             if fingerprint(folder / "prepared", (p for p in (folder / "prepared").rglob("*") if p.is_file()))["sha256"] != item["outputs"]["sha256"]:
                 raise ValueError("Prepared checkpoint changed; create a new iteration")
-            if diagnose and source_fingerprint(Path(item["source"]))["sha256"] != item["source_fingerprint"]["sha256"]:
+            source = recorded_source(item, specimen, catalog)
+            if diagnose and source_fingerprint(source)["sha256"] != item["source_fingerprint"]["sha256"]:
                 raise ValueError("Original source changed; create a new iteration before baseline diagnosis")
             report["results"][specimen] = qualify_relocation(folder / "prepared",
-                folder / "qualifications" / name, config, raw_dirs=[Path(item["source"])], output_format=output_format,
-                diagnose=diagnose, baseline=(Path(item["source"]), item["main"]) if diagnose else None)
+                folder / "qualifications" / name, config, raw_dirs=[source], output_format=output_format,
+                diagnose=diagnose, baseline=(source, item["main"]) if diagnose else None)
         except (OSError, ValueError) as error:
             report["results"][specimen] = {"status": "failed", "error": str(error)}
         print(f"{specimen}: relocation {report['results'][specimen]['status']} "
@@ -406,6 +423,7 @@ def main():
     qualify.add_argument("--format", choices=("pdf", "xdv"), default="pdf")
     qualify.add_argument("--diagnose", action="store_true", help="On failure, run bounded XDV/original-source diagnostic checks")
     for command in (render, qualify):
+        command.add_argument("--catalog", type=Path, help="Locate sources moved since the batch was run")
         command.add_argument("--tectonic", type=Path, required=True)
         command.add_argument("--timeout", type=float, default=120)
         command.add_argument("--bundle")
@@ -421,13 +439,14 @@ def main():
         from .render import RenderConfig
         result = render_specimen(args.runs, args.batch, args.specimen, args.name,
             RenderConfig(args.tectonic, args.timeout, args.bundle, not args.allow_downloads,
-                         args.fontconfig, tuple(args.font_dir)))
+                         args.fontconfig, tuple(args.font_dir)), args.catalog)
         return 0 if result["status"] == "rendered" else 1
     if args.command == "qualify":
         from .render import RenderConfig
         result = qualify_batch(args.runs, args.batch, args.name,
             RenderConfig(args.tectonic, args.timeout, args.bundle, not args.allow_downloads,
-                         args.fontconfig, tuple(args.font_dir)), args.specimen, output_format=args.format, diagnose=args.diagnose)
+                         args.fontconfig, tuple(args.font_dir)), args.specimen, output_format=args.format,
+            diagnose=args.diagnose, catalog=args.catalog)
         return 0 if result["status"] == "qualified" else 1
     refresh_index(args.runs)
     return 0

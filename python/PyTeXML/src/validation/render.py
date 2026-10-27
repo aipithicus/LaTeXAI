@@ -29,6 +29,14 @@ DRIVER_NAME = "__pytexml_svg_driver__.tex"
 BOOTSTRAP = ("\\AddToHook{package/graphics/after}{\\input{" + DRIVER_NAME + "}}\n").encode("ascii")
 BOOKKEEPING = {"manifest.json", "master.provenance.json", "preparation.jsonl", "preparation.log"}
 BYPRODUCTS = {".aux", ".log", ".out", ".toc", ".lof", ".lot", ".blg", ".fls", ".synctex"}
+# Tectonic's bundle and format cache stays in the repository's gitignored temp/
+# unless the caller's environment names one (LaTeXAI temp/README.md).
+DEFAULT_CACHE_DIR = Path(__file__).resolve().parents[4] / "temp" / "tectonic-cache"
+
+
+def cache_directory() -> Path:
+    inherited = os.environ.get("TECTONIC_CACHE_DIR")
+    return Path(inherited) if inherited else DEFAULT_CACHE_DIR
 
 
 @dataclass(frozen=True)
@@ -56,6 +64,9 @@ class RenderConfig:
 def compiler_environment(config: RenderConfig, work: Path) -> tuple[dict, dict]:
     """One child-process environment for both sides; never mutate os.environ."""
     env = dict(os.environ)
+    cache = cache_directory()
+    cache.mkdir(parents=True, exist_ok=True)
+    env["TECTONIC_CACHE_DIR"] = str(cache)
     info = {"mode": "inherited"}
     if config.font_dirs:
         root = ET.Element("fontconfig")
@@ -83,7 +94,7 @@ def execution_identity(config, fonts):
     with config.tectonic.open("rb") as executable:
         digest = hashlib.file_digest(executable, "sha256").hexdigest()
     return {"compiler_sha256": digest, "bundle": config.bundle, "only_cached": config.only_cached,
-            "fonts": fonts, "timeout_seconds": config.timeout_seconds,
+            "cache_dir": cache_directory().as_posix(), "fonts": fonts, "timeout_seconds": config.timeout_seconds,
             "driver_sha256": hashlib.sha256(BOOTSTRAP + SVG_DRIVER.encode("ascii")).hexdigest(),
             "scope": "Configured environment shared by these attempts; engine cache and font directory contents are not snapshotted."}
 

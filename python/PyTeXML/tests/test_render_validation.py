@@ -17,8 +17,8 @@ PROJECT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT))
 from src.assets import raster_to_svg_wrapper
 from src.validation.assets import stage_svg
-from src.validation.render import (BOOTSTRAP, DRIVER_NAME, RenderConfig, compiler_environment,
-                                   render_comparison, stage_project, compare_pdfs)
+from src.validation.render import (BOOTSTRAP, DEFAULT_CACHE_DIR, DRIVER_NAME, RenderConfig, compiler_environment,
+                                   execution_identity, render_comparison, stage_project, compare_pdfs)
 
 
 class RenderValidationTests(unittest.TestCase):
@@ -243,6 +243,21 @@ class RenderValidationTests(unittest.TestCase):
         env, info = compiler_environment(RenderConfig(Path(sys.executable), fontconfig_file=file), self.root)
         self.assertEqual(Path(env["FONTCONFIG_FILE"]), file)
         self.assertEqual(info["mode"], "explicit_config")
+
+    def test_tectonic_cache_defaults_to_the_repository_unless_the_environment_names_one(self):
+        config = RenderConfig(Path(sys.executable))
+        with patch.dict(os.environ):
+            os.environ.pop("TECTONIC_CACHE_DIR", None)
+            env, info = compiler_environment(config, self.root)
+            self.assertEqual(Path(env["TECTONIC_CACHE_DIR"]), DEFAULT_CACHE_DIR)
+            self.assertNotIn("TECTONIC_CACHE_DIR", os.environ)
+            self.assertEqual(execution_identity(config, info)["cache_dir"], DEFAULT_CACHE_DIR.as_posix())
+        chosen = self.root / "cache"
+        with patch.dict(os.environ, {"TECTONIC_CACHE_DIR": str(chosen)}):
+            env, info = compiler_environment(config, self.root)
+            self.assertEqual(Path(env["TECTONIC_CACHE_DIR"]), chosen)
+            self.assertTrue(chosen.is_dir())
+            self.assertEqual(execution_identity(config, info)["cache_dir"], chosen.as_posix())
 
     def test_pdf_comparison_reports_content_changes_without_certifying_equivalence(self):
         png = self.root / "plot.png"

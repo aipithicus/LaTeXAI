@@ -20,3 +20,19 @@ specimens:
     title: 'LoopArena: Benchmarking Models as Runtime Controllers for Loop Engineering'
     source: 2608.28281v2-tex
     main: main.tex
+  gauntlet-master-natbib:
+    title: 'Synthetic gauntlet master, root A: natbib wrapper main and every non-bibliography case'
+    source: gauntlet-master
+    main: master.tex
+  gauntlet-master-biblatex:
+    title: 'Synthetic gauntlet master, root B: biblatex'
+    source: gauntlet-master
+    main: master-biblatex.tex
+  gauntlet-master-plain:
+    title: 'Synthetic gauntlet master, root C: kernel cite and inline thebibliography'
+    source: gauntlet-master
+    main: master-plain.tex
+  gauntlet-master-arxiv:
+    title: 'Synthetic gauntlet master, root D: stripped .bib with a shipped .bbl'
+    source: gauntlet-master
+    main: master-arxiv.tex

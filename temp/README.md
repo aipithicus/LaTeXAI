@@ -14,7 +14,7 @@ Layout:
 | `temp/logs/<runstamp>/` | every `*.latexml.log` and `latexmlpost` log, from probes and tests alike, grouped by run; `LATEXAI_RUNSTAMP` or minted per process |
 | `temp/t/<test>/` | output a test driver writes to disk |
 | `temp/bindings/<pkg>/` | intermediates while minting a binding: census, stub, probes, before/after outputs |
-| `temp/tectonic-cache/` | Tectonic's bundle and format cache; point `TECTONIC_CACHE_DIR` here so downloads stay in the repo |
+| `temp/tectonic-cache/` | Tectonic's bundle and format cache. PyTeXML's render and relocation adapters set `TECTONIC_CACHE_DIR` here unless it is already set; set it yourself when running Tectonic by hand |
 | `temp/<actor-or-task>/` | anything else, named for who or what produced it (`temp/codex-1/`, `temp/tokenize-drift/`) |
 
 Rules:

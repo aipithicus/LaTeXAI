@@ -749,7 +749,9 @@ The original main path is relative to its project; the prepared entry is
 `master.tex`. The comparison directory must be new and outside both input trees.
 No compiler is located on PATH, installed, or called by preparation. The default
 uses only Tectonic's cached bundle resources; `--allow-downloads` explicitly permits
-missing resources to enter that compiler's cache. `--bundle` selects a bundle,
+missing resources to enter that compiler's cache. That cache is the repository's
+gitignored `temp/tectonic-cache` unless `TECTONIC_CACHE_DIR` is already set; the
+execution context records which one was used. `--bundle` selects a bundle,
 and `--timeout` bounds each compiler invocation (120 seconds by default).
 
 Each source tree is staged independently. SVGs become temporary PDF derivatives
