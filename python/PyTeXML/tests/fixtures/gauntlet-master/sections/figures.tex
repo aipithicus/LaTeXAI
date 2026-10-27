@@ -1,0 +1,13 @@
+\section{Figures and generated inputs}
+% [E2] matplotlib PGF: \pgftext changes the catcodes of ^ and % partway through
+% its box body, inside a group (see figures/plot.pgf)
+\begin{center}\gminputfig{plot.pgf}\end{center}
+% [E3] Inkscape PDF+LaTeX output, read after setting \svgwidth; [N20] the
+% name resolves only through \input@path (set in master.tex)
+\begin{center}\def\svgwidth{0.4\linewidth}\input{drawing.pdf_tex}\end{center}
+% [D13] \ifdim inside a TikZ option, with a \foreach list of pairs
+\begin{tikzpicture}[>=Stealth]
+  \foreach \v/\x in {10/0,60/1}{%
+    \node[fill=black!\v, text=\ifdim\v pt>45pt white\else black\fi] at (\x,0) {\v};}
+  \draw[->] (0,-0.5) -- (1,-0.5);
+\end{tikzpicture}

@@ -1,0 +1,41 @@
+% master-plain.tex -- gauntlet-master root C: kernel \cite with the cite
+% package, and an inline thebibliography that is partly pasted dcu.bst output.
+% Bracketed tags name inventory cases (coverage.md).
+\documentclass[a4paper]{article}% [C4] after a comment header, with a trailing comment
+\usepackage{cite}% [B3] compresses numeric citation lists
+\usepackage{url}
+% [B5] dcu.bst output uses \harvarditem; natbib would provide it, so a
+% kernel document defines stand-ins before pasting the entries.
+\providecommand{\harvarditem}[4][]{\bibitem[#2 #3]{#4}}
+\providecommand{\harvardand}{\&}
+\providecommand{\harvardyearleft}{(}
+\providecommand{\harvardyearright}{)}
+\begin{document}
+\input{sections/cite-shared}
+Alpha and numeric labels: \cite{chu1997,web2024}; pasted harvard entries:
+\cite{armagan2013,bai2020}.
+% [B4] inline thebibliography: numeric \bibitem{key}, an alpha label, {\em}
+% cues, \newblock, \url, a macro defined in the list, a commented-out entry,
+% and an explicit \input of a .bbl fragment
+\begin{thebibliography}{99}
+\providecommand{\noopsort}[1]{}
+\bibitem{knuth1984} D.~E. Knuth.
+\newblock {\em The \TeX book}.
+\newblock Addison-Wesley, 1984.
+
+\bibitem{lamport1994} L.~Lamport.
+\newblock {\em \LaTeX: A Document Preparation System}.
+\newblock {TeX Users Group} Notes, 1994.
+
+\bibitem[Chu97]{chu1997} F.~Chung.
+\newblock {\em Spectral Graph Theory}, volume~92 of {\em CBMS Regional
+  Conference Series}.
+\newblock AMS, 1997.
+
+\bibitem{web2024} Anthropic. Introducing a protocol. Technical note, 2024.
+\url{https://example.org/protocol}
+% \bibitem{removed} A commented-out entry.
+
+\input{bib/pasted-dcu.bbl}% [N19] .bbl fragment read inside the list
+\end{thebibliography}
+\end{document}

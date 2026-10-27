@@ -1,0 +1,192 @@
+# Coverage map
+
+This maps each case in the gauntlet inventory (`reports/gauntlet-master-inventory-20261027.md`
+in the private issues workspace) to its place in this fixture.
+
+- **Tags.** Each place carries a bracketed tag, such as `[T10]`, in a comment
+  next to it. To find every place for a tag, run `rg -n '\[T10\]'`. Line numbers
+  in the tables are as of 2026-10-27; the tags are the stable anchors.
+- **Frequencies** come from the inventory. `Np` is a number of papers.
+  **pkg** means the case was counted in local `.sty` or `.cls` files rather than
+  in author `.tex` files.
+- **Roots.** A is `master.tex` (natbib), B is `master-biblatex.tex` and C is
+  `master-plain.tex`.
+
+## Classes and packages
+
+| Tag | Case | Gauntlet | Fixture |
+| --- | --- | --- | --- |
+| C1 | Local class | 23p | `master.tex:5` → `gmvenue.cls` |
+| C2 | Local class over `\LoadClass`, with a trailing date | 13p; 1p dated | `gmvenue.cls:14` |
+| C3 | `\pdfoutput=1` before `\documentclass` | 6p | `master.tex:1–4` |
+| C4 | `\documentclass` after a comment header, with a trailing comment | 2p | `master-plain.tex:4` |
+| P1 | Several packages in one call | 97p | `body/paper.tex:12` |
+| P2 | A call that spans lines, with `%` inside the list | 16p | `body/paper.tex:13` |
+| P3 | Trailing date option | 3p (pkg) | `body/paper.tex:16` |
+| P4 | `\RequirePackage` before `\documentclass` | 11p | `master.tex:4` |
+| P5 | Package option chosen under an engine test | 5p | `body/paper.tex:22` |
+| P8 | Package choice inside a class option flag | 15p (pkg) | `gmvenue.cls:16` |
+| P9 | Load guarded by `\@ifpackageloaded` | 1p (pkg) | `gmstyle.sty:6` |
+| P10 | Package name computed by `\edef` | 1p (pkg) | `gmstyle.sty:7` |
+| P11 | Package marked loaded with `\csname ver@x.sty\endcsname`, so `\usepackage{gmfake}` reads no file | 1p | `master.tex:13`, `body/paper.tex:4` |
+
+## Comments
+
+| Tag | Case | Gauntlet | Fixture |
+| --- | --- | --- | --- |
+| K1–K4 | Whole-line comment; trailing comment; bare `%` joining lines; `%%` banner | 137p, 126p, 115p, 105p | `sections/comments.tex:2–6` |
+| (K5) | Lone `%` line (it can't carry a tag) | 85p | `sections/comments.tex:7` |
+| K6 | Escaped `\%` | 90p | `sections/comments.tex:8` |
+| K7 | Commented-out `\usepackage`, `\input`, `\begin`/`\end`, `\bibliography`, `\end{document}` | 96p, 25p, 78p, 12p, 4p | `sections/comments.tex:9–13` |
+| K8 | Multi-line `\iffalse` block holding an unbalanced `\begin`, a missing input and `\iff` | 6p | `sections/comments.tex:14–22` |
+| K9 | Inline `\iffalse … \fi` | 6p | `sections/comments.tex:23` |
+| K10 | Numeric false test used as a comment | | `sections/comments.tex:24` |
+| K11 | `comment` environment | 5p | `sections/comments.tex:25–28` |
+| K12 | `\excludecomment` and `\includecomment` | 1p (pkg) | `body/macros.tex:77`; `sections/comments.tex:29–34` |
+| K13 | Macro that discards its argument | 15p | `sections/comments.tex:35` |
+| K14 | Note shown or hidden by a `\newif` flag | 2p | `sections/comments.tex:36–37` |
+| K15 | Text after `\endinput` | 13p (pkg) | `gmstyle.sty:56` |
+| K16 | Text after `\end{document}` | 11p | `body/paper.tex:67` |
+
+## Dead branches, engine and format probes, flags
+
+| Tag | Case | Gauntlet | Fixture |
+| --- | --- | --- | --- |
+| D1 | `\ifx\pdfoutput\undefined` and `\ifx\pdfoutput\relax` | 4p (pkg) | `gmvenue.cls:25–29`; also at author level in `sections/branches.tex:4` |
+| D2 | iftex names (`\ifPDFTeX`, `\ifXeTeX`, `\ifLuaTeX`) choosing packages and text | 3p, 2p | `body/paper.tex:5`; `sections/branches.tex:2` |
+| D4 | Flag by definedness across files | 5p | defined at `master.tex:7`, tested at `sections/branches.tex:6` and `body/paper.tex:61` |
+| D5 | `\IfFileExists` on an absent file | 20p (pkg) | `gmvenue.cls:32` |
+| D6 | `\newif` flag set true, and one never set | 20p, 13p | `body/paper.tex:32–33` |
+| D7 | ifthen boolean; etoolbox toggle | 10p (pkg); 1p | `body/paper.tex:34–35`; `sections/branches.tex:8–9` |
+| D8 | Parametric `\ifcsname` over a name built by a macro | 1p | `sections/branches.tex:11` |
+| D9 | Emptiness test, `\ifmmode` in a macro, `\loop … \repeat`, `\ifcase`, `\unless` | 1p, 5p, 1p | `sections/branches.tex:13–18` |
+| D10 | Option flags set by `\DeclareOption` | 57p | `gmvenue.cls:5–13` |
+| D11 | Hand-made flag `\let\ifX\iffalse` | 7p (pkg) | `gmvenue.cls:7` |
+| D12 | `\iff`, which starts like a conditional (live text, and inside K8's dead text) | 6p | `sections/branches.tex:20`; `sections/comments.tex:19` |
+| D13 | `\ifdim` inside a TikZ option, with `\foreach` pairs | 1p | `sections/figures.tex:8` |
+
+## Verbatim
+
+| Tag | Case | Gauntlet | Fixture |
+| --- | --- | --- | --- |
+| V1 | `\verb` with the delimiters `\|`, `!` and `+`; `\verb*`; a payload holding `\` and `%` | 4p, 1p, 1p | `sections/verbatim.tex:2–3` |
+| V2 | `\lstinline` in brace form, in delimiter form, and with `%` in the payload | 1p | `sections/verbatim.tex:4–5` |
+| V3 | `\verb` in `\caption`, made safe by `\cprotect` | 1p | `sections/verbatim.tex:6–10` |
+| V4 | `verbatim` inside a group, with a payload that looks like structure | 8p | `sections/verbatim.tex:11–16` |
+| V5 | `lstlisting` with `escapeinside` and `mathescape` | 13p; 3p, 1p | `sections/verbatim.tex:17–21` |
+| V6 | `\lstnewenvironment` with an optional argument | 2p | `body/paper.tex:36`; `sections/verbatim.tex:22–25` |
+| V7 | `\newtcblisting` | 2p | `body/paper.tex:37`; `sections/verbatim.tex:26–29` |
+| V8 | `\DefineVerbatimEnvironment` with `commandchars` | 1p | `body/paper.tex:38`; `sections/verbatim.tex:30–33` |
+| V9 | `\VerbatimInput`; `\lstinputlisting` through a parametric macro | 2p; 3p | `sections/verbatim.tex:34–36` |
+| V10 | `\path`, `\url` with `%` and `#`, `\nolinkurl`, `\detokenize` | 10p, 58p, 4p, 1p | `sections/verbatim.tex:37–39` |
+| V11 | Payload text before `\end{verbatim}` on the closing line | 1p | `sections/verbatim.tex:40–43` |
+
+## Catcode mutations
+
+| Tag | Case | Gauntlet | Fixture |
+| --- | --- | --- | --- |
+| T1 | `\makeatletter` pair, in the body | 40p; 3p in the body | `sections/catcodes.tex:2–3` |
+| T3 | `\makeatletter` left open, with the next `\input` read under @-letter | 4p | `body/paper.tex:62` → `sections/tail.tex` |
+| T5 | Active UTF-8 characters: `\newunicodechar`, and `\DeclareUnicodeCharacter` under `\ifPDFTeX` | 1p; 4p | `body/paper.tex:8`, `:27–28`; `sections/catcodes.tex:20–21` |
+| T6 | Catcode saved in a `\chardef`, set with an explicit `\catcode`, then restored | 2p (pkg) | `body/macros.tex:2–3`, `:80` |
+| T7 | `\catcode` change partway through a line, inside a group | (language-core brief §10) | `sections/catcodes.tex:13–14` |
+| T8 | `\obeylines` in a group | 1p | `sections/catcodes.tex:15–17` |
+| T9 | `\uppercase\expandafter{\romannumeral …}` | 1p | `body/macros.tex:26`; `sections/catcodes.tex:22–23` |
+| T10 | `\makeatletter` run by a macro before it reads its arguments | 1p (pkg) | `gmvenue.cls:44–49`; `sections/catcodes.tex:4–6` |
+| T12 | `\ExplSyntaxOn … \ExplSyntaxOff` with `\seq_…` and `\cs_new…` | 1p (pkg) | `gmvenue.cls:34–41`; used at `body/paper.tex:42` |
+| T13 | Catcode change in a group, with the definition escaping through `\gdef` | 9p (pkg) | `gmstyle.sty:12–16` |
+| T14 | Brace remapping: `(` and `)` as group delimiters, `{` and `}` as other | 1p (pkg) | `gmstyle.sty:18–23` |
+| T15 | Active `"` shorthand, switched on by a macro inside a group | 2p (pkg) | `gmstyle.sty:25–31`; `sections/catcodes.tex:7–8` |
+| T16 | Active character defined through `\lccode` and `\lowercase` | 1p (pkg) | `gmstyle.sty:33–37`; `sections/catcodes.tex:9–10` |
+| T17 | `\makeatletter` and `\makeatother` run by macros the author calls | 1p (pkg) | `gmstyle.sty:39–41`; `body/paper.tex:29–31` |
+| T18 | `\endlinechar=-1` for the lines that follow the assignment | 16p (pkg) | `gmstyle.sty:43–48` |
+| T19 | Catcode read with `\ifnum\catcode…`; active `~` rebound in a group | 9p, 10p (pkg) | `gmstyle.sty:50–51` |
+| T20 | `^^J` in a message | 28p (pkg) | `gmstyle.sty:54` |
+
+## Nested effects
+
+| Tag | Case | Gauntlet | Fixture |
+| --- | --- | --- | --- |
+| N1, N2 | Wrapper main: `\documentclass` neutralised; the inner file has its own preamble and `\begin{document}` | 1p | `master.tex:11–12` → `body/paper.tex` |
+| N3 | `\input` with an explicit `.tex` extension | 25p | `body/paper.tex:26` |
+| N4 | Save-and-wrap `\bibliographystyle` | 1p | `master.tex:15–17` |
+| N5 | File hooks set up inside a macro | 1p | `master.tex:19–23` (see the quirks section of `README.md`) |
+| N6 | Dead input of a missing file | | `body/paper.tex:60` |
+| N7 | Input inside a live conditional | 9p | `body/paper.tex:61` |
+| N8 | Parametric input paths | 15p | `body/paper.tex:39–40` |
+| N9–N12 | Local package → local package → configuration file, read twice | 63p local `.sty` | `master.tex:6`; `gmstyle.sty:4–5`; `gmtools.sty:5` |
+| N13 | `\expandafter\endinput\fi` on one line | (language-core brief §10) | `gmstyle.cfg:2–3` |
+| N14 | Definitions that define: `##` parameters, macros built with `\csname`, `\@namedef` | 29p, 2p, 4p, 1p | `body/macros.tex:36–46` |
+| N15 | `\let` to `\relax` and `\undefined`, a `\let` chain, save-and-wrap of `\paragraph` | 70p, 11p, 5p, 2p | `body/macros.tex:47–55` |
+| N16 | `\@ifstar`, `\@ifnextchar`, and a patch of an optional-argument internal through `\csname\string` | 3p, 1p, 1p | `body/macros.tex:56–61` |
+| N17 | Bare `\input name` with a directory and an extension | 4p | `sections/nesting.tex:2–3` |
+| N18 | Input depth 4 | 1p (35p reach depth 2) | `sections/nested/deeper.tex:3` |
+| N19 | Explicit `\input` of a `.bbl` fragment | 1p | `master-plain.tex:39` |
+| N20 | A name that resolves only through `\input@path` | 2p | `master.tex:9–10`; `sections/figures.tex:5–7` |
+
+## Author macros
+
+| Tag | Case | Gauntlet | Fixture |
+| --- | --- | --- | --- |
+| M1 | Symbol aliases, and control-symbol names (`\1`) | 101p; 33p | `body/macros.tex:5–8` |
+| M2 | `\DeclareMathOperator(*)`, `\DeclarePairedDelimiter(X)`, delimiter wrapper | 66p; 7p; 38p | `body/macros.tex:11–16` |
+| M3 | xspace, annotation and `\providecommand` text macros | 24p, 91p, 18p | `body/macros.tex:17–21` |
+| M4, M5 | Default for an optional argument; seven parameters | 21p; 2p | `body/macros.tex:20`, `:22` |
+| M6 | Conditional and expansion control in bodies | 23p, 9p | `body/macros.tex:23–26` |
+| M7 | Delimited parameters; a `#{` parameter | 9p; 1p | `body/macros.tex:27–30` |
+| M8 | Comment macros (see K13 and K14) | | `body/macros.tex:31–34` |
+| M9 | `\newenvironment`, `\newcolumntype`, theorems (shared counter, within section, starred) | 18p, 21p, 91p | `body/macros.tex:64–71` |
+| M10 | `\renewcommand*` | 6p | `body/macros.tex:72` |
+| M11 | The same name defined again | 54p | `body/macros.tex:76` |
+| M12 | Definitions after `\begin{document}` | 28p, 12p | `sections/math.tex:35–36` |
+| M13 | Unbraced body | 7p | `body/macros.tex:9` |
+| M14 | xparse `\NewDocumentCommand` with `s O{} m` | 2p | `body/macros.tex:62` |
+| M15 | Renewing a kernel control symbol (`\>`) | 6p | `body/macros.tex:10` |
+| M18 | `\protected\def` | 1p (pkg) | `gmstyle.sty:53` |
+
+## Math
+
+| Tag | Case | Gauntlet | Fixture |
+| --- | --- | --- | --- |
+| X1 | `$…$`, `\(…\)`, `\[…\]`, `$$…$$` | 75p, 36p, 48p | `sections/math.tex:2–4` |
+| X2 | equation, align(*), gather, split, subequations, multline, eqnarray, cases, dcases, pmatrix, bmatrix, array, `\newcolumntype` | see inventory §9 | `sections/math.tex:5–24` |
+| X3 | `\choose`, `\over`, double subscript brace | 4p, 4p | `sections/math.tex:25–26` |
+| X4 | Math alphabets (including mathrsfs `\mathscr`), operators, `\stackrel`, `\overset`, `\substack`, `\middle`, `\eqref`, `\text` | inventory §9 | `sections/math.tex:27–32` |
+| X5 | UTF-8 quotes, dashes and × in the source | 45p, 35p, 5p | `sections/math.tex:33–34` |
+| X7 | `\DeclareMathAlphabet` and `\SetMathAlphabet` | 13p | `body/macros.tex:73–75` |
+
+## Bibliography
+
+| Tag | Case | Gauntlet | Fixture |
+| --- | --- | --- | --- |
+| B1 | Kernel `\cite` forms shared by every dialect | 117p | `sections/cite-shared.tex`, read by A, B and C |
+| B2 | natbib `\citet`, `\citep[pre][post]`, `\citealp`, `\citeauthor`, `\citeyearpar`, `\nocite`; `\natexlab` year suffixes | 101p; 24p | `sections/cite-natbib.tex` (A) |
+| B6, B7 | `\bibliographystyle` chosen by a class flag and rebound by the wrapper | 18p | `gmvenue.cls:22`; `body/paper.tex:64` (A) |
+| — | `.bib` plus jobname `.bbl` (plainnat form: `\natexlab`, braced labels, `urlstyle` header) | 45p | `refs.bib` + `master.bbl` (A) |
+| B8 | `.bib` data: `@string` with `#`, `@preamble`, `@comment`, `crossref`, month macro, quoted values, upper-case type, `{{…}}`, corporate author, `and others`, accents, math, key with `:` and `/`, non-ASCII, `@software` with `date` | see inventory §10 | `refs.bib` |
+| B9 | biblatex with `\addbibresource{x.bib}`; `\entry`-record `.bbl` | 4p | `master-biblatex.tex:5–6` + `master-biblatex.bbl` (B) |
+| B10 | `\textcite`, `\parencite[…]`, `\autocite`, `\citeauthor` | | `master-biblatex.tex:9–13` (B) |
+| B3 | `cite` package over kernel `\cite` | 12p | `master-plain.tex:5` (C) |
+| B4 | Inline `thebibliography`: numeric and alpha labels, `{\em}`, `\newblock`, `\url`, a macro defined in the list, a commented-out entry | 6p; 2p alpha | `master-plain.tex:17–40` (C) |
+| B5 | Pasted `dcu.bst` `\harvarditem` entries, with kernel stand-ins | 16p | `master-plain.tex:7–12`; `bib/pasted-dcu.bbl` (C) |
+
+## Encoding and generated inputs
+
+| Tag | Case | Gauntlet | Fixture |
+| --- | --- | --- | --- |
+| E1 | CRLF line endings | 7p | `sections/nested/deepest.tex` (see `.gitattributes`) |
+| E2 | matplotlib `.pgf`: `\catcode` of `^` and `%` changed inside a `\pgftext` box body | 4p | `figures/plot.pgf:23`; `sections/figures.tex:2–4` |
+| E3 | Inkscape `.pdf_tex`: `\providecommand\color` that refers to itself, `\global\let\svgwidth\undefined` | 1p | `figures/drawing.pdf_tex`; `sections/figures.tex:5–7` |
+
+## Not exercised
+
+| Case | Gauntlet | Why |
+| --- | --- | --- |
+| `\bibliography` names a `.bib` that is missing, with a shipped `.bbl` | 41p | Tectonic reruns BibTeX, which fails on the missing database. The rewritten `.bbl` replaces the shipped one, and the citations end up undefined, although the exit status is 0. arXiv never reruns BibTeX, so this compiles there. It needs its own root, and the oracle can't check it |
+| `.bbl` under a name other than the jobname; several `.bbl` files | 1p, 2p | The `.bbl` would be inert, and nothing reads it |
+| apacite | 4p | It would be a fourth root; left out as proposed |
+| `\input` that resolves only case-insensitively, or only relative to the including file | 1p, 1p | TeX fails on these on a case-sensitive file system, or anywhere for the second |
+| `\include`, `\subfile`, `\import` | 0p | Never used in the gauntlet |
+| `\scantokens`, `\ExplSyntaxOn` in author files, babel shorthands | 0p | Never used in the gauntlet |
+| `\usepackage` while `\makeatletter` is in force | 2p | T3 covers `@`-letter reading across an `\input`; a preamble variant would add little |
+| Duplicate `.bib` keys | 11p | BibTeX treats a repeated entry as an error |

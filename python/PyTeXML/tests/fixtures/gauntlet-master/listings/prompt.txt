@@ -1,0 +1,2 @@
+System: answer in JSON. A literal \begin{document} and 50% stay verbatim.
+User: {"task": "summarize"}

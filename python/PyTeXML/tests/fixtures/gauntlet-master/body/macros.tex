@@ -1,0 +1,81 @@
+% macros.tex -- author macros, read by body/paper.tex in the preamble.
+\chardef\gmsavedatcode=\catcode`\@ % [T6] catcode saved in a \chardef ...
+\catcode`\@=11                      % ... an explicit \catcode in an author file
+
+% [M1] symbol aliases and control-symbol names
+\newcommand{\R}{\mathbb{R}}
+\def\eps{{\epsilon}}
+\newcommand{\1}{\mathbf{1}}
+\newcommand\gmeps\varepsilon% [M13] unbraced body
+\renewcommand{\>}{\rangle}% [M15] renewing a kernel control symbol
+% [M2] operators and paired delimiters
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator{\Tr}{Tr}
+\DeclarePairedDelimiter\norm{\lVert}{\rVert}
+\DeclarePairedDelimiterX\inner[2]{\langle}{\rangle}{#1,#2}
+\newcommand{\abs}[1]{\left\lvert #1 \right\rvert}
+% [M3] text macros
+\newcommand{\gmname}{\textsc{GM}\xspace}
+\newcommand{\gmfix}{\marginpar{FIX}}
+\newcommand{\gmcard}[2][Note]{\textbf{#1:} #2}% [M4] optional-argument default
+\providecommand{\gmagent}[1]{\textsc{#1}}
+\newcommand*{\gmseven}[7]{#1#2#3#4#5#6#7}% [M5] seven parameters
+% [M6] conditional and expansion control in bodies
+\newcommand{\gmpp}{\ifmmode\mathrm{pp}\else pp\fi}
+\newcommand{\gmifempty}[3]{\if\relax\detokenize{#1}\relax#2\else#3\fi}
+\newcommand{\gmrnum}[1]{\uppercase\expandafter{\romannumeral #1\relax}}
+% [M7] delimited parameters and a #{ parameter
+\def\gmpair(#1,#2){\langle #1,#2\rangle}
+\def\gmmathcolor#1#{\gm@mathcolor{#1}}% #1 is whatever precedes the first {
+\def\gm@mathcolor#1#2#3{{\color#1{#2}#3}}
+% [M8] comments by macro: discard the argument, or show it under a flag
+\newcommand{\gmignore}[1]{}
+\newif\ifgmdraftnotes
+\newcommand{\gmnote}[1]{\ifgmdraftnotes\textcolor{red}{[#1]}\fi}
+
+% [N14] definitions that define
+\newcommand\gmblfootnote[1]{\begingroup
+  \renewcommand\thefootnote{}\footnote{#1}\addtocounter{footnote}{-1}\endgroup}
+\newcommand\gmdefpair[2]{\def#1##1{[#2:##1]}}% inner ## parameters
+\gmdefpair\gmtagA{A}
+\newcommand*\gmmakecheck[1]{%
+  \expandafter\newcommand\csname #1check\endcsname{\textcolor{#1}{\checkmark}}}
+\gmmakecheck{red}\gmmakecheck{blue}
+\newcommand{\gmsetcap}[2]{\expandafter\def\csname gmcap@#1\endcsname{#2}}
+\gmsetcap{fig1}{0.75}% tested later with \ifcsname
+\@namedef{gm@named}{a macro named through \string\@namedef}
+% [N15] \let: to \relax and \undefined, a chain, and save-and-wrap
+\let\gmnothing\relax
+\let\gmgone\undefined
+\let\gmbase\textbf
+\let\gmmid\gmbase
+\let\gmtop\gmmid
+\let\gmoldparagraph\paragraph
+\renewcommand{\paragraph}{\gmparahook\gmoldparagraph}
+\newcommand{\gmparahook}{\typeout{paragraph}}
+% [N16] kernel idioms: \@ifstar, \@ifnextchar, a patch of an optional-argument internal
+\newcommand{\gmsec}{\@ifstar{\section*}{\section}}
+\newcommand{\gmextp}{\@ifnextchar^\gm@extp{\gm@extp^{\,}}}
+\def\gm@extp^#1{\mathop{\Lambda}\nolimits^{#1}}
+\newcommand{\gmopt}[1][dflt]{(#1)}
+\expandafter\patchcmd\csname\string\gmopt\endcsname{(}{[}{}{\typeout{gmopt: patch failed}}
+\NewDocumentCommand{\gmstarred}{s O{} m}{\IfBooleanTF{#1}{#3*}{#3}#2}% [M14] xparse
+\AtBeginDocument{\typeout{gauntlet-master: document begins}}
+% [M9] environments and theorems
+\newenvironment{gmpacked}{\begin{itemize}\setlength{\itemsep}{0pt}}{\end{itemize}}
+\newcolumntype{C}{>{$}c<{$}}
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\theoremstyle{definition}
+\newtheorem*{remark*}{Remark}
+\renewcommand*{\thetheorem}{\thesection.\arabic{theorem}}% [M10] \renewcommand*
+% [X7] math alphabet declarations (iclr math_commands pattern)
+\DeclareMathAlphabet{\mathsfit}{\encodingdefault}{\sfdefault}{m}{sl}
+\SetMathAlphabet{\mathsfit}{bold}{\encodingdefault}{\sfdefault}{bx}{n}
+\providecommand{\R}{\mathbf{R}}\renewcommand{\R}{\mathbb{R}}% [M11] the same name again
+% [K12] comment environments made by the comment package
+\excludecomment{gmhidden}
+\includecomment{gmshown}
+\catcode`\@=\gmsavedatcode % [T6] restored
+\endinput

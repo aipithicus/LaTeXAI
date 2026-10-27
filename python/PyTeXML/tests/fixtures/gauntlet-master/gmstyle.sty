@@ -1,0 +1,56 @@
+% gmstyle.sty -- author macro package for the gauntlet-master fixture.
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{gmstyle}[2026/10/27 v0.1 gauntlet-master style]
+\RequirePackage{gmtools}% [N10] local package requiring a local package
+\InputIfFileExists{gmstyle.cfg}{}{}% [N11] optional configuration file
+\@ifpackageloaded{natbib}{}{\RequirePackage[numbers]{natbib}}% [P9] guarded load
+% [P10] package name computed by a macro and loaded through \edef
+\def\gm@helper{xspace}
+\edef\gm@load{\noexpand\RequirePackage{\gm@helper}}
+\gm@load
+
+% [T13] catcode change in a group; the definition escapes with \gdef
+\begingroup
+  \catcode`\_=12
+  \gdef\gmunderscore{_}
+\endgroup
+
+% [T14] brace remapping: ( and ) become group delimiters, { and } become other
+\begingroup
+  \catcode`\(=1 \catcode`\)=2 \catcode`\{=12 \catcode`\}=12
+  \gdef\gmlbrace({)
+  \gdef\gmrbrace(})
+\endgroup
+
+% [T15] active " shorthand defined in a group, switched on by a macro
+\begingroup
+  \catcode`\"=\active
+  \gdef\gm@activedq{\def"##1{\"##1}}
+\endgroup
+\newcommand{\gmdqon}{\catcode`\"=\active\gm@activedq}
+\newcommand{\gmdqoff}{\catcode`\"=12\relax}
+
+% [T16] active character defined through \lccode and \lowercase
+\begingroup
+  \lccode`\~=`\|
+  \lowercase{\endgroup\def~}{\ensuremath{\vert}}
+\newcommand{\gmbaron}{\catcode`\|=\active}
+
+% [T17] \makeatletter and \makeatother run by macros that authors call (imsart)
+\def\gmstartlocaldefs{\makeatletter}
+\def\gmendlocaldefs{\makeatother}
+
+% [T18] \endlinechar changed for the lines that follow the assignment
+\begingroup
+  \endlinechar=-1
+  \gdef\gmjoined{joined
+  across lines}
+\endgroup
+
+% [T19] catcode read, not assigned; and active ~ rebound inside a group
+\newcommand{\gmifletter}[1]{\ifnum\catcode`#1=11 letter\else not a letter\fi}
+\newcommand{\gmplainties}[1]{{\def~{ }#1}}
+\protected\def\gmrobust{robust}% [M18] \protected prefix
+\typeout{gmstyle: loaded^^J(engine \gm@unicode)}% [T20] ^^J in a message
+\endinput
+Text after \endinput is never read: \undefinedcommand [K15]

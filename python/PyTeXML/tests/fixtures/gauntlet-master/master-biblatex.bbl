@@ -1,0 +1,237 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 3.2 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated as
+% required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+\datalist[entry]{nyt/global//global/global}
+\preamble{%
+\providecommand{\noopsort}[1]{}
+}
+
+  \entry{doe2024:agents/v2}{inproceedings}{}
+    \true{moreauthor}
+    \true{morelabelname}
+    \name{author}{2}{}{%
+      {{hash=DJ}{%
+         family={Doe},
+         familyi={D\bibinitperiod},
+         given={Jane},
+         giveni={J\bibinitperiod},
+      }}%
+      {{hash=MJ}{%
+         family={M{\"u}ller},
+         familyi={M\bibinitperiod},
+         given={J{\"o}rg},
+         giveni={J\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{DJMJ+1}
+    \strng{fullhash}{DJMJ+1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{labelyear}{2024}
+    \field{labeldatesource}{}
+    \field{sortinit}{D}
+    \field{sortinithash}{D}
+    \field{booktitle}{Proceedings of the 2024 Conference on Synthetic Things}
+    \verb{doi}
+    \verb 10.1000/xyz123
+    \endverb
+    \field{title}{{$\tau$-Bench}: Tool Use in Agents}
+    \verb{url}
+    \verb https://example.org/doe2024
+    \endverb
+    \field{year}{2024}
+  \endentry
+
+  \entry{knuth1984}{book}{}
+    \name{author}{1}{}{%
+      {{hash=KDE}{%
+         family={Knuth},
+         familyi={K\bibinitperiod},
+         given={Donald\bibnamedelima E.},
+         giveni={D\bibinitperiod\bibinitdelim E\bibinitperiod},
+      }}%
+    }
+    \list{publisher}{1}{%
+      {Addison-Wesley}%
+    }
+    \strng{namehash}{KDE1}
+    \strng{fullhash}{KDE1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{labelyear}{1984}
+    \field{labeldatesource}{}
+    \field{sortinit}{K}
+    \field{sortinithash}{K}
+    \field{title}{The {\TeX}book}
+    \field{year}{1984}
+  \endentry
+
+  \entry{lamport1994}{article}{}
+    \name{author}{1}{}{%
+      {{hash=LL}{%
+         family={Lamport},
+         familyi={L\bibinitperiod},
+         given={Leslie},
+         giveni={L\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{LL1}
+    \strng{fullhash}{LL1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{labelyear}{1994}
+    \field{labeldatesource}{}
+    \field{sortinit}{L}
+    \field{sortinithash}{L}
+    \field{title}{{\LaTeX}: A Document Preparation System}
+    \field{journaltitle}{TeXUsersGroup Notes}
+    \field{month}{06}
+    \field{year}{1994}
+  \endentry
+
+  \entry{openai2024}{misc}{}
+    \name{author}{1}{}{%
+      {{hash=O}{%
+         family={{OpenAI}},
+         familyi={O\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{O1}
+    \strng{fullhash}{O1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{labelyear}{2024}
+    \field{labeldatesource}{}
+    \field{sortinit}{O}
+    \field{sortinithash}{O}
+    \verb{eprint}
+    \verb 2401.00001
+    \endverb
+    \field{howpublished}{\url{https://example.org/gpt-4o-mini}}
+    \field{title}{{GPT‑4o} mini: a cost-efficient model}
+    \field{eprinttype}{arXiv}
+    \field{year}{2024}
+  \endentry
+
+  \entry{gm-unpublished}{unpublished}{}
+    \name{author}{1}{}{%
+      {{hash=PE}{%
+         family={Poe},
+         familyi={P\bibinitperiod},
+         given={Edgar},
+         giveni={E\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{PE1}
+    \strng{fullhash}{PE1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{labelyear}{2023}
+    \field{labeldatesource}{}
+    \field{sortinit}{P}
+    \field{sortinithash}{P}
+    \field{note}{Manuscript}
+    \field{title}{An Unpublished Note}
+    \field{year}{2023}
+  \endentry
+
+  \entry{gmtool}{software}{}
+    \name{author}{1}{}{%
+      {{hash=RR}{%
+         family={Roe},
+         familyi={R\bibinitperiod},
+         given={Richard},
+         giveni={R\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{RR1}
+    \strng{fullhash}{RR1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{labelyear}{2025}
+    \field{labeldatesource}{}
+    \field{sortinit}{R}
+    \field{sortinithash}{R}
+    \field{title}{gmtool}
+    \field{version}{1.0}
+    \field{month}{03}
+    \field{year}{2025}
+  \endentry
+
+  \entry{smith2020a}{inproceedings}{}
+    \name{author}{1}{}{%
+      {{hash=SA}{%
+         family={Smith},
+         familyi={S\bibinitperiod},
+         given={Ann},
+         giveni={A\bibinitperiod},
+      }}%
+    }
+    \name{editor}{1}{}{%
+      {{hash=RR}{%
+         family={Roe},
+         familyi={R\bibinitperiod},
+         given={Richard},
+         giveni={R\bibinitperiod},
+      }}%
+    }
+    \list{publisher}{1}{%
+      {Synthetic Press}%
+    }
+    \strng{namehash}{SA1}
+    \strng{fullhash}{SA1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{labelyear}{2020}
+    \field{extradate}{1}
+    \field{labeldatesource}{}
+    \field{sortinit}{S}
+    \field{sortinithash}{S}
+    \field{booktitle}{Proceedings of Synthetic Things 2020}
+    \field{pages}{1\bibrangedash 10}
+    \field{title}{First Paper of the Year}
+    \field{year}{2020}
+  \endentry
+
+  \entry{smith2020b}{article}{}
+    \name{author}{1}{}{%
+      {{hash=SA}{%
+         family={Smith},
+         familyi={S\bibinitperiod},
+         given={Ann},
+         giveni={A\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{SA1}
+    \strng{fullhash}{SA1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{labelyear}{2020}
+    \field{extradate}{2}
+    \field{labeldatesource}{}
+    \field{sortinit}{S}
+    \field{sortinithash}{S}
+    \field{number}{2}
+    \field{pages}{20\bibrangedash 30}
+    \field{title}{Second Paper of the Year}
+    \field{volume}{3}
+    \field{journaltitle}{Journal of Synthetic Results}
+    \field{year}{2020}
+  \endentry
+\enddatalist
+\endinput

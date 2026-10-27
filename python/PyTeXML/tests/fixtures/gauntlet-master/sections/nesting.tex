@@ -1,0 +1,9 @@
+\section{Nesting}
+% [N17] bare \input with a directory and an extension; the name ends at the space
+\input sections/nested/deeper.tex
+% [N14] [N15] results of definitions that define, \csname macros and \let chains
+\gmtagA{x}, \redcheck, \bluecheck, \csname gm@named\endcsname, \gmtop{bold}, \gmopt, \gmopt[set].
+\gmblfootnote{An unnumbered footnote.}
+\paragraph{Wrapped} The paragraph command was saved with \verb|\let| and wrapped.
+\gmstarred*{x}[y].
+\gmsec*{A starred section through an \texttt{@ifstar} test}

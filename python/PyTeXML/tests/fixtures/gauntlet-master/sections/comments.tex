@@ -1,0 +1,37 @@
+\section{Comments}
+% [K1] a whole-line comment
+Text with a trailing comment. % [K2] trailing comment after code
+A line ended by a bare percent% [K3] the newline is suppressed, so this joins
+ed word.
+%% [K4] a double-percent banner
+%
+50\% of this sentence is not a comment. % [K6] escaped percent
+% [K7] commented-out code:
+% \usepackage{neverloaded}
+% \input{sections/never}
+% \begin{figure}[t] \includegraphics{x} \end{figure}
+% \bibliography{old} \end{document}
+% [K8] a multi-line \iffalse block. It holds an unbalanced \begin, an input
+% of a missing file, and the math symbol \iff, which is not a conditional.
+\iffalse
+  \section{Dropped}
+  \input{sections/Missing-Draft}
+  \begin{itemize}
+  $A \iff B$ \undefinedcommand
+  \ifnum1=1 nested and balanced \fi
+\fi
+Inline \iffalse hidden text \fi visible text.% [K9]
+\ifnum0=1 a numeric false test used as a comment \fi% [K10]
+% [K11] comment-package environment; the body is never tokenized
+\begin{comment}
+\section{Not here} \verb|unclosed
+\end{comment}
+\begin{gmhidden}
+Excluded by \excludecomment in body/macros.tex. [K12]
+\end{gmhidden}
+\begin{gmshown}
+Included by \verb|\includecomment|.
+\end{gmshown}
+\gmignore{\undefinedcommand discarded by a macro}% [K13]
+\gmnote{a draft note, shown because the draft-notes flag is true}% [K14]
+\ifgmcomments never shown\fi

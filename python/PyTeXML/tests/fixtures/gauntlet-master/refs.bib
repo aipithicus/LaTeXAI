@@ -1,0 +1,77 @@
+% refs.bib -- shared by root A (BibTeX, plainnat) and root B (biblatex).
+% Text outside entries, such as these lines, is ignored. [B8]
+@string{tug = "TeX Users Group"}
+@preamble{ "\providecommand{\noopsort}[1]{}" }
+@comment{ An @comment entry is ignored by BibTeX. }
+
+@book{knuth1984,
+  author    = {Knuth, Donald E.},
+  title     = {The {\TeX}book},
+  publisher = {Addison-Wesley},
+  year      = 1984,
+}
+
+@Article{lamport1994,
+  author  = "Lamport, Leslie",
+  title   = {{\LaTeX}: A Document Preparation System},
+  journal = tug # " Notes",
+  year    = {1994},
+  month   = jun,
+}
+
+@inproceedings{doe2024:agents/v2,
+  author    = {Doe, Jane and M{\"u}ller, J{\"o}rg and others},
+  title     = {{$\tau$-Bench}: Tool Use in Agents},
+  booktitle = {Proceedings of the 2024 Conference on Synthetic Things},
+  year      = {2024},
+  doi       = {10.1000/xyz123},
+  url       = {https://example.org/doe2024},
+}
+
+@misc{openai2024,
+  author        = {{OpenAI}},
+  title         = {{GPT‑4o} mini: a cost-efficient model},
+  howpublished  = {\url{https://example.org/gpt-4o-mini}},
+  year          = {2024},
+  eprint        = {2401.00001},
+  archivePrefix = {arXiv},
+}
+
+@inproceedings{smith2020a,
+  author    = {Smith, Ann},
+  title     = {First Paper of the Year},
+  pages     = {1--10},
+  crossref  = {proc2020},
+}
+
+@article{smith2020b,
+  author  = {Smith, Ann},
+  title   = {Second Paper of the Year},
+  journal = {Journal of Synthetic Results},
+  volume  = {3},
+  number  = {2},
+  pages   = {20--30},
+  year    = 2020,
+}
+
+@proceedings{proc2020,
+  title     = {Proceedings of Synthetic Things 2020},
+  booktitle = {Proceedings of Synthetic Things 2020},
+  editor    = {Roe, Richard},
+  publisher = {Synthetic Press},
+  year      = {2020},
+}
+
+@software{gmtool,
+  author  = {Roe, Richard},
+  title   = {gmtool},
+  date    = {2025-03},
+  version = {1.0},
+}
+
+@unpublished{gm-unpublished,
+  author = {Poe, Edgar},
+  title  = {An Unpublished Note},
+  note   = {Manuscript},
+  year   = {2023},
+}

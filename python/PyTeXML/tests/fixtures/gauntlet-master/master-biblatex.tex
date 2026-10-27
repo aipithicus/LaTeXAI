@@ -1,0 +1,15 @@
+\documentclass{article}
+% master-biblatex.tex -- gauntlet-master root B: biblatex reading refs.bib.
+% The BibTeX backend lets Tectonic regenerate master-biblatex.bbl.
+% Bracketed tags name inventory cases (coverage.md).
+\usepackage[backend=bibtex,style=authoryear,giveninits=true,doi=false,url=false]{biblatex}% [B9]
+\addbibresource{refs.bib}% [B9] the resource is named with its extension
+\begin{document}
+\input{sections/cite-shared}
+% [B10] biblatex citation commands
+\textcite{doe2024:agents/v2} build on \parencite[5]{openai2024};
+\autocite{smith2020a,smith2020b}, and \citeauthor{gmtool} wrote software
+\parencite{gmtool}.
+\nocite{gm-unpublished}
+\printbibliography
+\end{document}

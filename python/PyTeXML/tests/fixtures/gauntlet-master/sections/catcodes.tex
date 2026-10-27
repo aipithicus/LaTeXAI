@@ -1,0 +1,23 @@
+\section{Catcodes}
+% [T1] a \makeatletter pair in the body
+\makeatletter Local text: \gm@localtext. \makeatother
+% [T10] the class macro runs \makeatletter before reading its arguments, so
+% \gm@one is one control sequence here even though @ is not a letter
+Columns: \gmcolumncase{\gm@one}{\gm@two}.
+% [T15] an active " switched on inside a group by a macro
+{\gmdqon M"uller, Sch"one}, and outside the group " is other again.
+% [T16] an active | whose meaning was set through \lccode
+{\gmbaron $a|b$}
+% [T14] braces from a remapped-catcode definition
+\gmlbrace x\gmrbrace
+% [T7] an explicit catcode change partway through a line, inside a group
+{\catcode`\^=12 x^y} and $x^y$.
+% [T8] \obeylines in a group
+{\obeylines first line
+second line}
+% [T13] [T18] [T19] package-level results used in the body
+\gmunderscore, \gmjoined, \gmifletter{a}, \gmifletter{1}, \gmplainties{no~tie}.
+% [T5] active UTF-8 characters defined by \newunicodechar: ± and a non-breaking hyphen
+Result 3 ± 1, non‑breaking.
+% [T9] \uppercase with \expandafter and \romannumeral
+Roman: \gmrnum{14}.

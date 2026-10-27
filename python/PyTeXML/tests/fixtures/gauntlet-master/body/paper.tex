@@ -1,0 +1,67 @@
+\documentclass[11pt]{article}% [N1] neutralised: master.tex redefined \documentclass
+% body/paper.tex -- the inner main. It has its own preamble and
+% \begin{document}; master.tex reads it with \input. [N2]
+\usepackage{gmfake}% [P11] never read: master.tex marked gmfake.sty as loaded
+\ifPDFTeX% [D2] engine test chooses the encoding packages
+  \usepackage[utf8]{inputenc}
+  \usepackage[T1]{fontenc}
+  \DeclareUnicodeCharacter{2192}{\ensuremath{\rightarrow}}% [T5]
+\else
+  \usepackage{fontspec}
+\fi
+\usepackage{amsmath,amssymb,amsthm}% [P1] several packages in one call
+\usepackage{mathtools,bm,% [P2] the list spans lines
+  mathrsfs}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{graphicx}[2017/06/01]% [P3] trailing date option
+\usepackage{array,comment,cprotect,newunicodechar,ifthen}
+\usepackage{listings,fancyvrb}
+\usepackage[listings,skins]{tcolorbox}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning}
+% [P5] driver option under an engine test: Tectonic defines \pdfoutput, so
+% after master.tex's \pdfoutput=1 hyperref would pick its pdfTeX driver
+\ifXeTeX\PassOptionsToPackage{xetex}{hyperref}\fi
+\usepackage[colorlinks,citecolor=blue]{hyperref}
+\input{body/macros.tex}% [N3] explicit .tex extension
+\newunicodechar{±}{\ensuremath{\pm}}% [T5] active UTF-8 characters
+\newunicodechar{‑}{-}
+\gmstartlocaldefs% [T17] \makeatletter by macro
+\def\gm@localtext{a local definition}
+\gmendlocaldefs
+\gmdraftnotestrue% [D6] \newif flag set true; \ifgmcomments is never set
+\newif\ifgmcomments
+\newboolean{gmlong}\setboolean{gmlong}{true}% [D7] ifthen boolean
+\newtoggle{gmtoggle}\toggletrue{gmtoggle}% [D7] etoolbox toggle
+\lstnewenvironment{gmcode}[1][]{\lstset{basicstyle=\ttfamily\small,#1}}{}% [V6]
+\newtcblisting{gmprompt}[1]{listing only,title=#1}% [V7]
+\DefineVerbatimEnvironment{cfgblock}{Verbatim}{commandchars=\\\{\},fontsize=\small}% [V8]
+\newcommand{\gmlisting}[1]{\lstinputlisting[language=Python]{listings/#1}}% [N8] parametric path
+\newcommand{\gminputfig}[1]{\input{figures/#1}}
+\title{Gauntlet master fixture}
+\gmauthor{A. Author}\gmauthor{B. Author}\gmauthor{C. Author}% [T12] expl3 author list
+\author{\gmauthorlist}
+\date{27 October 2026}
+
+\begin{document}
+\maketitle
+\begin{abstract}
+A synthetic paper whose sources exercise the cases in the gauntlet inventory.
+\end{abstract}
+\input{sections/comments}
+\input{sections/branches}
+\input{sections/verbatim}
+\input{sections/catcodes}
+\input{sections/nesting}
+\input{sections/math}
+\input{sections/figures}
+\input{sections/cite-shared}
+\input{sections/cite-natbib}
+\iffalse\input{sections/Missing-Draft}\fi% [N6] dead input; the file does not exist
+\ifdefined\gmarxiv\input{sections/extras}\fi% [N7] input inside a live test
+\makeatletter% [T3] left open: everything below reads @ as a letter
+\input{sections/tail}
+\bibliographystyle{abbrvnat}% [B7] rebound by master.tex to the class's choice
+\bibliography{refs}
+\end{document}
+Text after \end{document} is never typeset. [K16]

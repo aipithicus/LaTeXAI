@@ -1,0 +1,2 @@
+# The one file in this fixture that exercises CRLF input keeps CRLF on checkout.
+sections/nested/deepest.tex text eol=crlf

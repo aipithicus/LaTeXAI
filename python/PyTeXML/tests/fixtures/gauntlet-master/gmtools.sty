@@ -1,0 +1,7 @@
+% gmtools.sty -- second-level local package (gmstyle.sty requires it).
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{gmtools}[2026/10/27 v0.1 gauntlet-master tools]
+\RequirePackage{etoolbox}
+\InputIfFileExists{gmstyle.cfg}{}{}% [N12] the same file read twice; see gmstyle.cfg
+\newcommand{\gmhooked}[1]{\typeout{gmtools: entering #1}}
+\endinput

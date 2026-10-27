@@ -1,0 +1,43 @@
+\section{Verbatim}
+% [V1] \verb with several delimiters; payloads hold a backslash and a percent sign
+Inline \verb|\catcode`\%=12|, \verb!a|b!, \verb*|two  spaces| and \verb+x+.
+% [V2] \lstinline in brace and delimiter forms; a % inside the payload
+Tactic \lstinline{exact?} and \lstinline!x % y!.
+% [V3] \verb inside a caption, made safe by \cprotect
+\begin{figure}[h]
+\centering\fbox{figure}
+\cprotect\caption{A caption with \verb|\x_y|.}
+\end{figure}
+% [V4] verbatim inside a group; the payload looks like structure. The kernel
+% drops the rest of the \end{verbatim} line, so the group closes on its own line.
+{\small\begin{verbatim}
+\begin{document} % not a real one
+\end{verbatim}
+}
+% [V5] lstlisting with escapeinside and mathescape
+\begin{lstlisting}[language=Python,escapeinside={(*@}{@*)},mathescape]
+def f(x):  # (*@\textbf{escaped}@*) and $\alpha$
+    return x % 2
+\end{lstlisting}
+% [V6] a custom listings environment with an optional argument
+\begin{gmcode}[language={[LaTeX]TeX}]
+\makeatletter \def\x{%}
+\end{gmcode}
+% [V7] a tcolorbox listing environment
+\begin{gmprompt}{Prompt}
+{"role": "user", "content": "50% done"}
+\end{gmprompt}
+% [V8] fancyvrb with commandchars: \textbf is live inside the verbatim body
+\begin{cfgblock}
+key: \textbf{value}   % kept
+\end{cfgblock}
+% [V9] verbatim input files, one through a parametric macro
+\VerbatimInput{listings/prompt.txt}
+\gmlisting{snippet.py}
+% [V10] semi-verbatim arguments
+\path{a/b_c.txt}, \url{https://example.org/a%20b?x=1#frag}, \nolinkurl{x@example.org}
+and \detokenize{\[ \mathrm{CH_2} \]}.
+% [V11] payload text before \end{verbatim} on the closing line
+\begin{verbatim}
+first line
+last line\end{verbatim}

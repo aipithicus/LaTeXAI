@@ -1,0 +1,24 @@
+\pdfoutput=1
+% master.tex -- gauntlet-master root A: natbib author-year, refs.bib with a
+% jobname master.bbl. Bracketed tags name inventory cases (coverage.md).
+\RequirePackage{iftex}% [P4] \RequirePackage before \documentclass; [C3] \pdfoutput first
+\documentclass[11pt]{gmvenue}% [C1] local class
+\usepackage{gmstyle}% [N9] local package, which requires a second local package
+\def\gmarxiv{}% [D4] flag by definedness, tested in body/paper.tex and sections/branches.tex
+\makeatletter
+% [N20] \input@path adds a search directory; figures.tex relies on it
+\def\input@path{{./}{figures/}}
+% [N1] wrapper main: neutralise the inner main's \documentclass ...
+\renewcommand{\documentclass}[2][]{}
+% [P11] ... and mark a package as loaded so it is never read
+\expandafter\def\csname ver@gmfake.sty\endcsname{}
+% [N4] save-and-wrap \bibliographystyle; the class flag picks the style
+\let\gm@savedbst\bibliographystyle
+\renewcommand{\bibliographystyle}[1]{\gm@savedbst{\gm@bst}}
+\makeatother
+% [N5] file hooks set up inside a macro
+\newcommand{\gmfilehook}[1]{%
+  \AddToHook{file/#1.tex/before}{\gmhooked{#1}}%
+  \AddToHook{file/#1.tex/after}{\typeout{left #1}}}
+\gmfilehook{sections/math}
+\input{body/paper}

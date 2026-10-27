@@ -1,0 +1,21 @@
+\section{Branches and probes}
+% [D2] iftex names, nested
+Engine: \ifPDFTeX pdfTeX\else\ifXeTeX XeTeX\else\ifLuaTeX LuaTeX\else other\fi\fi\fi.
+% [D1] format probe at author level
+\ifx\pdfoutput\undefined No \verb|\pdfoutput|.\else \verb|\pdfoutput| is defined.\fi
+% [D4] flag by definedness; master.tex defines \gmarxiv
+\ifdefined\gmarxiv arXiv build.\else\newpage\fi
+% [D7] ifthen boolean and etoolbox toggle
+\ifthenelse{\boolean{gmlong}}{Long version.}{Short version.}
+\iftoggle{gmtoggle}{Toggle on.}{Toggle off.}
+% [D8] parametric \ifcsname over a name built by \gmsetcap
+\ifcsname gmcap@fig1\endcsname Cap is \csname gmcap@fig1\endcsname.\fi
+% [D9] emptiness test, \ifmmode inside a macro, \ifcase, \unless, a \loop
+Empty: \gmifempty{}{yes}{no}; \gmpp\ and $\gmpp$.
+\newcount\gmn
+\gmn=0
+\loop\ifnum\gmn<3 \advance\gmn by 1 [\the\gmn]\repeat
+\ifcase\gmn zero\or one\or two\or three\else many\fi;
+\unless\ifdefined\gmundefinedflag unless-test passed\fi.
+% [D12] \iff in live text
+$A \iff B$.
