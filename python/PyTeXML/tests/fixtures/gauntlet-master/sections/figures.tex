@@ -1,4 +1,16 @@
 \section{Figures and generated inputs}
+% [S7] \includegraphics resolved through \graphicspath with no extension, an
+% [H] float (float package), subfigures (subcaption) and \captionsetup
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}{0.3\linewidth}\centering
+    \includegraphics[width=1.5cm]{swatch}\caption{Plain.}\label{fig:plain}
+  \end{subfigure}\hfill
+  \begin{subfigure}{0.3\linewidth}\centering
+    \includegraphics[width=1.5cm,angle=90]{swatch.png}\caption{Rotated.}
+  \end{subfigure}
+  \caption{Two subfigures; \cref{fig:plain} is the first.}
+\end{figure}
 % [E2] matplotlib PGF: \pgftext changes the catcodes of ^ and % partway through
 % its box body, inside a group (see figures/plot.pgf)
 \begin{center}\gminputfig{plot.pgf}\end{center}

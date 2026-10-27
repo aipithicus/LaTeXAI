@@ -1,4 +1,4 @@
-\section{Math}
+\section{Math}\label{sec:math}
 % [X1] inline and display delimiters, including plain TeX $$
 Inline $x$ and \(y\); display \[ \sum_i x_i \] and
 $$ a^2 + b^2 = c^2 $$
@@ -8,8 +8,10 @@ $$ a^2 + b^2 = c^2 $$
 \end{equation}
 \begin{align}
   f(x) &= \argmin_{z \in \R} \Tr(z) \nonumber \\
+  \intertext{and, for large $n$,}% [X9] text between display rows
   g(x) &\xrightarrow{n \to \infty} 0 \tag{$*$}
 \end{align}
+\begin{equation}\begin{aligned} a &= b + c \\ &= d \end{aligned}\end{equation}% [X9]
 \begin{align*} a &= b & c &= d \end{align*}
 \begin{gather} x = 1 \notag \\ y = 2 \end{gather}
 \begin{equation}\begin{split} h &= a \\ &= b \end{split}\end{equation}
@@ -29,11 +31,15 @@ $\mathcal{A}, \mathbb{N}, \mathbf{v}, \boldsymbol{\theta}, \bm{w}, \mathscr{L},
 \mathfrak{g}, \mathsf{T}, \mathsfit{x}, \R, \1, \eps, \gmeps, \operatorname{rank} M$.
 $\stackrel{\mathrm{def}}{=}$, $\overset{a}{b}$, $\underset{c}{d}$, $\sum_{\substack{i \\ j}}$,
 $\left( x \middle| y \right)$, $\gmpair(a,b)$, $\gmmathcolor{red}{z}$, $\gmmathcolor[rgb]{0,0,1}{w}$, $\gmextp^{k}$, $\gmextp$.
-See \eqref{eq:one}; $\text{text}$ in math.
+See \eqref{eq:one}; $\text{text}$ in math; $\langle u, v \>$ with the renewed \verb|\>|.
+% [X8] accents and delimiter sizing, including an unbalanced \left.
+$\hat{\theta}, \bar{x}, \tilde{y}, \vec{v}, \dot{x}, \widehat{AB}, \widetilde{xy},
+\overline{z}, \underline{w}$, $\left. \frac{\partial f}{\partial x} \right\vert_{x=0}$,
+$\bigl( x + y \bigr)$, $\Bigl\lVert u \Bigr\rVert$.
 % [X5] UTF-8 in the source: typographic quotes and dashes, ×
 “Quoted” text — with an en dash in 1–2 and a 3×3 matrix; it’s fine.
 \renewcommand{\arraystretch}{1.2}% [M12] definitions after \begin{document}
-\newcommand{\gmlate}{late}
+\newcommand{\gmlate}{late}This definition is \gmlate.
 \begin{theorem}\label{thm:one} A theorem, with a lemma below. \end{theorem}
 \begin{lemma} A lemma numbered \thelemma. \end{lemma}
 \begin{proof} Trivial: \[ 1 = 1. \qedhere \] \end{proof}

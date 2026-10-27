@@ -74,6 +74,13 @@
 \DeclareMathAlphabet{\mathsfit}{\encodingdefault}{\sfdefault}{m}{sl}
 \SetMathAlphabet{\mathsfit}{bold}{\encodingdefault}{\sfdefault}{bx}{n}
 \providecommand{\R}{\mathbf{R}}\renewcommand{\R}{\mathbb{R}}% [M11] the same name again
+% [S3] algpseudocode keywords renamed, and a new statement command
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+\algnewcommand{\LineComment}[1]{\State \(\triangleright\) #1}
+\crefname{lemma}{lemma}{lemmas}% [S4] cleveref names for a shared-counter theorem
+\setlist{itemsep=1pt}% [S1] global enumitem settings
+\captionsetup{font=small,labelfont=bf}% [S7]
 % [K12] comment environments made by the comment package
 \excludecomment{gmhidden}
 \includecomment{gmshown}

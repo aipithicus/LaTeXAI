@@ -1,0 +1,51 @@
+\section{Document structure}\label{sec:structure}
+% [S1] lists: enumitem labels, nesting, a custom \item label, inline enumerate*,
+% description, and the author's packed list
+\begin{enumerate}[label=(\roman*)]
+  \item First, with a nested list:
+    \begin{itemize}[leftmargin=*]
+      \item[$\star$] an item with its own label;
+      \item an item with a numbered footnote.\footnote{A numbered note.}% [S5]
+    \end{itemize}
+  \item Second.
+\end{enumerate}
+\begin{enumerate}[label=\textbf{\arabic*.}]\item Bold numbers.\end{enumerate}
+Inline: \begin{enumerate*}[label=(\alph*)] \item one, \item two. \end{enumerate*}
+\begin{description}\item[Term] Its description.\end{description}
+\begin{gmpacked}\item Packed, from an author's \verb|\newenvironment|.\end{gmpacked}
+% [S2] a starred table float: booktabs rules, \multicolumn, \cmidrule(lr),
+% \multirow, \rowcolor, all inside \resizebox
+\begin{table*}[t]
+\centering\small
+\caption{Benchmark comparison.}\label{tab:results}
+\resizebox{0.6\linewidth}{!}{%
+\begin{tabular}{l c r}
+  \toprule
+  \multicolumn{2}{c}{\textbf{Setting}} & \textbf{Score} \\
+  \cmidrule(lr){1-2}\cmidrule(lr){3-3}
+  \multirow{2}{*}{Group} & A & 10.5 \\
+                         & B & 20.0 \\
+  \rowcolor{gray!15} Other & C & $-$ \\
+  \bottomrule
+\end{tabular}}
+\end{table*}
+% [S3] an algorithm float with algpseudocode
+\begin{algorithm}[h]
+\caption{Summing a range}\label{alg:sum}
+\begin{algorithmic}[1]
+\Require $n \ge 0$
+\Ensure $s = \sum_{i \le n} i$
+\State $s \gets 0$
+\For{$i \gets 1, n$}
+  \If{$i > 0$}\State $s \gets s + i$\Comment{accumulate}\EndIf
+\EndFor
+\LineComment{done}
+\State \Return $s$
+\end{algorithmic}
+\end{algorithm}
+% [S4] cross-references; the section title holds math behind \texorpdfstring
+\subsection{References with \texorpdfstring{$\alpha$}{alpha} in the title}
+\phantomsection\label{sec:anchor}%
+See \cref{tab:results}, \Cref{alg:sum}, \autoref{sec:math}, \ref{sec:structure},
+\cref{thm:one} and \cref{eq:one} on page~\pageref{eq:one}; \hyperref[sec:anchor]{a
+named anchor}, and \href{https://example.org/docs}{a link with text}.

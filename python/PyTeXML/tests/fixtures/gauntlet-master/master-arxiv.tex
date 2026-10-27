@@ -1,0 +1,11 @@
+% master-arxiv.tex -- gauntlet-master root D: the arXiv pattern. \bibliography
+% names a database that arXiv stripped, and only the jobname .bbl ships.
+% Bracketed tags name inventory cases (coverage.md).
+\documentclass{article}
+\usepackage[authoryear,round]{natbib}
+\begin{document}
+\input{sections/cite-shared}
+\input{sections/cite-natbib}
+\bibliographystyle{plainnat}
+\bibliography{arxiv-stripped}% [B11] no arxiv-stripped.bib exists; master-arxiv.bbl does
+\end{document}

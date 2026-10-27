@@ -12,8 +12,12 @@
 \usepackage{amsmath,amssymb,amsthm}% [P1] several packages in one call
 \usepackage{mathtools,bm,% [P2] the list spans lines
   mathrsfs}
-\usepackage[dvipsnames]{xcolor}
+\usepackage[dvipsnames,table]{xcolor}% [S2] the table option loads colortbl
 \usepackage{graphicx}[2017/06/01]% [P3] trailing date option
+\usepackage[margin=1in]{geometry}% [P12] the commonest option form
+\usepackage{microtype,booktabs,multirow,float,subcaption}
+\usepackage[inline]{enumitem}
+\usepackage{algorithm,algpseudocode}
 \usepackage{array,comment,cprotect,newunicodechar,ifthen}
 \usepackage{listings,fancyvrb}
 \usepackage[listings,skins]{tcolorbox}
@@ -23,6 +27,8 @@
 % after master.tex's \pdfoutput=1 hyperref would pick its pdfTeX driver
 \ifXeTeX\PassOptionsToPackage{xetex}{hyperref}\fi
 \usepackage[colorlinks,citecolor=blue]{hyperref}
+\usepackage[capitalise,noabbrev,nameinlink]{cleveref}% [S4] must follow hyperref
+\graphicspath{{figures/}}% [S7] graphics found by search path, without an extension
 \input{body/macros.tex}% [N3] explicit .tex extension
 \newunicodechar{±}{\ensuremath{\pm}}% [T5] active UTF-8 characters
 \newunicodechar{‑}{-}
@@ -54,9 +60,11 @@ A synthetic paper whose sources exercise the cases in the gauntlet inventory.
 \input{sections/catcodes}
 \input{sections/nesting}
 \input{sections/math}
+\input{sections/structure}
 \input{sections/figures}
 \input{sections/cite-shared}
 \input{sections/cite-natbib}
+\appendix% [S6] the section counter restarts as letters
 \iffalse\input{sections/Missing-Draft}\fi% [N6] dead input; the file does not exist
 \ifdefined\gmarxiv\input{sections/extras}\fi% [N7] input inside a live test
 \makeatletter% [T3] left open: everything below reads @ as a letter

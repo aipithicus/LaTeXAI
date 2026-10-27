@@ -5,5 +5,9 @@
 \gmtagA{x}, \redcheck, \bluecheck, \csname gm@named\endcsname, \gmtop{bold}, \gmopt, \gmopt[set].
 \gmblfootnote{An unnumbered footnote.}
 \paragraph{Wrapped} The paragraph command was saved with \verb|\let| and wrapped.
-\gmstarred*{x}[y].
+\gmstarred*[y]{x} and \gmstarred{z}.% [M14] s O{} m: star, then optional, then mandatory
+% [M3] [M4] [M5] [M18] calls, so parameter matching runs and not only the definitions:
+% \gmseven takes braced and single-token undelimited arguments
+\gmname is a name; \gmcard{a default label}, \gmcard[Warning]{a given one};
+\gmagent{agent}; \gmseven{1}2{3}4{5}6{7}; \gmrobust.\gmfix
 \gmsec*{A starred section through an \texttt{@ifstar} test}
