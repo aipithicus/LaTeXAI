@@ -18,7 +18,7 @@ from .contracts import (
     ConditionalRule, EffectiveReadingProfile, LiteralRegion, ReadingBoundary, ReadingIssue,
     ReadingKnowledge, SkippedRegion, StoredDefinition, SourceCommand, SourceEnd, require_resolved,
     DeferredRegion, UnresolvedBindingResult, UnresolvedReason, BooleanMeaning, CommandDefinition,
-    EnvironmentDefinition, UncertainMeaning, BoundMeaning, ScannedArgument,
+    EnvironmentDefinition, UncertainMeaning, BoundMeaning, CharacterCodeMeaning, ScannedArgument,
 )
 from .argument_scanner import ArgumentScanner, key_values
 from .configuration import entries, configured_options
@@ -92,6 +92,8 @@ class StructuralDispatcher:
     have an independent stack and create no lexical scopes. EOF in executed text
     with unclosed structure anchors the diagnostic to an opener with empty residue.
     """
+
+    operations = FAMILY_OPERATIONS
 
     def __init__(self, reader: TexReader, context: ReaderContext, knowledge: ReadingKnowledge,
                  *, source_commands: bool = False, preparation: bool = False, units: UnitRegistry | None = None,
@@ -363,6 +365,13 @@ class StructuralDispatcher:
                                   "Math and alignment require their own mode and scope handling")
         try:
             deferred = DeferredScanner(reader, context)
+            if isinstance(meaning, CharacterCodeMeaning):
+                if meaning.uncertain is not None:
+                    raise ReadingIssue("uncertain_meaning", "Character code may have been redefined", causes=(meaning.uncertain,))
+                if self.preparation:
+                    return DeferredRegion(event.span, "character_interpretation",
+                                          "Character-code content requires interpretation", (token,))
+                raise ReadingIssue("character_interpretation", "Character-code content requires interpretation")
             if isinstance(meaning, UncertainMeaning):
                 raise ReadingIssue("uncertain_meaning", f"{token.value!r} may have been redefined at {meaning.span}", causes=(meaning.span,))
             if isinstance(meaning, BoundMeaning):
@@ -436,13 +445,6 @@ class StructuralDispatcher:
                               "Nested option declarations/processing require further resolution")
                 command = ArgumentScanner(reader, context).read(event.span, profile)
                 return self._options(command)
-            if profile.family == "catcode_assignment":
-                self._require(profile.grammar.get("handler") == "literal_catcode_assignment"
-                              and profile.state_management.scope == "local",
-                              "unsupported_reading_effect", "Assignment needs a supported local scanner")
-                command = AssignmentScanner(reader, context).catcode(event.span, profile)
-                context.catcodes[command.metadata["character"]] = command.metadata["category"]
-                return command
             if profile.family == "source_command":
                 self._require(self.source_commands or profile.action in {"reading_noop", "capture_setting"},
                               "unsupported_operation", "Source commands require an input owner")
@@ -676,7 +678,7 @@ class StructuralDispatcher:
         """Unknown execution can invalidate live and suspended bounded state."""
         selective = summary is not None and summary.selective
         changed = (self.context.invalidate_writes(summary, span) if selective
-                   else self.context.invalidate_booleans(span))
+                   else self.context.invalidate_observed_meanings(span))
         for scope in (self.options, *(parent[2] for parent in self._parents)):
             if (scope is not None and scope.uncertain is None
                     and (not selective or summary.options.contains(scope.name))):
@@ -760,7 +762,7 @@ class StructuralDispatcher:
             return AssignmentScanner(self.reader, self.context).let(token.span, profile)
         if profile.family == "collected_environment_definition":
             return self.environments.definition(token.span.start, profile)  # capture, never install
-        if profile.family in {"conditional", "conditional_factory", "catcode_mutator", "catcode_assignment", "grouping", "environment_factory", "option_control", "configuration_command", "assignment_prefix", "parameter_assignment"}:
+        if profile.family in {"conditional", "conditional_factory", "catcode_mutator", "catcode_assignment", "character_code_definition", "grouping", "environment_factory", "option_control", "configuration_command", "assignment_prefix", "parameter_assignment"}:
             raise ReadingIssue("environment_reading", "Control flow or reading effects inside an unbound environment require resolution")
         if profile.family == "source_command" and profile.action != "environment_end":
             checkpoint = self.reader.checkpoint()

@@ -1,15 +1,17 @@
 """Executable operation contract and explicit, immutable catalog assembly.
 
-This first increment uses the reader's live state and scanners. Expansion and
-internal-value protocols will be added with their first consumers, not emulated
-through this execution interface.
+Execution and internal integer values are separate roles. Both use the reader's
+live state; requesting a value never executes an assignment.
 """
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from types import MappingProxyType
-from typing import Protocol, TypeVar
+from typing import TYPE_CHECKING, Protocol, TypeVar
+
+if TYPE_CHECKING:
+    from .integers import IntegerScanner
 
 from ..reading.context import ExecutionMode, ReaderContext
 from ..reading.contracts import (EffectiveReadingProfile, EnvironmentDefinition,
@@ -30,6 +32,7 @@ class OperationHost(Protocol):
     context: ReaderContext
     knowledge: ReadingKnowledge
     units: UnitRegistry
+    operations: Mapping[str, ExecutableOperation]
 
     def identify(self, item: Identified) -> Identified: ...
     def begin_group(self, kind: str, span: SourceSpan) -> None: ...
@@ -40,6 +43,8 @@ class OperationHost(Protocol):
 class ExecutableOperation:
     identity: str
     handler: Callable[[OperationHost, ReadEvent, EffectiveReadingProfile], OperationResult]
+    integer_value: Callable[[IntegerScanner, EffectiveReadingProfile], int] | None = None
+    unexpandable: bool = False
 
     def execute(self, host: OperationHost, opening: ReadEvent,
                 profile: EffectiveReadingProfile) -> OperationResult:

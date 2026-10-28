@@ -74,6 +74,14 @@ def observe_dependencies(argument, text, context, knowledge: ReadingKnowledge, u
                 shadowed.add(definition.target.value)
                 pending.append((ScannedArgument("body", definition.body, definition.body_tokens, "stored"), child, set(shadowed)))
                 continue
+            if profile.family == "character_code_definition":
+                try:
+                    with context.argument_scanning():
+                        target = AssignmentScanner(cursor, context).target()
+                except ReadingIssue:
+                    break
+                shadowed.add(target.value)
+                continue
             if profile.family == "meaning_assignment":
                 try:
                     assignment = AssignmentScanner(cursor, context).let(token.span, profile)

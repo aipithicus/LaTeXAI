@@ -37,6 +37,42 @@ class TraversalTests(unittest.TestCase):
     def prepare(self, **kwargs):
         return preprocess_paper(str(self.root), **kwargs)
 
+    def test_character_code_save_restore_allows_child_inlining_with_source_coverage(self):
+        self.document(r"LEFT\input{defs}RIGHT")
+        child = (r"\chardef\saved=\catcode`\@ " "\n"
+                 r"\catcode`\@=11 " "\n"
+                 r"\def\foo@bar{BODY}" "\n"
+                 r"\catcode`\@=\saved " "\n")
+        self.put("defs.tex", child)
+        text, manifest, _, ledger = self.prepare()
+        self.assertEqual(manifest.preparation_status, "complete")
+        self.assertEqual(manifest.unresolved, [])
+        self.assertNotIn(r"\input", text)
+        self.assertIn(r"\def\foo@bar{BODY}", text)
+        self.assertIn(r"\catcode`\@=\saved", text)
+        self.assertEqual(ledger.master_length, len(text))
+        self.assertTrue(ledger.resolve_source_line("defs.tex", 1)["occurrences"])
+
+    def test_code_value_control_word_remains_separated_when_comment_is_removed(self):
+        self.document("\\chardef\\saved=12 \\catcode64=\\saved%comment\nTEXT")
+        text, manifest, _, _ = self.prepare()
+        self.assertEqual(manifest.preparation_status, "complete")
+        self.assertNotIn(r"\savedTEXT", text)
+        self.assertIn(r"\saved TEXT", text)
+
+    def test_number_lookahead_keeps_assignment_and_terminator_source_disjoint(self):
+        self.document(r"{\catcode64=11@ @} @")
+        text, manifest, _, ledger = self.prepare()
+        self.assertEqual(manifest.preparation_status, "complete")
+        self.assertIn(r"\catcode64=11@ @", text)
+        self.assertEqual(text.count("@"), 3)
+        self.assertEqual(ledger.master_length, len(text))
+
+    def test_stored_code_assignment_target_is_not_a_file_request(self):
+        self.document(r"\def\later{\chardef\input=12 \input{not-a-file}}BODY")
+        _, manifest, _, _ = self.prepare()
+        self.assertFalse([r for r in manifest.requirements if r["reason"] == "deferred_dependency"])
+
     def test_nested_root_repeats_inline_prefix_suffix_and_one_read_per_file(self):
         self.document("LEFT\\input{sections/a}RIGHT\\input{sections/a}END", name="paper/root.tex")
         self.put("paper/sections/a.tex", "A\\input{sections/shared}Z")

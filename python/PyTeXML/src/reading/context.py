@@ -6,14 +6,14 @@ from enum import Enum
 from typing import Iterator
 from .contracts import (EffectiveReadingProfile, MouthBaseline, StoredDefinition,
                         EnvironmentDeclaration, EnvironmentDefinition, ScannedArgument,
-                        BooleanMeaning, BoundMeaning, ConditionalRule, ReadingIssue, UncertainMeaning)
+                        BooleanMeaning, BoundMeaning, CharacterCodeMeaning, ConditionalRule, ReadingIssue, UncertainMeaning)
 from .tex_reader import CatCode, CatcodeTable, TokenKind
 from .configuration import ConfigurationState
 from .spans import SourceSpan
 
 
 DefinitionKey = tuple[TokenKind, str]
-LocalMeaning = StoredDefinition | EnvironmentDefinition | BooleanMeaning | BoundMeaning | UncertainMeaning
+LocalMeaning = StoredDefinition | EnvironmentDefinition | BooleanMeaning | BoundMeaning | CharacterCodeMeaning | UncertainMeaning
 
 
 class ExecutionMode(str, Enum):
@@ -168,7 +168,7 @@ class ReaderContext:
                         if key[0] == TokenKind.CONTROL_SEQUENCE and names.contains(key[1]))
 
         def uncertain(value):
-            if isinstance(value, (BooleanMeaning, BoundMeaning)):
+            if isinstance(value, (BooleanMeaning, BoundMeaning, CharacterCodeMeaning)):
                 return value if value.uncertain is not None else replace(value, uncertain=span)
             return value if isinstance(value, UncertainMeaning) else UncertainMeaning(span)
 
@@ -216,7 +216,7 @@ class ReaderContext:
             return meaning.profile.conditional if meaning.profile else None
         return None if meaning is not None else knowledge.resolve_conditional(name)
 
-    def invalidate_booleans(self, span) -> bool:
+    def invalidate_observed_meanings(self, span) -> bool:
         """Keep unexecuted effects explicit; no inference of arbitrary macro purity.
 
         Unknown code can make global assignments, so suspended outer meanings are
@@ -226,7 +226,7 @@ class ReaderContext:
         changed = False
         for meanings in (self._meanings, *self._meaning_scopes):
             for key, meaning in list(meanings.items()):
-                if isinstance(meaning, (BooleanMeaning, BoundMeaning)) and meaning.uncertain is None:
+                if isinstance(meaning, (BooleanMeaning, BoundMeaning, CharacterCodeMeaning)) and meaning.uncertain is None:
                     meanings[key] = replace(meaning, uncertain=span)
                     changed = True
         return changed

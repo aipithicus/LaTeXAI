@@ -269,6 +269,9 @@ class BindingCatalog:
                     if (grammar != {"handler": "literal_integer_assignment"} or spec.get("scope") != "local"
                             or not isinstance(spec.get("metadata", {}).get("source_reference"), str)):
                         raise ProfileError(f"{path}: {name} requires a sourced literal integer assignment")
+                if spec.get("family") == "character_code_definition":
+                    if grammar != {"handler": "character_code_definition"} or spec.get("scope") != "local":
+                        raise ProfileError(f"{path}: {name} requires a local character-code definition")
                 if spec.get("family") == "conditional_factory":
                     setters = grammar.get("setters")
                     if (set(grammar) != {"handler", "target_prefix", "initial", "setters"}
@@ -283,7 +286,7 @@ class BindingCatalog:
                                    for suffix, source in setters.items())):
                         raise ProfileError(f"{path}: {name} requires a local boolean declaration recipe")
                 if spec.get("action") == "assign_catcode_dynamic":
-                    if grammar != {"handler": "literal_catcode_assignment"} or spec.get("scope") != "local":
+                    if grammar != {"handler": "integer_catcode_assignment"} or spec.get("scope") != "local":
                         raise ProfileError(f"{path}: {name} requires the local literal assignment scanner")
                 if spec.get("family") in ("source_command", "structural_environment", "environment_factory", "option_control", "configuration_command"):
                     if not isinstance(spec.get("metadata", {}), dict):

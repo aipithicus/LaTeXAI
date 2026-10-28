@@ -280,8 +280,9 @@ class StructuralDispatcherTests(unittest.TestCase):
     def test_assignment_does_not_retokenize_an_unqualified_number_terminator(self):
         self.setup_reader(r"\catcode64=11@")
         item = self.dispatcher.next_item()
-        self.assertEqual(item.reason, "assignment_terminator")
-        self.assertEqual(self.context.catcodes["@"], CatCode.OTHER)
+        self.assertEqual(item.metadata, {"character": "@", "category": 11})
+        self.assertEqual(self.context.catcodes["@"], CatCode.LETTER)
+        self.assertEqual(self.dispatcher.next_item().token.catcode, CatCode.OTHER)
 
     def test_assignment_range_and_computed_numbers_remain_located(self):
         for source in (r"\catcode37=16 ", r"\catcode37=\value ", r"\catcode\which=12 "):

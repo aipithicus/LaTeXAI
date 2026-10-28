@@ -29,6 +29,15 @@ def observe_source(reader, context, knowledge):
         checkpoint = reader.checkpoint()
         try:
             if profile is not None:
+                if profile.family == "character_code_definition":
+                    with context.argument_scanning():
+                        target = AssignmentScanner(reader, context).target()
+                    shadowed.add(target.value)
+                    # Protect the raw target, without evaluating its RHS or
+                    # asserting how far that expansion-dependent value extends.
+                    yield token
+                    yield target
+                    continue
                 if profile.family == "stored_definition":
                     definition = definitions.read(token.span.start, profile)
                     shadowed.add(definition.target.value)

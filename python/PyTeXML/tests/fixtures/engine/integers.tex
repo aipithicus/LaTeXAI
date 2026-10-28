@@ -1,0 +1,26 @@
+\documentclass{article}
+\begin{document}
+\chardef\saved=\catcode`\@
+\typeout{PYTEXML saved=\number\saved}
+\catcode`\@=11
+\typeout{PYTEXML changed=\number\catcode`\@}
+\catcode`\@=\saved
+\typeout{PYTEXML restored=\number\catcode`\@}
+\chardef\value=--+ '17
+\typeout{PYTEXML octal=\number\value}
+\chardef\value="AF
+\typeout{PYTEXML hex=\number\value}
+\def\x{BAD}\chardef\value=`\x
+\typeout{PYTEXML rawbacktick=\number\value}
+\chardef\value=12
+{\chardef\value=11 \let\copy\value \chardef\value=10
+\typeout{PYTEXML copied=\number\copy}}
+\typeout{PYTEXML outer=\number\value}
+\def\grab#1{\ifcat#1a\typeout{PYTEXML terminator=LETTER}\else\typeout{PYTEXML terminator=OTHER}\fi}
+{\afterassignment\grab\catcode64=11@}
+{\afterassignment\grab\catcode64=11 @}
+\def\gobble#1{}
+\def\saved{9}\afterassignment\gobble\chardef\saved=12\saved
+\typeout{PYTEXML selftarget=\number\saved}
+Oracle complete.
+\end{document}

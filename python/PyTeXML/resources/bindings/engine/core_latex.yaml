@@ -13,6 +13,11 @@ identity:
 
 reading:
   commands:
+    # Bootstrap routing only; integer grammar and value roles live in Python.
+    - name: '\chardef'
+      family: character_code_definition
+      scope: local
+      grammar: {handler: character_code_definition}
     # TeX82 eqtb integer parameters: these assignments change line/page breaking,
     # not mouth categories, option declarations, or conditional meanings.
     - name: '\widowpenalty'
@@ -246,7 +251,7 @@ reading:
 
     - name: "\\catcode"
       action: "assign_catcode_dynamic"
-      grammar: {handler: literal_catcode_assignment}
+      grammar: {handler: integer_catcode_assignment}
       syntax: "char_number '='? category_number"
       scope: local
       affects_reading: true

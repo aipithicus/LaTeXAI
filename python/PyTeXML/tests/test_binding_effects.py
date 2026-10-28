@@ -147,7 +147,7 @@ class ResolvedEffectTests(unittest.TestCase):
     def test_pending_commands_do_not_become_successful_noops(self):
         pending = self.resolver.resolve_command(r"\catcode")
         self.assertIsInstance(pending, EffectiveReadingProfile)
-        self.assertEqual(pending.grammar["handler"], "literal_catcode_assignment")
+        self.assertEqual(pending.grammar["handler"], "integer_catcode_assignment")
         with self.assertRaises(ValueError):
             self.resolver.new_context().apply_profile(pending)
         unloaded = self.resolver.resolve_command(r"\VerbatimInput")

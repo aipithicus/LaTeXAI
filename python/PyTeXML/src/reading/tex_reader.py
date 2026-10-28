@@ -259,6 +259,8 @@ class TexReader:
         self._tail_reported = False
         self._failure: InvalidCharacterError | None = None
         self._position = 0
+        self._pending_event: ReadEvent | None = None
+        self._last_event: ReadEvent | None = None
         self._line_start = 0
         self._physical_content_end = 0
         self._checkpoint_owner = object()
@@ -343,7 +345,8 @@ class TexReader:
             self._line_end_char, self._endline_queued, self._tail_reported,
             self._failure, self._position, self._line_start,
             self._physical_content_end, self.endline_char, self._stop_after_line,
-            self.terminated_span, len(self.discarded)), self.catcodes.copy())
+            self.terminated_span, len(self.discarded), self._pending_event,
+            self._last_event), self.catcodes.copy())
 
     def consume_raw_to(self, end: int) -> None:
         """Hand a proven literal extent back without tokenizing its body.
@@ -351,11 +354,13 @@ class TexReader:
         Forward only. A handler must establish the extent and owns its meaning.
         Physical line loading still honors input_ln and pending endinput limits.
         """
-        if not self.position <= end <= self.limit or self._failure is not None:
+        if (not self.position <= end <= self.limit or self._failure is not None
+                or self._pending_event is not None):
             raise ValueError("Invalid raw cursor handoff")
         if self._stop_after_line is not None and end > self._stop_after_line:
             raise ValueError("Raw handoff crosses pending endinput")
         self._queue.clear()
+        self._last_event = None
         while not self._ready or end > self._line_end:
             if not self._load_line():
                 raise ValueError("Raw handoff crosses source termination")
@@ -377,7 +382,8 @@ class TexReader:
          self._line_end_char, self._endline_queued, self._tail_reported,
          self._failure, self._position, self._line_start,
          self._physical_content_end, self.endline_char, self._stop_after_line,
-         self.terminated_span, discarded_count) = checkpoint._cursor
+         self.terminated_span, discarded_count, self._pending_event,
+         self._last_event) = checkpoint._cursor
         del self.discarded[discarded_count:]
         self._queue = deque(queued)
         self.catcodes.restore_from(checkpoint._catcodes)
@@ -491,7 +497,12 @@ class TexReader:
                      self._span(escape.start, last.end), transformed, control_word=category == CatCode.LETTER)
 
     def next_event(self) -> ReadEvent | None:
-        event = self._next_event()
+        self._last_event = None
+        if self._pending_event is not None:
+            event, self._pending_event = self._pending_event, None
+        else:
+            event = self._next_event()
+        self._last_event = event
         if event is not None:
             self._position = event.span.end
             if event.token is None and event.span.start < event.span.end:
@@ -499,6 +510,18 @@ class TexReader:
         else:
             self._position = self.limit
         return event
+
+    def unread_token(self, token: Token) -> None:
+        """Return the last token with its captured category and consumed span.
+
+        This is bounded token lookahead, not character rewind. In particular an
+        assignment may change catcodes before the pending token is delivered.
+        """
+        event = self._last_event
+        if self._pending_event is not None or event is None or event.token is not token:
+            raise ValueError("Only the last returned token can be put back")
+        self._pending_event, self._last_event = event, None
+        self._position = event.span.start
 
     def discard_invalid_character(self, error: InvalidCharacterError) -> ReadEvent:
         """Explicitly recover the exact failed character, without changing state.

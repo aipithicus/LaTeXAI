@@ -34,6 +34,13 @@ class SourceObserverTests(unittest.TestCase):
         self.assertEqual(text[commands[-1].span.start:commands[-1].span.end], text[text.index(r"\InputIfFileExists"):])
         self.assertEqual(commands[-1].argument("then").role, "branch")
 
+    def test_character_code_target_is_not_observed_as_a_dependency(self):
+        items = self.observe(r"\chardef\input=12 \input{not-a-file}\include{candidate}")
+        commands = [i for i in items if isinstance(i, SourceCommand)]
+        self.assertEqual([c.action for c in commands], ["source_include"])
+        self.assertEqual(commands[0].value("target"), "candidate")
+        self.assertIsNone(self.context.lookup_meaning("input"))
+
     def test_definition_literal_and_assignment_operands_are_protected(self):
         items = self.observe(r"\def\saved{\input{hidden}}\verb|\input{fake}|"
             r"\begin{verbatim}\input{fake}\end{verbatim}\let\x\input\input{real}")

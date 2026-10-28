@@ -2,6 +2,9 @@ identity:
   registry: reading_handlers
   description: Reading actions and their current implementation boundary
 handlers:
+  character_code_definition:
+    status: scanner
+    description: Engine operation scans a local chardef target and integer; installs a scoped character-code meaning
   summarized_effects:
     status: context_effect
     description: Preserve the invocation and invalidate only a complete declared write set; unknown closure keeps conservative invalidation
@@ -92,10 +95,10 @@ handlers:
       to ReaderContext
   assign_catcode_dynamic:
     status: scanner
-    description: Route bounded literal assignments; computed values and general numeric scanning remain deferred
-  literal_catcode_assignment:
+    description: Route category assignments through the shared engine integer scanner; macro expansion remains deferred
+  integer_catcode_assignment:
     status: scanner
-    description: Scan decimal or backtick character codes and decimal categories terminated by space, relax or EOF
+    description: Engine integer scanner reads constants and supported internal values with frozen token pushback; expansion remains a boundary
   expl3_lexical_enter:
     status: context_effect
     description: Route resolved local expl3 entry and preserve its first snapshot

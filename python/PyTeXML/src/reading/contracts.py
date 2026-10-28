@@ -89,6 +89,14 @@ class UncertainMeaning:
 
 
 @dataclass(frozen=True, slots=True)
+class CharacterCodeMeaning:
+    """A chardef constant has an integer value, not replacement text."""
+    span: SourceSpan
+    value: int
+    uncertain: SourceSpan | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class BooleanMeaning:
     """A locally assigned conditional or setter, never an expanded macro body.
 

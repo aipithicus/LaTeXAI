@@ -199,10 +199,13 @@ The structural dispatcher routes `assign_catcode`, `expl3_lexical_enter`,
 `expl3_lexical_exit`, `push_lexical_scope` and `pop_lexical_scope`. It uses resolved
 data without hardcoded command spellings. These are local effects applied before
 the next token is read; already converted lookahead and the current line's
-captured `endlinechar` remain intact. The `literal_catcode_assignment` scanner
-handles decimal/backtick character codes and decimal categories ending at space,
-`\relax` or EOF. Other numeric/terminator forms, computed assignments, global prefixes and
-unsupported combinations establish a diagnostic boundary.
+captured `endlinechar` remain intact. The `integer_catcode_assignment` bridge
+routes to the engine's shared integer scanner: signs, decimal/octal/hexadecimal
+and backtick constants, internal category values and scoped `\chardef` values.
+An unconsumed terminator keeps its captured category; `\relax` is returned to
+execution. Macro expansion, other internal quantities and global prefixes still
+establish a diagnostic boundary. The existing Unicode category-table domain is
+preserved; `\chardef` accepts the TeX82/e-TeX range 0..255.
 
 Each grouping declaration supplies `state_management.group_kind`: `simple` for
 brace-category groups, `semi_simple` for the core `\begingroup`/`\endgroup` pair.

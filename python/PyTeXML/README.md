@@ -9,7 +9,7 @@ expansion and XML interpretation belong to later development.
 | Location | Responsibility |
 | --- | --- |
 | [`src/reading/`](src/reading) | Reusable N/M/S reader and cursor, structural dispatcher, literal/definition scanners, source intervals and coverage queries, regex catcode rules, mouth profiles, and scoped document state |
-| [`src/engine/`](src/engine) | Fixed Python operation catalog and definition/meaning/scope handlers, used by the reader over its existing state and scanners |
+| [`src/engine/`](src/engine) | Fixed Python operation catalog, family handlers and shared integer scanning, used by the reader over its existing state |
 | [`src/bindings/`](src/bindings) | Reusable binding catalog and document-local resolution/package activation |
 | [`src/prepare/`](src/prepare) | Cached source traversal, dependency resolution, emission, bibliography, assets, provenance, and publication |
 | [`src/validation/`](src/validation) | Optional paired rendering and relocation qualification in disposable workspaces; independent of preparation |
@@ -33,8 +33,21 @@ environment declarations, grouping, and established lexical profiles use that
 route. Scanners still own operands; deferred regions scan without installing
 definitions. The dispatcher owns input and control frames, and state owns scope
 restoration. Remaining operations move family by family as their shared machinery
-lands. Expansion, internal values, and global assignments are not implemented by
-this extraction; preparation's existing limits and publication rules still apply.
+lands. General expansion and global assignments remain explicit boundaries.
+
+The next integrated family is [code assignments](src/engine/primitives/assignments.py).
+`\catcode` has separate execution and internal-integer roles; local `\chardef`
+installs a scoped constant in the existing meaning table, including `\let` copies
+and invalidation after unknown effects. [IntegerScanner](src/engine/integers.py)
+handles signs, decimal/octal/hexadecimal and raw backtick constants, category-table
+reads and established character-code constants. It returns a frozen terminator
+token to the same cursor; assignments cannot retokenize that lookahead.
+Expansion-dependent operands or terminators, other internal values and prefixes
+still stop explicitly. Unicode category indices retain the reader's existing
+domain; `\chardef` is limited to 0..255. Existing literal layout-parameter summaries
+do not yet establish integer values. Preparation preserves code assignments and
+their source coverage; successful value evaluation alone does not authorize
+inlining a file that reaches another unsupported operation.
 
 Within preparation, [session.py](src/prepare/session.py) owns one ordered
 multi-file traversal through the structural dispatcher. [Discovery](src/prepare/discovery.py)

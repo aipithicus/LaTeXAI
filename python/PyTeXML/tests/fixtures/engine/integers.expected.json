@@ -1,0 +1,12 @@
+{
+  "saved": 12,
+  "changed": 11,
+  "restored": 12,
+  "octal": 15,
+  "hex": 175,
+  "rawbacktick": 120,
+  "copied": 11,
+  "outer": 12,
+  "terminators": ["OTHER", "LETTER"],
+  "selftarget": 12
+}
