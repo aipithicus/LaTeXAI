@@ -1,0 +1,21 @@
+\documentclass{article}
+\begin{document}
+\newcommand\gmword\varepsilon
+\typeout{PYTEXML word=\meaning\gmword}
+\newcommand\gmletter A
+\typeout{PYTEXML letter=\meaning\gmletter}
+\newcommand*\gmparagraph\par
+\typeout{PYTEXML star_par=\meaning\gmparagraph}
+\newcommand\gmactive~
+\typeout{PYTEXML active=\meaning\gmactive}
+\newcommand\gmgroup{{A}B}
+\typeout{PYTEXML group=\meaning\gmgroup}
+{\renewcommand\gmletter B
+\typeout{PYTEXML inner=\meaning\gmletter}}
+\typeout{PYTEXML outer=\meaning\gmletter}
+\newcommand\gmeffect\makeatletter
+\typeout{PYTEXML noeffect=\number\catcode`\@}
+\newcommand\gmfirst A\def\gmafter{TAIL}
+\typeout{PYTEXML after=\meaning\gmafter}
+Oracle complete.
+\end{document}

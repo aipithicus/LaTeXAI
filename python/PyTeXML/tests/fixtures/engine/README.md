@@ -18,3 +18,21 @@ copied/scoped constants, frozen versus newly read number terminators, and the
 temporary relax meaning of a chardef target. Negative values/range failures and
 unimplemented expansion boundaries are separate Python tests; this fixture does
 not claim they reproduce TeX's interactive error recovery.
+
+## Command replacement arguments
+
+`command-bodies.tex` and `command-bodies.expected.json` record Tectonic
+0.16.9+20260504's `PYTEXML` log lines on 2026-10-27 (local date), with trailing
+printer spaces removed. The kernel's `\@argdef` and `\@xargdef` consume the
+replacement as a long, undelimited argument before defining the command:
+[ltdefns.dtx](https://github.com/latex3/latex2e/blob/develop/base/ltdefns.dtx).
+The underlying group/single-token capture is `macro_call` in
+[tex.web](https://github.com/TeX-Live/texlive-source/blob/trunk/texk/web2c/tex.web).
+
+The Python tests compare captured replacement text and long/star flags with
+these observations; they do not claim to render `\meaning` or expand macros.
+The probe also records local renewal restoration, absence of capture-time catcode
+effects, and the command after a one-token replacement. Run it with the same
+cached, untrusted compilation command above. The initial complete log is retained
+in the repository's temp/pytexml-command-body-oracle; compilation succeeded with
+the same unrelated Fontconfig warning.

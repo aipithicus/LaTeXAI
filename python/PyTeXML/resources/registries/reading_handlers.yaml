@@ -44,7 +44,7 @@ handlers:
   command_definition:
     status: scanner
     description: Capture local starred or unstarred command declarations with a literal
-      target, argument count and optional default; dispatch owns scoped registration
+      target, argument count, optional default and a single-token or grouped replacement; dispatch owns scoped registration
   pass_options:
     status: scanner
     description: Capture literal options for a future package/class load without activating it

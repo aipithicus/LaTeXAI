@@ -294,6 +294,8 @@ class CommandDefinition(StoredDefinition):
     is created: parameter_tokens is empty and parameter_text covers the authored
     header after the target. Defaults, like bodies, retain lexical tokens only.
     target_check records knowledge, not a complete TeX definedness test.
+    An unbraced replacement is one token; its closing span is empty. body_braced
+    records authored syntax without inventing delimiters in the source basis.
     """
     declaration: str
     starred: bool
@@ -302,6 +304,11 @@ class CommandDefinition(StoredDefinition):
     optional_default: ScannedArgument | None
     target_requirement: str
     target_check: str = "unchecked"
+    body_braced: bool = True
+
+    @property
+    def trailing_control_word(self) -> bool:
+        return not self.body_braced and self.body_tokens[0].control_word
 
 
 @dataclass(frozen=True, slots=True)

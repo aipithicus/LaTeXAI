@@ -119,13 +119,16 @@ class DefinitionScanner:
             body.append(token)
             if token.catcode == CatCode.PARAMETER:
                 following = self._token()
-                number = self._digit(following)
-                self._require(following.catcode == CatCode.PARAMETER
-                              or (number is not None and number <= count),
-                              "invalid_definition_parameter", "Replacement text requires a declared parameter or doubled marker")
+                self._replacement_parameter(following, count)
                 body.append(following)
 
         return tuple(body), closing
+
+    def _replacement_parameter(self, following: Token | None, count: int) -> None:
+        number = self._digit(following) if following is not None else None
+        self._require(following is not None and (following.catcode == CatCode.PARAMETER
+                      or (number is not None and number <= count)),
+                      "invalid_definition_parameter", "Replacement text requires a declared parameter or doubled marker")
 
     def _command(self, start: int, profile: EffectiveReadingProfile) -> CommandDefinition:
         args = ArgumentScanner(self.reader, self.context)
@@ -155,17 +158,29 @@ class DefinitionScanner:
         target_end = self.reader.position
         count_argument, count, default = self.signature()
         opening = args.next_nonspace()
-        self._require(opening is not None and opening.catcode == CatCode.BEGIN_GROUP,
-                      "argument_required", "Command replacement text must be braced")
-        body, closing = self.read_body(count)
+        self._require(opening is not None, "argument_required", "Missing command replacement text")
+        # ltdefns.dtx's long @argdef/@xargdef absorb the replacement as one
+        # undelimited argument, before constructing the primitive definition.
+        try:
+            replacement = args.undelimited("command replacement text", first=opening)
+        except ReadingIssue as error:
+            if error.reason == "unclosed_argument":
+                raise ReadingIssue("unclosed_definition", error.detail) from error
+            raise
+        tokens = iter(replacement.tokens)
+        for token in tokens:
+            if token.catcode == CatCode.PARAMETER:
+                self._replacement_parameter(next(tokens, None), count)
+        braced = opening.catcode == CatCode.BEGIN_GROUP
+        end = self.reader.position if braced else replacement.span.end
         span = self.reader.source_span
         return CommandDefinition(
-            span(start, closing.span.end), span(start, opening.span.end),
-            span(target_end, opening.span.start), span(opening.span.end, closing.span.start),
-            closing.span, target, (), body, count, None, profile.binding_id,
+            span(start, end), span(start, replacement.span.start),
+            span(target_end, opening.span.start), replacement.span,
+            span(replacement.span.end, end), target, (), replacement.tokens, count, None, profile.binding_id,
             declaration=profile.name, starred=starred, target_argument=target_argument,
             argument_count=count_argument, optional_default=default,
-            target_requirement=profile.grammar["target_requirement"])
+            target_requirement=profile.grammar["target_requirement"], body_braced=braced)
 
     def signature(self):
         """Capture the shared bounded [count][default] declaration signature."""

@@ -4,6 +4,7 @@ https://github.com/latex3/latex2e/blob/main/base/ltdefns.dtx
 Tests assert authored tokens and reading effects, not macro expansion.
 """
 from copy import deepcopy
+import json
 from pathlib import Path
 import sys
 import tempfile
@@ -24,6 +25,8 @@ from src.reading.definition_scanner import DefinitionScanner
 from src.reading.dispatcher import StructuralDispatcher
 from src.reading.options import OptionScope
 from src.reading.tex_reader import CatCode, TexReader, TokenKind
+from src.reading.token_cursor import TokenCursor
+from src.reading.contracts import ScannedArgument
 
 
 class CommandDefinitionTests(unittest.TestCase):
@@ -77,6 +80,90 @@ class CommandDefinitionTests(unittest.TestCase):
                 self.assertFalse(item.starred)
                 self.assertEqual(item.parameter_count, count)
                 self.assertEqual(None if item.optional_default is None else item.optional_default.literal(), default)
+
+    def test_captured_bodies_and_long_flags_match_recorded_kernel_oracle(self):
+        expected = json.loads((PROJECT / "tests/fixtures/engine/command-bodies.expected.json").read_text(encoding="utf-8"))
+        for name, source in (("word", r"\newcommand\x\varepsilon"),
+                             ("letter", r"\newcommand\x A"),
+                             ("star_par", r"\newcommand*\x\par"),
+                             ("active", r"\newcommand\x~"),
+                             ("group", r"\newcommand\x{{A}B}")):
+            with self.subTest(name=name):
+                self.setup_reader(source)
+                item = self.complete()[0]
+                # Only the captured body and long flag are compared here; this
+                # does not pretend to implement meaning rendering or expansion.
+                observed = ("" if item.starred else "\\long ") + "macro:->" + self.reader.source_slice(item.body)
+                self.assertEqual(observed, expected[name])
+
+    def test_unbraced_body_consumes_exactly_one_raw_token_with_exact_spans(self):
+        for body, suffix in ((r"\varepsilon", " tail"), ("A", "BC"), ("~", "tail"),
+                             (r"\makeatletter", " @"), (r"\unknown", "{next}")):
+            with self.subTest(body=body):
+                source = r"\newcommand\x " + body + suffix
+                self.setup_reader(source)
+                item = self.dispatcher.next_item()
+                self.assertIsInstance(item, CommandDefinition)
+                self.assertFalse(item.body_braced)
+                self.assertEqual(len(item.body_tokens), 1)
+                self.assertEqual(self.reader.source_slice(item.body), body)
+                self.assertEqual(item.closing.start, item.closing.end)
+                self.assertEqual(item.opening.end, item.body.start)
+                self.assertEqual(item.body.end, item.span.end)
+                self.assertEqual(self.reader.position, len(source) - len(suffix))
+                self.assertEqual(self.reader.source_slice(self.reader.source_span(item.span.end, len(source))), suffix)
+                self.assertIs(self.context.lookup_definition("x"), item)
+                self.assertEqual(self.context.catcodes["@"], CatCode.OTHER)
+                self.assertEqual(self.context.scope_depth, 0)
+                ReadingCoverage(self.reader.basis, [item])
+
+    def test_unbraced_body_preserves_stars_defaults_paragraphs_and_renewal_scope(self):
+        self.setup_reader(r"\newcommand*\x[2][default]\par{\renewcommand\x\other}")
+        items = self.complete()
+        declarations = [i for i in items if isinstance(i, CommandDefinition)]
+        self.assertEqual([d.body_tokens[0].value for d in declarations], ["par", "other"])
+        self.assertTrue(declarations[0].starred)
+        self.assertEqual(declarations[0].parameter_count, 2)
+        self.assertEqual(declarations[0].optional_default.literal(), "default")
+        self.assertIs(self.context.lookup_definition("x"), declarations[0])
+
+    def test_unbraced_parameter_marker_does_not_consume_a_following_digit(self):
+        self.setup_reader(r"\newcommand\x[1]#1TAIL")
+        item = self.dispatcher.next_item()
+        self.assertEqual(item.reason, "invalid_definition_parameter")
+        self.assertIsNone(self.context.lookup_definition("x"))
+        self.assertEqual(self.reader.next_token().value, "1")
+
+    def test_unbraced_body_token_keeps_capture_time_category_in_replay(self):
+        source = r"\newcommand\x@"
+        self.setup_reader(source)
+        tokens = tuple(self.reader)
+        self.context.catcodes["@"] = CatCode.LETTER
+        cursor = TokenCursor(ScannedArgument("body", self.reader.source_span(0, len(source)), tokens, "stored"), source, self.context)
+        opener = cursor.next_token()
+        item = DefinitionScanner(cursor, self.context).read(opener.span.start, self.resolver.resolve_command(opener.value))
+        self.assertEqual(item.body_tokens[0].catcode, CatCode.OTHER)
+        self.assertFalse(item.body_braced)
+        self.assertIsNone(self.context.lookup_definition("x"))
+
+    def test_unbraced_command_body_is_protected_during_deferred_observation(self):
+        self.setup_reader(r"\begin{unknown}\newcommand\x\fi TEXT\end{unknown}", preparation=True)
+        items = self.complete()
+        self.assertIsInstance(items[0], DeferredRegion)
+        self.assertEqual(self.reader.source_slice(items[0].span), self.reader.text)
+        self.assertIsNone(self.context.lookup_definition("x"))
+
+    def test_unbraced_implicit_paragraph_and_custom_group_categories(self):
+        self.setup_reader("\\newcommand\\x\n\nTAIL")
+        item = self.dispatcher.next_item()
+        self.assertEqual(item.body_tokens[0].value, "par")
+        self.assertFalse(item.body_braced)
+        self.setup_reader(r"\newcommand\x(A(B)C)tail")
+        self.context.catcodes["("] = CatCode.BEGIN_GROUP
+        self.context.catcodes[")"] = CatCode.END_GROUP
+        item = self.complete()[0]
+        self.assertTrue(item.body_braced)
+        self.assertEqual(self.reader.source_slice(item.body), "A(B)C")
 
     def test_scanner_only_captures_dispatcher_owns_registration(self):
         self.setup_reader(r"\newcommand{\x}{\newif\ifhidden\makeatletter}")
@@ -211,7 +298,8 @@ class CommandDefinitionTests(unittest.TestCase):
             (r"\newcommand\x{#}", "invalid_definition_parameter"),
             (r"\newcommand\x{", "unclosed_definition"),
             (r"\newcommand\x[1", "unclosed_argument"),
-            (r"\newcommand\x unbraced", "argument_required"),
+            (r"\newcommand\x", "argument_required"),
+            (r"\newcommand\x}", "argument_required"),
         )
         for source, reason in cases:
             with self.subTest(source=source):
@@ -266,6 +354,45 @@ class CommandPreparationTests(unittest.TestCase):
 
     def put(self, name, text):
         (self.root / name).write_text(text, encoding="utf-8", newline="\n")
+
+    def test_unbraced_definition_separates_control_word_after_removed_comment(self):
+        self.put("main.tex", "\\documentclass{article}\n\\begin{document}\n"
+                 "\\newcommand\\x\\varepsilon% comment\nTAIL\n\\end{document}\n")
+        text, manifest, _, ledger = preprocess_paper(str(self.root))
+        self.assertEqual(manifest.preparation_status, "complete")
+        self.assertIn(r"\newcommand\x\varepsilon TAIL", text)
+        self.assertNotIn(r"\varepsilonTAIL", text)
+        self.assertFalse(any(c["unaccounted"] for c in ledger.source_coverage))
+
+    def test_unbraced_body_and_following_group_remain_separate_in_preparation(self):
+        self.put("main.tex", r"\documentclass{article}\input{child}")
+        self.put("child.tex", r"\newcommand\x\varepsilon{\makeatletter}\input{tail}")
+        self.put("tail.tex", "TAIL")
+        text, manifest, _, ledger = preprocess_paper(str(self.root))
+        self.assertEqual(manifest.preparation_status, "complete")
+        self.assertIn(r"\newcommand\x\varepsilon {\makeatletter }", text)
+        self.assertIn("TAIL", text)
+        self.assertNotIn(r"\input", text)
+        self.assertTrue(ledger.resolve_source_line("child.tex", 1)["occurrences"])
+
+    def test_unproven_separator_retains_child_without_manufacturing_a_letter(self):
+        self.put("main.tex", r"\documentclass{article}\input{child}")
+        child = r"\catcode32=11\relax\newcommand\x\varepsilon{}"
+        self.put("child.tex", child)
+        text, manifest, out, _ = preprocess_paper(str(self.root))
+        self.assertEqual(manifest.preparation_status, "partial")
+        self.assertEqual(manifest.unresolved[0]["reason"], "definition_separator")
+        self.assertIn(r"\input{child.tex}", text)
+        self.assertEqual((out / "child.tex").read_text(), child)
+
+    def test_unchanged_style_copy_does_not_require_an_output_separator(self):
+        self.put("main.tex", r"\documentclass{article}\usepackage{local}")
+        style = r"\catcode32=11\relax\newcommand\x\varepsilon{}\catcode32=10\relax"
+        self.put("local.sty", style)
+        _, manifest, out, _ = preprocess_paper(str(self.root))
+        self.assertEqual(manifest.preparation_status, "complete")
+        self.assertEqual(manifest.unresolved, [])
+        self.assertEqual((out / "local.sty").read_text(), style)
 
     def test_local_style_declarations_preserve_boolean_routing_and_final_locations(self):
         style = (r"\newif\ifload\loadtrue\renewcommand{\rmdefault}{ptm}"

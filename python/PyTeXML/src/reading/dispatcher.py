@@ -193,11 +193,17 @@ class StructuralDispatcher:
             self.context.catcodes[char] = code
         self._set_reader(reader)
 
-    def _boundary(self, span: SourceSpan, reason: str, detail: str,
-                  *, remainder_start: int | None = None, causes=()) -> ReadingBoundary:
+    def halt(self, span: SourceSpan, reason: str, detail: str,
+             *, remainder_start: int | None = None, causes=(), unit_id: str | None = None) -> ReadingBoundary:
+        """Stop for an execution or caller-owned publication boundary.
+
+        Preparation may subsequently retain the input and resume its saved caller;
+        merely constructing a diagnostic does not authorize that recovery.
+        """
         self.halted = True
         start = span.start if remainder_start is None else remainder_start
-        return ReadingBoundary(span, self.reader.source_span(start, len(self.reader.text)), reason, detail, causes=tuple(causes))
+        return ReadingBoundary(span, self.reader.source_span(start, len(self.reader.text)), reason, detail,
+                               unit_id, causes=tuple(causes))
 
     @staticmethod
     def _require(condition: bool, reason: str, detail: str) -> None:
@@ -291,11 +297,11 @@ class StructuralDispatcher:
         cursor_span = (self._pending_skip.terminator.span if self._pending_skip is not None
                        else reader.source_span(reader.position, reader.position))
         if context.mode != ExecutionMode.ACTIVE_EXECUTION:
-            return self._boundary(cursor_span, "inactive_context",
+            return self.halt(cursor_span, "inactive_context",
                                   "An owning scanner must handle this execution mode")
         if (reader.catcodes is not context.catcodes or reader.endline_char != context.endlinechar
                 or context.scope_depth != self._base_scope_depth + len(self._groups)):
-            return self._boundary(cursor_span, "context_changed",
+            return self.halt(cursor_span, "context_changed",
                                   "Reader parameters or scope ownership changed outside the dispatcher")
         if self._skip_start is not None:
             return self._scan_skipped()
@@ -305,11 +311,11 @@ class StructuralDispatcher:
                 self._conditional(pending.rule, pending.terminator.span)
                 return pending.terminator
             except ReadingIssue as error:
-                return self._boundary(pending.terminator.span, error.reason, error.detail, causes=error.causes)
+                return self.halt(pending.terminator.span, error.reason, error.detail, causes=error.causes)
         try:
             event = reader.next_event()
         except InvalidCharacterError as error:
-            boundary = self._boundary(error.span, "invalid_character", str(error))
+            boundary = self.halt(error.span, "invalid_character", str(error))
             self._lexical_failure = (boundary, error)
             return boundary
         if event is None:
@@ -332,11 +338,11 @@ class StructuralDispatcher:
                 self._set_reader(parent)
                 return end
             if self._conditionals:
-                return self._boundary(self._conditionals[-1].opening, "unclosed_conditional",
+                return self.halt(self._conditionals[-1].opening, "unclosed_conditional",
                                       f"EOF with {len(self._conditionals)} unclosed conditional(s)",
                                       remainder_start=len(reader.text))
             if self._groups:
-                return self._boundary(self._groups[-1].opening, "unclosed_group",
+                return self.halt(self._groups[-1].opening, "unclosed_group",
                                       f"EOF with {len(self._groups)} unclosed source group(s)",
                                       remainder_start=len(reader.text))
             self._finished = True
@@ -351,7 +357,7 @@ class StructuralDispatcher:
         meaning = context.lookup_meaning(token.value, token.kind)
         definition = context.lookup_definition(token.value, token.kind)
         if definition is not None and not self.preparation:
-            return self._boundary(event.span, "stored_macro",
+            return self.halt(event.span, "stored_macro",
                                   f"Stored macro {token.value!r} requires interpretation; defined at "
                                   f"{definition.span.basis.source_id}:{definition.span.start}")
         if event.kind != EventKind.TOKEN:
@@ -359,9 +365,9 @@ class StructuralDispatcher:
             # redefinition must block that route just like an explicit command.
             return event
         if token.kind == TokenKind.ACTIVE_CHARACTER and not self.preparation:
-            return self._boundary(event.span, "active_character", "Active character meaning is unresolved")
+            return self.halt(event.span, "active_character", "Active character meaning is unresolved")
         if token.catcode in {CatCode.MATH_SHIFT, CatCode.ALIGNMENT_TAB} and not self.preparation:
-            return self._boundary(event.span, "unsupported_structure",
+            return self.halt(event.span, "unsupported_structure",
                                   "Math and alignment require their own mode and scope handling")
         try:
             deferred = DeferredScanner(reader, context)
@@ -575,9 +581,9 @@ class StructuralDispatcher:
                 return SourceCommand(region.opening, region.name, "transparent_begin", (), metadata)
             return region
         except ReadingIssue as error:
-            return self._boundary(event.span, error.reason, error.detail, causes=error.causes)
+            return self.halt(event.span, error.reason, error.detail, causes=error.causes)
         except InvalidCharacterError as error:
-            return self._boundary(error.span, "invalid_character", str(error), remainder_start=event.span.start)
+            return self.halt(error.span, "invalid_character", str(error), remainder_start=event.span.start)
 
     def _configuration(self, opening, profile):
         # Some package headers establish catcodes before collecting arguments.
@@ -886,9 +892,9 @@ class StructuralDispatcher:
         try:
             scanned = self.skipped.read(stop_at_alternative=not frame.in_alternative)
         except ReadingIssue as error:
-            return self._boundary(frame.opening, error.reason, error.detail, remainder_start=self._skip_start, causes=error.causes)
+            return self.halt(frame.opening, error.reason, error.detail, remainder_start=self._skip_start, causes=error.causes)
         except InvalidCharacterError as error:
-            return self._boundary(error.span, "invalid_character", str(error), remainder_start=self._skip_start)
+            return self.halt(error.span, "invalid_character", str(error), remainder_start=self._skip_start)
         self._skip_start = None
         self._pending_skip = scanned
         return SkippedRegion(scanned.span, frame.opening, "else" if frame.in_alternative else "then")

@@ -489,9 +489,18 @@ prefixes and other declaration factories remain unsupported boundaries.
 
 The same scanner captures bounded `\newcommand` and `\renewcommand` declarations:
 starred or unstarred, a literal control-sequence target (braced or unbraced), a
-literal argument count 0–9, an optional first-argument default, and a braced body.
+literal argument count 0–9, an optional first-argument default, and a replacement
+captured as one unexpanded token or a balanced group. The shared
+`ArgumentScanner.undelimited()` strips only an explicit group's outer braces;
+parameter validation stays within the captured replacement. A lone unbraced `#`
+cannot borrow a following digit from outside that argument.
 `CommandDefinition` retains that authored signature, exact spans and frozen tokens;
 it does not synthesize primitive parameter patterns or optional-argument helpers.
+`body_braced` records authored syntax; an unbraced body's closing span is empty.
+Preparation inserts a separator after an unbraced control-word body so removed
+comments/whitespace cannot merge it with following text. If a space is not a
+SPACE-category character, publication retains the affected input pending a
+proven separator, even though definition capture succeeded.
 Bodies and defaults do not execute or invalidate unrelated boolean state. YAML
 specifies the handler, target requirement and reserved names. Registration and
 scope restoration remain in the dispatcher. Known new-command collisions are

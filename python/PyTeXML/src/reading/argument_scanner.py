@@ -38,6 +38,24 @@ class ArgumentScanner:
                 self.reader.restore(checkpoint)
                 return None
             raise ReadingIssue("argument_required", f"Expected a braced {name}")
+        return self._group_contents(name, opening, optional=optional)
+
+    def undelimited(self, name: str, *, first: Token | None = None) -> ScannedArgument:
+        """Capture one raw token or an explicit balanced group, stripping its braces.
+
+        SPACE tokens are skipped; paragraph tokens are allowed. No meaning lookup,
+        expansion or execution occurs. A caller that already read the first
+        nonspace token can pass it without rewinding the mouth. This is the long
+        argument form; short/outer validity requires the eventual macro runtime.
+        """
+        first = first if first is not None else self.next_nonspace()
+        if first is None or first.catcode == CatCode.END_GROUP:
+            raise ReadingIssue("argument_required", f"Expected a token or balanced group for {name}")
+        if first.catcode == CatCode.BEGIN_GROUP:
+            return self._group_contents(name, first)
+        return ScannedArgument(name, first.span, (first,))
+
+    def _group_contents(self, name: str, opening: Token, *, optional=False) -> ScannedArgument:
         depth = 0
         tokens = []
         while (token := self.reader.next_token()) is not None:

@@ -1,0 +1,11 @@
+{
+  "word": "\\long macro:->\\varepsilon",
+  "letter": "\\long macro:->A",
+  "star_par": "macro:->\\par",
+  "active": "\\long macro:->~",
+  "group": "\\long macro:->{A}B",
+  "inner": "\\long macro:->B",
+  "outer": "\\long macro:->A",
+  "noeffect": "12",
+  "after": "macro:->TAIL"
+}

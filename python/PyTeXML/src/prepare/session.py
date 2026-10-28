@@ -758,6 +758,15 @@ class PreparationSession:
             item = self.dispatcher.next_item()
             if item is None:
                 break
+            if (self.frames[-1].emit and isinstance(item, CommandDefinition) and item.trailing_control_word
+                    and self.context.catcodes[" "] != CatCode.SPACE):
+                # Execution established the definition, but publication cannot
+                # use its usual separator. Reuse whole-input retention rather
+                # than deferring just this item and continuing an unsafe splice.
+                item = self.dispatcher.halt(item.span,
+                    "definition_separator",
+                    "An unbraced control-word body requires a proven output separator under the current catcodes",
+                    unit_id=item.unit_id)
             if isinstance(item, ReadingBoundary):
                 recovery = self.lint.repair_boundary(self, item)
                 if recovery is not None:
@@ -874,6 +883,8 @@ class PreparationSession:
                             self.require(item.span, "policy_action", f"Literal role does not support {action!r}", stage="preparation", unit_id=item.unit_id)
                 else:
                     self.emit(item.span)
+                    if isinstance(item, CommandDefinition) and item.trailing_control_word:
+                        self.emit(item.span.basis.span(item.span.end, item.span.end), " ", operation="SYNTHETIC_SEPARATOR")
                     if isinstance(item, (StoredDefinition, EnvironmentDefinition)):
                         body_id = next(i for i in self.units.children.get(item.unit_id, ())
                                        if self.units.records[i].kind == "stored_body")

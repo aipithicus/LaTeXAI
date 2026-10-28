@@ -309,15 +309,17 @@ The `command_definition` handler captures the bounded LaTeX command forms from
 The renewal recipe uses `target_requirement: present` and empty forbidden lists.
 Only local, non-expanding recipes are valid. The grammar accepts an optional star,
 a single literal control sequence (braced or unbraced), an optional literal digit
-0–9, an optional default when the count is positive, and a braced replacement.
+0–9, an optional default when the count is positive, and one raw token or balanced
+group as the replacement. This follows the long argument capture in the kernel's
+`\@argdef` and `\@xargdef`; the replacement is never expanded or executed here.
 Computed targets/counts and other factories need separate resolution.
 
 `CommandDefinition` extends `StoredDefinition` with the declaration identity,
-star flag, target/count/default arguments and target-check status. It records the
+star flag, target/count/default arguments, `body_braced` and target-check status. It records the
 logical authored signature, not the kernel's generated helper definitions.
 `parameter_tokens` is empty; `parameter_text` spans the authored header after the
 target. Bodies and defaults retain definition-time tokens. Body parameter checks
-reuse primitive scanning; default parameter markers must be doubled because the
+reuse primitive parameter validation within the captured argument; default parameter markers must be doubled because the
 kernel stores the default in a parameterless helper. The star is metadata for
 later invocation argument scanning, not an instruction to execute the body now.
 
