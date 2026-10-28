@@ -48,13 +48,27 @@ replacement frame to be consumed before effects are published. A macro-produced
 terminator or remaining replacement code needing later execution is an explicit
 `integer_continuation` boundary. Unsupported expansion, other internal values
 and prefixes still stop explicitly. Unicode category indices retain the reader's existing
-domain; `\chardef` is limited to 0..255. Existing literal layout-parameter summaries
-do not yet establish integer values. Preparation preserves code assignments and
+domain; `\chardef` is limited to 0..255. Preparation preserves code assignments and
 their source coverage; successful value evaluation alone does not authorize
 inlining a file that reaches another unsupported operation.
 If the authored assignment ends with a control word and the current space
 category cannot supply the usual separator, preparation retains the input at an
 explicit boundary instead of inserting an unsafe separator.
+
+[Integer parameters](src/engine/primitives/parameters.py) use that same scanner,
+with execution and internal-value roles referring to a scoped cell in the
+document context. The initial supported vocabulary is `\widowpenalty`,
+`\clubpenalty` and pdfTeX's `\pdfoutput`. A copied primitive still refers to
+the same cell even if its original control sequence is redefined. No
+format-dependent initial number is guessed; a read needs an established value.
+Local writes restore on group exit, context rollback restores cells and their
+journals, and unknown effects invalidate current and suspended values.
+Complete deferred-write summaries invalidate only their named cells.
+
+These assignments remain authored TeX in the payload. Recording `\pdfoutput`
+does not select a compiler, infer engine identity, or execute PDF backend
+operations. General register allocation/arithmetic, global parameter prefixes
+and reader parameters such as `\endlinechar` remain separate work.
 
 [engine/format.py](src/engine/format.py) installs the supported LaTeX-format
 meanings in each document's mutable state. The initial entry is `\active`, the

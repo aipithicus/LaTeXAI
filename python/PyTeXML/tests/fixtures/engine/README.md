@@ -106,3 +106,22 @@ v2.3m dated 2025-04-14. The numeric algorithms are `scan_int` and
 `scan_optional_equals` in
 [tex.web](https://github.com/TeX-Live/texlive-source/blob/trunk/texk/web2c/tex.web).
 An initial format value does not prove that intervening unexecuted code preserves it.
+
+## Integer parameter cells
+
+`integer-parameters.tex` records common-TeX parameter behavior with Tectonic
+0.16.9+20260504 on 2026-10-28. Its expected JSON is extracted from the compiler's
+`PYTEXML` lines and consumed by `test_integer_parameters.py`. It covers nested
+local restoration, copied primitive references surviving a spelling redefinition,
+internal reads, expanded operands, assignment reading its old value and both
+signed integer limits. Reproduce with the cached, untrusted command above.
+The full log is retained at the repository's
+`temp/pytexml-integer-parameters-oracle/integer-parameters.log`; compilation
+succeeded with the unrelated Fontconfig warning.
+
+The pdfTeX-specific declaration is source-checked against
+[pdftex.web](https://github.com/TeX-Live/texlive-source/blob/trunk/texk/web2c/pdftexdir/pdftex.web):
+`pdfoutput` uses `assign_int` at `pdf_output_code`; assignment uses
+`scan_optional_equals`, `scan_int` and `word_define`.
+Tectonic's XeTeX is not a live oracle for that primitive or the PDF backend.
+No default parameter value or engine identity is inferred from these probes.

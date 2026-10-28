@@ -216,6 +216,16 @@ unsupported expansion operations, other internal quantities and global prefixes.
 The existing Unicode category-table domain is
 preserved; `\chardef` accepts the TeX82/e-TeX range 0..255.
 
+`parameter_assignment` routes to the engine's integer-parameter operation.
+Its `integer_parameter_assignment` grammar and `metadata.parameter` identify
+a cell independently of the command spelling. The catalog requires an explicit
+cell identity, local scope and a source reference. Aliases preserve that identity;
+assignment and internal-value reads share the cell. The supported declarations
+currently cover widowpenalty, clubpenalty and pdfoutput. Initial values are
+unavailable until established, and pdfoutput support does not choose an engine.
+The old literal scanner remains only as a nonexecuting effect-analysis grammar:
+it consumes bounded literals without publishing any value.
+
 Each grouping declaration supplies `state_management.group_kind`: `simple` for
 brace-category groups, `semi_simple` for the core `\begingroup`/`\endgroup` pair.
 Aliases can select a declared group kind independently of command spelling.

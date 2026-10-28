@@ -268,9 +268,12 @@ class BindingCatalog:
                     if grammar != {"handler": handler} or spec.get("scope") != "local":
                         raise ProfileError(f"{path}: {name} requires the bounded local {handler} recipe")
                 if spec.get("family") == "parameter_assignment":
-                    if (grammar != {"handler": "literal_integer_assignment"} or spec.get("scope") != "local"
-                            or not isinstance(spec.get("metadata", {}).get("source_reference"), str)):
-                        raise ProfileError(f"{path}: {name} requires a sourced literal integer assignment")
+                    metadata = spec.get("metadata", {})
+                    key = metadata.get("parameter")
+                    if (grammar != {"handler": "integer_parameter_assignment"} or spec.get("scope") != "local"
+                            or not isinstance(metadata.get("source_reference"), str)
+                            or not isinstance(key, str) or not key or key.startswith("\\")):
+                        raise ProfileError(f"{path}: {name} requires a sourced local integer parameter and cell identity")
                 if spec.get("family") == "character_code_definition":
                     if grammar != {"handler": "character_code_definition"} or spec.get("scope") != "local":
                         raise ProfileError(f"{path}: {name} requires a local character-code definition")

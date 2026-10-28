@@ -31,10 +31,10 @@ nonempty when `complete` is true.
 
 | Field | Implemented use |
 | --- | --- |
-| `scope: local/global/unknown` | Local meaning uncertainty is restored on group exit. Global or unknown-scope writes also invalidate suspended outer meanings. |
+| `scope: local/global/unknown` | Local meaning and integer-parameter uncertainty is restored on group exit. Global or unknown-scope writes also invalidate suspended outer state. |
 | `writes.meanings.names/prefixes` | Literal control-sequence names and literal namespace prefixes, without the escape character. Matching is exact-name or `startswith`, not a substring search. Use the namespace delimiter: `Gm@` does not match `GmOther`. Namespace barriers also protect catalog fallback meanings not yet queried. |
 | `writes.options.names/prefixes` | Package/class option-scope identities whose declarations or selection may change. Other option scopes retain their established state. Affected option state remains conservatively uncertain; this does not introduce group-local option replay. |
-| `writes.registers` | Layout/register values left for interpretation. They do not themselves assign control-sequence meanings. |
+| `writes.registers` | Canonical cell identities without an escape character. Established integer-parameter values are invalidated with the declared scope; other register/layout values remain for interpretation. These writes do not assign control-sequence meanings. |
 | `writes.catcodes` | Unicode character numbers whose category may change. Recorded; requires conservative fallback until a corresponding resolved lexical effect can be applied. |
 | `writes.reader_parameters` | Reader parameter names. Recorded; unresolved writes require conservative fallback. |
 | `writes.hooks` | Hook registration/effect knowledge. Recorded; hook timing and firing remain unsupported, so such summaries currently fall back conservatively. |
@@ -57,6 +57,9 @@ assignments, known setters, established no-ops, and summarized calls with litera
 data arguments. It unions the write sets without installing any assignment or
 expanding the body. Definitions inside the body contribute their target writes;
 their stored replacement text is not executed.
+Integer-parameter writes use the resolved primitive's cell identity, including
+through an alias. Literal capture here does not execute the new expanded-integer
+operation or claim that a computed value has a complete effect summary.
 
 Unknown callees, active/typesetting tokens, computed names/values, parameter substitution,
 unresolved prerequisites, recursive calls, and calls whose dependencies may have

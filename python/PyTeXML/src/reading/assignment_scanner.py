@@ -7,8 +7,8 @@ from .tex_reader import CatCode, TokenKind
 class AssignmentScanner(ArgumentScanner):
     """Raw let operands and capture-only literal layout-parameter summaries.
 
-    Executed code assignments use engine.integers and primitives.assignments.
-    The layout summary does not establish an internal parameter value.
+    Executed code/parameter assignments use engine.integers and primitive
+    operations. This capture-only summary does not establish a parameter value.
     """
 
     def let(self, opening, profile):
@@ -42,8 +42,8 @@ class AssignmentScanner(ArgumentScanner):
         return (token is not None and token.kind == TokenKind.CHARACTER
                 and token.catcode == CatCode.OTHER and token.value in "0123456789")
 
-    def integer_parameter(self, opening, profile):
-        """Literal integer parameter assignment, with no expansion or pushback."""
+    def literal_integer_assignment(self):
+        """Capture-only effect analysis: consume a literal assignment, never write."""
         with self.context.argument_scanning():
             checkpoint = self.reader.checkpoint()
             token = self.next_nonspace()
@@ -68,8 +68,7 @@ class AssignmentScanner(ArgumentScanner):
                     self.reader.next_token()
                 else:
                     raise ReadingIssue("assignment_terminator", "Literal integer assignment needs space or EOF")
-        return SourceCommand(self.reader.source_span(opening.start, self.reader.position), profile.name,
-                             "layout_assignment", metadata={"value": value, "source_reference": profile.tex_mechanics["source_reference"]})
+        return value
 
     def _integer(self):
         token = self.next_nonspace()

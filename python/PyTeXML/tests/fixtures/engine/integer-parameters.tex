@@ -1,0 +1,22 @@
+% Independent common-TeX parameter semantics; pdfoutput is not a XeTeX primitive.
+\documentclass{article}
+\widowpenalty=11
+{\widowpenalty=22{\widowpenalty=33}
+ \typeout{PYTEXML inner=\number\widowpenalty}}
+\typeout{PYTEXML outer=\number\widowpenalty}
+\widowpenalty=17\relax\clubpenalty=\widowpenalty
+\typeout{PYTEXML internal=\number\clubpenalty}
+\let\saved\widowpenalty
+\def\widowpenalty{BAD}\saved=23
+\typeout{PYTEXML alias=\number\saved}
+\let\widowpenalty\saved
+\def\sign{--+}\def\digits{'17}\widowpenalty=\sign\digits\relax
+\typeout{PYTEXML expanded=\number\widowpenalty}
+\widowpenalty=17 \widowpenalty=-\widowpenalty
+\typeout{PYTEXML old_value=\number\widowpenalty}
+\widowpenalty=-2147483647
+\typeout{PYTEXML minimum=\number\widowpenalty}
+\widowpenalty=2147483647
+\typeout{PYTEXML maximum=\number\widowpenalty}
+\widowpenalty=0
+\begin{document}Integer parameter witness.\end{document}

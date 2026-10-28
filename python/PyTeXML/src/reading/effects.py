@@ -103,8 +103,8 @@ def definition_summary(definition, context, knowledge, *, active=(), forbidden=N
                     effect = EffectSummary(meanings=NameSet((captured.target.value,)),
                                            scope=profile.state_management.scope)
                 elif profile.family == "parameter_assignment":
-                    AssignmentScanner(cursor, context).integer_parameter(token.span, profile)
-                    effect = EffectSummary(registers=(profile.name,))
+                    AssignmentScanner(cursor, context).literal_integer_assignment()
+                    effect = EffectSummary(registers=(profile.tex_mechanics["parameter"],))
                 elif profile.family == "source_command" and ("effect_summary" in profile.tex_mechanics or profile.action == "reading_noop"):
                     command = ArgumentScanner(cursor, context).read(token.span, profile)
                     for argument in command.arguments:

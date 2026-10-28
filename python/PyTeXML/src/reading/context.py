@@ -10,6 +10,7 @@ from .contracts import (EffectiveReadingProfile, MouthBaseline, StoredDefinition
 from .tex_reader import CatCode, CatcodeTable, TokenKind
 from .configuration import ConfigurationState
 from .spans import SourceSpan
+from ..engine.parameters import IntegerParameters
 
 
 DefinitionKey = tuple[TokenKind, str]
@@ -67,6 +68,7 @@ class ReaderContext:
         self._capture_settings: dict[str, ScannedArgument] = {}
         self._capture_setting_scopes: list[dict[str, ScannedArgument | None]] = []
         self.configurations = ConfigurationState()
+        self.integer_parameters = IntegerParameters()
 
     def _snapshot(self) -> _ScopeSnapshot:
         return _ScopeSnapshot(self.catcodes.copy(), self.endlinechar,
@@ -92,6 +94,7 @@ class ReaderContext:
         ctx._capture_settings = dict(self._capture_settings)
         ctx._capture_setting_scopes = [dict(saved) for saved in self._capture_setting_scopes]
         ctx.configurations = self.configurations.copy()
+        ctx.integer_parameters = self.integer_parameters.copy()
         return ctx
 
     def restore_from(self, saved: ReaderContext) -> None:
@@ -108,6 +111,7 @@ class ReaderContext:
         self._capture_settings = dict(saved._capture_settings)
         self._capture_setting_scopes = [dict(state) for state in saved._capture_setting_scopes]
         self.configurations = saved.configurations.copy()
+        self.integer_parameters = saved.integer_parameters.copy()
 
     def lookup_environment(self, name: str) -> EnvironmentDeclaration | EnvironmentDefinition | None:
         return self._environments.get(name)
@@ -172,7 +176,7 @@ class ReaderContext:
                 return value if value.uncertain is not None else replace(value, uncertain=span)
             return value if isinstance(value, UncertainMeaning) else UncertainMeaning(span)
 
-        changed = False
+        changed = self.integer_parameters.invalidate(span, names=summary.registers, global_=global_)
         for key in keys:
             previous = self._meanings.get(key)
             if not global_ and self._meaning_scopes:
@@ -223,7 +227,7 @@ class ReaderContext:
         also uncertain. A later fresh declaration can establish a new local meaning.
         This is a bounded guard, not a general context dependency analysis.
         """
-        changed = False
+        changed = self.integer_parameters.invalidate(span)
         for meanings in (self._meanings, *self._meaning_scopes):
             for key, meaning in list(meanings.items()):
                 if isinstance(meaning, (BooleanMeaning, BoundMeaning, CharacterCodeMeaning)) and meaning.uncertain is None:
@@ -297,6 +301,7 @@ class ReaderContext:
         self._environment_scopes.append({})
         self._capture_setting_scopes.append({})
         self.configurations.push()
+        self.integer_parameters.push()
 
     @property
     def scope_depth(self) -> int:
@@ -308,6 +313,7 @@ class ReaderContext:
             return False
         self._restore(self._scope_stack.pop())
         self.configurations.pop()
+        self.integer_parameters.pop()
         for key, previous in self._meaning_scopes.pop().items():
             if previous is None:
                 self._meanings.pop(key, None)

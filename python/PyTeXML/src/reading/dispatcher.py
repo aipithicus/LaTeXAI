@@ -449,8 +449,6 @@ class StructuralDispatcher:
                 return operation.execute(self, event, profile)
             if profile.family == "assignment_prefix":
                 raise ReadingIssue("assignment_prefix", "Prefixed assignments require explicit scope and prefix resolution")
-            if profile.family == "parameter_assignment":
-                return AssignmentScanner(reader, context).integer_parameter(event.span, profile)
             if profile.family == "configuration_command":
                 return self._configuration(event.span, profile)
             if profile.family == "option_control":

@@ -10,6 +10,7 @@ from ..engine.catalog import CORE_OPERATIONS
 
 
 FAMILY_OPERATIONS = MappingProxyType({
+    "parameter_assignment": CORE_OPERATIONS["parameter.assign_integer"],
     "expansion_control": CORE_OPERATIONS["expansion.noexpand"],
     "catcode_assignment": CORE_OPERATIONS["reading.assign_catcode"],
     "character_code_definition": CORE_OPERATIONS["meaning.define_character_code"],

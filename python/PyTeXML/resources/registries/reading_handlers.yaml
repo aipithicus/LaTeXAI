@@ -11,9 +11,9 @@ handlers:
   summarized_effects:
     status: context_effect
     description: Preserve the invocation and invalidate only a complete declared write set; unknown closure keeps conservative invalidation
-  literal_integer_assignment:
+  integer_parameter_assignment:
     status: scanner
-    description: Capture a literal signed decimal parameter assignment without expansion; preserve its layout value for later interpretation
+    description: Shared expanded integer scan and scoped parameter write; internal reads use the same cell and authored assignments remain in source
   declared_effects:
     status: context_effect
     description: Apply sourced local meaning copies with explicit unshadowed prerequisites; leave layout computation downstream

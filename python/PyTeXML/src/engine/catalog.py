@@ -1,6 +1,7 @@
 """The single assembly point for implemented language operations."""
 from .operations import build_catalog
-from .primitives import assignments, definitions, grouping, expansion
+from .primitives import assignments, definitions, grouping, expansion, parameters
 
 
-CORE_OPERATIONS = build_catalog(definitions.OPERATIONS, grouping.OPERATIONS, assignments.OPERATIONS, expansion.OPERATIONS)
+CORE_OPERATIONS = build_catalog(definitions.OPERATIONS, grouping.OPERATIONS, assignments.OPERATIONS,
+                                expansion.OPERATIONS, parameters.OPERATIONS)

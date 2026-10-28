@@ -32,7 +32,7 @@ class DeclaredEffectsTests(unittest.TestCase):
                           r"\flushbottom\sloppy\ifflag A\else B\fi")
         self.assertFalse(any(isinstance(i, (ReadingBoundary, DeferredRegion)) for i in items))
         self.assertIsNone(self.context.lookup_meaning("ifflag").uncertain)
-        self.assertEqual([i.metadata["value"] for i in items if isinstance(i, SourceCommand) and i.action == "layout_assignment"], [10000, 10000])
+        self.assertEqual([i.metadata["value"] for i in items if isinstance(i, SourceCommand) and i.action == "integer_parameter_assignment"], [10000, 10000])
 
     def test_flushbottom_assigns_real_scoped_meanings(self):
         self.read(r"\makeatletter\def\@textbottom{BEFORE}{\flushbottom}\makeatother")

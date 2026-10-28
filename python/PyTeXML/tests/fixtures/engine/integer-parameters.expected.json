@@ -1,0 +1,10 @@
+{
+  "inner": 22,
+  "outer": 11,
+  "internal": 17,
+  "alias": 23,
+  "expanded": 15,
+  "old_value": -17,
+  "minimum": -2147483647,
+  "maximum": 2147483647
+}
