@@ -298,8 +298,8 @@ class StoredDefinitionTests(unittest.TestCase):
         self.assertEqual(self.reader.source_slice(definition.span), r"\declare\x{body}")
         self.assertIs(self.context.lookup_definition("x"), definition)
 
-    def test_expanding_global_prefixed_and_other_wrapper_forms_remain_boundaries(self):
-        for command in ("edef", "gdef", "xdef", "global", "long", "outer", "protected", "providecommand", "DeclareRobustCommand"):
+    def test_global_prefixed_and_other_wrapper_forms_remain_boundaries(self):
+        for command in ("gdef", "xdef", "global", "long", "outer", "protected", "providecommand", "DeclareRobustCommand"):
             with self.subTest(command=command):
                 source = "\\" + command + r"\x{\makeatletter}"
                 self.setup_reader(source)
@@ -309,6 +309,14 @@ class StoredDefinitionTests(unittest.TestCase):
                 self.assertEqual(self.reader.position, len(command) + 1)
                 self.assertIsNone(self.context.lookup_definition("x"))
                 self.assertEqual(self.context.catcodes["@"], CatCode.OTHER)
+
+    def test_edef_unknown_expansion_keeps_target_and_reading_state_unpublished(self):
+        self.setup_reader(r"\edef\x{\makeatletter}")
+        boundary = self.dispatcher.next_item()
+        self.assertIsInstance(boundary, ReadingBoundary)
+        self.assertEqual(boundary.reason, "expansion_required")
+        self.assertIsNone(self.context.lookup_definition("x"))
+        self.assertEqual(self.context.catcodes["@"], CatCode.OTHER)
 
     def test_failed_redefinition_does_not_replace_previous_meaning(self):
         self.setup_reader(r"\def\x{good}\def\x{missing")

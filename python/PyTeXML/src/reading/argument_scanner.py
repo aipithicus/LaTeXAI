@@ -5,6 +5,47 @@ from .contracts import ReadingIssue, ScannedArgument, SourceCommand
 from .tex_reader import CatCode, Token, TokenKind
 
 
+def group_tokens(reader, name, *, optional=False, long=True):
+    """Collect raw tokens after an opener, without assuming one source basis."""
+    depth, tokens = 0, []
+    while (token := reader.next_token()) is not None:
+        if not long and token.kind == TokenKind.CONTROL_SEQUENCE and token.value == "par":
+            raise ReadingIssue("runaway_argument", f"Paragraph in a short argument of {name}")
+        if token.catcode == CatCode.BEGIN_GROUP:
+            depth += 1
+        elif token.catcode == CatCode.END_GROUP:
+            if depth == 0 and not optional:
+                return tuple(tokens), token
+            depth -= 1
+            if depth < 0:
+                raise ReadingIssue("unclosed_argument", f"Unbalanced {name}")
+        elif (optional and depth == 0 and token.kind == TokenKind.CHARACTER
+              and token.value == "]" and token.catcode == CatCode.OTHER):
+            return tuple(tokens), token
+        tokens.append(token)
+    raise ReadingIssue("unclosed_argument", f"EOF while scanning {name}")
+
+
+def undelimited_tokens(reader, name, *, first=None, long=True):
+    """Return argument tokens and their actual opening/closing tokens.
+
+    Token lists can span multiple input frames. Source scanners may additionally
+    establish a contiguous source extent; expansion need not invent one.
+    """
+    if first is None:
+        first = reader.next_token()
+        while first is not None and first.catcode == CatCode.SPACE:
+            first = reader.next_token()
+    if first is None or first.catcode == CatCode.END_GROUP:
+        raise ReadingIssue("argument_required", f"Expected a token or balanced group for {name}")
+    if first.catcode == CatCode.BEGIN_GROUP:
+        tokens, closing = group_tokens(reader, name, long=long)
+        return tokens, first, closing
+    if not long and first.kind == TokenKind.CONTROL_SEQUENCE and first.value == "par":
+        raise ReadingIssue("runaway_argument", f"Paragraph in a short argument of {name}")
+    return (first,), first, first
+
+
 class ArgumentScanner:
     def __init__(self, reader, context):
         self.reader, self.context = reader, context
@@ -48,29 +89,14 @@ class ArgumentScanner:
         nonspace token can pass it without rewinding the mouth. This is the long
         argument form; short/outer validity requires the eventual macro runtime.
         """
-        first = first if first is not None else self.next_nonspace()
-        if first is None or first.catcode == CatCode.END_GROUP:
-            raise ReadingIssue("argument_required", f"Expected a token or balanced group for {name}")
-        if first.catcode == CatCode.BEGIN_GROUP:
-            return self._group_contents(name, first)
-        return ScannedArgument(name, first.span, (first,))
+        tokens, opening, closing = undelimited_tokens(self.reader, name, first=first)
+        span = (self.reader.source_span(opening.span.end, closing.span.start)
+                if opening.catcode == CatCode.BEGIN_GROUP else opening.span)
+        return ScannedArgument(name, span, tokens)
 
     def _group_contents(self, name: str, opening: Token, *, optional=False) -> ScannedArgument:
-        depth = 0
-        tokens = []
-        while (token := self.reader.next_token()) is not None:
-            if token.catcode == CatCode.BEGIN_GROUP:
-                depth += 1
-            elif token.catcode == CatCode.END_GROUP:
-                if depth == 0 and not optional:
-                    return ScannedArgument(name, self.reader.source_span(opening.span.end, token.span.start), tuple(tokens))
-                depth -= 1
-                if depth < 0:
-                    raise ReadingIssue("unclosed_argument", f"Unbalanced {name}")
-            elif optional and depth == 0 and token.kind == TokenKind.CHARACTER and token.value == "]" and token.catcode == CatCode.OTHER:
-                return ScannedArgument(name, self.reader.source_span(opening.span.end, token.span.start), tuple(tokens))
-            tokens.append(token)
-        raise ReadingIssue("unclosed_argument", f"EOF while scanning {name}")
+        tokens, closing = group_tokens(self.reader, name, optional=optional)
+        return ScannedArgument(name, self.reader.source_span(opening.span.end, closing.span.start), tokens)
 
     def filename(self, name: str) -> ScannedArgument:
         checkpoint = self.reader.checkpoint()
@@ -135,8 +161,11 @@ class ArgumentScanner:
                 if arg is not None:
                     arguments.append(replace(arg, role=spec.get("role", "unknown"),
                         literal_categories=tuple(spec["literal_categories"]) if "literal_categories" in spec else None))
-        return SourceCommand(self.reader.source_span(opening.start, self.reader.position), profile.name,
+        return SourceCommand(self.command_span(opening), profile.name,
                              profile.action, tuple(arguments), {**profile.tex_mechanics, "binding_id": profile.binding_id})
+
+    def command_span(self, opening):
+        return self.reader.source_span(opening.start, self.reader.position)
 
 
 def key_value_items(argument: ScannedArgument | None):

@@ -2,6 +2,9 @@ identity:
   registry: reading_handlers
   description: Reading actions and their current implementation boundary
 handlers:
+  noexpand:
+    status: scanner
+    description: Expansion consumer reads one raw token and suppresses its expansion once
   character_code_definition:
     status: scanner
     description: Engine operation scans a local chardef target and integer; installs a scoped character-code meaning
@@ -78,8 +81,8 @@ handlers:
     description: Capture a literal boolean target; the dispatcher installs scoped conditional and setter meanings
   primitive_definition:
     status: scanner
-    description: Capture local unexpanded primitive definitions; global and expanding
-      forms remain boundaries
+    description: Capture local primitive definitions; the engine supplies bounded
+      expansion for edef replacements; global forms remain boundaries
   environment_name:
     status: scanner
     description: Read a literal braced environment name without expansion

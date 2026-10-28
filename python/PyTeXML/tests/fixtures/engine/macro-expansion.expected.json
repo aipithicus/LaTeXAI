@@ -1,0 +1,11 @@
+{
+  "package": "loaded",
+  "load": "macro:->\\RequirePackage {xspace}",
+  "joined": "macro:->BATAIL",
+  "aliases": "macro:->OLD/NEW",
+  "copy": "macro:#1->#1",
+  "result": "macro:->VALUE",
+  "held": "macro:->\\old",
+  "later": "macro:->B",
+  "atcode": "12"
+}

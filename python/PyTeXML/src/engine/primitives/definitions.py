@@ -1,4 +1,4 @@
-"""Existing non-expanding declaration and meaning-assignment operations.
+"""Declaration and meaning-assignment operations over shared reader state.
 
 These retain the reader's bounded contracts: captures are not compiled macros,
 and an unavailable donor remains unknown rather than becoming undefined.
@@ -6,6 +6,7 @@ and an unavailable donor remains unknown rather than becoming undefined.
 from dataclasses import replace
 
 from ..operations import ExecutableOperation
+from ..expansion import ExpansionCursor
 from ...reading.assignment_scanner import AssignmentScanner
 from ...reading.argument_scanner import ArgumentScanner
 from ...reading.boolean_scanner import declaration as boolean_declaration
@@ -46,12 +47,15 @@ def assign_meaning(host, opening, profile):
 
 
 def store_definition(host, opening, profile):
-    """Scan target, signature and body raw; body tokens retain their catcodes.
+    """Scan target/signature raw; collect a raw or expanded replacement.
 
     Check known target conflicts, identify the capture, then install it locally.
-    Return that same capture; neither execute its body nor prove unknown names absent.
+    Return that same capture; never execute replacement commands or prove unknown names absent.
     """
-    definition = DefinitionScanner(host.reader, host.context).read(opening.span.start, profile)
+    expand = None
+    if profile.grammar.get("expansion") == "full":
+        expand = lambda scanner, count: expanded_body(host, scanner, count)
+    definition = DefinitionScanner(host.reader, host.context).read(opening.span.start, profile, expand_body=expand)
     if isinstance(definition, CommandDefinition):
         known = (host.context.lookup_meaning(definition.target.value) is not None
                  or isinstance(host.knowledge.resolve_command(definition.target.value), EffectiveReadingProfile))
@@ -61,6 +65,32 @@ def store_definition(host, opening, profile):
     definition = host.identify(definition)
     host.context.record_definition(definition)
     return definition
+
+
+def expanded_body(host, scanner, count):
+    """Expand an edef replacement, committing no state before collection ends.
+
+    Authored tokens and the evaluated replacement have separate identities.
+    A closing delimiter from a replacement frame needs a persistent execution
+    continuation and remains an explicit boundary in this initial consumer.
+    """
+    cursor = ExpansionCursor(host.reader, host.context, host.knowledge, host.operations)
+    tokens, depth = [], 1
+    while (token := cursor.next_expanded()) is not None:
+        if token.catcode == CatCode.BEGIN_GROUP:
+            depth += 1
+        elif token.catcode == CatCode.END_GROUP:
+            depth -= 1
+            if depth == 0:
+                if cursor.pending or not cursor.source_tokens or token is not cursor.source_tokens[-1]:
+                    raise ReadingIssue("expanded_delimiter", "Expanded closing delimiter needs an execution continuation")
+                return tuple(cursor.source_tokens[:-1]), token, tuple(tokens)
+        tokens.append(token)
+        if token.catcode == CatCode.PARAMETER:
+            following = cursor.next_expanded()  # scan_toks uses get_x_token when xpand is true.
+            scanner._replacement_parameter(following, count)
+            tokens.append(following)
+    raise ReadingIssue("unclosed_definition", "EOF while expanding a definition")
 
 
 def store_environment(host, opening, profile):

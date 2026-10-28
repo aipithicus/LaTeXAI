@@ -204,6 +204,9 @@ reading:
       family: stored_definition
       scope: global
       grammar: {handler: primitive_definition, expansion: none}
+    - name: "\\noexpand"
+      family: expansion_control
+      grammar: {handler: noexpand}
     - name: "\\edef"
       family: stored_definition
       scope: local

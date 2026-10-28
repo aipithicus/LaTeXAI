@@ -261,6 +261,8 @@ class BindingCatalog:
                           or grammar.get("expansion") not in ("none", "full")
                           or spec.get("scope") not in ("local", "global")):
                         raise ProfileError(f"{path}: {name} requires a primitive definition grammar, expansion and scope")
+                if spec.get("family") == "expansion_control" and grammar != {"handler": "noexpand"}:
+                    raise ProfileError(f"{path}: {name} requires a supported expansion-control grammar")
                 if spec.get("family") in {"meaning_assignment", "assignment_prefix"}:
                     handler = "let_assignment" if spec["family"] == "meaning_assignment" else "assignment_prefix"
                     if grammar != {"handler": handler} or spec.get("scope") != "local":

@@ -42,13 +42,16 @@ class OperationHost(Protocol):
 @dataclass(frozen=True, slots=True)
 class ExecutableOperation:
     identity: str
-    handler: Callable[[OperationHost, ReadEvent, EffectiveReadingProfile], OperationResult]
+    handler: Callable[[OperationHost, ReadEvent, EffectiveReadingProfile], OperationResult] | None = None
     integer_value: Callable[[IntegerScanner, EffectiveReadingProfile], int] | None = None
     unexpandable: bool = False
+    expansion: Callable | None = None
 
     def execute(self, host: OperationHost, opening: ReadEvent,
                 profile: EffectiveReadingProfile) -> OperationResult:
         """Execute after the opener was read, using the caller's live cursor."""
+        if self.handler is None:
+            raise ReadingIssue("expansion_required", "This operation requires an expansion consumer")
         if host.context.mode != ExecutionMode.ACTIVE_EXECUTION:
             raise ReadingIssue("inactive_context", "Operation requires active execution")
         if host.reader.catcodes is not host.context.catcodes or host.reader.endline_char != host.context.endlinechar:

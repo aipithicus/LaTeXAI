@@ -190,6 +190,9 @@ class BindingResolver:
         for declaration in self._command_specs(clean):
             origin, reading, section, spec = declaration.origin, declaration.reading, declaration.section, declaration.spec
             action = spec.get("action")
+            if spec.get("family") == "expansion_control":
+                return EffectiveReadingProfile(clean, spec["family"], grammar=deepcopy(spec["grammar"]),
+                                               binding_id=origin)
             if spec.get("family") == "configuration_command":
                 return EffectiveReadingProfile(clean, spec["family"], action=action,
                     grammar=deepcopy(spec["grammar"]), tex_mechanics=deepcopy(spec["metadata"]), binding_id=origin,

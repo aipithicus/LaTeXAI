@@ -38,14 +38,16 @@ class DefinitionScanner:
             return int(token.value)
         return None
 
-    def read(self, start: int, profile: EffectiveReadingProfile) -> StoredDefinition:
+    def read(self, start: int, profile: EffectiveReadingProfile, *, expand_body=None) -> StoredDefinition:
         """Capture a supported local declaration after its command token was read."""
         self._require(self.context.mode == ExecutionMode.ACTIVE_EXECUTION,
                       "inactive_context", "Definition scanning requires an active declaration")
         self._require(self.reader.catcodes is self.context.catcodes
                       and self.reader.endline_char == self.context.endlinechar,
                       "context_changed", "Definition scanner and reader must share reading state")
-        primitive = profile.grammar == {"handler": "primitive_definition", "expansion": "none"}
+        primitive = (profile.grammar == {"handler": "primitive_definition", "expansion": "none"}
+                     or expand_body is not None and profile.grammar ==
+                     {"handler": "primitive_definition", "expansion": "full"})
         wrapper = (profile.grammar.get("handler") == "command_definition"
                    and set(profile.grammar) == {"handler", "expansion", "target_requirement", "forbidden_names", "forbidden_prefixes"}
                    and profile.grammar.get("expansion") == "none"
@@ -59,11 +61,11 @@ class DefinitionScanner:
                       and not profile.catcode_overrides and not profile.reader_parameters
                       and not profile.interpolations and not profile.active_options
                       and profile.terminator is None and not profile.tex_mechanics,
-                      "unsupported_definition", "Only supported local, unexpanded definitions are captured")
+                      "unsupported_definition", "Only supported local definitions can be established")
         with self.context.stored_definition():
-            return self._command(start, profile) if wrapper else self._read(start, profile.binding_id)
+            return self._command(start, profile) if wrapper else self._read(start, profile.binding_id, expand_body)
 
-    def _read(self, start: int, binding_id: str) -> StoredDefinition:
+    def _read(self, start: int, binding_id: str, expand_body=None) -> StoredDefinition:
         target = self._token()
         while target.catcode == CatCode.SPACE:
             target = self._token()
@@ -90,13 +92,17 @@ class DefinitionScanner:
                 parameters.append(following)
                 count += 1
 
-        body, closing = self.read_body(count)
+        expanded = None
+        if expand_body is None:
+            body, closing = self.read_body(count)
+        else:
+            body, closing, expanded = expand_body(self, count)
         span = self.reader.source_span
         return StoredDefinition(
             span(start, closing.span.end), span(start, opening.span.end),
             span(target.span.end, opening.span.start),
             span(opening.span.end, closing.span.start), closing.span, target,
-            tuple(parameters), body, count, hash_brace, binding_id)
+            tuple(parameters), body, count, hash_brace, binding_id, expanded_tokens=expanded)
 
     def read_body(self, count: int) -> tuple[tuple[Token, ...], Token]:
         """Capture replacement tokens after the opening group was consumed.

@@ -13,12 +13,13 @@ from collections import deque
 from typing import Iterator
 
 from ..engine.primitives.definitions import boolean_value
+from ..engine.requests import package_request
 from .context import ExecutionMode, ReaderContext
 from .contracts import (
     ConditionalRule, EffectiveReadingProfile, LiteralRegion, ReadingBoundary, ReadingIssue,
     ReadingKnowledge, SkippedRegion, StoredDefinition, SourceCommand, SourceEnd, require_resolved,
     DeferredRegion, UnresolvedBindingResult, UnresolvedReason, BooleanMeaning, CommandDefinition,
-    EnvironmentDefinition, UncertainMeaning, BoundMeaning, CharacterCodeMeaning, ScannedArgument,
+    EnvironmentDefinition, UncertainMeaning, BoundMeaning, CharacterCodeMeaning, ScannedArgument, TokenArgument,
 )
 from .argument_scanner import ArgumentScanner, key_values
 from .configuration import entries, configured_options
@@ -264,9 +265,13 @@ class StructuralDispatcher:
         if isinstance(item, SourceCommand) and item.arguments:
             arguments = {}
             for arg in item.arguments:
-                arguments[arg.name] = self.units.add(arg.span, "argument", identifier,
+                derived = isinstance(arg, TokenArgument)
+                arguments[arg.name] = self.units.add(arg.span, "token_argument" if derived else "argument", identifier,
                     activity=argument_activity(arg.role), evidence={"reason": "declared_argument_role",
                         "argument_name": arg.name, "argument_role": arg.role,
+                        **({"location_relation": "invocation_anchor",
+                            "token_origins": [{"source": t.span.basis.source_id, "occurrence": t.span.basis.occurrence_id,
+                                              "start": t.span.start, "end": t.span.end} for t in arg.tokens]} if derived else {}),
                         "binding_id": item.metadata.get("binding_id", "")})
             item = replace(item, metadata={**item.metadata, "argument_units": arguments})
         if isinstance(item, (StoredDefinition, EnvironmentDefinition)):
@@ -401,6 +406,8 @@ class StructuralDispatcher:
                                       metadata={"predicate": "established_boolean"})
                 return event
             if definition is not None:
+                if self.source_commands and (request := package_request(self, event)) is not None:
+                    return request
                 summary = definition_summary(definition, context, self.knowledge)
                 detail = f"Unexpanded {token.value!r}; definition at {definition.span.basis.source_id}:{definition.span.start}"
                 # A completely bounded argument-free body consumes no following

@@ -1,0 +1,35 @@
+% Independent Tectonic observations for macro invocation and expanded definitions.
+\documentclass{article}
+\def\part{xspace}
+\edef\load{\noexpand\RequirePackage{\part}}
+\load
+\makeatletter
+\@ifpackageloaded{xspace}{\typeout{PYTEXML package=loaded}}{\typeout{PYTEXML package=missing}}
+\makeatother
+\typeout{PYTEXML load=\meaning\load}
+\def\pair#1#2{#2#1}
+\def\start{\pair{A}}
+\edef\joined{\start{B}TAIL}
+\typeout{PYTEXML joined=\meaning\joined}
+\def\original{OLD}
+\let\saved\original
+\def\original{NEW}
+\edef\aliases{\saved/\original}
+\typeout{PYTEXML aliases=\meaning\aliases}
+\def\hash{##}
+\def\numbertoken{1}
+\edef\copy#1{\hash\numbertoken}
+\typeout{PYTEXML copy=\meaning\copy}
+\edef\result{\copy{VALUE}}
+\typeout{PYTEXML result=\meaning\result}
+\def\old{A}
+\edef\held{\noexpand\old}
+\def\old{B}
+\edef\later{\held}
+\typeout{PYTEXML held=\meaning\held}
+\typeout{PYTEXML later=\meaning\later}
+\edef\inert{\catcode64=11}
+\typeout{PYTEXML atcode=\the\catcode64}
+\begin{document}
+Expansion witness.
+\end{document}

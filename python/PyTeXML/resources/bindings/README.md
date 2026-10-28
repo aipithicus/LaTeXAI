@@ -254,9 +254,11 @@ without temporary files. This separates boundary capture from body execution.
 Commands in the `stored_definition` family declare `scope: local|global` and
 `grammar: {handler: primitive_definition, expansion: none|full}`. The catalog
 validates these fields; the resolver preserves them without applying the
-declaration. `StructuralDispatcher` delegates the local, non-expanding form to
-[DefinitionScanner](../../src/reading/definition_scanner.py). Global or expanding
-forms are rejected before scanning arguments. This vocabulary describes the
+declaration. `StructuralDispatcher` delegates local forms to
+[DefinitionScanner](../../src/reading/definition_scanner.py). The definition
+operation supplies the shared expansion cursor for `\edef` replacements;
+the scanner alone does not expand. Global forms are rejected before scanning
+arguments. This vocabulary describes the
 current primitive forms, not a schema for arbitrary definition factories.
 
 The scanner implements the parameter/body collection rules from TeX82's
@@ -272,12 +274,16 @@ ASCII digits. It reports malformed input without TeX's token-insertion repairs.
 the target token, raw parameter/body token tuples, parameter count and optional
 `hash_brace` token. The tuples preserve lexical input: `##` is not collapsed,
 references are not substituted, and the hash brace is not synthesized into the
-body. They are not yet an expansion-ready replacement list. Token occurrence
-spans and categories remain valid after later lexical changes.
+body. Invocation compiles supported parameter references directly into frozen
+token frames. `expanded_tokens` separately holds an `\edef` replacement;
+`replacement_tokens` selects the operational sequence without changing the
+authored capture. Token occurrence spans and categories remain valid after later
+lexical changes.
 
 The scanner reads in `STORED_DEFINITION` mode and returns a capture without
-resolving or executing body commands or publishing a definition. Only the
-dispatcher installs a successful capture. Context scope journals restore prior
+executing body commands or publishing a definition. Expanded definitions resolve
+body meanings through the supplied expansion consumer. Only the definition
+operation installs a successful capture. Context scope journals restore prior
 meanings without copying every stored definition at each group. Active characters
 and same-spelled control symbols have separate keys. Failed captures leave prior
 meanings intact and preserve the declaration's source as boundary residue.
@@ -285,11 +291,19 @@ meanings intact and preserve the declaration's source as boundary residue.
 Lookup checks stored meanings before selecting binding handlers, including implicit
 paragraph tokens and the entry/exit commands of a directly dispatched environment.
 A stored invocation stops at an explicit boundary in strict execution mode.
-Preparation instead captures it without expansion and records the need for later
+Preparation first probes for a complete package-load request using shared
+expansion. Supported requests have literal token arguments and publish through
+the existing loader; failed probes restore the cursor without publishing effects.
+Otherwise preparation captures the invocation and records the need for later
 interpretation. It does not establish that the invocation is reading-neutral.
 This is lexical capture and scoped
 shadowing, not complete TeX meaning validation: prefix/outer/protected semantics,
-other declaration factories, global assignments and expansion remain future work.
+other declaration factories, global assignments and broader expansion remain future work.
+
+The temporary `expansion_control` family currently selects only
+`grammar: {handler: noexpand}`. Its Python operation reads one raw token and
+suppresses expansion for that return only; it has no standalone execution role.
+Aliases and shadows follow the same mutable meaning lookup as other operations.
 
 The `command_definition` handler captures the bounded LaTeX command forms from
 [ltdefns.dtx](https://github.com/latex3/latex2e/blob/main/base/ltdefns.dtx):

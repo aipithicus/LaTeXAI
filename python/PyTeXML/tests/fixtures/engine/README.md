@@ -1,4 +1,4 @@
-# Integer-operation oracle
+# Engine-operation oracles
 
 `integers.tex` records common TeX semantics exercised by `test_integer_operations.py`.
 The `PYTEXML` log lines were captured using Tectonic 0.16.9+20260504 on
@@ -36,3 +36,28 @@ effects, and the command after a one-token replacement. Run it with the same
 cached, untrusted compilation command above. The initial complete log is retained
 in the repository's temp/pytexml-command-body-oracle; compilation succeeded with
 the same unrelated Fontconfig warning.
+
+## Macro expansion and expanded definitions
+
+`macro-expansion.tex` and `macro-expansion.expected.json` record Tectonic
+0.16.9+20260504's `PYTEXML` log lines on 2026-10-27 (local date), with trailing
+printer spaces removed. Compilation succeeded using the cached, untrusted
+invocation above; the complete log is retained in
+`temp/pytexml-expansion-oracle` at the repository root. The same Fontconfig
+warning did not affect the observations.
+
+The probes cover replacement-to-source continuation, raw undelimited arguments,
+copied meanings versus late name lookup, one-time `\noexpand`, expanded parameter
+markers/numbers, and assignments captured without execution. The expanded
+`\RequirePackage{xspace}` invocation is also observed to load the package.
+`test_macro_expansion.py` compares stored token replacements to this recorded
+evidence; `test_expanded_requests.py` checks the preparation consumer separately.
+The simple test-only spelling of these replacements does not implement
+`\meaning` or establish arbitrary package execution.
+
+The relevant engine algorithms are `macro_call`, `scan_toks` with `xpand`
+enabled, and `no_expand` in
+[tex.web](https://github.com/TeX-Live/texlive-source/blob/trunk/texk/web2c/tex.web).
+In particular, `scan_toks` expands the token following a parameter marker when
+collecting an expanded definition. Unsupported continuations and expansion
+operations remain explicit boundaries rather than approximations of TeX recovery.

@@ -1,0 +1,154 @@
+"""Bounded expansion over lazy source input and frozen replacement tokens.
+
+The cursor owns input continuation, not meanings or execution state. Tokens keep
+their original source spans and categories even when one argument crosses frames.
+This module never serializes tokens as TeX or dispatches an executable command.
+"""
+from dataclasses import dataclass
+
+from ..reading.argument_scanner import undelimited_tokens
+from ..reading.contracts import (BoundMeaning, CharacterCodeMeaning, CommandDefinition,
+                                 EffectiveReadingProfile, ReadingIssue, StoredDefinition,
+                                 UncertainMeaning)
+from ..reading.tex_reader import CatCode, Token, TokenKind
+
+
+@dataclass(frozen=True, slots=True)
+class MacroCall:
+    invocation: Token
+    definition: StoredDefinition
+    arguments: tuple[tuple[Token, ...], ...]
+
+
+class ExpansionCursor:
+    def __init__(self, source, context, knowledge, operations, *, budget=10000):
+        if type(budget) is not int or budget <= 0:
+            raise ValueError("Expansion requires a positive work budget")
+        self.source, self.context, self.knowledge, self.operations = source, context, knowledge, operations
+        self.remaining = budget
+        self.frames = []
+        self.source_tokens = []
+        self.calls = []
+        self._last = None
+
+    def push(self, tokens):
+        tokens = tuple(tokens)
+        if tokens:
+            self.frames.append((tokens, 0))
+
+    def _charge(self, amount=1):
+        if amount > self.remaining:
+            self.remaining = 0
+            raise ReadingIssue("expansion_budget", "Expansion exhausted its work budget")
+        self.remaining -= amount
+
+    def next_token(self):
+        self._charge()
+        while self.frames:
+            tokens, index = self.frames[-1]
+            if index == len(tokens):
+                self.frames.pop()
+                continue
+            self.frames[-1] = tokens, index + 1
+            self._last = tokens[index]
+            return self._last
+        token = self.source.next_token()
+        if token is not None:
+            self.source_tokens.append(token)
+        self._last = token
+        return token
+
+    def unread_token(self, token):
+        if token is None or token is not self._last:
+            raise ValueError("Only the last expansion token can be put back")
+        self.push((token,))
+        self._last = None
+
+    def checkpoint(self):
+        return self.source.checkpoint(), tuple(self.frames), len(self.source_tokens), len(self.calls), self._last
+
+    def restore(self, saved):
+        source, frames, consumed, calls, self._last = saved
+        self.source.restore(source)
+        self.frames = list(frames)
+        del self.source_tokens[consumed:]
+        del self.calls[calls:]
+        # Work already attempted still counts against the evaluation budget.
+
+    @property
+    def pending(self):
+        return any(index < len(tokens) for tokens, index in self.frames)
+
+    def expand_macro(self, token, definition):
+        if isinstance(definition, CommandDefinition):
+            if definition.optional_default is not None:
+                raise ReadingIssue("macro_parameters", "Optional macro arguments are not implemented")
+            long = not definition.starred
+        else:
+            expected = []
+            for number in range(1, definition.parameter_count + 1):
+                expected.extend(((CatCode.PARAMETER, None), (CatCode.OTHER, str(number))))
+            actual = [(t.catcode, None if t.catcode == CatCode.PARAMETER else t.value)
+                      for t in definition.parameter_tokens]
+            if definition.hash_brace is not None or actual != expected:
+                raise ReadingIssue("macro_parameters", "Delimited macro parameters are not implemented")
+            long = False
+        arguments = tuple(undelimited_tokens(self, token.value, long=long)[0]
+                          for _ in range(definition.parameter_count))
+        replacement, index = [], 0
+        body = definition.replacement_tokens
+        self._charge(len(body))
+        while index < len(body):
+            part = body[index]
+            index += 1
+            if part.catcode != CatCode.PARAMETER:
+                replacement.append(part)
+                continue
+            if index == len(body):
+                raise ReadingIssue("invalid_definition_parameter", "Missing replacement parameter")
+            following = body[index]
+            index += 1
+            if following.catcode == CatCode.PARAMETER:
+                replacement.append(following)
+            elif (following.catcode == CatCode.OTHER and following.value in "123456789"
+                  and int(following.value) <= len(arguments)):
+                argument = arguments[int(following.value) - 1]
+                # Charge duplication before allocating the replacement. Reading
+                # input alone would not bound a large, repeatedly substituted arg.
+                self._charge(len(argument))
+                replacement.extend(argument)
+            else:
+                raise ReadingIssue("invalid_definition_parameter", "Invalid replacement parameter")
+        self.calls.append(MacroCall(token, definition, arguments))
+        self.push(replacement)
+
+    def next_expanded(self, *, stop=None):
+        while (token := self.next_token()) is not None:
+            if token.kind == TokenKind.CHARACTER:
+                return token
+            meaning = self.context.lookup_meaning(token.value, token.kind)
+            uncertain = meaning.span if isinstance(meaning, UncertainMeaning) else getattr(meaning, "uncertain", None)
+            if uncertain is not None:
+                raise ReadingIssue("uncertain_meaning", f"Expansion depends on {token.value!r}", causes=(uncertain,))
+            if isinstance(meaning, StoredDefinition):
+                self.expand_macro(token, meaning)
+                continue
+            if isinstance(meaning, CharacterCodeMeaning) or (isinstance(meaning, BoundMeaning) and meaning.token is not None):
+                return token
+            profile = (meaning.profile if isinstance(meaning, BoundMeaning)
+                       else self.knowledge.resolve_command(token.value) if meaning is None else None)
+            if isinstance(profile, EffectiveReadingProfile):
+                # A consumer can intercept an established semantic operation.
+                # This does not declare the underlying TeX code unexpandable.
+                if stop is not None and stop(profile):
+                    return token
+                operation = self.operations.get(profile.family)
+                if operation is not None and operation.expansion is not None:
+                    return operation.expansion(self, token, profile)
+                if operation is not None and operation.unexpandable:
+                    return token
+                if (profile.family == "stored_definition" and profile.grammar.get("handler") == "primitive_definition"
+                        or profile.name == r"\relax" and profile.action == "reading_noop"):
+                    return token
+            raise ReadingIssue("expansion_required", f"No established expansion behavior for {token.value!r}")
+        return None

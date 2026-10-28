@@ -52,7 +52,7 @@ def definition_summary(definition, context, knowledge, *, active=(), forbidden=N
     if _budget.remaining <= 0:
         return EffectSummary.unknown("Effect analysis work budget exhausted")
     _budget.remaining -= 1
-    if (not isinstance(definition, StoredDefinition) or definition.parameter_count
+    if (not isinstance(definition, StoredDefinition) or definition.expanded_tokens is not None or definition.parameter_count
             or definition.parameter_tokens or definition.hash_brace):
         return EffectSummary.unknown("Invocation requires argument or environment interpretation")
     if definition.span in active or len(active) >= 64:

@@ -25,14 +25,14 @@ def compare_characters(reader, context, opening, rule):
             definition = context.lookup_meaning(token.value, token.kind)
             if (key in seen or not isinstance(definition, StoredDefinition)
                     or definition.parameter_count or definition.parameter_tokens
-                    or definition.hash_brace is not None or len(definition.body_tokens) != 1):
+                    or definition.hash_brace is not None or len(definition.replacement_tokens) != 1):
                 reader.restore(checkpoint)
                 return None
             seen.add(key)
             if definition.unit_id is not None and definition.unit_id not in definition_ids:
                 definition_ids.add(definition.unit_id)
                 definitions.append(definition.unit_id)
-            token = definition.body_tokens[0]
+            token = definition.replacement_tokens[0]
         if token.kind != TokenKind.CHARACTER:
             reader.restore(checkpoint)
             return None

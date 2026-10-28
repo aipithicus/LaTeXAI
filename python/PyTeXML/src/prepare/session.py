@@ -16,7 +16,7 @@ from ..bindings.resolver import BindingResolver
 from ..reading.dispatcher import StructuralDispatcher, InputRecovery
 from ..reading.argument_scanner import key_values
 from ..reading.coverage import ReadingCoverage
-from ..reading.contracts import (SourceCommand, SourceEnd, ReadingBoundary, ReadingIssue,
+from ..reading.contracts import (SourceCommand, SourceEnd, ReadingBoundary, ReadingIssue, TokenArgument,
                                 StoredDefinition, CommandDefinition, EnvironmentDefinition, CollectedEnvironment,
                                 SkippedRegion, DeferredRegion, LiteralRegion, ConditionalRegion, ScannedArgument)
 from ..reading.dependencies import observe_dependencies, DEPENDENCY_ACTIONS
@@ -659,13 +659,22 @@ class PreparationSession:
             if action == "document_class":
                 self.class_options = tuple(options)
             names = [s.strip() for s in name.split(",")]
-            frame.packages.extend((n, options, command, action == "document_class") for n in names)
             # Rebase local names because master.tex moves to the payload root.
             resolved_names = []
             for n in names:
                 p = self.resolve(n, [".cls" if action == "document_class" else ".sty"], command.span, required=False)
                 resolved_names.append(self.name(p.with_suffix("")) if p else n)
             arg = command.argument("name")
+            if isinstance(arg, TokenArgument):
+                if resolved_names != names:
+                    self.defer(command.span, "expanded_package_relocation",
+                        "Computed package name needs relocation; its invocation is preserved without a source-argument edit")
+                frame.packages.extend((n, options, command, action == "document_class") for n in names)
+                self.emit(command.span, command=command)
+                if command.metadata["trailing_control_word"]:
+                    self.emit(command.span.basis.span(command.span.end, command.span.end), " ", operation="SYNTHETIC_SEPARATOR")
+                return
+            frame.packages.extend((n, options, command, action == "document_class") for n in names)
             raw = self.raw(command.span)
             a, b = arg.span.start - command.span.start, arg.span.end - command.span.start
             replacement = raw[:a] + ",".join(resolved_names) + raw[b:]
@@ -758,14 +767,17 @@ class PreparationSession:
             item = self.dispatcher.next_item()
             if item is None:
                 break
-            if (self.frames[-1].emit and isinstance(item, CommandDefinition) and item.trailing_control_word
+            if (self.frames[-1].emit and
+                    (isinstance(item, CommandDefinition) and item.trailing_control_word
+                     or isinstance(item, SourceCommand) and item.metadata.get("expanded_invocation")
+                     and item.metadata.get("trailing_control_word"))
                     and self.context.catcodes[" "] != CatCode.SPACE):
-                # Execution established the definition, but publication cannot
-                # use its usual separator. Reuse whole-input retention rather
+                # Publication cannot use its usual control-word separator.
+                # Reuse whole-input retention rather
                 # than deferring just this item and continuing an unsafe splice.
                 item = self.dispatcher.halt(item.span,
-                    "definition_separator",
-                    "An unbraced control-word body requires a proven output separator under the current catcodes",
+                    "definition_separator" if isinstance(item, CommandDefinition) else "invocation_separator",
+                    "A trailing control word requires a proven output separator under the current catcodes",
                     unit_id=item.unit_id)
             if isinstance(item, ReadingBoundary):
                 recovery = self.lint.repair_boundary(self, item)

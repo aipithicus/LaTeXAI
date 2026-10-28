@@ -9,7 +9,7 @@ expansion and XML interpretation belong to later development.
 | Location | Responsibility |
 | --- | --- |
 | [`src/reading/`](src/reading) | Reusable N/M/S reader and cursor, structural dispatcher, literal/definition scanners, source intervals and coverage queries, regex catcode rules, mouth profiles, and scoped document state |
-| [`src/engine/`](src/engine) | Fixed Python operation catalog, family handlers and shared integer scanning, used by the reader over its existing state |
+| [`src/engine/`](src/engine) | Fixed Python operation catalog, family handlers, integer scanning and bounded token expansion over the reader's existing state |
 | [`src/bindings/`](src/bindings) | Reusable binding catalog and document-local resolution/package activation |
 | [`src/prepare/`](src/prepare) | Cached source traversal, dependency resolution, emission, bibliography, assets, provenance, and publication |
 | [`src/validation/`](src/validation) | Optional paired rendering and relocation qualification in disposable workspaces; independent of preparation |
@@ -33,7 +33,7 @@ environment declarations, grouping, and established lexical profiles use that
 route. Scanners still own operands; deferred regions scan without installing
 definitions. The dispatcher owns input and control frames, and state owns scope
 restoration. Remaining operations move family by family as their shared machinery
-lands. General expansion and global assignments remain explicit boundaries.
+lands. Unsupported expansion operations and global assignments remain explicit boundaries.
 
 The next integrated family is [code assignments](src/engine/primitives/assignments.py).
 `\catcode` has separate execution and internal-integer roles; local `\chardef`
@@ -48,6 +48,30 @@ domain; `\chardef` is limited to 0..255. Existing literal layout-parameter summa
 do not yet establish integer values. Preparation preserves code assignments and
 their source coverage; successful value evaluation alone does not authorize
 inlining a file that reaches another unsupported operation.
+
+[ExpansionCursor](src/engine/expansion.py) adds frozen replacement frames above
+the same lazy reader. It resolves current meanings, collects raw undelimited
+macro arguments across frame boundaries, and returns to source when a replacement
+ends. Existing token objects retain their categories and origins. This first
+consumer supports parameterless macros and ordinary undelimited parameters,
+including command declarations without optional defaults; delimited parameters,
+prefixes and outer/protected behavior remain unsupported.
+
+Local `\edef` uses that cursor to collect an expanded replacement before publishing
+the target. `\noexpand` suppresses expansion of one raw token once. Authored body
+tokens and expanded replacement tokens remain separate; assignments encountered
+during expansion are not executed. An unsupported expansion or exhausted budget
+leaves the prior target intact. Closing the definition through replacement input
+still requires a persistent execution continuation and remains a boundary.
+
+Preparation's first expansion request accepts a complete invocation that produces
+one established package-load operation with literal token arguments. Only then
+does the existing package loader act. Failed probes restore the source cursor and
+publish no effects. The master keeps the authored invocation; derived arguments
+carry token origins and an invocation anchor rather than a writable source slice.
+Requests needing package-name relocation are deferred. Other macro invocations
+retain the existing deferred/boundary behavior. This does not enable unrestricted
+style execution or expansion in integer scans and option replay.
 
 Within preparation, [session.py](src/prepare/session.py) owns one ordered
 multi-file traversal through the structural dispatcher. [Discovery](src/prepare/discovery.py)
@@ -481,11 +505,13 @@ recorded explicitly for later interpretation. No body is serialized and retokeni
 
 Local definitions shadow bindings immediately and restore on matching group exit.
 A scope journals only the meanings changed in that scope. A stored macro invocation
-is a located boundary, including redefined literal commands and environment
-entry/exit commands; it cannot silently invoke the previous binding. This increment
-captures declarations, without classifying their eventual reading effects or
-expanding their invocations. Expanding/global forms (`\edef`, `\xdef`, `\gdef`),
-prefixes and other declaration factories remain unsupported boundaries.
+is a located boundary in strict execution, including redefined literal commands
+and environment entry/exit commands; it cannot silently invoke the previous
+binding. Preparation additionally admits the bounded package request described
+above and otherwise preserves the invocation for later interpretation.
+Local `\edef` retains authored tokens plus a separate expanded replacement.
+Global forms (`\xdef`, `\gdef`), prefixes and other declaration factories remain
+unsupported boundaries.
 
 The same scanner captures bounded `\newcommand` and `\renewcommand` declarations:
 starred or unstarred, a literal control-sequence target (braced or unbraced), a

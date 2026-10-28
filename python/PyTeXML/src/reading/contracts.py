@@ -268,6 +268,14 @@ class StoredDefinition:
     binding_id: str
     unit_id: str | None = field(default=None, compare=False)
 
+    # Authored body_tokens stay a source capture. Expanded replacement tokens
+    # are separate, can have multiple origins, and must never be retokenized.
+    expanded_tokens: tuple[Token, ...] | None = field(default=None, kw_only=True)
+
+    @property
+    def replacement_tokens(self):
+        return self.body_tokens if self.expanded_tokens is None else self.expanded_tokens
+
 
 @dataclass(frozen=True, slots=True)
 class ScannedArgument:
@@ -284,6 +292,23 @@ class ScannedArgument:
         if any(t.kind != TokenKind.CHARACTER or t.catcode not in categories for t in self.tokens):
             raise ReadingIssue("computed_argument", f"{self.name} requires interpretation")
         return "".join(t.value for t in self.tokens).strip()
+
+
+@dataclass(frozen=True, slots=True)
+class TokenArgument:
+    """Derived tokens with an invocation anchor, not an editable source slice."""
+    name: str
+    anchor: SourceSpan
+    tokens: tuple[Token, ...]
+    role: str = "unknown"
+    literal_categories: tuple[int, ...] | None = None
+
+    @property
+    def span(self):
+        return self.anchor
+
+    def literal(self):
+        return ScannedArgument.literal(self)
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -317,11 +342,11 @@ class SourceCommand:
     span: SourceSpan
     name: str
     action: str
-    arguments: tuple[ScannedArgument, ...] = ()
+    arguments: tuple[ScannedArgument | TokenArgument, ...] = ()
     metadata: dict[str, Any] = field(default_factory=dict)
     unit_id: str | None = field(default=None, compare=False)
 
-    def argument(self, name: str) -> ScannedArgument | None:
+    def argument(self, name: str) -> ScannedArgument | TokenArgument | None:
         return next((arg for arg in self.arguments if arg.name == name), None)
 
     def value(self, name: str, default: str = "") -> str:
