@@ -726,9 +726,28 @@ rejected. This layer does not build a claim hierarchy, resume dependency request
 plan output edits, or emit `master.tex`. Preparation consumes one coverage snapshot per input occurrence.
 No additional YAML schema or dependency is needed for these interval algorithms.
 
+## Environment
+
+The commands in this README expect `python` to be the shared virtual environment
+`python/.venv`: CPython 3.14, per `python/.python-version`, with the exact pins in
+[requirements.txt](requirements.txt). Activate it first, for example with
+`..\.venv\Scripts\Activate.ps1` in PowerShell. Nothing depends on whichever Python
+is on PATH without it. Commands that start child processes, such as the specimen
+harness, reuse the interpreter that runs them.
+
+To build or rebuild the environment, run these from `python/` with `UV_CACHE_DIR`
+set to the repository's gitignored `temp/uv-cache`, so downloads stay in the repository:
+
+```text
+uv venv .venv --python 3.14 --seed --clear
+uv pip install -r PyTeXML/requirements.txt
+```
+
+`uv pip install` finds `.venv` in the current directory.
+
 ## Running and checking
 
-From this directory, with the dependencies in [requirements.txt](requirements.txt):
+From this directory, with the environment active:
 
 ```text
 python -B -m src.prepare.pipeline --help
