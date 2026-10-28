@@ -2,10 +2,12 @@
 
 TeX's scan_int/scan_optional_equals expand
 while scanning numbers, but not after a backtick. This subset accepts literal
-constants and established internal values; it reports an expansion requirement
-instead of treating an unexpanded command as a numeric terminator. A returned
+constants, bounded macro expansion and established internal values. A returned
 token retains its captured category. Internal quantities consume no optional
 trailing space, unlike constants.
+
+One scanner owns all operands of a request. Call finish() before publishing its
+effects: replacement input requiring later execution remains a boundary.
 
 Reference: https://github.com/TeX-Live/texlive-source/blob/trunk/texk/web2c/tex.web
 """
@@ -15,12 +17,14 @@ from ..reading.contracts import (BoundMeaning, CharacterCodeMeaning,
                                  EffectiveReadingProfile, ReadingIssue)
 from ..reading.tex_reader import CatCode, TokenKind
 from .operations import OperationHost
+from .expansion import ExpansionCursor
 
 
 class IntegerScanner:
     def __init__(self, host: OperationHost, *, relaxed_target=None):
         self.host = host
-        self.reader = host.reader
+        self.reader = ExpansionCursor(host.reader, host.context, host.knowledge, host.operations,
+                                      relaxed_target=relaxed_target)
         # chardef gives its target temporary relax meaning before reading RHS.
         # Keep that provisional meaning local until the whole assignment succeeds.
         self.relaxed_target = relaxed_target
@@ -49,13 +53,26 @@ class IntegerScanner:
                 return (operation, profile)
             if profile.name == r"\relax" and profile.action == "reading_noop":
                 return None
+        if self.reader.suppressed:
+            return None  # A suppressed expandable token has no integer role.
         raise ReadingIssue("computed_assignment", "Integer scanning requires expansion or an unsupported internal value")
 
     def _next(self):
-        token = self.reader.next_token()
-        if token is not None and token.kind != TokenKind.CHARACTER:
-            self._meaning(token)  # establish that it is unexpandable before using it
-        return token
+        return self.reader.next_expanded()
+
+    def finish(self):
+        """Return source lookahead and require complete replacement consumption.
+
+        ExpansionCursor already returns source tokens to their frozen cursor.
+        Leftover replacement tokens need an execution continuation and cannot be
+        discarded or attributed to a fabricated manuscript slice.
+        """
+        if self.reader.pending:
+            raise ReadingIssue("integer_continuation",
+                               "Integer request leaves replacement tokens requiring execution")
+        consumed = self.reader.source_tokens
+        self.ends_control_word = bool(consumed and consumed[-1].control_word
+                                      and self.host.reader.position == consumed[-1].span.end)
 
     def _nonspace(self):
         token = self._next()

@@ -83,3 +83,26 @@ The underlying TeX algorithms are `geq_define` and `unsave` in
 The journal implementation removes superseded restoration entries eagerly;
 TeX retains the global level when it later processes those entries. Neither
 mechanism restores a value that predates a successful global write.
+
+## Expanded integer operands and format constants
+
+`integer-expansion.tex` records Tectonic 0.16.9+20260504 observations on
+2026-10-28. Its expected JSON is extracted from `PYTEXML` log lines, grouping
+the two lookahead observations in order. The full log remains at the repository's
+`temp/pytexml-integer-expansion-oracle/integer-expansion.log`. Compilation succeeded
+with the same unrelated Fontconfig warning. Use the cached, untrusted command
+above to reproduce it.
+
+The probe covers mutable/copied/restored `\active`, macro-produced signs, radix
+and operands, internal category reads, raw backtick tokens, frozen versus unread
+source lookahead, optional-equals expansion, one-time suppression and a chardef
+target's provisional relax meaning. `test_integer_expansion.py` compares these
+observations with the Python consumer; continuation boundaries and failed
+publication are tested separately.
+
+The bootstrap declaration `\chardef\active=13` is in
+[ltplain.dtx](https://github.com/latex3/latex2e/blob/develop/base/ltplain.dtx#L118),
+v2.3m dated 2025-04-14. The numeric algorithms are `scan_int` and
+`scan_optional_equals` in
+[tex.web](https://github.com/TeX-Live/texlive-source/blob/trunk/texk/web2c/tex.web).
+An initial format value does not prove that intervening unexecuted code preserves it.

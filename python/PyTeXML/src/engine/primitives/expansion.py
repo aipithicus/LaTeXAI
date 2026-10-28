@@ -8,6 +8,7 @@ def noexpand(cursor, token, profile):
     following = cursor.next_token()
     if following is None:
         raise ReadingIssue("expansion_operand", "No token follows noexpand")
+    cursor.suppressed = True
     return following
 
 

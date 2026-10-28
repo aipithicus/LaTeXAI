@@ -29,6 +29,7 @@ def assign_catcode(host, opening, profile):
         category = scanner.integer()
         if not 0 <= category <= 15:
             raise ReadingIssue("invalid_assignment", "Category number is out of range")
+        scanner.finish()
     host.context.catcodes[character] = category
     return SourceCommand(host.reader.source_span(opening.span.start, host.reader.position),
                          profile.name, "reading_assignment",
@@ -47,6 +48,7 @@ def define_character_code(host, opening, profile):
         value = scanner.integer()
         if not 0 <= value <= 255:
             raise ReadingIssue("invalid_assignment", "chardef value is outside 0..255")
+        scanner.finish()
     span = host.reader.source_span(opening.span.start, host.reader.position)
     host.context.record_meaning(target.value, CharacterCodeMeaning(span, value), target.kind)
     return SourceCommand(span, profile.name, "character_code_assignment",

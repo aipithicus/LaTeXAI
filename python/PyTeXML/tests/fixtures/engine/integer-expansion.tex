@@ -1,0 +1,36 @@
+% Independent Tectonic observations for integer expansion and format meanings.
+\documentclass{article}
+\typeout{PYTEXML active=\number\active}
+\let\savedactive\active
+{\chardef\active=11 \typeout{PYTEXML inner_active=\number\active}}
+\typeout{PYTEXML restored_active=\number\active}
+\typeout{PYTEXML copied_active=\number\savedactive}
+\def\identity#1{#1}\def\sign{--+}
+\chardef\value=\sign\identity{'17}
+\typeout{PYTEXML expanded_octal=\number\value}
+\def\args{64=11}
+{\catcode\args\relax\typeout{PYTEXML supplied_operands=\number\catcode64}}
+\def\index{64}\def\quantity{\catcode\index}
+\chardef\value=\quantity
+\typeout{PYTEXML internal_value=\number\value}
+\def\x{BAD}\def\rawvalue{`\x}
+\chardef\value=\rawvalue\relax
+\typeout{PYTEXML raw_backtick=\number\value}
+\def\grab#1{\ifcat#1a\typeout{PYTEXML lookahead=LETTER}\else\typeout{PYTEXML lookahead=OTHER}\fi}
+\def\digits{11}
+{\afterassignment\grab\catcode64=\digits @}
+\def\digits{11 }
+{\afterassignment\grab\catcode64=\digits @}
+\def\gobble#1{}
+\def\numeric{99}
+\afterassignment\gobble\chardef\value=12\noexpand\numeric
+\typeout{PYTEXML noexpand_terminator=\number\value}
+\chardef\value\noexpand\numeric
+\typeout{PYTEXML optional_equals_reexpands=\number\value}
+\def\equals{=}\chardef\value\equals13
+\typeout{PYTEXML expanded_equals=\number\value}
+\def\value{9}\afterassignment\gobble\chardef\value=12\value
+\typeout{PYTEXML provisional_relax=\number\value}
+\begin{document}
+Integer expansion witness.
+\end{document}

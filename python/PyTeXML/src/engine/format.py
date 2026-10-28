@@ -1,0 +1,14 @@
+"""Established LaTeX-format meanings, installed in each document's mutable state.
+
+These are format declarations, not engine primitives or spelling-based values.
+Keep the supported set explicit and source-backed as consumers are added.
+"""
+from ..reading.contracts import CharacterCodeMeaning
+from ..reading.tex_reader import TokenKind
+
+
+def latex_meanings():
+    # ltplain.dtx v2.3m (2025/04/14), initial catcode setup:
+    # \chardef\active=13. No manuscript source span is fabricated for the format.
+    return {(TokenKind.CONTROL_SEQUENCE, "active"): CharacterCodeMeaning(
+        None, 13, format_origin="https://github.com/latex3/latex2e/blob/develop/base/ltplain.dtx#L118")}

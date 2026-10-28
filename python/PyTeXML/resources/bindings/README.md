@@ -129,7 +129,11 @@ capture recipes remain explicit boundaries. Command spellings and operand counts
 belong in YAML, not scanner switches.
 
 `resolver.new_context("latex_ascii")` constructs a context from the loaded YAML
-baseline. `ReaderContext` applies immediate local effects and restores scoped catcodes,
+baseline and the supported Python format bootstrap. Format meanings such as
+`\active` are ordinary mutable character-code meanings, not numeric answers
+selected by command spelling. Their format-source reference does not fabricate a
+manuscript span. Unknown effects can invalidate them, just as author constants.
+`ReaderContext` applies immediate local effects and restores scoped catcodes,
 `endlinechar`, expl3 saved state, and stored local definitions. Repeated `\ExplSyntaxOn` reapplies its
 assignments while preserving the saved baseline. `StructuralDispatcher` owns active
 execution routing, source group and conditional pairing, the supported environment header scan,
@@ -202,9 +206,14 @@ the next token is read; already converted lookahead and the current line's
 captured `endlinechar` remain intact. The `integer_catcode_assignment` bridge
 routes to the engine's shared integer scanner: signs, decimal/octal/hexadecimal
 and backtick constants, internal category values and scoped `\chardef` values.
-An unconsumed terminator keeps its captured category; `\relax` is returned to
-execution. Macro expansion, other internal quantities and global prefixes still
-establish a diagnostic boundary. The existing Unicode category-table domain is
+The scanner uses the shared bounded macro expander for operands and optional
+equals, retaining raw backtick operands and provisional relax for a chardef
+target. An unconsumed source terminator keeps its captured category; source
+`\relax` is returned to execution. The complete request must consume its
+replacement input before publication. Replacement-produced terminators or extra
+replacement code needing an execution continuation remain a boundary, as do
+unsupported expansion operations, other internal quantities and global prefixes.
+The existing Unicode category-table domain is
 preserved; `\chardef` accepts the TeX82/e-TeX range 0..255.
 
 Each grouping declaration supplies `state_management.group_kind`: `simple` for

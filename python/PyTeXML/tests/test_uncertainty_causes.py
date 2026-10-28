@@ -61,9 +61,15 @@ class UncertaintyCauseTests(unittest.TestCase):
         self.assertEqual(cause["reason"], "package_binding")
         self.assertIn("notbound", cause["detail"])
 
-    def test_no_cause_table_growth_without_tracked_state_to_invalidate(self):
-        _, manifest, _, _ = self.prepare(r"\unknown $\expression$ \another")
-        self.assertEqual(manifest.uncertainty_causes, [])
+    def test_no_cause_table_growth_after_format_meanings_become_uncertain(self):
+        text, manifest, _, _ = self.prepare(r"\unknown $\expression$ \another")
+        # The first unknown invalidates the format's initial active meaning.
+        # Subsequent unknowns must not allocate redundant causes.
+        self.assertEqual(len(manifest.uncertainty_causes), 1)
+        cause = manifest.uncertainty_causes[0]
+        self.assertEqual(cause["reason"], "unknown_construct")
+        location = cause["locations"][0]
+        self.assertEqual(text[location["start"]:location["end"]], r"\unknown")
 
     def test_option_replay_preserves_the_cause_from_an_unknown_copied_meaning(self):
         self.put("local.sty", r"\let\copy\missing\DeclareOption{x}{\copy}\ProcessOptions")

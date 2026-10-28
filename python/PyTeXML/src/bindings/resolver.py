@@ -9,6 +9,7 @@ from dataclasses import dataclass, field, replace
 from typing import Any, Iterator
 from .catalog import BindingCatalog, ReadingDeclaration
 from ..yaml_io import overlay
+from ..engine.format import latex_meanings
 from ..reading.context import ReaderContext
 from ..reading.contracts import (
     ConditionalRule, EffectiveReadingProfile, InterpolationRule, SpanClassification,
@@ -96,7 +97,8 @@ class BindingResolver:
 
     def new_context(self, baseline: str = "latex_ascii", **kwargs: Any) -> ReaderContext:
         """Bootstrap from already loaded YAML; subsequent reading performs no I/O."""
-        return ReaderContext(baseline=self.catalog.mouth.baseline(baseline), **kwargs)
+        return ReaderContext(baseline=self.catalog.mouth.baseline(baseline),
+                             initial_meanings=latex_meanings(), **kwargs)
 
     def load_package(self, package_name: str) -> bool:
         """Activate once; a repeated request must not reorder prior definitions."""

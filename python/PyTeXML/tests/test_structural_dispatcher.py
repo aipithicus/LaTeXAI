@@ -256,7 +256,7 @@ class StructuralDispatcherTests(unittest.TestCase):
                 self.assertEqual(self.context.catcodes["@"], CatCode.LETTER)
 
     def test_dynamic_assignment_and_global_prefix_remain_unresolved(self):
-        for source, reason in ((r"\catcode`\@=\computed", "computed_assignment"),
+        for source, reason in ((r"\catcode`\@=\computed", "expansion_required"),
                                (r"\global\makeatletter", "assignment_prefix")):
             with self.subTest(source=source):
                 self.setup_reader(source)

@@ -1,0 +1,18 @@
+{
+  "active": 13,
+  "inner_active": 11,
+  "restored_active": 13,
+  "copied_active": 13,
+  "expanded_octal": 15,
+  "supplied_operands": 11,
+  "internal_value": 12,
+  "raw_backtick": 120,
+  "lookahead": [
+    "OTHER",
+    "LETTER"
+  ],
+  "noexpand_terminator": 12,
+  "optional_equals_reexpands": 99,
+  "expanded_equals": 13,
+  "provisional_relax": 12
+}

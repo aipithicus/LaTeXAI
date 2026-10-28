@@ -48,7 +48,7 @@ class ReaderContext:
 
     def __init__(self, *, baseline: MouthBaseline, catcodes: CatcodeTable | None = None,
                  endlinechar: int | None = None,
-                 mode: ExecutionMode = ExecutionMode.ACTIVE_EXECUTION):
+                 mode: ExecutionMode = ExecutionMode.ACTIVE_EXECUTION, initial_meanings=None):
         self.baseline = baseline
         self.catcodes = catcodes.copy() if catcodes is not None else baseline.new_catcodes()
         self.endlinechar = baseline.endlinechar if endlinechar is None else endlinechar
@@ -58,7 +58,7 @@ class ReaderContext:
         self.expl3_saved_endlinechar = self.endlinechar
         self._uncertain_prefixes = {}
         self._scope_stack: list[_ScopeSnapshot] = []
-        self._meanings: dict[DefinitionKey, LocalMeaning] = {}
+        self._meanings: dict[DefinitionKey, LocalMeaning] = dict(initial_meanings or {})
         # Journal only changed meanings, avoiding a copy of every definition at
         # each group (including temporary literal scopes).
         self._meaning_scopes: list[dict[DefinitionKey, LocalMeaning | None]] = []

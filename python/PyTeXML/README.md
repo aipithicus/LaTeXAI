@@ -40,14 +40,28 @@ The next integrated family is [code assignments](src/engine/primitives/assignmen
 installs a scoped constant in the existing meaning table, including `\let` copies
 and invalidation after unknown effects. [IntegerScanner](src/engine/integers.py)
 handles signs, decimal/octal/hexadecimal and raw backtick constants, category-table
-reads and established character-code constants. It returns a frozen terminator
+reads and established character-code constants. Its operands and equals scan use
+the shared bounded expander; the token after a backtick remains raw. It returns a frozen terminator
 token to the same cursor; assignments cannot retokenize that lookahead.
-Expansion-dependent operands or terminators, other internal values and prefixes
-still stop explicitly. Unicode category indices retain the reader's existing
+One scanner owns the complete assignment request. `finish()` requires every
+replacement frame to be consumed before effects are published. A macro-produced
+terminator or remaining replacement code needing later execution is an explicit
+`integer_continuation` boundary. Unsupported expansion, other internal values
+and prefixes still stop explicitly. Unicode category indices retain the reader's existing
 domain; `\chardef` is limited to 0..255. Existing literal layout-parameter summaries
 do not yet establish integer values. Preparation preserves code assignments and
 their source coverage; successful value evaluation alone does not authorize
 inlining a file that reaches another unsupported operation.
+If the authored assignment ends with a control word and the current space
+category cannot supply the usual separator, preparation retains the input at an
+explicit boundary instead of inserting an unsafe separator.
+
+[engine/format.py](src/engine/format.py) installs the supported LaTeX-format
+meanings in each document's mutable state. The initial entry is `\active`, the
+kernel's character-code constant 13. It carries a format-source reference and no
+invented manuscript span. `\let`, shadowing, restoration and uncertainty use the
+same paths as author declarations. An earlier unexecuted operation can make the
+format value uncertain; lookup never silently reinstates its initial value.
 
 [ExpansionCursor](src/engine/expansion.py) adds frozen replacement frames above
 the same lazy reader. It resolves current meanings, collects raw undelimited
@@ -82,7 +96,8 @@ publish no effects. The master keeps the authored invocation; derived arguments
 carry token origins and an invocation anchor rather than a writable source slice.
 Requests needing package-name relocation are deferred. Other macro invocations
 retain the existing deferred/boundary behavior. This does not enable unrestricted
-style execution or expansion in integer scans and option replay.
+style execution. Integer scans use their own bounded consumer; general option
+replay remains limited to its existing execution roles.
 
 Within preparation, [session.py](src/prepare/session.py) owns one ordered
 multi-file traversal through the structural dispatcher. [Discovery](src/prepare/discovery.py)

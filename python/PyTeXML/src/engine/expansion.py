@@ -21,7 +21,7 @@ class MacroCall:
 
 
 class ExpansionCursor:
-    def __init__(self, source, context, knowledge, operations, *, budget=10000):
+    def __init__(self, source, context, knowledge, operations, *, budget=10000, relaxed_target=None):
         if type(budget) is not int or budget <= 0:
             raise ValueError("Expansion requires a positive work budget")
         self.source, self.context, self.knowledge, self.operations = source, context, knowledge, operations
@@ -30,6 +30,9 @@ class ExpansionCursor:
         self.source_tokens = []
         self.calls = []
         self._last = None
+        self._last_from_source = False
+        self.suppressed = False
+        self.relaxed_target = relaxed_target
 
     def push(self, tokens):
         tokens = tuple(tokens)
@@ -51,27 +54,35 @@ class ExpansionCursor:
                 continue
             self.frames[-1] = tokens, index + 1
             self._last = tokens[index]
+            self._last_from_source = False
             return self._last
         token = self.source.next_token()
         if token is not None:
             self.source_tokens.append(token)
         self._last = token
+        self._last_from_source = True
         return token
 
     def unread_token(self, token):
         if token is None or token is not self._last:
             raise ValueError("Only the last expansion token can be put back")
-        self.push((token,))
+        if self._last_from_source:
+            self.source.unread_token(token)
+            self.source_tokens.pop()
+        else:
+            self.push((token,))
         self._last = None
+        self._last_from_source = False
 
     def checkpoint(self):
-        return self.source.checkpoint(), tuple(self.frames), len(self.source_tokens), len(self.calls), self._last
+        return (self.source.checkpoint(), tuple(self.frames), tuple(self.source_tokens), len(self.calls),
+                self._last, self._last_from_source, self.suppressed)
 
     def restore(self, saved):
-        source, frames, consumed, calls, self._last = saved
+        source, frames, consumed, calls, self._last, self._last_from_source, self.suppressed = saved
         self.source.restore(source)
         self.frames = list(frames)
-        del self.source_tokens[consumed:]
+        self.source_tokens = list(consumed)
         del self.calls[calls:]
         # Work already attempted still counts against the evaluation budget.
 
@@ -123,9 +134,12 @@ class ExpansionCursor:
         self.push(replacement)
 
     def next_expanded(self, *, stop=None):
+        self.suppressed = False
         while (token := self.next_token()) is not None:
             if token.kind == TokenKind.CHARACTER:
                 return token
+            if self.relaxed_target == (token.kind, token.value):
+                return token  # Provisional relax used while scanning a chardef RHS.
             meaning = self.context.lookup_meaning(token.value, token.kind)
             uncertain = meaning.span if isinstance(meaning, UncertainMeaning) else getattr(meaning, "uncertain", None)
             if uncertain is not None:

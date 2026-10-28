@@ -91,9 +91,10 @@ class UncertainMeaning:
 @dataclass(frozen=True, slots=True)
 class CharacterCodeMeaning:
     """A chardef constant has an integer value, not replacement text."""
-    span: SourceSpan
+    span: SourceSpan | None
     value: int
     uncertain: SourceSpan | None = None
+    format_origin: str | None = field(default=None, kw_only=True)
 
 
 @dataclass(frozen=True, slots=True)

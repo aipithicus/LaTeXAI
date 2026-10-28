@@ -75,7 +75,9 @@ class IntegerOperationTests(unittest.TestCase):
     def test_redefined_catcode_is_not_read_by_spelling(self):
         host = self.host(r"\def\catcode{12}\chardef\saved=\catcode64 ")
         items = list(host)
-        self.assertEqual(items[-1].reason, "computed_assignment")
+        # The redefined command expands to digits, giving 1264 rather than
+        # reading category 64 through the shadowed primitive.
+        self.assertEqual(items[-1].reason, "invalid_assignment")
         self.assertIsNone(host.context.lookup_meaning("saved"))
 
     def test_stored_and_skipped_code_assignments_do_not_install_values(self):

@@ -769,14 +769,18 @@ class PreparationSession:
                 break
             if (self.frames[-1].emit and
                     (isinstance(item, CommandDefinition) and item.trailing_control_word
-                     or isinstance(item, SourceCommand) and item.metadata.get("expanded_invocation")
+                     or isinstance(item, SourceCommand)
+                     and (item.metadata.get("expanded_invocation")
+                          or item.action in {"reading_assignment", "character_code_assignment"})
                      and item.metadata.get("trailing_control_word"))
                     and self.context.catcodes[" "] != CatCode.SPACE):
                 # Publication cannot use its usual control-word separator.
                 # Reuse whole-input retention rather
                 # than deferring just this item and continuing an unsafe splice.
                 item = self.dispatcher.halt(item.span,
-                    "definition_separator" if isinstance(item, CommandDefinition) else "invocation_separator",
+                    ("definition_separator" if isinstance(item, CommandDefinition)
+                     else "invocation_separator" if item.metadata.get("expanded_invocation")
+                     else "assignment_separator"),
                     "A trailing control word requires a proven output separator under the current catcodes",
                     unit_id=item.unit_id)
             if isinstance(item, ReadingBoundary):
