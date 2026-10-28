@@ -15,6 +15,7 @@ Layout:
 | `temp/t/<test>/` | output a test driver writes to disk |
 | `temp/bindings/<pkg>/` | intermediates while minting a binding: census, stub, probes, before/after outputs |
 | `temp/tectonic-cache/` | Tectonic's bundle and format cache. PyTeXML's render and relocation adapters set `TECTONIC_CACHE_DIR` here unless it is already set; set it yourself when running Tectonic by hand |
+| `temp/uv-cache/` | uv's download and metadata cache; set `UV_CACHE_DIR` here when building or changing `python/.venv` |
 | `temp/<actor-or-task>/` | anything else, named for who or what produced it (`temp/codex-1/`, `temp/tokenize-drift/`) |
 
 Rules:
