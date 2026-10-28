@@ -72,8 +72,8 @@ checked. Everything is in root A unless the entry names another root.
   `\usepackage{gmfake}` reads no file. No binding or file requirement should name gmfake.
 - **D2** `body/paper.tex:5–11`, `sections/branches.tex:3`:
   - **Reading.** `\ifPDFTeX`, `\ifXeTeX` and `\ifLuaTeX` are conditionals whose value
-    depends on the compiling engine. Their `\else` and `\fi` must be read as theirs,
-    and the dependence on the engine stays visible.
+    depends on the compiling engine, and their `\else` and `\fi` must be read as theirs.
+    Which branch the master keeps is not fixed here.
   - **Under Tectonic.** The fontspec branch runs, and `sections/branches.tex` prints
     "Engine: XeTeX."
 
