@@ -7,3 +7,6 @@
 
 # Disposable test outputs must not enter Git's untracked-file inventory.
 /temp/tests/
+
+# Retained native compiler probes and differential witness receipts.
+/temp/oracle-probes/

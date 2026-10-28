@@ -29,7 +29,8 @@ From the PyTeXML project directory, create one named batch for all catalog entri
 python -B -m src.validation.specimens --runs <run-collection> run --catalog <catalog.yaml> --name 20261023-baseline --note "Baseline before extending local-style reading"
 ```
 
-Use repeatable `--specimen <id>` options for a subset. Always use a new batch name;
+Use repeatable `--specimen <id>` options for a subset. Select the environment with
+`--engine-profile etex|pdftex` (default `etex`). Always use a new batch name;
 existing batches cannot be overwritten. Each paper gets a bounded preparation
 process (180 seconds by default, configurable with `--timeout`). A failure or
 timeout is recorded without preventing attempts on the other selected papers.
@@ -82,7 +83,7 @@ collection yet. Removing a pool link does not invalidate links retained by a run
 To add independent rendering evidence to an existing prepared checkpoint:
 
 ```text
-python -B -m src.validation.specimens --runs <run-collection> render --batch 20261023-baseline --specimen paper-v1 --name system-fonts --tectonic <executable> --font-dir <font-directory>
+python -B -m src.validation.specimens --runs <run-collection> render --batch 20261023-baseline --specimen paper-v1 --name system-fonts --backend tectonic --compiler <executable> --font-dir <font-directory>
 ```
 
 The renderer checks that source and prepared fingerprints still match the batch.
@@ -101,7 +102,7 @@ is explicitly requested for that checkpoint.
 To qualify relocation across an existing batch:
 
 ```text
-python -B -m src.validation.specimens --runs <run-collection> qualify --batch 20261023-baseline --name relocation --tectonic <executable> --font-dir <font-directory>
+python -B -m src.validation.specimens --runs <run-collection> qualify --batch 20261023-baseline --name relocation --backend tectonic --compiler <executable> --font-dir <font-directory>
 ```
 
 Use repeatable `--specimen` options for a subset. Only prepared files are staged;

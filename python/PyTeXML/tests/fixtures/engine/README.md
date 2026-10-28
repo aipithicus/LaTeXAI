@@ -149,3 +149,47 @@ This supports fully resolved legacy lists, not protected expansion, key/value
 option frameworks, filename hooks, or arbitrary execution inside option bodies.
 Expansion-produced spaces are an explicit boundary: the kernel removes source
 spaces before expansion, so dropping spaces afterward would change semantics.
+
+## Raw meaning comparison
+
+`meaning-comparison.tex` records 30 raw `ifx` decisions and two format entry
+observations using Tectonic 0.16.9+20260504 on 2026-10-28. Its cached format
+reports LaTeX2e 2021-11-15 patch 1. Both `undefined` and `@undefined` have
+undefined meaning in that baseline; this supports two explicit initial facts,
+not a rule that an uncatalogued command is undefined.
+
+The witness compares character aliases and chardefs, parameter cell identities,
+primitive definition variants, booleans, raw spaces/braces, active characters,
+macro flags, parameter delimiters/marker characters, doubled markers,
+hash-brace definitions, expanded replacements and scope restoration.
+Conditional bodies store results; all diagnostic output occurs afterward.
+The Python test reads that same prefix and compares its stored results with
+`meaning-comparison.expected.json`, independently extracted from the TeX log.
+Diagnostic expansion itself is not executed by the Python witness.
+
+The implementation also follows
+[TeX82 tex.web](https://github.com/TeX-Live/texlive-source/blob/trunk/texk/web2c/tex.web),
+sections 506–507: raw command/operand comparison, or compiled macro token lists
+with their flags. References inside macro bodies compare token identity without
+expanding or looking up those tokens' current meanings.
+Optional-argument wrappers and collecting environments are not compiled into
+TeX macro meanings. Unsupported comparisons remain deferred; copied command
+meanings can still be recognized. Executing `ifx` while expanding an edef
+replacement requires a separate expansion continuation.
+
+Oracle receipt and full log, at repository root:
+`temp/logs/pytexml-ifx/oracle-final/result.json` and
+`temp/logs/pytexml-ifx/oracle-final-output/meaning-comparison.log`.
+Compilation succeeded with the unrelated Fontconfig warning.
+
+## Expansion continuation and native profiles
+
+`expansion-continuation.tex` and its expected JSON cover exactly-once expansion,
+constructed definition targets, nested expanded lists, reinsertion after
+noexpand, execution of one resulting definition, and local name restoration.
+The Python test also validates the resulting source-coverage partition.
+
+On 2026-10-28, both this fixture's six witnesses and meaning-comparison's
+32 observations matched unchanged native pdfLaTeX and LaTeX/DVI runs.
+These are shared-language witnesses, not full engine-profile equivalence.
+See [engine oracles](../../../recipes/engine-oracles.md) for configuration.

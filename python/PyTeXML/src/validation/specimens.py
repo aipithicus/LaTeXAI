@@ -267,7 +267,7 @@ def record_changes(runs, batch, specimen, item, previous):
         (folder / "master.diff").write_text("".join(diff), encoding="utf-8", newline="\n")
 
 
-def run_batch(catalog, runs, name, note, selected=(), timeout=180):
+def run_batch(catalog, runs, name, note, selected=(), timeout=180, engine_profile="etex"):
     catalog, runs = Path(catalog).resolve(), Path(runs).resolve()
     identifier(name)
     if name.casefold() == "resources":
@@ -290,7 +290,7 @@ def run_batch(catalog, runs, name, note, selected=(), timeout=180):
     batch_dir.mkdir(parents=True, exist_ok=False)
     batch = {"schema": SCHEMA, "name": name, "note": note, "started": utc_now(), "status": "running",
              "catalog": str(catalog), "catalog_sha256": digest(catalog), "code": code_identity(),
-             "selected": chosen, "timeout_seconds": timeout, "results": {}}
+             "selected": chosen, "timeout_seconds": timeout, "engine_profile": engine_profile, "results": {}}
     (batch_dir / "NOTES.md").write_text(f"# Investigation notes\n\nPurpose: {note}\n\n", encoding="utf-8", newline="\n")
     try:
         write_json(batch_dir / "run.json", batch)
@@ -306,7 +306,7 @@ def run_batch(catalog, runs, name, note, selected=(), timeout=180):
                 item["source_fingerprint"] = source_fingerprint(Path(record["source"]))
                 with (folder / "console.log").open("wb") as log:
                     proc = subprocess.run([sys.executable, "-B", "-m", "src.prepare.pipeline",
-                        record["source"], str(prepared), record["main"]], cwd=PROJECT,
+                        "--engine-profile", engine_profile, record["source"], str(prepared), record["main"]], cwd=PROJECT,
                         stdout=log, stderr=subprocess.STDOUT, timeout=timeout, check=False)
                 item["returncode"] = proc.returncode
                 item["summary"] = summarize(prepared)
@@ -411,6 +411,7 @@ def main():
     run.add_argument("--note", required=True)
     run.add_argument("--specimen", action="append", default=[])
     run.add_argument("--timeout", type=float, default=180)
+    run.add_argument("--engine-profile", choices=("etex", "pdftex"), default="etex")
     commands.add_parser("index")
     render = commands.add_parser("render")
     render.add_argument("--batch", required=True)
@@ -424,7 +425,10 @@ def main():
     qualify.add_argument("--diagnose", action="store_true", help="On failure, run bounded XDV/original-source diagnostic checks")
     for command in (render, qualify):
         command.add_argument("--catalog", type=Path, help="Locate sources moved since the batch was run")
-        command.add_argument("--tectonic", type=Path, required=True)
+        command.add_argument("--compiler", type=Path, required=True)
+        command.add_argument("--backend", choices=("tectonic", "pdftex", "etex"), required=True)
+        command.add_argument("--engine-profile", choices=("etex", "pdftex"))
+        command.add_argument("--dvipdfmx", type=Path)
         command.add_argument("--timeout", type=float, default=120)
         command.add_argument("--bundle")
         command.add_argument("--allow-downloads", action="store_true")
@@ -433,19 +437,20 @@ def main():
         fonts.add_argument("--font-dir", type=Path, action="append", default=[])
     args = parser.parse_args()
     if args.command == "run":
-        result = run_batch(args.catalog, args.runs, args.name, args.note, args.specimen, args.timeout)
+        result = run_batch(args.catalog, args.runs, args.name, args.note, args.specimen, args.timeout, args.engine_profile)
         return 0 if result["status"] == "finished" else 1
     if args.command == "render":
         from .render import RenderConfig
         result = render_specimen(args.runs, args.batch, args.specimen, args.name,
-            RenderConfig(args.tectonic, args.timeout, args.bundle, not args.allow_downloads,
-                         args.fontconfig, tuple(args.font_dir)), args.catalog)
+            RenderConfig(args.compiler, args.timeout, args.bundle, not args.allow_downloads,
+                         args.fontconfig, tuple(args.font_dir), args.backend, args.engine_profile, args.dvipdfmx), args.catalog)
         return 0 if result["status"] == "rendered" else 1
     if args.command == "qualify":
         from .render import RenderConfig
         result = qualify_batch(args.runs, args.batch, args.name,
-            RenderConfig(args.tectonic, args.timeout, args.bundle, not args.allow_downloads,
-                         args.fontconfig, tuple(args.font_dir)), args.specimen, output_format=args.format,
+            RenderConfig(args.compiler, args.timeout, args.bundle, not args.allow_downloads,
+                         args.fontconfig, tuple(args.font_dir), args.backend, args.engine_profile, args.dvipdfmx),
+            args.specimen, output_format=args.format,
             diagnose=args.diagnose, catalog=args.catalog)
         return 0 if result["status"] == "qualified" else 1
     refresh_index(args.runs)

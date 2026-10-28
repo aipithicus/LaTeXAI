@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import argparse
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import hashlib
 import json
 import math
@@ -23,6 +23,7 @@ from ..source_io import SourceStore
 from .assets import SVG_DRIVER, stage_svg
 from .diagnostics import parse_log, audit_diagnostics
 from .assessment import render_status, summarize
+from .compilers import BACKENDS, compile_document, probe_profile
 
 
 DRIVER_NAME = "__pytexml_svg_driver__.tex"
@@ -41,16 +42,21 @@ def cache_directory() -> Path:
 
 @dataclass(frozen=True)
 class RenderConfig:
-    tectonic: Path
+    compiler: Path
     timeout_seconds: float = 120
     bundle: str | None = None
     only_cached: bool = True
     fontconfig_file: Path | None = None
     font_dirs: tuple[Path, ...] = ()
+    backend: str = "tectonic"
+    engine_profile: str | None = None
+    dvipdfmx: Path | None = None
 
     def validate(self):
-        if not self.tectonic.is_file():
-            raise ValueError(f"Explicit Tectonic executable not found: {self.tectonic}")
+        if self.backend not in BACKENDS:
+            raise ValueError("Unknown compiler backend")
+        if not self.compiler.is_file():
+            raise ValueError(f"Explicit compiler executable not found: {self.compiler}")
         if not math.isfinite(self.timeout_seconds) or self.timeout_seconds <= 0:
             raise ValueError("Compiler timeout must be finite and positive")
         if self.fontconfig_file and self.font_dirs:
@@ -59,11 +65,17 @@ class RenderConfig:
             raise ValueError(f"Fontconfig file not found: {self.fontconfig_file}")
         if any(not p.is_dir() for p in self.font_dirs):
             raise ValueError("Every configured font directory must exist")
+        if self.backend != "tectonic" and self.bundle is not None:
+            raise ValueError("Bundle selection belongs to the Tectonic backend")
+        if self.backend == "etex" and (self.dvipdfmx is None or not self.dvipdfmx.is_file()):
+            raise ValueError("DVI rendering requires an explicit dvipdfmx executable")
 
 
 def compiler_environment(config: RenderConfig, work: Path) -> tuple[dict, dict]:
     """One child-process environment for both sides; never mutate os.environ."""
     env = dict(os.environ)
+    if config.backend != "tectonic":
+        env["PATH"] = str(config.compiler.resolve().parent) + os.pathsep + env.get("PATH", "")
     cache = cache_directory()
     cache.mkdir(parents=True, exist_ok=True)
     env["TECTONIC_CACHE_DIR"] = str(cache)
@@ -91,12 +103,39 @@ def compiler_environment(config: RenderConfig, work: Path) -> tuple[dict, dict]:
 
 def execution_identity(config, fonts):
     """Record the configured instrument, not a claim to snapshot its whole cache."""
-    with config.tectonic.open("rb") as executable:
+    with config.compiler.open("rb") as executable:
         digest = hashlib.file_digest(executable, "sha256").hexdigest()
-    return {"compiler_sha256": digest, "bundle": config.bundle, "only_cached": config.only_cached,
+    return {"compiler_sha256": digest, "backend": config.backend,
+            "dvipdfmx_sha256": hashlib.sha256(config.dvipdfmx.read_bytes()).hexdigest() if config.dvipdfmx else None,
+            "bundle": config.bundle, "only_cached": config.only_cached,
             "cache_dir": cache_directory().as_posix(), "fonts": fonts, "timeout_seconds": config.timeout_seconds,
             "driver_sha256": hashlib.sha256(BOOTSTRAP + SVG_DRIVER.encode("ascii")).hexdigest(),
             "scope": "Configured environment shared by these attempts; engine cache and font directory contents are not snapshotted."}
+
+
+def profile_configuration(config, prepared):
+    """A payload's recorded environment also applies to standalone qualification."""
+    manifest = Path(prepared) / "manifest.json"
+    if manifest.is_file():
+        selected = json.loads(manifest.read_text(encoding="utf-8")).get("engine_profile", {}).get("name")
+        if selected:
+            if config.engine_profile is not None and config.engine_profile != selected:
+                raise ValueError("Rendering profile differs from the prepared payload's recorded profile")
+            return replace(config, engine_profile=selected)
+    return config
+
+
+def profile_evidence(config, work, output, env):
+    if config.engine_profile is None:
+        return None
+    try:
+        report = probe_profile(config, work, env)
+    except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as error:
+        return {"status": "unavailable", "profile": config.engine_profile,
+                "error": f"{type(error).__name__}: {error}", "mismatches": {}}
+    transcript = report.pop("transcript")
+    (output / "profile-probe.log").write_text(transcript, encoding="utf-8", newline="\n")
+    return {**report, "log": "profile-probe.log"}
 
 
 def stage_project(source: Path, main: str, destination: Path, *, excluded_dirs=()) -> dict:
@@ -156,32 +195,32 @@ def render_one(source: Path, main: str, label: str, output: Path, work: Path,
         main_path = stage / "source" / result["inputs"]["main"]
         build = stage / "build"
         build.mkdir()
-        command = [str(config.tectonic.resolve()), "-X", "compile", "--untrusted", "--keep-logs",
-                   "--print", "--outdir", str(build)]
-        if output_format != "pdf":
-            command.extend(["--outfmt", output_format])
-        if config.only_cached:
-            command.append("--only-cached")
-        if config.bundle:
-            command.extend(["--bundle", config.bundle])
         rules = build / "inputs.mk"
-        if dependency_audit:
-            command.extend(["--makefile-rules", str(rules)])
-            for path in hidden_inputs:
-                command.extend(["--hide", str(path)])
-        command.append(str(main_path))
         phase = "execution"
-        with log_path.open("wb") as log:
-            process = subprocess.run(command, cwd=main_path.parent, env=env, stdout=log,
-                                     stderr=subprocess.STDOUT, timeout=config.timeout_seconds, check=False)
+        process, result["passes"], converged = compile_document(config, main_path, build, log_path,
+            env, output_format, rules if dependency_audit else None, hidden_inputs)
+        checks["rerun_convergence"] = {"outcome": "passed" if converged else "failed",
+                                      "passes": len(result["passes"])}
         result["returncode"] = process.returncode
         checks["execution"] = {"outcome": "passed" if process.returncode == 0 else "failed",
                                "returncode": process.returncode}
         pdf = build / (main_path.stem + "." + output_format)
         if process.returncode != 0:
             result["error"] = "Compiler returned an error; inspect the retained log"
+        elif not converged:
+            result["error"] = "Native auxiliary files did not converge within four passes"
         else:
             checks["tex_compilation"] = {"outcome": "passed", "evidence": "execution"}
+            if config.backend == "etex":
+                phase = "pdf_generation"
+                dvi = build / (main_path.stem + ".dvi")
+                with log_path.open("ab") as log:
+                    converted = subprocess.run([str(config.dvipdfmx.resolve()), "-o", str(pdf), str(dvi)],
+                        cwd=main_path.parent, env=env, stdout=log, stderr=subprocess.STDOUT,
+                        timeout=config.timeout_seconds, check=False)
+                result["converter_returncode"] = converted.returncode
+                if converted.returncode:
+                    raise ValueError("DVI-to-PDF conversion failed; inspect the retained log")
             if output_format == "pdf":
                 checks["pdf_generation"] = {"outcome": "passed", "evidence": "execution"}
             phase = "output_inspection"
@@ -281,6 +320,7 @@ def compare_pdfs(original: Path, prepared: Path) -> dict:
 def render_comparison(original_dir: Path, original_main: str, prepared_dir: Path,
                       output_dir: Path, config: RenderConfig) -> dict:
     """Publish a new comparison directory; dispose of inputs on every exit path."""
+    config = profile_configuration(config, prepared_dir)
     config.validate()
     original, prepared, output = original_dir.resolve(), prepared_dir.resolve(), output_dir.resolve()
     for source in (original, prepared):
@@ -289,22 +329,27 @@ def render_comparison(original_dir: Path, original_main: str, prepared_dir: Path
         if output.is_relative_to(source) or source.is_relative_to(output):
             raise ValueError("Comparison output must be separate from both source trees")
     output.mkdir(parents=True, exist_ok=False)  # never mistake an older PDF for success
-    report = {"schema": "pytexml-render-comparison/2", "compiler": str(config.tectonic.resolve()),
+    report = {"schema": "pytexml-render-comparison/2", "compiler": str(config.compiler.resolve()),
+              "backend": config.backend,
               "bundle": config.bundle, "only_cached": config.only_cached, "status": "failed"}
     with tempfile.TemporaryDirectory(prefix=".render-", dir=output) as directory:
         work = Path(directory)
         env, report["fonts"] = compiler_environment(config, work)
         report["execution_context"] = execution_identity(config, report["fonts"])
         try:
-            version = subprocess.run([str(config.tectonic.resolve()), "--version"], env=env,
+            version = subprocess.run([str(config.compiler.resolve()), "--version"], env=env,
                 capture_output=True, timeout=config.timeout_seconds, check=True)
             report["compiler_version"] = version.stdout.decode("utf-8", errors="replace").strip()
+            if config.engine_profile is not None:
+                report["profile_probe"] = profile_evidence(config, work, output, env)
             for label, source, main in (("original", original, original_main), ("prepared", prepared, "master.tex")):
                 report[label] = render_one(source, main, label, output, work, config, env)
             report["paired_configuration"] = True
             if all(report[label]["status"] == "rendered" for label in ("original", "prepared")):
                 report["comparison"] = compare_pdfs(output / "original.pdf", output / "prepared.pdf")
                 report["status"] = "rendered"
+                if report.get("profile_probe", {}).get("status", "matched") != "matched":
+                    report["status"] = "profile_mismatch"
             else:
                 report["status"] = "incomplete"
         except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as error:
@@ -320,7 +365,10 @@ def main():
     parser.add_argument("original_main", help="TeX path relative to the original source directory")
     parser.add_argument("prepared_dir", type=Path)
     parser.add_argument("output_dir", type=Path, help="New directory outside both source trees")
-    parser.add_argument("--tectonic", type=Path, required=True)
+    parser.add_argument("--compiler", type=Path, required=True)
+    parser.add_argument("--backend", choices=tuple(BACKENDS), required=True)
+    parser.add_argument("--engine-profile", choices=("etex", "pdftex"))
+    parser.add_argument("--dvipdfmx", type=Path)
     parser.add_argument("--timeout", type=float, default=120)
     parser.add_argument("--bundle")
     parser.add_argument("--allow-downloads", action="store_true")
@@ -329,8 +377,8 @@ def main():
     fonts.add_argument("--font-dir", type=Path, action="append", default=[])
     args = parser.parse_args()
     report = render_comparison(args.original_dir, args.original_main, args.prepared_dir, args.output_dir,
-        RenderConfig(args.tectonic, args.timeout, args.bundle, not args.allow_downloads,
-                     args.fontconfig, tuple(args.font_dir)))
+        RenderConfig(args.compiler, args.timeout, args.bundle, not args.allow_downloads,
+                     args.fontconfig, tuple(args.font_dir), args.backend, args.engine_profile, args.dvipdfmx))
     print(json.dumps({"status": report["status"], "summary": summarize(report),
                       "report": str(args.output_dir / "comparison.json")}, indent=2))
     return 0 if report["status"] == "rendered" else 1

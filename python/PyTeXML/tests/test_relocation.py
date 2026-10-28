@@ -72,6 +72,27 @@ class RelocationTests(unittest.TestCase):
             self.assertEqual(report["status"], "incomplete")
             self.assertEqual(report["render"]["status"], "unqualified")
 
+    def test_manifest_profile_is_checked_even_when_filesystem_closure_passes(self):
+        (self.prepared / "manifest.json").write_text(json.dumps({"engine_profile": {"name": "etex"}}))
+        probe = {"status": "mismatch", "mismatches": {"pdfoutput": {"expected": False, "observed": True}},
+                 "transcript": "Witnessed extra primitive."}
+        with patch("src.validation.render.probe_profile", return_value=probe) as observed, patch(
+                "src.validation.render.subprocess.run", side_effect=self.compiler):
+            report = qualify_relocation(self.prepared, self.root / "profile", self.config, raw_dirs=[self.raw])
+        self.assertEqual(observed.call_args.args[0].engine_profile, "etex")
+        self.assertEqual(report["render"]["checks"]["dependency_audit"]["outcome"], "passed")
+        self.assertEqual(report["status"], "profile_mismatch")
+        self.assertFalse(summarize(report)["pdf_qualified"])
+
+    def test_profile_probe_failure_is_not_treated_as_a_match(self):
+        (self.prepared / "manifest.json").write_text(json.dumps({"engine_profile": {"name": "etex"}}))
+        with patch("src.validation.render.probe_profile", side_effect=subprocess.TimeoutExpired("probe", 7)), patch(
+                "src.validation.render.subprocess.run", side_effect=self.compiler):
+            report = qualify_relocation(self.prepared, self.root / "probe-failed", self.config, raw_dirs=[self.raw])
+        self.assertEqual(report["profile_probe"]["status"], "unavailable")
+        self.assertEqual(report["status"], "profile_mismatch")
+        self.assertEqual(report["render"]["status"], "rendered")
+
     def test_receipt_escaped_spaces_and_traversal_are_checked(self):
         stage = self.root / "stage"
         stage.mkdir()

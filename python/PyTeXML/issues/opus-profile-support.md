@@ -1,3 +1,39 @@
+"LaTeX3" started in the late 1980s as the name for a planned successor to LaTeX2e. That successor was never released as a separate format. The LaTeX team built its pieces and gradually merged them into ordinary LaTeX instead. So today the name mostly refers to those pieces:
+
+- **expl3, the programming language.** It ships in the LaTeX kernel itself, loaded by default since the 2020-02 release. Code looks like this:
+
+  ```latex
+  \ExplSyntaxOn
+  \cs_new:Npn \my_double:n #1 { #1 #1 }
+  \tl_new:N \l_my_name_tl
+  \tl_set:Nn \l_my_name_tl { world }
+  \ExplSyntaxOff
+  ```
+
+  Names follow the pattern `\module_description:signature`. The letters after the colon describe each argument:
+  - `n`: a braced argument
+  - `N`: a single token
+  - `V`: the value of a variable
+  - `e`/`x`: expanded first
+  - `T`/`F`: branches taken on true or false
+
+  Variants such as `\tl_set:NV` are generated automatically from a base function by `\cs_generate_variant:Nn`.
+
+- **Interfaces built on expl3, now in the kernel.**
+  - `\NewDocumentCommand` (xparse, now called ltcmd) arrived in 2020-10, with argument specifications like `s o m`.
+  - The hook system (`\AddToHook`, lthooks) arrived in the same release.
+  - Key-value package options (`\DeclareKeys`, `\ProcessKeyOptions`) came later.
+
+- **l3build**, the team's test tool, which has the `.lvt` and `.tlg` regression files I mentioned earlier.
+
+For PyTeXML, it matters in four ways:
+
+- **It's a catcode regime.** `\ExplSyntaxOn` makes `_` and `:` letters, makes spaces and newlines ignored, and turns `~` into a space. That's one of the few common regimes your L4 reading model should treat as a known transition, not an arbitrary write.
+- **Much of it is generated, not written out.** Variants and many kernel functions are created by executing code rather than appearing as literal definitions. This is the harvest-versus-evaluate distinction from earlier.
+- **It sets your engine baseline.** Current expl3 requires e-TeX plus `\expanded`, which is why L2 chose that identity. Which string-comparison primitive it uses depends on the engine profile.
+- **Modern packages lean on it.** Newer packages, and the kernel's own newer features, are written in expl3. This is the shift behind arXiv's statement that HTML conversion success slipped as dependencies migrated to newer LaTeX 3 definitions. Its argument-specification language is the same one your ontology brief proposed for binding signatures.
+
+
 Think of a profile as four independent choices, and only one of them is the engine:
 
 1. **Engine:** pdfTeX, XeTeX or LuaTeX. All three are built on e-TeX, which is built on Knuth's TeX.
@@ -82,4 +118,39 @@ Every profile needs all of this.
 
 1. **e-TeX base plus pdfTeX, both output modes.** This covers nearly the whole arXiv corpus, needs no second language, and the inputenc/LICR work is just your engine running kernel code.
 2. **XeTeX.** Your Unicode reading model already exists in D4, and XeTeX adds Unicode data tables, the `\U…` math primitives, unicode-math and inter-character tokens. It also brings an oracle you already have.
-3. **LuaTeX.** This is the only step that adds a runtime dependency. Start with the token-level API that the kernel and expl3 need, and grow from there as your corpus actually requires.
+3. **LuaTeX.** This is the only step that adds a runtime dependency. Start with the token-level API that the kernel and expl3 need, 
+
+Profile support means splitting the work into two kinds of surface.
+
+**Closed surfaces can be specified completely, so target completeness.** These are the e-TeX and TeX primitives, the pdfTeX and XeTeX extension primitives, the LaTeX kernel and expl3 for each TeX Live year, and LuaTeX's Lua API. Each is a finite, documented set, so "support it as needed" is the wrong posture. Users should be able to trust that a primitive or kernel function behaves exactly like TeX, without checking which ones you happened to implement.
+
+**Open surfaces can't be completed, so publish coverage measured on a population.** These are the package ecosystem and author code. Nobody covers all of CTAN. A credible tool states its coverage on a defined, representative population and reports it every release. arXiv does this for its HTML: it prioritizes from missing-package statistics gathered across the whole historical corpus, and it publishes its rate of error-free conversion against a stated target. Demand-driven development is fine here, as long as the demand is measured across the population your users care about, not your own reading list.
+
+| Surface | Kind | Target | Evidence |
+| :--- | :--- | :--- | :--- |
+| TeX + e-TeX primitives | Closed | Complete | Differential tests per primitive against a real engine (Tectonic, plus pdftex in a container) |
+| pdfTeX and XeTeX extensions | Closed | Complete for reading semantics; typesetting primitives consume their operands exactly and act as sinks | Same |
+| LaTeX kernel + expl3, per TeX Live year | Closed | Complete | The LaTeX team's own l3build regression suites: pass rate per release |
+| LuaTeX Lua API | Closed but large | A published tiered contract, stated up front | Compatibility matrix plus tests per tier |
+| Packages | Open | Population-weighted coverage | Stratified sample of arXiv by year and category; per-release report with the top missing packages ranked by usage |
+| Author code | Open | Exact on everything executed; typed residue for the rest | Soundness checks: every "complete" claim is compared against the oracle |
+
+For LuaTeX, the grown-up version of my earlier advice is a contract, not an order of implementation:
+
+- **Tier 1 (full support):** `tex`, `token`, `texio`, `lua`, `kpse`, `status`, and the string and hash helpers. This is everything the kernel and expl3 need.
+- **Tier 2 (named subset):** `process_input_buffer` and the file-finding callbacks.
+- **Declared out of scope:** `node`, `font` and `mplib`, documented as typesetting, with a typed residue code for each.
+
+You can publish that contract before writing any of it. That tells users what they're getting.
+
+The build order stays the same, but the reason changes: pdfTeX first because arXiv compiled LaTeX almost exclusively with pdfLaTeX for decades, which is population weight, not personal need.
+
+For the population itself, arXiv's bulk source archive on S3 (requester-pays) gives you the whole corpus. A fixed stratified sample drawn from it, frozen and versioned the way your G1 inventory was, becomes the denominator for every coverage claim.
+
+Beyond coverage, these are what make the tool usable by others:
+
+- a compatibility matrix in the docs, covering profiles × TeX Live years × tiers
+- a versioned IR schema and a stable CLI, with a deprecation policy
+- engine-profile data pinned per TeX Live year, so results are reproducible
+- a per-paper report saying which profile was used and what remained unresolved
+- a license audit of whatever CTAN material ships inside the wheel

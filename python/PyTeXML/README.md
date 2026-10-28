@@ -865,20 +865,32 @@ python -B -m unittest discover -s tests -p 'test_*.py' -v
 
 ### Optional rendering comparison
 
-Rendering is a separate command with an explicitly supplied Tectonic executable:
+Rendering is a separate command with an explicitly supplied compiler and backend.
+The default preparation profile is `etex`; use `--engine-profile pdftex` to expose
+`\pdfoutput` as an integer parameter. Profiles have separate validated YAML sources
+under [engine_profiles](resources/engine_profiles/README.md), and their identity
+and source hash travel into preparation manifests. Both remain partial implementations.
 
 ```text
-python -B -m src.validation.render <original-project> <original-main.tex> <prepared-directory> <new-comparison-directory> --tectonic <executable> --font-dir <font-directory>
+python -B -m src.validation.render <original-project> <original-main.tex> <prepared-directory> <new-comparison-directory> --backend pdftex --compiler <pdflatex-executable>
 ```
 
 The original main path is relative to its project; the prepared entry is
 `master.tex`. The comparison directory must be new and outside both input trees.
-No compiler is located on PATH, installed, or called by preparation. The default
-uses only Tectonic's cached bundle resources; `--allow-downloads` explicitly permits
+No compiler is located on PATH, installed, or called by preparation. The Tectonic backend
+uses only cached bundle resources; `--allow-downloads` explicitly permits
 missing resources to enter that compiler's cache. That cache is the repository's
 gitignored `temp/tectonic-cache` unless `TECTONIC_CACHE_DIR` is already set; the
 execution context records which one was used. `--bundle` selects a bundle,
-and `--timeout` bounds each compiler invocation (120 seconds by default).
+and `--timeout` bounds compilation (120 seconds by default). Native formats rerun
+until auxiliary files settle, with at most four passes under one compilation deadline.
+Bibliography processors and indexes are not run automatically.
+
+The backends are `pdftex` for direct PDF, `etex` for DVI followed by an explicit
+`--dvipdfmx <executable>`, and `tectonic` for the existing XeTeX route.
+The prepared manifest selects the profile to probe; `--engine-profile` supplies
+it for older payloads. A primitive-exposure mismatch remains visible even when
+both PDFs render. See [engine oracles](recipes/engine-oracles.md).
 
 Each source tree is staged independently. SVGs become temporary PDF derivatives
 plus small bounding-box sidecars, using the existing PyMuPDF dependency. A graphics
@@ -902,7 +914,7 @@ Fontconfig does not guarantee that the manuscript's selected fonts contain every
 glyph. Compiler warnings remain in the logs.
 
 Relocation qualification is available independently through
-`python -B -m src.validation.relocation <prepared> <new-output> --tectonic <executable>`
+`python -B -m src.validation.relocation <prepared> <new-output> --backend tectonic --compiler <executable>`
 or the specimen harness's `qualify` command. Only prepared files are staged; optional
 `--raw-source` paths are hidden from the compiler, and inherited TeX input search
 variables are removed. A successful engine result also needs a filesystem dependency
@@ -919,8 +931,10 @@ pure summary projection. `--diagnose` enables bounded XDV/original-source checks
 after a failure; a baseline-reproduced error or successful XDV does not certify PDF
 output. Unrecognized errors stay visible for later catalog growth.
 
-The initial adapter targets Tectonic's XeTeX/LaTeX graphics route, not arbitrary
-engines or SVG packages. SVG conversion warnings and external-resource failures
+Filesystem relocation qualification remains implemented only for Tectonic;
+native adapters currently provide paired rendering observations. The graphics
+driver is tested on Tectonic; arbitrary engines and SVG packages need their own
+fixtures. SVG conversion warnings and external-resource failures
 are explicit. Text in vector SVGs and engine/package differences still require
 inspection; no claim of universal rendering fidelity is made.
 
@@ -929,6 +943,8 @@ Set `PYTEXML_TEST_TECTONIC` to an explicit executable to also run the optional l
 graphics test; `PYTEXML_TEST_FONT_DIR` optionally configures its fonts. That test
 uses cached compiler resources and checks scaling, clipping, rotation, nested
 entry paths and cleanup.
+Set `PYTEXML_TEST_NATIVE_DIR` to a TeX Live Windows binary directory to exercise
+both native rendering routes and the profile-mismatch reporting.
 
 See the [preparation contract](issues/DESIGN.md) and
 [native processing/dependency note](issues/external-toolchains.md) for scope and

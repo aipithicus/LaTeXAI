@@ -11,7 +11,7 @@ def render_status(checks, output_format):
     if outcome("execution") == "timeout":
         return "timeout"
     if (outcome("execution") != "passed" or outcome("output_inspection") != "passed" or
-            any(outcome(name) == "failed" for name in ("staging", "tex_compilation", "pdf_generation"))):
+            any(outcome(name) == "failed" for name in ("staging", "tex_compilation", "pdf_generation", "rerun_convergence"))):
         return "failed"
     if outcome("dependency_audit") not in {"passed", "not_requested"}:
         return "unqualified"
@@ -61,6 +61,8 @@ def summarize(report):
         return {"schema": "pytexml-assessment/1", "classification": "INDETERMINATE", "findings": [],
                 "explanation": "This receipt has no structured check evidence."}
     findings = []
+    if report.get("profile_probe", {}).get("status", "matched") != "matched":
+        findings.append({"category": "PROFILE_MISMATCH", "evidence": report["profile_probe"]["mismatches"]})
     for diagnostic in run.get("diagnostics", []):
         failed = checks.get(diagnostic["phase"], {}).get("outcome") == "failed"
         if failed and diagnostic["category"] in {"payload_dependency_failure", "environment_limitation"}:
@@ -73,7 +75,9 @@ def summarize(report):
     elif baseline.get("outcome") == "baseline_passed" and render_status(checks, run["format"]) == "failed":
         findings.append({"category": "PREPARED_ONLY_FAILURE", "evidence": "baseline_comparison"})
     categories = {finding["category"] for finding in findings}
-    if qualified(run):
+    if "PROFILE_MISMATCH" in categories:
+        classification = "PROFILE_MISMATCH"
+    elif qualified(run):
         classification = "QUALIFIED"
     else:
         classification = next((category for category in ("PAYLOAD_DEPENDENCY_FAILURE", "ENVIRONMENT_LIMITATION",
@@ -86,5 +90,5 @@ def summarize(report):
                                   if check["outcome"] != "passed" and
                                   not (name == "pdf_generation" and run["format"] == "xdv")],
             "compilation_isolation": "qualified" if qualified(run) or (same_payload and qualified(xdv)) else "not_established",
-            "pdf_qualified": run["format"] == "pdf" and qualified(run),
+            "pdf_qualified": run["format"] == "pdf" and qualified(run) and "PROFILE_MISMATCH" not in categories,
             "scope": "Exercised configuration only; compilation and dependency isolation do not establish manuscript fidelity."}

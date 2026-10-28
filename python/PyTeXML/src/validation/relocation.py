@@ -12,7 +12,8 @@ from pathlib import Path
 import tempfile
 
 from ..source_io import SourceStore
-from .render import RenderConfig, compiler_environment, execution_identity, render_one
+from .render import (RenderConfig, compiler_environment, execution_identity, render_one,
+                     profile_configuration, profile_evidence)
 from .assessment import qualified, summarize
 
 
@@ -70,7 +71,10 @@ def audit_dependencies(rules, cwd, staged, build):
 
 def qualify_relocation(prepared_dir, output_dir, config, *, raw_dirs=(), output_format="pdf",
                        diagnose=False, baseline=None):
+    config = profile_configuration(config, prepared_dir)
     config.validate()
+    if config.backend != "tectonic":
+        raise ValueError("Filesystem closure auditing currently requires the Tectonic backend")
     prepared, output = Path(prepared_dir).resolve(), Path(output_dir).resolve()
     raw_dirs = tuple(Path(p).resolve() for p in raw_dirs)
     baseline = (Path(baseline[0]).resolve(), baseline[1]) if baseline else None
@@ -81,7 +85,7 @@ def qualify_relocation(prepared_dir, output_dir, config, *, raw_dirs=(), output_
     output.mkdir(parents=True, exist_ok=False)
     report = {"schema": "pytexml-relocation/2",
               "raw_source_staged": False, "hidden_raw_files": len(hidden),
-              "compiler": str(config.tectonic.resolve()), "only_cached": config.only_cached,
+              "compiler": str(config.compiler.resolve()), "only_cached": config.only_cached,
               "bundle": config.bundle, "format": output_format,
               "scope": "The exercised compilation with only prepared payload files; engine bundle/cache and configured fonts are allowed. XDV qualification does not establish PDF rendering."}
     with tempfile.TemporaryDirectory(prefix=".relocated-", dir=output) as directory:
@@ -90,6 +94,8 @@ def qualify_relocation(prepared_dir, output_dir, config, *, raw_dirs=(), output_
         report["execution_context"] = execution_identity(config, report["fonts"])
         for variable in ("TEXINPUTS", "BIBINPUTS", "BSTINPUTS", "TEXMFHOME", "TEXMFOUTPUT"):
             env.pop(variable, None)
+        if config.engine_profile is not None:
+            report["profile_probe"] = profile_evidence(config, work, output, env)
         report["render"] = render_one(prepared, "master.tex", "prepared", output, work, config, env,
                                       dependency_audit=True, hidden_inputs=hidden, output_format=output_format)
         failed = report["render"]["status"] in {"failed", "timeout"}
@@ -104,6 +110,8 @@ def qualify_relocation(prepared_dir, output_dir, config, *, raw_dirs=(), output_
                                                 output_format=output_format)
                 report["paired_configuration"] = True
         report["status"] = "qualified" if qualified(report["render"]) else "incomplete"
+        if report["status"] == "qualified" and report.get("profile_probe", {}).get("status", "matched") != "matched":
+            report["status"] = "profile_mismatch"
     report["temporary_inputs_removed"] = True
     (output / "relocation.json").write_text(json.dumps(report, indent=2), encoding="utf-8", newline="\n")
     return report
@@ -114,7 +122,10 @@ def main():
     parser.add_argument("prepared", type=Path)
     parser.add_argument("output", type=Path)
     parser.add_argument("--raw-source", type=Path, action="append", default=[])
-    parser.add_argument("--tectonic", type=Path, required=True)
+    parser.add_argument("--compiler", type=Path, required=True)
+    parser.add_argument("--backend", choices=("tectonic", "pdftex", "etex"), required=True)
+    parser.add_argument("--engine-profile", choices=("etex", "pdftex"))
+    parser.add_argument("--dvipdfmx", type=Path)
     parser.add_argument("--timeout", type=float, default=120)
     parser.add_argument("--bundle")
     parser.add_argument("--font-dir", type=Path, action="append", default=[])
@@ -124,8 +135,9 @@ def main():
     args = parser.parse_args()
     if args.baseline_main and (not args.diagnose or len(args.raw_source) != 1):
         parser.error("--baseline-main requires --diagnose and exactly one --raw-source")
-    report = qualify_relocation(args.prepared, args.output, RenderConfig(args.tectonic,
-        timeout_seconds=args.timeout, bundle=args.bundle, font_dirs=tuple(args.font_dir)),
+    report = qualify_relocation(args.prepared, args.output, RenderConfig(args.compiler,
+        timeout_seconds=args.timeout, bundle=args.bundle, font_dirs=tuple(args.font_dir),
+        backend=args.backend, engine_profile=args.engine_profile, dvipdfmx=args.dvipdfmx),
         raw_dirs=args.raw_source, output_format=args.format, diagnose=args.diagnose,
         baseline=(args.raw_source[0], args.baseline_main) if args.baseline_main else None)
     print(json.dumps({"status": report["status"], "summary": summarize(report), "report": str(args.output / "relocation.json")}))
