@@ -326,7 +326,8 @@ class CommandDefinitionTests(unittest.TestCase):
     def test_selected_option_captures_frozen_tokens_and_reports_pending_check(self):
         self.setup_reader(r"\DeclareOption{x}{\catcode`\!=11\relax\newcommand\kept{!}}"
                           r"\ProcessOptions", preparation=True)
-        self.dispatcher.options = OptionScope("local", ("x",), ())
+        from reader_support import requested_options
+        self.dispatcher.options = OptionScope("local", requested_options(self.context, ("x",)))
         items = self.complete()
         item = self.context.lookup_definition("kept")
         self.assertEqual(item.body_tokens[0].catcode, CatCode.OTHER)

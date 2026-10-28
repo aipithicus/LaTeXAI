@@ -1,4 +1,4 @@
-"""Accept one completed package request from a bounded macro invocation.
+"""Complete bounded source-request operands using the shared expansion cursor.
 
 Expansion is pure. The existing preparation owner resolves/loads the package
 only after this probe succeeds; a failed probe publishes no effects.
@@ -7,13 +7,42 @@ from dataclasses import replace
 
 from .expansion import ExpansionCursor
 from ..reading.argument_scanner import ArgumentScanner, group_tokens
-from ..reading.contracts import ReadingIssue, TokenArgument
+from ..reading.contracts import ReadingIssue, ScannedArgument, TokenArgument
+from ..reading.token_cursor import TokenCursor
 from ..reading.tex_reader import CatCode, TexReader
 
 
 def origin(span):
     return {"source": span.basis.source_id, "occurrence": span.basis.occurrence_id,
             "start": span.start, "end": span.end}
+
+
+def expand_literal_argument(host, argument, *, strip_spaces=False):
+    """Expand a bounded token argument; no physical-input continuation or effects.
+
+    A replacement frame can contain tokens from many source occurrences. The
+    empty base cursor supplies an anchor only, never a synthetic source slice.
+    """
+    source = TokenCursor(ScannedArgument(argument.name, argument.span, ()), "", host.context)
+    cursor = ExpansionCursor(source, host.context, host.knowledge, host.operations)
+    cursor.push(t for t in argument.tokens if not strip_spaces or t.catcode != CatCode.SPACE)
+    tokens = []
+    while (token := cursor.next_expanded()) is not None:
+        tokens.append(token)
+    result = TokenArgument(argument.name, argument.span, tuple(tokens),
+                           argument.role, argument.literal_categories)
+    result.literal()  # A request must be completely resolved before publication.
+    return result
+
+
+def forwarding_request(host, command):
+    arguments = tuple(expand_literal_argument(host, arg, strip_spaces=arg.name == "options")
+                      for arg in command.arguments)
+    # zap@space removes source spaces before expansion. Spaces introduced by a
+    # replacement have different kernel semantics; do not silently erase them.
+    if any(t.catcode == CatCode.SPACE for arg in arguments if arg.name == "options" for t in arg.tokens):
+        raise ReadingIssue("option_expansion", "Expansion-produced option spaces require further resolution")
+    return replace(command, arguments=arguments)
 
 
 class _RequestArguments(ArgumentScanner):

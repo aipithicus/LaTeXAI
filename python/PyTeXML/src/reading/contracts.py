@@ -98,6 +98,19 @@ class CharacterCodeMeaning:
 
 
 @dataclass(frozen=True, slots=True)
+class TokenListMeaning:
+    """An established parameterless macro without a fabricated source definition.
+
+    The assignment anchor and replacement-token origins are distinct. Kernel
+    variables such as CurrentOption use this same mutable meaning machinery.
+    """
+    span: SourceSpan | None
+    replacement_tokens: tuple[Token, ...]
+    uncertain: SourceSpan | None = None
+    format_origin: str | None = field(default=None, kw_only=True)
+
+
+@dataclass(frozen=True, slots=True)
 class BooleanMeaning:
     """A locally assigned conditional or setter, never an expanded macro body.
 

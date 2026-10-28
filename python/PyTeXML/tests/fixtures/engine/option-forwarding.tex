@@ -1,0 +1,14 @@
+% Independent LaTeX option-order, CurrentOption and forwarding witness.
+\documentclass[11pt]{of-venue}
+\usepackage[b,a,other]{of-order}
+\usepackage[b,a,other]{of-star}
+\makeatletter
+\typeout{PYTEXML article=\@ptionlist{article.cls}}
+\typeout{PYTEXML declaration=\declarationTrace}
+\typeout{PYTEXML request=\requestTrace}
+\typeout{PYTEXML defaults=\afterDefaults}
+\typeout{PYTEXML process=\afterProcess}
+\typeout{PYTEXML alias=\savedAlias}
+\typeout{PYTEXML forwarded=\@ptionlist{of-target.sty}}
+\makeatother
+\begin{document}Option forwarding witness.\end{document}

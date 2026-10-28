@@ -1,7 +1,7 @@
 """Bounded option effects, checked against latex2e base/ltclass.dtx's contracts.
 
 https://github.com/latex3/latex2e/blob/main/base/ltclass.dtx
-No engine or general expansion is used by the preparation tests.
+Preparation remains compiler-free; selected forwarding uses bounded expansion.
 """
 from copy import deepcopy
 from pathlib import Path
@@ -13,7 +13,7 @@ from unittest.mock import patch
 PROJECT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT))
 from src.bindings.catalog import BindingCatalog
-from reader_support import reload_catalog
+from reader_support import reload_catalog, requested_options
 from src.bindings.resolver import BindingResolver
 from src.prepare.pipeline import preprocess_paper
 from src.reading.contracts import ReadingBoundary, SourceCommand
@@ -34,7 +34,8 @@ class OptionProcessingTests(unittest.TestCase):
         self.context = resolver.new_context()
         self.reader = TexReader(text, source_id="local.sty", occurrence_id=1,
                                 catcodes=self.context.catcodes, endline_char=self.context.endlinechar)
-        self.scope = OptionScope("local", tuple(local), tuple(globals_), is_class)
+        self.scope = OptionScope("local", requested_options(self.context, local),
+                                requested_options(self.context, globals_, "global.tex"), is_class)
         self.dispatcher = StructuralDispatcher(self.reader, self.context, resolver,
                                                source_commands=True, preparation=True, options=self.scope)
         items = list(self.dispatcher)
@@ -153,7 +154,7 @@ class OptionProcessingTests(unittest.TestCase):
         text = r"\DeclareOption{lex}{\catcode`\!=11\relax}\ProcessOptions"
         reader = TexReader(text, catcodes=context.catcodes, endline_char=context.endlinechar)
         dispatcher = StructuralDispatcher(reader, context, resolver, source_commands=True,
-            options=OptionScope("local", ("lex",), depth=1))
+            options=OptionScope("local", requested_options(context, ("lex",)), depth=1))
         self.assertFalse(any(isinstance(i, ReadingBoundary) for i in dispatcher))
         self.assertEqual(context.catcodes["!"], CatCode.LETTER)
         context.pop_scope()

@@ -1,0 +1,9 @@
+{
+  "article": "11pt,",
+  "declaration": "b,a,b,other,",
+  "request": "b,a,other,",
+  "defaults": "previous",
+  "process": "",
+  "alias": "other",
+  "forwarded": "b,a,other,"
+}

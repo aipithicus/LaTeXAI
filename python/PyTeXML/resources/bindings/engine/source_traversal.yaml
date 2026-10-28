@@ -63,6 +63,20 @@ reading:
         kind: braced
       - name: version
         kind: optional
+  - name: \LoadClass
+    family: source_command
+    action: class_load
+    grammar:
+      handler: source_arguments
+      arguments:
+      - name: options
+        kind: optional
+        role: data
+        literal_categories: [4, 7, 8, 10, 11, 12]
+      - name: name
+        kind: braced
+      - name: version
+        kind: optional
   - name: \RequirePackage
     family: source_command
     action: package_load

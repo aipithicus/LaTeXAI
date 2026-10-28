@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from ..reading.argument_scanner import undelimited_tokens
 from ..reading.contracts import (BoundMeaning, CharacterCodeMeaning, CommandDefinition,
                                  EffectiveReadingProfile, ReadingIssue, StoredDefinition,
-                                 UncertainMeaning)
+                                 UncertainMeaning, TokenListMeaning)
 from ..reading.tex_reader import CatCode, Token, TokenKind
 
 
@@ -146,6 +146,10 @@ class ExpansionCursor:
                 raise ReadingIssue("uncertain_meaning", f"Expansion depends on {token.value!r}", causes=(uncertain,))
             if isinstance(meaning, StoredDefinition):
                 self.expand_macro(token, meaning)
+                continue
+            if isinstance(meaning, TokenListMeaning):
+                self._charge(len(meaning.replacement_tokens))
+                self.push(meaning.replacement_tokens)
                 continue
             if isinstance(meaning, CharacterCodeMeaning) or (isinstance(meaning, BoundMeaning) and meaning.token is not None):
                 return token

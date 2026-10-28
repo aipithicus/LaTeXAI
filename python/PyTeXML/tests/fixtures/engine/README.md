@@ -125,3 +125,27 @@ The pdfTeX-specific declaration is source-checked against
 `scan_optional_equals`, `scan_int` and `word_define`.
 Tectonic's XeTeX is not a live oracle for that primitive or the PDF backend.
 No default parameter value or engine identity is inferred from these probes.
+
+## Legacy option forwarding
+
+`option-forwarding.tex` and the four `of-*` class/package files exercise
+actual LaTeX loads, default and starred ordering, `ExecuteOptions` restoration,
+`ProcessOptions` cleanup, aliased `CurrentOption`, and forwarding to both
+a base class and a package. `option-forwarding.expected.json` was extracted
+from Tectonic 0.16.9+20260504's `PYTEXML` log lines on 2026-10-28; the cached
+format reports LaTeX2e 2021-11-15 patch 1. The Python test reads the same source
+files and compares their resolved effects to those independent observations.
+Kernel list serialization has a trailing empty item; resolved request lists
+omit it. The full log and invocation receipt are in
+`temp/logs/pytexml-option-forwarding/oracle-output/` and
+`temp/logs/pytexml-option-forwarding/oracle/` at repository root.
+Compilation succeeded with the unrelated Fontconfig warning.
+
+The implementation was also checked against the current
+[ltclass.dtx](https://github.com/latex3/latex2e/blob/develop/base/ltclass.dtx):
+`@pass@ptions`, `@process@ptions`, `@xprocess@ptions`,
+`@process@pti@ns`, `ExecuteOptions`, and `LoadClass`.
+This supports fully resolved legacy lists, not protected expansion, key/value
+option frameworks, filename hooks, or arbitrary execution inside option bodies.
+Expansion-produced spaces are an explicit boundary: the kernel removes source
+spaces before expansion, so dropping spaces afterward would change semantics.

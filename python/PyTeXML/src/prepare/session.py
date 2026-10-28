@@ -18,12 +18,12 @@ from ..reading.argument_scanner import key_values
 from ..reading.coverage import ReadingCoverage
 from ..reading.contracts import (SourceCommand, SourceEnd, ReadingBoundary, ReadingIssue, TokenArgument,
                                 StoredDefinition, CommandDefinition, EnvironmentDefinition, CollectedEnvironment,
-                                SkippedRegion, DeferredRegion, LiteralRegion, ConditionalRegion, ScannedArgument)
+                                SkippedRegion, DeferredRegion, LiteralRegion, ConditionalRegion, ScannedArgument, TokenListMeaning)
 from ..reading.dependencies import observe_dependencies, DEPENDENCY_ACTIONS
 from ..reading.tex_reader import TexReader, ReadEvent, TokenKind, CatCode
 from ..reading.edit_map import EditMap
 from ..reading.units import UnitRegistry
-from ..reading.options import OptionScope, option_names
+from ..reading.options import Option, OptionScope, option_items, option_names
 from ..reading.spans import SourceSpan
 from .discovery import select_root
 from .emission import SourcePiece, MouthEmitter
@@ -109,8 +109,8 @@ class PreparationSession:
         self.line_starts = {}
         self.loaded_packages: set[str] = set()
         self.package_options: dict[str, tuple[str, ...]] = {}
-        self.forwarded_options: dict[str, tuple[str, ...]] = {}
-        self.class_options: tuple[str, ...] = ()
+        self.forwarded_options: dict[str, tuple[Option, ...]] = {}
+        self.class_options: tuple[Option, ...] = ()
         self.graphic_paths: dict[int, list[Path]] = {}
         self.graphic_extensions: dict[int, list[str]] = {}
         self.includeonly: set[str] | None = None
@@ -127,7 +127,7 @@ class PreparationSession:
         self._root_reader = first
         self.frames.append(_Input(self.root, first, True))
         self.dispatcher = StructuralDispatcher(first, self.context, self.resolver,
-            source_commands=True, preparation=True, units=self.units)
+            source_commands=True, preparation=True, units=self.units, option_forwarder=self._forward_options)
         self.manifest.reading_assumptions = [
             "Source-visible preparation does not generally expand manuscript macros; bounded reading predicates may resolve captured single-token constants. Unbound commands and packages are not assumed to generate inputs or change entry catcodes.",
             "Uninterpreted math, environments and adjacent command groups retain their source; their contents are not executed.",
@@ -450,7 +450,7 @@ class PreparationSession:
                 dependency="possible", next_step="macro_invocation" if role == "stored" else
                     "branch_selection" if role == "branch" else "argument_behavior")
             retain_candidate_input(self, command, argument.span, requirement)
-            if action in {"package_load", "document_class"} and role != "stored":
+            if action in {"package_load", "document_class", "class_load"} and role != "stored":
                 self.dispatcher.loads.invalidate(identifier)
 
     def require_deferred_dependencies(self, tokens, *, observed=(), observations=(), parent_id=None, command=None, role="unknown"):
@@ -462,7 +462,7 @@ class PreparationSession:
                     self.require(header.span, "deferred_dependency", "Possible dependency in a retained source region",
                         stage="preparation", unit_id=header.unit_id, dependency="possible",
                         next_step="branch_selection" if role == "branch" else "argument_behavior")
-                    if header.action in {"package_load", "document_class"}:
+                    if header.action in {"package_load", "document_class", "class_load"}:
                         self.dispatcher.loads.invalidate(header.unit_id)
                 for arg in header.arguments:
                     self._observe_argument(arg, header.unit_id)
@@ -497,7 +497,8 @@ class PreparationSession:
         frame = self.frames[-1]
         name, options, command, is_class = frame.packages.pop(0)
         key = ("class:" if is_class else "package:") + name
-        options = list(self.forwarded_options.get(key, ())) + options
+        items = list(self.forwarded_options.get(key, ())) + options
+        options = [option.name for option in items]
         path = self.resolve(name, [".cls" if is_class else ".sty"], command.span, required=False)
         if key in self.loaded_packages:
             if not set(options) <= set(self.package_options[key]):
@@ -513,6 +514,7 @@ class PreparationSession:
         self.loaded_packages.add(key)
         self.dispatcher.loads.record("class" if is_class else "package", name, command.unit_id)
         self.package_options[key] = tuple(options)
+        self.context.record_meaning("CurrentOption", TokenListMeaning(command.span, ()))
         usage = PackageUsage(name, options, path is not None, self.name(path) if path else None,
                              unit_id=command.unit_id, binding_available=name in self.resolver.catalog.package_bindings)
         self.manifest.packages_declared.append(usage)
@@ -525,7 +527,7 @@ class PreparationSession:
             self.edge(command, path, "class" if is_class else "package")
             self.styles[path] = StyleFileInfo(self.name(path), str(path), True, len(self.store.read_bytes(path)))
             self._enter(path, command, emit=False, package=True,
-                        options=OptionScope(key, tuple(options), self.class_options, is_class, self.context.scope_depth))
+                        options=OptionScope(key, tuple(items), self.class_options, is_class, self.context.scope_depth))
         elif is_class:
             baseline = self.resolver.catalog.engine_bindings["source_traversal"]["reading"]["baseline_classes"]
             if name not in baseline:
@@ -555,6 +557,20 @@ class PreparationSession:
                      f"Captured {declaration} for {target!r}; target must be {requirement}, "
                      "but available reading knowledge cannot verify that", unit_id=unit_id)
 
+    def _forward_options(self, commands):
+        """Publish only a fully validated option-request batch from the engine."""
+        pending = dict(self.forwarded_options)
+        for command in commands:
+            name = command.value("name")
+            if not name or "," in name:
+                raise ReadingIssue("option_target", "Option forwarding requires one literal package/class name")
+            key = command.metadata["target_kind"] + ":" + name
+            if key in self.loaded_packages:
+                raise ReadingIssue("option_lifecycle",
+                    "Option forwarding after the target was loaded requires further resolution")
+            pending[key] = pending.get(key, ()) + option_items(command.argument("options"))
+        self.forwarded_options = pending
+
     def _command(self, command):
         frame, action = self.frames[-1], command.action
         self.commands.append(command)
@@ -564,18 +580,17 @@ class PreparationSession:
         for check in command.metadata.get("definition_checks", ()):
             self._definition_check(**check)
         if action == "pass_options":
-            name = command.value("name")
-            if not name or "," in name:
-                self.defer(command.span, "option_target", "Option forwarding requires one literal package/class name")
-            key = command.metadata["target_kind"] + ":" + name
-            if key in self.loaded_packages:
-                first_id = self.dispatcher.loads.loaded[(command.metadata["target_kind"], name)]
-                self.defer(command.span, "option_lifecycle",
-                    "Option forwarding after the target was loaded requires further resolution",
-                    evidence={"target": name, "kind": command.metadata["target_kind"],
+            try:
+                self._forward_options((command,))
+            except ReadingIssue as issue:
+                evidence = {}
+                if issue.reason == "option_lifecycle":
+                    name, kind = command.value("name"), command.metadata["target_kind"]
+                    first_id = self.dispatcher.loads.loaded[(kind, name)]
+                    evidence = {"target": name, "kind": kind,
                         "requested_options": list(option_names(command.argument("options"))),
-                        "automatic_repair": False, "related": [self.lint.related(self.units.records[first_id])]})
-            self.forwarded_options[key] = self.forwarded_options.get(key, ()) + option_names(command.argument("options"))
+                        "automatic_repair": False, "related": [self.lint.related(self.units.records[first_id])]}
+                self.defer(command.span, issue.reason, issue.detail, evidence=evidence)
             self.emit(command.span, command=command)
             return
         if action == "external_literal":
@@ -653,28 +668,31 @@ class PreparationSession:
                 self._enter(bbl, command, emit=frame.emit, import_dir=frame.import_dir)
                 self.frames[-1].bibliography_start = len(self.pieces)
             return
-        if action in {"package_load", "document_class"}:
+        if action in {"package_load", "document_class", "class_load"}:
+            is_class = action != "package_load"
+            if action == "class_load" and (self.dispatcher.options is None or not self.dispatcher.options.is_class):
+                self.defer(command.span, "class_context", "LoadClass requires an active class load")
             name = command.value("name")
-            options = list(option_names(command.argument("options")))
+            options = list(option_items(command.argument("options")))
             if action == "document_class":
                 self.class_options = tuple(options)
             names = [s.strip() for s in name.split(",")]
             # Rebase local names because master.tex moves to the payload root.
             resolved_names = []
             for n in names:
-                p = self.resolve(n, [".cls" if action == "document_class" else ".sty"], command.span, required=False)
+                p = self.resolve(n, [".cls" if is_class else ".sty"], command.span, required=False)
                 resolved_names.append(self.name(p.with_suffix("")) if p else n)
             arg = command.argument("name")
             if isinstance(arg, TokenArgument):
                 if resolved_names != names:
                     self.defer(command.span, "expanded_package_relocation",
                         "Computed package name needs relocation; its invocation is preserved without a source-argument edit")
-                frame.packages.extend((n, options, command, action == "document_class") for n in names)
+                frame.packages.extend((n, options, command, is_class) for n in names)
                 self.emit(command.span, command=command)
                 if command.metadata["trailing_control_word"]:
                     self.emit(command.span.basis.span(command.span.end, command.span.end), " ", operation="SYNTHETIC_SEPARATOR")
                 return
-            frame.packages.extend((n, options, command, action == "document_class") for n in names)
+            frame.packages.extend((n, options, command, is_class) for n in names)
             raw = self.raw(command.span)
             a, b = arg.span.start - command.span.start, arg.span.end - command.span.start
             replacement = raw[:a] + ",".join(resolved_names) + raw[b:]

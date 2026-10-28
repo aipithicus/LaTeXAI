@@ -129,6 +129,9 @@ handlers:
   document_class:
     status: scanner
     description: Emit a class declaration request for the source owner
+  class_load:
+    status: scanner
+    description: Load a base class without replacing the document global options
   package_load:
     status: scanner
     description: Emit an ordered package activation request

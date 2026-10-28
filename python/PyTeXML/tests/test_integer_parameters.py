@@ -18,6 +18,7 @@ from src.reading.effect_summary import EffectSummary
 from src.reading.mouth_profiles import ProfileError
 from src.reading.options import OptionScope
 from src.reading.tex_reader import CatCode, TexReader
+from reader_support import requested_options
 
 
 class IntegerParameterTests(unittest.TestCase):
@@ -136,7 +137,7 @@ class IntegerParameterTests(unittest.TestCase):
                 source = (r"\widowpenalty=11 \def\value{23 }\DeclareOption{x}{"
                           r"\widowpenalty=\value" + ending + r"}\ProcessOptions")
                 host = self.host(source)
-                host.options = OptionScope("local", ("x",))
+                host.options = OptionScope("local", requested_options(host.context, ("x",)))
                 items = list(host)
                 self.assertEqual(isinstance(items[-1], ReadingBoundary), bool(ending))
                 self.assertEqual(self.value(host), expected)

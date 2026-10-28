@@ -6,7 +6,8 @@ from enum import Enum
 from typing import Iterator
 from .contracts import (EffectiveReadingProfile, MouthBaseline, StoredDefinition,
                         EnvironmentDeclaration, EnvironmentDefinition, ScannedArgument,
-                        BooleanMeaning, BoundMeaning, CharacterCodeMeaning, ConditionalRule, ReadingIssue, UncertainMeaning)
+                        BooleanMeaning, BoundMeaning, CharacterCodeMeaning, ConditionalRule, ReadingIssue, UncertainMeaning,
+                        TokenListMeaning)
 from .tex_reader import CatCode, CatcodeTable, TokenKind
 from .configuration import ConfigurationState
 from .spans import SourceSpan
@@ -14,7 +15,7 @@ from ..engine.parameters import IntegerParameters
 
 
 DefinitionKey = tuple[TokenKind, str]
-LocalMeaning = StoredDefinition | EnvironmentDefinition | BooleanMeaning | BoundMeaning | CharacterCodeMeaning | UncertainMeaning
+LocalMeaning = StoredDefinition | EnvironmentDefinition | BooleanMeaning | BoundMeaning | CharacterCodeMeaning | TokenListMeaning | UncertainMeaning
 
 
 class ExecutionMode(str, Enum):
@@ -172,7 +173,7 @@ class ReaderContext:
                         if key[0] == TokenKind.CONTROL_SEQUENCE and names.contains(key[1]))
 
         def uncertain(value):
-            if isinstance(value, (BooleanMeaning, BoundMeaning, CharacterCodeMeaning)):
+            if isinstance(value, (BooleanMeaning, BoundMeaning, CharacterCodeMeaning, TokenListMeaning)):
                 return value if value.uncertain is not None else replace(value, uncertain=span)
             return value if isinstance(value, UncertainMeaning) else UncertainMeaning(span)
 
@@ -230,7 +231,7 @@ class ReaderContext:
         changed = self.integer_parameters.invalidate(span)
         for meanings in (self._meanings, *self._meaning_scopes):
             for key, meaning in list(meanings.items()):
-                if isinstance(meaning, (BooleanMeaning, BoundMeaning, CharacterCodeMeaning)) and meaning.uncertain is None:
+                if isinstance(meaning, (BooleanMeaning, BoundMeaning, CharacterCodeMeaning, TokenListMeaning)) and meaning.uncertain is None:
                     meanings[key] = replace(meaning, uncertain=span)
                     changed = True
         return changed

@@ -1,0 +1,11 @@
+\ProvidesPackage{of-star}
+\def\requestTrace{}
+\DeclareOption{a}{\edef\requestTrace{\requestTrace\CurrentOption,}
+  \PassOptionsToPackage{\CurrentOption}{of-target}}
+\DeclareOption{b}{\edef\requestTrace{\requestTrace\CurrentOption,}
+  \PassOptionsToPackage{\CurrentOption}{of-target}}
+\DeclareOption*{\edef\requestTrace{\requestTrace\CurrentOption,}
+  \let\savedAlias\CurrentOption\def\CurrentOption{changed}
+  \PassOptionsToPackage{\savedAlias}{of-target}}
+\ProcessOptions*\relax
+\RequirePackage{of-target}

@@ -10,16 +10,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass, replace
 from collections import deque
-from typing import Iterator
+from typing import Callable, Iterator
 
 from ..engine.primitives.definitions import boolean_value
-from ..engine.requests import package_request
+from ..engine.requests import package_request, expand_literal_argument, forwarding_request, origin
 from .context import ExecutionMode, ReaderContext
 from .contracts import (
     ConditionalRule, EffectiveReadingProfile, LiteralRegion, ReadingBoundary, ReadingIssue,
     ReadingKnowledge, SkippedRegion, StoredDefinition, SourceCommand, SourceEnd, require_resolved,
     DeferredRegion, UnresolvedBindingResult, UnresolvedReason, BooleanMeaning, CommandDefinition,
-    EnvironmentDefinition, UncertainMeaning, BoundMeaning, CharacterCodeMeaning, ScannedArgument, TokenArgument,
+    EnvironmentDefinition, UncertainMeaning, BoundMeaning, CharacterCodeMeaning, ScannedArgument, TokenArgument, TokenListMeaning,
 )
 from .argument_scanner import ArgumentScanner, key_values
 from .configuration import entries, configured_options
@@ -38,7 +38,7 @@ from .dependencies import argument_activity
 from .loads import SourceLoadState
 from .spans import SourceSpan
 from .units import UnitRegistry
-from .options import OptionBody, OptionScope, option_names
+from .options import OptionBody, OptionScope, option_items
 from .operations import EFFECT_OPERATIONS, FAMILY_OPERATIONS
 from .token_cursor import TokenCursor
 from .tex_reader import CatCode, EventKind, InvalidCharacterError, ReadEvent, TexReader, TokenKind
@@ -98,7 +98,8 @@ class StructuralDispatcher:
 
     def __init__(self, reader: TexReader, context: ReaderContext, knowledge: ReadingKnowledge,
                  *, source_commands: bool = False, preparation: bool = False, units: UnitRegistry | None = None,
-                 options: OptionScope | None = None, loads: SourceLoadState | None = None):
+                 options: OptionScope | None = None, loads: SourceLoadState | None = None,
+                 option_forwarder: Callable[[tuple[SourceCommand, ...]], None] | None = None):
         self.literals = LiteralScanner(reader, context, knowledge)
         self.environments = EnvironmentScanner(reader, context)
         self.skipped = SkippedBranchScanner(reader, context, knowledge)
@@ -117,6 +118,9 @@ class StructuralDispatcher:
         self.preparation = preparation
         self._parents: list[tuple[TexReader, dict[str, CatCode], OptionScope | None]] = []
         self.options = options
+        # The source owner validates/commits a complete batch. Frozen replay
+        # admits only forwarding, never arbitrary source I/O.
+        self.option_forwarder = option_forwarder
         self._environment_stack: list[str] = []
         self._root_ended = False
         self._replays = {}
@@ -376,6 +380,12 @@ class StructuralDispatcher:
                                   "Math and alignment require their own mode and scope handling")
         try:
             deferred = DeferredScanner(reader, context)
+            if isinstance(meaning, TokenListMeaning):
+                if meaning.uncertain is not None:
+                    raise ReadingIssue("uncertain_meaning", "Token-list meaning may have changed", causes=(meaning.uncertain,))
+                if self.preparation:
+                    return self._deferred(deferred.command(token, "stored_macro", "Token-list content requires interpretation"))
+                raise ReadingIssue("stored_macro", "Token-list content requires interpretation")
             if isinstance(meaning, CharacterCodeMeaning):
                 if meaning.uncertain is not None:
                     raise ReadingIssue("uncertain_meaning", "Character code may have been redefined", causes=(meaning.uncertain,))
@@ -457,7 +467,8 @@ class StructuralDispatcher:
                 command = ArgumentScanner(reader, context).read(event.span, profile)
                 return self._options(command)
             if profile.family == "source_command":
-                self._require(self.source_commands or profile.action in {"reading_noop", "capture_setting"},
+                self._require(self.source_commands or profile.action in {"reading_noop", "capture_setting"}
+                              or profile.action == "pass_options" and self.option_forwarder is not None,
                               "unsupported_operation", "Source commands require an input owner")
                 checkpoint = reader.checkpoint()
                 try:
@@ -477,6 +488,8 @@ class StructuralDispatcher:
                         self.environments.validate_final(value)
                     context.record_capture_setting(command.metadata["key"], value)
                     return command
+                if command.action == "pass_options":
+                    return forwarding_request(self, command)
                 if command.action == "branch_test":
                     return self._branch_test(command)
                 if command.action == "declared_effects":
@@ -634,29 +647,47 @@ class StructuralDispatcher:
         Option replay is an effect-only operation. Its source is already captured
         by DeclareOption and is never re-emitted or added to top-level coverage.
         Each selected body must be self-contained with respect to groups and
-        conditionals; dependencies and arbitrary macros remain explicit limits.
+        conditionals. Only the owner's atomic forwarding capability is admitted;
+        source loads and arbitrary macro execution remain explicit limits.
         """
         scope = self.options
         self._require(scope is not None, "option_context", "Option commands require a package/class load")
         self._require(self.context.scope_depth == scope.depth, "option_scope",
                       "Option controls inside an additional lexical group need further resolution")
         if command.action == "declare_option":
-            name = None if command.argument("star") else command.value("name").replace(" ", "")
-            scope.declare(name, OptionBody(command.argument("body"), self.reader.text))
+            option = None
+            if not command.argument("star"):
+                names = option_items(command.argument("name"))
+                self._require(len(names) == 1, "option_name", "An option declaration needs one literal name")
+                option = names[0]
+            scope.declare(option.name if option else None, OptionBody(command.argument("body"), self.reader.text, option))
             return command
         if command.action == "execute_options":
-            plan = scope.defaults(option_names(command.argument("options")))
+            plan = scope.defaults(option_items(command.argument("options")))
         else:
             order = command.metadata["starred_order" if command.argument("star") else "order"]
             plan = scope.plan(order)
         saved = self.context.copy()
-        definition_checks = []
+        definition_checks, requests = [], []
         try:
-            for name, body in plan:
+            previous = self.context.lookup_meaning("CurrentOption")
+            if command.action == "execute_options":
+                # ExecuteOptions saves one expansion, then edef-restores it
+                # after the bodies. General parameterized donors stay bounded.
+                self._require(isinstance(previous, (TokenListMeaning, StoredDefinition))
+                              and getattr(previous, "uncertain", None) is None
+                              and not getattr(previous, "parameter_tokens", ())
+                              and not getattr(previous, "parameter_count", 0),
+                              "option_current", "ExecuteOptions needs an established parameterless CurrentOption")
+                previous_tokens = previous.replacement_tokens
+            for option, body in plan:
+                name = option.name
+                self.context.record_meaning("CurrentOption", TokenListMeaning(command.span, option.tokens))
                 self._require(not any(t.catcode == CatCode.PARAMETER for t in body.argument.tokens),
                               "option_body", f"Option {name!r} requires parameter-token compilation")
                 cursor = TokenCursor(body.argument, body.text, self.context)
-                replay = StructuralDispatcher(cursor, self.context, self.knowledge, units=self.units, loads=self.loads)
+                replay = StructuralDispatcher(cursor, self.context, self.knowledge, units=self.units, loads=self.loads,
+                                              option_forwarder=self.option_forwarder)
                 replay.decisions = self.decisions
                 for item in replay:
                     if isinstance(item, (ReadingBoundary, DeferredRegion)):
@@ -666,6 +697,14 @@ class StructuralDispatcher:
                         definition_checks.append({"unit_id": item.unit_id, "declaration": item.declaration,
                                                   "target": item.name if isinstance(item, EnvironmentDefinition) else item.target.value,
                                                   "requirement": item.target_requirement})
+                    if isinstance(item, SourceCommand) and item.action == "pass_options":
+                        requests.append(item)
+            restored = ()
+            if command.action == "execute_options":
+                restored = expand_literal_argument(self, TokenArgument("CurrentOption", command.span, previous_tokens)).tokens
+            self.context.record_meaning("CurrentOption", TokenListMeaning(command.span, restored))
+            if requests:
+                self.option_forwarder(tuple(requests))
         except ReadingIssue:
             # Failed bounded resolution publishes no partly applied option state.
             self.context.restore_from(saved)
@@ -674,8 +713,11 @@ class StructuralDispatcher:
             self.reader.endline_char = self.context.endlinechar
         if command.action == "process_options":
             scope.processed = True
-        return replace(command, metadata={**command.metadata, "selected_options": [name for name, _ in plan],
-                                          "definition_checks": definition_checks})
+        return replace(command, metadata={**command.metadata, "selected_options": [option.name for option, _ in plan],
+            "definition_checks": definition_checks,
+            "forwarded_options": [{"unit_id": request.unit_id, "target_kind": request.metadata["target_kind"],
+                "target": request.value("name"), "options": [option.name for option in option_items(request.argument("options"))],
+                "tokens": [origin(t.span) for t in request.argument("options").tokens]} for request in requests]})
 
     def _deferred(self, region: DeferredRegion) -> DeferredRegion:
         # Bare arithmetic/text math cannot assign meanings. Other unexecuted

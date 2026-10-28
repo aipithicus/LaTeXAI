@@ -13,7 +13,7 @@ from unittest.mock import patch
 PROJECT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT))
 from src.bindings.catalog import BindingCatalog
-from reader_support import reload_catalog
+from reader_support import reload_catalog, requested_options
 from src.bindings.resolver import BindingResolver
 from src.prepare.pipeline import preprocess_paper
 from src.reading.character_rules import ProfileError
@@ -231,13 +231,13 @@ class EnvironReadingTests(unittest.TestCase):
 
     def test_parameterless_option_declaration_reuses_token_cursor(self):
         self.setup_reader(r"\DeclareOption{x}{\NewEnviron{box}{\BODY}}\ProcessOptions")
-        self.dispatcher.options = OptionScope("local", ("x",), ())
+        self.dispatcher.options = OptionScope("local", requested_options(self.context, ("x",)))
         self.complete()
         self.assertIsInstance(self.context.lookup_environment("box"), EnvironmentDefinition)
 
     def test_option_invocation_is_not_silently_treated_as_executed(self):
         self.setup_reader(r"\NewEnviron{box}{\BODY}\DeclareOption{x}{\begin{box}text\end{box}}\ProcessOptions")
-        self.dispatcher.options = OptionScope("local", ("x",), ())
+        self.dispatcher.options = OptionScope("local", requested_options(self.context, ("x",)))
         self.assertEqual(list(self.dispatcher)[-1].reason, "option_body")
 
     def test_malformed_or_computed_declarations_are_explicit_boundaries(self):

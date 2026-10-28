@@ -1,0 +1,10 @@
+\ProvidesPackage{of-order}
+\def\declarationTrace{}
+\DeclareOption{a}{\edef\declarationTrace{\declarationTrace\CurrentOption,}}
+\DeclareOption{b}{\edef\declarationTrace{\declarationTrace\CurrentOption,}}
+\DeclareOption*{\edef\declarationTrace{\declarationTrace\CurrentOption,}}
+\def\CurrentOption{previous}
+\ExecuteOptions{b}
+\edef\afterDefaults{\CurrentOption}
+\ProcessOptions\relax
+\edef\afterProcess{\CurrentOption}

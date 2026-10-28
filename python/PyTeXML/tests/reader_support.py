@@ -7,6 +7,8 @@ import yaml
 from src.bindings.catalog import BindingCatalog
 from src.reading.mouth_profiles import MouthProfiles
 from src.reading.tex_reader import TexReader
+from src.reading.argument_scanner import ArgumentScanner
+from src.reading.options import option_items
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 PROFILES = MouthProfiles(PROJECT_ROOT / "resources" / "profiles" / "mouth")
@@ -21,6 +23,12 @@ def new_reader(text, **kwargs):
     kwargs.setdefault("catcodes", new_catcodes())
     kwargs.setdefault("endline_char", BASELINE.endlinechar)
     return TexReader(text, **kwargs)
+
+
+def requested_options(context, names, source="request.tex"):
+    reader = TexReader("{" + ",".join(names) + "}", source_id=source,
+                       catcodes=context.catcodes, endline_char=context.endlinechar)
+    return option_items(ArgumentScanner(reader, context).group("options"))
 
 
 def reload_catalog(testcase, catalog):
