@@ -193,9 +193,8 @@ reading:
       action: execute_options
       grammar: {handler: source_arguments, arguments: [{name: options, kind: braced, role: data, literal_categories: [4, 7, 8, 10, 11, 12]}]}
 
-    # TeX82 scan_toks/get_r_token: only the local, non-expanding form is
-    # executable in the initial structural dispatcher. Other forms resolve to
-    # explicit contracts which the scanner declines before reading arguments.
+    # TeX82 scan_toks/get_r_token: scope and replacement expansion are independent.
+    # The definition operation publishes only after successful body collection.
     - name: "\\def"
       family: stored_definition
       scope: local

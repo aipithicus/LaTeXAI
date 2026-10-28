@@ -39,7 +39,7 @@ class DefinitionScanner:
         return None
 
     def read(self, start: int, profile: EffectiveReadingProfile, *, expand_body=None) -> StoredDefinition:
-        """Capture a supported local declaration after its command token was read."""
+        """Capture a supported declaration without applying its assignment scope."""
         self._require(self.context.mode == ExecutionMode.ACTIVE_EXECUTION,
                       "inactive_context", "Definition scanning requires an active declaration")
         self._require(self.reader.catcodes is self.context.catcodes
@@ -55,13 +55,15 @@ class DefinitionScanner:
                    and all(isinstance(profile.grammar[key], list)
                            and all(isinstance(value, str) and value for value in profile.grammar[key])
                            for key in ("forbidden_names", "forbidden_prefixes")))
+        scope_supported = (profile.state_management == StateManagementRule()
+                           or primitive and profile.state_management == StateManagementRule(scope="global"))
         self._require(profile.family == "stored_definition" and (primitive or wrapper)
-                      and profile.state_management == StateManagementRule()
+                      and scope_supported
                       and profile.action is None and not profile.catcode_layers
                       and not profile.catcode_overrides and not profile.reader_parameters
                       and not profile.interpolations and not profile.active_options
                       and profile.terminator is None and not profile.tex_mechanics,
-                      "unsupported_definition", "Only supported local definitions can be established")
+                      "unsupported_definition", "Definition grammar or assignment scope is not supported")
         with self.context.stored_definition():
             return self._command(start, profile) if wrapper else self._read(start, profile.binding_id, expand_body)
 

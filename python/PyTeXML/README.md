@@ -33,7 +33,7 @@ environment declarations, grouping, and established lexical profiles use that
 route. Scanners still own operands; deferred regions scan without installing
 definitions. The dispatcher owns input and control frames, and state owns scope
 restoration. Remaining operations move family by family as their shared machinery
-lands. Unsupported expansion operations and global assignments remain explicit boundaries.
+lands. Unsupported expansion operations and assignment prefixes remain explicit boundaries.
 
 The next integrated family is [code assignments](src/engine/primitives/assignments.py).
 `\catcode` has separate execution and internal-integer roles; local `\chardef`
@@ -63,6 +63,17 @@ tokens and expanded replacement tokens remain separate; assignments encountered
 during expansion are not executed. An unsupported expansion or exhausted budget
 leaves the prior target intact. Closing the definition through replacement input
 still requires a persistent execution continuation and remains a boundary.
+
+`\gdef` and `\xdef` publish through the same meaning journal with global scope.
+A global write removes that target's older restoration entries from every open
+group; a subsequent local write saves the global value normally. Unrelated names
+and lexical state still restore. A failed definition changes neither the meaning
+nor its journal. Context copies/checkpoints include these journals, so speculative
+input recovery can roll back even a global write. Global scope applies to TeX
+group restoration; it does not bypass evaluation rollback.
+Deferred effect summaries retain a captured `\gdef`'s global write scope without
+installing its body. General `\global` prefix processing and `\globaldefs`
+remain explicit boundaries; global character-table assignments are not added.
 
 Preparation's first expansion request accepts a complete invocation that produces
 one established package-load operation with literal token arguments. Only then
@@ -510,8 +521,9 @@ and environment entry/exit commands; it cannot silently invoke the previous
 binding. Preparation additionally admits the bounded package request described
 above and otherwise preserves the invocation for later interpretation.
 Local `\edef` retains authored tokens plus a separate expanded replacement.
-Global forms (`\xdef`, `\gdef`), prefixes and other declaration factories remain
-unsupported boundaries.
+Global forms (`\xdef`, `\gdef`) use the same scanner and publish with global
+assignment scope. Prefixes and other declaration factories remain unsupported
+boundaries.
 
 The same scanner captures bounded `\newcommand` and `\renewcommand` declarations:
 starred or unstarred, a literal control-sequence target (braced or unbraced), a

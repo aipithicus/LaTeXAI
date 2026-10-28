@@ -1,0 +1,21 @@
+{
+  "inside": "macro:->LOCAL",
+  "middle": "macro:->GLOBAL",
+  "after": "macro:->GLOBAL",
+  "a": "macro:->G",
+  "b": "macro:->OTHER",
+  "fresh": "macro:->LAST",
+  "expanded": "macro:->LOCALNEW",
+  "copied": "macro:->COPIED",
+  "under": "macro:->_",
+  "underscore_after": "8",
+  "underscore_token": "other",
+  "left": "macro:->{",
+  "right": "macro:->}",
+  "left_token": "other",
+  "right_token": "other",
+  "brace_after": "1",
+  "active": "macro:->ACTIVE",
+  "symbol": "macro:->SYMBOL",
+  "exclamation_after": "12"
+}

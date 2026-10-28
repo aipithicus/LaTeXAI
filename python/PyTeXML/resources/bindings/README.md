@@ -257,8 +257,9 @@ validates these fields; the resolver preserves them without applying the
 declaration. `StructuralDispatcher` delegates local forms to
 [DefinitionScanner](../../src/reading/definition_scanner.py). The definition
 operation supplies the shared expansion cursor for `\edef` replacements;
-the scanner alone does not expand. Global forms are rejected before scanning
-arguments. This vocabulary describes the
+the scanner alone does not expand. `\gdef` captures raw replacement tokens and
+`\xdef` uses the same bounded expansion as `\edef`. Assignment scope comes from
+the resolved profile, including when copied by `\let`. This vocabulary describes the
 current primitive forms, not a schema for arbitrary definition factories.
 
 The scanner implements the parameter/body collection rules from TeX82's
@@ -284,7 +285,11 @@ The scanner reads in `STORED_DEFINITION` mode and returns a capture without
 executing body commands or publishing a definition. Expanded definitions resolve
 body meanings through the supplied expansion consumer. Only the definition
 operation installs a successful capture. Context scope journals restore prior
-meanings without copying every stored definition at each group. Active characters
+meanings without copying every stored definition at each group. A global write
+cancels older restoration entries for its target in all open groups; a later
+local write saves the global value normally. Failed definitions leave journals
+untouched. Context checkpoints copy the journals for speculative rollback.
+Active characters
 and same-spelled control symbols have separate keys. Failed captures leave prior
 meanings intact and preserve the declaration's source as boundary residue.
 
@@ -298,7 +303,9 @@ Otherwise preparation captures the invocation and records the need for later
 interpretation. It does not establish that the invocation is reading-neutral.
 This is lexical capture and scoped
 shadowing, not complete TeX meaning validation: prefix/outer/protected semantics,
-other declaration factories, global assignments and broader expansion remain future work.
+other declaration factories, general assignment prefixes, global character-table
+assignments and broader expansion remain future work. `\globaldefs` remains an
+explicit boundary; its value is not guessed when executing definitions.
 
 The temporary `expansion_control` family currently selects only
 `grammar: {handler: noexpand}`. Its Python operation reads one raw token and

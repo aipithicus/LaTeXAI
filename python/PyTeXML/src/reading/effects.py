@@ -100,7 +100,8 @@ def definition_summary(definition, context, knowledge, *, active=(), forbidden=N
                     captured = DefinitionScanner(cursor, context).read(token.span.start, profile)
                     if captured.target.kind != TokenKind.CONTROL_SEQUENCE:
                         return EffectSummary.unknown("Active-character definition needs further resolution")
-                    effect = EffectSummary(meanings=NameSet((captured.target.value,)))
+                    effect = EffectSummary(meanings=NameSet((captured.target.value,)),
+                                           scope=profile.state_management.scope)
                 elif profile.family == "parameter_assignment":
                     AssignmentScanner(cursor, context).integer_parameter(token.span, profile)
                     effect = EffectSummary(registers=(profile.name,))

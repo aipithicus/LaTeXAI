@@ -298,8 +298,8 @@ class StoredDefinitionTests(unittest.TestCase):
         self.assertEqual(self.reader.source_slice(definition.span), r"\declare\x{body}")
         self.assertIs(self.context.lookup_definition("x"), definition)
 
-    def test_global_prefixed_and_other_wrapper_forms_remain_boundaries(self):
-        for command in ("gdef", "xdef", "global", "long", "outer", "protected", "providecommand", "DeclareRobustCommand"):
+    def test_prefixed_and_other_wrapper_forms_remain_boundaries(self):
+        for command in ("global", "long", "outer", "protected", "providecommand", "DeclareRobustCommand"):
             with self.subTest(command=command):
                 source = "\\" + command + r"\x{\makeatletter}"
                 self.setup_reader(source)

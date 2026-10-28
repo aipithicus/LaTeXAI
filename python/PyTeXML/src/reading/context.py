@@ -39,7 +39,7 @@ class _ScopeSnapshot:
 
 
 class ReaderContext:
-    """Scoped reading state; source dispatch and global assignments live above it.
+    """Scoped reading state and meaning writes; source dispatch lives above it.
 
     Literal callers establish a lexical_scope(), enter the resolved profile, and
     restore it on exit. A live TexReader can share catcodes; the caller must also
@@ -232,17 +232,27 @@ class ReaderContext:
         return changed
 
     def record_meaning(self, name: str, meaning: LocalMeaning,
-                       kind: TokenKind = TokenKind.CONTROL_SEQUENCE) -> None:
+                       kind: TokenKind = TokenKind.CONTROL_SEQUENCE, *, global_: bool = False) -> None:
+        """Install a meaning, cancelling older restorations for a global write.
+
+        This is equivalent to retaining a level-one meaning during TeX's unsave:
+        no enclosing journal may restore a value predating this write. A later
+        local write saves this global value normally. Other names and lexical
+        state keep their existing restoration entries.
+        """
         if self.mode != ExecutionMode.ACTIVE_EXECUTION:
             raise ValueError("Meanings can only be installed in active execution")
         key = (kind, name)
-        if self._meaning_scopes:
+        if global_:
+            for saved in self._meaning_scopes:
+                saved.pop(key, None)
+        elif self._meaning_scopes:
             self._meaning_scopes[-1].setdefault(key, self._meanings.get(key))
         self._meanings[key] = meaning
 
-    def record_definition(self, definition: StoredDefinition) -> None:
-        """Publish a completed local definition, called by active execution routing."""
-        self.record_meaning(definition.target.value, definition, definition.target.kind)
+    def record_definition(self, definition: StoredDefinition, *, global_: bool = False) -> None:
+        """Publish a completed definition with the operation's assignment scope."""
+        self.record_meaning(definition.target.value, definition, definition.target.kind, global_=global_)
 
     def invalidate_meanings(self, names, span) -> None:
         """Observed declarations are not installed; neither may old meanings win.

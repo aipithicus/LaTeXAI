@@ -61,3 +61,25 @@ enabled, and `no_expand` in
 In particular, `scan_toks` expands the token following a parameter marker when
 collecting an expanded definition. Unsupported continuations and expansion
 operations remain explicit boundaries rather than approximations of TeX recovery.
+
+## Global definitions and restoration
+
+`global-definitions.tex` and `global-definitions.expected.json` record Tectonic
+0.16.9+20260504's `PYTEXML` observations on 2026-10-28 (local date).
+The JSON is extracted from the independent compiler log, not PyTeXML output.
+Reproduce with the cached, untrusted command above; the initial complete log is
+retained at the repository's `temp/pytexml-global-definitions-oracle`.
+Compilation succeeded with the same unrelated Fontconfig warning.
+
+The observations cover a global write beneath multiple local writes, local
+assignments following it, repeated global definitions, `\xdef` reading the old
+target, copied primitive meanings, active-character identity, and T13/T14 frozen
+categories surviving lexical restoration. `test_global_definitions.py` compares
+the resulting replacements and categories with those observations. Failed
+definitions and speculative context rollback are separate Python tests.
+
+The underlying TeX algorithms are `geq_define` and `unsave` in
+[tex.web](https://github.com/TeX-Live/texlive-source/blob/trunk/texk/web2c/tex.web).
+The journal implementation removes superseded restoration entries eagerly;
+TeX retains the global level when it later processes those entries. Neither
+mechanism restores a value that predates a successful global write.

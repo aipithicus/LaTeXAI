@@ -49,7 +49,7 @@ def assign_meaning(host, opening, profile):
 def store_definition(host, opening, profile):
     """Scan target/signature raw; collect a raw or expanded replacement.
 
-    Check known target conflicts, identify the capture, then install it locally.
+    Check known target conflicts, identify the capture, then install at its scope.
     Return that same capture; never execute replacement commands or prove unknown names absent.
     """
     expand = None
@@ -63,7 +63,7 @@ def store_definition(host, opening, profile):
             raise ReadingIssue("definition_conflict", f"{definition.target.value!r} already has an established meaning")
         definition = replace(definition, target_check="known_present" if known else "unverified")
     definition = host.identify(definition)
-    host.context.record_definition(definition)
+    host.context.record_definition(definition, global_=profile.state_management.scope == "global")
     return definition
 
 

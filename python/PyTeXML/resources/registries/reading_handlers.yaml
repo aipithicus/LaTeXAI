@@ -81,8 +81,8 @@ handlers:
     description: Capture a literal boolean target; the dispatcher installs scoped conditional and setter meanings
   primitive_definition:
     status: scanner
-    description: Capture local primitive definitions; the engine supplies bounded
-      expansion for edef replacements; global forms remain boundaries
+    description: Capture primitive definitions at local or global scope; the engine
+      supplies bounded expansion for edef/xdef and publishes through the meaning journal
   environment_name:
     status: scanner
     description: Read a literal braced environment name without expansion

@@ -1,0 +1,54 @@
+% Independent Tectonic observations for global definitions and group restoration.
+\documentclass{article}
+\def\a{OLD}
+\begingroup
+  \def\a{OUTER}
+  \begingroup
+    \def\a{INNER}\gdef\a{GLOBAL}\def\a{LOCAL}
+    \xdef\inside{\a}
+  \endgroup
+  \xdef\middle{\a}
+\endgroup
+\edef\after{\a}
+\typeout{PYTEXML inside=\meaning\inside}
+\typeout{PYTEXML middle=\meaning\middle}
+\typeout{PYTEXML after=\meaning\after}
+\def\b{OTHER}
+{\def\b{LOCAL}\gdef\a{G}\let\a\b}
+\typeout{PYTEXML a=\meaning\a}
+\typeout{PYTEXML b=\meaning\b}
+{\gdef\fresh{FIRST}{\gdef\fresh{LAST}\def\fresh{LOCAL}}\def\fresh{OUTER}}
+\typeout{PYTEXML fresh=\meaning\fresh}
+\def\old{OLD}
+{\def\old{LOCAL}\xdef\old{\old NEW}}
+\typeout{PYTEXML expanded=\meaning\old}
+\let\savedglobal\gdef
+\def\gdef{SHADOW}
+{\savedglobal\copied{COPIED}}
+\typeout{PYTEXML copied=\meaning\copied}
+\let\gdef\savedglobal
+\begingroup
+  \catcode`\_=12 \gdef\under{_}
+\endgroup
+\typeout{PYTEXML under=\meaning\under}
+\typeout{PYTEXML underscore_after=\the\catcode`\_}
+\ifcat\under?\typeout{PYTEXML underscore_token=other}\else\typeout{PYTEXML underscore_token=wrong}\fi
+\begingroup
+  \catcode`\(=1 \catcode`\)=2 \catcode`\{=12 \catcode`\}=12
+  \gdef\leftchar({)\gdef\rightchar(})
+\endgroup
+\typeout{PYTEXML left=\meaning\leftchar}
+\typeout{PYTEXML right=\meaning\rightchar}
+\ifcat\leftchar?\typeout{PYTEXML left_token=other}\else\typeout{PYTEXML left_token=wrong}\fi
+\ifcat\rightchar?\typeout{PYTEXML right_token=other}\else\typeout{PYTEXML right_token=wrong}\fi
+\typeout{PYTEXML brace_after=\the\catcode`\{}
+\begingroup
+  \catcode`\!=13 \gdef!{ACTIVE}
+\endgroup
+\def\!{SYMBOL}
+{\catcode`\!=13 \typeout{PYTEXML active=\meaning!}}
+\typeout{PYTEXML symbol=\meaning\!}
+\typeout{PYTEXML exclamation_after=\the\catcode`\!}
+\begin{document}
+Global definition witness.
+\end{document}
