@@ -9,6 +9,7 @@ expansion and XML interpretation belong to later development.
 | Location | Responsibility |
 | --- | --- |
 | [`src/reading/`](src/reading) | Reusable N/M/S reader and cursor, structural dispatcher, literal/definition scanners, source intervals and coverage queries, regex catcode rules, mouth profiles, and scoped document state |
+| [`src/engine/`](src/engine) | Fixed Python operation catalog and definition/meaning/scope handlers, used by the reader over its existing state and scanners |
 | [`src/bindings/`](src/bindings) | Reusable binding catalog and document-local resolution/package activation |
 | [`src/prepare/`](src/prepare) | Cached source traversal, dependency resolution, emission, bibliography, assets, provenance, and publication |
 | [`src/validation/`](src/validation) | Optional paired rendering and relocation qualification in disposable workspaces; independent of preparation |
@@ -17,6 +18,23 @@ expansion and XML interpretation belong to later development.
 | [`src/bibtex.py`](src/bibtex.py) | Reusable BibTeX parser and data model |
 | [`src/assets.py`](src/assets.py) | Image inspection and individual asset conversion |
 | [`src/yaml_io.py`](src/yaml_io.py) | Strict YAML mapping loading, with schema validation left to each consumer |
+
+The first language-core increment extracts existing operations from the structural
+dispatcher into [family modules](src/engine/primitives), assembled explicitly by
+[engine/catalog.py](src/engine/catalog.py). The catalog is immutable and rejects
+duplicate identities. It is separate from the document's mutable meaning table:
+author definitions and `\let` assignments change the existing `ReaderContext`,
+and command resolution still observes local shadows and aliases before dispatch.
+There is no second state store or independent evaluator in this increment.
+
+[reading/operations.py](src/reading/operations.py) maps the prototype binding
+profiles to these operations. Definition capture, meaning assignment, boolean and
+environment declarations, grouping, and established lexical profiles use that
+route. Scanners still own operands; deferred regions scan without installing
+definitions. The dispatcher owns input and control frames, and state owns scope
+restoration. Remaining operations move family by family as their shared machinery
+lands. Expansion, internal values, and global assignments are not implemented by
+this extraction; preparation's existing limits and publication rules still apply.
 
 Within preparation, [session.py](src/prepare/session.py) owns one ordered
 multi-file traversal through the structural dispatcher. [Discovery](src/prepare/discovery.py)

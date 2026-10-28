@@ -14,6 +14,7 @@ from src.bindings.resolver import BindingResolver
 from src.reading.context import ExecutionMode
 from src.reading.contracts import LiteralRegion, ReadingBoundary, ReadingIssue, SkippedRegion, StoredDefinition
 from src.reading.coverage import ReadingCoverage
+from src.reading.definition_scanner import DefinitionScanner
 from src.reading.dispatcher import StructuralDispatcher
 from src.reading.skipped_scanner import SkippedBranchScanner
 from src.reading.tex_reader import CatCode, ReadEvent, TexReader, TokenKind
@@ -111,7 +112,7 @@ class ConditionalTests(unittest.TestCase):
                   r"$&#~\fi @")
         self.setup_reader(source)
         with patch.object(self.dispatcher.literals, "read", side_effect=AssertionError("Literal executed")), \
-             patch.object(self.dispatcher.definitions, "read", side_effect=AssertionError("Definition executed")), \
+             patch.object(DefinitionScanner, "read", side_effect=AssertionError("Definition scanned")), \
              patch.object(self.resolver, "resolve_command", wraps=self.resolver.resolve_command) as resolve:
             items = self.scan()
         self.assertEqual([call.args[0] for call in resolve.call_args_list], ["iffalse"])

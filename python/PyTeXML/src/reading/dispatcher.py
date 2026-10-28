@@ -1,6 +1,6 @@
 """Structural execution routing over one source-preserving reader cursor.
 
-Execute only resolved local reading effects in an established active context.
+Execute resolved local operations through the shared engine catalog.
 Literal, stored-definition and skipped-branch scanning is delegated to dedicated
 scanners. Constant and established boolean conditionals execute here. Package discovery, expansion
 and master.tex assembly remain outside this slice. Unsupported behavior leaves
@@ -12,6 +12,7 @@ from dataclasses import dataclass, replace
 from collections import deque
 from typing import Iterator
 
+from ..engine.primitives.definitions import boolean_value
 from .context import ExecutionMode, ReaderContext
 from .contracts import (
     ConditionalRule, EffectiveReadingProfile, LiteralRegion, ReadingBoundary, ReadingIssue,
@@ -19,12 +20,11 @@ from .contracts import (
     DeferredRegion, UnresolvedBindingResult, UnresolvedReason, BooleanMeaning, CommandDefinition,
     EnvironmentDefinition, UncertainMeaning, BoundMeaning, ScannedArgument,
 )
-from .boolean_scanner import declaration as boolean_declaration
 from .argument_scanner import ArgumentScanner, key_values
 from .configuration import entries, configured_options
 from .assignment_scanner import AssignmentScanner
 from .effects import declared_effects, command_summary, definition_summary, observed_write_names
-from .environment_registry import declarations, resolve_environment
+from .environment_registry import resolve_environment
 from .environment_scanner import EnvironmentScanner
 from .definition_scanner import DefinitionScanner
 from .deferred_scanner import DeferredScanner
@@ -38,6 +38,7 @@ from .loads import SourceLoadState
 from .spans import SourceSpan
 from .units import UnitRegistry
 from .options import OptionBody, OptionScope, option_names
+from .operations import EFFECT_OPERATIONS, FAMILY_OPERATIONS
 from .token_cursor import TokenCursor
 from .tex_reader import CatCode, EventKind, InvalidCharacterError, ReadEvent, TexReader, TokenKind
 
@@ -96,7 +97,6 @@ class StructuralDispatcher:
                  *, source_commands: bool = False, preparation: bool = False, units: UnitRegistry | None = None,
                  options: OptionScope | None = None, loads: SourceLoadState | None = None):
         self.literals = LiteralScanner(reader, context, knowledge)
-        self.definitions = DefinitionScanner(reader, context)
         self.environments = EnvironmentScanner(reader, context)
         self.skipped = SkippedBranchScanner(reader, context, knowledge)
         self.reader, self.context, self.knowledge = reader, context, knowledge
@@ -173,7 +173,6 @@ class StructuralDispatcher:
         self.reader = reader
         reader.endline_char = self.context.endlinechar
         self.literals = LiteralScanner(reader, self.context, self.knowledge)
-        self.definitions = DefinitionScanner(reader, self.context)
         self.environments = EnvironmentScanner(reader, self.context)
         self.skipped = SkippedBranchScanner(reader, self.context, self.knowledge)
 
@@ -380,7 +379,7 @@ class StructuralDispatcher:
                 if meaning.uncertain is not None:
                     raise ReadingIssue("uncertain_boolean", f"Meaning of {token.value!r} may have changed in unexecuted source at {meaning.uncertain}", causes=(meaning.uncertain,))
                 if meaning.target is not None:
-                    truth = self._boolean_value(meaning.source)
+                    truth = boolean_value(context, self.knowledge, meaning.source)
                     context.record_meaning(meaning.target, BooleanMeaning(event.span, truth))
                 else:
                     self._conditional(context.conditional_rule(token.value, self.knowledge), event.span,
@@ -406,8 +405,7 @@ class StructuralDispatcher:
                                    else "pop_lexical_scope")
                 self._require(profile.action == expected_action, "unsupported_operation",
                               "Group binding does not match this token's grouping category")
-                self._effect(profile, event.span)
-                return event
+                return EFFECT_OPERATIONS[profile.action].execute(self, event, profile)
             if token.kind != TokenKind.CONTROL_SEQUENCE:
                 return event
             resolved = meaning.profile if isinstance(meaning, BoundMeaning) else self.knowledge.resolve_command(token.value)
@@ -424,69 +422,20 @@ class StructuralDispatcher:
                     # An inactive literal binding can require a different mouth.
                     # Do not treat its body as ordinary executed TeX.
             profile = require_resolved(resolved)
+            operation = FAMILY_OPERATIONS.get(profile.family)
+            if operation is not None:
+                return operation.execute(self, event, profile)
             if profile.family == "assignment_prefix":
                 raise ReadingIssue("assignment_prefix", "Prefixed assignments require explicit scope and prefix resolution")
             if profile.family == "parameter_assignment":
                 return AssignmentScanner(reader, context).integer_parameter(event.span, profile)
-            if profile.family == "meaning_assignment":
-                command = AssignmentScanner(reader, context).let(event.span, profile)
-                target, donor = (a.tokens[0] for a in command.arguments)
-                copied = context.lookup_meaning(donor.value, donor.kind)
-                if copied is None:
-                    if donor.kind == TokenKind.CHARACTER:
-                        copied = BoundMeaning(command.span, token=donor)
-                    else:
-                        donor_profile = self.knowledge.resolve_command(donor.value)
-                        copied = (BoundMeaning(command.span, profile=donor_profile)
-                                  if isinstance(donor_profile, EffectiveReadingProfile) else UncertainMeaning(command.span))
-                        if (isinstance(donor_profile, EffectiveReadingProfile) and donor_profile.conditional is not None
-                                and donor_profile.conditional.evaluation in {"always_true", "always_false"}):
-                            copied = BooleanMeaning(command.span, donor_profile.conditional.evaluation == "always_true")
-                context.record_meaning(target.value, copied, target.kind)
-                if isinstance(copied, UncertainMeaning):
-                    self.units.uncertainty_cause(command.span, "assignment_donor", "The donor's current meaning is not established")
-                return replace(command, metadata={"donor_resolved": not isinstance(copied, UncertainMeaning),
-                    "trailing_control_word": donor.kind == TokenKind.CONTROL_SEQUENCE and bool(donor.value)
-                        and context.catcodes[donor.value[-1]] == CatCode.LETTER})
             if profile.family == "configuration_command":
                 return self._configuration(event.span, profile)
-            if profile.family == "collected_environment_definition":
-                definition = self.environments.definition(event.span.start, profile)
-                known = (context.lookup_environment(definition.name) is not None
-                         or context.lookup_meaning(definition.name) is not None
-                         or isinstance(self.knowledge.resolve_environment(definition.name), EffectiveReadingProfile)
-                         or isinstance(self.knowledge.resolve_command(definition.name), EffectiveReadingProfile))
-                end_known = (context.lookup_meaning("end" + definition.name) is not None
-                             or isinstance(self.knowledge.resolve_command("end" + definition.name), EffectiveReadingProfile))
-                self._require(not (known or end_known) or definition.target_requirement != "absent",
-                              "definition_conflict", f"{definition.name!r} already has an established meaning")
-                definition = self.identify(replace(definition, target_check="known_present" if known else "unverified"))
-                context.record_collected_environment(definition)
-                return definition
             if profile.family == "option_control":
                 self._require(not isinstance(reader, TokenCursor), "option_body",
                               "Nested option declarations/processing require further resolution")
                 command = ArgumentScanner(reader, context).read(event.span, profile)
                 return self._options(command)
-            if profile.family == "conditional_factory":
-                self._require(profile.grammar.get("handler") == "boolean_declaration"
-                              and profile.state_management is not None
-                              and profile.state_management.scope == "local",
-                              "unsupported_boolean_declaration", "Boolean declaration needs a local recipe")
-                command = boolean_declaration(reader, context, event.span, profile)
-                # Resolve before publishing any of the generated meanings.
-                truth = self._boolean_value(profile.grammar["initial"])
-                target = command.metadata["target"]
-                stem = target[len(profile.grammar["target_prefix"]):]
-                context.record_meaning(target, BooleanMeaning(command.span, truth))
-                for suffix, source in profile.grammar["setters"].items():
-                    context.record_meaning(stem + suffix, BooleanMeaning(command.span, target=target, source=source))
-                return command
-            if profile.family == "environment_factory":
-                command = ArgumentScanner(reader, context).read(event.span, profile)
-                for declaration in declarations(command, self.knowledge):
-                    context.record_environment(declaration)
-                return command
             if profile.family == "catcode_assignment":
                 self._require(profile.grammar.get("handler") == "literal_catcode_assignment"
                               and profile.state_management.scope == "local",
@@ -562,23 +511,10 @@ class StructuralDispatcher:
                     return self._capture_conditional(token, profile.conditional)
                 self._conditional(profile.conditional, event.span)
                 return event
-            if profile.family == "stored_definition":
-                definition = self.definitions.read(event.span.start, profile)
-                if isinstance(definition, CommandDefinition):
-                    known = (context.lookup_meaning(definition.target.value) is not None
-                             or isinstance(self.knowledge.resolve_command(definition.target.value), EffectiveReadingProfile))
-                    self._require(not known or definition.target_requirement != "absent",
-                                  "definition_conflict", f"{definition.target.value!r} already has an established meaning")
-                    # An incomplete binding inventory cannot prove undefinedness.
-                    # Registration records a source declaration, not validation of
-                    # its precondition or execution of its replacement text.
-                    definition = replace(definition, target_check="known_present" if known else "unverified")
-                definition = self.identify(definition)
-                context.record_definition(definition)
-                return definition
             if profile.action is not None:
-                self._effect(profile, event.span)
-                return event
+                operation = EFFECT_OPERATIONS.get(profile.action)
+                self._require(operation is not None, "unsupported_operation", f"No execution route for {profile.action!r}")
+                return operation.execute(self, event, profile)
             if profile.family in {"grouping", "catcode_mutator"}:
                 raise ReadingIssue("unsupported_operation", "Reading effect has no executable action")
             self._require(not isinstance(reader, TokenCursor), "option_body",
@@ -728,13 +664,6 @@ class StructuralDispatcher:
         return replace(command, metadata={**command.metadata, "selected_options": [name for name, _ in plan],
                                           "definition_checks": definition_checks})
 
-    def _boolean_value(self, name: str) -> bool:
-        rule = self.context.conditional_rule(name.removeprefix("\\"), self.knowledge)
-        self._require(rule is not None and rule.role == "opener"
-                      and rule.evaluation in {"always_true", "always_false"},
-                      "unsupported_boolean_meaning", f"{name!r} has no established boolean value")
-        return rule.evaluation == "always_true"
-
     def _deferred(self, region: DeferredRegion) -> DeferredRegion:
         # Bare arithmetic/text math cannot assign meanings. Other unexecuted
         # expressions may redefine a boolean or its setter, even globally.
@@ -826,7 +755,7 @@ class StructuralDispatcher:
                 raise ReadingIssue(profile.reason.value, profile.detail)
             return DeferredScanner(self.reader, self.context).command(token, profile.reason.value, profile.detail)
         if profile.family == "stored_definition":
-            return self.definitions.read(token.span.start, profile)  # capture, never install
+            return DefinitionScanner(self.reader, self.context).read(token.span.start, profile)  # capture, never install
         if profile.family == "meaning_assignment":
             return AssignmentScanner(self.reader, self.context).let(token.span, profile)
         if profile.family == "collected_environment_definition":
@@ -962,39 +891,17 @@ class StructuralDispatcher:
         self._pending_skip = scanned
         return SkippedRegion(scanned.span, frame.opening, "else" if frame.in_alternative else "then")
 
-    def _effect(self, profile: EffectiveReadingProfile, span: SourceSpan) -> None:
-        """Route generic action identities; command spellings remain in bindings."""
-        self._require(not profile.grammar and not profile.interpolations
-                      and not profile.active_options and profile.terminator is None,
-                      "unsupported_reading_effect", "Reading effect requires additional scanning or interpretation")
-        state = profile.state_management
-        self._require(state is None or state.scope == "local", "unsupported_reading_effect",
-                      "Only local reading effects are supported")
-        if profile.action in {"push_lexical_scope", "pop_lexical_scope"}:
-            self._require(not profile.catcode_overrides and not profile.catcode_layers
-                          and not profile.reader_parameters,
-                          "unsupported_reading_effect", "Combined grouping and assignments are unsupported")
-            kind = state.group_kind if state else None
-            self._require(kind in {"simple", "semi_simple"}, "unsupported_reading_effect",
-                          "Grouping requires a supported group kind")
-            if profile.action == "push_lexical_scope":
-                self.context.apply_profile(profile)
-                self._groups.append(_GroupFrame(kind, span))
-            else:
-                self._require(bool(self._groups), "unmatched_group", "No source group is available to close")
-                self._require(self._groups[-1].kind == kind, "mismatched_group",
-                              f"Cannot close {self._groups[-1].kind} group with {kind} closer")
-                self.context.apply_profile(profile)
-                self._groups.pop()
-        else:
-            self._require(profile.action in {"assign_catcode", "expl3_lexical_enter", "expl3_lexical_exit"},
-                          "unsupported_operation", f"No execution route for {profile.action!r}")
-            self._require(not (set(profile.reader_parameters) - {"endlinechar"}),
-                          "unsupported_reading_effect", "Unknown reader parameter")
-            self.context.apply_profile(profile)
-        # Updating the configured parameter does not change the already loaded
-        # physical line or discard pending ^^ conversions. Never reset N/M/S.
-        self.reader.endline_char = self.context.endlinechar
+    def begin_group(self, kind: str, span: SourceSpan) -> None:
+        """Own the execution frame; the shared state owns scope restoration."""
+        self.context.push_scope()
+        self._groups.append(_GroupFrame(kind, span))
+
+    def end_group(self, kind: str) -> None:
+        self._require(bool(self._groups), "unmatched_group", "No source group is available to close")
+        self._require(self._groups[-1].kind == kind, "mismatched_group",
+                      f"Cannot close {self._groups[-1].kind} group with {kind} closer")
+        self.context.pop_scope()
+        self._groups.pop()
 
     def _environment_name(self) -> str:
         """Read a non-expanding argument; braces here are not execution groups."""
