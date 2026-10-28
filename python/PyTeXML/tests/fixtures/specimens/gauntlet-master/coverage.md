@@ -12,6 +12,110 @@ in the private issues workspace) to its place in this fixture.
 - **Roots.** A is `master.tex` (natbib), B is `master-biblatex.tex`, C is
   `master-plain.tex` and D is `master-arxiv.tex`.
 
+## Expected observations
+
+Selected cases come with expected observations: what a correct reading of the
+fixture shows. They are progress criteria for preparation runs. A case passes when the
+prepared master and manifest agree with its observation, not merely when the run
+reports no error at that place.
+
+The TeX side of each observation was confirmed on 2026-10-27. A copy of the root was
+compiled with Tectonic (XeTeX), and the `\typeout` probes and typeset text were
+checked. Everything is in root A unless the entry names another root.
+
+### Nested effects
+
+- **N13** `gmstyle.cfg:3`, read from `gmtools.sty:5` and then again from `gmstyle.sty:5`:
+  - **First read.** `\ifdefined\gm@cfgseen` is false, so lines 4–5 run.
+  - **Second read.** The test is true. `\expandafter` closes the conditional
+    before `\endinput` runs, so input ends after line 3.
+  - **After both.** The conditional level is back to 0, `gmstyle.sty` continues
+    at line 6, and `\gm@cfgversion` is `1` where `sections/tail.tex:4` uses it.
+    No `\fi` is unmatched.
+- **N15** `body/macros.tex:47–55`:
+  - **`\let` targets.** `\gmnothing` is `\relax` and `\gmgone` is undefined.
+  - **The chain.** It copies meanings, so `\gmtop` is `\textbf` and `\gmtop{bold}`
+    at `sections/nesting.tex:5` is bold.
+  - **Save-and-wrap.** `\gmoldparagraph` keeps the earlier `\paragraph`, which is
+    distinct from the new one. `\paragraph{Wrapped}` at `sections/nesting.tex:7` runs the
+    hook once, then the original sectioning, with no recursion.
+- **N4, B6, B7** `master.tex:15–17`, `gmvenue.cls:22`, `body/paper.tex:72`: the wrapped
+  `\bibliographystyle` discards its argument. `abbrvnat` is ignored, and the class's
+  `plainnat` is the style written (`\bibstyle{plainnat}`).
+- **N5** `master.tex:19–23`:
+  - **When it fires.** The hooks are registered under the base name `math` and fire
+    around `\input{sections/math}` at `body/paper.tex:62`. `gmtools: entering math`
+    comes before the section and `left math` after it.
+  - **Under flattening.** A master that inlines `sections/math.tex` no longer has
+    that input, so the before and after code must still run exactly around the
+    inlined section.
+- **N6** `body/paper.tex:68`: the dead `\input` names a missing file. It is never
+  opened and should not become a missing-file requirement.
+- **N7** `body/paper.tex:69`: `\gmarxiv` is defined at `master.tex:7`, so `\ifdefined`
+  is true and `sections/extras.tex` is read.
+- **N20** `sections/figures.tex:19`: `drawing.pdf_tex` resolves to
+  `figures/drawing.pdf_tex` through `\input@path`.
+
+### Classes, packages and branches
+
+- **D10** `gmvenue.cls:5–13`:
+  - **Flags.** `\ExecuteOptions{final}` sets `\ifgm@final`, and `\ifgm@numeric`
+    stays false.
+  - **Unknown options.** The class passes `11pt` to article through
+    `\DeclareOption*`, so the body size is 10.95pt.
+- **P9** `gmstyle.sty:6`: the class has already loaded natbib with `authoryear,round`
+  (`gmvenue.cls:21`). `\@ifpackageloaded` is true, the `[numbers]` load doesn't happen,
+  and natbib's options stay `authoryear,round`.
+- **P10** `gmstyle.sty:7–10`: after the `\edef`, `\gm@load` is
+  `\RequirePackage{xspace}`, so xspace is loaded.
+- **P11** `master.tex:14`, `body/paper.tex:4`: `\ver@gmfake.sty` is defined, so
+  `\usepackage{gmfake}` reads no file. No binding or file requirement should name gmfake.
+- **D2** `body/paper.tex:5–11`, `sections/branches.tex:3`:
+  - **Reading.** `\ifPDFTeX`, `\ifXeTeX` and `\ifLuaTeX` are conditionals whose value
+    depends on the compiling engine. Their `\else` and `\fi` must be read as theirs,
+    and the dependence on the engine stays visible.
+  - **Under Tectonic.** The fontspec branch runs, and `sections/branches.tex` prints
+    "Engine: XeTeX."
+
+### Catcodes
+
+- **T3** `body/paper.tex:70` → `sections/tail.tex`: `@` is still a letter (11) when
+  `tail.tex` starts. Its `\gm@…` names are single control sequences.
+- **T7** `sections/catcodes.tex:15`: inside the group, the assignment applies to the
+  rest of the line, so `x^y` prints a literal `^`. After the `}`, `^` is superscript
+  again in `$x^y$`.
+- **T10** `gmvenue.cls:44–49`, `sections/catcodes.tex:6`: `\gmcolumncase` runs
+  `\makeatletter` before its arguments are read. `\gm@one` is one control sequence
+  and gives "one-column text", and `@` is other (12) again afterwards.
+- **T13** `gmstyle.sty:12–16`:
+  - **The definition.** The `\gdef` survives its group.
+  - **The catcode.** The assignment is restored: `_` is 8 again after the group.
+  - **The captured token.** The underscore token keeps its definition-time catcode 12,
+    so `\gmunderscore` at `sections/catcodes.tex:20` prints `_` rather than starting
+    a subscript.
+- **T14** `gmstyle.sty:18–23`, `sections/catcodes.tex:13`: `\gmlbrace` and `\gmrbrace`
+  each hold one brace of catcode 12. `\gmlbrace x\gmrbrace` prints `{x}` and opens no
+  group. After the group `{` is 1 and `(` is 12 again.
+- **T15** `gmstyle.sty:25–31`, `sections/catcodes.tex:8–9`:
+  - **Inside the groups.** `\gmdqon` makes `"` active, giving "Müller, Schöne" and "König".
+  - **Outside.** `"` is other (12) outside the groups.
+  - **After `\gmdqoff`.** `"` is other again in the rest of the second group,
+    because a catcode applies to characters not yet read.
+- **T16** `gmstyle.sty:33–37`, `sections/catcodes.tex:11`: the active `|`, defined at
+  package level through `\lccode` and `\lowercase`, means `\ensuremath{\vert}`.
+  `\gmbaron` makes `|` active only inside its group.
+- **T18** `gmstyle.sty:43–48`: `\gmjoined` is `joinedacross lines`. Under
+  `\endlinechar=-1` the line end adds no space, and the next line's indentation is skipped.
+- **T19** `gmstyle.sty:50–52`: `\gmifletter{a}` gives "letter" and `\gmifletter{1}`
+  gives "not a letter". `\gmplainties{no~tie}` gives a plain space.
+
+### Bibliography
+
+- **B9** `master-biblatex.tex:5–6` (root B): the backend is bibtex, from `backend=bibtex`,
+  and the data source is `refs.bib`, from `\addbibresource`.
+- **B11** `master-arxiv.tex:10` (root D): the shipped `master-arxiv.bbl` supplies
+  all 8 entries. The missing `arxiv-stripped.bib` is not an error for preparation.
+
 ## Classes and packages
 
 | Tag | Case | Gauntlet | Fixture |
