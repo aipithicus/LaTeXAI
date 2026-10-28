@@ -1,0 +1,26 @@
+schema: pytexml-engine-profile/1
+identity: {name: etex}
+description: e-TeX language baseline with modern shared expansion support.
+base: etex
+extensions: [expanded]
+absent: [pdfoutput, XeTeXversion, luatexversion, directlua]
+preparation:
+  capture_integer_setup: [pdfoutput]
+oracle:
+  language: etex
+  shared_extensions: pdftex
+  rendering: etex
+  output: dvi
+  qualification: capability_scoped
+  note: >-
+    Historical e-TeX does not implement expanded or the full modern expl3
+    utility set. Validate the base with e-TeX, and shared extensions separately
+    with a modern engine. Do not hide or redefine engine primitives to force a
+    reference engine to impersonate this profile. A renderer must report its
+    actual primitive exposure before a profile-level comparison is qualified.
+targets:
+  expl3: partial
+  note: >-
+    expanded is included. The remaining utility primitives required by modern
+    expl3 are future capabilities; this profile does not claim full expl3
+    execution or complete e-TeX emulation.

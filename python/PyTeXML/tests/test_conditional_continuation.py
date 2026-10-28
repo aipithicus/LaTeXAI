@@ -53,7 +53,7 @@ class ConditionalCaptureTests(unittest.TestCase):
         self.assertFalse(any(isinstance(i, ReadingBoundary) for i in items))
 
     def test_two_operand_header_can_itself_name_a_conditional(self):
-        items = self.scan(r"\ifx\fi\else A\fi\input{tail}")
+        items = self.scan(r"\ifx\fi\other A\fi\input{tail}")
         region = next(i for i in items if isinstance(i, ConditionalRegion))
         self.assertEqual(len(region.markers), 1)
         self.assertFalse(any(isinstance(i, ReadingBoundary) for i in items))
@@ -111,12 +111,8 @@ class ConditionalCaptureTests(unittest.TestCase):
         self.assertFalse(any(isinstance(i, ReadingBoundary) for i in items))
         self.assertEqual(self.scan(r"\def\x{OLD}\if0\blind\def\x{NEW}\fi\x")[-1].reason, "uncertain_meaning")
 
-    def test_yaml_selects_capture_recipe_without_command_name_switches(self):
-        catalog = deepcopy(BindingCatalog())
-        rules = catalog.engine_bindings["core_latex"]["reading"]["conditionals"]
-        rule = next(r for r in rules if r["name"] == r"\ifx")
-        rule["name"] = r"\compare"
-        items = self.scan(r"\compare\a\b A\fi\input{tail}", catalog=reload_catalog(self, catalog))
+    def test_native_alias_selects_capture_recipe_without_command_name_switches(self):
+        items = self.scan(r"\let\compare\ifx\compare\a\b A\fi\input{tail}")
         self.assertTrue(any(isinstance(i, ConditionalRegion) for i in items))
 
     def test_unsupported_operand_grammar_is_explicit(self):

@@ -1,0 +1,31 @@
+\documentclass{article}
+\def\PyA{\PyB}\def\PyB{Y}
+\edef\PyResult{\expandafter\noexpand\PyA}
+\def\PyExpected{\PyB}
+\ifx\PyResult\PyExpected\gdef\PyWitnessonce{true}\else\gdef\PyWitnessonce{false}\fi
+\expandafter\def\csname PyConstructed\endcsname{VALUE}
+\def\PyExpected{VALUE}
+\ifx\PyConstructed\PyExpected\gdef\PyWitnesstarget{true}\else\gdef\PyWitnesstarget{false}\fi
+\def\PyA{X}
+\edef\PyResult{A\expanded{{\PyA}B}C}
+\def\PyExpected{A{X}BC}
+\ifx\PyResult\PyExpected\gdef\PyWitnessnested{true}\else\gdef\PyWitnessnested{false}\fi
+\edef\PyResult{\expanded{\noexpand\PyA}}
+\def\PyExpected{X}
+\ifx\PyResult\PyExpected\gdef\PyWitnessreinsert{true}\else\gdef\PyWitnessreinsert{false}\fi
+\expanded{\def\noexpand\PyDefined{RESULT}}
+\def\PyExpected{RESULT}
+\ifx\PyDefined\PyExpected\gdef\PyWitnessexecute{true}\else\gdef\PyWitnessexecute{false}\fi
+{\expandafter\let\csname undefined\endcsname\relax}
+\makeatletter
+\ifx\undefined\@undefined\gdef\PyWitnessscope{true}\else\gdef\PyWitnessscope{false}\fi
+\makeatother
+\typeout{PYTEXML once=\PyWitnessonce}
+\typeout{PYTEXML target=\PyWitnesstarget}
+\typeout{PYTEXML nested=\PyWitnessnested}
+\typeout{PYTEXML reinsert=\PyWitnessreinsert}
+\typeout{PYTEXML execute=\PyWitnessexecute}
+\typeout{PYTEXML scope=\PyWitnessscope}
+\begin{document}
+Independent expansion continuation witness.
+\end{document}

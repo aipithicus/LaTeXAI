@@ -5,7 +5,8 @@ configuration; they are loaded deliberately at bootstrap, then reused in memory.
 
 | Store | Owner/consumer | Authority |
 | --- | --- | --- |
-| [bindings/](bindings/README.md) | Binding catalog and document resolver | Core/package syntax, reading effects, argument grammar, construct classifications, and package knowledge |
+| [engine_profiles/](engine_profiles/README.md) | Native engine bootstrap | Initial primitive environment, explicit absences, preparation-only setup capture, oracle contract |
+| [bindings/](bindings/README.md) | Prototype binding catalog and document resolver | Remaining kernel/package syntax, reading effects, argument grammar, construct classifications, and package knowledge |
 | [profiles/mouth/](profiles/mouth/README.md) | MouthProfiles and the reusable reader | Baseline catcodes, regex character classes, profile inheritance and local reading settings |
 | [registries/reading_handlers.yaml](registries/reading_handlers.yaml) | Binding catalog | Current core reading-action vocabulary and capability status |
 | [policies/prepare.yaml](policies/prepare.yaml) | Preparation policy loader | Role/event actions for preparing `master.tex` |
@@ -16,6 +17,10 @@ There is one package binding identity across stages. The current bindings contai
 reading contracts; future interpretation can extend that ownership without
 creating separate preparation copies of package knowledge. Author-local state
 belongs to document execution and is not a global YAML library.
+
+Engine primitive grammar and behavior now belong to the Python operation catalog.
+The remaining binding library is a prototype, not a commitment to retain this
+ontology when the complete engine can execute more kernel and package code.
 
 ## Naming and references
 

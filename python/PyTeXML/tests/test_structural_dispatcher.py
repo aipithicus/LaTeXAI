@@ -112,14 +112,11 @@ class StructuralDispatcherTests(unittest.TestCase):
             items = self.assert_complete()
         self.assertEqual(self.categories(items, "@"), [CatCode.LETTER])
 
-    def test_command_group_kind_comes_from_the_binding(self):
+    def test_command_group_kind_comes_from_native_meaning(self):
+        from src.engine.primitive import PrimitiveMeaning
         self.setup_reader(r"\open\makeatletter @}@")
-        original = self.resolver.resolve_command
-        profile = replace(original("begingroup"), name=r"\open",
-                          state_management=StateManagementRule(group_kind="simple"))
-        with patch.object(self.resolver, "resolve_command", side_effect=lambda name:
-                          profile if name == "open" else original(name)):
-            items = self.assert_complete()
+        self.context.record_meaning("open", PrimitiveMeaning("scope.begin", "simple"))
+        items = self.assert_complete()
         self.assertEqual(self.categories(items, "@"), [CatCode.LETTER, CatCode.OTHER])
         self.assertEqual(self.context.scope_depth, 0)
 
@@ -137,7 +134,7 @@ class StructuralDispatcherTests(unittest.TestCase):
         self.setup_reader(r"{\makeatletter\begin{verbatim}}\endgroup\makeatother\end{verbatim}@}@")
         with patch.object(self.resolver, "resolve_group", wraps=self.resolver.resolve_group) as lookup:
             items = self.assert_complete()
-        self.assertEqual([call.args[0] for call in lookup.call_args_list], [CatCode.BEGIN_GROUP, CatCode.END_GROUP])
+        self.assertEqual([call.args[0] for call in lookup.call_args_list], [])
         self.assertEqual(self.categories(items, "@"), [CatCode.LETTER, CatCode.OTHER])
         self.assertEqual(self.context.mode, ExecutionMode.ACTIVE_EXECUTION)
         self.assertEqual(self.context.scope_depth, 0)

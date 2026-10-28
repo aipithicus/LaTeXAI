@@ -38,8 +38,9 @@ class DeclaredEffectsTests(unittest.TestCase):
         self.read(r"\makeatletter\def\@textbottom{BEFORE}{\flushbottom}\makeatother")
         self.assertIsNotNone(self.context.lookup_definition("@textbottom"))
         self.read(r"\flushbottom")
-        self.assertIsInstance(self.context.lookup_meaning("@textbottom"), BoundMeaning)
-        self.assertEqual(self.context.lookup_meaning("@textbottom").profile.action, "reading_noop")
+        from src.engine.primitive import PrimitiveMeaning
+        self.assertIsInstance(self.context.lookup_meaning("@textbottom"), PrimitiveMeaning)
+        self.assertEqual(self.context.lookup_meaning("@textbottom").operation, "execution.relax")
 
     def test_shadowing_and_computed_values_do_not_use_summary(self):
         items = self.read(r"\def\sloppy{\catcode`\%=12}\sloppy")

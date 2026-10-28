@@ -76,16 +76,18 @@ class _ImplicitGraphic:
 
 
 class PreparationSession:
-    def __init__(self, project_dir: Path, *, root_tex=None, excluded_dirs=(), engine="pytexml", catalog=None, policy="prepare"):
+    def __init__(self, project_dir: Path, *, root_tex=None, excluded_dirs=(), engine="pytexml", catalog=None, policy="prepare",
+                 engine_profile="etex"):
         self.policy = load_policy(policy)
         self.emitter = MouthEmitter(self.policy)
         self.store = SourceStore(project_dir, excluded_dirs)
-        self.resolver = BindingResolver(catalog)
-        self.root = select_root(self.store, root_tex, catalog=self.resolver.catalog)
+        self.resolver = BindingResolver(catalog, engine_profile=engine_profile)
+        self.root = select_root(self.store, root_tex, catalog=self.resolver.catalog, engine_profile=engine_profile)
         self.context = self.resolver.new_context()
         self.literal_payloads = {}
         self.manifest = PreflightManifest(self.name(self.root), self.root.stem, str(self.store.root), engine,
             BibliographyInfo("NONE", None, None, False, False))
+        self.manifest.engine_profile = self.context.engine_profile.record()
         self.lint = PreparationLint(self.policy.linting)
         self.manifest.lint = self.lint.report
         self.pieces: list[SourcePiece] = []
@@ -398,7 +400,7 @@ class PreparationSession:
         """Freeze reading knowledge at the accepted bibliography site."""
         self.bibliography_context = self.context.copy()
         if knowledge is None:
-            knowledge = BindingResolver(self.resolver.catalog)
+            knowledge = BindingResolver(self.resolver.catalog, engine_profile=self.context.engine_profile)
             knowledge.active_packages = list(self.resolver.active_packages)
         self.bibliography_knowledge = knowledge
         self.bibliography_observed = observed
@@ -767,7 +769,7 @@ class PreparationSession:
             # retain those gaps explicitly instead of fabricating mappings.
             self.manifest.input_occurrences[basis.occurrence_id]["unobserved"] = [
                 [s.start, s.end] for s in coverage.unknown]
-        self.manifest.source_survey = survey_sources(self.store, self.resolver.catalog)
+        self.manifest.source_survey = survey_sources(self.store, self.resolver.catalog, engine_profile=self.context.engine_profile)
         retain_survey_inputs(self)
         self._inventory()
         self.manifest.source_reads = list(self.store.read_paths)

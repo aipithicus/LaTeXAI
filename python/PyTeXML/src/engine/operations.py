@@ -14,16 +14,19 @@ if TYPE_CHECKING:
     from .integers import IntegerScanner
 
 from ..reading.context import ExecutionMode, ReaderContext
-from ..reading.contracts import (EffectiveReadingProfile, EnvironmentDefinition,
+from ..reading.contracts import (ConditionalRegion, ConditionalRule, EffectiveReadingProfile, EnvironmentDefinition,
                                  ReadingIssue, ReadingKnowledge, SourceCommand, StoredDefinition)
 from ..reading.spans import SourceSpan
-from ..reading.tex_reader import ReadEvent, TexReader
+from ..reading.tex_reader import ReadEvent, TexReader, Token
 from ..reading.token_cursor import TokenCursor
 from ..reading.units import UnitRegistry
+from .primitive import PrimitiveMeaning
 
 
 Identified = TypeVar("Identified", StoredDefinition, EnvironmentDefinition)
-OperationResult = ReadEvent | SourceCommand | StoredDefinition | EnvironmentDefinition
+OperationResult = ReadEvent | SourceCommand | StoredDefinition | EnvironmentDefinition | ConditionalRegion
+# Kernel operations still receive temporary reader profiles until their migration.
+OperationMeaning = PrimitiveMeaning | EffectiveReadingProfile
 
 
 class OperationHost(Protocol):
@@ -33,22 +36,27 @@ class OperationHost(Protocol):
     knowledge: ReadingKnowledge
     units: UnitRegistry
     operations: Mapping[str, ExecutableOperation]
+    preparation: bool
 
     def identify(self, item: Identified) -> Identified: ...
     def begin_group(self, kind: str, span: SourceSpan) -> None: ...
     def end_group(self, kind: str) -> None: ...
+    def route_conditional(self, rule: ConditionalRule, span: SourceSpan, *, metadata=None) -> str | None: ...
+    def capture_conditional(self, token: Token, rule: ConditionalRule, *, causes=()) -> ConditionalRegion: ...
 
 
 @dataclass(frozen=True, slots=True)
 class ExecutableOperation:
     identity: str
-    handler: Callable[[OperationHost, ReadEvent, EffectiveReadingProfile], OperationResult] | None = None
-    integer_value: Callable[[IntegerScanner, EffectiveReadingProfile], int] | None = None
+    handler: Callable[[OperationHost, ReadEvent, OperationMeaning], OperationResult] | None = None
+    integer_value: Callable[[IntegerScanner, PrimitiveMeaning], int] | None = None
     unexpandable: bool = False
     expansion: Callable | None = None
+    capture: Callable | None = None
+    continuation: bool = False
 
     def execute(self, host: OperationHost, opening: ReadEvent,
-                profile: EffectiveReadingProfile) -> OperationResult:
+                profile: OperationMeaning) -> OperationResult:
         """Execute after the opener was read, using the caller's live cursor."""
         if self.handler is None:
             raise ReadingIssue("expansion_required", "This operation requires an expansion consumer")

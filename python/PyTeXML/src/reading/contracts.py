@@ -89,6 +89,14 @@ class UncertainMeaning:
 
 
 @dataclass(frozen=True, slots=True)
+class UndefinedMeaning:
+    """Established TeX undefined state, distinct from unavailable knowledge."""
+    span: SourceSpan | None
+    uncertain: SourceSpan | None = None
+    format_origin: str | None = field(default=None, kw_only=True)
+
+
+@dataclass(frozen=True, slots=True)
 class CharacterCodeMeaning:
     """A chardef constant has an integer value, not replacement text."""
     span: SourceSpan | None

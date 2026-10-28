@@ -1,0 +1,87 @@
+\documentclass{article}
+\makeatletter
+\ifx\undefined\@undefined\gdef\PyWitnessundefinedpair{true}\else\gdef\PyWitnessundefinedpair{false}\fi
+\ifx\undefined\relax\gdef\PyWitnessundefinedrelax{true}\else\gdef\PyWitnessundefinedrelax{false}\fi
+\let\PyChar=A
+\chardef\PyCode=65
+\chardef\PyOtherCode=65
+\ifx\PyChar A\gdef\PyWitnesscharacteralias{true}\else\gdef\PyWitnesscharacteralias{false}\fi
+\ifx\PyCode A\gdef\PyWitnesscodecharacter{true}\else\gdef\PyWitnesscodecharacter{false}\fi
+\ifx\PyCode\PyOtherCode\gdef\PyWitnesscodevalue{true}\else\gdef\PyWitnesscodevalue{false}\fi
+\ifx a \gdef\PyWitnessrawspace{true}\else\gdef\PyWitnessrawspace{false}\fi
+\ifx{{\gdef\PyWitnessrawbraces{true}\else\gdef\PyWitnessrawbraces{false}\fi
+\def\PyA{\PyMissing}\def\PyB{\PyMissing}
+\ifx\PyA\PyB\gdef\PyWitnessnoexpansion{true}\else\gdef\PyWitnessnoexpansion{false}\fi
+\let\PyC\relax\let\PyD\relax\def\PyA{\PyC}\def\PyB{\PyD}
+\ifx\PyA\PyB\gdef\PyWitnessbodycontrolidentity{true}\else\gdef\PyWitnessbodycontrolidentity{false}\fi
+\def\PyA#1,#2;{#2##:#1}\def\PyB#1,#2;{#2##:#1}\def\PyC#1;#2;{#2##:#1}
+\ifx\PyA\PyB\gdef\PyWitnessmacroparameters{true}\else\gdef\PyWitnessmacroparameters{false}\fi
+\ifx\PyA\PyC\gdef\PyWitnessmacrodelimiters{true}\else\gdef\PyWitnessmacrodelimiters{false}\fi
+\def\PyA#1#{#1}\def\PyB#1#{#1}
+\ifx\PyA\PyB\gdef\PyWitnesshashbrace{true}\else\gdef\PyWitnesshashbrace{false}\fi
+\newcommand{\PyLong}[1]{#1}\newcommand*{\PyShort}[1]{#1}\def\PyPrimitive#1{#1}
+\ifx\PyLong\PyShort\gdef\PyWitnesslongflag{true}\else\gdef\PyWitnesslongflag{false}\fi
+\ifx\PyShort\PyPrimitive\gdef\PyWitnessshortprimitive{true}\else\gdef\PyWitnessshortprimitive{false}\fi
+\def\PyA{X}\edef\PyB{\PyA}\def\PyC{X}\def\PyD{\PyA}
+\ifx\PyB\PyC\gdef\PyWitnessexpandedbody{true}\else\gdef\PyWitnessexpandedbody{false}\fi
+\ifx\PyB\PyD\gdef\PyWitnessrawbody{true}\else\gdef\PyWitnessrawbody{false}\fi
+\let\PySaved\PyA
+{\def\PyA{Y}\ifx\PyA\PySaved\gdef\PyWitnesslocalchange{true}\else\gdef\PyWitnesslocalchange{false}\fi}
+\ifx\PyA\PySaved\gdef\PyWitnessrestored{true}\else\gdef\PyWitnessrestored{false}\fi
+{\gdef\PyA{Z}}
+\ifx\PyA\PySaved\gdef\PyWitnessglobalchange{true}\else\gdef\PyWitnessglobalchange{false}\fi
+\let\PySaved\widowpenalty\widowpenalty=17 \clubpenalty=17
+\ifx\widowpenalty\clubpenalty\gdef\PyWitnessparametercells{true}\else\gdef\PyWitnessparametercells{false}\fi
+\widowpenalty=23
+\ifx\PySaved\widowpenalty\gdef\PyWitnessparameteralias{true}\else\gdef\PyWitnessparameteralias{false}\fi
+\ifx\def\gdef\gdef\PyWitnessdefinitionscope{true}\else\gdef\PyWitnessdefinitionscope{false}\fi
+\ifx\def\edef\gdef\PyWitnessdefinitionexpansion{true}\else\gdef\PyWitnessdefinitionexpansion{false}\fi
+\newif\ifPyflag
+\ifx\ifPyflag\iffalse\gdef\PyWitnessbooleanfalse{true}\else\gdef\PyWitnessbooleanfalse{false}\fi
+\Pyflagtrue
+\ifx\ifPyflag\iftrue\gdef\PyWitnessbooleantrue{true}\else\gdef\PyWitnessbooleantrue{false}\fi
+\ifx\fi\else\gdef\PyWitnessconditionaloperands{true}\else\gdef\PyWitnessconditionaloperands{false}\fi
+{\def\PyA{!}\catcode33=11 \def\PyB{!}
+\ifx\PyA\PyB\gdef\PyWitnessfrozencatcodes{true}\else\gdef\PyWitnessfrozencatcodes{false}\fi}
+{\def\PyA#1{#1}\catcode33=6 \def\PyB!1{!1}
+\ifx\PyA\PyB\gdef\PyWitnessmatchcharacter{true}\else\gdef\PyWitnessmatchcharacter{false}\fi}
+{\def~{X}\def\PyA{X}
+\ifx~\PyA\gdef\PyWitnessactivemeaning{true}\else\gdef\PyWitnessactivemeaning{false}\fi
+\def\PyB{~}\def\PyC{\~}
+\ifx\PyB\PyC\gdef\PyWitnessactiveidentity{true}\else\gdef\PyWitnessactiveidentity{false}\fi}
+\typeout{PYTEXML sentinel_plain=\meaning\undefined}
+\typeout{PYTEXML sentinel_at=\meaning\@undefined}
+\typeout{PYTEXML undefined_pair=\PyWitnessundefinedpair}
+\typeout{PYTEXML undefined_relax=\PyWitnessundefinedrelax}
+\typeout{PYTEXML character_alias=\PyWitnesscharacteralias}
+\typeout{PYTEXML code_character=\PyWitnesscodecharacter}
+\typeout{PYTEXML code_value=\PyWitnesscodevalue}
+\typeout{PYTEXML raw_space=\PyWitnessrawspace}
+\typeout{PYTEXML raw_braces=\PyWitnessrawbraces}
+\typeout{PYTEXML no_expansion=\PyWitnessnoexpansion}
+\typeout{PYTEXML body_control_identity=\PyWitnessbodycontrolidentity}
+\typeout{PYTEXML macro_parameters=\PyWitnessmacroparameters}
+\typeout{PYTEXML macro_delimiters=\PyWitnessmacrodelimiters}
+\typeout{PYTEXML hash_brace=\PyWitnesshashbrace}
+\typeout{PYTEXML long_flag=\PyWitnesslongflag}
+\typeout{PYTEXML short_primitive=\PyWitnessshortprimitive}
+\typeout{PYTEXML expanded_body=\PyWitnessexpandedbody}
+\typeout{PYTEXML raw_body=\PyWitnessrawbody}
+\typeout{PYTEXML local_change=\PyWitnesslocalchange}
+\typeout{PYTEXML restored=\PyWitnessrestored}
+\typeout{PYTEXML global_change=\PyWitnessglobalchange}
+\typeout{PYTEXML parameter_cells=\PyWitnessparametercells}
+\typeout{PYTEXML parameter_alias=\PyWitnessparameteralias}
+\typeout{PYTEXML definition_scope=\PyWitnessdefinitionscope}
+\typeout{PYTEXML definition_expansion=\PyWitnessdefinitionexpansion}
+\typeout{PYTEXML boolean_false=\PyWitnessbooleanfalse}
+\typeout{PYTEXML boolean_true=\PyWitnessbooleantrue}
+\typeout{PYTEXML conditional_operands=\PyWitnessconditionaloperands}
+\typeout{PYTEXML frozen_catcodes=\PyWitnessfrozencatcodes}
+\typeout{PYTEXML match_character=\PyWitnessmatchcharacter}
+\typeout{PYTEXML active_meaning=\PyWitnessactivemeaning}
+\typeout{PYTEXML active_identity=\PyWitnessactiveidentity}
+\makeatother
+\begin{document}
+Independent raw meaning comparison witness.
+\end{document}

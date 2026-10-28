@@ -6,12 +6,13 @@ and an unavailable donor remains unknown rather than becoming undefined.
 from dataclasses import replace
 
 from ..operations import ExecutableOperation
+from ..primitive import PrimitiveMeaning
 from ..expansion import ExpansionCursor
 from ...reading.assignment_scanner import AssignmentScanner
 from ...reading.argument_scanner import ArgumentScanner
 from ...reading.boolean_scanner import declaration as boolean_declaration
 from ...reading.contracts import (BooleanMeaning, BoundMeaning, CommandDefinition,
-                                  EffectiveReadingProfile, ReadingIssue, UncertainMeaning)
+                                  EffectiveReadingProfile, ReadingIssue, UncertainMeaning, UndefinedMeaning)
 from ...reading.definition_scanner import DefinitionScanner
 from ...reading.environment_registry import declarations
 from ...reading.environment_scanner import EnvironmentScanner
@@ -25,19 +26,16 @@ def assign_meaning(host, opening, profile):
     assignment and donor-resolution evidence; never execute the donor.
     """
     context = host.context
-    command = AssignmentScanner(host.reader, context).let(opening.span, profile)
+    command = AssignmentScanner(host.reader, context).let(opening.span, ("\\" + opening.token.value))
     target, donor = (a.tokens[0] for a in command.arguments)
-    copied = context.lookup_meaning(donor.value, donor.kind)
+    copied = context.resolve_meaning(host.knowledge, donor.value, donor.kind)
     if copied is None:
         if donor.kind == TokenKind.CHARACTER:
             copied = BoundMeaning(command.span, token=donor)
         else:
-            donor_profile = host.knowledge.resolve_command(donor.value)
-            copied = (BoundMeaning(command.span, profile=donor_profile)
-                      if isinstance(donor_profile, EffectiveReadingProfile) else UncertainMeaning(command.span))
-            if (isinstance(donor_profile, EffectiveReadingProfile) and donor_profile.conditional is not None
-                    and donor_profile.conditional.evaluation in {"always_true", "always_false"}):
-                copied = BooleanMeaning(command.span, donor_profile.conditional.evaluation == "always_true")
+            copied = UncertainMeaning(command.span)
+    elif isinstance(copied, (PrimitiveMeaning, BoundMeaning)) and copied.span is None:
+        copied = replace(copied, span=command.span)
     context.record_meaning(target.value, copied, target.kind)
     if isinstance(copied, UncertainMeaning):
         host.units.uncertainty_cause(command.span, "assignment_donor", "The donor's current meaning is not established")
@@ -46,25 +44,54 @@ def assign_meaning(host, opening, profile):
             and context.catcodes[donor.value[-1]] == CatCode.LETTER})
 
 
+def capture_let(reader, context, token, meaning):
+    return AssignmentScanner(reader, context).let(token.span, token.value)
+
+
+def capture_definition(reader, context, token, meaning):
+    return DefinitionScanner(reader, context).primitive(token.span.start)
+
+
+def store_primitive_definition(host, opening, meaning):
+    from ..continuation import ContinuationReader
+    scanner = DefinitionScanner(host.reader, host.context)
+    expand = (lambda scanner, count: expanded_body(host, scanner, count)) if meaning.operand.expanded else None
+    definition = scanner.primitive(opening.span.start, expand_body=expand)
+    if isinstance(host.reader, ContinuationReader):
+        definition = host.reader.enclose_definition(definition)
+    definition = host.identify(definition)
+    host.context.record_definition(definition, global_=meaning.operand.global_)
+    return definition
+
+
 def store_definition(host, opening, profile):
     """Scan target/signature raw; collect a raw or expanded replacement.
 
     Check known target conflicts, identify the capture, then install at its scope.
     Return that same capture; never execute replacement commands or prove unknown names absent.
     """
-    expand = None
-    if profile.grammar.get("expansion") == "full":
-        expand = lambda scanner, count: expanded_body(host, scanner, count)
-    definition = DefinitionScanner(host.reader, host.context).read(opening.span.start, profile, expand_body=expand)
+    definition = DefinitionScanner(host.reader, host.context).read(opening.span.start, profile)
     if isinstance(definition, CommandDefinition):
-        known = (host.context.lookup_meaning(definition.target.value) is not None
-                 or isinstance(host.knowledge.resolve_command(definition.target.value), EffectiveReadingProfile))
+        presence = command_presence(host.context, host.knowledge, definition.target.value)
+        absent, known = presence is False, presence is True
         if known and definition.target_requirement == "absent":
             raise ReadingIssue("definition_conflict", f"{definition.target.value!r} already has an established meaning")
-        definition = replace(definition, target_check="known_present" if known else "unverified")
+        if absent and definition.target_requirement == "present":
+            raise ReadingIssue("definition_conflict", f"{definition.target.value!r} is established undefined")
+        definition = replace(definition, target_check="known_absent" if absent else "known_present" if known else "unverified")
     definition = host.identify(definition)
     host.context.record_definition(definition, global_=profile.state_management.scope == "global")
     return definition
+
+
+def command_presence(context, knowledge, name):
+    """Known undefined overrides fallback profiles; absent knowledge stays None."""
+    meaning = context.resolve_meaning(knowledge, name)
+    if isinstance(meaning, UndefinedMeaning) and meaning.uncertain is None:
+        return False
+    if meaning is not None:
+        return True
+    return None
 
 
 def expanded_body(host, scanner, count):
@@ -101,15 +128,17 @@ def store_environment(host, opening, profile):
     """
     context, knowledge = host.context, host.knowledge
     definition = EnvironmentScanner(host.reader, context).definition(opening.span.start, profile)
-    known = (context.lookup_environment(definition.name) is not None
-             or context.lookup_meaning(definition.name) is not None
-             or isinstance(knowledge.resolve_environment(definition.name), EffectiveReadingProfile)
-             or isinstance(knowledge.resolve_command(definition.name), EffectiveReadingProfile))
-    end_known = (context.lookup_meaning("end" + definition.name) is not None
-                 or isinstance(knowledge.resolve_command("end" + definition.name), EffectiveReadingProfile))
+    present = command_presence(context, knowledge, definition.name)
+    end_present = command_presence(context, knowledge, "end" + definition.name)
+    known = present is not False and (present is True or context.lookup_environment(definition.name) is not None
+                                     or isinstance(knowledge.resolve_environment(definition.name), EffectiveReadingProfile))
+    end_known = end_present is True
     if (known or end_known) and definition.target_requirement == "absent":
         raise ReadingIssue("definition_conflict", f"{definition.name!r} already has an established meaning")
-    definition = host.identify(replace(definition, target_check="known_present" if known else "unverified"))
+    if present is False and definition.target_requirement == "present":
+        raise ReadingIssue("definition_conflict", f"{definition.name!r} is established undefined")
+    definition = host.identify(replace(definition, target_check="known_present" if known else
+                                      "known_absent" if present is False and end_present is False else "unverified"))
     context.record_collected_environment(definition)
     return definition
 
@@ -153,8 +182,9 @@ def declare_environment(host, opening, profile):
 
 
 OPERATIONS = (
-    ExecutableOperation("meaning.assign", assign_meaning),
-    ExecutableOperation("definition.store", store_definition),
+    ExecutableOperation("meaning.assign", assign_meaning, unexpandable=True, capture=capture_let, continuation=True),
+    ExecutableOperation("definition.store", store_primitive_definition, unexpandable=True, capture=capture_definition, continuation=True),
+    ExecutableOperation("kernel.define_command", store_definition),
     ExecutableOperation("definition.store_environment", store_environment),
     ExecutableOperation("definition.declare_boolean", declare_boolean),
     ExecutableOperation("definition.declare_environment", declare_environment),

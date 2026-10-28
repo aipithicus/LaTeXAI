@@ -224,7 +224,7 @@ class BindingCatalog:
                             raise ProfileError(f"{path}: {name} capture_operands must be 0, 1 or 2")
                     if role == "opener" and "predicate" in spec:
                         fields.add("predicate")
-                        if (spec["predicate"] not in ("character_equal", "category_equal")
+                        if (spec["predicate"] not in ("character_equal", "category_equal", "meaning_equal")
                                 or spec.get("evaluation") != "deferred" or spec.get("capture_operands") != 2):
                             raise ProfileError(f"{path}: {name} predicate needs two operands and deferred fallback")
                     if (set(spec) != fields

@@ -94,6 +94,7 @@ class PreflightManifest:
 
     # Bibliography
     bibliography: BibliographyInfo
+    engine_profile: Dict[str, Any] = field(default_factory=dict)
 
     # Canonical package entrypoint; root_file above records source discovery.
     entrypoint: Optional[str] = None

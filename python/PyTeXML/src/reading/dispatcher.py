@@ -19,7 +19,7 @@ from .contracts import (
     ConditionalRule, EffectiveReadingProfile, LiteralRegion, ReadingBoundary, ReadingIssue,
     ReadingKnowledge, SkippedRegion, StoredDefinition, SourceCommand, SourceEnd, require_resolved,
     DeferredRegion, UnresolvedBindingResult, UnresolvedReason, BooleanMeaning, CommandDefinition,
-    EnvironmentDefinition, UncertainMeaning, BoundMeaning, CharacterCodeMeaning, ScannedArgument, TokenArgument, TokenListMeaning,
+    EnvironmentDefinition, UncertainMeaning, BoundMeaning, CharacterCodeMeaning, ScannedArgument, TokenArgument, TokenListMeaning, UndefinedMeaning,
 )
 from .argument_scanner import ArgumentScanner, key_values
 from .configuration import entries, configured_options
@@ -33,13 +33,15 @@ from .literal_scanner import LiteralScanner
 from .skipped_scanner import SkippedBranchScanner, SkippedScan
 from .conditional_scanner import ConditionalScanner
 from .input_scanner import InputScanner
-from .predicates import compare_characters
 from .dependencies import argument_activity
 from .loads import SourceLoadState
 from .spans import SourceSpan
 from .units import UnitRegistry
 from .options import OptionBody, OptionScope, option_items
 from .operations import EFFECT_OPERATIONS, FAMILY_OPERATIONS
+from ..engine.catalog import CORE_OPERATIONS
+from ..engine.primitive import PrimitiveMeaning
+from ..engine.observation import capture_primitive
 from .token_cursor import TokenCursor
 from .tex_reader import CatCode, EventKind, InvalidCharacterError, ReadEvent, TexReader, TokenKind
 
@@ -94,7 +96,7 @@ class StructuralDispatcher:
     with unclosed structure anchors the diagnostic to an opener with empty residue.
     """
 
-    operations = FAMILY_OPERATIONS
+    operations = CORE_OPERATIONS
 
     def __init__(self, reader: TexReader, context: ReaderContext, knowledge: ReadingKnowledge,
                  *, source_commands: bool = False, preparation: bool = False, units: UnitRegistry | None = None,
@@ -182,6 +184,26 @@ class StructuralDispatcher:
         self.literals = LiteralScanner(reader, self.context, self.knowledge)
         self.environments = EnvironmentScanner(reader, self.context)
         self.skipped = SkippedBranchScanner(reader, self.context, self.knowledge)
+
+    def execute_continuation(self, opening):
+        """Commit one admitted operation only after its pending input is settled."""
+        from ..engine.continuation import execute
+        reader, saved_cursor = self.reader, self.reader.checkpoint()
+        saved_context, saved_units = self.context.copy(), self.units.checkpoint()
+        conditionals = [replace(frame) for frame in self._conditionals]
+        decisions, conditional_units = list(self.decisions), dict(self._conditional_units)
+        skipped, pending_skip = self._skip_start, self._pending_skip
+        try:
+            return execute(self, opening)
+        except (ReadingIssue, InvalidCharacterError):
+            self.context.restore_from(saved_context)
+            self.units.restore(saved_units)
+            self._conditionals, self.decisions = conditionals, decisions
+            self._conditional_units = conditional_units
+            self._skip_start, self._pending_skip = skipped, pending_skip
+            self._set_reader(reader)
+            reader.restore(saved_cursor)
+            raise
 
     def enter_source(self, reader: TexReader, *, catcode_overrides: dict[str, int] | None = None,
                      options: OptionScope | None = None) -> None:
@@ -317,7 +339,7 @@ class StructuralDispatcher:
         if self._pending_skip is not None:
             pending, self._pending_skip = self._pending_skip, None
             try:
-                self._conditional(pending.rule, pending.terminator.span)
+                self.route_conditional(pending.rule, pending.terminator.span)
                 return pending.terminator
             except ReadingIssue as error:
                 return self.halt(pending.terminator.span, error.reason, error.detail, causes=error.causes)
@@ -363,7 +385,7 @@ class StructuralDispatcher:
         if event.token is None:
             return event
         token = event.token
-        meaning = context.lookup_meaning(token.value, token.kind)
+        meaning = context.resolve_meaning(self.knowledge, token.value, token.kind)
         definition = context.lookup_definition(token.value, token.kind)
         if definition is not None and not self.preparation:
             return self.halt(event.span, "stored_macro",
@@ -380,6 +402,27 @@ class StructuralDispatcher:
                                   "Math and alignment require their own mode and scope handling")
         try:
             deferred = DeferredScanner(reader, context)
+            if isinstance(meaning, PrimitiveMeaning):
+                if meaning.uncertain is not None:
+                    if (self.preparation and meaning.operation == "conditional.route"
+                            and meaning.operand.evaluation in {"always_true", "always_false"}):
+                        return self.capture_conditional(token, ConditionalRule("opener", "deferred", 0),
+                                                        causes=(meaning.uncertain,))
+                    raise ReadingIssue("uncertain_meaning", "Primitive meaning may have changed", causes=(meaning.uncertain,))
+                operation = self.operations[meaning.operation]
+                if operation.expansion is not None:
+                    return self.execute_continuation(event)
+                return operation.execute(self, event, meaning)
+            if isinstance(meaning, UndefinedMeaning):
+                if meaning.uncertain is not None:
+                    raise ReadingIssue("uncertain_meaning", "Undefined state may have changed", causes=(meaning.uncertain,))
+                if self.preparation and token.value in context.engine_profile.capture_integer_setup:
+                    from ..engine.profiles import EXTENSIONS
+                    captured = capture_primitive(reader, context, token, EXTENSIONS[token.value])
+                    return replace(captured, action="external_engine_setup",
+                                   metadata={**captured.metadata, "engine_profile": context.engine_profile.name,
+                                             "exposed": False, "executed": False})
+                raise ReadingIssue("undefined_control_sequence", f"{token.value!r} is established undefined")
             if isinstance(meaning, TokenListMeaning):
                 if meaning.uncertain is not None:
                     raise ReadingIssue("uncertain_meaning", "Token-list meaning may have changed", causes=(meaning.uncertain,))
@@ -405,14 +448,14 @@ class StructuralDispatcher:
                 raise ReadingIssue("option_body", "Option text requires interpretation beyond reading effects")
             if isinstance(meaning, BooleanMeaning):
                 if self.preparation and meaning.uncertain is not None and meaning.target is None:
-                    return self._capture_conditional(token, ConditionalRule("opener", "deferred", 0), causes=(meaning.uncertain,))
+                    return self.capture_conditional(token, ConditionalRule("opener", "deferred", 0), causes=(meaning.uncertain,))
                 if meaning.uncertain is not None:
                     raise ReadingIssue("uncertain_boolean", f"Meaning of {token.value!r} may have changed in unexecuted source at {meaning.uncertain}", causes=(meaning.uncertain,))
                 if meaning.target is not None:
                     truth = boolean_value(context, self.knowledge, meaning.source)
                     context.record_meaning(meaning.target, BooleanMeaning(event.span, truth))
                 else:
-                    self._conditional(context.conditional_rule(token.value, self.knowledge), event.span,
+                    self.route_conditional(context.conditional_rule(token.value, self.knowledge), event.span,
                                       metadata={"predicate": "established_boolean"})
                 return event
             if definition is not None:
@@ -432,12 +475,8 @@ class StructuralDispatcher:
             if self.preparation and token.catcode == CatCode.ALIGNMENT_TAB:
                 return DeferredRegion(event.span, "alignment_interpretation", "Alignment retained without interpretation", (token,))
             if token.catcode in {CatCode.BEGIN_GROUP, CatCode.END_GROUP}:
-                profile = require_resolved(self.knowledge.resolve_group(token.catcode))
-                expected_action = ("push_lexical_scope" if token.catcode == CatCode.BEGIN_GROUP
-                                   else "pop_lexical_scope")
-                self._require(profile.action == expected_action, "unsupported_operation",
-                              "Group binding does not match this token's grouping category")
-                return EFFECT_OPERATIONS[profile.action].execute(self, event, profile)
+                identity = "scope.begin" if token.catcode == CatCode.BEGIN_GROUP else "scope.end"
+                return self.operations[identity].execute(self, event, PrimitiveMeaning(identity, "simple"))
             if token.kind != TokenKind.CONTROL_SEQUENCE:
                 return event
             resolved = meaning.profile if isinstance(meaning, BoundMeaning) else self.knowledge.resolve_command(token.value)
@@ -520,23 +559,6 @@ class StructuralDispatcher:
                     env = require_resolved(self.knowledge.resolve_environment(name))
                     command = SourceCommand(command.span, command.name, command.action, command.arguments, env.tex_mechanics)
                 return command
-            if profile.family == "conditional":
-                self._require(profile.conditional is not None and profile.action is None
-                              and not profile.grammar and not profile.catcode_overrides
-                              and not profile.catcode_layers and not profile.reader_parameters
-                              and not profile.interpolations and not profile.active_options
-                              and profile.terminator is None and profile.state_management is None,
-                              "unsupported_conditional", "Conditional requires a standalone nesting/evaluation rule")
-                command = compare_characters(reader, context, token, profile.conditional)
-                if command is not None:
-                    identifier = self._conditional(ConditionalRule("opener", "always_true" if command.metadata["truth"] else "always_false"),
-                        command.span, metadata=command.metadata)
-                    return replace(command, unit_id=identifier)
-                if (self.preparation and profile.conditional.role == "opener"
-                        and profile.conditional.evaluation == "deferred"):
-                    return self._capture_conditional(token, profile.conditional)
-                self._conditional(profile.conditional, event.span)
-                return event
             if profile.action is not None:
                 operation = EFFECT_OPERATIONS.get(profile.action)
                 self._require(operation is not None, "unsupported_operation", f"No execution route for {profile.action!r}")
@@ -740,7 +762,7 @@ class StructuralDispatcher:
         if changed:
             self.units.uncertainty_cause(span, reason, detail, evidence=self._activity_evidence())
 
-    def _capture_conditional(self, token, rule, *, causes=()):
+    def capture_conditional(self, token, rule, *, causes=()):
         try:
             region = ConditionalScanner(self.reader, self.context).read(token, rule, classify=self._observed_conditional,
                 protect=lambda t, **kw: self._protect_deferred_environment(t, conditional=True, **kw))
@@ -754,6 +776,9 @@ class StructuralDispatcher:
         if candidate.kind != TokenKind.CONTROL_SEQUENCE:
             return None
         meaning = self.context.lookup_meaning(candidate.value)
+        if (isinstance(meaning, PrimitiveMeaning) and meaning.operation == "conditional.route"
+                and meaning.operand.evaluation in {"always_true", "always_false"}):
+            return ConditionalRule("opener", "deferred", 0)
         if isinstance(meaning, BooleanMeaning):
             # Retain its declared nesting role as an explicit assumption;
             # uncertainty prohibits choosing a branch, not source capture.
@@ -783,7 +808,12 @@ class StructuralDispatcher:
             return ConditionalScanner(self.reader, self.context).read(token, rule,
                 classify=self._observed_conditional,
                 protect=lambda t, **kw: self._protect_deferred_environment(t, conditional=True, **kw))
-        meaning = self.context.lookup_meaning(token.value)
+        meaning = self.context.resolve_meaning(self.knowledge, token.value)
+        if isinstance(meaning, PrimitiveMeaning):
+            captured = capture_primitive(self.reader, self.context, token, meaning)
+            if captured is not None:
+                return captured
+            raise ReadingIssue("environment_reading", "Primitive effects in retained source require resolution")
         if isinstance(meaning, BooleanMeaning) and meaning.target is not None:
             return DeferredScanner(self.reader, self.context).command(token, "conditional_interpretation",
                 "Boolean setter retained without selecting or executing a branch")
@@ -812,7 +842,7 @@ class StructuralDispatcher:
         if profile.family == "stored_definition":
             return DefinitionScanner(self.reader, self.context).read(token.span.start, profile)  # capture, never install
         if profile.family == "meaning_assignment":
-            return AssignmentScanner(self.reader, self.context).let(token.span, profile)
+            return AssignmentScanner(self.reader, self.context).let(token.span, profile.name)
         if profile.family == "collected_environment_definition":
             return self.environments.definition(token.span.start, profile)  # capture, never install
         if profile.family in {"conditional", "conditional_factory", "catcode_mutator", "catcode_assignment", "character_code_definition", "grouping", "environment_factory", "option_control", "configuration_command", "assignment_prefix", "parameter_assignment"}:
@@ -903,7 +933,7 @@ class StructuralDispatcher:
         self._pending.extend((*before, _BranchStart(selected, after, command.unit_id, selected.name)))
         return self._next_item()
 
-    def _conditional(self, rule: ConditionalRule, span: SourceSpan, *, metadata=None):
+    def route_conditional(self, rule: ConditionalRule, span: SourceSpan, *, metadata=None):
         """Own execution and stack changes; conditionals do not create scopes."""
         if rule.role == "opener":
             self._require(rule.evaluation in {"always_true", "always_false"},

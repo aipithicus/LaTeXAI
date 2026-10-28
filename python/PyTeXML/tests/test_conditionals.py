@@ -115,7 +115,7 @@ class ConditionalTests(unittest.TestCase):
              patch.object(DefinitionScanner, "read", side_effect=AssertionError("Definition scanned")), \
              patch.object(self.resolver, "resolve_command", wraps=self.resolver.resolve_command) as resolve:
             items = self.scan()
-        self.assertEqual([call.args[0] for call in resolve.call_args_list], ["iffalse"])
+        self.assertEqual([call.args[0] for call in resolve.call_args_list], [])
         self.assertEqual(self.chars(items), "@")
         self.assertIsNone(self.context.lookup_definition("x"))
         self.assertEqual(self.context.scope_depth, 0)
@@ -175,10 +175,10 @@ class ConditionalTests(unittest.TestCase):
         self.assertEqual(self.scan(complete=False)[-1].reason, "package_not_loaded")
         self.assertIsNone(self.resolver.resolve_conditional("no"))
 
-    def test_nonconditional_package_override_shadows_kernel_nesting_meaning(self):
+    def test_package_metadata_cannot_override_native_nesting_meaning(self):
         catalog = deepcopy(self.catalog)
         catalog.package_bindings["shadow"] = {"reading": {"commands": [{"name": r"\iftrue", "family": "opaque"}]}}
-        self.setup_reader(r"\iffalse\iftrue\fi LIVE", catalog=catalog, packages=("shadow",))
+        self.setup_reader(r"\iffalse\iftrue X\fi\fi LIVE", catalog=catalog, packages=("shadow",))
         self.assertIsNone(self.resolver.resolve_conditional("iftrue"))
         self.assertEqual(self.chars(self.scan()), "LIVE")
 

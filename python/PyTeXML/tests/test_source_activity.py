@@ -100,11 +100,8 @@ class PredicateTests(unittest.TestCase):
         self.assertEqual([d.metadata["truth"] for d in self.decisions(items)], [True])
         self.assertEqual(len(self.decisions(items)[0].metadata["definition_unit_ids"]), 600)
 
-    def test_yaml_selects_comparison_without_python_command_spelling(self):
-        catalog = BindingCatalog()
-        spec = next(s for s in catalog.engine_bindings["core_latex"]["reading"]["conditionals"] if s["name"] == r"\if")
-        catalog.engine_bindings["core_latex"]["reading"]["conditionals"].append({**spec, "name": r"\samechar"})
-        _, _, items = self.scan(r"\samechar aa YES\else NO\fi", resolver=BindingResolver(reload_catalog(self, catalog)))
+    def test_native_alias_selects_comparison_without_command_spelling(self):
+        _, _, items = self.scan(r"\let\samechar\if\samechar aa YES\else NO\fi")
         self.assertEqual([d.metadata["truth"] for d in self.decisions(items)], [True])
 
     def test_kernel_conditional_role_does_not_invent_its_truth(self):

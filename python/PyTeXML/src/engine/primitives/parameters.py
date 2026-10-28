@@ -9,15 +9,11 @@ References: TeX82 tex.web and pdftexdir/pdftex.web, assign_int/word_define.
 from ...reading.contracts import ReadingIssue, SourceCommand
 from ..integers import IntegerScanner
 from ..operations import ExecutableOperation
+from ...reading.assignment_scanner import AssignmentScanner
 
 
 def parameter_key(profile):
-    key = profile.tex_mechanics.get("parameter")
-    if (profile.grammar != {"handler": "integer_parameter_assignment"}
-            or profile.state_management is None or profile.state_management.scope != "local"
-            or not isinstance(key, str) or not key or key.startswith("\\")):
-        raise ReadingIssue("unsupported_parameter", "Integer parameter requires an explicit cell identity and local grammar")
-    return key
+    return profile.operand
 
 
 def integer_value(scanner, profile):
@@ -33,12 +29,18 @@ def assign_integer(host, opening, profile):
         scanner.finish()
     span = host.reader.source_span(opening.span.start, host.reader.position)
     host.context.integer_parameters.assign(key, value, span)
-    return SourceCommand(span, profile.name, "integer_parameter_assignment",
+    return SourceCommand(span, ("\\" + opening.token.value), "integer_parameter_assignment",
                          metadata={"parameter": key, "value": value,
                                    "trailing_control_word": scanner.ends_control_word,
-                                   "source_reference": profile.tex_mechanics["source_reference"]})
+                                   "source_reference": "TeX assign_int / word_define"})
+
+
+def capture(reader, context, token, meaning):
+    value = AssignmentScanner(reader, context).literal_integer_assignment()
+    return SourceCommand(reader.source_span(token.span.start, reader.position), token.value,
+                         "integer_parameter_assignment", metadata={"parameter": meaning.operand, "value": value})
 
 
 OPERATIONS = (
-    ExecutableOperation("parameter.assign_integer", assign_integer, integer_value, unexpandable=True),
+    ExecutableOperation("parameter.assign_integer", assign_integer, integer_value, unexpandable=True, capture=capture),
 )

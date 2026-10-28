@@ -9,7 +9,9 @@ from dataclasses import replace
 from .argument_scanner import ArgumentScanner
 from .effects import observed_write_names
 from .assignment_scanner import AssignmentScanner
-from .contracts import EffectiveReadingProfile, ReadingIssue, ReadingKnowledge, ScannedArgument, StoredDefinition
+from .contracts import EffectiveReadingProfile, ReadingIssue, ReadingKnowledge, ScannedArgument, StoredDefinition, SourceCommand
+from ..engine.primitive import AssignmentTarget, PrimitiveMeaning
+from ..engine.observation import capture_primitive
 from .definition_scanner import DefinitionScanner
 from .token_cursor import TokenCursor
 from .tex_reader import TokenKind
@@ -36,6 +38,26 @@ def observe_dependencies(argument, text, context, knowledge: ReadingKnowledge, u
         scanner = ArgumentScanner(cursor, context)
         while (token := cursor.next_token()) is not None:
             if token.kind != TokenKind.CONTROL_SEQUENCE:
+                continue
+            if token.value in shadowed:
+                continue
+            meaning = context.resolve_meaning(knowledge, token.value)
+            if isinstance(meaning, PrimitiveMeaning):
+                checkpoint = cursor.checkpoint()
+                try:
+                    captured = capture_primitive(cursor, context, token, meaning)
+                except ReadingIssue:
+                    cursor.restore(checkpoint)
+                    break
+                if isinstance(captured, StoredDefinition):
+                    shadowed.add(captured.target.value)
+                    child = units.add(captured.body, "stored_body", owner, activity="stored",
+                                      evidence={"reason": "stored_definition"})
+                    pending.append((ScannedArgument("body", captured.body, captured.body_tokens, "stored"), child, set(shadowed)))
+                elif isinstance(captured, AssignmentTarget):
+                    shadowed.add(captured.target.value)
+                elif isinstance(captured, SourceCommand) and captured.action == "meaning_assignment":
+                    shadowed.add(captured.argument("target").tokens[0].value)
                 continue
             profile = knowledge.resolve_command(token.value)
             active_grammar = isinstance(profile, EffectiveReadingProfile)
@@ -84,7 +106,7 @@ def observe_dependencies(argument, text, context, knowledge: ReadingKnowledge, u
                 continue
             if profile.family == "meaning_assignment":
                 try:
-                    assignment = AssignmentScanner(cursor, context).let(token.span, profile)
+                    assignment = AssignmentScanner(cursor, context).let(token.span, profile.name)
                 except ReadingIssue:
                     break
                 shadowed.add(assignment.argument("target").tokens[0].value)

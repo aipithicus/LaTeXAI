@@ -376,12 +376,6 @@ reading:
     grammar:
       handler: source_arguments
       arguments: []
-  - name: \relax
-    family: source_command
-    action: reading_noop
-    grammar:
-      handler: source_arguments
-      arguments: []
   - name: \noindent
     family: source_command
     action: opaque

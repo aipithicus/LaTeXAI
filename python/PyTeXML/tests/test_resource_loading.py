@@ -164,21 +164,21 @@ class ResourceLoadingTests(unittest.TestCase):
                 with self.assertRaisesRegex(ProfileError, "requires a primitive definition grammar"):
                     BindingCatalog(self.bindings)
 
-    def test_definition_contract_is_resolved_from_yaml_without_losing_scope_or_expansion(self):
+    def test_definition_contract_is_native_and_immutable(self):
+        from dataclasses import FrozenInstanceError
         from src.bindings.resolver import BindingResolver
         from src.reading.contracts import UnresolvedBindingResult
-
         resolver = BindingResolver()
-        for name, scope, expansion in (("def", "local", "none"), ("gdef", "global", "none"),
-                                        ("edef", "local", "full"), ("xdef", "global", "full")):
+        context = resolver.new_context()
+        for name, global_, expanded in (("def", False, False), ("gdef", True, False),
+                                       ("edef", False, True), ("xdef", True, True)):
             with self.subTest(name=name):
-                profile = resolver.resolve_command(name)
-                self.assertEqual(profile.family, "stored_definition")
-                self.assertEqual(profile.state_management.scope, scope)
-                self.assertEqual(profile.grammar, {"handler": "primitive_definition", "expansion": expansion})
-                self.assertIsInstance(resolver.resolve_command(name, {"unexpected": True}), UnresolvedBindingResult)
-        resolver.resolve_command("def").grammar["expansion"] = "full"
-        self.assertEqual(resolver.resolve_command("def").grammar["expansion"], "none")
+                meaning = context.resolve_meaning(resolver, name)
+                self.assertEqual(meaning.operation, "definition.store")
+                self.assertEqual((meaning.operand.global_, meaning.operand.expanded), (global_, expanded))
+                self.assertIsInstance(resolver.resolve_command(name), UnresolvedBindingResult)
+                with self.assertRaises(FrozenInstanceError):
+                    meaning.operand.expanded = not expanded
 
     def test_handler_registry_rejects_executable_and_unknown_fields(self):
         data = load_mapping(HANDLERS_PATH)

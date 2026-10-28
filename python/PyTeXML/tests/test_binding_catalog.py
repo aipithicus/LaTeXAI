@@ -125,7 +125,7 @@ class CatalogSharingTests(unittest.TestCase):
             "command_overrides": [{"name": r"\iftrue", "family": "opaque"}],
             "conditionals": [{**conditional, "evaluation": "always_true"}]}}
         resolver = BindingResolver(reload_catalog(self, self.catalog))
-        self.assertEqual(resolver.resolve_conditional("iftrue").evaluation, "always_true")
+        self.assertIsNone(resolver.resolve_conditional("iftrue"))
         resolver.load_package("first")
         self.assertEqual(resolver.resolve_conditional("iftrue").evaluation, "always_false")
         resolver.load_package("second")
@@ -138,15 +138,15 @@ class CatalogSharingTests(unittest.TestCase):
     def test_environment_override_and_group_category_indexes_keep_provider_precedence(self):
         env = deepcopy(self.catalog.engine_bindings["verbatim"]["reading"]["environments"][0])
         env["lexical_mode"] = {"catcode_overrides": {"@": 11}}
-        group = next(deepcopy(s) for s in self.catalog.engine_bindings["core_latex"]["reading"]["grouping"]
-                     if s.get("catcode") == 1)
-        group["state_management"]["group_kind"] = "semi_simple"
+        group = {"name": "group_begin", "catcode": 1, "family": "grouping", "action": "push_lexical_scope",
+                 "trigger": "token_category",
+                 "state_management": {"group_kind": "semi_simple"}}
         self.catalog.package_bindings["custom"] = {"reading": {
             "environment_overrides": [env],
             "environments": [{**env, "lexical_mode": {"catcode_overrides": {"@": 12}}}],
             "grouping": [group]}}
         resolver = BindingResolver(reload_catalog(self, self.catalog))
-        self.assertEqual(resolver.resolve_group(1).state_management.group_kind, "simple")
+        self.assertEqual(resolver.resolve_group(1).reason, UnresolvedReason.UNKNOWN_CONSTRUCT)
         resolver.load_package("custom")
         self.assertEqual(resolver.resolve_group(1).state_management.group_kind, "semi_simple")
         context = resolver.new_context()

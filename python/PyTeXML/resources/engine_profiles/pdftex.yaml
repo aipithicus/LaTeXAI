@@ -1,0 +1,23 @@
+schema: pytexml-engine-profile/1
+identity: {name: pdftex}
+description: e-TeX language baseline with modern expansion and pdfTeX setup.
+base: etex
+extensions: [expanded, pdfoutput]
+absent: [XeTeXversion, luatexversion, directlua]
+preparation:
+  capture_integer_setup: []
+oracle:
+  language: pdftex
+  shared_extensions: pdftex
+  rendering: pdftex
+  output: pdf
+  qualification: capability_scoped
+  note: >-
+    Use a modern pdfTeX/pdflatex toolchain and record its version, executable
+    hash, format and primitive exposure. pdfoutput selects a parameter cell in
+    the emulator; PyTeXML does not implement a PDF backend.
+targets:
+  expl3: partial
+  note: >-
+    expanded and pdfoutput are included. The remaining expl3 utility primitives
+    and pdfTeX backend operations are future capabilities.

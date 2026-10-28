@@ -40,6 +40,13 @@ class UnitRegistry:
         self.uncertainty: dict[SourceSpan, UncertaintyCause] = {}
         self._by_span: dict[SourceSpan, str] = {}
 
+    def checkpoint(self):
+        return (dict(self.records), {key: list(values) for key, values in self.children.items()},
+                dict(self.uncertainty), dict(self._by_span))
+
+    def restore(self, saved):
+        self.records, self.children, self.uncertainty, self._by_span = saved
+
     def uncertainty_cause(self, span, reason="unresolved_reading", detail="Reading effects remain unresolved", *, evidence=None):
         """Retain the first witnessed cause for this exact source occurrence."""
         if span not in self.uncertainty:

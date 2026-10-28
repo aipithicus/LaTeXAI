@@ -5,11 +5,12 @@ their original source spans and categories even when one argument crosses frames
 This module never serializes tokens as TeX or dispatches an executable command.
 """
 from dataclasses import dataclass
+from .primitive import PrimitiveMeaning
 
 from ..reading.argument_scanner import undelimited_tokens
 from ..reading.contracts import (BoundMeaning, CharacterCodeMeaning, CommandDefinition,
-                                 EffectiveReadingProfile, ReadingIssue, StoredDefinition,
-                                 UncertainMeaning, TokenListMeaning)
+                                 ReadingIssue, StoredDefinition,
+                                 UncertainMeaning, TokenListMeaning, UndefinedMeaning)
 from ..reading.tex_reader import CatCode, Token, TokenKind
 
 
@@ -33,6 +34,7 @@ class ExpansionCursor:
         self._last_from_source = False
         self.suppressed = False
         self.relaxed_target = relaxed_target
+        self._depth = 0
 
     def push(self, tokens):
         tokens = tuple(tokens)
@@ -133,40 +135,51 @@ class ExpansionCursor:
         self.calls.append(MacroCall(token, definition, arguments))
         self.push(replacement)
 
-    def next_expanded(self, *, stop=None):
+    def expand_once(self, token, *, stop=None, stop_operation=None):
+        """Expand one token once, or return an unexpanded token to the consumer."""
+        if token.kind == TokenKind.CHARACTER:
+            return token
+        if self.relaxed_target == (token.kind, token.value):
+            return token
+        meaning = self.context.resolve_meaning(self.knowledge, token.value, token.kind)
+        uncertain = meaning.span if isinstance(meaning, UncertainMeaning) else getattr(meaning, "uncertain", None)
+        if uncertain is not None:
+            raise ReadingIssue("uncertain_meaning", f"Expansion depends on {token.value!r}", causes=(uncertain,))
+        if isinstance(meaning, UndefinedMeaning):
+            raise ReadingIssue("undefined_control_sequence", f"{token.value!r} is established undefined")
+        if isinstance(meaning, StoredDefinition):
+            self.expand_macro(token, meaning)
+            return None
+        if isinstance(meaning, TokenListMeaning):
+            self._charge(len(meaning.replacement_tokens))
+            self.push(meaning.replacement_tokens)
+            return None
+        if isinstance(meaning, CharacterCodeMeaning) or (isinstance(meaning, BoundMeaning) and meaning.token is not None):
+            return token
+        if isinstance(meaning, PrimitiveMeaning):
+            operation = self.operations.get(meaning.operation)
+            if operation is not None:
+                if stop_operation is not None and stop_operation(operation):
+                    return token
+                if operation.expansion is not None:
+                    if self._depth >= 100:
+                        raise ReadingIssue("expansion_budget", "Expansion nesting exhausted its work budget")
+                    self._depth += 1
+                    try:
+                        return operation.expansion(self, token, meaning)
+                    finally:
+                        self._depth -= 1
+                if operation.unexpandable:
+                    return token
+        elif isinstance(meaning, BoundMeaning) and meaning.profile is not None:
+            if stop is not None and stop(meaning.profile):
+                return token
+        raise ReadingIssue("expansion_required", f"No established expansion behavior for {token.value!r}")
+
+    def next_expanded(self, *, stop=None, stop_operation=None):
         self.suppressed = False
         while (token := self.next_token()) is not None:
-            if token.kind == TokenKind.CHARACTER:
-                return token
-            if self.relaxed_target == (token.kind, token.value):
-                return token  # Provisional relax used while scanning a chardef RHS.
-            meaning = self.context.lookup_meaning(token.value, token.kind)
-            uncertain = meaning.span if isinstance(meaning, UncertainMeaning) else getattr(meaning, "uncertain", None)
-            if uncertain is not None:
-                raise ReadingIssue("uncertain_meaning", f"Expansion depends on {token.value!r}", causes=(uncertain,))
-            if isinstance(meaning, StoredDefinition):
-                self.expand_macro(token, meaning)
-                continue
-            if isinstance(meaning, TokenListMeaning):
-                self._charge(len(meaning.replacement_tokens))
-                self.push(meaning.replacement_tokens)
-                continue
-            if isinstance(meaning, CharacterCodeMeaning) or (isinstance(meaning, BoundMeaning) and meaning.token is not None):
-                return token
-            profile = (meaning.profile if isinstance(meaning, BoundMeaning)
-                       else self.knowledge.resolve_command(token.value) if meaning is None else None)
-            if isinstance(profile, EffectiveReadingProfile):
-                # A consumer can intercept an established semantic operation.
-                # This does not declare the underlying TeX code unexpandable.
-                if stop is not None and stop(profile):
-                    return token
-                operation = self.operations.get(profile.family)
-                if operation is not None and operation.expansion is not None:
-                    return operation.expansion(self, token, profile)
-                if operation is not None and operation.unexpandable:
-                    return token
-                if (profile.family == "stored_definition" and profile.grammar.get("handler") == "primitive_definition"
-                        or profile.name == r"\relax" and profile.action == "reading_noop"):
-                    return token
-            raise ReadingIssue("expansion_required", f"No established expansion behavior for {token.value!r}")
+            result = self.expand_once(token, stop=stop, stop_operation=stop_operation)
+            if result is not None:
+                return result
         return None

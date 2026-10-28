@@ -91,12 +91,14 @@ def _delimiter_pair(value: Any) -> tuple[str, str] | None:
 class BindingResolver:
     """One document's ordered package activation over reusable catalog knowledge."""
 
-    def __init__(self, catalog: BindingCatalog | None = None):
+    def __init__(self, catalog: BindingCatalog | None = None, *, engine_profile="etex"):
         self.catalog = catalog if catalog is not None else BindingCatalog()
+        self.engine_profile = engine_profile
         self.active_packages: list[str] = []
 
     def new_context(self, baseline: str = "latex_ascii", **kwargs: Any) -> ReaderContext:
         """Bootstrap from already loaded YAML; subsequent reading performs no I/O."""
+        kwargs.setdefault("engine_profile", self.engine_profile)
         return ReaderContext(baseline=self.catalog.mouth.baseline(baseline),
                              initial_meanings=latex_meanings(), **kwargs)
 

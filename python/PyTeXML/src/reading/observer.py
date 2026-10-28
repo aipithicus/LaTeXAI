@@ -12,6 +12,8 @@ from .definition_scanner import DefinitionScanner
 from .literal_scanner import LiteralScanner
 from .tex_reader import TokenKind
 from .effects import observed_write_names
+from ..engine.primitive import AssignmentTarget, PrimitiveMeaning
+from ..engine.observation import capture_primitive
 
 
 def observe_source(reader, context, knowledge):
@@ -28,6 +30,23 @@ def observe_source(reader, context, knowledge):
             profile = knowledge.source_command_syntax(token.value)
         checkpoint = reader.checkpoint()
         try:
+            meaning = context.resolve_meaning(knowledge, token.value)
+            if isinstance(meaning, PrimitiveMeaning):
+                captured = capture_primitive(reader, context, token, meaning)
+                if captured is not None:
+                    target = getattr(captured, "target", None)
+                    if target is not None:
+                        shadowed.add(target.value)
+                    elif isinstance(captured, SourceCommand) and captured.action == "meaning_assignment":
+                        shadowed.add(captured.argument("target").tokens[0].value)
+                    if isinstance(captured, AssignmentTarget):
+                        yield token
+                        yield captured.target
+                    else:
+                        yield captured
+                    continue
+                yield token
+                continue
             if profile is not None:
                 if profile.family == "character_code_definition":
                     with context.argument_scanning():
@@ -44,7 +63,7 @@ def observe_source(reader, context, knowledge):
                     yield definition
                     continue
                 if profile.family == "meaning_assignment":
-                    assignment = AssignmentScanner(reader, context).let(token.span, profile)
+                    assignment = AssignmentScanner(reader, context).let(token.span, profile.name)
                     shadowed.add(assignment.argument("target").tokens[0].value)
                     yield assignment
                     continue
@@ -66,7 +85,9 @@ def observe_source(reader, context, knowledge):
                     shadowed.update(observed_write_names(command, context, knowledge))
                     yield command
                     continue
-        except ReadingIssue:
-            pass
+        except ReadingIssue as issue:
+            if issue.reason == "expansion_continuation":
+                yield token
+                return
         reader.restore(checkpoint)
         yield token

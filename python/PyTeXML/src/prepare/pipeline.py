@@ -26,6 +26,7 @@ class _PreparationRequest:
     emit_manifest_json: bool
     emit_provenance: bool | None
     policy: str | Path
+    engine_profile: str
 
 
 def preprocess_paper(
@@ -45,6 +46,7 @@ def preprocess_paper(
     emit_provenance: Optional[bool] = None,
     policy: str = "prepare",
     logger: EventLogger | None = None,
+    engine_profile: str = "etex",
 ) -> Tuple[str, PreflightManifest, Path, Optional[ProvenanceLedger]]:
     """Build in isolation and publish a complete payload, with failure rollback.
 
@@ -80,7 +82,8 @@ def preprocess_paper(
             request = _PreparationRequest(
                 project=project, root_tex=root_tex, engine=engine,
                 convert_images_to_svg=convert_images_to_svg, copy_local_dependencies=copy_local_dependencies,
-                emit_manifest_json=emit_manifest_json, emit_provenance=emit_provenance, policy=policy)
+                emit_manifest_json=emit_manifest_json, emit_provenance=emit_provenance, policy=policy,
+                engine_profile=engine_profile)
             text, manifest, ledger = _prepare_paper(
                 request, transaction.stage, excluded_dirs=(destination, transaction.workspace), logger=log)
             log.emit("payload.prepared", "Payload built in staging",
@@ -134,7 +137,8 @@ def _prepare_paper(request: _PreparationRequest, out_dir: Path, *,
     try:
         logger.emit("phase.started", data={"phase": "reading"})
         session = PreparationSession(p_dir, root_tex=request.root_tex, engine=request.engine,
-                                     excluded_dirs=(out_dir, *excluded_dirs), policy=request.policy)
+                                     excluded_dirs=(out_dir, *excluded_dirs), policy=request.policy,
+                                     engine_profile=request.engine_profile)
         emit_provenance = (session.policy.provenance.emit_ledger if request.emit_provenance is None
                            else request.emit_provenance)
         session.run()
@@ -225,7 +229,9 @@ if __name__ == "__main__":
     parser.add_argument("project_dir")
     parser.add_argument("output_dir", nargs="?")
     parser.add_argument("root_tex", nargs="?")
+    parser.add_argument("--engine-profile", choices=("etex", "pdftex"), default="etex")
     args = parser.parse_args()
-    text, manifest, output, ledger = preprocess_paper(args.project_dir, output_dir=args.output_dir, root_tex=args.root_tex)
+    text, manifest, output, ledger = preprocess_paper(args.project_dir, output_dir=args.output_dir,
+                                                    root_tex=args.root_tex, engine_profile=args.engine_profile)
     print(f"Prepared {manifest.root_file} -> {output / 'master.tex'} "
           f"({len(text):,} characters; {manifest.preparation_status})")

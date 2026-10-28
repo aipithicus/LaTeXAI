@@ -145,10 +145,9 @@ class ResolvedEffectTests(unittest.TestCase):
         self.assertEqual(profile.span_classification.category, "semi_verbatim_block")
 
     def test_pending_commands_do_not_become_successful_noops(self):
-        pending = self.resolver.resolve_command(r"\catcode")
-        self.assertIsInstance(pending, EffectiveReadingProfile)
-        self.assertEqual(pending.grammar["handler"], "integer_catcode_assignment")
-        with self.assertRaises(ValueError):
+        pending = self.resolver.new_context().resolve_meaning(self.resolver, "catcode")
+        self.assertEqual(pending.operation, "reading.assign_catcode")
+        with self.assertRaises(TypeError):
             self.resolver.new_context().apply_profile(pending)
         unloaded = self.resolver.resolve_command(r"\VerbatimInput")
         self.assertEqual(unloaded.reason, UnresolvedReason.PACKAGE_NOT_LOADED)
@@ -246,16 +245,22 @@ class StateRestorationTests(unittest.TestCase):
         self.assertFalse(self.context.expl3_active)
 
     def test_group_tokens_are_dispatched_by_category_and_respect_execution_mode(self):
-        begin = self.resolver.resolve_group(CatCode.BEGIN_GROUP)
-        end = self.resolver.resolve_group(CatCode.END_GROUP)
-        with self.context.argument_scanning():
-            self.assertFalse(self.context.apply_profile(begin))
-        self.assertFalse(self.context.pop_scope())
-        self.context.apply_profile(begin)
+        from src.reading.tex_reader import TexReader
+        from src.reading.dispatcher import StructuralDispatcher
+        from src.engine.catalog import CORE_OPERATIONS
+        from src.engine.primitive import PrimitiveMeaning
+        from src.reading.contracts import ReadingIssue
+        reader = TexReader("{", catcodes=self.context.catcodes, endline_char=self.context.endlinechar)
+        host = StructuralDispatcher(reader, self.context, self.resolver)
+        opening = reader.next_event()
+        with self.context.argument_scanning(), self.assertRaises(ReadingIssue):
+            CORE_OPERATIONS["scope.begin"].execute(host, opening, PrimitiveMeaning("scope.begin", "simple"))
+        self.assertEqual(self.context.scope_depth, 0)
+        CORE_OPERATIONS["scope.begin"].execute(host, opening, PrimitiveMeaning("scope.begin", "simple"))
         self.context.apply_profile(self.on)
-        self.assertTrue(self.context.apply_profile(end))
+        host.end_group("simple")
         self.assertFalse(self.context.expl3_active)
-        self.assertFalse(self.context.apply_profile(end))
+        self.assertEqual(self.context.scope_depth, 0)
 
 
 if __name__ == "__main__":

@@ -9,7 +9,7 @@ from ..reading.tex_reader import TexReader, ReadEvent, EventKind
 from .emission import comment_directive
 
 
-def select_root(store: SourceStore, explicit: str | None = None, *, catalog=None) -> Path:
+def select_root(store: SourceStore, explicit: str | None = None, *, catalog=None, engine_profile="etex") -> Path:
     if explicit is not None:
         path = (store.root / explicit).resolve()
         if store.is_excluded(path):
@@ -23,7 +23,7 @@ def select_root(store: SourceStore, explicit: str | None = None, *, catalog=None
     candidates, hints, blocked = [], set(), []
     for path in files:
         doc = store.document(path)
-        resolver = BindingResolver(catalog)
+        resolver = BindingResolver(catalog, engine_profile=engine_profile)
         if catalog is None:
             catalog = resolver.catalog
         context = resolver.new_context()

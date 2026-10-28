@@ -7,15 +7,17 @@ from typing import Iterator
 from .contracts import (EffectiveReadingProfile, MouthBaseline, StoredDefinition,
                         EnvironmentDeclaration, EnvironmentDefinition, ScannedArgument,
                         BooleanMeaning, BoundMeaning, CharacterCodeMeaning, ConditionalRule, ReadingIssue, UncertainMeaning,
-                        TokenListMeaning)
+                        TokenListMeaning, UndefinedMeaning)
 from .tex_reader import CatCode, CatcodeTable, TokenKind
 from .configuration import ConfigurationState
 from .spans import SourceSpan
 from ..engine.parameters import IntegerParameters
+from ..engine.primitive import PrimitiveMeaning
+from ..engine.profiles import engine_profile as select_engine_profile
 
 
 DefinitionKey = tuple[TokenKind, str]
-LocalMeaning = StoredDefinition | EnvironmentDefinition | BooleanMeaning | BoundMeaning | CharacterCodeMeaning | TokenListMeaning | UncertainMeaning
+LocalMeaning = StoredDefinition | EnvironmentDefinition | BooleanMeaning | BoundMeaning | CharacterCodeMeaning | TokenListMeaning | UncertainMeaning | UndefinedMeaning | PrimitiveMeaning
 
 
 class ExecutionMode(str, Enum):
@@ -50,7 +52,8 @@ class ReaderContext:
 
     def __init__(self, *, baseline: MouthBaseline, catcodes: CatcodeTable | None = None,
                  endlinechar: int | None = None,
-                 mode: ExecutionMode = ExecutionMode.ACTIVE_EXECUTION, initial_meanings=None):
+                 mode: ExecutionMode = ExecutionMode.ACTIVE_EXECUTION, initial_meanings=None, engine_profile="etex"):
+        self.engine_profile = select_engine_profile(engine_profile)
         self.baseline = baseline
         self.catcodes = catcodes.copy() if catcodes is not None else baseline.new_catcodes()
         self.endlinechar = baseline.endlinechar if endlinechar is None else endlinechar
@@ -85,7 +88,7 @@ class ReaderContext:
         self._uncertain_prefixes = dict(saved.uncertain_prefixes)
 
     def copy(self) -> ReaderContext:
-        ctx = ReaderContext(baseline=self.baseline, mode=self.mode)
+        ctx = ReaderContext(baseline=self.baseline, mode=self.mode, engine_profile=self.engine_profile)
         ctx._restore(self._snapshot())
         ctx._scope_stack = [saved.copy() for saved in self._scope_stack]
         ctx._meanings = dict(self._meanings)
@@ -100,7 +103,7 @@ class ReaderContext:
 
     def restore_from(self, saved: ReaderContext) -> None:
         """Restore a suspended input's state without replacing the live table."""
-        if self.baseline != saved.baseline:
+        if self.baseline != saved.baseline or self.engine_profile != saved.engine_profile:
             raise ValueError("Cannot restore a different reading baseline")
         self._restore(saved._snapshot())
         self.mode = saved.mode
@@ -158,6 +161,10 @@ class ReaderContext:
                     return UncertainMeaning(span)
         return meaning
 
+    def resolve_meaning(self, knowledge, name, kind=TokenKind.CONTROL_SEQUENCE):
+        from ..engine.resolution import resolve_meaning
+        return resolve_meaning(self, knowledge, name, kind)
+
     def invalidate_writes(self, summary, span) -> bool:
         """Invalidate named meanings, including fallback knowledge, with TeX scope.
 
@@ -173,7 +180,7 @@ class ReaderContext:
                         if key[0] == TokenKind.CONTROL_SEQUENCE and names.contains(key[1]))
 
         def uncertain(value):
-            if isinstance(value, (BooleanMeaning, BoundMeaning, CharacterCodeMeaning, TokenListMeaning)):
+            if isinstance(value, (BooleanMeaning, BoundMeaning, CharacterCodeMeaning, TokenListMeaning, UndefinedMeaning, PrimitiveMeaning)):
                 return value if value.uncertain is not None else replace(value, uncertain=span)
             return value if isinstance(value, UncertainMeaning) else UncertainMeaning(span)
 
@@ -205,8 +212,17 @@ class ReaderContext:
     def conditional_rule(self, name: str, knowledge) -> ConditionalRule | None:
         """Resolve nesting from the current meaning, including local shadows."""
         meaning = self.lookup_meaning(name)
+        if meaning is None:
+            meaning = self.engine_profile.lookup(name)
+        if isinstance(meaning, PrimitiveMeaning):
+            if meaning.uncertain is not None:
+                raise ReadingIssue("uncertain_meaning", "Primitive meaning may have changed", causes=(meaning.uncertain,))
+            return meaning.operand if meaning.operation == "conditional.route" else None
         if isinstance(meaning, UncertainMeaning):
             raise ReadingIssue("uncertain_meaning", f"Meaning of {name!r} depends on retained source at {meaning.span}", causes=(meaning.span,))
+        if isinstance(meaning, UndefinedMeaning) and meaning.uncertain is not None:
+            raise ReadingIssue("uncertain_meaning", f"Undefined state of {name!r} may have changed",
+                               causes=(meaning.uncertain,))
         if isinstance(meaning, BooleanMeaning):
             if meaning.uncertain is not None:
                 # Even its nesting meaning may have changed, not just its value.
@@ -231,7 +247,7 @@ class ReaderContext:
         changed = self.integer_parameters.invalidate(span)
         for meanings in (self._meanings, *self._meaning_scopes):
             for key, meaning in list(meanings.items()):
-                if isinstance(meaning, (BooleanMeaning, BoundMeaning, CharacterCodeMeaning, TokenListMeaning)) and meaning.uncertain is None:
+                if isinstance(meaning, (BooleanMeaning, BoundMeaning, CharacterCodeMeaning, TokenListMeaning, UndefinedMeaning, PrimitiveMeaning)) and meaning.uncertain is None:
                     meanings[key] = replace(meaning, uncertain=span)
                     changed = True
         return changed

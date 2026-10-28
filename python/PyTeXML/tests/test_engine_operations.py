@@ -35,9 +35,13 @@ class EngineOperationTests(unittest.TestCase):
 
     def execute(self, host, identity):
         opening = host.reader.next_event()
-        profile = (host.knowledge.resolve_group(opening.token.catcode)
+        from src.engine.primitive import PrimitiveMeaning
+        profile = (PrimitiveMeaning(identity, "simple")
                    if opening.token.catcode in {CatCode.BEGIN_GROUP, CatCode.END_GROUP}
-                   else host.knowledge.resolve_command(opening.token.value))
+                   else host.context.resolve_meaning(host.knowledge, opening.token.value))
+        from src.reading.contracts import BoundMeaning
+        if isinstance(profile, BoundMeaning):
+            profile = profile.profile
         return CORE_OPERATIONS[identity].execute(host, opening, profile)
 
     def test_catalog_rejects_duplicates_across_families_and_cannot_be_mutated(self):

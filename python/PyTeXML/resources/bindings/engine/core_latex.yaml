@@ -1,6 +1,6 @@
 # resources/bindings/engine/core_latex.yaml
 # =============================================================================
-# Core LaTeX 2e / TeX primitives and format constructs.
+# Temporary LaTeX format and package-facing reader knowledge.
 # Built into LaTeX 2e base (latex.ltx / l3bootstrap.dtx / TeX82).
 # Active in all LaTeX documents by default.
 # =============================================================================
@@ -9,37 +9,10 @@ identity:
   name: core_latex
   tier: engine_kernel
   source_reference: "TeX82 tex.web (get_r_token / scan_toks / conditional / pass_text) / base/latex.ltx / l3kernel/l3bootstrap.dtx"
-  description: "Core primitives, catcode mutators, reader parameters, and structural boundaries"
+  description: "Unmigrated format constructs and source argument contracts"
 
 reading:
   commands:
-    # Bootstrap routing only; integer grammar and value roles live in Python.
-    - name: '\chardef'
-      family: character_code_definition
-      scope: local
-      grammar: {handler: character_code_definition}
-    # TeX82 eqtb integer parameters: these assignments change line/page breaking,
-    # not mouth categories, option declarations, or conditional meanings.
-    - name: '\widowpenalty'
-      family: parameter_assignment
-      scope: local
-      grammar: {handler: integer_parameter_assignment}
-      metadata: {parameter: widowpenalty, source_reference: 'TeX82 tex.web: widow_penalty_code, assign_int, scan_int'}
-    - name: '\clubpenalty'
-      family: parameter_assignment
-      scope: local
-      grammar: {handler: integer_parameter_assignment}
-      metadata: {parameter: clubpenalty, source_reference: 'TeX82 tex.web: club_penalty_code, assign_int, scan_int'}
-    # Supported pdfTeX setup vocabulary. This does not select an engine,
-    # initialize its format-dependent value, or implement backend output.
-    - name: '\pdfoutput'
-      family: parameter_assignment
-      scope: local
-      grammar: {handler: integer_parameter_assignment}
-      metadata: {parameter: pdfoutput, source_reference: 'pdftexdir/pdftex.web: pdf_output_code, assign_int, word_define'}
-    # https://github.com/latex3/latex2e/blob/develop/base/ltpage.dtx
-    # These summaries preserve the actual local meaning writes. They are not
-    # blanket exemptions for author macros bearing formatting-looking names.
     - name: '\flushbottom'
       family: source_command
       action: declared_effects
@@ -66,31 +39,6 @@ reading:
           scope: local
           writes:
             registers: [tolerance, emergencystretch, hfuzz, vfuzz]
-    # TeX82 tex.web, prefixed_command (let). Prefixes are explicit boundaries.
-    - name: '\let'
-      family: meaning_assignment
-      scope: local
-      grammar: {handler: let_assignment}
-    - name: '\global'
-      family: assignment_prefix
-      scope: local
-      grammar: {handler: assignment_prefix}
-    - name: '\long'
-      family: assignment_prefix
-      scope: local
-      grammar: {handler: assignment_prefix}
-    - name: '\outer'
-      family: assignment_prefix
-      scope: local
-      grammar: {handler: assignment_prefix}
-    - name: '\protected'
-      family: assignment_prefix
-      scope: local
-      grammar: {handler: assignment_prefix}
-    - name: '\globaldefs'
-      family: assignment_prefix
-      scope: local
-      grammar: {handler: assignment_prefix}
     # Capture-only boundaries (base/ltdefns.dtx, base/ltmiscen.dtx).
     # Preparation neither checks target existence nor installs replacements,
     # evaluates their bodies, or schedules/runs hook code.
@@ -202,26 +150,6 @@ reading:
 
     # TeX82 scan_toks/get_r_token: scope and replacement expansion are independent.
     # The definition operation publishes only after successful body collection.
-    - name: "\\def"
-      family: stored_definition
-      scope: local
-      grammar: {handler: primitive_definition, expansion: none}
-    - name: "\\gdef"
-      family: stored_definition
-      scope: global
-      grammar: {handler: primitive_definition, expansion: none}
-    - name: "\\noexpand"
-      family: expansion_control
-      grammar: {handler: noexpand}
-    - name: "\\edef"
-      family: stored_definition
-      scope: local
-      grammar: {handler: primitive_definition, expansion: full}
-    - name: "\\xdef"
-      family: stored_definition
-      scope: global
-      grammar: {handler: primitive_definition, expansion: full}
-
     - name: "\\begin"
       family: environment_open
       grammar:
@@ -258,17 +186,6 @@ reading:
       scope: local
       affects_reading: true
 
-    - name: "\\catcode"
-      action: "assign_catcode_dynamic"
-      grammar: {handler: integer_catcode_assignment}
-      syntax: "char_number '='? category_number"
-      scope: local
-      affects_reading: true
-
-    # Expl3 Syntax Switching (l3kernel/l3bootstrap.dtx)
-    # Combines catcode overrides with reader-parameter effects (endlinechar).
-    # Note: '@' is intentionally NOT modified by \ExplSyntaxOn; it retains whatever
-    # category it held previously (e.g. 11 under \makeatletter or 12 under \makeatother).
     - name: "\\ExplSyntaxOn"
       action: "expl3_lexical_enter"
       overrides:
@@ -304,71 +221,8 @@ reading:
   # ---------------------------------------------------------------------------
   # Scoping and Grouping Primitives
   # ---------------------------------------------------------------------------
-  grouping:
-    - name: "\\begingroup"
-      action: "push_lexical_scope"
-      trigger: control_sequence
-      state_management: {group_kind: semi_simple}
-    - name: "\\endgroup"
-      action: "pop_lexical_scope"
-      trigger: control_sequence
-      state_management: {group_kind: semi_simple}
-    - name: "group_begin"
-      action: "push_lexical_scope"
-      trigger: token_category
-      catcode: 1    # CatCode.BEGIN_GROUP (matches '{' or any char with catcode 1)
-      state_management: {group_kind: simple}
-    - name: "group_end"
-      action: "pop_lexical_scope"
-      trigger: token_category
-      catcode: 2    # CatCode.END_GROUP (matches '}' or any char with catcode 2)
-      state_management: {group_kind: simple}
-
-  # ---------------------------------------------------------------------------
-  # TeX82 conditional meanings. Nesting is known even when evaluation is not.
-  # ---------------------------------------------------------------------------
   conditionals:
-    - name: "\\iftrue"
-      role: opener
-      evaluation: always_true
-      capture_operands: 0
-    - name: "\\iffalse"
-      role: opener
-      evaluation: always_false
-      capture_operands: 0
-    # Preparation observes these source operands without expanding/evaluating them.
-    # A capture remains conditional on the entry meanings and reading state.
-    - {name: "\\if", role: opener, evaluation: deferred, capture_operands: 2, predicate: character_equal}
-    - {name: "\\ifcat", role: opener, evaluation: deferred, capture_operands: 2, predicate: category_equal}
-    # LaTeX kernel conditional meaning; class options determine its value.
-    # Knowing the nesting role does not assert either branch is selected.
     - {name: "\\if@twoside", role: opener, evaluation: deferred, capture_operands: 0}
-    - {name: "\\ifnum", role: opener, evaluation: deferred}
-    - {name: "\\ifdim", role: opener, evaluation: deferred}
-    - {name: "\\ifodd", role: opener, evaluation: deferred}
-    - {name: "\\ifvmode", role: opener, evaluation: deferred, capture_operands: 0}
-    - {name: "\\ifhmode", role: opener, evaluation: deferred, capture_operands: 0}
-    - {name: "\\ifmmode", role: opener, evaluation: deferred, capture_operands: 0}
-    - {name: "\\ifinner", role: opener, evaluation: deferred, capture_operands: 0}
-    - {name: "\\ifvoid", role: opener, evaluation: deferred}
-    - {name: "\\ifhbox", role: opener, evaluation: deferred}
-    - {name: "\\ifvbox", role: opener, evaluation: deferred}
-    - {name: "\\ifx", role: opener, evaluation: deferred, capture_operands: 2}
-    - {name: "\\ifeof", role: opener, evaluation: deferred}
-    - {name: "\\ifcase", role: opener, evaluation: deferred}
-    # e-TeX extension, part of every LaTeX format since 2017. Its operand is
-    # one unexpanded token, so a header such as \ifdefined\fi does not close.
-    - {name: "\\ifdefined", role: opener, evaluation: deferred, capture_operands: 1}
-    - name: "\\else"
-      role: alternative
-    - name: "\\fi"
-      role: terminator
-    - name: "\\or"
-      role: case_alternative
-
-  # ---------------------------------------------------------------------------
-  # Structural File Inclusions
-  # ---------------------------------------------------------------------------
   inclusions:
     - name: "\\input"
       family: source_command

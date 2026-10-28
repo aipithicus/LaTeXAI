@@ -1,0 +1,8 @@
+{
+  "once": "true",
+  "target": "true",
+  "nested": "true",
+  "reinsert": "true",
+  "execute": "true",
+  "scope": "true"
+}

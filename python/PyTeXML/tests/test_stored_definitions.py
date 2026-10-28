@@ -58,7 +58,7 @@ class StoredDefinitionTests(unittest.TestCase):
         self.assertEqual(self.reader.source_slice(definition.body), "[{#2}]#1")
         self.assertEqual(self.reader.source_slice(definition.opening), r"\def\pair prefix#1,#2;{")
         self.assertEqual(self.reader.source_slice(definition.closing), "}")
-        self.assertEqual(definition.binding_id, "engine/core_latex")
+        self.assertEqual(definition.binding_id, "primitive:definition.store")
         self.assertEqual(self.reader.position, source.index(" tail"))
         self.assertEqual(self.reader.state, ReaderState.MID_LINE)
         self.assertIs(self.context.lookup_definition("pair"), definition)
@@ -73,7 +73,7 @@ class StoredDefinitionTests(unittest.TestCase):
              patch.object(self.resolver, "resolve_group", side_effect=AssertionError("Body group executed")), \
              patch.object(self.resolver, "resolve_environment", side_effect=AssertionError("Body environment executed")):
             items = self.complete()
-        self.assertEqual([call.args[0] for call in lookup.call_args_list], ["def"])
+        self.assertEqual([call.args[0] for call in lookup.call_args_list], [])
         self.assertIsNone(self.context.lookup_definition("inner"))
         self.assertEqual(self.context.catcodes["@"], CatCode.OTHER)
         self.assertFalse(self.context.expl3_active)
@@ -212,7 +212,7 @@ class StoredDefinitionTests(unittest.TestCase):
                     self.capture()
                     boundary = self.dispatcher.next_item()
                 self.assertEqual(boundary.reason, "stored_macro")
-                self.assertEqual([call.args[0] for call in lookup.call_args_list], ["def"])
+                self.assertEqual([call.args[0] for call in lookup.call_args_list], [])
                 self.assertEqual(self.context.scope_depth, 0)
                 self.assertEqual(self.context.catcodes["@"], CatCode.OTHER)
 
@@ -272,7 +272,7 @@ class StoredDefinitionTests(unittest.TestCase):
             modes.append(self.context.mode)
             return original()
         with patch.object(self.reader, "next_token", side_effect=next_token):
-            definition = scanner.read(command.span.start, self.resolver.resolve_command("def"))
+            definition = scanner.primitive(command.span.start)
         self.assertIsInstance(definition, StoredDefinition)
         self.assertTrue(modes)
         self.assertEqual(set(modes), {ExecutionMode.STORED_DEFINITION})
@@ -286,15 +286,14 @@ class StoredDefinitionTests(unittest.TestCase):
         self.reader.next_event()
         position = self.reader.position
         with self.context.argument_scanning(), self.assertRaises(ReadingIssue) as error:
-            DefinitionScanner(self.reader, self.context).read(0, self.resolver.resolve_command("def"))
+            DefinitionScanner(self.reader, self.context).primitive(0)
         self.assertEqual(error.exception.reason, "inactive_context")
         self.assertEqual(self.reader.position, position)
 
-    def test_routing_uses_binding_grammar_not_command_spelling(self):
+    def test_routing_uses_current_native_meaning_not_command_spelling(self):
         self.setup_reader(r"\declare\x{body}")
-        profile = replace(self.resolver.resolve_command("def"), name=r"\declare")
-        with patch.object(self.resolver, "resolve_command", return_value=profile):
-            definition = self.capture()
+        self.context.record_meaning("declare", self.context.resolve_meaning(self.resolver, "def"))
+        definition = self.capture()
         self.assertEqual(self.reader.source_slice(definition.span), r"\declare\x{body}")
         self.assertIs(self.context.lookup_definition("x"), definition)
 

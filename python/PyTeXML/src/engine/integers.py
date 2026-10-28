@@ -18,6 +18,7 @@ from ..reading.contracts import (BoundMeaning, CharacterCodeMeaning,
 from ..reading.tex_reader import CatCode, TokenKind
 from .operations import OperationHost
 from .expansion import ExpansionCursor
+from .primitive import PrimitiveMeaning
 
 
 class IntegerScanner:
@@ -39,20 +40,16 @@ class IntegerScanner:
     def _meaning(self, token):
         if self.relaxed_target == (token.kind, token.value):
             return None  # provisional relax, with no integer role
-        meaning = self.host.context.lookup_meaning(token.value, token.kind)
-        if isinstance(meaning, (BoundMeaning, CharacterCodeMeaning)) and meaning.uncertain is not None:
+        meaning = self.host.context.resolve_meaning(self.host.knowledge, token.value, token.kind)
+        if isinstance(meaning, (BoundMeaning, CharacterCodeMeaning, PrimitiveMeaning)) and meaning.uncertain is not None:
             raise ReadingIssue("uncertain_meaning", "Integer depends on an uncertain meaning",
                                causes=(meaning.uncertain,))
         if isinstance(meaning, CharacterCodeMeaning):
             return meaning
-        profile = (meaning.profile if isinstance(meaning, BoundMeaning)
-                   else self.host.knowledge.resolve_command(token.value) if meaning is None else None)
-        if isinstance(profile, EffectiveReadingProfile):
-            operation = self.host.operations.get(profile.family)
+        if isinstance(meaning, PrimitiveMeaning):
+            operation = self.host.operations.get(meaning.operation)
             if operation is not None and operation.unexpandable:
-                return (operation, profile)
-            if profile.name == r"\relax" and profile.action == "reading_noop":
-                return None
+                return (operation, meaning)
         if self.reader.suppressed:
             return None  # A suppressed expandable token has no integer role.
         raise ReadingIssue("computed_assignment", "Integer scanning requires expansion or an unsupported internal value")

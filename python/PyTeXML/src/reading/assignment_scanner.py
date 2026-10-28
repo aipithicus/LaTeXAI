@@ -11,7 +11,7 @@ class AssignmentScanner(ArgumentScanner):
     operations. This capture-only summary does not establish a parameter value.
     """
 
-    def let(self, opening, profile):
+    def let(self, opening, name):
         """TeX82 prefixed_command/let: get_r_token, optional equals, one donor.
 
         Neither operand is expanded. After an equals TeX consumes at most one
@@ -26,7 +26,7 @@ class AssignmentScanner(ArgumentScanner):
                     donor = self.reader.next_token()
             if donor is None:
                 raise ReadingIssue("assignment_donor", "EOF before the let donor token")
-        return SourceCommand(self.reader.source_span(opening.start, self.reader.position), profile.name,
+        return SourceCommand(self.reader.source_span(opening.start, self.reader.position), name,
             "meaning_assignment", tuple(ScannedArgument(name, t.span, (t,), "data")
                                         for name, t in (("target", target), ("donor", donor))))
 

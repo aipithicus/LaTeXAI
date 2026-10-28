@@ -27,8 +27,8 @@ class IntegerParameterTests(unittest.TestCase):
         cls.catalog = BindingCatalog()
         cls.oracle = json.loads((PROJECT / "tests/fixtures/engine/integer-parameters.expected.json").read_text())
 
-    def host(self, text, *, preparation=False, context=None):
-        knowledge = BindingResolver(self.catalog)
+    def host(self, text, *, preparation=False, context=None, engine_profile="etex"):
+        knowledge = BindingResolver(self.catalog, engine_profile=engine_profile)
         context = context or knowledge.new_context()
         reader = TexReader(text, source_id="parameters.tex", catcodes=context.catcodes,
                            endline_char=context.endlinechar)
@@ -45,7 +45,7 @@ class IntegerParameterTests(unittest.TestCase):
 
     def test_gauntlet_setup_assignment_preserves_active_format_constant(self):
         first = (PROJECT / "tests/fixtures/specimens/gauntlet-master/master.tex").read_text().splitlines()[0]
-        host, items = self.read(first + r"\chardef\saved=\active")
+        host, items = self.read(first + r"\chardef\saved=\active", engine_profile="pdftex")
         self.assertEqual(self.value(host, "pdfoutput"), 1)
         self.assertEqual(host.context.lookup_meaning("saved").value, 13)
         self.assertIsNone(host.context.lookup_meaning("active").uncertain)
@@ -54,7 +54,7 @@ class IntegerParameterTests(unittest.TestCase):
     def test_initial_parameter_values_are_not_guessed(self):
         for name in ("pdfoutput", "widowpenalty", "clubpenalty"):
             with self.subTest(name=name):
-                host = self.host("\\chardef\\saved=\\" + name)
+                host = self.host("\\chardef\\saved=\\" + name, engine_profile="pdftex")
                 self.assertEqual(list(host)[-1].reason, "unavailable_integer")
                 self.assertIsNone(host.context.lookup_meaning("saved"))
 
@@ -195,8 +195,9 @@ class IntegerParameterTests(unittest.TestCase):
             self.value(host)
 
     def test_catalog_requires_parameter_identity_and_supported_grammar(self):
-        original = next(c for c in self.catalog.engine_bindings["core_latex"]["reading"]["commands"]
-                        if c["name"] == r"\widowpenalty")
+        original = {"name": r"\legacyparameter", "family": "parameter_assignment",
+                    "grammar": {"handler": "integer_parameter_assignment"},
+                    "metadata": {"parameter": "legacyparameter"}}
         for key in (None, "", r"\widowpenalty"):
             command = deepcopy(original)
             command["metadata"]["parameter"] = key

@@ -13,7 +13,7 @@ from ..reading.observer import observe_source
 from ..reading.tex_reader import TexReader, Token, TokenKind, InvalidCharacterError
 
 
-def survey_sources(store, catalog):
+def survey_sources(store, catalog, *, engine_profile="etex"):
     reports = []
     for path in store.files:
         if path.suffix.lower() not in {".tex", ".sty", ".cls", ".cfg", ".bbl", ".tikz"}:
@@ -27,7 +27,7 @@ def survey_sources(store, catalog):
         except (SourceDecodingError, OSError) as error:
             report.update(status="unreadable", error=str(error))
             continue
-        resolver = BindingResolver(catalog)
+        resolver = BindingResolver(catalog, engine_profile=engine_profile)
         report["length"] = len(doc.text)
         context = resolver.new_context()
         if path.suffix.lower() in {".sty", ".cls"}:

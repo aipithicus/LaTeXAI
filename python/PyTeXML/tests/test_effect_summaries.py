@@ -52,7 +52,7 @@ class EffectSummaryTests(unittest.TestCase):
         self.addCleanup(temporary.cleanup)
         root = Path(temporary.name)
         (root / "main.tex").write_text(text, encoding="utf-8")
-        with patch("src.prepare.session.BindingResolver", side_effect=lambda _: BindingResolver(catalog or self.catalog)):
+        with patch("src.prepare.session.BindingResolver", side_effect=lambda _, **kw: BindingResolver(catalog or self.catalog, **kw)):
             return preprocess_paper(str(root))
 
     def test_pure_and_layout_bodies_preserve_unrelated_boolean_without_expanding(self):

@@ -4,6 +4,8 @@ from .contracts import (BooleanMeaning, BoundMeaning, EffectiveReadingProfile,
                         ReadingIssue, ScannedArgument, StoredDefinition)
 from .effect_summary import EffectSummary, NameSet
 from .tex_reader import CatCode, TokenKind
+from ..engine.primitive import PrimitiveMeaning
+from ..engine.observation import capture_primitive
 
 
 def command_summary(metadata, context):
@@ -78,8 +80,28 @@ def definition_summary(definition, context, knowledge, *, active=(), forbidden=N
             if (token.kind != TokenKind.CONTROL_SEQUENCE or total.meanings.contains(token.value)
                     or forbidden.contains(token.value)):
                 return EffectSummary.unknown("Body calls an active or possibly overwritten meaning")
-            meaning = context.lookup_meaning(token.value)
-            if isinstance(meaning, StoredDefinition):
+            meaning = context.resolve_meaning(knowledge, token.value)
+            if isinstance(meaning, PrimitiveMeaning):
+                if meaning.operation == "definition.store" and meaning.operand.expanded:
+                    return EffectSummary.unknown("Expanded definition requires execution")
+                captured = capture_primitive(cursor, context, token, meaning)
+                if isinstance(captured, StoredDefinition):
+                    if captured.target.kind != TokenKind.CONTROL_SEQUENCE:
+                        return EffectSummary.unknown("Active-character definition needs further resolution")
+                    effect = EffectSummary(meanings=NameSet((captured.target.value,)),
+                                           scope="global" if meaning.operand.global_ else "local")
+                elif captured is not None and captured.action == "meaning_assignment":
+                    target = captured.argument("target").tokens[0]
+                    if target.kind != TokenKind.CONTROL_SEQUENCE:
+                        return EffectSummary.unknown("Active-character assignment needs further resolution")
+                    effect = EffectSummary(meanings=NameSet((target.value,)))
+                elif captured is not None and captured.action == "integer_parameter_assignment":
+                    effect = EffectSummary(registers=(captured.metadata["parameter"],))
+                elif captured is not None and captured.action == "reading_noop":
+                    effect = EffectSummary()
+                else:
+                    return EffectSummary.unknown("Primitive requires execution")
+            elif isinstance(meaning, StoredDefinition):
                 blocked = NameSet((*forbidden.names, *total.meanings.names), (*forbidden.prefixes, *total.meanings.prefixes))
                 effect = definition_summary(meaning, context, knowledge, active=active, forbidden=blocked, _budget=_budget)
             elif isinstance(meaning, BooleanMeaning) and meaning.target is not None and meaning.uncertain is None:
@@ -91,7 +113,7 @@ def definition_summary(definition, context, knowledge, *, active=(), forbidden=N
                 if not isinstance(profile, EffectiveReadingProfile):
                     return EffectSummary.unknown(f"No effect contract for {token.value!r}")
                 if profile.family == "meaning_assignment":
-                    command = AssignmentScanner(cursor, context).let(token.span, profile)
+                    command = AssignmentScanner(cursor, context).let(token.span, profile.name)
                     target = command.argument("target").tokens[0]
                     if target.kind != TokenKind.CONTROL_SEQUENCE:
                         return EffectSummary.unknown("Active-character assignment needs further resolution")
@@ -138,9 +160,10 @@ def declared_effects(command, context, knowledge):
             raise ReadingIssue("effect_precondition", f"Reading summary depends on the standard meaning of {name!r}")
     copies = []
     for target, donor in contract["meaning_copies"].items():
-        profile = knowledge.resolve_command(donor)
-        if not isinstance(profile, EffectiveReadingProfile):
+        meaning = context.resolve_meaning(knowledge, donor)
+        if not isinstance(meaning, (PrimitiveMeaning, BoundMeaning)):
             raise ReadingIssue("effect_precondition", f"No established reading meaning for {donor!r}")
-        copies.append((target, BoundMeaning(command.span, profile=profile)))
+        from dataclasses import replace
+        copies.append((target, replace(meaning, span=command.span)))
     for target, meaning in copies:
         context.record_meaning(target, meaning)

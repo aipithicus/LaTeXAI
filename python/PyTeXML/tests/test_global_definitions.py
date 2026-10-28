@@ -84,8 +84,7 @@ class GlobalDefinitionTests(unittest.TestCase):
     def test_scanner_captures_global_definition_without_applying_scope(self):
         host = self.host(r"\gdef\a{G}")
         token = host.reader.next_token()
-        definition = DefinitionScanner(host.reader, host.context).read(
-            token.span.start, host.knowledge.resolve_command("gdef"))
+        definition = DefinitionScanner(host.reader, host.context).primitive(token.span.start)
         self.assertEqual("".join(t.value for t in definition.body_tokens), "G")
         self.assertIsNone(host.context.lookup_meaning("a"))
 
@@ -171,7 +170,7 @@ class GlobalDefinitionTests(unittest.TestCase):
                 host = self.host(source)
                 boundary = host.next_item()
                 self.assertIsInstance(boundary, ReadingBoundary)
-                self.assertEqual(boundary.reason, "assignment_prefix")
+                self.assertEqual(boundary.reason, "unsupported_primitive" if source.startswith(r"\globaldefs") else "assignment_prefix")
                 self.assertIsNone(host.context.lookup_meaning("a"))
 
     def test_global_loader_defined_in_child_group_is_used_after_return(self):

@@ -10,22 +10,12 @@ def validate_effect(profile):
         raise ReadingIssue("unsupported_reading_effect", "Only local reading effects are supported")
 
 
-def group_kind(profile):
-    validate_effect(profile)
-    if profile.catcode_overrides or profile.catcode_layers or profile.reader_parameters:
-        raise ReadingIssue("unsupported_reading_effect", "Combined grouping and assignments are unsupported")
-    kind = profile.state_management.group_kind if profile.state_management else None
-    if kind not in {"simple", "semi_simple"}:
-        raise ReadingIssue("unsupported_reading_effect", "Grouping requires a supported group kind")
-    return kind
-
-
 def begin_scope(host, opening, profile):
     """No operands or expansion; push a local journal and owned group frame.
 
     Return the original opener event, preserving its source and mouth state.
     """
-    host.begin_group(group_kind(profile), opening.span)
+    host.begin_group(profile.operand, opening.span)
     host.reader.endline_char = host.context.endlinechar
     return opening
 
@@ -36,7 +26,7 @@ def end_scope(host, opening, profile):
     Return the original closer. Synchronize the next line's reader parameter
     without reloading the current line or discarding pending conversions.
     """
-    host.end_group(group_kind(profile))
+    host.end_group(profile.operand)
     host.reader.endline_char = host.context.endlinechar
     return opening
 
@@ -58,7 +48,7 @@ def apply_lexical_profile(host, opening, profile):
 
 
 OPERATIONS = (
-    ExecutableOperation("scope.begin", begin_scope),
-    ExecutableOperation("scope.end", end_scope),
+    ExecutableOperation("scope.begin", begin_scope, unexpandable=True),
+    ExecutableOperation("scope.end", end_scope, unexpandable=True),
     ExecutableOperation("reading.apply_lexical_profile", apply_lexical_profile),
 )
