@@ -242,6 +242,18 @@ class ResourceLoadingTests(unittest.TestCase):
                 with self.assertRaises(ProfileError):
                     BindingCatalog(self.bindings)
 
+    def test_operand_capture_counts_are_bounded(self):
+        spec = {"name": r"\probe", "role": "opener", "evaluation": "deferred"}
+        for count, valid in ((0, True), (1, True), (2, True), (3, False), (True, False)):
+            with self.subTest(count=count):
+                self.core["reading"] = {"conditionals": [{**spec, "capture_operands": count}]}
+                self.write("engine/core.yaml", self.core)
+                if valid:
+                    BindingCatalog(self.bindings)
+                else:
+                    with self.assertRaises(ProfileError):
+                        BindingCatalog(self.bindings)
+
     def test_newif_is_a_factory_without_a_conditional_nesting_role(self):
         from src.bindings.resolver import BindingResolver
         from src.reading.contracts import EffectiveReadingProfile

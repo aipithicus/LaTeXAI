@@ -342,6 +342,9 @@ reading:
     - {name: "\\ifx", role: opener, evaluation: deferred, capture_operands: 2}
     - {name: "\\ifeof", role: opener, evaluation: deferred}
     - {name: "\\ifcase", role: opener, evaluation: deferred}
+    # e-TeX extension, part of every LaTeX format since 2017. Its operand is
+    # one unexpanded token, so a header such as \ifdefined\fi does not close.
+    - {name: "\\ifdefined", role: opener, evaluation: deferred, capture_operands: 1}
     - name: "\\else"
       role: alternative
     - name: "\\fi"

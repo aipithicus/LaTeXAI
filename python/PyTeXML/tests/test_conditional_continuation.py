@@ -24,8 +24,10 @@ from src.reading.tex_reader import TexReader
 
 
 class ConditionalCaptureTests(unittest.TestCase):
-    def scan(self, source, *, preparation=True, catalog=None):
+    def scan(self, source, *, preparation=True, catalog=None, packages=()):
         resolver = BindingResolver(catalog)
+        for name in packages:
+            resolver.load_package(name)
         self.context = resolver.new_context()
         self.reader = TexReader(source, catcodes=self.context.catcodes, endline_char=self.context.endlinechar)
         items = list(StructuralDispatcher(self.reader, self.context, resolver,
@@ -54,6 +56,22 @@ class ConditionalCaptureTests(unittest.TestCase):
         items = self.scan(r"\ifx\fi\else A\fi\input{tail}")
         region = next(i for i in items if isinstance(i, ConditionalRegion))
         self.assertEqual(len(region.markers), 1)
+        self.assertFalse(any(isinstance(i, ReadingBoundary) for i in items))
+
+    def test_one_operand_header_can_itself_name_a_conditional(self):
+        items = self.scan(r"\ifdefined\fi A\else B\fi\input{tail}")
+        region = next(i for i in items if isinstance(i, ConditionalRegion))
+        self.assertEqual(len(region.markers), 2)
+        self.assertTrue(any(isinstance(i, SourceCommand) and i.value("target") == "tail" for i in items))
+        self.assertFalse(any(isinstance(i, ReadingBoundary) for i in items))
+
+    def test_engine_tests_nest_only_once_iftex_is_loaded(self):
+        body = r"\ifPDFTeX\usepackage{inputenc}\else\ifXeTeX X\fi\usepackage{fontspec}\fi"
+        self.assertTrue(any(isinstance(i, ReadingBoundary) for i in self.scan(body + r"\input{tail}")))
+        items = self.scan(body + r"\input{tail}", packages=("iftex",))
+        region = next(i for i in items if isinstance(i, ConditionalRegion))
+        self.assertEqual(self.reader.text[region.span.start:region.span.end], body)
+        self.assertTrue(any(isinstance(i, SourceCommand) and i.value("target") == "tail" for i in items))
         self.assertFalse(any(isinstance(i, ReadingBoundary) for i in items))
 
     def test_skipped_and_active_readings_must_agree(self):

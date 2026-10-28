@@ -1,0 +1,39 @@
+identity:
+  package: iftex
+  description: Engine-test conditionals; their values depend on the compiling engine, so no branch is selected
+  source:
+    version: 1.0f
+    reference: https://mirrors.ctan.org/macros/generic/iftex/iftex.sty
+reading:
+  # iftex.sty \let-s each name to \iftrue or \iffalse at load time from the
+  # engine's primitives. Preparation knows only the nesting role; the value
+  # belongs to whichever engine compiles the document.
+  conditionals:
+  - {name: \ifetex, role: opener, evaluation: deferred, capture_operands: 0}
+  - {name: \ifeTeX, role: opener, evaluation: deferred, capture_operands: 0}
+  - {name: \ifpdftex, role: opener, evaluation: deferred, capture_operands: 0}
+  - {name: \ifPDFTeX, role: opener, evaluation: deferred, capture_operands: 0}
+  - {name: \ifxetex, role: opener, evaluation: deferred, capture_operands: 0}
+  - {name: \ifXeTeX, role: opener, evaluation: deferred, capture_operands: 0}
+  - {name: \ifluatex, role: opener, evaluation: deferred, capture_operands: 0}
+  - {name: \ifLuaTeX, role: opener, evaluation: deferred, capture_operands: 0}
+  - {name: \ifluahbtex, role: opener, evaluation: deferred, capture_operands: 0}
+  - {name: \ifLuaHBTeX, role: opener, evaluation: deferred, capture_operands: 0}
+  - {name: \ifptex, role: opener, evaluation: deferred, capture_operands: 0}
+  - {name: \ifpTeX, role: opener, evaluation: deferred, capture_operands: 0}
+  - {name: \ifuptex, role: opener, evaluation: deferred, capture_operands: 0}
+  - {name: \ifupTeX, role: opener, evaluation: deferred, capture_operands: 0}
+  - {name: \ifptexng, role: opener, evaluation: deferred, capture_operands: 0}
+  - {name: \ifpTeXng, role: opener, evaluation: deferred, capture_operands: 0}
+  - {name: \ifvtex, role: opener, evaluation: deferred, capture_operands: 0}
+  - {name: \ifVTeX, role: opener, evaluation: deferred, capture_operands: 0}
+  - {name: \ifalephtex, role: opener, evaluation: deferred, capture_operands: 0}
+  - {name: \ifAlephTeX, role: opener, evaluation: deferred, capture_operands: 0}
+  - {name: \iftutex, role: opener, evaluation: deferred, capture_operands: 0}
+  - {name: \ifTUTeX, role: opener, evaluation: deferred, capture_operands: 0}
+  - {name: \iftexpadtex, role: opener, evaluation: deferred, capture_operands: 0}
+  - {name: \ifTexpadTeX, role: opener, evaluation: deferred, capture_operands: 0}
+  - {name: \ifhint, role: opener, evaluation: deferred, capture_operands: 0}
+  - {name: \ifHINT, role: opener, evaluation: deferred, capture_operands: 0}
+  # Output mode (pdf or dvi), set at load time like a \newif flag.
+  - {name: \ifpdf, role: opener, evaluation: deferred, capture_operands: 0}

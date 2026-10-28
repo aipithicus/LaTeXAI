@@ -220,8 +220,8 @@ class BindingCatalog:
                     fields = {"name", "role", "evaluation"} if role == "opener" else {"name", "role"}
                     if role == "opener" and "capture_operands" in spec:
                         fields.add("capture_operands")
-                        if type(spec["capture_operands"]) is not int or spec["capture_operands"] not in (0, 2):
-                            raise ProfileError(f"{path}: {name} capture_operands must be 0 or 2")
+                        if type(spec["capture_operands"]) is not int or spec["capture_operands"] not in (0, 1, 2):
+                            raise ProfileError(f"{path}: {name} capture_operands must be 0, 1 or 2")
                     if role == "opener" and "predicate" in spec:
                         fields.add("predicate")
                         if (spec["predicate"] not in ("character_equal", "category_equal")
