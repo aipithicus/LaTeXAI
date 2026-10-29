@@ -58,6 +58,15 @@ checked. Everything is in root A unless the entry names another root.
 
 ### Classes, packages and branches
 
+- **D5** `gmvenue.cls`, clarified 2026-10-29: `gmlogo.pdf` is intentionally
+  absent. The file test records a definite absent result under the configured
+  search environment and executes the authored false branch, establishing
+  `gm@logo` as `no logo`. It must not create a missing-asset obligation, fetch a
+  logo, fabricate a file at that name or stop preparation. Keep the absence and
+  selected fallback visible in the manifest. This is an expected false-path
+  witness; separate active missing-asset cases must verify an in-place typed
+  error tombstone, correlated logging and continued extraction.
+
 - **D10** `gmvenue.cls:5–13`:
   - **Flags.** `\ExecuteOptions{final}` sets `\ifgm@final`, and `\ifgm@numeric`
     stays false.

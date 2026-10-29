@@ -1,5 +1,48 @@
 # Source execution checkpoints
 
+## 2026-10-29: review reconciliation and recovery direction (planning only)
+
+The user clarified the product contract: recover useful content from broken
+LaTeX by default, including severe source failures. Strict rejection is
+user-selected. An active missing asset produces a typed error tombstone at its
+expected output position and a correlated log record; surrounding extraction
+continues. Author-provided fallbacks execute through the engine and take
+precedence over generated recovery. A failure must not suppress discovery of
+independent failures. Scope consequences and preserve assumptions where recovery
+continues without complete language-state knowledge.
+
+The [staged pipeline §6.1](../../../../aipithicus-issues/LaTeXAI/briefs/pytexml-staged-resolution-pipeline.md#61-failure-consequences-continued-discovery-and-recovery-policy)
+owns that contract. The [active plan](../../../../aipithicus-issues/LaTeXAI/briefs/pytexml-language-core.md#active-implementation-plan)
+owns dispatch: continued discovery/recovery and computed-resource closure can
+advance before full expl3/package integration. These are planned changes; the
+runtime still raises on some required dependency and materialization failures.
+No new implementation or qualification is claimed by this entry.
+
+Reconciliation with the [roundup review](../../../../aipithicus-issues/LaTeXAI/briefs/feedback/opus-roundup-review.md):
+
+- D5's `gmlogo.pdf` is intentionally absent. Its false branch defines `gm@logo`
+  as `no logo`; the existing recorded false decision is correct. It must not be
+  turned into an asset requirement or a fabricated file. Active missing-image
+  references need their own typed-tombstone recovery witnesses.
+- `gmlisting` is declared in `body/paper.tex` and requests the existing
+  `listings/snippet.py` through a computed path. Close that request through its
+  actual invocation context. The prepared render's first failure does not prove
+  that it is the only remaining failure.
+- Add differential declaration coverage and make successful-declaration target
+  assumptions explicit. The Python hidden-before-public assignment order differs
+  from pinned kernel source; collision/restoration cases need qualification.
+- A native hit-state receipt already records `@filef@und` as the relative quoted
+  `etoolbox.sty` name. The tracked witness still overwrites the hit before
+  inspection, so promote that observation into the reusable fixture.
+- The search fingerprint is names-only and the index is rebuilt per session.
+  Preserve that scope, then qualify content identity, snapshot reuse and native
+  duplicate-path ordering. Current ambiguity refusal is conservative, not a
+  qualification of native search precedence.
+- The newer L14 direction in issues commit `6db82c3` makes expl3 engine-native;
+  it supersedes the review's runtime source-loading suggestion. Constructing
+  ordinary macro meanings informs binding design without establishing a new
+  overlay/replace precedence mode.
+
 ## 2026-10-29: Python format routines and explicit file search
 
 The user clarified the implementation boundary: adapt kernel routines in Python;
@@ -70,9 +113,10 @@ The compiler reports `Package Listings Error: File listings/snippet(.py) not fou
 Computed external-literal dependency closure remains open. This checkpoint does
 not qualify prepared Root A render equivalence.
 
-Next increments: establish the relevant format namespace and Python expl3/kernel
+The next-increment ordering at this checkpoint was: establish the relevant format namespace and Python expl3/kernel
 declaration routines; integrate package-source execution with explicit resource
 ownership; then close computed resource requests and rerun paired native rendering.
+The recovery clarification above revises that ordering in the active plan.
 Keep the original source witnesses, initialization gaps, source continuation,
 declaration observations and output qualification separate.
 
