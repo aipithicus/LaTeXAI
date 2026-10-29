@@ -145,7 +145,12 @@ class ActivityPreparationTests(unittest.TestCase):
         self.assertEqual((output / "inner.sty").read_text(), inner)
         self.assertEqual((output / "outer.sty").read_text(), outer)
         self.assertTrue({"middle-tail.tex", "outer-tail.tex"} <= set(manifest.code_inputs))
-        self.assertFalse(any(r["reason"] == "package_not_loaded" for r in manifest.requirements))
+        # The retained inner source could set either package's load marker.
+        # Keep the later declarations without pretending their code executed.
+        self.assertFalse(any(p.binding_activated for p in manifest.packages_declared
+                             if p.name in {"graphicx", "natbib"}))
+        self.assertEqual(len([r for r in manifest.requirements
+                             if r["reason"] == "package_load_state"]), 2)
         requirement, = (r for r in manifest.requirements if r["reason"] == "retained_code_reading")
         self.assertIn("'inner.sty'", requirement["detail"])
         self.assertEqual(requirement["materialization"], "prepared")

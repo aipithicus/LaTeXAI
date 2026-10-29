@@ -197,6 +197,7 @@ class PreparationLintTests(unittest.TestCase):
         self.assertEqual(finding["locations"], [])
 
     def test_publication_failure_clears_repair_cursors_and_related_load_locations(self):
+        self.put("xcolor.sty", "% Known source: no optional configuration loads.\n")
         self.put("wrapper.sty", r"\RequirePackage[a]{xcolor}")
         rename = os.replace
         def fail(source, target):
@@ -246,6 +247,7 @@ class PreparationLintTests(unittest.TestCase):
         self.assertTrue(manifest.unresolved)
 
     def test_option_clash_links_transitive_first_load_and_new_options(self):
+        self.put("xcolor.sty", "% Known source: no optional configuration loads.\n")
         self.put("wrapper.sty", r"\RequirePackage[table]{xcolor}")
         source = r"\usepackage{wrapper}\usepackage[dvipsnames]{xcolor}BODY"
         text, manifest, output, _ = self.prepare(source, mode="repair")
@@ -275,10 +277,13 @@ class PreparationLintTests(unittest.TestCase):
         self.assertTrue(finding["evidence"]["related"][0]["locations"])
         self.assertEqual(finding["repair"]["status"], "not_available")
 
-    def test_multi_package_clashes_are_separate_findings(self):
+    def test_option_error_makes_later_package_guard_uncertain(self):
+        self.put("foo.sty", "")
+        self.put("bar.sty", "")
         _, manifest, _, _ = self.prepare(r"\usepackage[a]{foo,bar}\usepackage[b]{foo,bar}")
         clashes = [f for f in manifest.lint["findings"] if f["reason"] == "option_clash"]
-        self.assertEqual({f["evidence"]["target"] for f in clashes}, {"foo", "bar"})
+        self.assertEqual({f["evidence"]["target"] for f in clashes}, {"foo"})
+        self.assertTrue(any(r["reason"] == "package_load_state" for r in manifest.requirements))
 
     def test_policy_and_catalog_validation_reject_unknown_contracts(self):
         path = Path(self.policy())

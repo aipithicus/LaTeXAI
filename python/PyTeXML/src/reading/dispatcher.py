@@ -922,21 +922,24 @@ class StructuralDispatcher:
     def _branch_test(self, command):
         """Route a YAML-described braced branch over its already captured tokens."""
         command = self.identify(command)
+        causes, definitions = (), ()
         try:
             name = command.value("name")
             self._require(bool(name), "computed_argument", "A load query needs a nonempty literal name")
-            truth, facts, unknown = self.loads.query(command.metadata["kind"], name)
-            detail = "An earlier source region may contain additional loads" if truth is None else ""
+            status = self.loads.query(command.metadata["kind"], name, self.context)
+            truth, facts, unknown = status.truth, list(status.load_units), list(status.uncertainty_units)
+            causes, definitions = status.causes, status.definition_units
+            detail = "The current package/class load marker is unresolved" if truth is None else ""
         except ReadingIssue as error:
             name, truth, facts, unknown, detail = None, None, [], [], error.detail
         self.decisions.append({"unit_id": command.unit_id, "predicate": "loaded",
             "kind": command.metadata["kind"], "name": name, "truth": truth,
-            "definition_unit_ids": [], "load_unit_ids": facts, "uncertainty_unit_ids": unknown,
+            "definition_unit_ids": list(definitions), "load_unit_ids": facts, "uncertainty_unit_ids": unknown,
             "assumption": "source_visible_loads"})
         if truth is None:
             return self._deferred(DeferredRegion(command.span, "branch_selection", detail,
                 tuple(t for a in command.arguments for t in a.tokens), command,
-                command.metadata["binding_id"], unit_id=command.unit_id))
+                command.metadata["binding_id"], unit_id=command.unit_id, causes=causes))
         then, otherwise = command.argument("then"), command.argument("else")
         selected, rejected = (then, otherwise) if truth else (otherwise, then)
         for arg in (selected, rejected):

@@ -70,6 +70,7 @@ class ActivityEvidenceTests(unittest.TestCase):
         self.assertEqual((self.root / "main.tex").read_text(), r"\documentclass{article}\makeatletter" + source)
 
     def test_package_queries_are_ordered_and_do_not_require_a_binding(self):
+        self.put("unbound.sty", r"\def\localvalue{known}")
         text, manifest, _, _ = self.prepare(
             r"\@ifpackageloaded{unbound}{BAD}{BEFORE}\usepackage{unbound}"
             r"\@ifpackageloaded{unbound}{AFTER}{BAD}")
@@ -106,15 +107,16 @@ class ActivityEvidenceTests(unittest.TestCase):
         self.assertNotIn("BAD", text)
         self.assert_links(manifest)
 
-    def test_unread_style_makes_negative_query_unknown_but_preserves_positive_fact(self):
+    def test_unread_style_keeps_load_history_but_can_change_existing_markers(self):
         self.put("broken.sty", r"\catcode\computed=12 \RequirePackage{hidden}")
         text, manifest, _, _ = self.prepare(r"\usepackage{broken}"
             r"\@ifpackageloaded{hidden}{LEFT}{RIGHT}\@ifclassloaded{article}{YES}{NO}")
-        self.assertEqual([d["truth"] for d in self.decisions(manifest)], [None, True])
+        self.assertEqual([d["truth"] for d in self.decisions(manifest)], [None, None])
         self.assertTrue(self.decisions(manifest)[0]["uncertainty_unit_ids"])
+        self.assertTrue(self.decisions(manifest)[1]["load_unit_ids"])
         self.assertIn("LEFT", text)
         self.assertIn("RIGHT", text)
-        self.assertNotIn("NO", text)
+        self.assertIn("NO", text)
         self.assert_links(manifest)
 
     def test_possible_load_invalidates_absence_without_becoming_a_known_load(self):
@@ -222,7 +224,7 @@ class DeclarativeActivityTests(unittest.TestCase):
         loads = SourceLoadState()
         units = UnitRegistry()
         fact = units.add(reader.basis.span(0, 0), "test_load", activity="reached")
-        loads.record("class", "article", fact)
+        loads.record("class", "article", fact, context, reader.basis.span(0, 0))
         dispatcher = StructuralDispatcher(reader, context, resolver, source_commands=True, preparation=True, loads=loads, units=units)
         items = list(dispatcher)
         self.assertFalse(any(isinstance(i, ReadingBoundary) for i in items))

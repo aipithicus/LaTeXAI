@@ -16,3 +16,6 @@
 
 # Bounded setup and retained-resource qualification receipts.
 /temp/setup-work/
+
+# Source-execution development and native differential receipts.
+/temp/engine-source-work/

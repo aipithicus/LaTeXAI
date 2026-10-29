@@ -120,6 +120,7 @@ class ManifestLocationTests(unittest.TestCase):
         self.assertEqual(manifest.prepared_artifacts, [])
 
     def test_location_lifecycle_preserves_records_and_related_source_evidence(self):
+        self.put("xcolor.sty", "% Known source: no optional configuration loads.\n")
         self.put("main.tex", "\\documentclass{article}\n% !TeX program = xelatex\n"
                  r"\usepackage{verbatim,wrapper}\usepackage[b]{xcolor}"
                  r"\input{child}\input{child}\if0\blind\input{candidate}\fi"

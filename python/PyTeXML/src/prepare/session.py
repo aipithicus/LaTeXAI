@@ -114,7 +114,6 @@ class PreparationSession:
         self.generated_sources = {}
         self.units = UnitRegistry()
         self.line_starts = {}
-        self.loaded_packages: set[str] = set()
         self.package_options: dict[str, tuple[str, ...]] = {}
         self.forwarded_options: dict[str, tuple[Option, ...]] = {}
         self.class_options: tuple[Option, ...] = ()
@@ -523,20 +522,38 @@ class PreparationSession:
         key = ("class:" if is_class else "package:") + name
         items = list(self.forwarded_options.get(key, ())) + options
         options = [option.name for option in items]
-        path = self.resolve(name, [".cls" if is_class else ".sty"], command.span, required=False)
-        if key in self.loaded_packages:
-            if not set(options) <= set(self.package_options[key]):
-                first_id = self.dispatcher.loads.loaded[("class" if is_class else "package", name)]
+        kind = "class" if is_class else "package"
+        status = self.dispatcher.loads.query(kind, name, self.context)
+        if status.truth is True:
+            previous_options = self.package_options.get(key, ())
+            if not set(options) <= set(previous_options):
+                related = [self.lint.related(self.units.records[i])
+                           for i in (*status.load_units, *status.definition_units)]
                 self.diagnose(command.span, "option_clash", f"{name!r} was already requested with different options",
                     unit_id=command.unit_id, evidence={"target": name, "kind": "class" if is_class else "package",
-                        "initial_options": list(self.package_options[key]), "requested_options": options,
-                        "added_options": sorted(set(options) - set(self.package_options[key])),
+                        "initial_options": list(previous_options), "requested_options": options,
+                        "added_options": sorted(set(options) - set(previous_options)),
                         "comparison": "source_visible_requests", "automatic_repair": False,
-                        "related": [self.lint.related(self.units.records[first_id])]})
+                        "related": related})
                 self.dispatcher.defer_effects(command.span, reason="option_clash", detail="Package/class options conflict with an earlier load")
             return
-        self.loaded_packages.add(key)
-        self.dispatcher.loads.record("class" if is_class else "package", name, command.unit_id)
+        path = self.resolve(name, [".cls" if is_class else ".sty"], command.span, required=False)
+        if status.truth is None:
+            self.manifest.packages_declared.append(PackageUsage(name, options, path is not None,
+                self.name(path) if path else None, unit_id=command.unit_id,
+                binding_available=name in self.resolver.catalog.package_bindings))
+            record = self.require(command.span, "package_load_state",
+                "The current package/class marker does not establish whether this request reads its source",
+                stage="preparation", unit_id=command.unit_id, dependency="possible",
+                next_step="reading_resolution", causes=(*status.causes,
+                    *(self.units.records[i].span for i in status.uncertainty_units)))
+            if path is not None:
+                retain_source(self, path)
+                record["materialization"] = "prepared"
+            self.dispatcher.defer_effects(command.span, reason="package_load_state",
+                detail="An unresolved load guard may execute package/class source")
+            return
+        self.dispatcher.loads.record(kind, name, command.unit_id, self.context, command.span)
         self.package_options[key] = tuple(options)
         self.context.record_meaning("CurrentOption", TokenListMeaning(command.span, ()))
         usage = PackageUsage(name, options, path is not None, self.name(path) if path else None,
@@ -589,7 +606,8 @@ class PreparationSession:
             if not name or "," in name:
                 raise ReadingIssue("option_target", "Option forwarding requires one literal package/class name")
             key = command.metadata["target_kind"] + ":" + name
-            if key in self.loaded_packages:
+            status = self.dispatcher.loads.query(command.metadata["target_kind"], name, self.context)
+            if status.truth is not False:
                 raise ReadingIssue("option_lifecycle",
                     "Option forwarding after the target was loaded requires further resolution")
             pending[key] = pending.get(key, ()) + option_items(command.argument("options"))
@@ -610,10 +628,11 @@ class PreparationSession:
                 evidence = {}
                 if issue.reason == "option_lifecycle":
                     name, kind = command.value("name"), command.metadata["target_kind"]
-                    first_id = self.dispatcher.loads.loaded[(kind, name)]
+                    status = self.dispatcher.loads.query(kind, name, self.context)
                     evidence = {"target": name, "kind": kind,
                         "requested_options": list(option_names(command.argument("options"))),
-                        "automatic_repair": False, "related": [self.lint.related(self.units.records[first_id])]}
+                        "automatic_repair": False, "related": [self.lint.related(self.units.records[i])
+                            for i in (*status.load_units, *status.definition_units)]}
                 self.defer(command.span, issue.reason, issue.detail, evidence=evidence)
             self.emit(command.span, command=command)
             return
