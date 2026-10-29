@@ -31,6 +31,11 @@ The exact installation profile, installer and package database remain under
 This rolling mirror is not a reproducible historical package snapshot: preserve
 that database and an archive of the toolchain when pinning a release oracle.
 
+The [2026-10-29 Root A baseline](root-a-oracle-baseline.md) now pins a completed
+snapshot and verifies a restored copy. It also records the first bounded kernel
+source witness. That concrete pdfTeX result does not qualify the restricted
+default profile, Python source execution or prepared Root A equivalence.
+
 Run paired native renders with:
 
 ~~~text

@@ -1,0 +1,122 @@
+{
+  "schema": "pytexml-kernel-source-boundary/1",
+  "target": "root-a-pdftex-20261029",
+  "source_sha256": "19d3b75884681539e1ef7a427af472bfe80d9ff214b84b9ca45e790d3e89c5c4",
+  "fragments": [
+    {
+      "file": "latex-321-322.tex",
+      "source": "texmf-dist/tex/latex/base/latex.ltx",
+      "line_start": 321,
+      "line_end": 322,
+      "byte_start": 10633,
+      "byte_end": 10663,
+      "sha256": "e6813af0f69a009e0b729cadff6732a367ea4cc649dce7e43f369bab36faf81e"
+    },
+    {
+      "file": "latex-344-344.tex",
+      "source": "texmf-dist/tex/latex/base/latex.ltx",
+      "line_start": 344,
+      "line_end": 344,
+      "byte_start": 11435,
+      "byte_end": 11462,
+      "sha256": "450f54a76fb618f35a8446fa69a86df8593c194f23eb6cd12aaebff49177501e"
+    },
+    {
+      "file": "latex-1225-1226.tex",
+      "source": "texmf-dist/tex/latex/base/latex.ltx",
+      "line_start": 1225,
+      "line_end": 1226,
+      "byte_start": 38311,
+      "byte_end": 38403,
+      "sha256": "06702e3d66569254ec581f4ea6dbff0bdb1927b5e174d06978c2bb7bc6b09d4c"
+    },
+    {
+      "file": "latex-1228-1230.tex",
+      "source": "texmf-dist/tex/latex/base/latex.ltx",
+      "line_start": 1228,
+      "line_end": 1230,
+      "byte_start": 38474,
+      "byte_end": 38560,
+      "sha256": "375cc12348a8b58ee8833ee0b720056be4a8cb8967c8fccc1ab29a95d962f3da"
+    },
+    {
+      "file": "latex-1237-1317.tex",
+      "source": "texmf-dist/tex/latex/base/latex.ltx",
+      "line_start": 1237,
+      "line_end": 1317,
+      "byte_start": 38751,
+      "byte_end": 40980,
+      "sha256": "fed7a556bce738b799f2490951d807b23b3bf8a8069e33c59372dc121f4bd610"
+    },
+    {
+      "file": "latex-1350-1358.tex",
+      "source": "texmf-dist/tex/latex/base/latex.ltx",
+      "line_start": 1350,
+      "line_end": 1358,
+      "byte_start": 42089,
+      "byte_end": 42405,
+      "sha256": "5414cd002cb0ac3477e3a23835ff42e40b17eba81b22492793d66208890acdac"
+    },
+    {
+      "file": "latex-1380-1386.tex",
+      "source": "texmf-dist/tex/latex/base/latex.ltx",
+      "line_start": 1380,
+      "line_end": 1386,
+      "byte_start": 43118,
+      "byte_end": 43327,
+      "sha256": "bd7054b7dd19309cc84c001d6b1e8bc5525905802cf4ac069ef5ebefa7d6a0d5"
+    },
+    {
+      "file": "latex-1391-1392.tex",
+      "source": "texmf-dist/tex/latex/base/latex.ltx",
+      "line_start": 1391,
+      "line_end": 1392,
+      "byte_start": 43472,
+      "byte_end": 43579,
+      "sha256": "0245a656d65d5c402b8546021ecfef1cc201b46ae43d8d77e8b6ec015b5b0212"
+    },
+    {
+      "file": "latex-1442-1447.tex",
+      "source": "texmf-dist/tex/latex/base/latex.ltx",
+      "line_start": 1442,
+      "line_end": 1447,
+      "byte_start": 44932,
+      "byte_end": 45109,
+      "sha256": "85c1a3e766f0c57dc09b4faba3e9f0c0c384bb1240aaf2d16233c72422454a35"
+    },
+    {
+      "file": "latex-1465-1465.tex",
+      "source": "texmf-dist/tex/latex/base/latex.ltx",
+      "line_start": 1465,
+      "line_end": 1465,
+      "byte_start": 45502,
+      "byte_end": 45523,
+      "sha256": "0eebeceb3749068497714800a178ae4395a95efc855a6d7a850e485422bebecf"
+    },
+    {
+      "file": "latex-1737-1783.tex",
+      "source": "texmf-dist/tex/latex/base/latex.ltx",
+      "line_start": 1737,
+      "line_end": 1783,
+      "byte_start": 54638,
+      "byte_end": 55935,
+      "sha256": "347444e6536187a32c8894ae3cbbbe798ac662cb324c7c7bf87e4eb1b7e29d72"
+    }
+  ],
+  "expected_trace": [
+    "BOUNDARY:protect=\\relax",
+    "BOUNDARY:public=macro:->\\@protected@testopt \\gmopt \\\\gmopt {dflt}",
+    "BOUNDARY:hidden=\\long macro:[#1]->\\gdef \\Observed {(#1)}",
+    "BOUNDARY:default=(dflt)",
+    "BOUNDARY:supplied=(set)",
+    "BOUNDARY:local=<local>",
+    "BOUNDARY:restored=(dflt)",
+    "BOUNDARY:alias=(alias)",
+    "BOUNDARY:provided-existing=(dflt)",
+    "BOUNDARY:starred=a/b",
+    "BOUNDARY:named=named",
+    "BOUNDARY:undefined=yes"
+  ],
+  "native_full_format_trace_equal": true,
+  "python_execution": "not_implemented"
+}

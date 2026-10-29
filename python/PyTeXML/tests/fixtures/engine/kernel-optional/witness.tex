@@ -1,0 +1,32 @@
+
+\immediate\write16{BOUNDARY:protect=\meaning\protect}
+\newcommand{\gmopt}[1][dflt]{\gdef\Observed{(#1)}}
+\immediate\write16{BOUNDARY:public=\meaning\gmopt}
+\expandafter\let\expandafter\hidden\csname\string\gmopt\endcsname
+\immediate\write16{BOUNDARY:hidden=\meaning\hidden}
+\gmopt
+\immediate\write16{BOUNDARY:default=\Observed}
+\gmopt [set]
+\immediate\write16{BOUNDARY:supplied=\Observed}
+\let\saved\gmopt
+\begingroup
+\renewcommand{\gmopt}[1][local]{\gdef\Observed{<#1>}}
+\gmopt
+\immediate\write16{BOUNDARY:local=\Observed}
+\endgroup
+\gmopt
+\immediate\write16{BOUNDARY:restored=\Observed}
+\saved[alias]
+\immediate\write16{BOUNDARY:alias=\Observed}
+\providecommand{\gmopt}[1][ignored]{bad}
+\gmopt
+\immediate\write16{BOUNDARY:provided-existing=\Observed}
+\newcommand*{\plain}[2]{\gdef\Observed{#1/#2}}
+\plain{a}{b}
+\immediate\write16{BOUNDARY:starred=\Observed}
+\@namedef{gm@named}{named}
+\immediate\write16{BOUNDARY:named=\gm@named}
+\ifcsname neverdefined\endcsname\errmessage{Unexpected definition}\fi
+\@ifundefined{neverdefined}{\immediate\write16{BOUNDARY:undefined=yes}}{\errmessage{Unexpected definition}}
+\ifcsname neverdefined\endcsname\errmessage{Undefined lookup created a name}\fi
+\end

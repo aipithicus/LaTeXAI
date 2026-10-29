@@ -1,0 +1,256 @@
+{
+  "schema": "pytexml-native-oracle-target/1",
+  "id": "root-a-pdftex-20261029",
+  "scope": "Original Root A baseline and native kernel-boundary feasibility; Python source execution and original/prepared equivalence remain unqualified.",
+  "profile": "pdftex",
+  "default_profile_changed": false,
+  "versions": {
+    "pdftex": "pdfTeX 3.141592653-2.6-1.40.29 (TeX Live 2026)",
+    "latex": "2026-06-01 patch 0",
+    "expl3": "2026-09-09",
+    "etoolbox": "2025/10/02 v2.5m"
+  },
+  "profile_source_sha256": "8493face33d48a7ce4cfa8bc450367c0097aeb95f9f57af25843c3683724f95a",
+  "archive": {
+    "archive": "texlive-pdftex-root-a-20261029.zip",
+    "sha256": "88dbbfb34a693c87d49fa791c5ef030781cf43ac1754dd5f7866664563e311e7",
+    "bytes": 196109309,
+    "inventory": "oracle-files.json",
+    "inventory_sha256": "e477567821917a9b0116f55833dfff79333363a1187a2dd6a641242bb19805b4",
+    "file_count": 10089,
+    "expanded_bytes": 331028596,
+    "package_database_sha256": "036b4e4bf0ed8358df08080ad71df575bbae43ddc614619636ad0f6ce0404cda",
+    "added_packages": [
+      "algorithmicx",
+      "algorithms",
+      "bigfoot",
+      "booktabs",
+      "caption",
+      "cleveref",
+      "cm-super",
+      "comment",
+      "cprotect",
+      "enumitem",
+      "environ",
+      "fancyvrb",
+      "float",
+      "fp",
+      "jknapltx",
+      "listings",
+      "mathtools",
+      "microtype",
+      "multirow",
+      "newunicodechar",
+      "pdfcol",
+      "pgf",
+      "rsfs",
+      "tcolorbox",
+      "tikzfill",
+      "trimspaces",
+      "xcolor"
+    ],
+    "changed_packages": {},
+    "restored_hash_mismatches": []
+  },
+  "availability": "Local artifacts only, not committed or remotely published. Preserve both archives before cleaning the development receipts; no rolling-mirror reproducibility claim.",
+  "local_receipt_root": "temp/oracle-root-a/20261029 (relative to LaTeXAI checkout)",
+  "evidence_archive": {
+    "name": "root-a-step1-evidence-20261029-v2.zip",
+    "sha256": "dd4fe057ef6beee796650a9971edb1a896215624cd1267b058859fbf460a2c7b",
+    "bytes": 1898380
+  },
+  "selected_files": [
+    {
+      "path": "bin/windows/pdftex.exe",
+      "sha256": "4b582d0be712b74ae5090aba2d7338f185082f6446cbee7b26115e8ab6e21184"
+    },
+    {
+      "path": "bin/windows/pdflatex.exe",
+      "sha256": "4b582d0be712b74ae5090aba2d7338f185082f6446cbee7b26115e8ab6e21184"
+    },
+    {
+      "path": "texmf-var/web2c/pdftex/pdflatex.fmt",
+      "sha256": "0a87849b8a9dea495227b1be22352277fefd90ccd3d3fed02c872391206bd910"
+    },
+    {
+      "path": "texmf-var/web2c/pdftex/pdflatex.log",
+      "sha256": "204196a57608440d3120acc9db6a81830ce08665fff41a48a5ff90e541cbefa0"
+    },
+    {
+      "path": "texmf-dist/tex/latex/base/latex.ltx",
+      "sha256": "19d3b75884681539e1ef7a427af472bfe80d9ff214b84b9ca45e790d3e89c5c4"
+    },
+    {
+      "path": "texmf-dist/tex/latex/l3kernel/expl3.sty",
+      "sha256": "271a27c4933fd45f16311959a5c6c300330430b50907f4fcf7666b0cdc54ebb9"
+    },
+    {
+      "path": "texmf-dist/tex/latex/l3kernel/expl3-code.tex",
+      "sha256": "94e9290b44e99ff164fad5cd4274eaebba8b325e434827b10a4fd86c86203ee9"
+    },
+    {
+      "path": "texmf-dist/tex/latex/etoolbox/etoolbox.sty",
+      "sha256": "e48026fcea59b4906d1fd47bde658cb5caf0a7928c45a45ea563b18d5b40ebd4"
+    },
+    {
+      "path": "texmf-dist/tex/generic/iftex/iftex.sty",
+      "sha256": "0dc0cefe2131f82330a3b8e62034c184455329d7d9bb94abe21e740821630381"
+    }
+  ],
+  "selected_packages": {
+    "amsfonts": {
+      "name": "amsfonts",
+      "revision": "77682",
+      "catalogue-version": "3.04"
+    },
+    "cm-super": {
+      "name": "cm-super",
+      "revision": "15878"
+    },
+    "etoolbox": {
+      "name": "etoolbox",
+      "revision": "77682",
+      "catalogue-version": "2.5m"
+    },
+    "iftex": {
+      "name": "iftex",
+      "revision": "77682",
+      "catalogue-version": "1.0g"
+    },
+    "l3kernel": {
+      "name": "l3kernel",
+      "revision": "80334"
+    },
+    "latex": {
+      "name": "latex",
+      "revision": "79618"
+    },
+    "latex-bin": {
+      "name": "latex-bin",
+      "revision": "80015"
+    },
+    "natbib": {
+      "name": "natbib",
+      "revision": "79618",
+      "catalogue-version": "8.31b"
+    },
+    "pdftex": {
+      "name": "pdftex",
+      "revision": "79618"
+    },
+    "pdftex.windows": {
+      "name": "pdftex.windows",
+      "revision": "78097"
+    },
+    "rsfs": {
+      "name": "rsfs",
+      "revision": "15878"
+    }
+  },
+  "baseline": {
+    "fixture": "tests/fixtures/specimens/gauntlet-master",
+    "entry": "master.tex",
+    "output_mode": "PDF, as selected by the unmodified source",
+    "staging": "byte_exact_no_bootstrap",
+    "source_file_count": 37,
+    "source_manifest_sha256": "33259b10580ccf644aef890179d4badc7f607ac8d0ffdf1c58acdb1aa02db01a",
+    "all_staged_sources_unchanged": true,
+    "supplied_bbl_sha256": "96c03b68193a514a56360f79eb49c2f29d33c2328572d83c21481fdedebccb60",
+    "staged_bbl_unchanged": true,
+    "external_bibliography_processor": "not_run",
+    "returncode": 0,
+    "passes": [
+      {
+        "number": 1,
+        "returncode": 0,
+        "auxiliary_hashes": {
+          "master.aux": "62ecd408e6b5850d7793a4f0744f6c6508e0db97930dcbbd169caa805e1afa2e",
+          "master.out": "e772ec54f47726e3aadaa2f141d508e61ed232a9beded43aca038eab3e3594bb"
+        }
+      },
+      {
+        "number": 2,
+        "returncode": 0,
+        "auxiliary_hashes": {
+          "master.aux": "62ecd408e6b5850d7793a4f0744f6c6508e0db97930dcbbd169caa805e1afa2e",
+          "master.out": "e772ec54f47726e3aadaa2f141d508e61ed232a9beded43aca038eab3e3594bb"
+        }
+      }
+    ],
+    "converged": true,
+    "pages": 5,
+    "pdf_sha256": "c35d9fd2146bd68aca1d6427d5794f6cfe224038b5f44edaf153ccd6db66f0d4",
+    "page_pixel_sha256_144dpi": [
+      "df78235b6513037f562f5f3977d1734ca4eeeb113488834d4b720700ed2f95ae",
+      "2f7ee81a016b6f88fd03c75b6affe6bfb4b33e36f007d1a6e6f44645e97e1bc1",
+      "c8bf9534b004d4e88a5c9dbf82d00cef48ba2175d735b10ace3d7137d9467f93",
+      "e5f747add9dcd9c2fe53fe750107e0774ca4961a51201e1500abaec6d98f0fd3",
+      "cf8349c7347d2fab96dd879fed72677e2cb81de7c78128226d3773586e74178c"
+    ],
+    "warning_lines": [
+      "Package newunicodechar Warning: Redefining Unicode character on input line 33.",
+      "Package newunicodechar Warning: Redefining Unicode character on input line 34.",
+      "Package epstopdf Warning: Shell escape feature is not enabled.",
+      "Overfull \\hbox (7.13873pt too wide) in paragraph at lines 1--2",
+      "Package amsmath Warning: Foreign command \\atopwithdelims;",
+      "Package amsmath Warning: Foreign command \\over;",
+      "LaTeX Warning: `h' float specifier changed to `ht'."
+    ],
+    "trace_lines": [
+      "gmstyle: loaded",
+      "gauntlet-master: document begins",
+      "paragraph",
+      "gmtools: entering math",
+      "left math"
+    ],
+    "inputs_by_kind": {
+      "source": 27,
+      "generated": 5,
+      "oracle": 293,
+      "external": 0
+    },
+    "primitive_exposure": {
+      "eTeXversion": true,
+      "expanded": true,
+      "pdfoutput": true,
+      "XeTeXversion": false,
+      "directlua": false,
+      "luatexversion": false
+    },
+    "profile_probe_status": "matched",
+    "observer": {
+      "python": "3.14.8 (main, Oct  3 2026, 01:05:10) [MSC v.1944 64 bit (AMD64)]",
+      "pymupdf": "1.28.2"
+    }
+  },
+  "restored_toolchain_replay": {
+    "source_files_equal": true,
+    "page_text_and_pixels_equal": true,
+    "auxiliary_passes_equal": true,
+    "trace_equal": true,
+    "recorded_input_hashes_equal": true,
+    "outside_input_files": [],
+    "missing_input_files": [],
+    "pages": 5,
+    "trace": [
+      "gmstyle: loaded",
+      "gauntlet-master: document begins",
+      "paragraph",
+      "gmtools: entering math",
+      "left math"
+    ]
+  },
+  "kernel_boundary": {
+    "manifest": "../../tests/fixtures/engine/kernel-optional/source-boundary.json",
+    "native_initex_returncode": 0,
+    "native_full_format_returncode": 0,
+    "observation_count": 12,
+    "traces_equal": true,
+    "python_execution": "not_implemented"
+  },
+  "limits": [
+    "FLS records TeX input files; it is not an operating-system dependency sandbox or dynamic-library audit.",
+    "Only Root A is rendered here; other roots and prepared payloads retain their prior qualification status.",
+    "The source-boundary witness covers successful declarations and invocation; kernel error recovery and full bootstrap remain out of scope."
+  ]
+}
