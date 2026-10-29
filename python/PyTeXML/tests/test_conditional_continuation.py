@@ -215,7 +215,7 @@ class ConditionalPreparationTests(unittest.TestCase):
         self.assertIn(r"\input{bad}", text)
         self.assertIn(r"\fi TAIL", text)
         self.assertEqual({d["reason"] for d in manifest.candidate_dependencies},
-                         {"missing_dependency", "computed_argument", "conditional_input"})
+                         {"file_search_environment", "computed_argument", "conditional_input"})
 
     def test_input_cycle_is_local_and_later_source_remains_preparable(self):
         self.put("main.tex", r"\if0\blind\input{child}\fi\input{tail}")

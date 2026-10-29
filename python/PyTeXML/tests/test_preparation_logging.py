@@ -64,7 +64,7 @@ class PreparationLoggingTests(unittest.TestCase):
         manifest = (self.output / "manifest.json").read_bytes()
         self.put(r"\input{missing}")
         with self.assertRaises(PreparationUnresolved):
-            self.prepare()
+            self.prepare(recovery="strict")
         failure = self.events()[-1]
         self.assertEqual(failure["code"], "attempt.failed")
         self.assertTrue(failure["data"]["previous_payload_preserved"])
@@ -200,7 +200,7 @@ class PreparationLoggingTests(unittest.TestCase):
                 raise OSError("failure log unavailable")
             return append(sink, batch)
         with patch.object(JsonlSink, "append", fail), self.assertRaises(PreparationUnresolved) as caught:
-            self.prepare()
+            self.prepare(recovery="strict")
         self.assertIn("missing", str(caught.exception))
         self.assertTrue(any("failure log unavailable" in note for note in caught.exception.__notes__))
 

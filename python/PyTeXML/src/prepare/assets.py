@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Dict, List
 from collections import Counter
 from dataclasses import dataclass
-from ..assets import convert_asset_to_svg
+from ..assets import convert_asset_to_svg, AssetConversionError
 from ..reading.contracts import ReadingIssue, SourceCommand
 from ..reading.spans import SourceSpan
 from ..reading.argument_scanner import key_value_items
@@ -118,6 +118,8 @@ def rewrite_image_references(pieces, mapping, uses):
     result = []
     for piece in pieces:
         for use in uses:
+            if use.command.unit_id not in mapping:
+                continue
             span = use.command.span
             if (span.basis is piece.span.basis and piece.span.start <= span.start <= span.end <= piece.span.end
                     and piece.operation != "PRESERVE_UNRESOLVED"):
@@ -130,7 +132,8 @@ def rewrite_image_references(pieces, mapping, uses):
 def batch_convert_assets_to_svg(
     uses: List[AssetUse],
     output_dir: Path,
-    project_dir: Path
+    project_dir: Path,
+    *, on_failure=None,
 ) -> Dict[str, str]:
     """
     Convert each distinct (file, page) once. Return unit id to payload path.
@@ -153,18 +156,26 @@ def batch_convert_assets_to_svg(
         destinations[p, page] = target
         occupied.add(target.casefold())
 
+    completed = set()
     for src_path, page in variants:
-        if not src_path.exists():
-            raise FileNotFoundError(f"Active image not found: {src_path}")
-
         # Create output destination preserving relative subdirectory
         rel_svg = destinations[src_path, page]
         dest_svg_path = (output_dir / rel_svg).resolve()
 
-        success = convert_asset_to_svg(src_path, dest_svg_path, page_index=page - 1)
-        if not success:
-            raise RuntimeError(f"SVG conversion failed for {src_path}; package preparation is incomplete")
-    return {use.command.unit_id: destinations[use.path, use.page] for use in uses}
+        try:
+            success = convert_asset_to_svg(src_path, dest_svg_path, page_index=page - 1)
+            if not success:
+                raise AssetConversionError(f"SVG conversion failed for {src_path}; no admitted converter")
+        except AssetConversionError as error:
+            if on_failure is None:
+                raise
+            for use in uses:
+                if (use.path, use.page) == (src_path, page):
+                    on_failure(use, error)
+        else:
+            completed.add((src_path, page))
+    return {use.command.unit_id: destinations[use.path, use.page] for use in uses
+            if (use.path, use.page) in completed}
 
 
 def surviving_asset_uses(uses, pieces, *, retained_bases):

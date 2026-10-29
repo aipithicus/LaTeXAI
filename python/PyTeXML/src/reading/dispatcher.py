@@ -264,12 +264,14 @@ class StructuralDispatcher:
         return event
 
     def _activity_evidence(self):
+        recovery = ({"recovery_context_ids": list(self.context.recovery_contexts)}
+                    if self.context.recovery_contexts else {})
         guards = [(f.unit_id, "else" if f.in_alternative else "then") for f in self._conditionals]
         guards.extend(self._active_branches)
         if guards:
             identifier, branch = max(guards, key=lambda g: int(g[0].split("-")[-1]))
-            return {"reason": "selected_branch", "decision_unit_id": identifier, "branch": branch}
-        return {"reason": "source_sequence", "assumption": "source_visible_reading"}
+            return {"reason": "selected_branch", "decision_unit_id": identifier, "branch": branch, **recovery}
+        return {"reason": "source_sequence", "assumption": "source_visible_reading", **recovery}
 
     @property
     def branch_in_progress(self):

@@ -10,10 +10,8 @@ from ..reading.dispatcher import StructuralDispatcher
 from ..reading.contracts import SourceCommand, SourceEnd, ReadingBoundary, DeferredRegion, ReadingIssue
 from .emission import SourcePiece
 from .citations import discover_citations
-
-
-class BibliographyPreparationError(ValueError):
-    pass
+from ..source_io import SourceDecodingError
+from .recovery import ResourceFailure, recover_resource, resource_record
 
 
 def _preserve_declarations(pieces, session, command, reason, detail):
@@ -39,8 +37,13 @@ def prepare_bibliography(pieces, session, output_dir: Path):
     declaration = declarations[0]
     command = declaration.command
     existing = Path(manifest.bibliography.bbl_path) if manifest.bibliography.bbl_path else None
+    if any(r["unit_id"] == command.unit_id and r.get("recovery", {}).get("disposition") == "tombstone"
+           for r in manifest.dependencies):
+        # The BBL was found but could not be entered. Its original decoding/access
+        # failure already owns the request; it is not evidence of malformed TeX.
+        return session.discard_bibliography(pieces)
     origin = store.root / command.span.basis.source_id
-    resources = []
+    resources, texts, resource_failed = [], [], False
     try:
         names = command.value("names").split(",")
     except ReadingIssue as error:
@@ -49,18 +52,38 @@ def prepare_bibliography(pieces, session, output_dir: Path):
         target = name.strip()
         if not target.endswith(".bib"):
             target += ".bib"
-        path = next((p for d in dict.fromkeys([session.root.parent, store.root, origin.parent])
-                     if store.contains(p := (d / target).resolve())), None)
-        if path is None:
-            manifest.bibliography.missing_bib_files.append(target)
+        try:
+            path = session.resolve(target, [""], command.span,
+                directories=[session.root.parent, store.root, origin.parent])
+            try:
+                text = store.document(path).text
+            except (OSError, SourceDecodingError) as error:
+                if isinstance(error, SourceDecodingError):
+                    session.preserve_opaque(path)
+                raise ResourceFailure("resource_reading", str(error), requested=target,
+                    resolved=session.name(path), outcome="unreadable" if isinstance(error, OSError) else "failed") from error
+        except ResourceFailure as error:
+            if error.outcome == "absent":
+                manifest.bibliography.missing_bib_files.append(target)
             if existing:
-                continue
-            raise BibliographyPreparationError(f"Bibliography resource not found: {target} (from {origin})")
+                observation = resource_record(session, command, "bibliography", requested=target,
+                    outcome=error.outcome, purpose="source_for_reformatting", search=error.search)
+                observation["recovery"] = {"disposition": "supplied_bibliography", "original_resource": "not_required"}
+            else:
+                recover_resource(session, command, error, kind="bibliography")
+                resource_failed = True
+            continue
         if path not in resources:
             resources.append(path)
+            texts.append(text)
             session.edge(command, path, "bibliography")
     manifest.bibliography.bib_files = [session.name(p) for p in resources]
-    texts = [store.document(path).text for path in resources]
+    if resource_failed:
+        # Keep available source records even when a complete bibliography cannot
+        # yet be built. Every declared database was investigated before returning.
+        for path in resources:
+            session.retained_resources[session.name(path)] = path
+        return session.discard_bibliography(pieces)
     canonical = "\n".join(text.rstrip() + "\n" for text in texts)
     selection = discover_citations(pieces, session.resolver, line=session.line)
     info = manifest.bibliography
@@ -103,7 +126,11 @@ def prepare_bibliography(pieces, session, output_dir: Path):
             return [piece.edit_source(arg.span, "bibliography", "REBASE_BIBLIOGRAPHY") if piece is declaration else piece
                     for piece in retained]
         except BibTeXError as error:
-            raise BibliographyPreparationError(str(error)) from error
+            recover_resource(session, command, ResourceFailure("bibliography_processing", str(error),
+                requested=command.value("names"), outcome="failed"), kind="bibliography")
+            for path in resources:
+                session.retained_resources[session.name(path)] = path
+            return session.discard_bibliography(pieces)
         backend = "native-bibtex"
         manifest.bibliography.preparation_warnings = database.diagnostics
         if session.bibliography_observed:
@@ -137,12 +164,21 @@ def prepare_bibliography(pieces, session, output_dir: Path):
                 retained = _preserve_declarations(pieces, session, command, 'bibliography_reading',
                     'The supplied BBL was retained at a reading boundary; its complete entry set is unresolved')
                 return [p for p in retained if p is declaration or not (p.command and p.command.action == 'bibliography')]
-            raise BibliographyPreparationError("Prepared .bbl does not contain a complete thebibliography environment")
+            recover_resource(session, command, ResourceFailure("bibliography_structure",
+                "Prepared .bbl does not contain a complete thebibliography environment",
+                requested=session.name(existing), outcome="failed"), kind="formatted_bibliography", program_effects=False)
+            session.retained_resources['master.bbl'] = existing
+            return session.discard_bibliography(pieces)
         entry_keys = {c.value(c.metadata["bibliography_key"]) for c in commands if c.metadata.get("bibliography_key")}
     missing = [key for key in keys if key != "*" and key not in entry_keys
                and key in selection.established_keys]
     if missing:
-        raise BibliographyPreparationError("Bibliography entries missing for citation keys: " + ", ".join(missing))
+        assumed = bool(session.units.records[command.unit_id].activity_evidence.get("recovery_context_ids"))
+        recover_resource(session, command, ResourceFailure("bibliography_entries",
+            ("Bibliography entry reading remains conditional under a recovery context: " if assumed else
+             "Bibliography entries missing for citation keys: ") + ", ".join(missing),
+            requested=", ".join(missing), outcome="unresolved" if assumed else "absent"), kind="bibliography_entry")
+        return pieces  # Keep any already-read entries alongside the typed marker.
     if existing:
         for key in keys:
             if key != "*" and key not in entry_keys and key not in selection.established_keys:

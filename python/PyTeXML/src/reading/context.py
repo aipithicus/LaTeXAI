@@ -79,6 +79,8 @@ class ReaderContext:
         self.configurations = ConfigurationState()
         self.integer_parameters = IntegerParameters()
         self.hooks = HookState()
+        # Preparation assumptions are derivations, not TeX state assignments.
+        self.recovery_contexts: tuple[str, ...] = ()
 
     def _snapshot(self) -> _ScopeSnapshot:
         return _ScopeSnapshot(self.catcodes.copy(), self.endlinechar,
@@ -107,6 +109,7 @@ class ReaderContext:
         ctx.configurations = self.configurations.copy()
         ctx.integer_parameters = self.integer_parameters.copy()
         ctx.hooks = self.hooks.copy()
+        ctx.recovery_contexts = self.recovery_contexts
         return ctx
 
     def restore_from(self, saved: ReaderContext) -> None:
@@ -125,6 +128,7 @@ class ReaderContext:
         self.configurations = saved.configurations.copy()
         self.integer_parameters = saved.integer_parameters.copy()
         self.hooks = saved.hooks.copy()
+        self.recovery_contexts = saved.recovery_contexts
 
     def lookup_environment(self, name: str) -> EnvironmentDeclaration | EnvironmentDefinition | None:
         return self._environments.get(name)

@@ -73,7 +73,8 @@ class SourceStore:
         self.excluded = tuple((self.root / p).resolve() for p in (".git", "artifacts", "build", "extracted")) + tuple(
             Path(p).resolve() for p in excluded_dirs)
         files = []
-        for directory, dirs, names in os.walk(self.root):
+        self.inventory_errors: list[OSError] = []
+        for directory, dirs, names in os.walk(self.root, onerror=self.inventory_errors.append):
             base = Path(directory)
             dirs[:] = sorted(d for d in dirs if not self.is_excluded(base / d))
             files.extend((base / n).resolve() for n in sorted(names) if not self.is_excluded(base / n))
@@ -94,7 +95,7 @@ class SourceStore:
         path = path.resolve()
         if path not in self._files:
             raise FileNotFoundError(f"Not an inventoried source dependency: {path}")
-        if path in self._errors:
+        if path in self._errors and path not in self._bytes:
             raise self._errors[path]
         if path not in self._bytes:
             try:
@@ -106,6 +107,8 @@ class SourceStore:
 
     def document(self, path: Path) -> SourceDocument:
         path = path.resolve()
+        if path in self._errors:
+            raise self._errors[path]
         if path not in self._documents:
             try:
                 text = decode_source(self.read_bytes(path), path)

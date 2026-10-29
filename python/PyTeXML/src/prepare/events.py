@@ -21,6 +21,15 @@ def record_locations(record, artifacts):
 def log_manifest(logger, manifest):
     """Record diagnostics with ids and declared coordinate bases, not full copies."""
     artifacts = {a["path"]: a["sha256"] for a in manifest.prepared_artifacts}
+    for record in manifest.dependencies:
+        disposition = record.get("recovery", {}).get("disposition")
+        if disposition not in {"tombstone", "retained_source"}:
+            continue
+        logger.emit("resource.tombstone" if disposition == "tombstone" else "resource.unresolved",
+            record["causes"][0]["detail"], level="error" if disposition == "tombstone" else "warning",
+            data={key: record[key] for key in ("item_id", "unit_id", "requested", "kind", "purpose", "activity", "activity_evidence",
+                "outcome", "knowledge", "causes", "cause_ids", "affected_domains", "recovery", "search") if key in record},
+            locations=record_locations(record, artifacts))
     for finding in manifest.lint.get("findings", []):
         logger.emit("lint.finding", finding["detail"],
             level="info" if finding["repair"]["status"] == "applied" else finding["severity"],

@@ -273,7 +273,7 @@ class BooleanPreparationTests(unittest.TestCase):
         self.assertIn(suffix.replace(r"\fi\end", r"\fi \end"), text)
         self.assertFalse(manifest.unresolved)
         self.assertTrue(any(d["reason"] == "conditional_interpretation" for d in manifest.requirements))
-        self.assertEqual({d["reason"] for d in manifest.candidate_dependencies}, {"missing_dependency"})
+        self.assertEqual({d["reason"] for d in manifest.candidate_dependencies}, {"file_search_environment"})
         self.assertEqual((self.root / "main.tex").read_text(), source)
 
     def test_input_can_open_an_evaluated_boolean_conditional_closed_by_caller(self):

@@ -8,6 +8,7 @@ from ..reading.contracts import ReadingIssue, StoredDefinition, TokenListMeaning
 from ..reading.effect_summary import EffectSummary, NameSet
 from ..reading.effects import definition_summary
 from ..reading.tex_reader import CatCode, TokenKind
+from .recovery import resource_record
 
 
 def input_directories(session):
@@ -50,7 +51,9 @@ def lookup_file(session, command):
 
 def file_exists(session, command):
     host = session.dispatcher
+    target = None
     try:
+        target = command.value('target')
         target, path, external = lookup_file(session, command)
         found = path or external
         if found is None and not session.resources.closed:
@@ -63,12 +66,23 @@ def file_exists(session, command):
             record_test(host, command, target, runtime_name)
         if path:
             session.tested_resources[session.name(path)] = path
-            session.edge(command, path, 'file_test')
         host.decisions.append({'unit_id': command.unit_id, 'predicate': 'file_exists',
             'name': target, 'truth': found is not None, 'resolved': resolved,
             'search': session.resources.record()})
+        observation = resource_record(session, command, 'file_test', requested=target,
+            target=resolved, outcome='present' if found is not None else 'absent',
+            purpose='probe', search=session.resources.record())
+        observation['recovery'] = {'disposition': 'authored_branch',
+            'branch': 'then' if found is not None else 'else', 'original_resource': 'not_required'}
         host.select_branch(command, found is not None)
     except ReadingIssue as error:
+        observation = resource_record(session, command, 'file_test',
+            requested=target,
+            outcome='ambiguous' if error.reason == 'ambiguous_dependency' else
+                    'unreadable' if error.reason == 'resource_access' else 'unresolved',
+            purpose='probe', search=session.resources.record())
+        observation['causes'] = [{'reason': error.reason, 'detail': error.detail}]
+        observation['recovery'] = {'disposition': 'retained_source', 'original_resource': 'unresolved'}
         session.observe(command)
         # Unknown file selection does not itself invalidate unrelated registers.
         summary = EffectSummary(meanings=NameSet(('@curr@file', '@curr@file@reqd', '@filef@und', 'reserved@a')), scope='global')

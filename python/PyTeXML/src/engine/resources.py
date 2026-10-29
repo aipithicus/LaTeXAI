@@ -8,6 +8,7 @@ from collections import defaultdict
 from pathlib import Path
 import hashlib
 import os
+import stat
 
 
 class ResourceSearch:
@@ -15,14 +16,30 @@ class ResourceSearch:
         self.closed = roots is not None
         self.roots = tuple(dict.fromkeys(Path(p).resolve() for p in roots or ()))
         self.indices = []
+        self.errors = []
         digest = hashlib.sha256()
         for root in self.roots:
-            if not root.is_dir():
-                raise FileNotFoundError(f'TeX resource root does not exist: {root}')
             index = defaultdict(list)
+            errors = []
+            self.errors.append(errors)
             digest.update(str(root).encode('utf-8') + b'\0')
-            for path in sorted(root.rglob('*')):
-                if path.is_file():
+            try:
+                if not stat.S_ISDIR(root.stat().st_mode):
+                    raise NotADirectoryError(str(root))
+            except OSError as error:
+                errors.append(error)
+            else:
+                files = []
+                for directory, dirs, names in os.walk(root, onerror=errors.append):
+                    dirs.sort()
+                    files.extend(Path(directory) / name for name in names)
+                for path in sorted(files):
+                    try:
+                        if not stat.S_ISREG(path.stat().st_mode):
+                            continue
+                    except OSError as error:
+                        errors.append(error)
+                        continue
                     relative = path.relative_to(root).as_posix()
                     digest.update(relative.encode('utf-8') + b'\0')
                     index[os.path.normcase(path.name)].append((os.path.normcase(relative), path))
@@ -34,7 +51,11 @@ class ResourceSearch:
         name = name.replace('\\', '/')
         if Path(name).anchor or '..' in Path(name).parts:
             raise ReadingIssue('dependency_path', 'External resource names must be relative and confined')
-        for index in self.indices:
+        for index, errors in zip(self.indices, self.errors):
+            if errors:
+                reason = ('file_search_environment' if all(isinstance(e, (FileNotFoundError, NotADirectoryError))
+                                                          for e in errors) else 'resource_access')
+                raise ReadingIssue(reason, '; '.join(str(e) for e in errors))
             for suffix in suffixes:
                 target = os.path.normcase(Path(name + suffix).as_posix())
                 separator = os.path.normcase('/')
@@ -48,4 +69,6 @@ class ResourceSearch:
 
     def record(self):
         return {'roots': [str(p) for p in self.roots], 'inventory_sha256': self.fingerprint,
-                'search': 'project_then_ordered_recursive_roots', 'closed': self.closed}
+                'search': 'project_then_ordered_recursive_roots', 'closed': self.closed,
+                'inventory_complete': not any(self.errors),
+                'inventory_errors': [str(error) for errors in self.errors for error in errors]}

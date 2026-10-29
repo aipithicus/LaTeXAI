@@ -13,7 +13,6 @@ from unittest.mock import patch
 PROJECT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT))
 from src.bindings.resolver import BindingResolver
-from src.prepare.bibliography import BibliographyPreparationError
 from src.prepare.pipeline import preprocess_paper
 from src.reading.contracts import DeferredRegion, ReadingBoundary, SourceCommand
 from src.reading.dispatcher import StructuralDispatcher
@@ -121,19 +120,27 @@ class HarvardBibliographyTests(unittest.TestCase):
                      r"\begin{verbatim}" + fake + r"\end{verbatim}",
                      r"\def\stored{" + fake + "}", r"\iffalse" + fake + r"\fi"]
         for region in protected:
-            with self.subTest(region=region), self.assertRaisesRegex(BibliographyPreparationError, "missing"):
-                self.prepare(r"\cite{missing}\bibliography{absent}", region)
-        self.assertFalse((self.root / "extracted/master.tex").exists())
+            with self.subTest(region=region):
+                text, manifest, _, _ = self.prepare(r"\cite{missing}\bibliography{absent}", region)
+                self.assert_missing_entry(text, manifest)
 
     def test_author_redefinition_shadows_the_entry_binding(self):
-        with self.assertRaisesRegex(BibliographyPreparationError, "missing"):
-            self.prepare(r"\cite{missing}\bibliography{absent}",
-                         r"\harvarditem{Author}{2000}{missing}", extra=r"\def\harvarditem#1#2#3{}")
+        text, manifest, _, _ = self.prepare(r"\cite{missing}\bibliography{absent}",
+                     r"\harvarditem{Author}{2000}{missing}", extra=r"\def\harvarditem#1#2#3{}")
+        self.assert_missing_entry(text, manifest)
 
     def test_missing_citation_is_not_confused_with_author_or_year_arguments(self):
-        with self.assertRaisesRegex(BibliographyPreparationError, "missing"):
-            self.prepare(r"\cite{missing}\bibliography{absent}",
-                         r"\harvarditem[missing]{missing}{missing}{different}BODY")
+        text, manifest, _, _ = self.prepare(r"\cite{missing}\bibliography{absent}",
+                     r"\harvarditem[missing]{missing}{missing}{different}BODY")
+        self.assert_missing_entry(text, manifest)
+        self.assertIn("BODY", text)
+
+    def assert_missing_entry(self, text, manifest):
+        entry = next(r for r in manifest.dependencies if r["kind"] == "bibliography_entry")
+        self.assertEqual(entry["requested"], "missing")
+        self.assertEqual(entry["outcome"], "absent")
+        self.assertIn(entry["recovery"]["marker"], text)
+        self.assertEqual(manifest.preparation_status, "partial")
 
     def test_retained_bbl_reading_boundary_preserves_request_and_jobname_resource(self):
         bbl = r'\providecommand\unestablished[1]{#1}\bibitem{one}\unestablished{BODY}'

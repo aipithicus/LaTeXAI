@@ -10,7 +10,7 @@ from dataclasses import dataclass, field, replace
 from pathlib import Path
 import re
 
-from ..source_io import SourceStore
+from ..source_io import SourceStore, SourceDecodingError
 from ..assets import IMAGE_EXTENSIONS, characterize_image
 from ..bindings.resolver import BindingResolver
 from ..reading.dispatcher import StructuralDispatcher, InputRecovery
@@ -37,6 +37,7 @@ from .preservation import retain_candidate_input, retain_source, retain_survey_i
 from .provenance import Tombstone
 from .manifest import PreflightManifest, BibliographyInfo, PackageUsage, StyleFileInfo, ImplicitGraphicInfo
 from .records import source_reference, pending_location
+from .recovery import ResourceFailure, RESOURCE_ACTIONS, recover_resource, resource_record, recovery_context
 from ..reading.effect_summary import EffectSummary
 from ..engine.file_events import FileInput
 from .inlining import check_context as check_file_context, wrappers as file_wrappers
@@ -111,6 +112,8 @@ class PreparationSession:
         self.retained_search_dirs: dict[Path, set[Path]] = {}
         self.retained_resources: dict[str, Path] = {}
         self.tested_resources: dict[str, Path] = {}
+        self.recovery_items = []
+        self.opaque_payloads: dict[str, bytes] = {}
         self.payload_edits: dict[Path, dict[tuple[int, int], str]] = {}
         self.commands: list[SourceCommand] = []
         self.documents = {}
@@ -145,6 +148,12 @@ class PreparationSession:
 
     def name(self, path):
         return path.relative_to(self.store.root).as_posix()
+
+    def preserve_opaque(self, path):
+        """Retain undecodable bytes under a distinct, non-executable payload name."""
+        target = "opaque-resources/" + self.name(path)
+        self.opaque_payloads[target] = self.store.read_bytes(path)
+        return target
 
     def pending_units(self):
         """Inventory/failure output has identities, but no finalized artifact yet."""
@@ -273,38 +282,63 @@ class PreparationSession:
                 self.bibliography_pieces = None
 
     def resolve(self, name, suffixes, span, *, directories=None, required=True, provisional=False):
-        def problem(reason, detail):
-            if provisional:
-                raise ReadingIssue(reason, detail)
-            self.fail(span, reason, detail)
+        frame = self.frames[-1] if self.frames else None
+        roots = directories if directories is not None else [(frame.import_dir if frame else None) or self.root.parent, self.store.root]
+        search = {"scope": "project_inventory", "directories": [str(p) for p in dict.fromkeys(roots)],
+                  "suffixes": list(suffixes), "external": self.resources.record(), "candidates": []}
+        def problem(reason, detail, outcome="unresolved"):
+            raise ResourceFailure(reason, detail, requested=name, outcome=outcome, search=search)
 
         if not name or Path(name).is_absolute():
             problem("dependency_path", f"Expected a project-relative dependency: {name!r}")
-        frame = self.frames[-1]
-        roots = directories if directories is not None else [frame.import_dir or self.root.parent, self.store.root]
         for directory in dict.fromkeys(roots):
             matches = []
             for suffix in suffixes:
                 path = (directory / (name + suffix)).resolve()
+                if self.store.is_excluded(path):
+                    problem("dependency_path", f"Dependency is outside the source inventory: {name!r}")
+                for error in self.store.inventory_errors:
+                    if error.filename is None or path.is_relative_to(Path(error.filename).resolve()):
+                        problem("resource_access", str(error), "unreadable")
                 if self.store.contains(path):
                     matches.append(path)
+            search["candidates"].extend(self.name(p) for p in matches)
             if len(set(matches)) > 1:
-                problem("ambiguous_dependency", f"Multiple candidates for {name!r}: {[self.name(p) for p in matches]}")
+                problem("ambiguous_dependency", f"Multiple candidates for {name!r}: {[self.name(p) for p in matches]}", "ambiguous")
             if matches:
                 return matches[0]
         if required:
-            problem("missing_dependency", f"Cannot resolve {name!r} in {[self.name(p) for p in roots if p.is_relative_to(self.store.root)]}")
+            # A project miss is not global absence when external lookup is open.
+            # External execution/relocation is a separate capability from finding.
+            try:
+                external = self.resources.find(name, suffixes)
+            except ReadingIssue as error:
+                problem(error.reason, error.detail,
+                        "ambiguous" if error.reason == "ambiguous_dependency" else
+                        "unreadable" if error.reason == "resource_access" else "unresolved")
+            if external is not None:
+                search["external_match"] = str(external)
+                problem("external_resource", f"External resource needs an admitted execution/relocation route: {external}")
+            if not self.resources.closed:
+                problem("file_search_environment", f"{name!r} is not in the project; external search is unspecified")
+            problem("missing_dependency", f"Cannot resolve {name!r} in the configured search environment", "absent")
         return None
 
     def edge(self, command, path, kind):
-        self.manifest.dependencies.append({**source_reference(self.units.records[command.unit_id]),
-                                           "kind": kind, "target": self.name(path)})
+        return resource_record(self, command, kind, requested=self.name(path), target=self.name(path))
 
     def _enter(self, path, command, *, emit, import_dir=None, package=False, include=False, options=None):
         if any(frame.path == path for frame in self.frames):
             chain = " -> ".join(self.name(f.path) for f in self.frames) + " -> " + self.name(path)
-            self.fail(command.span, "input_cycle", chain)
-        reader = self.open_source(path)
+            raise ResourceFailure("input_cycle", chain, requested=self.name(path),
+                                  resolved=self.name(path), outcome="failed")
+        try:
+            reader = self.open_source(path)
+        except (OSError, SourceDecodingError) as error:
+            if isinstance(error, SourceDecodingError):
+                self.preserve_opaque(path)
+            raise ResourceFailure("resource_reading", str(error), requested=self.name(path),
+                resolved=self.name(path), outcome="unreadable" if isinstance(error, OSError) else "failed") from error
         overrides = self.resolver.catalog.engine_bindings["source_traversal"]["reading"]["package_input_catcodes"] if package else None
         recovery = self.dispatcher.input_recovery()
         event = None
@@ -407,6 +441,8 @@ class PreparationSession:
         """Apply converted asset references to retained code, checking occurrences."""
         retained = set(self.styles) | self.code
         for use in uses:
+            if use.command.unit_id not in mapping:
+                continue
             if self.documents[use.command.span.basis].path in retained:
                 for span, replacement in use.edits(mapping[use.command.unit_id]):
                     self.edit_payload(span, replacement)
@@ -554,11 +590,38 @@ class PreparationSession:
                 next_step="reading_resolution", causes=(*status.causes,
                     *(self.units.records[i].span for i in status.uncertainty_units)))
             if path is not None:
-                retain_source(self, path)
+                try:
+                    retain_source(self, path)
+                except (OSError, SourceDecodingError) as error:
+                    if isinstance(error, SourceDecodingError):
+                        self.preserve_opaque(path)
+                    raise ResourceFailure("resource_reading", str(error), requested=name,
+                        resolved=self.name(path), outcome="unreadable" if isinstance(error, OSError) else "failed") from error
                 record["materialization"] = "prepared"
             self.dispatcher.defer_effects(command.span, reason="package_load_state",
                 detail="An unresolved load guard may execute package/class source")
             return
+        baseline = self.resolver.catalog.engine_bindings["source_traversal"]["reading"]["baseline_classes"]
+        adapted = name in baseline if is_class else name in self.resolver.catalog.package_bindings
+        if path is None and not adapted and self.resources.closed:
+            try:
+                external = self.resources.find(name, [".cls" if is_class else ".sty"])
+            except ReadingIssue as error:
+                raise ResourceFailure(error.reason, error.detail, requested=name,
+                    outcome="ambiguous" if error.reason == "ambiguous_dependency" else
+                            "unreadable" if error.reason == "resource_access" else "unresolved",
+                    search=self.resources.record()) from error
+            if external is None:
+                raise ResourceFailure("missing_dependency", f"{kind.title()} {name!r} is absent from the configured search",
+                    requested=name, outcome="absent", search=self.resources.record())
+        if path is not None:
+            try:
+                self.store.document(path)
+            except (OSError, SourceDecodingError) as error:
+                if isinstance(error, SourceDecodingError):
+                    self.preserve_opaque(path)
+                raise ResourceFailure("resource_reading", str(error), requested=name, resolved=self.name(path),
+                    outcome="unreadable" if isinstance(error, OSError) else "failed") from error
         self.dispatcher.loads.record(kind, name, command.unit_id, self.context, command.span)
         self.package_options[key] = tuple(options)
         self.context.record_meaning("CurrentOption", TokenListMeaning(command.span, ()))
@@ -754,6 +817,7 @@ class PreparationSession:
             for n in names:
                 p = self.resolve(n, [".cls" if is_class else ".sty"], command.span, required=False)
                 resolved_names.append(self.name(p.with_suffix("")) if p else n)
+            command.metadata["prepared_package_names"] = resolved_names
             arg = command.argument("name")
             if isinstance(arg, TokenArgument):
                 if resolved_names != names:
@@ -854,7 +918,14 @@ class PreparationSession:
     def _traverse(self):
         while self.frames and not self._ended_document:
             if self.frames[-1].packages:
-                self._package()
+                name, _, command, is_class = self.frames[-1].packages[0]
+                kind = "class" if is_class else "package"
+                conditional = self.dispatcher.loads.query(kind, name, self.context).truth is None
+                try:
+                    self._package()
+                except ResourceFailure as error:
+                    recover_resource(self, command, error, kind=kind, retain=conditional,
+                        purpose="conditional_consume" if conditional else "consume")
                 continue
             if len(self.frames) == 1 and self.dispatcher.reader is self._root_reader and not self.dispatcher.branch_in_progress:
                 self._checkpoint = (self.frames[0].reader.position, len(self.pieces),
@@ -943,11 +1014,20 @@ class PreparationSession:
                             retained = {piece.key for piece in self.pieces}
                             if any(piece.key not in retained for piece in self.bibliography_pieces):
                                 self.bibliography_pieces = None
-                    self.require(item.span, "retained_code_reading",
+                    retained = self.require(item.span, "retained_code_reading",
                         f"Retained {self.name(frame.path)!r}; immediate caller resumes with its entry reading state. "
                         "This file's reading effects and dependencies still require resolution.", stage="preparation", unit_id=item.unit_id,
                         materialization="prepared", causes=item.causes)
+                    assumptions = self.context.recovery_contexts
                     self.dispatcher.resume_input(frame.recovery)
+                    self.context.recovery_contexts = tuple(dict.fromkeys((*self.context.recovery_contexts, *assumptions)))
+                    context_id = recovery_context(self, frame.command.span, frame.command.unit_id,
+                        retained["id"], ["content", "control_state"], boundary="caller_after_retained_input")
+                    retained.update(item_id=retained["id"], kind="source_region", outcome="unresolved",
+                        knowledge={"source": self.name(frame.path), "reading": "partial"},
+                        causes=[{"reason": item.reason, "detail": item.detail}],
+                        affected_domains=["content", "control_state"],
+                        recovery={"disposition": "retained_source", "assumptions": [context_id]})
                     if frame.file_event is not None:
                         frame.file_event.invalidate_retained_effects(self.dispatcher)
                         self.manifest.file_events.append({**frame.file_event.record("retained"),
@@ -1054,8 +1134,14 @@ class PreparationSession:
                     if isinstance(item, StoredDefinition) and self.frames[-1].path in self.styles:
                         self.styles[self.frames[-1].path].declared_commands.append(item.target.value)
             except (ReadingIssue, _DeferredCommand) as error:
-                if isinstance(error, ReadingIssue):
+                if isinstance(error, ResourceFailure) and isinstance(item, SourceCommand) and item.action in RESOURCE_ACTIONS:
+                    previous = next((r for r in reversed(self.manifest.dependencies)
+                                     if r["unit_id"] == item.unit_id and r.get("outcome") == "present"), None)
+                    recover_resource(self, item, error, record=previous)
+                elif isinstance(error, ReadingIssue):
                     self.diagnose(item.span, error.reason, error.detail, causes=error.causes)
+                    if isinstance(item, SourceCommand) and item.action in RESOURCE_ACTIONS:
+                        recover_resource(self, item, ResourceFailure(error.reason, error.detail), retain=True)
                 # Only undo the current command's attempted emission. Previous
                 # children and subsequent source remain part of the new master.
                 del self.pieces[checkpoint[0]:]

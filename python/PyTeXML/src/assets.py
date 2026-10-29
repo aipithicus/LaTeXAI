@@ -38,7 +38,7 @@ class ImageAssetInfo:
     abs_path: str
     ext: str
     is_vector: bool
-    size_bytes: int
+    size_bytes: Optional[int]
     width: Optional[float] = None
     height: Optional[float] = None
     unit: str = "px"  # "px" for raster, "pt" for vector
@@ -109,7 +109,12 @@ def _probe_eps_dimensions(path: str) -> Dict[str, Any]:
 def characterize_image(rel_path: str, abs_path: str) -> ImageAssetInfo:
     ext = os.path.splitext(rel_path)[1].lower()
     is_vector = ext in VECTOR_EXTENSIONS
-    size_bytes = os.path.getsize(abs_path) if os.path.exists(abs_path) else 0
+    access_error = None
+    try:
+        size_bytes = os.path.getsize(abs_path)
+    except OSError as error:
+        size_bytes = None
+        access_error = str(error)
 
     width = None
     height = None
@@ -144,8 +149,8 @@ def characterize_image(rel_path: str, abs_path: str) -> ImageAssetInfo:
         dpi=dpi,
         color_mode=color_mode,
         converted_from_eps=is_converted_eps,
-        dimension_error=(None if width is not None and height is not None else
-                         f"Dimensions unavailable for {rel_path}"),
+        dimension_error=(access_error or (None if width is not None and height is not None else
+                         f"Dimensions unavailable for {rel_path}")),
     )
 
 
@@ -161,10 +166,18 @@ MIME_MAP = {
 }
 
 
+class AssetConversionError(RuntimeError):
+    """An admitted converter could not read/process its source, not publish output."""
+
+    def __init__(self, detail, *, outcome="failed"):
+        super().__init__(detail)
+        self.outcome = outcome
+
+
 def pdf_to_svg(pdf_path: Path, svg_path: Path, page_index: int = 0) -> bool:
     """Extracts a PDF page as a pure vector SVG using PyMuPDF."""
     if fitz is None:
-        raise ImportError("PyMuPDF (fitz) is required for vector PDF to SVG conversion. Run 'pip install pymupdf'.")
+        raise AssetConversionError("PyMuPDF is required for vector PDF to SVG conversion", outcome="unresolved")
 
     try:
         with fitz.open(str(pdf_path)) as doc:
@@ -172,12 +185,12 @@ def pdf_to_svg(pdf_path: Path, svg_path: Path, page_index: int = 0) -> bool:
                 raise ValueError(f"Requested page {page_index + 1}; PDF has {len(doc)} pages")
             svg_text = doc[page_index].get_svg_image()
 
-        svg_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(svg_path, "w", encoding="utf-8") as f:
-            f.write(svg_text)
-        return True
-    except Exception as e:
-        raise RuntimeError(f"Failed to convert PDF {pdf_path} to SVG: {e}") from e
+    except (OSError, ValueError, fitz.FileDataError, fitz.mupdf.FzErrorBase) as e:
+        raise AssetConversionError(f"Failed to convert PDF {pdf_path} to SVG: {e}",
+            outcome="unreadable" if isinstance(e, PermissionError) else "failed") from e
+    svg_path.parent.mkdir(parents=True, exist_ok=True)
+    svg_path.write_text(svg_text, encoding="utf-8", newline="\n")
+    return True
 
 
 def raster_to_svg_wrapper(img_path: Path, svg_path: Path) -> bool:
@@ -187,10 +200,10 @@ def raster_to_svg_wrapper(img_path: Path, svg_path: Path) -> bool:
     """
     ext = img_path.suffix.lower()
     mime = MIME_MAP.get(ext, "image/png")
+    if Image is None:
+        raise AssetConversionError("Pillow is required to determine raster image dimensions", outcome="unresolved")
 
     try:
-        if Image is None:
-            raise RuntimeError("Pillow is required to determine raster image dimensions")
         with Image.open(str(img_path)) as img:
             width, height = img.size
         if width <= 0 or height <= 0:
@@ -207,12 +220,12 @@ def raster_to_svg_wrapper(img_path: Path, svg_path: Path) -> bool:
             f'</svg>\n'
         )
 
-        svg_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(svg_path, "w", encoding="utf-8") as f:
-            f.write(svg_content)
-        return True
-    except Exception as e:
-        raise RuntimeError(f"Failed to wrap raster {img_path} in SVG: {e}") from e
+    except (OSError, ValueError) as e:
+        raise AssetConversionError(f"Failed to wrap raster {img_path} in SVG: {e}",
+            outcome="unreadable" if isinstance(e, PermissionError) else "failed") from e
+    svg_path.parent.mkdir(parents=True, exist_ok=True)
+    svg_path.write_text(svg_content, encoding="utf-8", newline="\n")
+    return True
 
 
 def convert_asset_to_svg(src_path: Path, dst_svg_path: Path, *, page_index: int = 0) -> bool:
@@ -223,9 +236,12 @@ def convert_asset_to_svg(src_path: Path, dst_svg_path: Path, *, page_index: int 
 
     if ext == ".svg":
         # Already SVG, copy directly
+        try:
+            payload = src_path.read_bytes()
+        except OSError as error:
+            raise AssetConversionError(str(error), outcome="unreadable") from error
         dst_svg_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(src_path, "rb") as src, open(dst_svg_path, "wb") as dst:
-            dst.write(src.read())
+        dst_svg_path.write_bytes(payload)
         return True
 
     if ext == ".pdf":
@@ -239,7 +255,7 @@ def convert_asset_to_svg(src_path: Path, dst_svg_path: Path, *, page_index: int 
         if fitz:
             try:
                 return pdf_to_svg(src_path, dst_svg_path)
-            except Exception:
+            except AssetConversionError:
                 pass
         # EPS bytes cannot be embedded as image/png. Report an unsupported
         # conversion until a real EPS conversion backend is provided.

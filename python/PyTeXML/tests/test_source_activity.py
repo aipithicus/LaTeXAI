@@ -244,11 +244,12 @@ class ActivityPreparationTests(unittest.TestCase):
     def test_failed_asset_conversion_never_claims_completed_materialization(self):
         import json
         self.put("plot.svg", '<svg xmlns="http://www.w3.org/2000/svg" width="2" height="2"/>')
-        with patch("src.prepare.assets.convert_asset_to_svg", return_value=False), self.assertRaises(RuntimeError):
-            self.prepare(r"\usepackage{graphicx}\includegraphics{plot.svg}")
+        with patch("src.prepare.assets.convert_asset_to_svg", return_value=False):
+            text, _, _, _ = self.prepare(r"\usepackage{graphicx}\includegraphics{plot.svg}")
         manifest = json.loads((self.root / "extracted/manifest.json").read_text())
-        self.assertEqual(manifest["materialization_status"], "failed")
-        self.assertIsNone(manifest["entrypoint"])
+        self.assertEqual(manifest["materialization_status"], "partial")
+        self.assertEqual(manifest["entrypoint"], "master.tex")
+        self.assertIn("PyTeXML asset failed", text)
 
 
 if __name__ == "__main__":

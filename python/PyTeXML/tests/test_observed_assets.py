@@ -136,7 +136,7 @@ class ObservedAssetTests(unittest.TestCase):
         self.assertIn("TAIL", text)
         self.assertNotIn("skipped.png", text)
         self.assertEqual([d["target"] for d in manifest.candidate_dependencies if d["status"] == "prepared"], ["real.png"])
-        self.assertTrue(all(d.get("reason") == "missing_dependency"
+        self.assertTrue(all(d.get("reason") == "file_search_environment"
                             for d in manifest.candidate_dependencies if d["status"] != "prepared"))
         self.assertEqual([p.name for p in out.glob("*.svg")], ["real.svg"])
 
@@ -155,7 +155,7 @@ class ObservedAssetTests(unittest.TestCase):
         self.assertIn("TAIL", text)
         candidates = manifest.candidate_dependencies
         self.assertEqual([c.get("reason") for c in candidates[:-1]],
-                         ["missing_dependency", "computed_argument", "ambiguous_dependency", "asset_page"])
+                         ["file_search_environment", "computed_argument", "ambiguous_dependency", "asset_page"])
         self.assertEqual(candidates[-1]["status"], "prepared")
         self.assertEqual(manifest.unresolved, [])
         self.assertEqual([p.name for p in out.glob("*.svg")], ["real.svg"])

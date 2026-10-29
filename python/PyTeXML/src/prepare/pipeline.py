@@ -4,8 +4,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional, Tuple
 from uuid import uuid4
+from hashlib import sha256
 from ..event_log import EventLogger, JsonlSink
-from .session import PreparationSession
+from .session import PreparationSession, PreparationUnresolved
 from .manifest import PreflightManifest
 from .provenance import ProvenanceLedger
 from .bibliography import prepare_bibliography
@@ -13,6 +14,17 @@ from .assets import batch_convert_assets_to_svg, rewrite_image_references
 from .locations import finalize_locations
 from .publication import OutputTransaction
 from .events import JOURNAL, RETAINED_HISTORY, log_manifest
+from .recovery import project_recoveries, ResourceFailure, recover_resource
+
+
+class PreparationRejected(PreparationUnresolved):
+    """Strict acceptance rejected a fully surveyed and materialized recovery."""
+
+    def __init__(self, manifest):
+        reasons = "; ".join(dict.fromkeys(f"{r['reason']}: {r['detail']}" for r in
+            (*manifest.unresolved, *manifest.requirements) if r.get("stage", "preparation") == "preparation"))
+        super().__init__("Strict preparation rejected the partial result after discovery: " + reasons)
+        self.manifest = manifest
 
 
 @dataclass(frozen=True, slots=True)
@@ -49,6 +61,7 @@ def preprocess_paper(
     logger: EventLogger | None = None,
     engine_profile: str = "etex",
     tex_resource_roots: tuple[str | Path, ...] | None = None,
+    recovery: str = "best_effort",
 ) -> Tuple[str, PreflightManifest, Path, Optional[ProvenanceLedger]]:
     """Build in isolation and publish a complete payload, with failure rollback.
 
@@ -56,8 +69,12 @@ def preprocess_paper(
     overrides it. Manifest locations are always finalized, independently of it.
     tex_resource_roots=None leaves external absence unestablished. An explicit
     tuple selects an ordered, closed recursive search; () means project-only.
+    recovery='strict' rejects a partial result after discovery and staging, keeping
+    the failure report and any previous published payload. The default publishes it.
     """
     project = Path(project_dir).resolve()
+    if recovery not in {"best_effort", "strict"}:
+        raise ValueError("recovery must be 'best_effort' or 'strict'")
     destination = Path(output_dir).resolve() if output_dir else project / "extracted"
     if not project.is_dir():
         raise FileNotFoundError(f"Project directory not found: {project_dir}")
@@ -91,6 +108,9 @@ def preprocess_paper(
                     else tuple(Path(p).resolve() for p in tex_resource_roots)))
             text, manifest, ledger = _prepare_paper(
                 request, transaction.stage, excluded_dirs=(destination, transaction.workspace), logger=log)
+            if recovery == "strict" and manifest.preparation_status != "complete":
+                manifest.acceptance_status = "rejected"
+                raise PreparationRejected(manifest)
             log.emit("payload.prepared", "Payload built in staging",
                      data={"preparation_status": manifest.preparation_status}, flush=True)
             if secondary is not None:
@@ -158,11 +178,18 @@ def _prepare_paper(request: _PreparationRequest, out_dir: Path, *,
             raise ValueError("Referenced images require SVG conversion for a standalone extraction package")
         if images:
             uses = session.surviving_assets(pieces)
-            mapping = batch_convert_assets_to_svg(uses, out_dir, p_dir)
+            def asset_failure(use, error):
+                previous = next((r for r in manifest.dependencies if r["unit_id"] == use.command.unit_id
+                                 and r["kind"] == "asset"), None)
+                recover_resource(session, use.command, ResourceFailure("asset_conversion", str(error),
+                    requested=use.command.value("target"), resolved=session.name(use.path), outcome=error.outcome),
+                    kind="asset", record=previous)
+            mapping = batch_convert_assets_to_svg(uses, out_dir, p_dir, on_failure=asset_failure)
             session.rebase_asset_payloads(uses, mapping)
             pieces = rewrite_image_references(pieces, mapping, uses)
             manifest.record_asset_payloads(mapping)
         logger.emit("phase.completed", data={"phase": "assets"})
+        pieces = project_recoveries(session, pieces)
         logger.emit("phase.started", data={"phase": "emission"}, flush=True)
         if session.bibliography_pieces is not None:
             keys = {p.key for p in session.bibliography_pieces}
@@ -200,8 +227,17 @@ def _prepare_paper(request: _PreparationRequest, out_dir: Path, *,
             if not target.exists():
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_bytes(session.store.read_bytes(source))
+        for relative, payload in session.opaque_payloads.items():
+            target = out_dir / relative
+            if target.exists() and target.read_bytes() != payload:
+                raise ValueError(f"Opaque source conflicts with prepared artifact {relative}")
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(payload)
         master_tex_content = "".join(p.text for p in pieces)
         locations = finalize_locations(session, pieces, master_tex_content, payloads)
+        manifest.prepared_artifacts.extend({"path": name, "sha256": sha256(payload).hexdigest(),
+            "length": len(payload), "coordinate_domain": "bytes", "kind": "opaque_source"}
+            for name, payload in session.opaque_payloads.items())
         session.lint.finalize_repairs(pieces, master_tex_content)
         ledger = ProvenanceLedger.build_from_pieces(pieces, locations.tombstones,
             source_coverage=locations.source_coverage, artifact=locations.artifacts['master.tex'],
@@ -249,12 +285,13 @@ if __name__ == "__main__":
     parser.add_argument("output_dir", nargs="?")
     parser.add_argument("root_tex", nargs="?")
     parser.add_argument("--engine-profile", choices=("etex", "pdftex"), default="etex")
+    parser.add_argument("--recovery", choices=("best_effort", "strict"), default="best_effort")
     search = parser.add_mutually_exclusive_group()
     search.add_argument("--tex-resource-root", type=Path, action="append", default=None)
     search.add_argument("--project-only-resources", action="store_true")
     args = parser.parse_args()
     text, manifest, output, ledger = preprocess_paper(args.project_dir, output_dir=args.output_dir,
         root_tex=args.root_tex, engine_profile=args.engine_profile,
-        tex_resource_roots=() if args.project_only_resources else args.tex_resource_root)
+        tex_resource_roots=() if args.project_only_resources else args.tex_resource_root, recovery=args.recovery)
     print(f"Prepared {manifest.root_file} -> {output / 'master.tex'} "
           f"({len(text):,} characters; {manifest.preparation_status})")

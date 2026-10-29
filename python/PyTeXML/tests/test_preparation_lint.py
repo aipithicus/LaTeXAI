@@ -190,7 +190,7 @@ class PreparationLintTests(unittest.TestCase):
 
     def test_later_failure_never_claims_a_published_repair(self):
         with self.assertRaises(PreparationUnresolved):
-            self.prepare("a\x7fb\\input{missing}", mode="repair")
+            self.prepare("a\x7fb\\input{missing}", mode="repair", recovery="strict")
         manifest = json.loads((self.output / "manifest.json").read_text())
         finding = manifest["lint"]["findings"][0]
         self.assertEqual(finding["repair"]["status"], "not_published")

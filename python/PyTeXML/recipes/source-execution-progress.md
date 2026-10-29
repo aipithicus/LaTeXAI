@@ -4,6 +4,81 @@ This file records implementation and qualification evidence. Current priorities
 live in the [working queue](../../../../aipithicus-issues/LaTeXAI/briefs/pytexml-language-core/working-queue.md);
 dated next-step statements below describe their checkpoint, not current dispatch.
 
+## 2026-10-29: Q1 resource failures and continued recovery
+
+The first Q1 gate is implemented in the existing preparation traversal, request
+records and source maps. `recovery="best_effort"` is the API/CLI default; diagnosed
+resource failures retain item identity, outcome, cause, partial knowledge,
+affected domains and disposition. Active failures produce correlated text markers
+and journal events. Projection happens after splice rollback, including retained
+package/input files. Independent readable requests continue. No file is fabricated
+at an absent resource's name. See [resource recovery](resource-recovery.md) for the
+implemented contract and acceptance/status fields.
+
+Unavailable programs invalidate captured meanings and state evidence. Subsequent
+reading carries explicit caller-state recovery contexts. Uncertain load guards
+remain possible loads; they are not promoted to active missing items. Access,
+decoding, ambiguity, an unspecified search environment and unevaluated names stay
+distinct from confirmed absence. Undecodable child bytes survive under an opaque
+artifact identity. Authored file-test fallbacks execute before generated recovery.
+`recovery="strict"` rejects after discovery, survey and materialization attempts,
+preserving an earlier published payload and the new attempt's diagnostics.
+
+The all-nine batch `20261029-q1-resource-recovery-qualified` uses the preceding
+`20261029-python-format-files-final` checkpoint's explicit native resource root.
+Its resource inventory fingerprint matches that checkpoint for every specimen.
+All nine attempts publish partial payloads:
+
+| Specimen | Master characters | Unresolved diagnostics | Newly visible recovery |
+| --- | ---: | ---: | --- |
+| 2306.01911v1 | 105923 | 0 | `eso-pic` absent; bibliography entry reading conditional on recovery state |
+| 2405.15943v3 | 67710 | 1 | Existing reading boundary; no resource tombstone |
+| 2412.11340v4 | 117103 | 1 | `setspace` absent; later declaration reading remains unresolved |
+| 2512.18792v1 | 169440 | 0 | `eso-pic` absent, marker in retained source |
+| 2608.28281v2 | 69902 | 3 | Existing reading boundaries; no resource tombstone |
+| Root A | 754 | 4 | Existing continuation boundaries; no resource tombstone |
+| Root B | 1081 | 1 | `biblatex` absent |
+| Root C | 1931 | 1 | `cite` absent |
+| Root D | 1866 | 2 | Existing reading boundary; no resource tombstone |
+
+These are not coverage gains. Earlier preparation left unknown external packages
+as binding requirements without checking the resource obligation. The explicit
+resource tree really lacks these names. BFPCA therefore changes from `complete`
+to `partial`; its original root text is retained, while the earlier 24 asset
+derivatives and formatted bibliography are no longer claimed as established
+extraction. The missing `eso-pic` also leaves 2306's bibliography entry grammar
+conditional: unrecognized entries are reported unresolved, not absent. Counts in
+the legacy `unresolved` list do not include all typed requirements or tombstones.
+Root A's D5 absence remains an authored false branch; computed `gmlisting`
+closure and paired native rendering remain Q2 work.
+
+All nine copied-payload rereads finish with `partial` status. They do not qualify
+replay equivalence: 2306's unresolved count changes from zero to one and exposes
+`lipsum`; BFPCA exposes `bbm`; 2512's unresolved count changes from zero to one.
+The marker text survives, but a fresh preparation does not import the earlier
+manifest's state consequences. Keeping the old marker is not equivalent to
+replaying its assumptions. The other six rows retain their prior unresolved
+counts, including Root A at four. This evidence makes recovery-state import an
+explicit follow-on rather than allowing an idempotent-payload claim.
+
+The full suite ran 1,183 tests: 1,180 passed and three skipped. The final correction
+for unreadable conditional package retention additionally passes all 23 focused
+recovery tests. Those tests include five independent missing requests in one run,
+authored fallback, content on both sides, state invalidation, rollback, strict
+rejection after discovery, corrupt/denied sources, conversion failure with later
+successful assets, and propagation of implementation/publication errors.
+
+This closes Q1's scanned-request recovery gate, not the whole staged-pipeline
+proposal. Arbitrary malformed-source resynchronization, complete discovery through
+opaque/computed source, a universal open-item taxonomy, and importing recovery
+state from an earlier prepared payload remain unimplemented. Text markers are a
+recovery projection, not proof of native rendering or original-resource closure.
+
+Receipts are under repository `temp/q1-recovery/`: `suite-final`, `focused-final`,
+`specimens-qualified`, `reread-run` and `payload-rereads/receipt.json`. Earlier
+failing runs remain diagnostic history. The first all-nine run used an unspecified
+external search and is not the matched-environment comparison above.
+
 ## 2026-10-29: review reconciliation and recovery direction (planning only)
 
 The user clarified the product contract: recover useful content from broken

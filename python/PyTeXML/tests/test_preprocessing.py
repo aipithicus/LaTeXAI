@@ -10,7 +10,6 @@ from unittest.mock import patch
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.prepare.bibliography import BibliographyPreparationError
 from src.bibtex import Database, BibTeXError
 from src.prepare.bibliography import extraction_bbl
 from src.prepare.assets import batch_convert_assets_to_svg, AssetUse
@@ -53,7 +52,7 @@ class PreparationTests(unittest.TestCase):
         self.document(r"\input{part}")
         self.put("part.tex", "\\input{main}\n")
         with self.assertRaisesRegex(PreparationUnresolved, "input_cycle"):
-            preprocess_paper(str(self.root))
+            preprocess_paper(str(self.root), recovery="strict")
         self.put("part.tex", "Recovered")
         text, _, _, _ = preprocess_paper(str(self.root))
         self.assertIn("Recovered", text)
@@ -136,13 +135,14 @@ class PreparationTests(unittest.TestCase):
         self.assertIn("\\bibitem{key}", text)
         self.assertIsNone(manifest.bibliography.canonical_bib)
 
-    def test_unresolved_citations_fail_without_publishing_master(self):
+    def test_missing_citations_preserve_available_entries_and_report_loss(self):
         self.bib_project()
         self.put("main.bbl", "\\begin{thebibliography}{1}\n\\bibitem{other} Wrong entry.\n\\end{thebibliography}\n")
-        with self.assertRaisesRegex(BibliographyPreparationError, "key"):
-            preprocess_paper(str(self.root))
-        self.assertFalse((self.root / "extracted/master.tex").exists())
-        self.assertIn("attempt.failed", (self.root / "extracted/preparation.jsonl").read_text())
+        text, manifest, _, _ = preprocess_paper(str(self.root))
+        self.assertIn("Wrong entry.", text)
+        self.assertIn("PyTeXML bibliography-entry absent", text)
+        self.assertEqual(manifest.preparation_status, "partial")
+        self.assertIn("resource.tombstone", (self.root / "extracted/preparation.jsonl").read_text())
 
     def test_native_bibliography_never_invokes_a_compiler(self):
         self.bib_project(existing=False)
@@ -215,25 +215,28 @@ class PreparationTests(unittest.TestCase):
     def test_bibliography_decoding_failure_is_not_swallowed(self):
         self.bib_project()
         (self.root / "main.bbl").write_bytes(b"\xff")
-        with self.assertRaises(SourceDecodingError):
-            preprocess_paper(str(self.root))
+        text, manifest, out, _ = preprocess_paper(str(self.root))
+        self.assertEqual((out / "opaque-resources/main.bbl").read_bytes(), b"\xff")
+        self.assertIn("PyTeXML formatted-bibliography failed", text)
+        self.assertTrue(any(r["reason"] == "resource_reading" for r in manifest.requirements))
         self.assertIn("main.bbl", (self.root / "extracted/preparation.jsonl").read_text())
 
     def test_local_style_decoding_failure_is_logged(self):
         self.document("\\usepackage{customstyle}")
         self.put("customstyle.sty", "").write_bytes(b"\xff")
-        with self.assertRaises(SourceDecodingError):
-            preprocess_paper(str(self.root))
+        text, manifest, out, _ = preprocess_paper(str(self.root))
+        self.assertIn("PyTeXML package failed", text)
+        self.assertEqual((out / "opaque-resources/customstyle.sty").read_bytes(), b"\xff")
         self.assertIn("customstyle.sty", (self.root / "extracted/preparation.jsonl").read_text())
 
-    def test_conversion_failure_is_logged_without_master_or_raw_copy(self):
+    def test_conversion_failure_is_logged_with_recovered_master_without_raw_copy(self):
         self.document("\\usepackage{graphicx}\\includegraphics{bad.png}")
         self.put("bad.png", "invalid image")
-        with self.assertRaises(RuntimeError):
-            preprocess_paper(str(self.root))
+        text, manifest, _, _ = preprocess_paper(str(self.root))
         out = self.root / "extracted"
         self.assertIn("bad.png", (out / "preparation.jsonl").read_text())
-        self.assertFalse((out / "master.tex").exists())
+        self.assertIn("PyTeXML asset failed", text)
+        self.assertEqual(manifest.materialization_status, "partial")
         self.assertFalse((out / "bad.png").exists())
 
     def test_unknown_dimensions_are_reported(self):
@@ -322,9 +325,9 @@ class PreparationTests(unittest.TestCase):
     def test_missing_native_entry_is_an_explicit_failure(self):
         self.bib_project(existing=False)
         self.put("refs.bib", "@misc{other,title={Other}}")
-        with self.assertRaisesRegex(BibliographyPreparationError, "key"):
-            preprocess_paper(str(self.root))
-        self.assertFalse((self.root / "extracted/master.tex").exists())
+        text, manifest, _, _ = preprocess_paper(str(self.root))
+        self.assertIn("PyTeXML bibliography failed", text)
+        self.assertTrue(any("key" in r["detail"] for r in manifest.requirements))
 
 
 if __name__ == "__main__":

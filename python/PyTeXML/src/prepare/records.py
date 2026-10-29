@@ -4,7 +4,7 @@ These are JSON-facing dictionaries, not a second set of runtime domain objects.
 Builders derive source coordinates from a ReadingUnit so the identity and span
 cannot disagree. Preparation-specific fields stay with their semantic producer.
 """
-from typing import Any, TypedDict
+from typing import Any, NotRequired, TypedDict
 
 from ..reading.units import ReadingUnit
 
@@ -41,6 +41,16 @@ class WorkRecord(SourceReference, LocationRecord, WorkClassification):
     detail: str
     activity: str
     activity_evidence: dict[str, Any]
+    item_id: NotRequired[str]
+    kind: NotRequired[str]
+    requested: NotRequired[str | None]
+    outcome: NotRequired[str]
+    knowledge: NotRequired[dict[str, Any]]
+    causes: NotRequired[list[dict[str, Any]]]
+    cause_ids: NotRequired[list[str]]
+    affected_domains: NotRequired[list[str]]
+    recovery: NotRequired[dict[str, Any]]
+    search: NotRequired[dict[str, Any]]
 
 
 class RequirementRecord(WorkRecord):
@@ -77,7 +87,7 @@ def work_classification(stage, *, dependency="none", materialization=None, next_
         raise ValueError("Unknown dependency certainty")
     if materialization is None:
         materialization = {"none": "not_required", "possible": "undetermined", "required": "pending"}[dependency]
-    if materialization not in {"not_required", "undetermined", "pending", "prepared"}:
+    if materialization not in {"not_required", "undetermined", "pending", "prepared", "unavailable"}:
         raise ValueError("Unknown materialization state")
     if dependency == "possible" and materialization == "pending":
         raise ValueError("A possible dependency is not an established payload request")

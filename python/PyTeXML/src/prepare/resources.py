@@ -4,13 +4,21 @@ import re
 
 from ..reading.configuration import configured_options
 from ..reading.contracts import EffectiveReadingProfile, LiteralRegion, ReadingIssue
+from ..source_io import SourceDecodingError
+from .recovery import ResourceFailure
 from .records import source_reference
 
 
 def prepare_external_literal(session, command):
     path = session.resolve(command.value("target"), [""], command.span)
     session.edge(command, path, "external_literal")
-    document = session.store.document(path)
+    try:
+        document = session.store.document(path)
+    except (OSError, SourceDecodingError) as error:
+        if isinstance(error, SourceDecodingError):
+            session.preserve_opaque(path)
+        raise ResourceFailure("resource_reading", str(error), requested=command.value("target"),
+            resolved=session.name(path), outcome="unreadable" if isinstance(error, OSError) else "failed") from error
     role = command.metadata["semantic_role"]
     action = session.policy.get_role_action(role)
     environment = command.metadata["inline_environment"]

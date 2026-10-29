@@ -217,8 +217,10 @@ class TraversalTests(unittest.TestCase):
         self.document("\\cite{key}\\bibliography{absent}")
         self.put("main.bbl", "\\def\\unused{\\bibitem{key}FAKE}"
                  "\\begin{thebibliography}{1}\\bibitem{other}OTHER\\end{thebibliography}")
-        with self.assertRaisesRegex(ValueError, "entries missing.*key"):
-            self.prepare()
+        text, manifest, _, _ = self.prepare()
+        self.assertIn("OTHER", text)
+        self.assertTrue(any(r.get("kind") == "bibliography_entry" and r.get("outcome") == "absent"
+                            for r in manifest.requirements))
 
     def test_source_entry_point_cli_uses_the_new_traversal(self):
         import subprocess
@@ -254,7 +256,7 @@ class TraversalTests(unittest.TestCase):
                 self.document(body)
                 self.put("extracted/old.tex", "GENERATED")
                 with self.assertRaises(PreparationUnresolved):
-                    self.prepare(root_tex="main.tex")
+                    self.prepare(root_tex="main.tex", recovery="strict")
 
     def test_uninterpreted_expressions_preserve_spans_and_continue_assembly(self):
         for pending in (r"\unknown{ARG}", "$x+y$", r"\later{ARG}",
@@ -384,8 +386,9 @@ class TraversalTests(unittest.TestCase):
     def test_partial_discovery_does_not_hide_a_known_missing_bibliography_entry(self):
         self.document("\\cite{missing}\\bibliography{refs}\\unknown")
         self.put("refs.bib", "@misc{other,title={OTHER}}")
-        with self.assertRaisesRegex(ValueError, "missing"):
-            self.prepare()
+        text, manifest, _, _ = self.prepare()
+        self.assertIn("PyTeXML bibliography failed", text)
+        self.assertTrue(any("missing" in r["detail"] for r in manifest.requirements))
 
     def test_multiple_bibliography_sites_preserve_later_site_without_duplicate_bbl(self):
         self.document("\\cite{key}\\bibliography{refs}BETWEEN\\bibliography{refs}AFTER")
@@ -454,7 +457,7 @@ class TraversalTests(unittest.TestCase):
         self.put("plot.png", "PNG")
         self.put("plot.pdf", "PDF")
         with self.assertRaisesRegex(PreparationUnresolved, "ambiguous_dependency"):
-            self.prepare()
+            self.prepare(recovery="strict")
         self.document("OTHER", name="other.tex")
         with self.assertRaisesRegex(ValueError, "Root selection is unresolved"):
             self.prepare()
@@ -462,8 +465,10 @@ class TraversalTests(unittest.TestCase):
     def test_nonfirst_pdf_page_is_not_silently_converted_as_page_one(self):
         self.document("\\includegraphics[page=2]{plot.pdf}", "\\usepackage{graphicx}")
         self.put("plot.pdf", "PDF")
-        with self.assertRaisesRegex(RuntimeError, "Failed to convert PDF"):
-            self.prepare()
+        text, manifest, out, _ = self.prepare()
+        self.assertIn("PyTeXML asset failed", text)
+        self.assertTrue(any("Failed to convert PDF" in r["detail"] for r in manifest.requirements))
+        self.assertFalse((out / "plot_p2.svg").exists())
 
     def test_explicit_assets_with_same_stem_have_distinct_derivatives(self):
         from PIL import Image
@@ -480,7 +485,7 @@ class TraversalTests(unittest.TestCase):
         _, _, out, _ = self.prepare()
         self.document("\\input{missing}")
         with self.assertRaises(PreparationUnresolved):
-            self.prepare()
+            self.prepare(recovery="strict")
         self.assertIn("OK", (out / "master.tex").read_text())
         log = (out / "preparation.jsonl").read_text()
         self.assertIn("attempt.published", log)
