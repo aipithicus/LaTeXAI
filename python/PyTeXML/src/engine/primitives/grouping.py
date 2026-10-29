@@ -1,6 +1,7 @@
 """Scope operations over the existing state journal and execution group stack."""
-from ..operations import ExecutableOperation
-from ...reading.contracts import ReadingIssue
+from ..operations import ExecutableOperation, ExpansionKind, OperationFamily, PrimitiveOperation
+from ..primitive import PrimitiveMeaning
+from ...reading.contracts import EffectiveReadingProfile, ReadingIssue
 
 
 def validate_effect(profile):
@@ -10,7 +11,7 @@ def validate_effect(profile):
         raise ReadingIssue("unsupported_reading_effect", "Only local reading effects are supported")
 
 
-def begin_scope(host, opening, profile):
+def begin_scope(host, opening, profile: PrimitiveMeaning[str]):
     """No operands or expansion; push a local journal and owned group frame.
 
     Return the original opener event, preserving its source and mouth state.
@@ -20,7 +21,7 @@ def begin_scope(host, opening, profile):
     return opening
 
 
-def end_scope(host, opening, profile):
+def end_scope(host, opening, profile: PrimitiveMeaning[str]):
     """No operands or expansion; validate the owned group kind before restoring.
 
     Return the original closer. Synchronize the next line's reader parameter
@@ -47,8 +48,11 @@ def apply_lexical_profile(host, opening, profile):
     return opening
 
 
-OPERATIONS = (
-    ExecutableOperation("scope.begin", begin_scope, unexpandable=True),
-    ExecutableOperation("scope.end", end_scope, unexpandable=True),
-    ExecutableOperation("reading.apply_lexical_profile", apply_lexical_profile),
+BEGIN = PrimitiveOperation("scope.begin", ExpansionKind.UNEXPANDABLE, begin_scope, operand_type=str)
+END = PrimitiveOperation("scope.end", ExpansionKind.UNEXPANDABLE, end_scope, operand_type=str)
+
+FAMILY = OperationFamily(
+    operations=(BEGIN, END, ExecutableOperation[EffectiveReadingProfile](
+        "reading.apply_lexical_profile", ExpansionKind.INTERNAL, apply_lexical_profile)),
+    primitives=(BEGIN.declare("begingroup", "semi_simple"), END.declare("endgroup", "semi_simple")),
 )

@@ -8,19 +8,20 @@ References: TeX82 tex.web and pdftexdir/pdftex.web, assign_int/word_define.
 """
 from ...reading.contracts import ReadingIssue, SourceCommand
 from ..integers import IntegerScanner
-from ..operations import ExecutableOperation
+from ..operations import ExpansionKind, OperationFamily, PrimitiveOperation
+from ..primitive import PrimitiveMeaning
 from ...reading.assignment_scanner import AssignmentScanner
 
 
-def parameter_key(profile):
+def parameter_key(profile: PrimitiveMeaning[str]) -> str:
     return profile.operand
 
 
-def integer_value(scanner, profile):
+def integer_value(scanner, profile: PrimitiveMeaning[str]):
     return scanner.host.context.integer_parameters.read(parameter_key(profile))
 
 
-def assign_integer(host, opening, profile):
+def assign_integer(host, opening, profile: PrimitiveMeaning[str]):
     key = parameter_key(profile)
     scanner = IntegerScanner(host)
     with host.context.argument_scanning():
@@ -35,12 +36,17 @@ def assign_integer(host, opening, profile):
                                    "source_reference": "TeX assign_int / word_define"})
 
 
-def capture(reader, context, token, meaning):
+def capture(reader, context, token, meaning: PrimitiveMeaning[str]):
     value = AssignmentScanner(reader, context).literal_integer_assignment()
     return SourceCommand(reader.source_span(token.span.start, reader.position), token.value,
                          "integer_parameter_assignment", metadata={"parameter": meaning.operand, "value": value})
 
 
-OPERATIONS = (
-    ExecutableOperation("parameter.assign_integer", assign_integer, integer_value, unexpandable=True, capture=capture),
+ASSIGN = PrimitiveOperation("parameter.assign_integer", ExpansionKind.UNEXPANDABLE, assign_integer,
+                            integer_value, operand_type=str, capture=capture)
+
+FAMILY = OperationFamily(
+    operations=(ASSIGN,),
+    primitives=(*(ASSIGN.declare(name, name) for name in ("widowpenalty", "clubpenalty")),
+                ASSIGN.declare("pdfoutput", "pdfoutput", extension=True)),
 )

@@ -3,9 +3,9 @@
 These retain the reader's bounded contracts: captures are not compiled macros,
 and an unavailable donor remains unknown rather than becoming undefined.
 """
-from dataclasses import replace
+from dataclasses import dataclass, replace
 
-from ..operations import ExecutableOperation
+from ..operations import ExecutableOperation, ExpansionKind, OperationFamily, PrimitiveOperation
 from ..primitive import PrimitiveMeaning
 from ..expansion import ExpansionCursor
 from ...reading.assignment_scanner import AssignmentScanner
@@ -19,7 +19,13 @@ from ...reading.environment_scanner import EnvironmentScanner
 from ...reading.tex_reader import CatCode, TokenKind
 
 
-def assign_meaning(host, opening, profile):
+@dataclass(frozen=True, slots=True)
+class DefinitionSpec:
+    global_: bool = False
+    expanded: bool = False
+
+
+def assign_meaning(host, opening, profile: PrimitiveMeaning[None]):
     """Raw target, optional equals/space, raw donor; no operand expansion.
 
     Copy the donor's current meaning into local state. Return the captured
@@ -44,15 +50,15 @@ def assign_meaning(host, opening, profile):
             and context.catcodes[donor.value[-1]] == CatCode.LETTER})
 
 
-def capture_let(reader, context, token, meaning):
+def capture_let(reader, context, token, meaning: PrimitiveMeaning[None]):
     return AssignmentScanner(reader, context).let(token.span, token.value)
 
 
-def capture_definition(reader, context, token, meaning):
+def capture_definition(reader, context, token, meaning: PrimitiveMeaning[DefinitionSpec]):
     return DefinitionScanner(reader, context).primitive(token.span.start)
 
 
-def store_primitive_definition(host, opening, meaning):
+def store_primitive_definition(host, opening, meaning: PrimitiveMeaning[DefinitionSpec]):
     from ..continuation import ContinuationReader
     scanner = DefinitionScanner(host.reader, host.context)
     expand = (lambda scanner, count: expanded_body(host, scanner, count)) if meaning.operand.expanded else None
@@ -181,11 +187,18 @@ def declare_environment(host, opening, profile):
     return command
 
 
-OPERATIONS = (
-    ExecutableOperation("meaning.assign", assign_meaning, unexpandable=True, capture=capture_let, continuation=True),
-    ExecutableOperation("definition.store", store_primitive_definition, unexpandable=True, capture=capture_definition, continuation=True),
-    ExecutableOperation("kernel.define_command", store_definition),
-    ExecutableOperation("definition.store_environment", store_environment),
-    ExecutableOperation("definition.declare_boolean", declare_boolean),
-    ExecutableOperation("definition.declare_environment", declare_environment),
+ASSIGN = PrimitiveOperation("meaning.assign", ExpansionKind.UNEXPANDABLE, assign_meaning,
+                            operand_type=type(None), capture=capture_let, continuation=True)
+STORE = PrimitiveOperation("definition.store", ExpansionKind.UNEXPANDABLE, store_primitive_definition,
+                           operand_type=DefinitionSpec, capture=capture_definition, continuation=True)
+
+FAMILY = OperationFamily(
+    operations=(ASSIGN, STORE,
+        ExecutableOperation[EffectiveReadingProfile]("kernel.define_command", ExpansionKind.INTERNAL, store_definition),
+        ExecutableOperation[EffectiveReadingProfile]("definition.store_environment", ExpansionKind.INTERNAL, store_environment),
+        ExecutableOperation[EffectiveReadingProfile]("definition.declare_boolean", ExpansionKind.INTERNAL, declare_boolean),
+        ExecutableOperation[EffectiveReadingProfile]("definition.declare_environment", ExpansionKind.INTERNAL, declare_environment)),
+    primitives=(ASSIGN.declare("let", None),
+        *(STORE.declare(name, DefinitionSpec(global_, expanded)) for name, global_, expanded in
+          (("def", False, False), ("gdef", True, False), ("edef", False, True), ("xdef", True, True)))),
 )

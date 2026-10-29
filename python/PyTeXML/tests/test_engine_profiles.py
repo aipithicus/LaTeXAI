@@ -9,8 +9,8 @@ PROJECT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT))
 from src.bindings.catalog import BindingCatalog
 from src.bindings.resolver import BindingResolver
-from src.engine.catalog import CORE_OPERATIONS
-from src.engine.profiles import COMMON_PRIMITIVES, EXTENSIONS, EngineProfile
+from src.engine.catalog import CORE_OPERATIONS, COMMON_PRIMITIVES, EXTENSIONS
+from src.engine.profiles import EngineProfile
 from src.engine.primitive import PrimitiveMeaning
 from src.reading.contracts import ReadingBoundary, UndefinedMeaning, UnresolvedBindingResult
 from src.reading.dispatcher import StructuralDispatcher

@@ -5,9 +5,12 @@
 setup policy and reference-engine contract. They do not encode primitive operand
 grammars or implementations.
 
-Native operations live in `src/engine/primitives/`, assembled once by the
-operation catalog. `src/engine/profiles.py` maps the common vocabulary and named
-extensions to those operations. Lookup first checks scoped mutable meanings,
+Native operations and their typed primitive declarations live together in
+`src/engine/primitives/`. The catalog explicitly assembles each family into
+immutable operation, common-vocabulary and extension indexes. `src/engine/profiles.py`
+selects those declarations and builds each profile's immutable environment once.
+The [registry recipe](../../recipes/engine-registry.md) describes extension and validation.
+Lookup first checks scoped mutable meanings,
 then the selected profile, then the remaining prototype kernel/package knowledge.
 Aliases retain operation identity. Redefinitions and scope restoration work through
 the same state as other meanings.

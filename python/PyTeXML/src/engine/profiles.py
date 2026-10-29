@@ -3,61 +3,16 @@
 These are deliberately partial environments. A missing implementation does not
 establish that an arbitrary name is undefined. Explicit exclusions do.
 """
-from dataclasses import dataclass
+from collections.abc import Mapping
+from dataclasses import dataclass, field
 import hashlib
 from pathlib import Path
 from types import MappingProxyType
 
-from .primitive import DefinitionSpec, PrimitiveMeaning
-from ..reading.contracts import ConditionalRule, UndefinedMeaning
+from .catalog import COMMON_PRIMITIVES, EXTENSIONS
+from .primitive import PrimitiveMeaning
+from ..reading.contracts import UndefinedMeaning
 from ..yaml_io import load_mapping, validate_resource_identity
-
-
-def _common():
-    result = {
-        "let": PrimitiveMeaning("meaning.assign"),
-        "relax": PrimitiveMeaning("execution.relax"),
-        "noexpand": PrimitiveMeaning("expansion.noexpand"),
-        "expandafter": PrimitiveMeaning("expansion.expand_after"),
-        "csname": PrimitiveMeaning("name.construct"),
-        "endcsname": PrimitiveMeaning("name.end"),
-        **{name: PrimitiveMeaning("assignment.prefix", name)
-           for name in ("global", "long", "outer", "protected")},
-        "globaldefs": PrimitiveMeaning("execution.unsupported", "globaldefs"),
-        "catcode": PrimitiveMeaning("reading.assign_catcode"),
-        "chardef": PrimitiveMeaning("meaning.define_character_code"),
-        "begingroup": PrimitiveMeaning("scope.begin", "semi_simple"),
-        "endgroup": PrimitiveMeaning("scope.end", "semi_simple"),
-        **{name: PrimitiveMeaning("definition.store", DefinitionSpec(global_, expanded))
-           for name, global_, expanded in (("def", False, False), ("gdef", True, False),
-                                           ("edef", False, True), ("xdef", True, True))},
-        **{name: PrimitiveMeaning("parameter.assign_integer", name)
-           for name in ("widowpenalty", "clubpenalty")},
-    }
-    rules = {
-        "iftrue": ConditionalRule("opener", "always_true", 0),
-        "iffalse": ConditionalRule("opener", "always_false", 0),
-        "if": ConditionalRule("opener", "deferred", 2, "character_equal"),
-        "ifcat": ConditionalRule("opener", "deferred", 2, "category_equal"),
-        "ifx": ConditionalRule("opener", "deferred", 2, "meaning_equal"),
-        "ifdefined": ConditionalRule("opener", "deferred", 1),
-        **{name: ConditionalRule("opener", "deferred") for name in
-           ("ifnum", "ifdim", "ifodd", "ifvoid", "ifhbox", "ifvbox", "ifeof", "ifcase", "ifcsname")},
-        **{name: ConditionalRule("opener", "deferred", 0) for name in
-           ("ifvmode", "ifhmode", "ifmmode", "ifinner")},
-        "else": ConditionalRule("alternative"),
-        "or": ConditionalRule("case_alternative"),
-        "fi": ConditionalRule("terminator"),
-    }
-    result.update((name, PrimitiveMeaning("conditional.route", rule)) for name, rule in rules.items())
-    return result
-
-
-COMMON_PRIMITIVES = MappingProxyType(_common())
-EXTENSIONS = MappingProxyType({
-    "expanded": PrimitiveMeaning("expansion.expanded"),
-    "pdfoutput": PrimitiveMeaning("parameter.assign_integer", "pdfoutput"),
-})
 
 
 @dataclass(frozen=True, slots=True)
@@ -78,6 +33,7 @@ class EngineProfile:
     capture_integer_setup: frozenset[str] = frozenset()
     oracle: OracleContract | None = None
     source_sha256: str | None = None
+    primitives: Mapping[str, PrimitiveMeaning | UndefinedMeaning] = field(init=False, repr=False, compare=False, hash=False)
 
     def __post_init__(self):
         for field in ("extensions", "absent", "capture_integer_setup"):
@@ -92,15 +48,14 @@ class EngineProfile:
                 or any(EXTENSIONS.get(name) is None or EXTENSIONS[name].operation != "parameter.assign_integer"
                        for name in self.capture_integer_setup)):
             raise ValueError("Preparation setup capture requires an explicitly absent integer parameter")
+        primitives = dict(COMMON_PRIMITIVES)
+        primitives.update((name, EXTENSIONS[name]) for name in self.extensions)
+        primitives.update((name, UndefinedMeaning(None, format_origin=f"engine profile: {self.name}"))
+                          for name in self.absent)
+        object.__setattr__(self, "primitives", MappingProxyType(primitives))
 
     def lookup(self, name):
-        if name in COMMON_PRIMITIVES:
-            return COMMON_PRIMITIVES[name]
-        if name in self.extensions:
-            return EXTENSIONS[name]
-        if name in self.absent:
-            return UndefinedMeaning(None, format_origin=f"engine profile: {self.name}")
-        return None
+        return self.primitives.get(name)
 
     def record(self):
         from dataclasses import asdict

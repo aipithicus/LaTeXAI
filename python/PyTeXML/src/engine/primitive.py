@@ -1,20 +1,14 @@
 """Native primitive meanings and immutable operands, independent of bindings."""
 from dataclasses import dataclass
-from typing import Any
 
 from ..reading.spans import SourceSpan
+from ..reading.tex_reader import Token
 
 
 @dataclass(frozen=True, slots=True)
-class DefinitionSpec:
-    global_: bool = False
-    expanded: bool = False
-
-
-@dataclass(frozen=True, slots=True)
-class PrimitiveMeaning:
+class PrimitiveMeaning[Operand = object]:
     operation: str
-    operand: Any = None
+    operand: Operand
     span: SourceSpan | None = None
     uncertain: SourceSpan | None = None
 
@@ -27,4 +21,4 @@ class PrimitiveMeaning:
 @dataclass(frozen=True, slots=True)
 class AssignmentTarget:
     """Observed raw target only; no claim about an expansion-dependent RHS."""
-    target: Any
+    target: Token

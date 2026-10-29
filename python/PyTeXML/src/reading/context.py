@@ -13,7 +13,6 @@ from .configuration import ConfigurationState
 from .spans import SourceSpan
 from ..engine.parameters import IntegerParameters
 from ..engine.primitive import PrimitiveMeaning
-from ..engine.profiles import engine_profile as select_engine_profile
 
 
 DefinitionKey = tuple[TokenKind, str]
@@ -53,6 +52,9 @@ class ReaderContext:
     def __init__(self, *, baseline: MouthBaseline, catcodes: CatcodeTable | None = None,
                  endlinechar: int | None = None,
                  mode: ExecutionMode = ExecutionMode.ACTIVE_EXECUTION, initial_meanings=None, engine_profile="etex"):
+        # Environment assembly imports family handlers that use ReaderContext.
+        # Select it at context construction, after the state classes are loaded.
+        from ..engine.profiles import engine_profile as select_engine_profile
         self.engine_profile = select_engine_profile(engine_profile)
         self.baseline = baseline
         self.catcodes = catcodes.copy() if catcodes is not None else baseline.new_catcodes()

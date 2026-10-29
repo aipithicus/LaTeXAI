@@ -2,8 +2,8 @@
 from ...reading.assignment_scanner import AssignmentScanner
 from ...reading.contracts import CharacterCodeMeaning, ReadingIssue, ScannedArgument, SourceCommand
 from ..integers import IntegerScanner
-from ..operations import ExecutableOperation
-from ..primitive import AssignmentTarget
+from ..operations import ExpansionKind, OperationFamily, PrimitiveOperation
+from ..primitive import AssignmentTarget, PrimitiveMeaning
 
 
 def character_index(scanner):
@@ -15,11 +15,11 @@ def character_index(scanner):
     return chr(value)
 
 
-def catcode_value(scanner, profile):
+def catcode_value(scanner, profile: PrimitiveMeaning[None]):
     return int(scanner.host.context.catcodes[character_index(scanner)])
 
 
-def assign_catcode(host, opening, profile):
+def assign_catcode(host, opening, profile: PrimitiveMeaning[None]):
     scanner = IntegerScanner(host)
     with host.context.argument_scanning():
         character = character_index(scanner)
@@ -35,7 +35,7 @@ def assign_catcode(host, opening, profile):
                                    **({"trailing_control_word": True} if scanner.ends_control_word else {})})
 
 
-def define_character_code(host, opening, profile):
+def define_character_code(host, opening, profile: PrimitiveMeaning[None]):
     with host.context.argument_scanning():
         target = AssignmentScanner(host.reader, host.context).target()
         scanner = IntegerScanner(host, relaxed_target=(target.kind, target.value))
@@ -51,13 +51,17 @@ def define_character_code(host, opening, profile):
                          {"value": value, "trailing_control_word": scanner.ends_control_word})
 
 
-def capture_character_target(reader, context, token, meaning):
+def capture_character_target(reader, context, token, meaning: PrimitiveMeaning[None]):
     with context.argument_scanning():
         return AssignmentTarget(AssignmentScanner(reader, context).target())
 
 
-OPERATIONS = (
-    ExecutableOperation("reading.assign_catcode", assign_catcode, catcode_value, unexpandable=True),
-    ExecutableOperation("meaning.define_character_code", define_character_code, unexpandable=True,
-                        capture=capture_character_target),
+CATCODE = PrimitiveOperation("reading.assign_catcode", ExpansionKind.UNEXPANDABLE, assign_catcode,
+                             catcode_value, operand_type=type(None))
+CHARDEF = PrimitiveOperation("meaning.define_character_code", ExpansionKind.UNEXPANDABLE, define_character_code,
+                             operand_type=type(None), capture=capture_character_target)
+
+FAMILY = OperationFamily(
+    operations=(CATCODE, CHARDEF),
+    primitives=(CATCODE.declare("catcode", None), CHARDEF.declare("chardef", None)),
 )

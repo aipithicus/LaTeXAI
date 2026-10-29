@@ -3,5 +3,8 @@ from .operations import build_catalog
 from .primitives import assignments, definitions, grouping, expansion, parameters, conditionals
 
 
-CORE_OPERATIONS = build_catalog(definitions.OPERATIONS, grouping.OPERATIONS, assignments.OPERATIONS,
-                                expansion.OPERATIONS, parameters.OPERATIONS, conditionals.OPERATIONS)
+CORE_CATALOG = build_catalog(definitions.FAMILY, grouping.FAMILY, assignments.FAMILY,
+                             expansion.FAMILY, parameters.FAMILY, conditionals.FAMILY)
+CORE_OPERATIONS = CORE_CATALOG.operations
+COMMON_PRIMITIVES = CORE_CATALOG.common_primitives
+EXTENSIONS = CORE_CATALOG.extensions

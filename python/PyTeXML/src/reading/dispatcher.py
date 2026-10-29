@@ -417,7 +417,7 @@ class StructuralDispatcher:
                 if meaning.uncertain is not None:
                     raise ReadingIssue("uncertain_meaning", "Undefined state may have changed", causes=(meaning.uncertain,))
                 if self.preparation and token.value in context.engine_profile.capture_integer_setup:
-                    from ..engine.profiles import EXTENSIONS
+                    from ..engine.catalog import EXTENSIONS
                     captured = capture_primitive(reader, context, token, EXTENSIONS[token.value])
                     return replace(captured, action="external_engine_setup",
                                    metadata={**captured.metadata, "engine_profile": context.engine_profile.name,

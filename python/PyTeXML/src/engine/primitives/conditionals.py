@@ -8,8 +8,9 @@ from dataclasses import replace
 from types import MappingProxyType
 
 from ..meanings import compare_tokens
-from ..operations import ExecutableOperation
-from ...reading.contracts import ConditionalRule, ReadingIssue, ScannedArgument, SourceCommand
+from ..operations import ExecutableOperation, ExpansionKind, OperationFamily, PrimitiveOperation
+from ..primitive import PrimitiveMeaning
+from ...reading.contracts import ConditionalRule, EffectiveReadingProfile, ReadingIssue, ScannedArgument, SourceCommand
 from ...reading.predicates import compare_characters
 from ...reading.tex_reader import TokenKind
 
@@ -57,7 +58,7 @@ def execute_legacy(host, opening, profile):
     return route(host, opening, profile.conditional)
 
 
-def execute(host, opening, meaning):
+def execute(host, opening, meaning: PrimitiveMeaning[ConditionalRule]):
     return route(host, opening, meaning.operand)
 
 
@@ -74,5 +75,23 @@ def route(host, opening, rule):
     return opening
 
 
-OPERATIONS = (ExecutableOperation("conditional.route", execute, continuation=True),
-              ExecutableOperation("reading.conditional", execute_legacy))
+ROUTE = PrimitiveOperation("conditional.route", ExpansionKind.EXPANDABLE, execute,
+                           operand_type=ConditionalRule, continuation=True, expansion_unavailable=True)
+
+FAMILY = OperationFamily(
+    operations=(ROUTE, ExecutableOperation[EffectiveReadingProfile](
+        "reading.conditional", ExpansionKind.INTERNAL, execute_legacy)),
+    primitives=(
+        ROUTE.declare("iftrue", ConditionalRule("opener", "always_true", 0)),
+        ROUTE.declare("iffalse", ConditionalRule("opener", "always_false", 0)),
+        *(ROUTE.declare(name, ConditionalRule("opener", "deferred", 2, predicate)) for name, predicate in
+          (("if", "character_equal"), ("ifcat", "category_equal"), ("ifx", "meaning_equal"))),
+        ROUTE.declare("ifdefined", ConditionalRule("opener", "deferred", 1)),
+        *(ROUTE.declare(name, ConditionalRule("opener", "deferred")) for name in
+          ("ifnum", "ifdim", "ifodd", "ifvoid", "ifhbox", "ifvbox", "ifeof", "ifcase", "ifcsname")),
+        *(ROUTE.declare(name, ConditionalRule("opener", "deferred", 0)) for name in
+          ("ifvmode", "ifhmode", "ifmmode", "ifinner")),
+        ROUTE.declare("else", ConditionalRule("alternative")),
+        ROUTE.declare("or", ConditionalRule("case_alternative")),
+        ROUTE.declare("fi", ConditionalRule("terminator"))),
+)

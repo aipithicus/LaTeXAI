@@ -14,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from src.bindings.catalog import BindingCatalog
 from src.bindings.resolver import BindingResolver
 from src.engine.catalog import CORE_OPERATIONS
-from src.engine.operations import build_catalog
+from src.engine.operations import OperationFamily, build_catalog
 from src.reading.context import ExecutionMode
 from src.reading.contracts import ReadingIssue, StoredDefinition, UncertainMeaning
 from src.reading.dispatcher import StructuralDispatcher
@@ -47,7 +47,7 @@ class EngineOperationTests(unittest.TestCase):
     def test_catalog_rejects_duplicates_across_families_and_cannot_be_mutated(self):
         operation = CORE_OPERATIONS["meaning.assign"]
         with self.assertRaisesRegex(ValueError, "Duplicate operation identity: meaning.assign"):
-            build_catalog((operation,), (operation,))
+            build_catalog(OperationFamily((operation,)), OperationFamily((operation,)))
         with self.assertRaises(TypeError):
             CORE_OPERATIONS["another"] = operation
         with self.assertRaises(FrozenInstanceError):
