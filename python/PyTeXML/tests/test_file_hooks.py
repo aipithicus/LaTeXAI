@@ -195,7 +195,28 @@ class FileHookTests(unittest.TestCase):
             r"\begin{document}\input{body}\end{document}")
         self.assertIn(r"\input{body}", text)
         self.assertTrue((output / "body.tex").is_file())
-        self.assertTrue(any(r["reason"] == "hook_order" for r in manifest.unresolved))
+        diagnostic = next(r for r in manifest.unresolved if r["reason"] == "hook_order")
+        cause, = [c for c in manifest.uncertainty_causes if c["id"] in diagnostic["cause_ids"]]
+        original = (self.root / "main.tex").read_text(encoding="utf-8")
+        self.assertEqual(cause["source"], "main.tex")
+        self.assertEqual(original[cause["start"]:cause["end"]], r"\unknown")
+        self.assertEqual(cause["location_status"], "mapped")
+
+    def test_failed_program_cause_keeps_authored_origin_after_rollback(self):
+        self.put("body.tex", "BODY")
+        text, manifest, output, _ = self.prepare(
+            r"\def\badcopy{\let\hidden\unavailable}"
+            r"\AddToHook{file/body.tex/before}{\badcopy\typeout{\hidden}}\input{body}")
+        diagnostic = next(r for r in manifest.unresolved if r["reason"] == "uncertain_meaning")
+        cause, = [c for c in manifest.uncertainty_causes if c["id"] in diagnostic["cause_ids"]]
+        original = (self.root / "main.tex").read_text(encoding="utf-8")
+        self.assertEqual(cause["source"], "main.tex")
+        self.assertEqual(original[cause["start"]:cause["end"]], r"\let\hidden\unavailable")
+        self.assertGreaterEqual(cause["occurrence"], 0)
+        self.assertEqual(cause["location_status"], "mapped")
+        self.assertIn(r"\input{body}", text)
+        self.assertTrue((output / "body.tex").is_file())
+        self.assertFalse(any(i.get("generated") for i in manifest.input_occurrences))
 
     def test_remove_top_level_hook(self):
         self.put("body.tex", "BODY")

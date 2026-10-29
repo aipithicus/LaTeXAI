@@ -164,7 +164,7 @@ def _prepare_paper(request: _PreparationRequest, out_dir: Path, *,
             prepared_bbl = ''.join(p.text for p in pieces if p.key in keys)
             (out_dir / "bibliography.bbl").write_text(prepared_bbl, encoding="utf-8", newline="\n")
         dependencies = [Path(s.abs_path) for s in manifest.local_styles] + [p_dir / p for p in manifest.code_inputs]
-        if (dependencies or session.literal_payloads) and not request.copy_local_dependencies:
+        if (dependencies or session.literal_payloads or session.retained_resources) and not request.copy_local_dependencies:
             raise ValueError("Local code dependencies must be emitted for a standalone extraction package")
         # Local code remains source-preserving until its own emission contract
         # exists. The cache also supplies payload bytes; no reopen/copy pass.
@@ -173,14 +173,22 @@ def _prepare_paper(request: _PreparationRequest, out_dir: Path, *,
             target = out_dir / source.relative_to(p_dir)
             target.parent.mkdir(parents=True, exist_ok=True)
             payload = session.payload_text(source)
-            payloads[source] = (source.relative_to(p_dir).as_posix(), payload)
+            payloads[source.relative_to(p_dir).as_posix()] = (source, payload)
             target.write_text(payload, encoding="utf-8", newline="\n")
         for source, relative in session.literal_payloads.items():
             target = out_dir / relative
             target.parent.mkdir(parents=True, exist_ok=True)
             payload = session.store.document(source).text
-            payloads[source] = (relative, payload)
+            payloads[relative] = (source, payload)
             target.write_text(payload, encoding="utf-8", newline="")
+        for relative, source in session.retained_resources.items():
+            target = out_dir / relative
+            payload = session.store.document(source).text
+            if target.exists() and target.read_bytes() != payload.encode("utf-8"):
+                raise ValueError(f"Retained resource conflicts with prepared artifact {relative}")
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(payload, encoding="utf-8", newline="")
+            payloads[relative] = (source, payload)
         master_tex_content = "".join(p.text for p in pieces)
         locations = finalize_locations(session, pieces, master_tex_content, payloads)
         session.lint.finalize_repairs(pieces, master_tex_content)

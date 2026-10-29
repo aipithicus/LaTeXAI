@@ -39,12 +39,12 @@ def assign_meaning(host, opening, profile: PrimitiveMeaning[None]):
         if donor.kind == TokenKind.CHARACTER:
             copied = BoundMeaning(command.span, token=donor)
         else:
-            copied = UncertainMeaning(command.span)
+            copied = UncertainMeaning(host.uncertainty_origin(command.span))
     elif isinstance(copied, (PrimitiveMeaning, BoundMeaning)) and copied.span is None:
         copied = replace(copied, span=command.span)
     context.record_meaning(target.value, copied, target.kind)
     if isinstance(copied, UncertainMeaning):
-        host.units.uncertainty_cause(command.span, "assignment_donor", "The donor's current meaning is not established")
+        host.units.uncertainty_cause(copied.span, "assignment_donor", "The donor's current meaning is not established")
     return replace(command, metadata={"donor_resolved": not isinstance(copied, UncertainMeaning),
         "trailing_control_word": donor.kind == TokenKind.CONTROL_SEQUENCE and bool(donor.value)
             and context.catcodes[donor.value[-1]] == CatCode.LETTER})

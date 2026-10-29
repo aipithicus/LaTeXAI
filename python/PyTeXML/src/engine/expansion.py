@@ -7,7 +7,7 @@ This module never serializes tokens as TeX or dispatches an executable command.
 from dataclasses import dataclass
 from .primitive import PrimitiveMeaning
 
-from ..reading.argument_scanner import undelimited_tokens
+from ..reading.argument_scanner import optional_tokens, undelimited_tokens
 from ..reading.contracts import (BoundMeaning, CharacterCodeMeaning, CommandDefinition,
                                  ReadingIssue, StoredDefinition,
                                  UncertainMeaning, TokenListMeaning, UndefinedMeaning)
@@ -92,10 +92,18 @@ class ExpansionCursor:
     def pending(self):
         return any(index < len(tokens) for tokens, index in self.frames)
 
-    def expand_macro(self, token, definition):
+    def expand_macro(self, token, definition, *, execution=False):
+        optional = None
         if isinstance(definition, CommandDefinition):
             if definition.optional_default is not None:
-                raise ReadingIssue("macro_parameters", "Optional macro arguments are not implemented")
+                # LaTeX implements the lookahead with execution (futurelet),
+                # not pure expansion. Only a transactional execution consumer
+                # may use this bounded format bridge; edef/value probes cannot.
+                if not execution:
+                    raise ReadingIssue("macro_parameters", "Optional macro arguments require execution")
+                if self.context.lookup_definition(definition.target.value) != definition:
+                    raise ReadingIssue("macro_parameters", "Optional alias depends on a changed kernel wrapper")
+                optional = definition.optional_default.tokens
             long = not definition.starred
         else:
             expected = []
@@ -106,8 +114,9 @@ class ExpansionCursor:
             if definition.hash_brace is not None or actual != expected:
                 raise ReadingIssue("macro_parameters", "Delimited macro parameters are not implemented")
             long = False
-        arguments = tuple(undelimited_tokens(self, token.value, long=long)[0]
-                          for _ in range(definition.parameter_count))
+        arguments = (() if optional is None else (optional_tokens(self, token.value, optional, long=long),))
+        arguments += tuple(undelimited_tokens(self, token.value, long=long)[0]
+                           for _ in range(definition.parameter_count - len(arguments)))
         replacement, index = [], 0
         body = definition.replacement_tokens
         self._charge(len(body))

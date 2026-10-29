@@ -46,6 +46,39 @@ def undelimited_tokens(reader, name, *, first=None, long=True):
     return (first,), first, first
 
 
+def optional_tokens(reader, name, default, *, long=True):
+    """LaTeX's execution-time optional argument, using frozen raw tokens.
+
+    The kernel's next-character test skips spaces, without expanding the next
+    token. Braces protect closing brackets. Like a TeX delimited parameter, a
+    supplied argument consisting of one group loses that outer pair of braces.
+    The captured default is substituted as-is.
+    """
+    first = reader.next_token()
+    while first is not None and first.catcode == CatCode.SPACE:
+        first = reader.next_token()
+    if first is None:
+        # A physical file or bounded replacement can end before its caller's
+        # next token. EOF here does not prove that the optional argument is absent.
+        raise ReadingIssue("argument_lookahead", f"Optional argument of {name} needs an input continuation")
+    if not (first is not None and first.kind == TokenKind.CHARACTER
+            and first.value == "[" and first.catcode == CatCode.OTHER):
+        if first is not None:
+            reader.unread_token(first)
+        return tuple(default)
+    tokens, _ = group_tokens(reader, name, optional=True, long=long)
+    if tokens and tokens[0].catcode == CatCode.BEGIN_GROUP:
+        depth = 0
+        for index, token in enumerate(tokens):
+            if token.catcode == CatCode.BEGIN_GROUP:
+                depth += 1
+            elif token.catcode == CatCode.END_GROUP:
+                depth -= 1
+            if depth == 0:
+                return tokens[1:-1] if index == len(tokens) - 1 else tokens
+    return tokens
+
+
 class ArgumentScanner:
     def __init__(self, reader, context):
         self.reader, self.context = reader, context

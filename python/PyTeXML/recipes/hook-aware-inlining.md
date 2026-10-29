@@ -23,6 +23,41 @@ views of frozen tokens, with original-token derivations; they are never parsed
 back into tokens. An unsuccessful request restores its state and unit writes.
 No package loading, filesystem I/O or typesetting runs in this consumer.
 
+Preparation also uses this consumer for complete setup invocations. Its setup
+policy accepts supported definitions, assignments, conditionals, hook operations
+and empty replacements, with a balanced entry/exit group stack. Literal output,
+unverified declaration targets and unsupported work reject the transaction.
+Nested programs inherit the policy and shared budget. The original invocation
+is emitted once; analysis effects and generated diagnostic coordinates do not
+become a second runtime copy. Failed probes restore state, units, sources and
+the authored operand cursor before ordinary deferral resumes.
+
+Captured LaTeX optional arguments have an execution-only bridge: raw lookahead,
+space skipping, defaults, brace-protected brackets and the single-group stripping
+rule of a delimited parameter. They remain unavailable to pure expansion/value
+requests such as `edef`. This follows the pinned kernel's `@protected@testopt`
+and `@testopt` execution route, without asserting a complete kernel bootstrap.
+Unbraced control-word operands retain a lexical separator when emitted.
+If optional lookahead reaches a child input's end, it cannot assume the default:
+the caller's next token may still be an operand. Preparation preserves the root
+handoff and its suffix until that continuation can be evaluated.
+
+Hook failures carry their original uncertainty cause into preparation diagnostics,
+including failures caught while resolving an input command. The manifest links
+the later symptom to the causal source unit and its prepared address.
+Causes created inside token programs follow the frozen-token origin relation back
+to authored source before publication or rollback. Mixed-source effects use the
+invocation anchor; temporary evaluation coordinates never become source locations.
+
+Retained-file closure uses captured survey commands to keep local bibliography
+databases/styles, the selected root job's BBL, external literal resources, and
+literal optional inputs. The BBL is published as `master.bbl`, even when its
+declaration is in a child. These are candidate resources, with their assumptions
+and disposition in `source_survey`; they do not become reached dependency edges
+or canonical bibliography products. Computed, missing and unrelocatable paths
+stay unresolved. Multiple payload addresses can refer to one source; conflicting
+payload contents fail publication rather than overwrite another artifact.
+
 `engine/file_events.py` provides ordered events and file context around each
 document input. `prepare/inlining.py` emits the corresponding kernel operations
 around the body. Hook registrations and their executable bodies remain in the
@@ -102,3 +137,36 @@ text and page pixels. Root A/B/C and the two changed papers are blocked on both
 sides by missing `mathtools`, `biblatex`, `cite`, `eso-pic` and `microtype`,
 respectively. Those failures do not qualify either side. The adapter's profile
 guard correctly rejects a `pdftex` override on default-`etex` payloads.
+
+## Bounded setup qualification, 2026-10-28
+
+The final `setup-work/full-qualified` receipt runs 1,112 tests: 1,110 pass and
+two optional Tectonic checks skip. The native PDF/DVI adapter checks run.
+The focused coverage includes 13 setup tests, 25 hook tests and six retained
+resource tests. Scoped registry/family type checking passes in 13 source files.
+The `setup-work/oracle-qualified` fixture passes both native modes with exact
+diagnostic order, visible witnesses, 144-dpi pixels and a prepared-only reread.
+
+The final default-`etex` batch is `20261028-bounded-setup-causal-closure`, compared
+with the previous `20261028-hook-aware-inlining-context` checkpoint. All nine
+masters are byte-identical to that checkpoint; four preparations remain complete
+and five partial. The prepared-only rereads preserve each status and unresolved
+count, and their masters match the previous checkpoint's reread masters. This
+does not impose byte-idempotence between preparation passes: the pre-existing
+whitespace, bibliography and context compaction remains observable.
+
+Root A's interpretation requirements fall from 165 to 161. The payload gains
+`refs.bib`, `master.bbl` and `listings/prompt.txt`, all preserved byte-for-byte on
+reread. `abbrvnat.bst` remains outside the local inventory. The master stays at
+511 characters, `body/paper.tex` remains retained, the 12 unresolved diagnostics
+remain and canonical bibliography is still deferred. Other specimen summaries
+are unchanged. The accepted `20261028-registry-consolidation` baseline is retained.
+
+The hook-order diagnostic at `body/paper.tex:62` now links to its earlier
+`usepackage{gmfake}` at line 4. The empty inner `documentclass` is no longer the
+cause. The next bounded integration should reconcile source-visible kernel
+loaded markers, especially `ver@gmfake.sty`, with current meanings and load state;
+this fixture explicitly installs that marker in `master.tex:14`. Then address
+the `expandafter/endinput/fi` physical-line continuation in `gmstyle.cfg` before
+claiming broader Root A flattening. These are remaining capabilities, not
+additional YAML package declarations or a claim that Root A now renders equally.

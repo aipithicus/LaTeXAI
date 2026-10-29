@@ -13,3 +13,6 @@
 
 # Hook implementation and native-oracle receipts.
 /temp/hook-work/
+
+# Bounded setup and retained-resource qualification receipts.
+/temp/setup-work/

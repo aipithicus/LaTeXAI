@@ -106,6 +106,7 @@ class PreparationSession:
         self._implicit: list[_ImplicitGraphic] = []
         self.code: set[Path] = set()
         self.retained_search_dirs: dict[Path, set[Path]] = {}
+        self.retained_resources: dict[str, Path] = {}
         self.payload_edits: dict[Path, dict[tuple[int, int], str]] = {}
         self.commands: list[SourceCommand] = []
         self.documents = {}
@@ -780,6 +781,7 @@ class PreparationSession:
         # No-argument commands need a lexical separator after a control word.
         if (not command.arguments and action in {"opaque", "biblatex_print", "reading_noop", "process_options", "declared_effects"}
                 or action == "boolean_declaration" and command.metadata["unbraced"]
+                or action == "setup_program" and command.metadata["trailing_control_word"]
                 or action in {"character_code_assignment", "reading_assignment", "integer_parameter_assignment"} and command.metadata.get("trailing_control_word")
                 or action in {"conditional_test", "meaning_assignment"} and command.metadata["trailing_control_word"]):
             self.emit(command.span.basis.span(command.span.end, command.span.end), " ", operation="SYNTHETIC_SEPARATOR")
@@ -872,6 +874,11 @@ class PreparationSession:
                     self._checkpoint = (min(start, item.remainder.start), pieces, tombstones, commands)
                 recoverable = next((i for i in reversed(range(len(self.frames)))
                                     if self.frames[i].recovery is not None), None)
+                if item.reason == "argument_lookahead":
+                    # A retained child may consume the caller's next tokens.
+                    # Preserve the root handoff and its suffix together rather
+                    # than resume at an unestablished command boundary.
+                    recoverable = None
                 self.diagnose(item.span, item.reason, item.detail, unit_id=item.unit_id,
                               materialization="prepared" if recoverable is not None else None, causes=item.causes)
                 self.dispatcher.loads.invalidate(item.unit_id)
@@ -998,7 +1005,7 @@ class PreparationSession:
                         self.styles[self.frames[-1].path].declared_commands.append(item.target.value)
             except (ReadingIssue, _DeferredCommand) as error:
                 if isinstance(error, ReadingIssue):
-                    self.diagnose(item.span, error.reason, error.detail)
+                    self.diagnose(item.span, error.reason, error.detail, causes=error.causes)
                 # Only undo the current command's attempted emission. Previous
                 # children and subsequent source remain part of the new master.
                 del self.pieces[checkpoint[0]:]

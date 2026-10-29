@@ -80,11 +80,11 @@ def execute(host, opening, profile):
              else host.options.name if host.options is not None else "top-level")
     state = host.context.hooks
     if command.action == "hook_register":
-        state.add(name, command.argument("body").tokens, command.span, label=label)
+        state.add(name, command.argument("body").tokens, host.uncertainty_origin(command.span), label=label)
     elif command.action == "hook_remove":
         state.remove(name, label=label)
     elif command.action == "hook_unresolved":
-        state.invalidate(name, command.span)
+        state.invalidate(name, host.uncertainty_origin(command.span))
     elif command.action == "hook_use":
         from .programs import evaluate
         for body in state.bodies(name):

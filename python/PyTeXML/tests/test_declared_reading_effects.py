@@ -44,7 +44,8 @@ class DeclaredEffectsTests(unittest.TestCase):
 
     def test_shadowing_and_computed_values_do_not_use_summary(self):
         items = self.read(r"\def\sloppy{\catcode`\%=12}\sloppy")
-        self.assertTrue(any(isinstance(i, DeferredRegion) and i.reason == "stored_macro" for i in items))
+        self.assertTrue(any(isinstance(i, SourceCommand) and i.action == "setup_program" for i in items))
+        self.assertEqual(self.context.catcodes["%"], 12)
         for text in (r"\def\tolerance{}\sloppy", r"\widowpenalty\computed", r"\clubpenalty2147483648 "):
             with self.subTest(text=text):
                 self.assertTrue(any(isinstance(i, ReadingBoundary) for i in self.read(text)))

@@ -159,7 +159,7 @@ class BooleanConditionalTests(unittest.TestCase):
         self.assertFalse(self.context.lookup_meaning("ifflag").truth)
 
     def test_unexecuted_commands_never_route_using_a_stale_boolean(self):
-        for code in (r"\unknown", r"\def\enable{\flagtrue}\enable",
+        for code in (r"\unknown", r"\def\enable{\flagtrue\unknown}\enable",
                      r"\begin{unknown}BODY\end{unknown}", r"$\flagtrue$"):
             with self.subTest(code=code):
                 items = self.read(r"\newif\ifflag" + code + r"\ifflag YES\else NO\fi",

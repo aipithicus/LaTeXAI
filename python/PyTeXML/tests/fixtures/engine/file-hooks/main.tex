@@ -8,7 +8,21 @@
   \AddToHook{file/#1.tex/after}{%
     After\endgroup\typeout{HOOK-after-\CurrentFilePath/\CurrentFile}}}
 \register{part}
+% Bounded setup: the inner document preamble is intentionally neutralized.
+\renewcommand{\documentclass}[2][]{}
+\documentclass[11pt]{unused}
+\newcommand{\setupvalue}[2][default]{\def#2{#1}}
+\let\setupalias\setupvalue
+\setupalias[SETUP]{\factoryvalue}
+\def\factoryexpected{SETUP}
+\setupvalue{\defaultvalue}
+\def\defaultexpected{default}
+\setupvalue[{]}]{\bracketvalue}
+\def\bracketexpected{]}
 \begin{document}
+\ifx\factoryvalue\factoryexpected SetupReady.\else WRONG.\fi
+\ifx\defaultvalue\defaultexpected DefaultReady.\else WRONG.\fi
+\ifx\bracketvalue\bracketexpected BracketReady.\else WRONG.\fi
 Start \input{a/part} end.
 
 Again \input{b/part} end.

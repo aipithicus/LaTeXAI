@@ -14,6 +14,7 @@ from src.reading.contracts import DeferredRegion, ReadingBoundary, StoredDefinit
 from src.reading.definition_scanner import DefinitionScanner
 from src.reading.dispatcher import StructuralDispatcher
 from src.reading.effect_summary import EffectSummary, NameSet
+from src.reading.effects import definition_summary
 from src.reading.tex_reader import CatCode, TexReader, TokenKind
 
 
@@ -141,12 +142,17 @@ class GlobalDefinitionTests(unittest.TestCase):
         self.assertEqual(self.value(host, "!"), self.observed_macro("symbol"))
         self.assertEqual(str(int(host.context.catcodes["!"])), self.oracle["exclamation_after"])
 
-    def test_unexecuted_global_write_invalidates_outer_meaning_without_installing_body(self):
-        host, items = self.read(
-            r"\def\a{OLD}\def\paint{\gdef\a{G}}{\def\a{LOCAL}\paint}", preparation=True)
-        effect = next(i.effect_summary for i in items if isinstance(i, DeferredRegion) and i.reason == "stored_macro")
+    def test_observational_global_summary_invalidates_without_installing_body(self):
+        host, _ = self.read(r"\def\a{OLD}\def\paint{\gdef\a{G}}", preparation=True)
+        definition = host.context.lookup_definition("paint")
+        effect = definition_summary(definition, host.context, host.knowledge)
         self.assertTrue(effect.selective)
         self.assertEqual(effect.scope, "global")
+        local, _ = self.read(r"\def\a{LOCAL}")
+        host.context.push_scope()
+        host.context.record_definition(local.context.lookup_definition("a"))
+        host.defer_effects(definition.span, summary=effect)
+        host.context.pop_scope()
         self.assertIsInstance(host.context.lookup_meaning("a"), UncertainMeaning)
 
     def test_explicit_global_definition_reestablishes_an_uncertain_target_only(self):

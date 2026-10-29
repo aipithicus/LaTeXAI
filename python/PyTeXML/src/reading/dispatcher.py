@@ -472,8 +472,8 @@ class StructuralDispatcher:
                     from ..engine.programs import expand_call
                     return expand_call(self, event, definition)
                 if self.source_commands:
-                    from ..engine.programs import registration_request
-                    request = registration_request(self, event, definition)
+                    from ..engine.programs import setup_request
+                    request = setup_request(self, event, definition)
                     if request is not None:
                         return request
                 if self.source_commands and (request := package_request(self, event)) is not None:
@@ -766,8 +766,13 @@ class StructuralDispatcher:
             self.defer_effects(region.span, reason=region.reason, detail=region.detail, summary=region.effect_summary)
         return region
 
+    def uncertainty_origin(self, span):
+        from ..engine.programs import source_origin
+        return source_origin(self.program_sources, span)
+
     def defer_effects(self, span, *, reason="unresolved_reading", detail="Reading effects remain unresolved", summary=None):
         """Unknown execution can invalidate live and suspended bounded state."""
+        span = self.uncertainty_origin(span)
         selective = summary is not None and summary.selective
         changed = (self.context.invalidate_writes(summary, span) if selective
                    else self.context.invalidate_observed_meanings(span))
@@ -787,7 +792,7 @@ class StructuralDispatcher:
         except ReadingIssue as error:
             raise ReadingIssue(error.reason, error.detail, causes=tuple(dict.fromkeys((*causes, *error.causes)))) from error
         region = replace(region, causes=tuple(causes))
-        self.context.invalidate_meanings(region.changed_meanings, region.span)
+        self.context.invalidate_meanings(region.changed_meanings, self.uncertainty_origin(region.span))
         return self._deferred(region)
 
     def _observed_conditional(self, candidate):

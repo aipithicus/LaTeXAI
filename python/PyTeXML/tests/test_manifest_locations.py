@@ -151,7 +151,7 @@ class ManifestLocationTests(unittest.TestCase):
         before = source_evidence(records)
         self.assertTrue(all(r.get("location_status", "pending") == "pending" for r in records))
         master = ''.join(p.text for p in session.pieces)
-        payloads = {self.root / name: (name, session.payload_text(self.root / name))
+        payloads = {name: (self.root / name, session.payload_text(self.root / name))
                     for name in ("wrapper.sty", "broken.sty")}
         finalize_locations(session, session.pieces, master, payloads)
         finalized = deepcopy(records)

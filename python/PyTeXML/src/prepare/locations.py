@@ -153,7 +153,7 @@ def finalize_locations(session, pieces, master, payloads):
     """No original file reads, and no dependency on provenance-sidecar emission."""
     locations = PreparedLocations()
     locations.add("master.tex", master, pieces)
-    for path, (artifact, text) in payloads.items():
+    for artifact, (path, text) in payloads.items():
         bases = [b for b, doc in session.documents.items() if doc.path == path]
         for basis in bases:
             locations.add(artifact, text, (session.payload_piece(path, basis),))

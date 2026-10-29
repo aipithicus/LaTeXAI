@@ -3,7 +3,7 @@
   "kernel": "LaTeX2e 2026-06-01 patch 0",
   "kernel_sha256": "19d3b75884681539e1ef7a427af472bfe80d9ff214b84b9ca45e790d3e89c5c4",
   "engine": "pdfTeX 3.141592653-2.6-1.40.29 (TeX Live 2026)",
-  "source_sections": {"input_route": [9876, 9890], "file_context_and_events": [19870, 19966], "file_context_strings": [20057, 20062]},
+  "source_sections": {"optional_macro_execution": [1247, 1282], "input_route": [9876, 9890], "file_context_and_events": [19870, 19966], "file_context_strings": [20057, 20062]},
   "diagnostic_pattern": "^(?:HOOK-|gmtools: entering |left math)[^\r\n]*",
   "trace": [
     "HOOK-before-a/part.tex",
@@ -17,6 +17,6 @@
     "gmtools: entering math",
     "left math"
   ],
-  "visible_required": ["Before", "After", "INNER", "RETAIN", "Restored.", "UNDERSCORE", "N5", "context.tex"],
+  "visible_required": ["SetupReady.", "DefaultReady.", "BracketReady.", "Before", "After", "INNER", "RETAIN", "Restored.", "UNDERSCORE", "N5", "context.tex"],
   "visible_forbidden": ["WRONG", "DROP"]
 }

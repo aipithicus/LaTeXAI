@@ -12,9 +12,10 @@ from reader_support import reload_catalog
 from src.bindings.catalog import BindingCatalog
 from src.bindings.resolver import BindingResolver
 from src.prepare.pipeline import preprocess_paper
-from src.reading.contracts import ConditionalRegion, DeferredRegion, ReadingBoundary, UncertainMeaning
+from src.reading.contracts import ConditionalRegion, DeferredRegion, ReadingBoundary, SourceCommand, UncertainMeaning
 from src.reading.dispatcher import StructuralDispatcher
 from src.reading.effect_summary import EffectSummary, NameSet
+from src.reading.effects import definition_summary
 from src.reading.mouth_profiles import ProfileError
 from src.reading.options import OptionScope
 from src.reading.tex_reader import TexReader
@@ -69,18 +70,19 @@ class EffectSummaryTests(unittest.TestCase):
         self.assertTrue(record["effect_summary"]["complete"])
         self.assertEqual(record["location_status"], "mapped")
 
-    def test_boolean_write_is_uncertain_without_executing_setter(self):
+    def test_bounded_boolean_setter_executes_without_invalidating_other_meanings(self):
         prefix = r"\newif\ifflag\newif\ifother\def\set{\flagtrue}\set"
         self.read(prefix)
-        self.assertIsNotNone(self.context.lookup_meaning("ifflag").uncertain)
-        self.assertFalse(self.context.lookup_meaning("ifflag").truth)
+        self.assertIsNone(self.context.lookup_meaning("ifflag").uncertain)
+        self.assertTrue(self.context.lookup_meaning("ifflag").truth)
         self.assertIsNone(self.context.lookup_meaning("ifother").uncertain)
-        self.assertTrue(any(isinstance(i, ConditionalRegion) for i in self.read(prefix + r"\ifflag YES\else NO\fi")))
+        self.assertFalse(any(isinstance(i, ConditionalRegion) for i in self.read(prefix + r"\ifflag YES\else NO\fi")))
 
     def test_literal_assignments_and_stored_definitions_bound_targets(self):
-        items = self.read(r"\newif\ifflag\def\set{\def\unrelated{\unknown}\let\another\unknown}\set")
-        effect = next(i.effect_summary for i in items if isinstance(i, DeferredRegion))
+        self.read(r"\newif\ifflag\def\set{\def\unrelated{\unknown}\let\another\unknown}")
+        effect = definition_summary(self.context.lookup_definition("set"), self.context, self.resolver)
         self.assertEqual(set(effect.meanings.names), {"unrelated", "another"})
+        self.dispatcher.defer_effects(self.context.lookup_definition("set").span, summary=effect)
         self.assertIsNone(self.context.lookup_meaning("ifflag").uncertain)
         self.assertIsInstance(self.context.lookup_meaning("another"), UncertainMeaning)
 
@@ -177,7 +179,8 @@ class EffectSummaryTests(unittest.TestCase):
     def test_call_time_meanings_are_not_cached_on_definition(self):
         items = self.read(r"\def\helper{}\def\set{\helper}\set\def\helper{\unknown}\set")
         summaries = [i.effect_summary for i in items if isinstance(i, DeferredRegion)]
-        self.assertEqual([s.complete for s in summaries], [True, False])
+        self.assertEqual([s.complete for s in summaries], [False])
+        self.assertEqual(len([i for i in items if isinstance(i, SourceCommand) and i.action == "setup_program"]), 1)
 
     def test_acyclic_repeated_call_graph_has_a_total_work_bound(self):
         names = ["macro" + "a" * n for n in range(30)]
