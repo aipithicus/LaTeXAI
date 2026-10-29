@@ -1,5 +1,9 @@
 # Source execution checkpoints
 
+This file records implementation and qualification evidence. Current priorities
+live in the [working queue](../../../../aipithicus-issues/LaTeXAI/briefs/pytexml-language-core/working-queue.md);
+dated next-step statements below describe their checkpoint, not current dispatch.
+
 ## 2026-10-29: review reconciliation and recovery direction (planning only)
 
 The user clarified the product contract: recover useful content from broken
@@ -11,8 +15,8 @@ precedence over generated recovery. A failure must not suppress discovery of
 independent failures. Scope consequences and preserve assumptions where recovery
 continues without complete language-state knowledge.
 
-The [staged pipeline §6.1](../../../../aipithicus-issues/LaTeXAI/briefs/pytexml-staged-resolution-pipeline.md#61-failure-consequences-continued-discovery-and-recovery-policy)
-owns that contract. The [active plan](../../../../aipithicus-issues/LaTeXAI/briefs/pytexml-language-core.md#active-implementation-plan)
+The [staged pipeline §6.1](../../../../aipithicus-issues/LaTeXAI/briefs/pytexml-language-core/pytexml-staged-resolution-pipeline.md#61-failure-consequences-continued-discovery-and-recovery-policy)
+owns that contract. The [working queue](../../../../aipithicus-issues/LaTeXAI/briefs/pytexml-language-core/working-queue.md)
 owns dispatch: continued discovery/recovery and computed-resource closure can
 advance before full expl3/package integration. These are planned changes; the
 runtime still raises on some required dependency and materialization failures.

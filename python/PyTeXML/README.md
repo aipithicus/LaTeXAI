@@ -4,6 +4,15 @@ Native Python preparation and reading machinery for a future manuscript compiler
 Preparation builds `master.tex` and its required resources; general macro
 expansion and XML interpretation belong to later development.
 
+Current work is tracked in the
+[working queue](../../../aipithicus-issues/LaTeXAI/briefs/pytexml-language-core/working-queue.md).
+The [consolidated engine briefs](../../../aipithicus-issues/LaTeXAI/briefs/pytexml-language-core/pytexml-language-core.md)
+own design contracts and [execution checkpoints](recipes/source-execution-progress.md)
+record implemented/tested behavior. The target is best-effort extraction from
+flawed sources, with authored fallbacks and typed output/log tombstones; broad
+recovery support remains planned. The dated increments below are history, not
+a competing task list.
+
 ## Current source organization
 
 | Location | Responsibility |
