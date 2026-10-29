@@ -296,6 +296,7 @@ class StoredDefinition:
     long: bool = field(default=False, kw_only=True)
     outer: bool = field(default=False, kw_only=True)
     protected: bool = field(default=False, kw_only=True)
+    scope_cause: SourceSpan | None = field(default=None, compare=False, kw_only=True)
 
     @property
     def replacement_tokens(self):
@@ -370,6 +371,7 @@ class SourceCommand:
     arguments: tuple[ScannedArgument | TokenArgument, ...] = ()
     metadata: dict[str, Any] = field(default_factory=dict)
     unit_id: str | None = field(default=None, compare=False)
+    scope_cause: SourceSpan | None = field(default=None, compare=False, kw_only=True)
 
     def argument(self, name: str) -> ScannedArgument | TokenArgument | None:
         return next((arg for arg in self.arguments if arg.name == name), None)

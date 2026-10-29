@@ -618,6 +618,9 @@ class PreparationSession:
     def _command(self, command):
         frame, action = self.frames[-1], command.action
         self.commands.append(command)
+        if command.scope_cause is not None:
+            self.require(command.span, "assignment_scope", "Current meaning established; persistence after group exit is unresolved",
+                         stage="interpretation", unit_id=command.unit_id, causes=(command.scope_cause,))
         if action == "meaning_assignment" and not command.metadata.get("donor_resolved", False):
             self.require(command.span, "assignment_donor", "Donor meaning needs interpretation; assignment retained without expansion",
                          stage="interpretation", unit_id=command.unit_id)
@@ -1020,6 +1023,9 @@ class PreparationSession:
                         body_id = next(i for i in self.units.children.get(item.unit_id, ())
                                        if self.units.records[i].kind == "stored_body")
                         self._observe_argument(ScannedArgument("body", item.body, item.body_tokens, "stored"), body_id)
+                    if isinstance(item, StoredDefinition) and item.scope_cause is not None:
+                        self.require(item.span, "assignment_scope", "Current definition established; persistence after group exit is unresolved",
+                                     stage="interpretation", unit_id=item.unit_id, causes=(item.scope_cause,))
                     if isinstance(item, CommandDefinition) and item.target_check == "unverified":
                         self._definition_check(item.unit_id, item.declaration, item.target.value, item.target_requirement)
                     if isinstance(item, EnvironmentDefinition):

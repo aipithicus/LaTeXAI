@@ -247,11 +247,14 @@ class FileHookTests(unittest.TestCase):
         text, manifest, _, _ = self.prepare(
             r"\def\showfile{Context \CurrentFile}"
             r"\begin{document}\input{body}\end{document}")
-        self.assertFalse(manifest.file_events[0]["lowered"])
-        self.assertIn(r"\input{body.tex}", text)
+        self.assertTrue(manifest.file_events[0]["lowered"])
+        self.assertIn('filehook@file@push', text)
+        self.assertIn('filehook@file@pop', text)
         self.assertIn(r"\showfile", text)
-        self.assertTrue(any(r["reason"] == "uncertain_integer" and "globaldefs" in r["detail"]
-                            for r in manifest.unresolved), manifest.unresolved)
+        self.assertFalse(manifest.unresolved, manifest.unresolved)
+        scope = [r for r in manifest.requirements if r['reason'] == 'assignment_scope']
+        self.assertTrue(scope)
+        self.assertTrue(all(r.get('cause_ids') for r in scope))
 
     def test_hooked_include_retains_its_own_protocol(self):
         self.put("body.tex", "BODY")

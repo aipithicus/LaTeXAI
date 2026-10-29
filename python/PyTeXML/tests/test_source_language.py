@@ -103,6 +103,40 @@ class SourceLanguageTests(unittest.TestCase):
         self.assertEqual(self.host.context.endlinechar, -1)
         self.assertEqual(self.host.reader.endline_char, -1)
 
+    def test_unknown_globaldefs_preserves_current_definition_but_not_restored_state(self):
+        from src.reading.contracts import UncertainMeaning
+        self.read(r"\unknown\relax{\def\a{NEW}\let\b\a\edef\inside{\a}}")
+        definitions = [item for item in self.items if getattr(item, 'target', None) is not None]
+        self.assertTrue(any(item.target.value == 'inside' and
+                            ''.join(t.value for t in item.replacement_tokens) == 'NEW' for item in definitions))
+        for name in ('a', 'b', 'inside'):
+            self.assertIsInstance(self.host.context.lookup_meaning(name), UncertainMeaning)
+
+    def test_later_global_definition_clears_uncertain_restoration(self):
+        self.read(r"\unknown\relax{\def\a{MAYBE}\globaldefs=0 \gdef\a{FINAL}}", complete=False)
+        # Re-establishing globaldefs itself still needs register-scope support.
+        self.assertEqual(self.items[-1].reason, 'uncertain_integer')
+        self.read(r"\unknown\relax{\def\a{MAYBE}}\gdef\a{FINAL}")
+        self.assertEqual(self.value('a'), 'FINAL')
+
+    def test_unknown_scope_invalidates_each_enclosing_restoration(self):
+        from src.reading.contracts import ConditionalRegion, UncertainMeaning
+        self.read(r"\unknown\relax{\def\a{OUTER}{\def\a{INNER}}"
+                  r"\ifx\a\relax LEFT\else RIGHT\fi}")
+        self.assertTrue(any(isinstance(item, ConditionalRegion) for item in self.items))
+        self.assertIsInstance(self.host.context.lookup_meaning('a'), UncertainMeaning)
+
+    def test_setup_execution_rejects_unknown_assignment_scope(self):
+        from src.reading.contracts import ReadingIssue
+        self.read(r"\unknown\relax")
+        self.host.begin_group('brace', self.host.reader.basis.span(0, 0))
+        reader = TexReader(r'\def\a{NEW}', catcodes=self.host.context.catcodes,
+                           endline_char=self.host.context.endlinechar)
+        with self.assertRaises(ReadingIssue) as raised:
+            evaluate(self.host, tuple(reader), reader.basis.whole, policy=SETUP)
+        self.assertEqual(raised.exception.reason, 'uncertain_integer')
+        self.assertIsNone(self.host.context.lookup_definition('a'))
+
     def test_frozen_program_futurelet_keeps_the_looked_at_token(self):
         self.read("")
         context = self.host.context

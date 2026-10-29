@@ -266,7 +266,8 @@ class ReaderContext:
         return changed
 
     def record_meaning(self, name: str, meaning: LocalMeaning,
-                       kind: TokenKind = TokenKind.CONTROL_SEQUENCE, *, global_: bool = False) -> None:
+                       kind: TokenKind = TokenKind.CONTROL_SEQUENCE, *, global_: bool = False,
+                       scope_cause: SourceSpan | None = None) -> None:
         """Install a meaning, cancelling older restorations for a global write.
 
         This is equivalent to retaining a level-one meaning during TeX's unsave:
@@ -277,16 +278,23 @@ class ReaderContext:
         if self.mode != ExecutionMode.ACTIVE_EXECUTION:
             raise ValueError("Meanings can only be installed in active execution")
         key = (kind, name)
-        if global_:
+        if scope_cause is not None:
+            # Both assignment scopes install this value now. On any enclosing
+            # exit it may persist or restore a prior value, so neither wins.
+            for saved in self._meaning_scopes:
+                saved[key] = UncertainMeaning(scope_cause)
+        elif global_:
             for saved in self._meaning_scopes:
                 saved.pop(key, None)
         elif self._meaning_scopes:
             self._meaning_scopes[-1].setdefault(key, self._meanings.get(key))
         self._meanings[key] = meaning
 
-    def record_definition(self, definition: StoredDefinition, *, global_: bool = False) -> None:
+    def record_definition(self, definition: StoredDefinition, *, global_: bool = False,
+                          scope_cause: SourceSpan | None = None) -> None:
         """Publish a completed definition with the operation's assignment scope."""
-        self.record_meaning(definition.target.value, definition, definition.target.kind, global_=global_)
+        self.record_meaning(definition.target.value, definition, definition.target.kind,
+                            global_=global_, scope_cause=scope_cause)
 
     def invalidate_meanings(self, names, span) -> None:
         """Observed declarations are not installed; neither may old meanings win.

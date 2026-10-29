@@ -8,7 +8,7 @@ from dataclasses import dataclass, replace
 from ..operations import ExecutableOperation, ExpansionKind, OperationFamily, PrimitiveOperation
 from ..primitive import PrimitiveMeaning
 from ..expansion import ExpansionCursor
-from ..transactions import atomic, assignment_global
+from ..transactions import atomic, meaning_assignment_scope
 from ...reading.assignment_scanner import AssignmentScanner
 from ...reading.argument_scanner import ArgumentScanner
 from ...reading.boolean_scanner import declaration as boolean_declaration
@@ -44,10 +44,11 @@ def assign_meaning(host, opening, profile: PrimitiveMeaning[None]):
             copied = UncertainMeaning(host.uncertainty_origin(command.span))
     elif isinstance(copied, (PrimitiveMeaning, BoundMeaning)) and copied.span is None:
         copied = replace(copied, span=command.span)
-    context.record_meaning(target.value, copied, target.kind, global_=assignment_global(host))
+    global_, scope_cause = meaning_assignment_scope(host)
+    context.record_meaning(target.value, copied, target.kind, global_=global_, scope_cause=scope_cause)
     if isinstance(copied, UncertainMeaning):
         host.units.uncertainty_cause(copied.span, "assignment_donor", "The donor's current meaning is not established")
-    return replace(command, metadata={"donor_resolved": not isinstance(copied, UncertainMeaning),
+    return replace(command, scope_cause=scope_cause, metadata={"donor_resolved": not isinstance(copied, UncertainMeaning),
         "trailing_control_word": donor.kind == TokenKind.CONTROL_SEQUENCE and bool(donor.value)
             and context.catcodes[donor.value[-1]] == CatCode.LETTER})
 
@@ -71,7 +72,9 @@ def store_primitive_definition(host, opening, meaning: PrimitiveMeaning[Definiti
     definition = host.identify(definition)
     prefixes = getattr(host, "assignment_prefixes", ())
     definition = replace(definition, long="long" in prefixes, outer="outer" in prefixes, protected="protected" in prefixes)
-    host.context.record_definition(definition, global_=assignment_global(host, meaning.operand.global_))
+    global_, scope_cause = meaning_assignment_scope(host, meaning.operand.global_)
+    definition = replace(definition, scope_cause=scope_cause)
+    host.context.record_definition(definition, global_=global_, scope_cause=scope_cause)
     return definition
 
 
