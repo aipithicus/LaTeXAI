@@ -62,8 +62,10 @@ def expansion_predicate(host, opening, rule):
                 raise _UnresolvedPredicate
             if cursor.pending:
                 raise ReadingIssue("conditional_continuation", "Predicate leaves replacement input pending")
+            last = cursor.source_tokens[-1] if cursor.source_tokens else opening
             return SourceCommand(host.reader.source_span(opening.span.start, host.reader.position), opening.value,
-                "conditional_test", metadata={"predicate": rule.predicate, "truth": truth, "definition_unit_ids": []})
+                "conditional_test", metadata={"predicate": rule.predicate, "truth": truth, "definition_unit_ids": [],
+                    "trailing_control_word": last.control_word and last.span.end == host.reader.position})
     except _UnresolvedPredicate:
         return None
 
@@ -115,8 +117,10 @@ def capture_header(reader, context, token, meaning):
         if operand is None:
             raise ReadingIssue("conditional_header", "EOF in conditional operands")
         operands.append(ScannedArgument(str(index), operand.span, (operand,)))
+    last = operands[-1].tokens[-1] if operands else token
     return SourceCommand(reader.source_span(token.span.start, reader.position), token.value,
-                         "conditional_test", tuple(operands))
+                         "conditional_test", tuple(operands), metadata={
+                             "trailing_control_word": last.control_word and last.span.end == reader.position})
 
 
 def route(host, opening, rule):

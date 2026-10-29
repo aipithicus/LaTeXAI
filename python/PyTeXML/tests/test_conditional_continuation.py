@@ -171,6 +171,16 @@ class ConditionalPreparationTests(unittest.TestCase):
         self.assertFalse(manifest.preserved_source_spans)
         self.assertEqual(main.read_text(), original)
 
+    def test_expanded_predicate_headers_publish_with_lexical_separators(self):
+        self.put('main.tex', r'\ifdefined\relax YES\else BAD\fi'
+                 r'\ifcsname relax\endcsname NAME\else BAD\fi'
+                 r'\ifnum2>1 NUM\else BAD\fi\ifodd3 ODD\else BAD\fi')
+        text, manifest, _, _ = self.prepare()
+        self.assertFalse(manifest.unresolved, manifest.unresolved)
+        for expected in (r'\ifdefined\relax YES', r'\endcsname NAME', 'NUM', 'ODD'):
+            self.assertIn(expected, text)
+        self.assertNotIn('BAD', text)
+
     def test_branch_inputs_recursive_and_repeated_are_candidates_with_cached_reads(self):
         self.put("main.tex", r"\if0\blind\input{child}\else\input{child}\fi\input{tail}")
         self.put("child.tex", r"CHILD\input{leaf}")
