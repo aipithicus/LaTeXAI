@@ -25,7 +25,7 @@ class IntegerScanner:
     def __init__(self, host: OperationHost, *, relaxed_target=None):
         self.host = host
         self.reader = ExpansionCursor(host.reader, host.context, host.knowledge, host.operations,
-                                      relaxed_target=relaxed_target)
+                                      relaxed_target=relaxed_target, host=host)
         # chardef gives its target temporary relax meaning before reading RHS.
         # Keep that provisional meaning local until the whole assignment succeeds.
         self.relaxed_target = relaxed_target

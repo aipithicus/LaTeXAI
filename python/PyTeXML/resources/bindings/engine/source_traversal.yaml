@@ -121,12 +121,6 @@ reading:
         kind: braced
       - name: version
         kind: optional
-  - name: \endinput
-    family: source_command
-    action: end_input
-    grammar:
-      handler: source_arguments
-      arguments: []
   - name: \end
     family: source_command
     action: environment_end
@@ -365,12 +359,6 @@ reading:
       handler: source_arguments
       arguments: []
   - name: \newpage
-    family: source_command
-    action: opaque
-    grammar:
-      handler: source_arguments
-      arguments: []
-  - name: \par
     family: source_command
     action: opaque
     grammar:

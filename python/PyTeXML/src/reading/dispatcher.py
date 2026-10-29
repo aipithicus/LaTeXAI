@@ -416,7 +416,7 @@ class StructuralDispatcher:
                                                         causes=(meaning.uncertain,))
                     raise ReadingIssue("uncertain_meaning", "Primitive meaning may have changed", causes=(meaning.uncertain,))
                 operation = self.operations[meaning.operation]
-                if operation.expansion is not None:
+                if operation.expansion is not None and operation.handler is None:
                     return self.execute_continuation(event)
                 return operation.execute(self, event, meaning)
             if isinstance(meaning, UndefinedMeaning):
@@ -560,11 +560,7 @@ class StructuralDispatcher:
                         t.kind in {TokenKind.CONTROL_SEQUENCE, TokenKind.ACTIVE_CHARACTER}
                         for arg in command.arguments if arg.role not in {"data", "diagnostic", "stored"} for t in arg.tokens):
                     self.defer_effects(command.span)
-                if command.action == "end_input":
-                    self._require(not isinstance(reader, TokenCursor), "token_input_boundary",
-                                  "Endinput in captured argument tokens needs the physical input owner")
-                    reader.end_input_after_line()
-                elif command.action == "environment_end":
+                if command.action == "environment_end":
                     name = command.value("name")
                     self._require(bool(self._environment_stack) and self._environment_stack[-1] == name
                                   and bool(self._groups) and self._groups[-1].kind == "environment:" + name,

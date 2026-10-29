@@ -60,8 +60,9 @@ class ConditionalCaptureTests(unittest.TestCase):
 
     def test_one_operand_header_can_itself_name_a_conditional(self):
         items = self.scan(r"\ifdefined\fi A\else B\fi\input{tail}")
-        region = next(i for i in items if isinstance(i, ConditionalRegion))
-        self.assertEqual(len(region.markers), 2)
+        predicate = next(i for i in items if isinstance(i, SourceCommand) and i.action == "conditional_test")
+        self.assertTrue(predicate.metadata["truth"])
+        self.assertFalse(any(isinstance(i, ConditionalRegion) for i in items))
         self.assertTrue(any(isinstance(i, SourceCommand) and i.value("target") == "tail" for i in items))
         self.assertFalse(any(isinstance(i, ReadingBoundary) for i in items))
 
@@ -116,7 +117,8 @@ class ConditionalCaptureTests(unittest.TestCase):
         self.assertTrue(any(isinstance(i, ConditionalRegion) for i in items))
 
     def test_unsupported_operand_grammar_is_explicit(self):
-        self.assertEqual(self.scan(r"\ifnum\x=1 A\fi")[-1].reason, "conditional_header")
+        self.assertEqual(self.scan(r"\ifnum\x=1 A\fi")[-1].reason, "expansion_required")
+        self.assertEqual(self.scan(r"\ifdim\x=1pt A\fi")[-1].reason, "conditional_header")
 
     def test_overloaded_metadata_signature_is_preserved_without_guessing(self):
         source = r"\if0\blind{\author[1]{Author\thanks{Grant}}}\fi\input{tail}"

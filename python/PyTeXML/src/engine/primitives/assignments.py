@@ -4,6 +4,7 @@ from ...reading.contracts import CharacterCodeMeaning, ReadingIssue, ScannedArgu
 from ..integers import IntegerScanner
 from ..operations import ExpansionKind, OperationFamily, PrimitiveOperation
 from ..primitive import AssignmentTarget, PrimitiveMeaning
+from ..transactions import atomic, assignment_global
 
 
 def character_index(scanner):
@@ -19,6 +20,7 @@ def catcode_value(scanner, profile: PrimitiveMeaning[None]):
     return int(scanner.host.context.catcodes[character_index(scanner)])
 
 
+@atomic
 def assign_catcode(host, opening, profile: PrimitiveMeaning[None]):
     scanner = IntegerScanner(host)
     with host.context.argument_scanning():
@@ -28,13 +30,14 @@ def assign_catcode(host, opening, profile: PrimitiveMeaning[None]):
         if not 0 <= category <= 15:
             raise ReadingIssue("invalid_assignment", "Category number is out of range")
         scanner.finish()
-    host.context.catcodes[character] = category
+    host.context.assign_catcode(character, category, global_=assignment_global(host))
     return SourceCommand(host.reader.source_span(opening.span.start, host.reader.position),
                          ("\\" + opening.token.value), "reading_assignment",
                          metadata={"character": character, "category": category,
                                    **({"trailing_control_word": True} if scanner.ends_control_word else {})})
 
 
+@atomic
 def define_character_code(host, opening, profile: PrimitiveMeaning[None]):
     with host.context.argument_scanning():
         target = AssignmentScanner(host.reader, host.context).target()
@@ -45,7 +48,7 @@ def define_character_code(host, opening, profile: PrimitiveMeaning[None]):
             raise ReadingIssue("invalid_assignment", "chardef value is outside 0..255")
         scanner.finish()
     span = host.reader.source_span(opening.span.start, host.reader.position)
-    host.context.record_meaning(target.value, CharacterCodeMeaning(span, value), target.kind)
+    host.context.record_meaning(target.value, CharacterCodeMeaning(span, value), target.kind, global_=assignment_global(host))
     return SourceCommand(span, ("\\" + opening.token.value), "character_code_assignment",
                          (ScannedArgument("target", target.span, (target,), "data"),),
                          {"value": value, "trailing_control_word": scanner.ends_control_word})
@@ -57,9 +60,10 @@ def capture_character_target(reader, context, token, meaning: PrimitiveMeaning[N
 
 
 CATCODE = PrimitiveOperation("reading.assign_catcode", ExpansionKind.UNEXPANDABLE, assign_catcode,
-                             catcode_value, operand_type=type(None))
+                             catcode_value, operand_type=type(None), accepted_prefixes=frozenset({"global"}))
 CHARDEF = PrimitiveOperation("meaning.define_character_code", ExpansionKind.UNEXPANDABLE, define_character_code,
-                             operand_type=type(None), capture=capture_character_target)
+                             operand_type=type(None), capture=capture_character_target,
+                             accepted_prefixes=frozenset({"global"}))
 
 FAMILY = OperationFamily(
     operations=(CATCODE, CHARDEF),

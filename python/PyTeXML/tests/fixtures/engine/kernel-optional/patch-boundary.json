@@ -1,0 +1,155 @@
+{
+  "schema": "pytexml-source-boundary/1",
+  "target": "root-a-pdftex-20261029",
+  "fragments": [
+    {
+      "source": "texmf-dist/tex/latex/base/latex.ltx",
+      "source_sha256": "19d3b75884681539e1ef7a427af472bfe80d9ff214b84b9ca45e790d3e89c5c4",
+      "line_start": 132,
+      "line_end": 133,
+      "byte_start": 4909,
+      "byte_end": 4963,
+      "sha256": "c3a9d5466e82a4b1f8f5816c3e251f4c87dab31beb0d53f72b648be1d98d21ae"
+    },
+    {
+      "source": "texmf-dist/tex/latex/base/latex.ltx",
+      "source_sha256": "19d3b75884681539e1ef7a427af472bfe80d9ff214b84b9ca45e790d3e89c5c4",
+      "line_start": 158,
+      "line_end": 158,
+      "byte_start": 5662,
+      "byte_end": 5676,
+      "sha256": "2b07706da2141f1793ab31fe1a1caf09ddedae03ec49cf4d14683d8156a45a01"
+    },
+    {
+      "source": "texmf-dist/tex/latex/base/latex.ltx",
+      "source_sha256": "19d3b75884681539e1ef7a427af472bfe80d9ff214b84b9ca45e790d3e89c5c4",
+      "line_start": 165,
+      "line_end": 165,
+      "byte_start": 5810,
+      "byte_end": 5833,
+      "sha256": "39b307942d1ace86f41391fe218901ce3c2f0c0c59d0369e77ddf8f85060a9ea"
+    },
+    {
+      "source": "texmf-dist/tex/latex/base/latex.ltx",
+      "source_sha256": "19d3b75884681539e1ef7a427af472bfe80d9ff214b84b9ca45e790d3e89c5c4",
+      "line_start": 1393,
+      "line_end": 1441,
+      "byte_start": 43579,
+      "byte_end": 44932,
+      "sha256": "e6c719ed11d7347b1192ec82b61316a0625e1699509a2df7a69a571c5fb5e8c8"
+    },
+    {
+      "source": "texmf-dist/tex/latex/base/latex.ltx",
+      "source_sha256": "19d3b75884681539e1ef7a427af472bfe80d9ff214b84b9ca45e790d3e89c5c4",
+      "line_start": 1805,
+      "line_end": 1805,
+      "byte_start": 56632,
+      "byte_end": 56688,
+      "sha256": "9cbc966e9e9245f52893ed5e43fa9a73174c3243763011335d4264829e338233"
+    },
+    {
+      "source": "texmf-dist/tex/latex/etoolbox/etoolbox.sty",
+      "source_sha256": "e48026fcea59b4906d1fd47bde658cb5caf0a7928c45a45ea563b18d5b40ebd4",
+      "line_start": 44,
+      "line_end": 50,
+      "byte_start": 1299,
+      "byte_end": 1420,
+      "sha256": "093ab6ac0ed534f08b2a74e437fdd8853b7c2f2ecaaee5a1f44dce2c3613c8d4"
+    },
+    {
+      "source": "texmf-dist/tex/latex/etoolbox/etoolbox.sty",
+      "source_sha256": "e48026fcea59b4906d1fd47bde658cb5caf0a7928c45a45ea563b18d5b40ebd4",
+      "line_start": 57,
+      "line_end": 81,
+      "byte_start": 1606,
+      "byte_end": 2285,
+      "sha256": "6b832f4e955863816c4548b0abcf68da0ea1fc0a3faeb9f42c68a4d70ae31d07"
+    },
+    {
+      "source": "texmf-dist/tex/latex/etoolbox/etoolbox.sty",
+      "source_sha256": "e48026fcea59b4906d1fd47bde658cb5caf0a7928c45a45ea563b18d5b40ebd4",
+      "line_start": 129,
+      "line_end": 142,
+      "byte_start": 3310,
+      "byte_end": 3559,
+      "sha256": "da7c2b088091f9d105e12aec50a325be96783fa1eca81bb7d7af1de5ba9cfe8e"
+    },
+    {
+      "source": "texmf-dist/tex/latex/etoolbox/etoolbox.sty",
+      "source_sha256": "e48026fcea59b4906d1fd47bde658cb5caf0a7928c45a45ea563b18d5b40ebd4",
+      "line_start": 169,
+      "line_end": 175,
+      "byte_start": 4067,
+      "byte_end": 4323,
+      "sha256": "cc12b02af8e92a92cd577cdf364069bcc3f1a631ad7bf1798ecd1fec3281aa2f"
+    },
+    {
+      "source": "texmf-dist/tex/latex/etoolbox/etoolbox.sty",
+      "source_sha256": "e48026fcea59b4906d1fd47bde658cb5caf0a7928c45a45ea563b18d5b40ebd4",
+      "line_start": 487,
+      "line_end": 500,
+      "byte_start": 11831,
+      "byte_end": 12205,
+      "sha256": "07dd81f7dd1ecb3c04fede98bd1207f20bbab0e5eedd51fc2e6dc9b0e90c5f17"
+    },
+    {
+      "source": "texmf-dist/tex/latex/etoolbox/etoolbox.sty",
+      "source_sha256": "e48026fcea59b4906d1fd47bde658cb5caf0a7928c45a45ea563b18d5b40ebd4",
+      "line_start": 930,
+      "line_end": 930,
+      "byte_start": 21265,
+      "byte_end": 21312,
+      "sha256": "4162aa8535ad90d586721b57ee7503d566cc0d932f415285829b19bbbe15db53"
+    },
+    {
+      "source": "texmf-dist/tex/latex/etoolbox/etoolbox.sty",
+      "source_sha256": "e48026fcea59b4906d1fd47bde658cb5caf0a7928c45a45ea563b18d5b40ebd4",
+      "line_start": 1219,
+      "line_end": 1263,
+      "byte_start": 28472,
+      "byte_end": 29826,
+      "sha256": "96c89163931b58e0c31e9acc39d8425280530c3ab35e40cd9d6d4c9bdf8175ac"
+    },
+    {
+      "source": "texmf-dist/tex/latex/etoolbox/etoolbox.sty",
+      "source_sha256": "e48026fcea59b4906d1fd47bde658cb5caf0a7928c45a45ea563b18d5b40ebd4",
+      "line_start": 1310,
+      "line_end": 1327,
+      "byte_start": 31206,
+      "byte_end": 31801,
+      "sha256": "bb1fd1ce0e8dc2c612177e8978615366957367a960a69dd86da27b79bc386f4a"
+    },
+    {
+      "source": "texmf-dist/tex/latex/etoolbox/etoolbox.sty",
+      "source_sha256": "e48026fcea59b4906d1fd47bde658cb5caf0a7928c45a45ea563b18d5b40ebd4",
+      "line_start": 1352,
+      "line_end": 1382,
+      "byte_start": 32475,
+      "byte_end": 33420,
+      "sha256": "bf524814a56547b46b2fc4f2d28fc2a32a16f91d4318d4b32b184d12b0927936"
+    },
+    {
+      "source": "texmf-dist/tex/latex/etoolbox/etoolbox.sty",
+      "source_sha256": "e48026fcea59b4906d1fd47bde658cb5caf0a7928c45a45ea563b18d5b40ebd4",
+      "line_start": 1447,
+      "line_end": 1451,
+      "byte_start": 35176,
+      "byte_end": 35306,
+      "sha256": "8637960af54e6dac4bc2f2f083831563d11d2f5797bf9a5fbf067cc3981a31aa"
+    }
+  ],
+  "expected_trace": [
+    "PATCH:success=yes",
+    "PATCH:supplied=[set)",
+    "PATCH:alias=[alias)",
+    "PATCH:local=<dflt)",
+    "PATCH:restored=[dflt)",
+    "PATCH:failure=yes",
+    "PATCH:hidden=\\long macro:[#1]->\\gdef \\Observed {[#1)}"
+  ],
+  "qualification": {
+    "native_selected_and_full_format": "identical seven observations; pdfTeX 1.40.29, LaTeX 2026-06-01, etoolbox 2.5m",
+    "python_execution": "bounded setup token programs; definition-only scantokens",
+    "default_preparation_bootstrap": false
+  }
+}

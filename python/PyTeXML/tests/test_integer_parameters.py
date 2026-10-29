@@ -108,10 +108,10 @@ class IntegerParameterTests(unittest.TestCase):
         self.assertEqual(list(host)[-1].reason, "integer_continuation")
         self.assertEqual(self.value(host), 17)
 
-    def test_global_prefix_remains_a_boundary_without_a_partial_write(self):
+    def test_global_prefix_preserves_assignment_after_group_exit(self):
         host = self.host(r"\widowpenalty=17 {\global\widowpenalty=23}")
-        self.assertEqual(list(host)[-1].reason, "assignment_prefix")
-        self.assertEqual(self.value(host), 17)
+        self.assertFalse([item for item in host if isinstance(item, ReadingBoundary)])
+        self.assertEqual(self.value(host), 23)
 
     def test_copy_and_restore_include_cells_and_their_scope_journals(self):
         host, _ = self.read(r"\widowpenalty=11")
@@ -147,7 +147,7 @@ class IntegerParameterTests(unittest.TestCase):
         host = self.host(r"\widowpenalty=17")
         host.context.mode = ExecutionMode.STORED_DEFINITION
         self.assertEqual(host.next_item().reason, "inactive_context")
-        self.assertEqual(host.context.integer_parameters.values, {})
+        self.assertNotIn("widowpenalty", host.context.integer_parameters.values)
 
     def test_unexecuted_alias_writer_invalidates_only_its_parameter(self):
         host, items = self.read(r"\widowpenalty=11 \clubpenalty=22 \let\saved\widowpenalty"

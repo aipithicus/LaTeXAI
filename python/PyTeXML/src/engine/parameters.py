@@ -20,6 +20,9 @@ class IntegerValue:
 class IntegerParameters:
     def __init__(self):
         self.values: dict[str, IntegerValue] = {}
+        # TeX primitive initialization, not LaTeX-format parameter guesses.
+        self.values.update((name, IntegerValue(value, None)) for name, value in
+                           (("escapechar", 92), ("newlinechar", -1), ("globaldefs", 0)))
         self.scopes: list[dict[str, IntegerValue | None]] = []
 
     def copy(self):
@@ -38,8 +41,11 @@ class IntegerParameters:
             else:
                 self.values[key] = previous
 
-    def assign(self, key, value, span):
-        if self.scopes:
+    def assign(self, key, value, span, *, global_=False):
+        if global_:
+            for scope in self.scopes:
+                scope.pop(key, None)
+        elif self.scopes:
             self.scopes[-1].setdefault(key, self.values.get(key))
         self.values[key] = IntegerValue(value, span)
 

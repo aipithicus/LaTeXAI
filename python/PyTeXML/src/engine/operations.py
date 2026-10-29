@@ -69,8 +69,11 @@ class ExecutableOperation[Meaning]:
     capture: CaptureHandler[Meaning] | None = None
     continuation: bool = False
     expansion_unavailable: bool = False
+    accepted_prefixes: frozenset[str] = field(default=frozenset(), kw_only=True)
 
     def __post_init__(self):
+        if not isinstance(self.accepted_prefixes, frozenset) or self.accepted_prefixes - {"global", "long", "outer", "protected"}:
+            raise ValueError("Invalid assignment prefix capability")
         if not isinstance(self.identity, str) or not self.identity:
             raise ValueError("Operation requires a nonempty identity")
         if not isinstance(self.expansion_kind, ExpansionKind):

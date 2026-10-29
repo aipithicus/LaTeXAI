@@ -67,9 +67,11 @@ class EngineRegistrationTests(unittest.TestCase):
             ExecutableOperation("missing.classification")
         conditional = CORE_OPERATIONS["conditional.route"]
         self.assertEqual(conditional.expansion_kind, ExpansionKind.EXPANDABLE)
-        self.assertTrue(conditional.expansion_unavailable)
+        self.assertFalse(conditional.expansion_unavailable)
         self.assertIsNotNone(conditional.handler)
-        self.assertIsNone(conditional.expansion)
+        self.assertIsNotNone(conditional.expansion)
+        unavailable = CORE_OPERATIONS["input.scantokens"]
+        self.assertTrue(unavailable.expansion_unavailable)
 
     def test_kernel_bridge_cannot_be_declared_as_a_native_primitive(self):
         with self.assertRaisesRegex(TypeError, "native operation"):

@@ -13,6 +13,9 @@ def resolve_meaning(context, knowledge, name, kind=TokenKind.CONTROL_SEQUENCE):
     primitive = context.engine_profile.lookup(name)
     if primitive is not None:
         return primitive
+    if context.primitive_initial_state:
+        from ..reading.contracts import UndefinedMeaning
+        return UndefinedMeaning(None, format_origin="explicit primitive initial state")
     # Temporary reader knowledge remains available for unmigrated constructs.
     legacy = knowledge.resolve_command(name)
     return BoundMeaning(None, profile=legacy) if isinstance(legacy, EffectiveReadingProfile) else None

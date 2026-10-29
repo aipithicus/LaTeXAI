@@ -8,6 +8,7 @@ from dataclasses import dataclass, replace
 from ..operations import ExecutableOperation, ExpansionKind, OperationFamily, PrimitiveOperation
 from ..primitive import PrimitiveMeaning
 from ..expansion import ExpansionCursor
+from ..transactions import atomic, assignment_global
 from ...reading.assignment_scanner import AssignmentScanner
 from ...reading.argument_scanner import ArgumentScanner
 from ...reading.boolean_scanner import declaration as boolean_declaration
@@ -25,6 +26,7 @@ class DefinitionSpec:
     expanded: bool = False
 
 
+@atomic
 def assign_meaning(host, opening, profile: PrimitiveMeaning[None]):
     """Raw target, optional equals/space, raw donor; no operand expansion.
 
@@ -42,7 +44,7 @@ def assign_meaning(host, opening, profile: PrimitiveMeaning[None]):
             copied = UncertainMeaning(host.uncertainty_origin(command.span))
     elif isinstance(copied, (PrimitiveMeaning, BoundMeaning)) and copied.span is None:
         copied = replace(copied, span=command.span)
-    context.record_meaning(target.value, copied, target.kind)
+    context.record_meaning(target.value, copied, target.kind, global_=assignment_global(host))
     if isinstance(copied, UncertainMeaning):
         host.units.uncertainty_cause(copied.span, "assignment_donor", "The donor's current meaning is not established")
     return replace(command, metadata={"donor_resolved": not isinstance(copied, UncertainMeaning),
@@ -58,6 +60,7 @@ def capture_definition(reader, context, token, meaning: PrimitiveMeaning[Definit
     return DefinitionScanner(reader, context).primitive(token.span.start)
 
 
+@atomic
 def store_primitive_definition(host, opening, meaning: PrimitiveMeaning[DefinitionSpec]):
     from ..continuation import ContinuationReader
     scanner = DefinitionScanner(host.reader, host.context)
@@ -66,7 +69,9 @@ def store_primitive_definition(host, opening, meaning: PrimitiveMeaning[Definiti
     if isinstance(host.reader, ContinuationReader):
         definition = host.reader.enclose_definition(definition)
     definition = host.identify(definition)
-    host.context.record_definition(definition, global_=meaning.operand.global_)
+    prefixes = getattr(host, "assignment_prefixes", ())
+    definition = replace(definition, long="long" in prefixes, outer="outer" in prefixes, protected="protected" in prefixes)
+    host.context.record_definition(definition, global_=assignment_global(host, meaning.operand.global_))
     return definition
 
 
@@ -107,7 +112,8 @@ def expanded_body(host, scanner, count):
     A closing delimiter from a replacement frame needs a persistent execution
     continuation and remains an explicit boundary in this initial consumer.
     """
-    cursor = ExpansionCursor(host.reader, host.context, host.knowledge, host.operations)
+    cursor = ExpansionCursor(host.reader, host.context, host.knowledge, host.operations, host=host, protect_macros=True)
+    cursor.allow_name_assignment = True  # The definition request owns rollback.
     tokens, depth = [], 1
     while (token := cursor.next_expanded()) is not None:
         if token.catcode == CatCode.BEGIN_GROUP:
@@ -188,9 +194,11 @@ def declare_environment(host, opening, profile):
 
 
 ASSIGN = PrimitiveOperation("meaning.assign", ExpansionKind.UNEXPANDABLE, assign_meaning,
-                            operand_type=type(None), capture=capture_let, continuation=True)
+                            operand_type=type(None), capture=capture_let, continuation=True,
+                            accepted_prefixes=frozenset({"global"}))
 STORE = PrimitiveOperation("definition.store", ExpansionKind.UNEXPANDABLE, store_primitive_definition,
-                           operand_type=DefinitionSpec, capture=capture_definition, continuation=True)
+                           operand_type=DefinitionSpec, capture=capture_definition, continuation=True,
+                           accepted_prefixes=frozenset({"global", "long", "protected"}))
 
 FAMILY = OperationFamily(
     operations=(ASSIGN, STORE,

@@ -13,6 +13,9 @@ from ..primitive import PrimitiveMeaning
 from ...reading.contracts import ConditionalRule, EffectiveReadingProfile, ReadingIssue, ScannedArgument, SourceCommand
 from ...reading.predicates import compare_characters
 from ...reading.tex_reader import TokenKind
+from ..expansion import ExpansionCursor
+from ..conditional_values import test, skip
+from ..transactions import atomic, transaction
 
 
 def compare_meanings(host, opening, rule):
@@ -38,6 +41,8 @@ def compare_meanings(host, opening, rule):
 
 
 def character_predicate(host, opening, rule):
+    if host.program:
+        return expansion_predicate(host, opening, rule)
     return compare_characters(host.reader, host.context, opening, rule)
 
 
@@ -46,6 +51,41 @@ PREDICATES = MappingProxyType({
     "category_equal": character_predicate,
     "meaning_equal": compare_meanings,
 })
+
+
+def expansion_predicate(host, opening, rule):
+    try:
+        with transaction(host):
+            cursor = ExpansionCursor(host.reader, host.context, host.knowledge, host.operations, host=host)
+            truth = test(cursor, rule)
+            if truth is None:
+                raise _UnresolvedPredicate
+            if cursor.pending:
+                raise ReadingIssue("conditional_continuation", "Predicate leaves replacement input pending")
+            return SourceCommand(host.reader.source_span(opening.span.start, host.reader.position), opening.value,
+                "conditional_test", metadata={"predicate": rule.predicate, "truth": truth, "definition_unit_ids": []})
+    except _UnresolvedPredicate:
+        return None
+
+
+class _UnresolvedPredicate(Exception):
+    """Rollback a speculative predicate before its raw capture is attempted."""
+
+
+def expand_route(cursor, token, meaning):
+    host, rule = cursor.host, meaning.operand
+    if host is None:
+        raise ReadingIssue("conditional_context", "Conditional expansion requires its execution owner")
+    if rule.role == "opener":
+        truth = test(cursor, rule)
+        if truth is None:
+            raise ReadingIssue("unsupported_conditional", "Conditional predicate is not established")
+        rule = ConditionalRule("opener", "always_true" if truth else "always_false")
+    host.route_conditional(rule, token.span)
+    if host._skip_start is not None:
+        host._skip_start = None
+        delimiter, end_rule = skip(cursor, alternative=not host._conditionals[-1].in_alternative)
+        host.route_conditional(end_rule, delimiter.span)
 
 
 def execute_legacy(host, opening, profile):
@@ -58,13 +98,31 @@ def execute_legacy(host, opening, profile):
     return route(host, opening, profile.conditional)
 
 
+@atomic
 def execute(host, opening, meaning: PrimitiveMeaning[ConditionalRule]):
     return route(host, opening, meaning.operand)
 
 
+def capture_header(reader, context, token, meaning):
+    """Consume only the declared raw header; never choose a branch."""
+    rule = meaning.operand
+    count = rule.capture_operands if rule.role == "opener" else 0
+    if count is None:
+        raise ReadingIssue("conditional_header", "Predicate has no raw operand grammar")
+    operands = []
+    for index in range(count):
+        operand = reader.next_token()
+        if operand is None:
+            raise ReadingIssue("conditional_header", "EOF in conditional operands")
+        operands.append(ScannedArgument(str(index), operand.span, (operand,)))
+    return SourceCommand(reader.source_span(token.span.start, reader.position), token.value,
+                         "conditional_test", tuple(operands))
+
+
 def route(host, opening, rule):
     predicate = PREDICATES.get(rule.predicate)
-    command = predicate(host, opening.token, rule) if predicate is not None else None
+    command = predicate(host, opening.token, rule) if predicate is not None else (
+        expansion_predicate(host, opening.token, rule) if rule.predicate is not None else None)
     if command is not None:
         identifier = host.route_conditional(ConditionalRule("opener", "always_true" if command.metadata["truth"] else "always_false"),
                                        command.span, metadata=command.metadata)
@@ -76,7 +134,8 @@ def route(host, opening, rule):
 
 
 ROUTE = PrimitiveOperation("conditional.route", ExpansionKind.EXPANDABLE, execute,
-                           operand_type=ConditionalRule, continuation=True, expansion_unavailable=True)
+                           operand_type=ConditionalRule, continuation=True, expansion=expand_route,
+                           capture=capture_header)
 
 FAMILY = OperationFamily(
     operations=(ROUTE, ExecutableOperation[EffectiveReadingProfile](
@@ -86,9 +145,12 @@ FAMILY = OperationFamily(
         ROUTE.declare("iffalse", ConditionalRule("opener", "always_false", 0)),
         *(ROUTE.declare(name, ConditionalRule("opener", "deferred", 2, predicate)) for name, predicate in
           (("if", "character_equal"), ("ifcat", "category_equal"), ("ifx", "meaning_equal"))),
-        ROUTE.declare("ifdefined", ConditionalRule("opener", "deferred", 1)),
+        ROUTE.declare("ifdefined", ConditionalRule("opener", "deferred", 1, "defined")),
+        ROUTE.declare("ifcsname", ConditionalRule("opener", "deferred", None, "name_defined")),
+        ROUTE.declare("ifnum", ConditionalRule("opener", "deferred", None, "integer_compare")),
+        ROUTE.declare("ifodd", ConditionalRule("opener", "deferred", None, "integer_odd")),
         *(ROUTE.declare(name, ConditionalRule("opener", "deferred")) for name in
-          ("ifnum", "ifdim", "ifodd", "ifvoid", "ifhbox", "ifvbox", "ifeof", "ifcase", "ifcsname")),
+          ("ifdim", "ifvoid", "ifhbox", "ifvbox", "ifeof", "ifcase")),
         *(ROUTE.declare(name, ConditionalRule("opener", "deferred", 0)) for name in
           ("ifvmode", "ifhmode", "ifmmode", "ifinner")),
         ROUTE.declare("else", ConditionalRule("alternative")),

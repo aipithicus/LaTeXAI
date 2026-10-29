@@ -91,6 +91,7 @@ class Token:
     transformed: bool = False
     # Lexical spelling fact retained when this token moves to a frozen cursor.
     control_word: bool = field(default=False, compare=False)
+    expansion_suppressed: bool = field(default=False, compare=False, kw_only=True)
 
 
 @dataclass(frozen=True, slots=True)
@@ -266,6 +267,7 @@ class TexReader:
         self._checkpoint_owner = object()
         self._stop_after_line: int | None = None
         self.terminated_span: SourceSpan | None = None
+        self.return_continuation = None  # Established by the physical input owner.
         # Includes discard events consumed inside argument scanners. Emission
         # subtracts preserved regions before turning these into tombstones.
         self.discarded: list[tuple[SourceSpan, str]] = []

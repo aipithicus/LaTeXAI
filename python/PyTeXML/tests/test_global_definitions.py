@@ -170,14 +170,12 @@ class GlobalDefinitionTests(unittest.TestCase):
         host, _ = self.read(r"\def\a{OLD}\iffalse\gdef\a{WRONG}\fi")
         self.assertEqual(self.value(host, "a"), "OLD")
 
-    def test_globaldefs_and_global_prefix_still_stop_before_assignment(self):
+    def test_globaldefs_and_global_prefix_execute_at_bottom_level(self):
         for source in (r"\globaldefs=-1\gdef\a{G}", r"\global\def\a{G}"):
             with self.subTest(source=source):
                 host = self.host(source)
-                boundary = host.next_item()
-                self.assertIsInstance(boundary, ReadingBoundary)
-                self.assertEqual(boundary.reason, "unsupported_primitive" if source.startswith(r"\globaldefs") else "assignment_prefix")
-                self.assertIsNone(host.context.lookup_meaning("a"))
+                self.assertFalse([item for item in host if isinstance(item, ReadingBoundary)])
+                self.assertEqual(self.value(host, "a"), "G")
 
     def test_global_loader_defined_in_child_group_is_used_after_return(self):
         scratch = PROJECT / "temp/tests"

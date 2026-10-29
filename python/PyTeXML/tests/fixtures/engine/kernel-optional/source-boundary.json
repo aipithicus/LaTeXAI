@@ -118,5 +118,6 @@
     "BOUNDARY:undefined=yes"
   ],
   "native_full_format_trace_equal": true,
-  "python_execution": "not_implemented"
+  "python_execution": "qualified bounded setup token programs; all 12 native observations agree",
+  "default_preparation_bootstrap": false
 }

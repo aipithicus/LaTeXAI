@@ -52,11 +52,13 @@ class ReaderContext:
 
     def __init__(self, *, baseline: MouthBaseline, catcodes: CatcodeTable | None = None,
                  endlinechar: int | None = None,
-                 mode: ExecutionMode = ExecutionMode.ACTIVE_EXECUTION, initial_meanings=None, engine_profile="etex"):
+                 mode: ExecutionMode = ExecutionMode.ACTIVE_EXECUTION, initial_meanings=None, engine_profile="etex",
+                 primitive_initial_state=False):
         # Environment assembly imports family handlers that use ReaderContext.
         # Select it at context construction, after the state classes are loaded.
         from ..engine.profiles import engine_profile as select_engine_profile
         self.engine_profile = select_engine_profile(engine_profile)
+        self.primitive_initial_state = primitive_initial_state
         self.baseline = baseline
         self.catcodes = catcodes.copy() if catcodes is not None else baseline.new_catcodes()
         self.endlinechar = baseline.endlinechar if endlinechar is None else endlinechar
@@ -92,7 +94,8 @@ class ReaderContext:
         self._uncertain_prefixes = dict(saved.uncertain_prefixes)
 
     def copy(self) -> ReaderContext:
-        ctx = ReaderContext(baseline=self.baseline, mode=self.mode, engine_profile=self.engine_profile)
+        ctx = ReaderContext(baseline=self.baseline, mode=self.mode, engine_profile=self.engine_profile,
+                            primitive_initial_state=self.primitive_initial_state)
         ctx._restore(self._snapshot())
         ctx._scope_stack = [saved.copy() for saved in self._scope_stack]
         ctx._meanings = dict(self._meanings)
@@ -334,6 +337,18 @@ class ReaderContext:
     def scope_depth(self) -> int:
         """Number of lexical snapshots; structural group kinds belong to routing."""
         return len(self._scope_stack)
+
+    def assign_catcode(self, character, category, *, global_=False):
+        self.catcodes[character] = category
+        if global_:
+            for saved in self._scope_stack:
+                saved.catcodes[character] = category
+
+    def assign_endlinechar(self, value, *, global_=False):
+        self.endlinechar = value
+        if global_:
+            for saved in self._scope_stack:
+                saved.endlinechar = value
 
     def pop_scope(self) -> bool:
         if not self._scope_stack:

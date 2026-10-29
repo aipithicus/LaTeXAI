@@ -1,5 +1,40 @@
 # Source execution checkpoints
 
+## 2026-10-29: selected kernel and package source execution
+
+The shared engine executes the pinned kernel definitions that construct optional
+commands, then the selected etoolbox 2.5m patching source. Public wrappers, hidden
+implementations, aliases and local restoration use ordinary current meanings.
+The source recipes, expected observations and scope are in the
+[kernel-optional fixture](../tests/fixtures/engine/kernel-optional/README.md).
+Python matches all 12 kernel observations and seven package observations; the
+selected-source and full-format native witnesses also agree. No Python handler
+implements `patchcmd` or manufactures the hidden implementation.
+
+The source prerequisites now include raw delimited macro arguments, definition
+prefixes/protection, global assignment overrides, character/name/integer tests
+inside expansion, token-display conversions, typed count/dimension cells, frozen
+`futurelet`, and definition-only `scantokens`. Families declare operations in the
+existing immutable catalog. Raw observation remains a separate capability; adding
+expansion did not authorize execution inside retained source. Failed assignments,
+predicates and generated definitions restore state, continuation and provenance.
+
+Preparation uses `endinput` as a native operation, including the
+`expandafter/endinput/fi` idiom. A braced LaTeX input's return continuation can
+establish an omitted optional argument at child EOF. Flattening then emits an
+inert lookahead barrier, with a line break if the child ends in a comment. Original
+and prepared native witnesses agree on the selected default, page text and exact
+144-dpi pixels. `lstinline` uses its reader grammar for options and raw delimiter
+or brace-terminated bodies; it is not a primitive.
+
+**Boundaries:** physical `futurelet`, unbraced cross-file optional lookahead,
+general pseudo-file execution, kernel diagnostic closures and full kernel/expl3
+startup remain unresolved capabilities. The source gate uses an explicit ASCII
+primitive initial state and pinned external sources. Default preparation still
+uses its captured-declaration bridge; automatically installing this boundary and
+retiring that bridge requires a source/bootstrap and declaration-observation
+integration step. This witness does not qualify prepared Root A render equivalence.
+
 ## 2026-10-29: current load markers
 
 Package/class load guards query the current `ver@<name>.sty` / `.cls` meaning.

@@ -4,7 +4,7 @@ The cursor owns input continuation, not meanings or execution state. Tokens keep
 their original source spans and categories even when one argument crosses frames.
 This module never serializes tokens as TeX or dispatches an executable command.
 """
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from .primitive import PrimitiveMeaning
 
 from ..reading.argument_scanner import optional_tokens, undelimited_tokens
@@ -22,10 +22,12 @@ class MacroCall:
 
 
 class ExpansionCursor:
-    def __init__(self, source, context, knowledge, operations, *, budget=10000, relaxed_target=None):
+    def __init__(self, source, context, knowledge, operations, *, budget=10000, relaxed_target=None, host=None, protect_macros=False):
         if type(budget) is not int or budget <= 0:
             raise ValueError("Expansion requires a positive work budget")
         self.source, self.context, self.knowledge, self.operations = source, context, knowledge, operations
+        self.host = host
+        self.protect_macros = protect_macros
         self.remaining = budget
         self.frames = []
         self.source_tokens = []
@@ -35,6 +37,18 @@ class ExpansionCursor:
         self.suppressed = False
         self.relaxed_target = relaxed_target
         self._depth = 0
+        self.optional_return_used = False
+
+    def optional_at_eof(self):
+        boundary = getattr(self.source, "return_continuation", None)
+        if boundary is None or not boundary.next_token_is_control_sequence:
+            return False
+        # Flattening must preserve the raw lookahead barrier. A current relax
+        # meaning gives preparation a source-backed, side-effect-free spelling.
+        from .input_boundaries import require_inert_barrier
+        require_inert_barrier(self.context, self.knowledge)
+        self.optional_return_used = True
+        return True
 
     def push(self, tokens):
         tokens = tuple(tokens)
@@ -105,18 +119,12 @@ class ExpansionCursor:
                     raise ReadingIssue("macro_parameters", "Optional alias depends on a changed kernel wrapper")
                 optional = definition.optional_default.tokens
             long = not definition.starred
+            arguments = (() if optional is None else (optional_tokens(self, token.value, optional, long=long),))
+            arguments += tuple(undelimited_tokens(self, token.value, long=long)[0]
+                               for _ in range(definition.parameter_count - len(arguments)))
         else:
-            expected = []
-            for number in range(1, definition.parameter_count + 1):
-                expected.extend(((CatCode.PARAMETER, None), (CatCode.OTHER, str(number))))
-            actual = [(t.catcode, None if t.catcode == CatCode.PARAMETER else t.value)
-                      for t in definition.parameter_tokens]
-            if definition.hash_brace is not None or actual != expected:
-                raise ReadingIssue("macro_parameters", "Delimited macro parameters are not implemented")
-            long = False
-        arguments = (() if optional is None else (optional_tokens(self, token.value, optional, long=long),))
-        arguments += tuple(undelimited_tokens(self, token.value, long=long)[0]
-                           for _ in range(definition.parameter_count - len(arguments)))
+            from .macro_arguments import arguments as scan_arguments
+            arguments = scan_arguments(self, token, definition)
         replacement, index = [], 0
         body = definition.replacement_tokens
         self._charge(len(body))
@@ -141,6 +149,8 @@ class ExpansionCursor:
                 replacement.extend(argument)
             else:
                 raise ReadingIssue("invalid_definition_parameter", "Invalid replacement parameter")
+        if definition.hash_brace is not None:
+            replacement.append(definition.hash_brace)
         self.calls.append(MacroCall(token, definition, arguments))
         self.push(replacement)
 
@@ -157,6 +167,8 @@ class ExpansionCursor:
         if isinstance(meaning, UndefinedMeaning):
             raise ReadingIssue("undefined_control_sequence", f"{token.value!r} is established undefined")
         if isinstance(meaning, StoredDefinition):
+            if meaning.protected and self.protect_macros:
+                return token
             self.expand_macro(token, meaning)
             return None
         if isinstance(meaning, TokenListMeaning):
@@ -188,6 +200,9 @@ class ExpansionCursor:
     def next_expanded(self, *, stop=None, stop_operation=None):
         self.suppressed = False
         while (token := self.next_token()) is not None:
+            if token.expansion_suppressed:
+                self.suppressed = True
+                return replace(token, expansion_suppressed=False)
             result = self.expand_once(token, stop=stop, stop_operation=stop_operation)
             if result is not None:
                 return result

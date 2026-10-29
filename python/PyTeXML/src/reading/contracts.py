@@ -293,6 +293,9 @@ class StoredDefinition:
     # Authored body_tokens stay a source capture. Expanded replacement tokens
     # are separate, can have multiple origins, and must never be retokenized.
     expanded_tokens: tuple[Token, ...] | None = field(default=None, kw_only=True)
+    long: bool = field(default=False, kw_only=True)
+    outer: bool = field(default=False, kw_only=True)
+    protected: bool = field(default=False, kw_only=True)
 
     @property
     def replacement_tokens(self):

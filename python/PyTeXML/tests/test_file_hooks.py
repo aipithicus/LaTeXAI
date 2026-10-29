@@ -242,16 +242,16 @@ class FileHookTests(unittest.TestCase):
         self.assertIn("filehook@file@push", text)
         self.assertFalse(manifest.unresolved, manifest.unresolved)
 
-    def test_deferred_context_reader_and_assignment_keep_context_lifetime(self):
+    def test_unknown_body_effects_leave_subsequent_assignment_scope_unresolved(self):
         self.put("body.tex", r"\showfile\def\CurrentFile{changed}")
         text, manifest, _, _ = self.prepare(
             r"\def\showfile{Context \CurrentFile}"
             r"\begin{document}\input{body}\end{document}")
-        self.assertTrue(manifest.file_events[0]["lowered"])
-        self.assertIn("filehook@file@push", text)
-        self.assertIn("filehook@file@pop", text)
+        self.assertFalse(manifest.file_events[0]["lowered"])
+        self.assertIn(r"\input{body.tex}", text)
         self.assertIn(r"\showfile", text)
-        self.assertFalse(manifest.unresolved, manifest.unresolved)
+        self.assertTrue(any(r["reason"] == "uncertain_integer" and "globaldefs" in r["detail"]
+                            for r in manifest.unresolved), manifest.unresolved)
 
     def test_hooked_include_retains_its_own_protocol(self):
         self.put("body.tex", "BODY")

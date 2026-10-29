@@ -58,6 +58,8 @@ def optional_tokens(reader, name, default, *, long=True):
     while first is not None and first.catcode == CatCode.SPACE:
         first = reader.next_token()
     if first is None:
+        if hasattr(reader, "optional_at_eof") and reader.optional_at_eof():
+            return tuple(default)
         # A physical file or bounded replacement can end before its caller's
         # next token. EOF here does not prove that the optional argument is absent.
         raise ReadingIssue("argument_lookahead", f"Optional argument of {name} needs an input continuation")

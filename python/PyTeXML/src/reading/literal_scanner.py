@@ -13,6 +13,8 @@ from .tex_reader import (
     CatCode, TexReader, Token, TokenKind,
 )
 from .spans import SourceSpan
+from .argument_scanner import ArgumentScanner
+from .configuration import configured_options
 
 _NEWLINE = re.compile(r"\r\n|\r|\n")
 
@@ -42,6 +44,11 @@ class LiteralScanner:
         if self.context.mode != ExecutionMode.ACTIVE_EXECUTION:
             raise ReadingIssue("inactive_context", "Literal entry requires active execution")
         try:
+            if profile.grammar.get("handler") == "inline_character" and profile.grammar.get("has_optional_arguments"):
+                with self.context.argument_scanning():
+                    argument = ArgumentScanner(reader, self.context).group("options", optional=True)
+                options = configured_options(profile, argument, self.context, preserve_unclassified=False)
+                profile = require_resolved(self.knowledge.resolve_command(profile.name, options.values))
             handler = profile.grammar.get("handler")
             self._require(handler in {"inline_character", "token_delimited", "physical_line_literal"},
                           "No initial literal handler is selected by this binding")
@@ -54,7 +61,8 @@ class LiteralScanner:
                 self._require(len(profile.interpolations) <= 1 and all(r.mode == "tex" for r in profile.interpolations),
                               "Combined or math interpolation needs another reading contract")
                 return self._physical_lines(start, profile)
-            self._require(not profile.active_options, "Literal options require further dispatch")
+            self._require(not profile.active_options or handler == "inline_character",
+                          "Literal options require further dispatch")
             with self.context.lexical_scope():
                 self.context.apply_profile(profile)
                 reader.endline_char = self.context.endlinechar
@@ -166,7 +174,7 @@ class LiteralScanner:
     def _inline(self, start: int, profile: EffectiveReadingProfile) -> LiteralRegion:
         reader = self.reader
         grammar = profile.grammar
-        self._require(grammar.get("delimiter_mode") == "dynamic_char" and
+        self._require(grammar.get("delimiter_mode") in {"dynamic_char", "hybrid_delim_or_braced"} and
                       grammar.get("multiline_allowed") is False,
                       "Only single-line dynamic-character literals are supported")
         unit = reader.peek_character()
@@ -194,7 +202,7 @@ class LiteralScanner:
                       "Delimiter is outside this binding's supported grammar")
         self._require(unit.catcode in {CatCode.LETTER, CatCode.OTHER, CatCode.ACTIVE},
                       "Delimiter requires additional argument scanning")
-        delimiter = unit.value
+        delimiter = "}" if unit.value == "{" and grammar.get("delimiter_mode") == "hybrid_delim_or_braced" else unit.value
         reader.next_event()
         body_start = reader.position
         self._require(grammar.get("delimiter_catcode") == CatCode.ACTIVE,

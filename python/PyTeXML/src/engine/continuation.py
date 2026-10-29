@@ -73,15 +73,22 @@ class ContinuationReader:
 def execute(host, opening):
     from ..reading.operations import FAMILY_OPERATIONS
     source = host.reader
-    cursor = ExpansionCursor(source, host.context, host.knowledge, host.operations)
+    cursor = ExpansionCursor(source, host.context, host.knowledge, host.operations, host=host)
     cursor.allow_name_assignment = True
     cursor.push((opening.token,))
     def admitted(profile):
         operation = FAMILY_OPERATIONS.get(profile.family)
         return operation is not None and operation.continuation
-    token = cursor.next_expanded(stop_operation=lambda op: op.continuation, stop=admitted)
+    token = cursor.next_expanded(stop_operation=lambda op: op.continuation or (host.program and op.unexpandable), stop=admitted)
     if token is None or cursor.suppressed:
         raise ReadingIssue("expansion_continuation", "Expansion has no supported execution result")
+    if host.program:
+        from .programs import frozen_reader
+        tail = []
+        while (part := cursor.next_token()) is not None:
+            tail.append(part)
+        host._set_reader(frozen_reader(host, (token, *tail), opening.span))
+        return host._next_item()
     meaning = host.context.resolve_meaning(host.knowledge, token.value, token.kind)
     operation = host.operations.get(meaning.operation) if isinstance(meaning, PrimitiveMeaning) else None
     operand = meaning

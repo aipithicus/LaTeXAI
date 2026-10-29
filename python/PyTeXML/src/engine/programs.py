@@ -12,16 +12,17 @@ from .primitive import PrimitiveMeaning
 from ..reading.contracts import (BooleanMeaning, BoundMeaning, DeferredRegion,
     EffectiveReadingProfile, EnvironmentDefinition, ReadingBoundary, ReadingIssue,
     ScannedArgument, SkippedRegion, SourceCommand, StoredDefinition, TokenArgument, TokenListMeaning)
-from ..reading.spans import SourceBasis
-from ..reading.tex_reader import CatCode, ReadEvent, TokenKind
+from ..reading.spans import SourceBasis, SourceSpan
+from ..reading.tex_reader import CatCode, ReadEvent, TokenKind, TexReader
 from ..reading.token_cursor import TokenCursor
 
 
 @dataclass(frozen=True, slots=True)
 class ProgramSource:
-    reader: TokenCursor
-    anchor: object
-    origins: tuple
+    reader: TokenCursor | TexReader
+    anchor: SourceSpan
+    origins: tuple[SourceSpan, ...]
+    kind: str = "frozen_tokens"
 
 
 def source_origin(sources, span):
@@ -35,7 +36,7 @@ def source_origin(sources, span):
         return span  # Physical-source effects need no program-origin lookup.
     by_basis = {source.reader.basis: source for source in sources}
     while (source := by_basis.get(span.basis)) is not None:
-        origins = [origin for token, origin in zip(source.reader.tokens, source.origins)
+        origins = [origin for token, origin in zip(getattr(source.reader, "tokens", ()), source.origins)
                    if token.span.start < span.end and token.span.end > span.start]
         if (origins and all(origin.basis == origins[0].basis for origin in origins)
                 and all(a.end <= b.start for a, b in zip(origins, origins[1:]))):
@@ -60,7 +61,7 @@ class ProgramBudget:
 PROGRAM_ACTIONS = frozenset({
     "hook_register", "hook_remove", "hook_unresolved", "hook_use", "hook_diagnostic",
     "meaning_assignment", "reading_assignment", "character_code_assignment",
-    "integer_parameter_assignment", "boolean_declaration", "conditional_test", "reading_noop"})
+    "integer_parameter_assignment", "boolean_declaration", "conditional_test", "reading_noop", "rescanned_definitions"})
 
 
 @dataclass(frozen=True, slots=True)
@@ -106,7 +107,7 @@ def _setup_event(item, host):
     if isinstance(meaning, BooleanMeaning):
         return meaning.uncertain is None
     if isinstance(meaning, PrimitiveMeaning):
-        return meaning.uncertain is None and meaning.operation in {"scope.begin", "scope.end"}
+        return meaning.uncertain is None and meaning.operation in {"scope.begin", "scope.end", "conditional.route"}
     profile = meaning.profile if isinstance(meaning, BoundMeaning) else host.knowledge.resolve_command(token.value)
     return (isinstance(profile, EffectiveReadingProfile)
             and profile.family in {"assign_catcode", "expl3_lexical_enter", "expl3_lexical_exit"}
@@ -132,7 +133,7 @@ def frozen_reader(host, tokens, anchor):
 
 
 def expand_call(host, event, definition):
-    cursor = ExpansionCursor(host.reader, host.context, host.knowledge, host.operations)
+    cursor = ExpansionCursor(host.reader, host.context, host.knowledge, host.operations, host=host)
     if isinstance(definition, TokenListMeaning):
         cursor.push(definition.replacement_tokens)
     else:
@@ -144,6 +145,11 @@ def expand_call(host, event, definition):
     last = cursor.source_tokens[-1] if cursor.source_tokens else event.token
     return SourceCommand(span, event.token.value, "program_expand",
                          (TokenArgument("body", span, tuple(tokens)),), metadata={
+                             "input_return_barrier": cursor.optional_return_used,
+                             "input_return_line_break": cursor.optional_return_used and any(
+                                 reason == "comment" and part.end == host.reader.position
+                                 and not host.reader.text[:part.end].endswith(("\r", "\n"))
+                                 for part, reason in getattr(host.reader, "discarded", ())),
                              "trailing_control_word": last.control_word and last.span.end == span.end})
 
 
@@ -222,19 +228,26 @@ def evaluate(host, tokens, anchor, *, policy=None, budget=10000):
 
 def setup_request(host, event, definition):
     """Execute a complete bounded setup invocation, preserving its runtime source."""
+    from .transactions import transaction
+    from .input_boundaries import require_inert_barrier
     saved = host.reader.checkpoint()
     try:
-        invocation = expand_call(host, event, definition)
-        results = evaluate(host, invocation.argument("body").tokens, invocation.span, policy=SETUP)
+        with transaction(host):
+            invocation = expand_call(host, event, definition)
+            results = evaluate(host, invocation.argument("body").tokens, invocation.span, policy=SETUP)
+            if invocation.metadata["input_return_barrier"]:
+                require_inert_barrier(host.context, host.knowledge)
         return SourceCommand(invocation.span, event.token.value, "setup_program", metadata={
             "expanded_invocation": True,
             "trailing_control_word": invocation.metadata["trailing_control_word"],
+            "input_return_barrier": invocation.metadata["input_return_barrier"],
+            "input_return_line_break": invocation.metadata["input_return_line_break"],
             "hooks": [r.metadata["hook"] for r in results
                       if isinstance(r, SourceCommand) and "hook" in r.metadata],
             "definition": origin(definition.span)})
     except ReadingIssue as error:
         host.reader.restore(saved)
-        if error.reason == "argument_lookahead":
+        if error.reason in {"argument_lookahead", "input_return_barrier"}:
             # The invocation's end is not established. Ordinary deferral may
             # otherwise route caller tokens that still belong to its operands.
             raise

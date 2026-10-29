@@ -43,6 +43,17 @@ class SetupProgramTests(unittest.TestCase):
         event = next(e for e in manifest.file_events if e["resolved"] == "sections/math.tex")
         self.assertEqual(event["events"][1]["diagnostics"], ["RIGHT"])
 
+    def test_braced_input_eof_defaults_and_publishes_a_return_barrier(self):
+        text, manifest, _, _ = self.prepare(
+            r"\documentclass{article}\newcommand{\opt}[1][default]{\gdef\Observed{#1}}"
+            r"\input{child}[caller]\def\Expected{default}\ifx\Observed\Expected YES\else NO\fi",
+            **{"child.tex": r"\opt%"})
+        self.assertFalse(manifest.unresolved, manifest.unresolved)
+        self.assertNotIn(r"\input{child}", text)
+        self.assertIn("\\opt%\n\\relax", text)
+        self.assertIn("YES", text)
+        self.assertNotIn("NO", text)
+
     def test_definition_factory_parameters_and_aliases_reach_the_reader(self):
         invocation = r"\install[chosen]{\value}"
         source = (r"\documentclass{article}\newcommand{\factory}[2][default]{\def#2{#1}}"
@@ -56,6 +67,15 @@ class SetupProgramTests(unittest.TestCase):
         self.assertFalse(manifest.unresolved, manifest.unresolved)
         generated = [r for r in manifest.input_occurrences if r.get("generated")]
         self.assertTrue(any(r["derivation"]["invocation"]["source"] == "main.tex" for r in generated))
+
+    def test_eof_optional_body_cannot_change_its_published_barrier(self):
+        text, manifest, output, _ = self.prepare(
+            r"\documentclass{article}\newcommand{\opt}[1][default]{\def\relax{SIDE}}"
+            r"\input{child}[caller]", **{"child.tex": r"\opt"})
+        self.assertIn(r"\input{child.tex}", text)
+        self.assertNotIn(r"\opt\relax", text)
+        self.assertTrue((output / 'child.tex').is_file())
+        self.assertTrue(any(r['reason'] == 'input_return_barrier' for r in manifest.unresolved))
 
     def test_factory_constructs_names_with_existing_expansion_operations(self):
         text, manifest, _, _ = self.prepare(

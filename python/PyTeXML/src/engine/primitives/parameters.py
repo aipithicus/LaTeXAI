@@ -11,6 +11,7 @@ from ..integers import IntegerScanner
 from ..operations import ExpansionKind, OperationFamily, PrimitiveOperation
 from ..primitive import PrimitiveMeaning
 from ...reading.assignment_scanner import AssignmentScanner
+from ..transactions import atomic, assignment_global
 
 
 def parameter_key(profile: PrimitiveMeaning[str]) -> str:
@@ -18,9 +19,12 @@ def parameter_key(profile: PrimitiveMeaning[str]) -> str:
 
 
 def integer_value(scanner, profile: PrimitiveMeaning[str]):
+    if profile.operand == "endlinechar":
+        return scanner.host.context.endlinechar
     return scanner.host.context.integer_parameters.read(parameter_key(profile))
 
 
+@atomic
 def assign_integer(host, opening, profile: PrimitiveMeaning[str]):
     key = parameter_key(profile)
     scanner = IntegerScanner(host)
@@ -29,7 +33,11 @@ def assign_integer(host, opening, profile: PrimitiveMeaning[str]):
         value = scanner.integer()
         scanner.finish()
     span = host.reader.source_span(opening.span.start, host.reader.position)
-    host.context.integer_parameters.assign(key, value, span)
+    global_ = assignment_global(host)
+    host.context.integer_parameters.assign(key, value, span, global_=global_)
+    if key == "endlinechar":
+        host.context.assign_endlinechar(value, global_=global_)
+        host.reader.endline_char = value
     return SourceCommand(span, ("\\" + opening.token.value), "integer_parameter_assignment",
                          metadata={"parameter": key, "value": value,
                                    "trailing_control_word": scanner.ends_control_word,
@@ -43,10 +51,11 @@ def capture(reader, context, token, meaning: PrimitiveMeaning[str]):
 
 
 ASSIGN = PrimitiveOperation("parameter.assign_integer", ExpansionKind.UNEXPANDABLE, assign_integer,
-                            integer_value, operand_type=str, capture=capture)
+                            integer_value, operand_type=str, capture=capture,
+                            accepted_prefixes=frozenset({"global"}))
 
 FAMILY = OperationFamily(
     operations=(ASSIGN,),
-    primitives=(*(ASSIGN.declare(name, name) for name in ("widowpenalty", "clubpenalty")),
+    primitives=(*(ASSIGN.declare(name, name) for name in ("widowpenalty", "clubpenalty", "escapechar", "newlinechar", "endlinechar", "globaldefs")),
                 ASSIGN.declare("pdfoutput", "pdfoutput", extension=True)),
 )

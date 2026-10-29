@@ -113,7 +113,7 @@ class IntegerOperationTests(unittest.TestCase):
     def test_unsupported_expansion_does_not_publish_partial_assignment(self):
         for text in (r"\chardef\saved=12\unknown", r"\chardef\saved=256 ",
                      r"\chardef\saved=-1 ", r"\chardef\saved=\widowpenalty",
-                     r"\chardef\saved=12\iftrue", r"\chardef\saved=`\word"):
+                     r"\chardef\saved=12\ifdim", r"\chardef\saved=`\word"):
             with self.subTest(text=text):
                 host = self.host(text)
                 self.assertIsInstance(host.next_item(), ReadingBoundary)

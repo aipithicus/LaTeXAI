@@ -96,6 +96,14 @@ reading:
     - name: "\\lstinline"
       family: inline_verbatim
       profile: inline_delimited
+      # listings.sty 1941-1995: raw character entry closes at the first
+      # active delimiter, including the first } for the braced spelling.
+      grammar:
+        handler: inline_character
+        delimiter_skip_characters: [" "]
+        delimiter_catcode: 13
+      multiline_allowed: false
+      invalid_delimiters: [" ", "\t", "\r", "\n"]
       has_optional_arguments: true
       options_syntax: "key_val"               # \lstinline[language=C]|int x = 0;| or \lstinline{foo}
       delimiter_mode: "hybrid_delim_or_braced" # Supports both |...| and {...}

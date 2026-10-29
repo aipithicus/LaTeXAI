@@ -305,6 +305,8 @@ class PreparationSession:
         recovery = self.dispatcher.input_recovery()
         event = None
         if command.action == "source_input" and command.metadata.get("filename_braced", True):
+            from ..engine.input_boundaries import LATEX_BRACED_INPUT
+            reader.return_continuation = LATEX_BRACED_INPUT
             event = FileInput(command.value("target"), self.name(path), command.span, reader.basis)
             try:
                 if self.context.hooks.relevant(event.hooks):
@@ -795,6 +797,10 @@ class PreparationSession:
         elif action in {"opaque", "metadata", "citation", "bibliography", "bibliography_style", "biblatex_resource", "biblatex_print"}:
             self._neutral(command)
         self.emit(command.span, command=command)
+        if action == "setup_program" and command.metadata.get("input_return_barrier"):
+            self.emit(command.span.basis.span(command.span.end, command.span.end),
+                      ("\n" if command.metadata.get("input_return_line_break") else "") + "\\relax ",
+                      operation="INPUT_RETURN_LOOKAHEAD_BARRIER")
         if action == "environment_end" and command.metadata.get("document"):
             self._ended_document = True
         # No-argument commands need a lexical separator after a control word.
@@ -858,6 +864,7 @@ class PreparationSession:
                 if source.reader.basis not in self.generated_sources:
                     self.register_generated_source(source.reader)
                     self.manifest.input_occurrences[-1]["derivation"] = {
+                        "kind": source.kind,
                         "invocation": {"source": source.anchor.basis.source_id,
                             "occurrence": source.anchor.basis.occurrence_id,
                             "start": source.anchor.start, "end": source.anchor.end},

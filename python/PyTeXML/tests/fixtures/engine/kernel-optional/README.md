@@ -1,7 +1,9 @@
 # First kernel source boundary
 
-This is a native feasibility witness for the first Python source-execution
-milestone. Python execution is **not implemented or qualified** by this fixture.
+This is a bounded Python and native source-execution witness. The same selected
+kernel definitions create the public and hidden optional-command meanings in
+both engines. Python uses the shared dispatcher and ordinary meaning/scope state;
+no wrapper or implementation macro is seeded by hand.
 The source target and native observations are pinned in
 [source-boundary.json](source-boundary.json); the complete environment is pinned
 by [root-a-pdftex-20261029](../../../../recipes/oracle-pins/root-a-pdftex-20261029.json).
@@ -57,7 +59,9 @@ The implementation prerequisites exposed by this boundary are:
   A stored reference to an unimplemented operation is not permission to execute
   it or to assume its effects.
 
-These are source requirements, not claims about current Python coverage. The
+The Python witness implements these requirements over frozen token programs.
+Physical `\futurelet`, arbitrary cross-file lookahead and full format startup
+remain outside this boundary. The
 native harness also uses `\meaning`, `\immediate\write`, `\errmessage` and
 termination to observe results; those observations may be checked through the
 Python engine's state API without making terminal output a product requirement.
@@ -77,9 +81,36 @@ or forbidden names and renewal of an undefined command reach `\@notdefinable`
 or `\@latex@error`, whose diagnostic dependencies are outside these fragments.
 They must stop explicitly until that source closure is admitted; no success or
 no-op stub is allowed. Moving-argument behavior, general error recovery,
-`DeclareRobustCommand`, environments, xparse/expl3 initialization and etoolbox
-patching are not qualified by these observations. Patching follows with the
-pinned package source once its additional prerequisites are implemented.
+environments and xparse/expl3 initialization are not qualified by these observations.
+
+## Package-source extension
+
+[patch-boundary.json](patch-boundary.json) selects additional byte-exact kernel
+and etoolbox 2.5m definitions. They supply robust declaration helpers, definedness,
+blank/macro/pattern checks and the actual `\patchcmd`/retokenization path. The
+package's own disabled-debug definitions are included unchanged. No Python
+replacement performs the patch or supplies a successful conditional result.
+
+[patch-witness.tex](patch-witness.tex) reaches the hidden implementation through
+`\csname\string\gmopt\endcsname`, as Root A does. Its seven ordered observations
+agree in Python, native INITEX with the selected fragments, and the pinned full
+LaTeX format with etoolbox loaded. They cover success, a supplied argument, a saved
+public alias, local patching with the default argument, scope restoration, a
+missing-pattern failure branch, and the final hidden meaning.
+
+Python's `\scantokens` path admits generated definitions only. It uses the normal
+reader and dispatcher with current catcodes and records a retokenized source
+derivation; any other generated effect rejects and rolls back the whole request.
+This does not qualify general pseudo-file execution. `\numexpr` is exposed for
+the source's identity test but its execution remains unavailable.
+
+Run `python -m unittest discover -s tests -p test_kernel_source.py` from PyTeXML
+with the pinned oracle sources restored. Tests verify whole-file and fragment
+hashes before execution; they skip explicitly if the snapshot is absent. Only
+the witnesses' `\immediate\write16` observation sites become `\xdef` captures;
+the exercised definitions and calls are unchanged. All 19 native observations
+are compared to engine state. The fixture does not install this source boundary
+into default preparation or retire its existing captured-declaration bridge.
 
 ## Reproduce the native check
 

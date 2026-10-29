@@ -91,12 +91,10 @@ class MacroExpansionTests(unittest.TestCase):
         self.declarations(long, 1)
         self.assertEqual("".join(t.value for t in self.expanded(self.cursor(long))), "A")
 
-    def test_unsupported_parameter_pattern_is_a_requirement(self):
+    def test_delimited_parameter_expands_without_expanding_its_delimiter(self):
         host = self.host(r"\def\a#1,{#1}\a A,%")
         self.declarations(host, 1)
-        with self.assertRaises(ReadingIssue) as caught:
-            self.expanded(self.cursor(host))
-        self.assertEqual(caught.exception.reason, "macro_parameters")
+        self.assertEqual("".join(t.value for t in self.expanded(self.cursor(host))), "A")
 
     def test_noexpand_reads_one_raw_token_and_suppression_does_not_persist(self):
         host = self.host(r"\def\a{A}\noexpand\a\a%")

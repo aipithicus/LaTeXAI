@@ -87,10 +87,16 @@ class MeaningAssignmentTests(unittest.TestCase):
         self.read(r"\let\letter=A")
         self.assertEqual(self.context.lookup_meaning("letter").token.value, "A")
         self.assertEqual(self.read(r"\let\letter=A\letter", complete=False)[-1].reason, "character_meaning")
-        for text in (r"\let", r"\let x=y", r"\let\x=", r"\global\let\x\relax", r"\globaldefs=1\let\x\relax"):
+        for text in (r"\let", r"\let x=y", r"\let\x="):
             with self.subTest(text=text):
                 self.read(text, complete=False)
                 self.assertIsNone(self.context.lookup_meaning("x"))
+
+    def test_global_assignment_cancels_scope_restoration(self):
+        for text in (r"{\global\let\x\relax}", r"{\globaldefs=1\let\x\relax}"):
+            with self.subTest(text=text):
+                self.read(text)
+                self.assertEqual(self.context.lookup_meaning("x").operation, "execution.relax")
 
     def test_prepare_copies_unexpanded_assignment_and_preserves_separator(self):
         scratch = PROJECT / "temp/tests"

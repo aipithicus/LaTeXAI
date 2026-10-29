@@ -38,7 +38,7 @@ def _(meaning: CharacterCodeMeaning, operations):
 
 @meaning_key.register
 def _(meaning: TokenListMeaning, operations):
-    return ("macro", False, (), tuple(map(token_key, meaning.replacement_tokens)))
+    return ("macro", False, (), tuple(map(token_key, meaning.replacement_tokens)), False, False)
 
 
 @meaning_key.register
@@ -76,7 +76,7 @@ def replacement_key(tokens):
 
 @meaning_key.register
 def _(meaning: StoredDefinition, operations):
-    long = False
+    long = meaning.long
     if isinstance(meaning, CommandDefinition):
         if meaning.optional_default is not None:
             return None  # The optional-argument wrapper has not been compiled.
@@ -97,7 +97,7 @@ def _(meaning: StoredDefinition, operations):
     replacement = replacement_key(meaning.replacement_tokens)
     if meaning.hash_brace is not None:
         replacement += (token_key(meaning.hash_brace),)
-    return ("macro", long, parameters, replacement)
+    return ("macro", long, parameters, replacement, meaning.outer, meaning.protected)
 
 
 def compare_tokens(left, right, context, knowledge, operations):
