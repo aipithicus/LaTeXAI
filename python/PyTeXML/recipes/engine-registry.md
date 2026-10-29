@@ -37,6 +37,11 @@ with `ExpansionKind.INTERNAL`. They have no native declaration constructor.
 They remain ordinary family entries while the corresponding kernel behavior is
 still supplied by prototype reading profiles.
 
+The file-hook bridge declares its format profiles in Python beside the family
+handler. An internal operation may opt into execution after expansion; this
+does not grant a native primitive declaration, integer-value role or expansion
+callback. Ordinary current-meaning resolution still precedes that dispatch.
+
 ## Validation
 
 Construction checks operand types, hashability, callback presence/callability

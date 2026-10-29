@@ -1,0 +1,33 @@
+\documentclass{article}
+\def\value{outer}
+\def\expected{outer}
+\newcommand{\register}[1]{%
+  \AddToHook{file/#1.tex/before}{%
+    \typeout{HOOK-before-\CurrentFilePath/\CurrentFile}%
+    \begingroup\def\value{inner}\def\expected{inner}Before }%
+  \AddToHook{file/#1.tex/after}{%
+    After\endgroup\typeout{HOOK-after-\CurrentFilePath/\CurrentFile}}}
+\register{part}
+\begin{document}
+Start \input{a/part} end.
+
+Again \input{b/part} end.
+
+\AddToHook{file/under_score.tex/before}{\typeout{HOOK-name-\CurrentFile}\CurrentFile: }
+\input{under_score}
+\ifx\value\expected Restored.\else WRONG.\fi
+
+% N5's registration program, copied from gauntlet-master/master.tex:20-23;
+% gmhooked is the definition in gauntlet-master/gmtools.sty:6.
+\newcommand{\gmhooked}[1]{\typeout{gmtools: entering #1}}
+\newcommand{\gmfilehook}[1]{%
+  \AddToHook{file/#1.tex/before}{\gmhooked{#1}}%
+  \AddToHook{file/#1.tex/after}{\typeout{left #1}}}
+\gmfilehook{math}
+\input{sections/math}
+
+\newcommand{\showfile}{Context \CurrentFile}
+\input{context}
+
+{\iftrue A\input{closer}B
+\end{document}

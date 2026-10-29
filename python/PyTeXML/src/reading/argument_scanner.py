@@ -49,6 +49,7 @@ def undelimited_tokens(reader, name, *, first=None, long=True):
 class ArgumentScanner:
     def __init__(self, reader, context):
         self.reader, self.context = reader, context
+        self.filename_braced = None
 
     def _peek(self):
         checkpoint = self.reader.checkpoint()
@@ -103,6 +104,7 @@ class ArgumentScanner:
         first = self.next_nonspace()
         if first is None:
             raise ReadingIssue("argument_required", "Missing input filename")
+        self.filename_braced = first.catcode == CatCode.BEGIN_GROUP
         if first.catcode == CatCode.BEGIN_GROUP:
             self.reader.restore(checkpoint)
             return self.group(name)
@@ -161,8 +163,11 @@ class ArgumentScanner:
                 if arg is not None:
                     arguments.append(replace(arg, role=spec.get("role", "unknown"),
                         literal_categories=tuple(spec["literal_categories"]) if "literal_categories" in spec else None))
+        metadata = {**profile.tex_mechanics, "binding_id": profile.binding_id}
+        if self.filename_braced is not None:
+            metadata["filename_braced"] = self.filename_braced
         return SourceCommand(self.command_span(opening), profile.name,
-                             profile.action, tuple(arguments), {**profile.tex_mechanics, "binding_id": profile.binding_id})
+                             profile.action, tuple(arguments), metadata)
 
     def command_span(self, opening):
         return self.reader.source_span(opening.start, self.reader.position)

@@ -91,7 +91,7 @@ class ExecutableOperation[Meaning]:
             if self.handler is None:
                 raise ValueError(f"{self.identity}: execution handler required")
         if self.expansion_kind == ExpansionKind.INTERNAL and (
-                self.integer_value is not None or self.capture is not None or self.continuation):
+                self.integer_value is not None or self.capture is not None):
             raise ValueError(f"{self.identity}: kernel bridge cannot declare native capabilities")
         if self.continuation and self.handler is None:
             raise ValueError(f"{self.identity}: continuation requires an execution handler")

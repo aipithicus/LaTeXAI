@@ -115,6 +115,7 @@ class PreflightManifest:
     source_metadata: List[Dict[str, Any]] = field(default_factory=list)
     reading_assumptions: List[str] = field(default_factory=list)
     input_occurrences: List[Dict[str, Any]] = field(default_factory=list)
+    file_events: List[Dict[str, Any]] = field(default_factory=list)
     dependencies: List[Dict[str, Any]] = field(default_factory=list)
     candidate_dependencies: List[Dict[str, Any]] = field(default_factory=list)
     unresolved: list[WorkRecord] = field(default_factory=list)

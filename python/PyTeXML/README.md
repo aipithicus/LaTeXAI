@@ -109,9 +109,22 @@ does the existing package loader act. Failed probes restore the source cursor an
 publish no effects. The master keeps the authored invocation; derived arguments
 carry token origins and an invocation anchor rather than a writable source slice.
 Requests needing package-name relocation are deferred. Other macro invocations
-retain the existing deferred/boundary behavior. This does not enable unrestricted
+can also make a bounded hook-registration request, described below. This does not enable unrestricted
 style execution. Integer scans use their own bounded consumer; general option
 replay remains limited to its existing execution roles.
+
+[Hook-aware inlining](recipes/hook-aware-inlining.md) integrates document-level
+braced inputs with file context and ordered before/after events. Native format
+operations capture top-level hook registrations through ordinary meanings,
+including aliases and macro-generated sequences. A bounded token-program
+consumer uses the existing dispatcher and scope machinery for supported hook
+effects. Preparation emits kernel context and hook-dispatch operations around
+the inserted body, with source derivations; it does not add an input-wide group.
+The original registrations stay in the payload and execute once during rendering.
+Unsupported ordering, next-use operations, uncertain effects or serialization
+retain the file boundary. Unbraced input follows the kernel's primitive route;
+include/import and package/class protocols have separate scope. The recipe pins
+the source contract and records focused PDF/DVI qualification.
 
 Within preparation, [session.py](src/prepare/session.py) owns one ordered
 multi-file traversal through the structural dispatcher. [Discovery](src/prepare/discovery.py)

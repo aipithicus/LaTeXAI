@@ -13,6 +13,7 @@ from .configuration import ConfigurationState
 from .spans import SourceSpan
 from ..engine.parameters import IntegerParameters
 from ..engine.primitive import PrimitiveMeaning
+from ..engine.hooks import HookState
 
 
 DefinitionKey = tuple[TokenKind, str]
@@ -75,6 +76,7 @@ class ReaderContext:
         self._capture_setting_scopes: list[dict[str, ScannedArgument | None]] = []
         self.configurations = ConfigurationState()
         self.integer_parameters = IntegerParameters()
+        self.hooks = HookState()
 
     def _snapshot(self) -> _ScopeSnapshot:
         return _ScopeSnapshot(self.catcodes.copy(), self.endlinechar,
@@ -101,6 +103,7 @@ class ReaderContext:
         ctx._capture_setting_scopes = [dict(saved) for saved in self._capture_setting_scopes]
         ctx.configurations = self.configurations.copy()
         ctx.integer_parameters = self.integer_parameters.copy()
+        ctx.hooks = self.hooks.copy()
         return ctx
 
     def restore_from(self, saved: ReaderContext) -> None:
@@ -118,6 +121,7 @@ class ReaderContext:
         self._capture_setting_scopes = [dict(state) for state in saved._capture_setting_scopes]
         self.configurations = saved.configurations.copy()
         self.integer_parameters = saved.integer_parameters.copy()
+        self.hooks = saved.hooks.copy()
 
     def lookup_environment(self, name: str) -> EnvironmentDeclaration | EnvironmentDefinition | None:
         return self._environments.get(name)
@@ -165,7 +169,11 @@ class ReaderContext:
 
     def resolve_meaning(self, knowledge, name, kind=TokenKind.CONTROL_SEQUENCE):
         from ..engine.resolution import resolve_meaning
-        return resolve_meaning(self, knowledge, name, kind)
+        meaning = resolve_meaning(self, knowledge, name, kind)
+        if (isinstance(meaning, TokenListMeaning) and meaning.span is not None
+                and meaning.format_origin == "latex-file-hooks/2026-06-01"):
+            self.hooks.context_reads.add(meaning.span.basis.occurrence_id)
+        return meaning
 
     def invalidate_writes(self, summary, span) -> bool:
         """Invalidate named meanings, including fallback knowledge, with TeX scope.

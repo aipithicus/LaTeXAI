@@ -10,6 +10,7 @@ from ..engine.catalog import CORE_OPERATIONS
 
 
 FAMILY_OPERATIONS = MappingProxyType({
+    "format_hook": CORE_OPERATIONS["kernel.file_hook"],
     "conditional": CORE_OPERATIONS["reading.conditional"],
     "stored_definition": CORE_OPERATIONS["kernel.define_command"],
     "collected_environment_definition": CORE_OPERATIONS["definition.store_environment"],

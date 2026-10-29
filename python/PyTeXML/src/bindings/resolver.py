@@ -163,7 +163,9 @@ class BindingResolver:
         return None
 
     def reading_names(self) -> set[str]:
+        from ..engine.file_hooks import PROFILES
         names = {name.lstrip("\\") for name in self.catalog.commands}
+        names.update(PROFILES)
         for name in self.catalog.environments:
             names.update((name, "end" + name))
         return names
@@ -189,6 +191,10 @@ class BindingResolver:
     def resolve_command(self, name: str, options: dict[str, Any] | None = None
                         ) -> EffectiveReadingProfile | UnresolvedBindingResult:
         """Resolve command identity. The caller consumes stars/arguments using grammar."""
+        from ..engine.file_hooks import PROFILES
+        native = PROFILES.get(name.removeprefix("\\"))
+        if native is not None:
+            return native
         clean = name if name.startswith("\\") else f"\\{name}"
         opts = dict(options or {})
         for declaration in self._command_specs(clean):

@@ -410,6 +410,10 @@ class ProvenanceLedger:
                 raise ValueError('Copy segment changes source length')
             if p.operation == 'IDENTITY' and segment['mapping'] != 'copy':
                 raise ValueError('Identity emission requires copy correspondence')
+            if p.derivations:
+                segment['derivations'] = [{'source': s.basis.source_id,
+                    'occurrence': s.basis.occurrence_id, 'start': s.start, 'end': s.end}
+                    for s in p.derivations]
             for source in p.replaces:
                 key = (source.basis.source_id, source.basis.occurrence_id, source.start, source.end)
                 ranges = replacements.setdefault(key, [])

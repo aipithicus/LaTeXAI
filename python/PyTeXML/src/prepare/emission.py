@@ -21,6 +21,8 @@ class SourcePiece:
     mapping: EditMap | None = None
     # Replacement relations are independent of the text's own source origin.
     replaces: tuple[SourceSpan, ...] = ()
+    # Generated source can depend on several sites without claiming a copied span.
+    derivations: tuple[SourceSpan, ...] = ()
     key: object = field(default_factory=object, compare=False, repr=False)
 
     def __post_init__(self):

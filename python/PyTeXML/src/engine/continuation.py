@@ -8,7 +8,7 @@ from dataclasses import replace
 
 from .expansion import ExpansionCursor
 from .primitive import PrimitiveMeaning
-from ..reading.contracts import ReadingIssue
+from ..reading.contracts import BoundMeaning, ReadingIssue
 from ..reading.tex_reader import EventKind, ReadEvent, ReaderState
 
 
@@ -71,15 +71,23 @@ class ContinuationReader:
 
 
 def execute(host, opening):
+    from ..reading.operations import FAMILY_OPERATIONS
     source = host.reader
     cursor = ExpansionCursor(source, host.context, host.knowledge, host.operations)
     cursor.allow_name_assignment = True
     cursor.push((opening.token,))
-    token = cursor.next_expanded(stop_operation=lambda op: op.continuation)
+    def admitted(profile):
+        operation = FAMILY_OPERATIONS.get(profile.family)
+        return operation is not None and operation.continuation
+    token = cursor.next_expanded(stop_operation=lambda op: op.continuation, stop=admitted)
     if token is None or cursor.suppressed:
         raise ReadingIssue("expansion_continuation", "Expansion has no supported execution result")
     meaning = host.context.resolve_meaning(host.knowledge, token.value, token.kind)
     operation = host.operations.get(meaning.operation) if isinstance(meaning, PrimitiveMeaning) else None
+    operand = meaning
+    if isinstance(meaning, BoundMeaning) and meaning.profile is not None:
+        operation = FAMILY_OPERATIONS.get(meaning.profile.family)
+        operand = meaning.profile
     if operation is None or not operation.continuation:
         raise ReadingIssue("expansion_continuation", "Expanded output needs another execution consumer")
     span = source.source_span(opening.span.start, source.position)
@@ -88,7 +96,7 @@ def execute(host, opening):
     event = replace(opening, span=span, token=replace(token, span=span))
     host._set_reader(ContinuationReader(cursor, opening.span.start))
     try:
-        result = operation.execute(host, event, meaning)
+        result = operation.execute(host, event, operand)
         if cursor.pending:
             raise ReadingIssue("expansion_continuation", "Operation left replacement tokens pending")
         return result

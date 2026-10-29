@@ -10,3 +10,6 @@
 
 # Retained native compiler probes and differential witness receipts.
 /temp/oracle-probes/
+
+# Hook implementation and native-oracle receipts.
+/temp/hook-work/

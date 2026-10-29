@@ -101,7 +101,8 @@ class StructuralDispatcher:
     def __init__(self, reader: TexReader, context: ReaderContext, knowledge: ReadingKnowledge,
                  *, source_commands: bool = False, preparation: bool = False, units: UnitRegistry | None = None,
                  options: OptionScope | None = None, loads: SourceLoadState | None = None,
-                 option_forwarder: Callable[[tuple[SourceCommand, ...]], None] | None = None):
+                 option_forwarder: Callable[[tuple[SourceCommand, ...]], None] | None = None,
+                 program: bool = False):
         self.literals = LiteralScanner(reader, context, knowledge)
         self.environments = EnvironmentScanner(reader, context)
         self.skipped = SkippedBranchScanner(reader, context, knowledge)
@@ -133,6 +134,9 @@ class StructuralDispatcher:
         self._pending = deque()
         self._branch_replays = {}
         self._active_branches = []
+        self.program = program
+        self.program_sources = []
+        self.program_serial = 0
 
     def input_recovery(self) -> InputRecovery:
         """Snapshot only at an active handoff, before entering retained code."""
@@ -360,6 +364,8 @@ class StructuralDispatcher:
                 parent, closing, name, metadata = self._replays.pop(reader)
                 self._set_reader(parent)
                 return SourceCommand(closing, name, "transparent_end", (), metadata)
+            if self.program:
+                return None  # The bounded token-program owner supplies the continuation.
             if self._parents:
                 end = SourceEnd(reader.terminated_span or reader.source_span(len(reader.text), len(reader.text)),
                                 "endinput" if reader.terminated_span else "eof")
@@ -426,6 +432,9 @@ class StructuralDispatcher:
             if isinstance(meaning, TokenListMeaning):
                 if meaning.uncertain is not None:
                     raise ReadingIssue("uncertain_meaning", "Token-list meaning may have changed", causes=(meaning.uncertain,))
+                if self.program:
+                    from ..engine.programs import expand_call
+                    return expand_call(self, event, meaning)
                 if self.preparation:
                     return self._deferred(deferred.command(token, "stored_macro", "Token-list content requires interpretation"))
                 raise ReadingIssue("stored_macro", "Token-list content requires interpretation")
@@ -443,7 +452,7 @@ class StructuralDispatcher:
                     raise ReadingIssue("uncertain_meaning", f"Copied meaning of {token.value!r} may have changed at {meaning.uncertain}", causes=(meaning.uncertain,))
                 self._require(meaning.profile is not None, "character_meaning",
                               "A character meaning is captured; its execution needs a downstream token interpreter")
-            if (isinstance(reader, TokenCursor) and reader not in self._branch_replays and token.kind == TokenKind.CHARACTER
+            if (isinstance(reader, TokenCursor) and not self.program and reader not in self._branch_replays and token.kind == TokenKind.CHARACTER
                     and token.catcode not in {CatCode.SPACE, CatCode.BEGIN_GROUP, CatCode.END_GROUP}):
                 raise ReadingIssue("option_body", "Option text requires interpretation beyond reading effects")
             if isinstance(meaning, BooleanMeaning):
@@ -459,6 +468,14 @@ class StructuralDispatcher:
                                       metadata={"predicate": "established_boolean"})
                 return event
             if definition is not None:
+                if self.program:
+                    from ..engine.programs import expand_call
+                    return expand_call(self, event, definition)
+                if self.source_commands:
+                    from ..engine.programs import registration_request
+                    request = registration_request(self, event, definition)
+                    if request is not None:
+                        return request
                 if self.source_commands and (request := package_request(self, event)) is not None:
                     return request
                 summary = definition_summary(definition, context, self.knowledge)
@@ -754,6 +771,7 @@ class StructuralDispatcher:
         selective = summary is not None and summary.selective
         changed = (self.context.invalidate_writes(summary, span) if selective
                    else self.context.invalidate_observed_meanings(span))
+        changed = self.context.hooks.invalidate_effects(summary, span) or changed
         for scope in (self.options, *(parent[2] for parent in self._parents)):
             if (scope is not None and scope.uncertain is None
                     and (not selective or summary.options.contains(scope.name))):

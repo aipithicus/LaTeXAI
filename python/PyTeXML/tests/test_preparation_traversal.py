@@ -149,8 +149,9 @@ class TraversalTests(unittest.TestCase):
     def test_group_and_true_conditional_can_close_in_child(self):
         self.document("{\\iftrue A\\input{closer}B")
         self.put("closer.tex", "C\\fi}")
-        text, _, _, _ = self.prepare()
-        self.assertIn("AC\\fi } B", text)
+        text, manifest, _, ledger = self.prepare()
+        self.assertIn("AC\\fi } B", self.authored_projection(text, ledger))
+        self.assertFalse(manifest.unresolved, manifest.unresolved)
 
     def test_import_directories_are_scoped_to_occurrences(self):
         self.document("\\import{one/}{part}\\import{two/}{part}", "\\usepackage{import}")
@@ -300,13 +301,24 @@ class TraversalTests(unittest.TestCase):
         self.put("done.tex", "COMPLETED")
         self.put("outer.tex", "OUTER\\input{inner}AFTER-INNER")
         self.put("inner.tex", "PREFIX\\unknown% no physical newline")
-        text, manifest, _, _ = self.prepare(root_tex="main.tex")
+        text, manifest, _, ledger = self.prepare(root_tex="main.tex")
         self.assertIn("COMPLETED", text)
-        self.assertIn("OUTERPREFIX\\unknown AFTER-INNER", text)
+        self.assertIn("OUTERPREFIX\\unknown AFTER-INNER", self.authored_projection(text, ledger))
         self.assertIn("TAIL", text)
         self.assertNotIn("\\input{outer}", text)
         self.assertEqual(manifest.requirements[0]["source"], "inner.tex")
         self.assertEqual(manifest.preserved_source_spans, [])
+
+    @staticmethod
+    def authored_projection(text, ledger):
+        # These tests assert authored source order and joining. File-context
+        # operations now occur between those pieces; native witnesses separately
+        # qualify their execution and group behavior.
+        for segment in reversed(ledger.segments):
+            if segment["operation"] in {"FILE_HOOK_ENTER", "FILE_HOOK_LEAVE"}:
+                start, end = segment["generated"]
+                text = text[:start] + text[end:]
+        return text
 
     def test_local_package_gap_preserves_declaration_and_remaining_manuscript(self):
         self.document("BODY\\input{later}", "\\usepackage{custom}")

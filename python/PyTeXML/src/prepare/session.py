@@ -38,6 +38,8 @@ from .provenance import Tombstone
 from .manifest import PreflightManifest, BibliographyInfo, PackageUsage, StyleFileInfo, ImplicitGraphicInfo
 from .records import source_reference, pending_location
 from ..reading.effect_summary import EffectSummary
+from ..engine.file_events import FileInput
+from .inlining import check_context as check_file_context, wrappers as file_wrappers
 
 
 class PreparationUnresolved(ValueError):
@@ -67,6 +69,8 @@ class _Input:
     command: SourceCommand | None = None
     tombstone_start: int = 0
     command_start: int = 0
+    file_event: FileInput | None = None
+    event_start: int = 0
 
 
 @dataclass(slots=True)
@@ -299,10 +303,27 @@ class PreparationSession:
         reader = self.open_source(path)
         overrides = self.resolver.catalog.engine_bindings["source_traversal"]["reading"]["package_input_catcodes"] if package else None
         recovery = self.dispatcher.input_recovery()
+        event = None
+        if command.action == "source_input" and command.metadata.get("filename_braced", True):
+            event = FileInput(command.value("target"), self.name(path), command.span, reader.basis)
+            try:
+                if self.context.hooks.relevant(event.hooks):
+                    check_file_context(self.context)
+                event.enter(self.dispatcher)
+                if event.required:
+                    check_file_context(self.context)
+            except ReadingIssue as error:
+                self.dispatcher.halted = True
+                self.dispatcher.resume_input(recovery)
+                event.invalidate_retained_effects(self.dispatcher)
+                retain_source(self, path, import_dir=import_dir)
+                self.manifest.file_events.append({**event.record("retained"), "reason": error.reason})
+                raise
         self.frames.append(_Input(path, reader, emit, import_dir, include=include, recovery=recovery,
             replacement=command.span if emit and command.action != "bibliography" else None,
             emission_start=len(self.pieces), command=command,
-            tombstone_start=len(self.tombstones), command_start=len(self.commands)))
+            tombstone_start=len(self.tombstones), command_start=len(self.commands),
+            file_event=event, event_start=len(self.manifest.file_events)))
         self.dispatcher.enter_source(reader, catcode_overrides=overrides, options=options)
 
     def emit(self, span, text=None, *, command=None, target=None, operation=None, deferred=None,
@@ -640,6 +661,15 @@ class PreparationSession:
             path = self.resolve(name, [""] if Path(name).suffix else [".tex", ""], command.span,
                                 directories=[imported] if imported else None)
             self.edge(command, path, "input")
+            if action != "source_input" and any(
+                    name == "*" or name.startswith(("file/", "include/"))
+                    for name in self.context.hooks.code.keys() | self.context.hooks.uncertain.keys()):
+                # Include/import own extra load semantics. Until those events
+                # are implemented, preserve the original entrypoint and file.
+                retain_source(self, path, import_dir=imported)
+                self.context.invalidate_meanings(self.context.meaning_names(), command.span)
+                self.dispatcher.defer_effects(command.span)
+                raise ReadingIssue("file_hook_entrypoint", "Hook-aware rewriting does not yet cover this input protocol")
             emit = frame.emit and path.suffix.lower() not in {".sty", ".cls"}
             if not emit:
                 self.code.add(path)
@@ -787,6 +817,33 @@ class PreparationSession:
             item = self.dispatcher.next_item()
             if item is None:
                 break
+            if isinstance(item, SourceEnd) and self.frames[-1].file_event is not None:
+                frame = self.frames[-1]
+                try:
+                    frame.file_event.leave(self.dispatcher)
+                    if frame.emit and frame.file_event.required:
+                        check_file_context(frame.recovery.context)
+                        check_file_context(self.context)
+                        before, after = file_wrappers(frame.file_event, self.line(frame.command.span))
+                        # Construct both pieces before publishing either edit.
+                        self.pieces.insert(frame.emission_start, before)
+                        self.pieces.append(after)
+                    self.manifest.file_events.append(frame.file_event.record())
+                    self.dispatcher.reader.endline_char = self.context.endlinechar
+                except ReadingIssue as error:
+                    item = self.dispatcher.halt(item.span, error.reason, error.detail,
+                        remainder_start=self.dispatcher.reader.position, causes=error.causes)
+            for source in self.dispatcher.program_sources:
+                if source.reader.basis not in self.generated_sources:
+                    self.register_generated_source(source.reader)
+                    self.manifest.input_occurrences[-1]["derivation"] = {
+                        "invocation": {"source": source.anchor.basis.source_id,
+                            "occurrence": source.anchor.basis.occurrence_id,
+                            "start": source.anchor.start, "end": source.anchor.end},
+                        "origins": [{"source": span.basis.source_id, "occurrence": span.basis.occurrence_id,
+                            "start": span.start, "end": span.end} for span in dict.fromkeys(source.origins)]}
+                    self.omit(source.reader.basis.whole,
+                              "Analysis token program; runtime code remains at its invocation")
             if (self.frames[-1].emit and
                     (isinstance(item, CommandDefinition) and item.trailing_control_word
                      or isinstance(item, SourceCommand)
@@ -825,6 +882,7 @@ class PreparationSession:
                         del self.pieces[frame.emission_start:]
                         del self.tombstones[frame.tombstone_start:]
                         del self.commands[frame.command_start:]
+                        del self.manifest.file_events[frame.event_start:]
                         # Already visited descendants still occur in the retained
                         # file. Keep their source, rather than stranding their units.
                         for basis, doc in self.documents.items():
@@ -839,6 +897,10 @@ class PreparationSession:
                         "This file's reading effects and dependencies still require resolution.", stage="preparation", unit_id=item.unit_id,
                         materialization="prepared", causes=item.causes)
                     self.dispatcher.resume_input(frame.recovery)
+                    if frame.file_event is not None:
+                        frame.file_event.invalidate_retained_effects(self.dispatcher)
+                        self.manifest.file_events.append({**frame.file_event.record("retained"),
+                                                         "reason": item.reason})
                     self.dispatcher.defer_effects(item.span, reason=item.reason, detail=item.detail)
                     del self.frames[recoverable:]
                     if frame.emit:
