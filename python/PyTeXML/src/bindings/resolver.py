@@ -164,8 +164,10 @@ class BindingResolver:
 
     def reading_names(self) -> set[str]:
         from ..engine.file_hooks import PROFILES
+        from ..engine.latex.registry import PROFILES as FORMAT_PROFILES
         names = {name.lstrip("\\") for name in self.catalog.commands}
         names.update(PROFILES)
+        names.update(FORMAT_PROFILES)
         for name in self.catalog.environments:
             names.update((name, "end" + name))
         return names
@@ -195,6 +197,10 @@ class BindingResolver:
         native = PROFILES.get(name.removeprefix("\\"))
         if native is not None:
             return native
+        from ..engine.latex.registry import PROFILES as FORMAT_PROFILES
+        format_profile = FORMAT_PROFILES.get(name.removeprefix("\\"))
+        if format_profile is not None:
+            return format_profile
         clean = name if name.startswith("\\") else f"\\{name}"
         opts = dict(options or {})
         for declaration in self._command_specs(clean):

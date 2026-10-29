@@ -56,7 +56,7 @@ class EngineRegistrationTests(unittest.TestCase):
             (expansion.RELAX, {"capture": "handler.location"}),
             (expansion.RELAX, {"expansion_kind": "unexpandable"}),
             (expansion.RELAX, {"expansion_kind": ExpansionKind.INTERNAL}),
-            (CORE_OPERATIONS["kernel.define_command"], {"capture": expansion.capture_relax}),
+            (CORE_OPERATIONS["format.declare_command"], {"capture": expansion.capture_relax}),
         )
         for operation, changes in cases:
             with self.subTest(operation=operation.identity, changes=changes), self.assertRaises((ValueError, TypeError)):
@@ -73,9 +73,9 @@ class EngineRegistrationTests(unittest.TestCase):
         unavailable = CORE_OPERATIONS["input.scantokens"]
         self.assertTrue(unavailable.expansion_unavailable)
 
-    def test_kernel_bridge_cannot_be_declared_as_a_native_primitive(self):
+    def test_format_operation_cannot_be_declared_as_a_native_primitive(self):
         with self.assertRaisesRegex(TypeError, "native operation"):
-            PrimitiveDeclaration("bad", CORE_OPERATIONS["kernel.define_command"], None)
+            PrimitiveDeclaration("bad", CORE_OPERATIONS["format.declare_command"], None)
 
     def test_assembled_indexes_and_selected_environments_are_immutable(self):
         for mapping in (CORE_CATALOG.operations, CORE_CATALOG.common_primitives, CORE_CATALOG.extensions,

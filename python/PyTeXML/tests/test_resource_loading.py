@@ -150,10 +150,10 @@ class ResourceLoadingTests(unittest.TestCase):
                 with self.assertRaises(ProfileError):
                     BindingCatalog(self.bindings)
 
-    def test_definition_contract_requires_explicit_supported_fields(self):
+    def test_retired_yaml_definition_contract_is_rejected(self):
         valid = {"name": r"\example", "family": "stored_definition", "scope": "local",
                  "grammar": {"handler": "primitive_definition", "expansion": "none"}}
-        for changed in ({"scope": "unknown"}, {"scope": None},
+        for changed in ({}, {"scope": "unknown"}, {"scope": None},
                         {"grammar": {"handler": "primitive_definition"}},
                         {"grammar": {"handler": "primitive_definition", "expansion": False}},
                         {"grammar": {"handler": "primitive_definition", "expansion": "none", "extra": True}},
@@ -161,7 +161,7 @@ class ResourceLoadingTests(unittest.TestCase):
             with self.subTest(changed=changed):
                 self.core["reading"] = {"commands": [valid | changed]}
                 self.write("engine/core.yaml", self.core)
-                with self.assertRaisesRegex(ProfileError, "requires a primitive definition grammar"):
+                with self.assertRaisesRegex(ProfileError, "owned by the Python format registry"):
                     BindingCatalog(self.bindings)
 
     def test_definition_contract_is_native_and_immutable(self):

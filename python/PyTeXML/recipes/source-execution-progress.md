@@ -1,5 +1,86 @@
 # Source execution checkpoints
 
+## 2026-10-29: Python format routines and explicit file search
+
+The user clarified the implementation boundary: adapt kernel routines in Python;
+retain kernel TeX fragments as reference/oracle fixtures; execute package source
+through the shared language engine. This entry supersedes the earlier proposal
+below to load kernel fragments in normal preparation.
+
+Normal preparation now uses `src/engine/latex/` for new/renew/provide-command
+declarations and optional dispatch. The immutable format registry selects Python
+operations. Native public/hidden macro meanings share the ordinary scope table,
+scanner and token-origin machinery. Authored `CommandDefinition` objects remain
+observations. The operational declaration bridge and its YAML recipes are removed.
+Aliases see later changes to hidden implementations with the same argument grammar.
+Changed hidden grammars, non-typesetting protection and pure-expansion requests
+remain explicit boundaries. Private scratch meanings not yet adapted exactly are
+marked uncertain with scope restoration; no old value is silently kept.
+
+`IfFileExists` now resolves project files, literal `input@path` directories and
+configured external roots, selects the branch and records the search evidence.
+It maintains the bounded kernel file-test meanings, retains the test in emitted
+TeX, and packages local presence-tested resources as bytes. Definite missing
+`InputIfFileExists` also executes its else branch. Finding an external source does
+not assert its execution. The [iteration recipe](specimen-iterations.md) documents
+the API/CLI and the distinction between omitted search configuration and an
+explicit project-only environment.
+
+The [native format witness](../tests/fixtures/engine/python-format/README.md)
+matches public/hidden macro meanings, zero-arity flags and missing-file state on
+pdfTeX 1.40.29 / LaTeX 2026-06-01. The configured native resource query finds
+`etoolbox.sty` and confirms `gmlogo.pdf` absent. Root A's file-test decision is now
+false with explicit search evidence; its first broad state-uncertainty cause is
+the unsupported `seq_new:N` in `gmvenue.cls`, followed by unexecuted etoolbox and
+configuration-file continuation work.
+
+All nine attempts finish in `20261029-python-format-files-final`. Compared with
+the previous `20261029-source-scope-closure` checkpoint:
+
+| Specimen | Preparation | Master characters | Unresolved | Change |
+| --- | --- | ---: | ---: | --- |
+| 2306.01911v1 | partial | 105849 | 0 | Same master/count |
+| 2405.15943v3 | partial | 67710 | 1 | Optional declaration now needs the actual `escapechar` |
+| 2412.11340v4 | complete | 133513 | 0 | Same master/count |
+| 2512.18792v1 | partial | 169440 | 1 | Same master/count |
+| 2608.28281v2 | partial | 69902 | 3 | Same master/count |
+| Root A | partial | 754 | 4 | File test resolved; later language state still unresolved |
+| Root B | partial | 1136 | 1 | Same master/count |
+| Root C | partial | 1913 | 1 | `providecommand` cannot establish the prior `harvarditem` meaning |
+| Root D | partial | 1866 | 2 | Uncertain `doi` meaning retains supplied BBL |
+
+The narrower treatment of `providecommand` exposes a real initialization gap.
+An unknown name is not assumed undefined, and a possibly existing definition
+does not acquire the supplied replacement as a known meaning. Root D previously
+crashed when bibliography processing mistook the retained BBL for a malformed
+environment. It now preserves the declaration and byte-exact jobname BBL, with
+a reading requirement. These changed statuses are not reported as coverage gains.
+All nine copied-payload rereads preserve statuses and unresolved counts.
+The full suite ran 1,160 tests: 1,157 passed and three skipped. The scoped registry
+type check passed for 18 source files. A final native-backed external-file-state
+correction has its own ten passing file tests: absolute lookup provenance stays
+separate from the relative filename in `@filef@und`. Root A's retained `refs.bib`,
+supplied `master.bbl` and `listings/prompt.txt` match the original contents.
+
+A separate `pdftex` Root A preparation/render attempt is recorded in
+`20261029-python-format-root-a-pdftex`. Native profile exposure matches; unchanged
+original source renders five pages in two converged passes. Prepared compilation
+fails at `gmlisting{snippet.py}` because `listings/snippet.py` is not packaged.
+The compiler reports `Package Listings Error: File listings/snippet(.py) not found`.
+Computed external-literal dependency closure remains open. This checkpoint does
+not qualify prepared Root A render equivalence.
+
+Next increments: establish the relevant format namespace and Python expl3/kernel
+declaration routines; integrate package-source execution with explicit resource
+ownership; then close computed resource requests and rerun paired native rendering.
+Keep the original source witnesses, initialization gaps, source continuation,
+declaration observations and output qualification separate.
+
+Local receipts are under `temp/bootstrap-work/`: native-format-run,
+native-state-tests, file-state-final, registry-types-final, python-suite-verified, all-nine-final,
+reread-run and root-a-render. Earlier failed attempts are retained as diagnostic
+history, not accepted qualification.
+
 ## 2026-10-29: selected kernel and package source execution
 
 The shared engine executes the pinned kernel definitions that construct optional

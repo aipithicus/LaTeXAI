@@ -267,7 +267,7 @@ def record_changes(runs, batch, specimen, item, previous):
         (folder / "master.diff").write_text("".join(diff), encoding="utf-8", newline="\n")
 
 
-def run_batch(catalog, runs, name, note, selected=(), timeout=180, engine_profile="etex"):
+def run_batch(catalog, runs, name, note, selected=(), timeout=180, engine_profile="etex", tex_resource_roots=None):
     catalog, runs = Path(catalog).resolve(), Path(runs).resolve()
     identifier(name)
     if name.casefold() == "resources":
@@ -290,7 +290,8 @@ def run_batch(catalog, runs, name, note, selected=(), timeout=180, engine_profil
     batch_dir.mkdir(parents=True, exist_ok=False)
     batch = {"schema": SCHEMA, "name": name, "note": note, "started": utc_now(), "status": "running",
              "catalog": str(catalog), "catalog_sha256": digest(catalog), "code": code_identity(),
-             "selected": chosen, "timeout_seconds": timeout, "engine_profile": engine_profile, "results": {}}
+             "selected": chosen, "timeout_seconds": timeout, "engine_profile": engine_profile,
+             "tex_resource_roots": None if tex_resource_roots is None else list(map(str, tex_resource_roots)), "results": {}}
     (batch_dir / "NOTES.md").write_text(f"# Investigation notes\n\nPurpose: {note}\n\n", encoding="utf-8", newline="\n")
     try:
         write_json(batch_dir / "run.json", batch)
@@ -305,8 +306,11 @@ def run_batch(catalog, runs, name, note, selected=(), timeout=180, engine_profil
             try:
                 item["source_fingerprint"] = source_fingerprint(Path(record["source"]))
                 with (folder / "console.log").open("wb") as log:
+                    search_args = ([] if tex_resource_roots is None else
+                        [arg for root in tex_resource_roots for arg in ("--tex-resource-root", str(root))]
+                        if tex_resource_roots else ["--project-only-resources"])
                     proc = subprocess.run([sys.executable, "-B", "-m", "src.prepare.pipeline",
-                        "--engine-profile", engine_profile, record["source"], str(prepared), record["main"]], cwd=PROJECT,
+                        "--engine-profile", engine_profile, *search_args, record["source"], str(prepared), record["main"]], cwd=PROJECT,
                         stdout=log, stderr=subprocess.STDOUT, timeout=timeout, check=False)
                 item["returncode"] = proc.returncode
                 item["summary"] = summarize(prepared)
@@ -412,6 +416,9 @@ def main():
     run.add_argument("--specimen", action="append", default=[])
     run.add_argument("--timeout", type=float, default=180)
     run.add_argument("--engine-profile", choices=("etex", "pdftex"), default="etex")
+    search = run.add_mutually_exclusive_group()
+    search.add_argument("--tex-resource-root", type=Path, action="append", default=None)
+    search.add_argument("--project-only-resources", action="store_true")
     commands.add_parser("index")
     render = commands.add_parser("render")
     render.add_argument("--batch", required=True)
@@ -437,7 +444,8 @@ def main():
         fonts.add_argument("--font-dir", type=Path, action="append", default=[])
     args = parser.parse_args()
     if args.command == "run":
-        result = run_batch(args.catalog, args.runs, args.name, args.note, args.specimen, args.timeout, args.engine_profile)
+        result = run_batch(args.catalog, args.runs, args.name, args.note, args.specimen, args.timeout, args.engine_profile,
+                           () if args.project_only_resources else args.tex_resource_root)
         return 0 if result["status"] == "finished" else 1
     if args.command == "render":
         from .render import RenderConfig

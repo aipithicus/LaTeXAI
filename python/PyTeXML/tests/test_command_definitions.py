@@ -48,6 +48,17 @@ class CommandDefinitionTests(unittest.TestCase):
         ReadingCoverage(self.reader.basis, items)
         return items
 
+    def assert_native_definition(self, name, observation):
+        from src.engine.meanings import token_key
+        value = self.context.lookup_definition(name)
+        self.assertIsInstance(value, StoredDefinition)
+        self.assertNotIsInstance(value, CommandDefinition)
+        self.assertNotEqual(value.span.basis, observation.span.basis)
+        if observation.optional_default is not None:
+            self.assertEqual(value.body_tokens[0].value, '@protected@testopt')
+            value = self.context.lookup_definition('\\' + name)
+        self.assertEqual(tuple(map(token_key, value.replacement_tokens)), tuple(map(token_key, observation.body_tokens)))
+
     def test_signature_and_exact_spans_without_synthetic_parameters(self):
         source = r"\newcommand * {\pair}[2][{a]b}]{#1:{#2}} tail"
         self.setup_reader(source)
@@ -67,7 +78,7 @@ class CommandDefinitionTests(unittest.TestCase):
         self.assertEqual(item.opening.end, item.body.start)
         self.assertEqual(item.body.end, item.closing.start)
         self.assertEqual(self.reader.position, source.index(" tail"))
-        self.assertIs(self.context.lookup_definition("pair"), item)
+        self.assert_native_definition("pair", item)
         self.assertIsNotNone(item.unit_id)
 
     def test_unbraced_target_zero_count_and_empty_default(self):
@@ -81,7 +92,7 @@ class CommandDefinitionTests(unittest.TestCase):
                 self.assertEqual(item.parameter_count, count)
                 self.assertEqual(None if item.optional_default is None else item.optional_default.literal(), default)
 
-    def test_captured_bodies_and_long_flags_match_recorded_kernel_oracle(self):
+    def test_captured_bodies_match_recorded_kernel_oracle(self):
         expected = json.loads((PROJECT / "tests/fixtures/engine/command-bodies.expected.json").read_text(encoding="utf-8"))
         for name, source in (("word", r"\newcommand\x\varepsilon"),
                              ("letter", r"\newcommand\x A"),
@@ -91,10 +102,10 @@ class CommandDefinitionTests(unittest.TestCase):
             with self.subTest(name=name):
                 self.setup_reader(source)
                 item = self.complete()[0]
-                # Only the captured body and long flag are compared here; this
-                # does not pretend to implement meaning rendering or expansion.
-                observed = ("" if item.starred else "\\long ") + "macro:->" + self.reader.source_slice(item.body)
-                self.assertEqual(observed, expected[name])
+                # This older receipt supplies body text; the current pinned
+                # kernel's zero-arity flags are checked in test_latex_format.
+                observed = "macro:->" + self.reader.source_slice(item.body)
+                self.assertEqual(observed, expected[name].removeprefix(r'\long '))
 
     def test_unbraced_body_consumes_exactly_one_raw_token_with_exact_spans(self):
         for body, suffix in ((r"\varepsilon", " tail"), ("A", "BC"), ("~", "tail"),
@@ -112,7 +123,7 @@ class CommandDefinitionTests(unittest.TestCase):
                 self.assertEqual(item.body.end, item.span.end)
                 self.assertEqual(self.reader.position, len(source) - len(suffix))
                 self.assertEqual(self.reader.source_slice(self.reader.source_span(item.span.end, len(source))), suffix)
-                self.assertIs(self.context.lookup_definition("x"), item)
+                self.assert_native_definition("x", item)
                 self.assertEqual(self.context.catcodes["@"], CatCode.OTHER)
                 self.assertEqual(self.context.scope_depth, 0)
                 ReadingCoverage(self.reader.basis, [item])
@@ -125,14 +136,14 @@ class CommandDefinitionTests(unittest.TestCase):
         self.assertTrue(declarations[0].starred)
         self.assertEqual(declarations[0].parameter_count, 2)
         self.assertEqual(declarations[0].optional_default.literal(), "default")
-        self.assertIs(self.context.lookup_definition("x"), declarations[0])
+        self.assert_native_definition("x", declarations[0])
 
     def test_unbraced_parameter_marker_does_not_consume_a_following_digit(self):
         self.setup_reader(r"\newcommand\x[1]#1TAIL")
         item = self.dispatcher.next_item()
         self.assertEqual(item.reason, "invalid_definition_parameter")
         self.assertIsNone(self.context.lookup_definition("x"))
-        self.assertEqual(self.reader.next_token().value, "1")
+        self.assertEqual(self.reader.next_token().value, "x")  # Failed request rolls back its operands.
 
     def test_unbraced_body_token_keeps_capture_time_category_in_replay(self):
         source = r"\newcommand\x@"
@@ -194,7 +205,7 @@ class CommandDefinitionTests(unittest.TestCase):
                           r"\newif\ifflag{\renewcommand\ifflag{opaque}}\ifflag NO\else YES\fi")
         items = self.complete()
         declarations = [i for i in items if isinstance(i, CommandDefinition)]
-        self.assertIs(self.context.lookup_definition("x"), declarations[0])
+        self.assert_native_definition("x", declarations[0])
         self.assertEqual(declarations[1].target_check, "known_present")
         self.assertEqual(declarations[2].target_check, "known_present")
         self.assertFalse(self.context.lookup_meaning("ifflag").truth)
@@ -215,7 +226,7 @@ class CommandDefinitionTests(unittest.TestCase):
             item = self.complete()[0]
             self.assertEqual(item.target_requirement, requirement)
             self.assertEqual(item.target_check, "unverified")
-            self.assertIs(self.context.lookup_definition("rmdefault"), item)
+            self.assert_native_definition("rmdefault", item)
 
     def test_known_newcommand_conflict_does_not_replace_existing_meaning(self):
         for prefix, target in ((r"\def\x{original}", "x"), ("", "makeatletter"), (r"\newif\ifflag", "ifflag")):
@@ -316,12 +327,11 @@ class CommandDefinitionTests(unittest.TestCase):
         self.context.catcodes["1"] = CatCode.LETTER
         self.assertEqual(self.dispatcher.next_item().reason, "unsupported_definition_count")
 
-    def test_handler_is_selected_by_yaml_not_command_spelling(self):
-        catalog = deepcopy(self.catalog)
-        spec = next(c for c in catalog.engine_bindings["core_latex"]["reading"]["commands"] if c["name"] == r"\newcommand")
-        spec["name"] = r"\declarelocal"
-        self.setup_reader(r"\declarelocal\x{body}", catalog=reload_catalog(self, catalog))
-        self.assertEqual(self.complete()[0].declaration, r"\declarelocal")
+    def test_format_operation_is_owned_by_python_and_follows_let_aliases(self):
+        self.assertNotIn(r"\newcommand", self.catalog.commands)
+        self.setup_reader(r"\let\declarelocal\newcommand\declarelocal\x{body}")
+        item = next(i for i in self.complete() if isinstance(i, CommandDefinition))
+        self.assert_native_definition('x', item)
 
     def test_selected_option_captures_frozen_tokens_and_reports_pending_check(self):
         self.setup_reader(r"\DeclareOption{x}{\catcode`\!=11\relax\newcommand\kept{!}}"
@@ -332,14 +342,20 @@ class CommandDefinitionTests(unittest.TestCase):
         item = self.context.lookup_definition("kept")
         self.assertEqual(item.body_tokens[0].catcode, CatCode.OTHER)
         checks = next(i.metadata["definition_checks"] for i in items if getattr(i, "action", None) == "process_options")
-        self.assertEqual(checks[0]["unit_id"], item.unit_id)
+        observation = self.dispatcher.units.records[checks[0]["unit_id"]]
+        self.assertEqual(observation.kind, 'CommandDefinition')
+        self.assertIsNotNone(checks[0]["unit_id"])
         self.assertEqual(checks[0]["requirement"], "absent")
 
-    def test_schema_rejects_invalid_command_definition_recipes(self):
+    def test_schema_rejects_retired_command_definition_recipes(self):
         for key, value in (("target_requirement", "any"), ("forbidden_names", "relax"),
                            ("forbidden_prefixes", [None]), ("expansion", "full")):
             reading = deepcopy(self.catalog.engine_bindings["core_latex"]["reading"])
-            spec = next(c for c in reading["commands"] if c["name"] == r"\newcommand")
+            # Kernel operations cannot be reintroduced as YAML implementations.
+            spec = {'name': r'\legacy', 'family': 'stored_definition', 'scope': 'local',
+                    'grammar': {'handler': 'command_definition', 'expansion': 'none',
+                                'target_requirement': 'absent', 'forbidden_names': [], 'forbidden_prefixes': []}}
+            reading['commands'].append(spec)
             spec["grammar"][key] = value
             with self.subTest(key=key), self.assertRaises(ProfileError):
                 self.catalog._validate_reading(reading, Path("core_latex.yaml"))
@@ -447,7 +463,8 @@ class CommandPreparationTests(unittest.TestCase):
         self.assertEqual([c["context"] for c in inputs], ["stored_definition_default", "stored_definition"])
         self.assertNotIn("DEFAULT", text)
         self.assertNotIn("BODY", text)
-        self.assertEqual({o["source"] for o in manifest.input_occurrences}, {"main.tex"})
+        self.assertEqual({o["source"] for o in manifest.input_occurrences
+                          if o.get('derivation', {}).get('kind') != 'constructed_definition'}, {"main.tex"})
 
     def test_repeated_scoped_inputs_keep_distinct_units_without_repeat_reads(self):
         child = r"\newcommand\x[1]{#1}"

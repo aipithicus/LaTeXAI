@@ -4,6 +4,25 @@ The development harness in `src.validation.specimens` calls the public preparati
 and optional rendering entry points. It owns experiment organization only; it adds
 no discovery, binding or emission rules to preparation.
 
+File tests use the same explicit resource environment as the preparation API.
+Pass repeatable `--tex-resource-root <directory>` arguments to `run` for ordered
+recursive external roots, or `--project-only-resources` for a deliberately closed
+project-only environment. The API spelling is `tex_resource_roots=(...)`.
+Omitting the setting leaves external absence unestablished; project hits still
+resolve. Preparation never guesses a TeX installation from PATH or launches a
+compiler for lookup. The manifest records the roots, filename-inventory hash and
+whether the search is closed. The native oracle must use a matching resource
+environment when qualifying branch-dependent output.
+
+`IfFileExists` resolves literal filenames through project paths, a literal
+`input@path`, then the configured external roots. It records branch selection,
+executes the selected branch through the existing dispatcher, retains the TeX
+test in output, and packages project files whose presence is tested, including
+binary files. Definite missing `InputIfFileExists` requests also select their
+else branch. Finding an external input does not by itself establish support for
+executing that file. Computed filenames, conflicting matches, substitutions and
+nonliteral search-path state need additional language/environment work.
+
 Keep source projects in one catalog directory, and the run collection outside it.
 This project's catalog is `tests/fixtures/specimens/catalog.yaml`, and its runs go
 in the gitignored `temp/specimen-runs/`. The catalog uses explicit main documents so

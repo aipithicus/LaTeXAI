@@ -135,6 +135,15 @@ class HarvardBibliographyTests(unittest.TestCase):
             self.prepare(r"\cite{missing}\bibliography{absent}",
                          r"\harvarditem[missing]{missing}{missing}{different}BODY")
 
+    def test_retained_bbl_reading_boundary_preserves_request_and_jobname_resource(self):
+        bbl = r'\providecommand\unestablished[1]{#1}\bibitem{one}\unestablished{BODY}'
+        text, manifest, out, _ = self.prepare(r'\citep{one}\bibliography{absent}', bbl)
+        self.assertEqual(manifest.bibliography.preparation_backend, 'deferred-reading')
+        self.assertIn(r'\bibliography{absent}', text)
+        self.assertNotIn(r'\input{main.bbl}', text)
+        self.assertEqual((out / 'master.bbl').read_bytes(), (self.root / 'main.bbl').read_bytes())
+        self.assertTrue(any(r['reason'] == 'bibliography_reading' for r in manifest.unresolved))
+
 
 if __name__ == "__main__":
     unittest.main()

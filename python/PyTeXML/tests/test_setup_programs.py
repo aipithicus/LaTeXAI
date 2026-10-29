@@ -102,7 +102,7 @@ class SetupProgramTests(unittest.TestCase):
         _, manifest, _, _ = self.prepare(
             r"\documentclass{article}\newcommand{\optional}[1][default]{#1}"
             r"\edef\value{\optional[x]}")
-        self.assertTrue(any(r["reason"] == "macro_parameters" for r in manifest.unresolved))
+        self.assertTrue(any(r["reason"] == "expansion_required" for r in manifest.unresolved))
 
     def test_optional_lookahead_cannot_assume_default_at_child_eof(self):
         text, manifest, _, _ = self.prepare(

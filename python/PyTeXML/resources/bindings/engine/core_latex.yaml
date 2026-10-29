@@ -42,17 +42,6 @@ reading:
     # Capture-only boundaries (base/ltdefns.dtx, base/ltmiscen.dtx).
     # Preparation neither checks target existence nor installs replacements,
     # evaluates their bodies, or schedules/runs hook code.
-    - name: "\\providecommand"
-      family: source_command
-      action: opaque
-      grammar:
-        handler: source_arguments
-        arguments:
-          - {name: star, kind: star}
-          - {name: target, kind: control_sequence, role: data}
-          - {name: count, kind: optional, role: data}
-          - {name: default, kind: optional, role: stored}
-          - {name: body, kind: braced, role: stored}
     - name: "\\renewenvironment"
       family: source_command
       action: opaque
@@ -110,24 +99,6 @@ reading:
         arguments: [{name: class, kind: braced, role: diagnostic}, {name: message, kind: braced, role: diagnostic}, {name: help, kind: braced, role: diagnostic}]
     # latex2e base/ltdefns.dtx: capture the authored signature and replacement
     # tokens; do not synthesize the kernel's optional-argument helper macros.
-    - name: "\\newcommand"
-      family: stored_definition
-      scope: local
-      grammar:
-        handler: command_definition
-        expansion: none
-        target_requirement: absent
-        forbidden_names: [relax]
-        forbidden_prefixes: [end]
-    - name: "\\renewcommand"
-      family: stored_definition
-      scope: local
-      grammar:
-        handler: command_definition
-        expansion: none
-        target_requirement: present
-        forbidden_names: []
-        forbidden_prefixes: []
 
     # latex2e base/ltclass.dtx: captured option code runs at processing time.
     # The dispatcher executes only bounded reading effects from stored tokens.

@@ -84,7 +84,7 @@ def observe_dependencies(argument, text, context, knowledge: ReadingKnowledge, u
                         "token_delimited", "physical_line_literal"}:
                     break
                 continue
-            if profile.family == "stored_definition":
+            if profile.family == "format_declaration":
                 checkpoint = cursor.checkpoint()
                 try:
                     definition = DefinitionScanner(cursor, context).read(token.span.start, profile)

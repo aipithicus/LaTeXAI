@@ -118,7 +118,7 @@ def definition_summary(definition, context, knowledge, *, active=(), forbidden=N
                     if target.kind != TokenKind.CONTROL_SEQUENCE:
                         return EffectSummary.unknown("Active-character assignment needs further resolution")
                     effect = EffectSummary(meanings=NameSet((target.value,)))
-                elif profile.family == "stored_definition":
+                elif profile.family == "format_declaration":
                     captured = DefinitionScanner(cursor, context).read(token.span.start, profile)
                     if captured.target.kind != TokenKind.CONTROL_SEQUENCE:
                         return EffectSummary.unknown("Active-character definition needs further resolution")

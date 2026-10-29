@@ -48,11 +48,11 @@ class DefinitionScanner:
         wrapper = (profile.grammar.get("handler") == "command_definition"
                    and set(profile.grammar) == {"handler", "expansion", "target_requirement", "forbidden_names", "forbidden_prefixes"}
                    and profile.grammar.get("expansion") == "none"
-                   and profile.grammar.get("target_requirement") in ("absent", "present")
+                   and profile.grammar.get("target_requirement") in ("absent", "present", "either")
                    and all(isinstance(profile.grammar[key], list)
                            and all(isinstance(value, str) and value for value in profile.grammar[key])
                            for key in ("forbidden_names", "forbidden_prefixes")))
-        self._require(profile.family == "stored_definition" and wrapper
+        self._require(profile.family == "format_declaration" and wrapper
                       and profile.state_management == StateManagementRule()
                       and profile.action is None and not profile.catcode_layers
                       and not profile.catcode_overrides and not profile.reader_parameters

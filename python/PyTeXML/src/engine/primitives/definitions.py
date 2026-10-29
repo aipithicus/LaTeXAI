@@ -12,7 +12,7 @@ from ..transactions import atomic, meaning_assignment_scope
 from ...reading.assignment_scanner import AssignmentScanner
 from ...reading.argument_scanner import ArgumentScanner
 from ...reading.boolean_scanner import declaration as boolean_declaration
-from ...reading.contracts import (BooleanMeaning, BoundMeaning, CommandDefinition,
+from ...reading.contracts import (BooleanMeaning, BoundMeaning,
                                   EffectiveReadingProfile, ReadingIssue, UncertainMeaning, UndefinedMeaning)
 from ...reading.definition_scanner import DefinitionScanner
 from ...reading.environment_registry import declarations
@@ -75,26 +75,6 @@ def store_primitive_definition(host, opening, meaning: PrimitiveMeaning[Definiti
     global_, scope_cause = meaning_assignment_scope(host, meaning.operand.global_)
     definition = replace(definition, scope_cause=scope_cause)
     host.context.record_definition(definition, global_=global_, scope_cause=scope_cause)
-    return definition
-
-
-def store_definition(host, opening, profile):
-    """Scan target/signature raw; collect a raw or expanded replacement.
-
-    Check known target conflicts, identify the capture, then install at its scope.
-    Return that same capture; never execute replacement commands or prove unknown names absent.
-    """
-    definition = DefinitionScanner(host.reader, host.context).read(opening.span.start, profile)
-    if isinstance(definition, CommandDefinition):
-        presence = command_presence(host.context, host.knowledge, definition.target.value)
-        absent, known = presence is False, presence is True
-        if known and definition.target_requirement == "absent":
-            raise ReadingIssue("definition_conflict", f"{definition.target.value!r} already has an established meaning")
-        if absent and definition.target_requirement == "present":
-            raise ReadingIssue("definition_conflict", f"{definition.target.value!r} is established undefined")
-        definition = replace(definition, target_check="known_absent" if absent else "known_present" if known else "unverified")
-    definition = host.identify(definition)
-    host.context.record_definition(definition, global_=profile.state_management.scope == "global")
     return definition
 
 
@@ -205,7 +185,6 @@ STORE = PrimitiveOperation("definition.store", ExpansionKind.UNEXPANDABLE, store
 
 FAMILY = OperationFamily(
     operations=(ASSIGN, STORE,
-        ExecutableOperation[EffectiveReadingProfile]("kernel.define_command", ExpansionKind.INTERNAL, store_definition),
         ExecutableOperation[EffectiveReadingProfile]("definition.store_environment", ExpansionKind.INTERNAL, store_environment),
         ExecutableOperation[EffectiveReadingProfile]("definition.declare_boolean", ExpansionKind.INTERNAL, declare_boolean),
         ExecutableOperation[EffectiveReadingProfile]("definition.declare_environment", ExpansionKind.INTERNAL, declare_environment)),

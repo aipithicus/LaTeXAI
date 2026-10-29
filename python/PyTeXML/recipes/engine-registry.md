@@ -42,6 +42,15 @@ handler. An internal operation may opt into execution after expansion; this
 does not grant a native primitive declaration, integer-value role or expansion
 callback. Ordinary current-meaning resolution still precedes that dispatch.
 
+`src/engine/latex/` owns the Python adaptations of kernel declaration and optional
+dispatch routines. Its explicit family list assembles one immutable name index;
+lookup does not scan modules. Operations register in the shared operation catalog
+and update ordinary scoped meanings. The declaration handler constructs native
+public/hidden macros through the primitive scanner, while `CommandDefinition`
+remains an authored observation. Superseded YAML command-definition recipes and
+their execution bridge have been removed. Pinned kernel fragments remain test
+references; production preparation does not load them as runtime source.
+
 ## Validation
 
 Construction checks operand types, hashability, callback presence/callability

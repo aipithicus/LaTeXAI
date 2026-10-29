@@ -76,28 +76,23 @@ def replacement_key(tokens):
 
 @meaning_key.register
 def _(meaning: StoredDefinition, operations):
-    long = meaning.long
     if isinstance(meaning, CommandDefinition):
-        if meaning.optional_default is not None:
-            return None  # The optional-argument wrapper has not been compiled.
-        long = not meaning.starred
-        parameters = tuple(("match", "#") for _ in range(meaning.parameter_count))
-    else:
-        parameters, iterator = [], iter(meaning.parameter_tokens)
-        for token in iterator:
-            if token.catcode == CatCode.PARAMETER:
-                following = next(iterator, None)
-                if following is None:
-                    parameters.append(token_key(meaning.hash_brace))
-                else:
-                    parameters.append(("match", token.value))
+        return None  # Authored observations are not executable meanings.
+    parameters, iterator = [], iter(meaning.parameter_tokens)
+    for token in iterator:
+        if token.catcode == CatCode.PARAMETER:
+            following = next(iterator, None)
+            if following is None:
+                parameters.append(token_key(meaning.hash_brace))
             else:
-                parameters.append(token_key(token))
-        parameters = tuple(parameters)
+                parameters.append(("match", token.value))
+        else:
+            parameters.append(token_key(token))
+    parameters = tuple(parameters)
     replacement = replacement_key(meaning.replacement_tokens)
     if meaning.hash_brace is not None:
         replacement += (token_key(meaning.hash_brace),)
-    return ("macro", long, parameters, replacement, meaning.outer, meaning.protected)
+    return ("macro", meaning.long, parameters, replacement, meaning.outer, meaning.protected)
 
 
 def compare_tokens(left, right, context, knowledge, operations):

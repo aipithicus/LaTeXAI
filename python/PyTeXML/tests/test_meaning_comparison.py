@@ -157,11 +157,11 @@ class MeaningComparisonTests(unittest.TestCase):
         self.assertEqual(self.truths(), [True])
         self.assertIsNone(self.host.context.lookup_meaning("unknown"))
 
-    def test_optional_wrappers_only_compare_when_known_copied(self):
+    def test_optional_wrappers_compare_their_native_public_tokens(self):
         self.read(r"\newcommand{\a}[1][x]{#1}\let\b\a\newcommand{\c}[1][x]{#1}"
                   r"\ifx\a\b YES\fi\ifx\a\c A\else B\fi")
-        self.assertEqual(self.truths(), [True])
-        self.assertEqual(sum(isinstance(i, ConditionalRegion) for i in self.items), 1)
+        self.assertEqual(self.truths(), [True, False])
+        self.assertEqual(sum(isinstance(i, ConditionalRegion) for i in self.items), 0)
 
     def test_uncompiled_environment_pair_is_not_one_macro_meaning(self):
         self.read(r"\NewEnviron{foo}{A}\ifx\foo\endfoo A\else B\fi", packages=("environ",))
@@ -179,7 +179,7 @@ class MeaningComparisonTests(unittest.TestCase):
     def test_undefined_overrides_a_known_provider_and_can_be_defined_again(self):
         context = self.read(r"\let\iftrue\undefined\ifx\iftrue\undefined YES\fi"
                             r"\newcommand{\iftrue}{X}\def\b{X}\ifx\iftrue\b NO\else YES\fi")
-        self.assertEqual(self.truths(), [True, False])  # newcommand is long.
+        self.assertEqual(self.truths(), [True, True])  # Zero-argument newcommand is not long.
         declaration = next(i for i in self.items if isinstance(i, StoredDefinition) and i.target.value == "iftrue")
         self.assertEqual(declaration.target_check, "known_absent")
         self.assertIsNotNone(context.lookup_definition("iftrue"))

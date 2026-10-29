@@ -134,6 +134,29 @@ def frozen_reader(host, tokens, anchor):
 
 def expand_call(host, event, definition):
     cursor = ExpansionCursor(host.reader, host.context, host.knowledge, host.operations, host=host)
+    captured = ()
+    lookahead = None
+    signature = getattr(definition, 'optional_invocation', None)
+    if signature is not None and not host.program:
+        from .meanings import token_key
+        from ..reading.argument_scanner import optional_tokens, undelimited_tokens
+        implementation = host.context.lookup_definition(signature.hidden)
+        if (implementation is None or tuple(map(token_key, implementation.parameter_tokens)) != signature.parameters
+                or implementation.long != signature.long):
+            raise ReadingIssue('argument_lookahead', 'The optional implementation argument grammar has changed')
+        optional_tokens(cursor, event.token.value, (), long=signature.long)
+        for _ in range(signature.count - 1):
+            undelimited_tokens(cursor, event.token.value, long=signature.long)
+        captured = tuple(cursor.source_tokens)
+        saved = host.reader.checkpoint()
+        try:
+            while (lookahead := host.reader.next_token()) is not None and lookahead.catcode == CatCode.SPACE:
+                pass
+        finally:
+            host.reader.restore(saved)
+        if lookahead is None and cursor.optional_return_used:
+            from .latex.construction import control
+            lookahead = control('relax', event.span)
     if isinstance(definition, TokenListMeaning):
         cursor.push(definition.replacement_tokens)
     else:
@@ -141,11 +164,13 @@ def expand_call(host, event, definition):
     tokens = []
     while cursor.pending:
         tokens.append(cursor.next_token())
+    tokens.extend(captured)
     span = host.reader.source_span(event.span.start, host.reader.position)
     last = cursor.source_tokens[-1] if cursor.source_tokens else event.token
     return SourceCommand(span, event.token.value, "program_expand",
                          (TokenArgument("body", span, tuple(tokens)),), metadata={
                              "input_return_barrier": cursor.optional_return_used,
+                             "return_lookahead": lookahead,
                              "input_return_line_break": cursor.optional_return_used and any(
                                  reason == "comment" and part.end == host.reader.position
                                  and not host.reader.text[:part.end].endswith(("\r", "\n"))
@@ -153,7 +178,7 @@ def expand_call(host, event, definition):
                              "trailing_control_word": last.control_word and last.span.end == span.end})
 
 
-def evaluate(host, tokens, anchor, *, policy=None, budget=10000):
+def evaluate(host, tokens, anchor, *, policy=None, budget=10000, return_lookahead=None):
     """Publish a supported program's state, or restore it completely.
 
     This consumer does no filesystem I/O, layout or general content projection.
@@ -176,6 +201,7 @@ def evaluate(host, tokens, anchor, *, policy=None, budget=10000):
         child.program_depth = depth + 1
         child.program_budget = fuel
         child.program_policy = policy
+        child.return_lookahead = return_lookahead
         child.options = host.options.copy() if host.options is not None else None
         child._groups, child._conditionals = list(parent_groups), [replace(c) for c in parent_conditionals]
         child.program_sources, child.program_serial = host.program_sources, host.program_serial
@@ -234,7 +260,8 @@ def setup_request(host, event, definition):
     try:
         with transaction(host):
             invocation = expand_call(host, event, definition)
-            results = evaluate(host, invocation.argument("body").tokens, invocation.span, policy=SETUP)
+            results = evaluate(host, invocation.argument("body").tokens, invocation.span, policy=SETUP,
+                               return_lookahead=invocation.metadata.get('return_lookahead'))
             if invocation.metadata["input_return_barrier"]:
                 require_inert_barrier(host.context, host.knowledge)
         return SourceCommand(invocation.span, event.token.value, "setup_program", metadata={

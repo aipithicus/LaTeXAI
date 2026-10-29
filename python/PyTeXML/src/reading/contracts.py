@@ -268,6 +268,14 @@ class SkippedRegion:
 
 
 @dataclass(frozen=True, slots=True)
+class OptionalInvocation:
+    count: int
+    hidden: str
+    parameters: tuple
+    long: bool
+
+
+@dataclass(frozen=True, slots=True)
 class StoredDefinition:
     """A lexical capture, not an expanded or compiled replacement list.
 
@@ -297,6 +305,7 @@ class StoredDefinition:
     outer: bool = field(default=False, kw_only=True)
     protected: bool = field(default=False, kw_only=True)
     scope_cause: SourceSpan | None = field(default=None, compare=False, kw_only=True)
+    optional_invocation: OptionalInvocation | None = field(default=None, compare=False, kw_only=True)
 
     @property
     def replacement_tokens(self):

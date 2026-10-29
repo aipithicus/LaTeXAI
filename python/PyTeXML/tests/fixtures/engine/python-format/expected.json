@@ -1,0 +1,19 @@
+{
+  "target": "pdfTeX 1.40.29, LaTeX 2026-06-01, expl3 2026-09-09",
+  "latex_ltx_sha256": "19d3b75884681539e1ef7a427af472bfe80d9ff214b84b9ca45e790d3e89c5c4",
+  "meanings": {
+    "zero": "macro:->body",
+    "one": "\\long macro:#1->#1",
+    "short": "macro:#1->#1",
+    "opt": "macro:->\\@protected@testopt \\opt \\\\opt {dflt}",
+    "\\opt": "\\long macro:[#1]->(#1)"
+  },
+  "file_test": {
+    "present": true,
+    "missing": false,
+    "@filef@und": "macro:->",
+    "@curr@file": "macro:->missing-pytexml-witness.tex",
+    "reserved@a": "macro:->\\def \\Selected {no}"
+  },
+  "separate_optional_wrappers_equal": false
+}

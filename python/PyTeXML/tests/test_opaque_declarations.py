@@ -15,8 +15,7 @@ from src.reading.contracts import SourceCommand
 
 class OpaqueDeclarationTests(unittest.TestCase):
     def test_declarations_do_not_install_targets_or_execute_body_effects(self):
-        bodies = [r"\providecommand*\iflater[1][\iffalse]{\newif\ifinner\innertrue\catcode`\%=12 #1}",
-                  r"\renewenvironment{later}[1][\iftrue]{\newif\ifinner\innertrue}{\catcode`\%=12}",
+        bodies = [r"\renewenvironment{later}[1][\iftrue]{\newif\ifinner\innertrue}{\catcode`\%=12}",
                   r"\AtBeginDocument{\newif\ifinner\innertrue\catcode`\%=12}"]
         for body in bodies:
             with self.subTest(body=body):

@@ -7,7 +7,6 @@ This module never serializes tokens as TeX or dispatches an executable command.
 from dataclasses import dataclass, replace
 from .primitive import PrimitiveMeaning
 
-from ..reading.argument_scanner import optional_tokens, undelimited_tokens
 from ..reading.contracts import (BoundMeaning, CharacterCodeMeaning, CommandDefinition,
                                  ReadingIssue, StoredDefinition,
                                  UncertainMeaning, TokenListMeaning, UndefinedMeaning)
@@ -107,24 +106,10 @@ class ExpansionCursor:
         return any(index < len(tokens) for tokens, index in self.frames)
 
     def expand_macro(self, token, definition, *, execution=False):
-        optional = None
         if isinstance(definition, CommandDefinition):
-            if definition.optional_default is not None:
-                # LaTeX implements the lookahead with execution (futurelet),
-                # not pure expansion. Only a transactional execution consumer
-                # may use this bounded format bridge; edef/value probes cannot.
-                if not execution:
-                    raise ReadingIssue("macro_parameters", "Optional macro arguments require execution")
-                if self.context.lookup_definition(definition.target.value) != definition:
-                    raise ReadingIssue("macro_parameters", "Optional alias depends on a changed kernel wrapper")
-                optional = definition.optional_default.tokens
-            long = not definition.starred
-            arguments = (() if optional is None else (optional_tokens(self, token.value, optional, long=long),))
-            arguments += tuple(undelimited_tokens(self, token.value, long=long)[0]
-                               for _ in range(definition.parameter_count - len(arguments)))
-        else:
-            from .macro_arguments import arguments as scan_arguments
-            arguments = scan_arguments(self, token, definition)
+            raise ReadingIssue('declaration_observation', 'A declaration capture is not an executable meaning')
+        from .macro_arguments import arguments as scan_arguments
+        arguments = scan_arguments(self, token, definition)
         replacement, index = [], 0
         body = definition.replacement_tokens
         self._charge(len(body))

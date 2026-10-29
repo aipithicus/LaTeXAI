@@ -858,7 +858,7 @@ class StructuralDispatcher:
             if profile.reason != UnresolvedReason.UNKNOWN_CONSTRUCT:
                 raise ReadingIssue(profile.reason.value, profile.detail)
             return DeferredScanner(self.reader, self.context).command(token, profile.reason.value, profile.detail)
-        if profile.family == "stored_definition":
+        if profile.family == "format_declaration":
             return DefinitionScanner(self.reader, self.context).read(token.span.start, profile)  # capture, never install
         if profile.family == "meaning_assignment":
             return AssignmentScanner(self.reader, self.context).let(token.span, profile.name)
@@ -936,6 +936,11 @@ class StructuralDispatcher:
             return self._deferred(DeferredRegion(command.span, "branch_selection", detail,
                 tuple(t for a in command.arguments for t in a.tokens), command,
                 command.metadata["binding_id"], unit_id=command.unit_id, causes=causes))
+        self.select_branch(command, truth)
+        return self._next_item()
+
+    def select_branch(self, command, truth):
+        """Queue one already captured branch; operand braces are not scopes."""
         then, otherwise = command.argument("then"), command.argument("else")
         selected, rejected = (then, otherwise) if truth else (otherwise, then)
         for arg in (selected, rejected):
@@ -953,7 +958,6 @@ class StructuralDispatcher:
         before = [boundary(prefix)] if truth else [boundary(prefix), skipped, middle]
         after = (middle, skipped, suffix) if truth else (suffix,)
         self._pending.extend((*before, _BranchStart(selected, after, command.unit_id, selected.name)))
-        return self._next_item()
 
     def route_conditional(self, rule: ConditionalRule, span: SourceSpan, *, metadata=None):
         """Own execution and stack changes; conditionals do not create scopes."""

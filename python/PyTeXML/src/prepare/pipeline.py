@@ -27,6 +27,7 @@ class _PreparationRequest:
     emit_provenance: bool | None
     policy: str | Path
     engine_profile: str
+    tex_resource_roots: tuple[Path, ...] | None
 
 
 def preprocess_paper(
@@ -47,11 +48,14 @@ def preprocess_paper(
     policy: str = "prepare",
     logger: EventLogger | None = None,
     engine_profile: str = "etex",
+    tex_resource_roots: tuple[str | Path, ...] | None = None,
 ) -> Tuple[str, PreflightManifest, Path, Optional[ProvenanceLedger]]:
     """Build in isolation and publish a complete payload, with failure rollback.
 
     emit_provenance=None follows policy.provenance.emit_ledger; an explicit bool
     overrides it. Manifest locations are always finalized, independently of it.
+    tex_resource_roots=None leaves external absence unestablished. An explicit
+    tuple selects an ordered, closed recursive search; () means project-only.
     """
     project = Path(project_dir).resolve()
     destination = Path(output_dir).resolve() if output_dir else project / "extracted"
@@ -83,7 +87,8 @@ def preprocess_paper(
                 project=project, root_tex=root_tex, engine=engine,
                 convert_images_to_svg=convert_images_to_svg, copy_local_dependencies=copy_local_dependencies,
                 emit_manifest_json=emit_manifest_json, emit_provenance=emit_provenance, policy=policy,
-                engine_profile=engine_profile)
+                engine_profile=engine_profile, tex_resource_roots=(None if tex_resource_roots is None
+                    else tuple(Path(p).resolve() for p in tex_resource_roots)))
             text, manifest, ledger = _prepare_paper(
                 request, transaction.stage, excluded_dirs=(destination, transaction.workspace), logger=log)
             log.emit("payload.prepared", "Payload built in staging",
@@ -138,7 +143,7 @@ def _prepare_paper(request: _PreparationRequest, out_dir: Path, *,
         logger.emit("phase.started", data={"phase": "reading"})
         session = PreparationSession(p_dir, root_tex=request.root_tex, engine=request.engine,
                                      excluded_dirs=(out_dir, *excluded_dirs), policy=request.policy,
-                                     engine_profile=request.engine_profile)
+                                     engine_profile=request.engine_profile, tex_resource_roots=request.tex_resource_roots)
         emit_provenance = (session.policy.provenance.emit_ledger if request.emit_provenance is None
                            else request.emit_provenance)
         session.run()
@@ -164,7 +169,7 @@ def _prepare_paper(request: _PreparationRequest, out_dir: Path, *,
             prepared_bbl = ''.join(p.text for p in pieces if p.key in keys)
             (out_dir / "bibliography.bbl").write_text(prepared_bbl, encoding="utf-8", newline="\n")
         dependencies = [Path(s.abs_path) for s in manifest.local_styles] + [p_dir / p for p in manifest.code_inputs]
-        if (dependencies or session.literal_payloads or session.retained_resources) and not request.copy_local_dependencies:
+        if (dependencies or session.literal_payloads or session.retained_resources or session.tested_resources) and not request.copy_local_dependencies:
             raise ValueError("Local code dependencies must be emitted for a standalone extraction package")
         # Local code remains source-preserving until its own emission contract
         # exists. The cache also supplies payload bytes; no reopen/copy pass.
@@ -189,6 +194,12 @@ def _prepare_paper(request: _PreparationRequest, out_dir: Path, *,
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(payload, encoding="utf-8", newline="")
             payloads[relative] = (source, payload)
+        for relative, source in session.tested_resources.items():
+            target = out_dir / relative
+            # Presence tests do not interpret a file. Binary resources must stay binary.
+            if not target.exists():
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(session.store.read_bytes(source))
         master_tex_content = "".join(p.text for p in pieces)
         locations = finalize_locations(session, pieces, master_tex_content, payloads)
         session.lint.finalize_repairs(pieces, master_tex_content)
@@ -238,8 +249,12 @@ if __name__ == "__main__":
     parser.add_argument("output_dir", nargs="?")
     parser.add_argument("root_tex", nargs="?")
     parser.add_argument("--engine-profile", choices=("etex", "pdftex"), default="etex")
+    search = parser.add_mutually_exclusive_group()
+    search.add_argument("--tex-resource-root", type=Path, action="append", default=None)
+    search.add_argument("--project-only-resources", action="store_true")
     args = parser.parse_args()
     text, manifest, output, ledger = preprocess_paper(args.project_dir, output_dir=args.output_dir,
-                                                    root_tex=args.root_tex, engine_profile=args.engine_profile)
+        root_tex=args.root_tex, engine_profile=args.engine_profile,
+        tex_resource_roots=() if args.project_only_resources else args.tex_resource_root)
     print(f"Prepared {manifest.root_file} -> {output / 'master.tex'} "
           f"({len(text):,} characters; {manifest.preparation_status})")

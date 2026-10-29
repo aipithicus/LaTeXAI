@@ -42,7 +42,7 @@ def prefix(host, opening, meaning: PrimitiveMeaning[str]):
             break
         else:
             raise ReadingIssue("assignment_prefix", "EOF after assignment prefix")
-        previous = getattr(host, "assignment_prefixes", frozenset())
+        previous: frozenset[str] = getattr(host, "assignment_prefixes", frozenset())
         host.assignment_prefixes = frozenset(prefixes)
         try:
             if host.program:

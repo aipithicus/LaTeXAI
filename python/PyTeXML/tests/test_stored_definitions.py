@@ -298,7 +298,7 @@ class StoredDefinitionTests(unittest.TestCase):
         self.assertIs(self.context.lookup_definition("x"), definition)
 
     def test_prefixed_and_other_wrapper_forms_remain_boundaries(self):
-        for command in ("global", "long", "outer", "protected", "providecommand", "DeclareRobustCommand"):
+        for command in ("global", "long", "outer", "protected", "DeclareRobustCommand"):
             with self.subTest(command=command):
                 source = "\\" + command + r"\x{\makeatletter}"
                 self.setup_reader(source)

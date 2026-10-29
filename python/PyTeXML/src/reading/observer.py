@@ -57,7 +57,7 @@ def observe_source(reader, context, knowledge):
                     yield token
                     yield target
                     continue
-                if profile.family == "stored_definition":
+                if profile.family == "format_declaration":
                     definition = definitions.read(token.span.start, profile)
                     shadowed.add(definition.target.value)
                     yield definition

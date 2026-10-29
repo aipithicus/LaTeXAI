@@ -81,17 +81,20 @@ class _ImplicitGraphic:
 
 class PreparationSession:
     def __init__(self, project_dir: Path, *, root_tex=None, excluded_dirs=(), engine="pytexml", catalog=None, policy="prepare",
-                 engine_profile="etex"):
+                 engine_profile="etex", tex_resource_roots=None):
         self.policy = load_policy(policy)
         self.emitter = MouthEmitter(self.policy)
         self.store = SourceStore(project_dir, excluded_dirs)
         self.resolver = BindingResolver(catalog, engine_profile=engine_profile)
         self.root = select_root(self.store, root_tex, catalog=self.resolver.catalog, engine_profile=engine_profile)
         self.context = self.resolver.new_context()
+        from ..engine.resources import ResourceSearch
+        self.resources = ResourceSearch(tex_resource_roots)
         self.literal_payloads = {}
         self.manifest = PreflightManifest(self.name(self.root), self.root.stem, str(self.store.root), engine,
             BibliographyInfo("NONE", None, None, False, False))
         self.manifest.engine_profile = self.context.engine_profile.record()
+        self.manifest.engine_profile['resource_search'] = self.resources.record()
         self.lint = PreparationLint(self.policy.linting)
         self.manifest.lint = self.lint.report
         self.pieces: list[SourcePiece] = []
@@ -107,6 +110,7 @@ class PreparationSession:
         self.code: set[Path] = set()
         self.retained_search_dirs: dict[Path, set[Path]] = {}
         self.retained_resources: dict[str, Path] = {}
+        self.tested_resources: dict[str, Path] = {}
         self.payload_edits: dict[Path, dict[tuple[int, int], str]] = {}
         self.commands: list[SourceCommand] = []
         self.documents = {}
@@ -644,9 +648,20 @@ class PreparationSession:
         if action == "external_literal":
             prepare_external_literal(self, command)
             return
+        if action == 'file_exists':
+            from .file_tests import file_exists
+            file_exists(self, command)
+            return
         if action == "optional_source_input":
-            # Do not equate absence from author files with absence from TeX's
-            # search path. Nonempty branches also require ordered execution.
+            # Existence and execution are separate. Definite absence selects
+            # the else branch; a found external input still needs source entry.
+            from .file_tests import lookup_file, file_exists
+            if self.resources.closed:
+                _, project_file, external_file = lookup_file(self, command)
+                if project_file is None and external_file is None:
+                    self._observations[command.span.basis].remove(command)
+                    file_exists(self, command)
+                    return
             target = command.value("target")
             path = self.resolve(target, [""] if Path(target).suffix else [".tex", ""], command.span, required=False)
             if path is not None and not any(command.argument(n).tokens for n in ("then", "else")):
@@ -950,7 +965,10 @@ class PreparationSession:
                             self.emit(frame.command.span, "\\clearpage ", operation="INCLUDE_BOUNDARY")
                     continue
                 raise _PreserveRemainder
-            self.observe(item)
+            # A selected file test is covered by its emitted boundaries and
+            # branch items. Observing the whole envelope would double-count it.
+            if not isinstance(item, SourceCommand) or item.action != 'file_exists':
+                self.observe(item)
             if isinstance(item, SourceEnd):
                 self.omit(item.span, "Unread remainder after endinput")
                 # Carry a zero-width cursor through the same ordered emission

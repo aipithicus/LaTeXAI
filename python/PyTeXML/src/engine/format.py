@@ -8,9 +8,12 @@ from ..reading.tex_reader import TokenKind
 
 
 def latex_meanings():
+    from .primitive import PrimitiveMeaning
     # ltplain.dtx v2.3m (2025/04/14), initial catcode setup:
     # \chardef\active=13. No manuscript source span is fabricated for the format.
-    return {(TokenKind.CONTROL_SEQUENCE, "active"): CharacterCodeMeaning(
+    return {**{(TokenKind.CONTROL_SEQUENCE, name): PrimitiveMeaning('execution.relax', None)
+               for name in ('protect', '@typeset@protect')},
+        (TokenKind.CONTROL_SEQUENCE, "active"): CharacterCodeMeaning(
         None, 13, format_origin="https://github.com/latex3/latex2e/blob/develop/base/ltplain.dtx#L118"),
         # ltclass.dtx: \let\CurrentOption\@empty.
         (TokenKind.CONTROL_SEQUENCE, "CurrentOption"): TokenListMeaning(
@@ -19,4 +22,4 @@ def latex_meanings():
         # witness. Missing catalog entries in general are NOT undefined.
         **{(TokenKind.CONTROL_SEQUENCE, name): UndefinedMeaning(
             None, format_origin="latex baseline: undefined sentinels; tests/fixtures/engine/meaning-comparison.tex")
-           for name in ("undefined", "@undefined")}}
+           for name in ("undefined", "@undefined", "input@path")}}

@@ -127,6 +127,16 @@ def prepare_bibliography(pieces, session, output_dir: Path):
     if existing:
         environments = {c.action for c in commands if c.metadata.get("bibliography")}
         if not {"environment_begin", "environment_end"} <= environments:
+            if any(r['source'] == session.name(existing) for r in manifest.unresolved):
+                # A reading boundary retained this BBL; it did not establish a
+                # malformed bibliography. Publish the original request and the
+                # jobname resource instead of requiring a partial traversal to
+                # prove its complete environment and key set.
+                session.retained_resources['master.bbl'] = existing
+                info.preparation_backend = 'deferred-reading'
+                retained = _preserve_declarations(pieces, session, command, 'bibliography_reading',
+                    'The supplied BBL was retained at a reading boundary; its complete entry set is unresolved')
+                return [p for p in retained if p is declaration or not (p.command and p.command.action == 'bibliography')]
             raise BibliographyPreparationError("Prepared .bbl does not contain a complete thebibliography environment")
         entry_keys = {c.value(c.metadata["bibliography_key"]) for c in commands if c.metadata.get("bibliography_key")}
     missing = [key for key in keys if key != "*" and key not in entry_keys

@@ -243,24 +243,18 @@ class BindingCatalog:
                     if (set(grammar) - {"handler", "arity", "body_start"} or grammar.get("arity") != 0
                             or grammar.get("body_start", "after_header") not in {"after_header", "next_physical_line"}):
                         raise ProfileError(f"{path}: invalid physical-line literal grammar for {name}")
-                if spec.get("family") in ("stored_definition", "collected_environment_definition"):
-                    environment = spec.get("family") == "collected_environment_definition"
-                    if grammar.get("handler") == "command_definition" or environment:
-                        if (set(grammar) != {"handler", "expansion", "target_requirement", "forbidden_names", "forbidden_prefixes"}
-                                or grammar.get("handler") != ("collected_environment_definition" if environment else "command_definition")
-                                or grammar.get("expansion") != "none" or spec.get("scope") != "local"
-                                or grammar.get("target_requirement") not in ("absent", "present")
-                                or any(not isinstance(grammar.get(key), list)
-                                       or any(not isinstance(value, str) or not value for value in grammar[key])
-                                       for key in ("forbidden_names", "forbidden_prefixes"))):
-                            raise ProfileError(f"{path}: {name} requires a local command definition recipe")
-                        if environment:
-                            self._validate_collector(spec.get("metadata"), path)
-                    elif (set(grammar) != {"handler", "expansion"}
-                          or grammar.get("handler") != "primitive_definition"
-                          or grammar.get("expansion") not in ("none", "full")
-                          or spec.get("scope") not in ("local", "global")):
-                        raise ProfileError(f"{path}: {name} requires a primitive definition grammar, expansion and scope")
+                if spec.get("family") == "stored_definition" or grammar.get("handler") == "command_definition":
+                    raise ProfileError(f"{path}: {name} command definitions are owned by the Python format registry")
+                if spec.get("family") == "collected_environment_definition":
+                    if (set(grammar) != {"handler", "expansion", "target_requirement", "forbidden_names", "forbidden_prefixes"}
+                            or grammar.get("handler") != "collected_environment_definition"
+                            or grammar.get("expansion") != "none" or spec.get("scope") != "local"
+                            or grammar.get("target_requirement") not in ("absent", "present")
+                            or any(not isinstance(grammar.get(key), list)
+                                   or any(not isinstance(value, str) or not value for value in grammar[key])
+                                   for key in ("forbidden_names", "forbidden_prefixes"))):
+                        raise ProfileError(f"{path}: {name} requires a local environment definition recipe")
+                    self._validate_collector(spec.get("metadata"), path)
                 if spec.get("family") == "expansion_control" and grammar != {"handler": "noexpand"}:
                     raise ProfileError(f"{path}: {name} requires a supported expansion-control grammar")
                 if spec.get("family") in {"meaning_assignment", "assignment_prefix"}:
