@@ -36,6 +36,11 @@ descriptors. The named primitive-alias layer includes 442 undefined entries, and
 `exp_args:Nc` is a macro. These facts constrain the interpretation of cost and
 coverage without changing the raw assay. Workload-selected Q4 family gates remain;
 static exception frontiers inform their investigation rather than defining it.
+The user's subsequent clarification makes the wider exception corpus an input
+to mechanism discovery and anticipatory testing, including cases outside current
+workload demand. Group patterns, identify failing assumptions and qualify general
+rules; do not turn exception names into individual engine additions. The
+qualification note records this purpose separately from completed measurements.
 
 ## 2026-10-29: qualify the assay as an oracle for source-derived meanings
 

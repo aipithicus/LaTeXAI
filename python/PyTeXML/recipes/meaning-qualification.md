@@ -5,6 +5,31 @@ reference corpus are unchanged. Native-display triage and source-state compariso
 are implemented; representation compaction and a derived-state snapshot are
 scheduled prerequisites, not implemented features.
 
+## Purpose of studying exceptions
+
+The user's intent is to extract general design insights from the exception
+corpus, including cases outside immediate manuscript demand. Investigate which
+assumptions, representations and operation contracts fail across many examples;
+use that knowledge to make the engine robust to unseen cases. A list of names
+or package-specific repairs is not the intended output of this study.
+
+Group cases by mechanism, build minimal native contrasts, distinguish a general
+engine rule from format/package behavior or an actual historical special case,
+then qualify the resulting contract with varied examples across families.
+The census alone does not establish that native TeX implemented these behaviors
+case by case. LaTeXML's accumulated bindings are useful comparative evidence,
+not proof that PyTeXML needs the same accumulation strategy.
+
+The first demonstrated lesson is that printed names are not a serialization of
+token identity. A representation must preserve arbitrary control-sequence names,
+token kinds and categories independently of current source-tokenization rules.
+That principle covers classes of generated names and spacing cases at once.
+Further studies can test definition-time versus current lexical state, parameter
+syntax, aliases, scope, initialized data and error continuations without waiting
+for each example to block a document. Label hypotheses separately from qualified
+rules. Workload evidence prioritizes implementation; broader exception study
+informs architecture and anticipatory regression tests.
+
 ## Display differences: 2026-10-29 triage
 
 The 533 records classified `python_meaning_display_differs` were reconstructed
