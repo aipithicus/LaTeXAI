@@ -20,3 +20,6 @@
 # Source-execution development and native differential receipts.
 /temp/engine-source-work/
 /temp/bootstrap-work/
+
+# Native census, reconstruction probes and cost receipts (frozen fixtures are tracked).
+/temp/meaning-assays/

@@ -4,6 +4,59 @@ This file records implementation and qualification evidence. Current priorities
 live in the [working queue](../../../../aipithicus-issues/LaTeXAI/briefs/pytexml-language-core/working-queue.md);
 dated next-step statements below describe their checkpoint, not current dispatch.
 
+## 2026-10-29: frontloaded native knowledge assay and generated fixture corpus
+
+The user's assay is now executable ahead of Q4 implementation. See the
+[meaning-assay recipe](meaning-assay.md) for the method, complete category
+tables, exception classes, costs and reproduction commands. It uses the pinned
+LuaLaTeX hash inventory, source vocabulary and iterative pdfTeX reference
+discovery. Native `ifx` qualifies reconstructed macros; printed equality alone
+does not. The native formats agree on LaTeX2e 2026-06-01 and expl3 2026-09-09.
+
+The final run inventories **23,160 candidates**, including **20,239 observed
+pdfTeX-defined names** and **17,546 macros**. Lua contributes 23,039 hash entries,
+including 1,549 undefined entries and one unavailable empty-name token. There
+are **40 target-defined names absent from Lua's hash**, so a Lua census alone is
+not target-complete. Cross-engine displays agree for 19,990 compared names and
+differ for 2,697; neither count proves cross-engine token equality.
+
+**15,481 first-regime and 71 alternate-regime reconstructions pass native `ifx`.**
+The remaining 1,994 macros and 352 names outside the probe's byte-name domain
+are individually recorded exceptions. A native error does not terminate the
+whole census: the rejected record is isolated and subsequent candidates resume.
+The four native error logs and their parameter-token limitation are documented
+in the recipe. Non-macro meanings are inventoried without claiming register
+initialization or primitive behavior has been reconstructed.
+
+The graph has 51,702 static control-sequence references and four active-character
+edges, with 2,270 possible computed-name users. It records body references and
+fan-in, not execution counts or complete intrinsic eligibility sets. A frozen
+1,416,829-byte gzip corpus supplies **15,552 generated fixtures** to the ordinary
+test tree, with semantic descriptors, hashes and basis/probe provenance.
+
+The accepted PyTeXML object representation retains **73,143,908 bytes (69.76
+MiB)** for 301,919 body tokens plus 39,187 parameter tokens. The assay takes
+38.043 seconds wall, 30.703 seconds Python CPU and 5.328 seconds native CPU;
+Python peak resident memory is 266.57 MiB, and the largest native peak is 111.05
+MiB. The traced construction pass, measurement scopes and the user's concurrent
+Bayesian/Monte Carlo workloads are explicit. This is not a performance baseline,
+runtime installation measurement or package-cost allocation.
+
+Qualification: **56 focused tests pass**, including replay of every generated
+entry and the existing meaning assignment/comparison tests. Native run evidence
+is retained under PyTeXML's `temp/meaning-assays/20261029-final`; outer receipts
+are under repository `temp/meaning-assay-final-receipt` and
+`temp/meaning-assay-fixture-receipt`. Earlier failed attempts remain evidence and
+do not qualify the frozen snapshot. The snapshot is code-fingerprinted from the
+working tree based on `3e6ae49` before this change's commit.
+
+Implemented: acquisition assay, bounded candidate validation, graph, reporting
+and fixture replay. Still proposed: a generic lossless serializer, complete
+target-only coverage, non-macro state installation, production tables, interned
+identities, dependency guards and intrinsics. No preparation behavior changed;
+the all-nine document status is not requalified by this assay. Q2 remains the
+next engine increment; Q4 now starts from measured acquisition evidence.
+
 ## 2026-10-29: Q4 acquisition proposal and meaning-identity counterexamples
 
 Q4 now proposes offline extraction through the pinned native engine/format,
