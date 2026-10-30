@@ -7,7 +7,7 @@ from dataclasses import dataclass, replace
 from types import MappingProxyType
 from ..reading.contracts import ReadingIssue
 from ..reading.spans import SourceBasis
-from ..reading.tex_reader import CatCode, TexReader
+from ..reading.tex_reader import CatCode, TexReader, Token, TokenKind
 
 
 @dataclass(frozen=True, slots=True)
@@ -69,7 +69,7 @@ class ReadStreams:
         self.check()
         self.streams[index] = None
 
-    def read(self, index, context, *, budget=10000):
+    def read(self, index, context, *, budget=10000, raw=False):
         self.check()
         if self.eof(index):
             raise ReadingIssue("terminal_input", "Reading a closed stream would require terminal input")
@@ -84,6 +84,11 @@ class ReadStreams:
                 if depth:
                     raise ReadingIssue("unbalanced_read", "File ended within a read group")
                 self.streams[index] = None
+                if raw:
+                    return (() if not 0 <= context.endlinechar <= 255 else
+                            (Token(TokenKind.CHARACTER, chr(context.endlinechar),
+                                   CatCode.SPACE if context.endlinechar == 32 else CatCode.OTHER,
+                                   source.basis.span(position, position), transformed=True),))
                 # TeX appends one empty line when a read discovers EOF.
                 empty = TexReader("\n", catcodes=context.catcodes, endline_char=context.endlinechar)
                 for token in iter(empty.next_token, None):
@@ -94,6 +99,18 @@ class ReadStreams:
                 end += 1
             if end < len(source.text):
                 end += 2 if source.text[end:end + 2] == "\r\n" else 1
+            if raw:
+                text = source.text[position:end].rstrip("\r\n").rstrip(" ")
+                if len(text) + 1 > budget:
+                    raise ReadingIssue("read_budget", "Read token list exceeds the bounded input budget")
+                tokens = [Token(TokenKind.CHARACTER, char, CatCode.SPACE if char == " " else CatCode.OTHER,
+                                source.basis.span(position + i, position + i + 1)) for i, char in enumerate(text)]
+                if 0 <= context.endlinechar <= 255:
+                    tokens.append(Token(TokenKind.CHARACTER, chr(context.endlinechar),
+                                        CatCode.SPACE if context.endlinechar == 32 else CatCode.OTHER,
+                                        source.basis.span(position + len(text), end), transformed=True))
+                self.streams[index] = ReadStream(source, end)
+                return tuple(tokens)
             line = mouth.line_window(source.basis.span(position, end))
             for token in iter(line.next_token, None):
                 depth += (token.catcode == CatCode.BEGIN_GROUP) - (token.catcode == CatCode.END_GROUP)

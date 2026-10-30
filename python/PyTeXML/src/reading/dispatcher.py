@@ -184,6 +184,20 @@ class StructuralDispatcher:
         with language_checkpoint(self, boundary="expansion_and_operation"):
             return execute(self, opening)
 
+    def insert_tokens(self, tokens, anchor):
+        """Execute frozen inserted input without retokenizing its characters.
+
+        A frozen program owns its whole tail. Physical input admits a complete
+        bounded setup insertion; cross-frame operands remain explicit boundaries.
+        """
+        from ..engine.programs import evaluate, frozen_reader, SETUP
+        if self.program:
+            tail = tuple(iter(self.reader.next_token, None))
+            self.program_budget.charge(len(tokens) + len(tail))
+            self._set_reader(frozen_reader(self, (*tokens, *tail), anchor))
+        else:
+            evaluate(self, tokens, anchor, policy=SETUP)
+
     def enter_source(self, reader: TexReader, *, catcode_overrides: dict[str, int] | None = None,
                      options: OptionScope | None = None) -> None:
         """Suspend one mouth; execution scopes/conditionals belong to the document."""
@@ -1029,8 +1043,13 @@ class StructuralDispatcher:
         self._require(bool(self._groups), "unmatched_group", "No source group is available to close")
         self._require(self._groups[-1].kind == kind, "mismatched_group",
                       f"Cannot close {self._groups[-1].kind} group with {kind} closer")
+        after = tuple(self.context.after_groups[-1])
+        anchor = self._groups[-1].opening
         self.context.pop_scope()
         self._groups.pop()
+        self.reader.endline_char = self.context.endlinechar
+        if after:
+            self.insert_tokens(after, anchor)
 
     def _environment_name(self) -> str:
         """Read a non-expanding argument; braces here are not execution groups."""

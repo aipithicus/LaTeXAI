@@ -7,6 +7,11 @@ transactional context. It does not establish the note's dispatch percentages or
 claim a complete LaTeX format build. No manuscript or macro-name answer table is
 installed.
 
+This records the expansion-core checkpoint. The later
+[state and format checkpoint](state-format-building.md) extends its glue,
+dimension-unit, font-loading and format-snapshot boundaries; the limits below
+describe this earlier qualification.
+
 ## Implemented scope
 
 | Mechanism | Operations and qualification |

@@ -79,16 +79,24 @@ Complete deferred-write summaries invalidate only their named cells.
 These assignments remain authored TeX in the payload. Recording `\pdfoutput`
 does not select a compiler, infer engine identity, or execute PDF backend
 operations. Count/dimension cells, their aliases, `advance`, global assignment
-prefixes and `endlinechar` now share this state. General register allocation and
-the remaining arithmetic operations are later increments.
+prefixes and `endlinechar` now share this state. The state checkpoint also adds
+glue registers and multiplication/division. General register allocation remains
+source-derived format behavior.
 
 The [expansion-core checkpoint](recipes/expansion-core.md) implements the 31
 named operations selected in the document trace, within the existing bounded
 execution framework. It adds Roman conversion, case and absolute-integer tests,
 typed `the` values, token registers, font parameter arrays and snapshot-backed
-`read`/`ifeof`. Font loading, general dimension units, terminal input and full
-format startup are outside this checkpoint's qualification. Input files must be
+`read`/`ifeof`. Input files must be
 supplied explicitly by their source owner; the core does not search the host.
+
+The [state and format checkpoint](recipes/state-format-building.md) adds code
+tables, case conversion, glue arithmetic, parameter families, raw-line reads,
+TFM-backed font parameters and bounded token scheduling. Its INITEX consumer can
+build, dump and restore a small source-defined format, with source/code hashes,
+shared aliases and provenance. Thirteen observations match native build/restore
+witnesses. Full LaTeX startup and collection-scale snapshot qualification remain
+open; terminal input and layout are not implemented by this consumer.
 
 [engine/format.py](src/engine/format.py) installs the supported LaTeX-format
 meanings in each document's mutable state. The initial entry is `\active`, the

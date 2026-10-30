@@ -1,7 +1,20 @@
 """Scope operations over the existing state journal and execution group stack."""
 from ..operations import ExecutableOperation, ExpansionKind, OperationFamily, PrimitiveOperation
 from ..primitive import PrimitiveMeaning
-from ...reading.contracts import EffectiveReadingProfile, ReadingIssue
+from ...reading.contracts import EffectiveReadingProfile, ReadingIssue, SourceCommand
+
+
+def schedule(host, opening, meaning):
+    token = host.reader.next_token()
+    if token is None:
+        raise ReadingIssue("after_token", "Scheduling requires one raw token")
+    if meaning.operand == "assignment":
+        host.context.after_assignment = token
+    elif host.context.after_groups:
+        host.context.after_groups[-1].append(token)
+    span = host.reader.source_span(opening.span.start, host.reader.position)
+    return SourceCommand(span, opening.token.value, "state_transformation",
+                         metadata={"trailing_control_word": token.control_word and token.span.end == host.reader.position})
 
 
 def validate_effect(profile):
@@ -50,9 +63,11 @@ def apply_lexical_profile(host, opening, profile):
 
 BEGIN = PrimitiveOperation("scope.begin", ExpansionKind.UNEXPANDABLE, begin_scope, operand_type=str)
 END = PrimitiveOperation("scope.end", ExpansionKind.UNEXPANDABLE, end_scope, operand_type=str)
+AFTER = PrimitiveOperation("scope.after", ExpansionKind.UNEXPANDABLE, schedule, operand_type=str)
 
 FAMILY = OperationFamily(
-    operations=(BEGIN, END, ExecutableOperation[EffectiveReadingProfile](
+    operations=(BEGIN, END, AFTER, ExecutableOperation[EffectiveReadingProfile](
         "reading.apply_lexical_profile", ExpansionKind.INTERNAL, apply_lexical_profile)),
-    primitives=(BEGIN.declare("begingroup", "semi_simple"), END.declare("endgroup", "semi_simple")),
+    primitives=(BEGIN.declare("begingroup", "semi_simple"), END.declare("endgroup", "semi_simple"),
+                AFTER.declare("afterassignment", "assignment"), AFTER.declare("aftergroup", "group")),
 )

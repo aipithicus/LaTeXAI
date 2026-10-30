@@ -22,7 +22,11 @@ def parameter_key(profile: PrimitiveMeaning[str]) -> str:
 def internal_value(scanner, profile: PrimitiveMeaning[str]):
     if profile.operand == "endlinechar":
         return InternalQuantity("integer", scanner.host.context.endlinechar)
-    return InternalQuantity("integer", scanner.host.context.integer_parameters.read(parameter_key(profile)))
+    key = parameter_key(profile)
+    if (scanner.host.context.primitive_initial_state and key not in CLOCK_PARAMETERS
+            and key not in scanner.host.context.integer_parameters.values):
+        return InternalQuantity("integer", INITIAL.get(key, 0))
+    return InternalQuantity("integer", scanner.host.context.integer_parameters.read(key))
 
 
 @atomic
@@ -55,8 +59,13 @@ ASSIGN = PrimitiveOperation("parameter.assign_integer", ExpansionKind.UNEXPANDAB
                             internal_value, operand_type=str, capture=capture,
                             accepted_prefixes=frozenset({"global"}))
 
+INITIAL = {"mag": 1000, "tolerance": 10000, "hangafter": 1, "maxdeadcycles": 25,
+           "defaulthyphenchar": 45, "defaultskewchar": -1}
+CLOCK_PARAMETERS = frozenset({"time", "day", "month", "year"})
+INTEGERS = "pretolerance tolerance linepenalty hyphenpenalty exhyphenpenalty clubpenalty widowpenalty displaywidowpenalty brokenpenalty binoppenalty relpenalty predisplaypenalty postdisplaypenalty interlinepenalty doublehyphendemerits finalhyphendemerits adjdemerits mag delimiterfactor looseness time day month year showboxbreadth showboxdepth hbadness vbadness pausing tracingonline tracingmacros tracingstats tracingparagraphs tracingpages tracingoutput tracinglostchars tracingcommands tracingrestores uchyph outputpenalty maxdeadcycles hangafter floatingpenalty globaldefs fam escapechar defaulthyphenchar defaultskewchar endlinechar newlinechar language lefthyphenmin righthyphenmin holdinginserts errorcontextlines".split()
+
 FAMILY = OperationFamily(
     operations=(ASSIGN,),
-    primitives=(*(ASSIGN.declare(name, name) for name in ("widowpenalty", "clubpenalty", "escapechar", "newlinechar", "endlinechar", "globaldefs")),
+    primitives=(*(ASSIGN.declare(name, name) for name in INTEGERS),
                 ASSIGN.declare("pdfoutput", "pdfoutput", extension=True)),
 )

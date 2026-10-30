@@ -61,8 +61,8 @@ class ProgramBudget:
 PROGRAM_ACTIONS = frozenset({
     "hook_register", "hook_remove", "hook_unresolved", "hook_use", "hook_diagnostic",
     "meaning_assignment", "reading_assignment", "character_code_assignment",
-    "integer_parameter_assignment", "font_parameter_assignment", "input_stream_assignment", "token_register_assignment",
-    "boolean_declaration", "conditional_test", "reading_noop", "rescanned_definitions"})
+    "integer_parameter_assignment", "font_parameter_assignment", "input_stream_assignment", "token_register_assignment", "state_transformation",
+    "boolean_declaration", "conditional_test", "reading_noop", "rescanned_definitions", "format_message", "format_data"})
 
 
 @dataclass(frozen=True, slots=True)

@@ -4,6 +4,60 @@ This file records implementation and qualification evidence. Current priorities
 live in the [working queue](../../../../aipithicus-issues/LaTeXAI/briefs/pytexml-language-core/working-queue.md);
 dated next-step statements below describe their checkpoint, not current dispatch.
 
+## 2026-10-30: state families and bounded format build/restore
+
+The [state/format recipe](state-format-building.md) records the implemented
+families, explicit input/TFM inventory, INITEX driver, versioned JSON graph and
+remaining boundaries. A source-built format now reaches `dump`, restores shared
+aliases and source origins, and executes a new source with independent mutation.
+Runtime messages/jobname are not frozen document facts; `everyjob` runs after
+restoration against the new jobname. Snapshots reject incompatible inventories,
+engine/profile/schema changes, corruption and unsettled/unrepresented state.
+
+The native build-and-restore witness matches all **13 / 13 observations**, with
+zero mismatches or unqualified observations. Fifteen focused tests pass,
+including normal preparation preservation, separators and manifest serialization.
+The first broad regression run ran **1,263 tests: 1,260 passed, three skipped** before the
+final provenance, uncertainty, preparation and lifecycle guards were added.
+The final broad run ran **1,269 tests: 1,266 passed, three skipped**, in 307.764
+seconds. Clock initialization is supplied explicitly, keyed
+into the snapshot basis, and refreshed on entry; missing clock values remain
+typed boundaries. The registry check passed for 22 source
+files. Receipts are under
+`temp/engine-source-work/state-format-*`.
+
+During test development, the harness exposed two test errors:
+
+```text
+TypeError: TexReader.__init__() missing 1 required keyword-only argument: 'endline_char'
+FAIL: test_snapshot_restored_provenance_scope_and_independent_documents
+AssertionError: Tuples differ: (Token[...] ...) != (Token[...] ...)
+```
+
+The reader fixture now supplies its required setting. Restored provenance is
+compared by source identity fields and offsets across deserialization, with
+separate `is` assertions for aliases and shared source objects inside the restored
+graph. No runtime state was changed to make distinct source objects compare equal.
+
+A native edge probe then exposed a true-unit rounding difference:
+
+```text
+Python: TRUE=3946905,54613
+pdfTeX: TRUE=3946881,54613
+```
+
+TeX truncates magnification adjustment before unit conversion. The corrected
+scanner preserves that order, including true scaled points and the single-job
+magnification guard. The shared native fixture now includes the thirteenth
+observation (`3946881,54613,0`). After this final numeric correction, all **15
+state/format tests and 79 expansion tests** passed; the build/restore CLI passed
+again. The final counter receipts and snapshot are retained in
+`state-format-numeric-qualified` and `state-format-python` under the same root.
+
+This is a bounded format checkpoint, not full LaTeX startup. Q4R compact runtime
+representation and the broader Q4S production/collection qualification remain
+open. No complete-format meaning census or rendering equivalence is claimed.
+
 ## 2026-10-30: bounded expansion core
 
 The [expansion-core recipe](expansion-core.md) records the implemented scope,

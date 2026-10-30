@@ -37,6 +37,8 @@ def meaning_text(meaning, context):
     if isinstance(meaning, CharacterCodeMeaning):
         return escape(context) + 'char"' + format(meaning.value, "X")
     if isinstance(meaning, PrimitiveMeaning):
+        if meaning.operation == "math.character":
+            return escape(context) + 'mathchar"' + format(meaning.operand, "X")
         if meaning.operation == "register.assign" and meaning.operand.index is not None:
             return escape(context) + meaning.operand.kind + str(meaning.operand.index)
         from .catalog import COMMON_PRIMITIVES, EXTENSIONS

@@ -4,6 +4,7 @@ The source/format owner supplies metrics through establish(). TeX font parameter
 are global even inside a group; transactions still restore failed requests.
 """
 from dataclasses import dataclass, replace
+from types import MappingProxyType
 from ..reading.contracts import ReadingIssue
 
 
@@ -17,10 +18,18 @@ class FontState:
     def __init__(self, *, initial=False):
         self.values = {"nullfont": FontParameters((0,) * 7)} if initial else {}
         self.latest = "nullfont" if initial else None
+        self.sources = None
+        self.identifiers = {"nullfont": "nullfont"} if initial else {}
+
+    def configure(self, sources):
+        if any(type(value) is not bytes for value in sources.values()):
+            raise TypeError("Font inventory requires TFM bytes")
+        self.sources = MappingProxyType(dict(sources))
 
     def copy(self):
         result = FontState()
         result.values, result.latest = dict(self.values), self.latest
+        result.sources, result.identifiers = self.sources, dict(self.identifiers)
         return result
 
     def establish(self, identity, dimensions):

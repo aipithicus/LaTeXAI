@@ -107,8 +107,18 @@ def the(cursor, token, meaning):
         cursor._charge(len(quantity.value))
         return TokenListInsertion(quantity.value)
     if quantity.kind == "font":
-        raise ReadingIssue("conversion_argument", "Font token conversion requires a font selector")
-    text = print_scaled(quantity.value) if quantity.kind == "dimension" else str(quantity.value)
+        name = cursor.context.fonts.identifiers[quantity.value]
+        from ..primitive import PrimitiveMeaning
+        selector = cursor.context.resolve_meaning(cursor.knowledge, name)
+        if not isinstance(selector, PrimitiveMeaning) or selector.operation != "font.identifier" or selector.operand != quantity.value:
+            raise ReadingIssue("font_selector", "The original font selector was redefined; a frozen font token is required")
+        return TokenListInsertion((Token(TokenKind.CONTROL_SEQUENCE, name, None, token.span,
+                                         transformed=True, control_word=True),))
+    if quantity.kind in {"glue", "muglue"}:
+        from ..dimensions import glue_text
+        text = glue_text(quantity.value, mu=quantity.kind == "muglue")
+    else:
+        text = print_scaled(quantity.value) if quantity.kind == "dimension" else str(quantity.value)
     return characters(cursor, text, token.span, insertion=True)
 
 

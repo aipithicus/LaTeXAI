@@ -60,13 +60,41 @@ def capture_character_target(reader, context, token, meaning: PrimitiveMeaning[N
         return AssignmentTarget(AssignmentScanner(reader, context).target())
 
 
+@atomic
+def define_math_character(host, opening, meaning):
+    target = AssignmentScanner(host.reader, host.context).target()
+    scanner = IntegerScanner(host, relaxed_target=(target.kind, target.value))
+    scanner.optional_equals()
+    number = scanner.integer()
+    if not 0 <= number <= 32767:
+        raise ReadingIssue("invalid_assignment", "mathchardef value is outside 0..32767")
+    scanner.finish()
+    span = host.reader.source_span(opening.span.start, host.reader.position)
+    host.context.record_meaning(target.value, PrimitiveMeaning("math.character", number, span), target.kind,
+                                global_=assignment_global(host))
+    return SourceCommand(span, opening.token.value, "character_code_assignment")
+
+
+def math_character(host, opening, meaning):
+    raise ReadingIssue("math_character", "Math character execution requires a math list consumer")
+
+
+def math_character_value(scanner, meaning):
+    return InternalQuantity("integer", meaning.operand)
+
+
 CATCODE = PrimitiveOperation("reading.assign_catcode", ExpansionKind.UNEXPANDABLE, assign_catcode,
                              catcode_value, operand_type=type(None), accepted_prefixes=frozenset({"global"}))
 CHARDEF = PrimitiveOperation("meaning.define_character_code", ExpansionKind.UNEXPANDABLE, define_character_code,
                              operand_type=type(None), capture=capture_character_target,
                              accepted_prefixes=frozenset({"global"}))
 
+MATHCHARDEF = PrimitiveOperation("meaning.define_math_character", ExpansionKind.UNEXPANDABLE, define_math_character,
+    operand_type=type(None), accepted_prefixes=frozenset({"global"}))
+MATHCHAR = PrimitiveOperation("math.character", ExpansionKind.UNEXPANDABLE, math_character, math_character_value,
+    operand_type=int)
 FAMILY = OperationFamily(
-    operations=(CATCODE, CHARDEF),
-    primitives=(CATCODE.declare("catcode", None), CHARDEF.declare("chardef", None)),
+    operations=(CATCODE, CHARDEF, MATHCHARDEF, MATHCHAR),
+    primitives=(CATCODE.declare("catcode", None), CHARDEF.declare("chardef", None),
+                MATHCHARDEF.declare("mathchardef", None)),
 )

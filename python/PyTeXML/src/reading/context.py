@@ -17,6 +17,7 @@ from ..engine.hooks import HookState
 from ..engine.fonts import FontState
 from ..engine.read_streams import ReadStreams
 from ..engine.token_registers import TokenRegisters
+from ..engine.state_cells import StateCells
 
 
 DefinitionKey = tuple[TokenKind, str]
@@ -84,6 +85,9 @@ class ReaderContext:
         self.fonts = FontState(initial=primitive_initial_state)
         self.read_streams = ReadStreams(initial=primitive_initial_state)
         self.token_registers = TokenRegisters(initial=primitive_initial_state)
+        self.state_cells = StateCells()
+        self.after_assignment = None
+        self.after_groups = []
         self.hooks = HookState()
         # Preparation assumptions are derivations, not TeX state assignments.
         self.recovery_contexts: tuple[str, ...] = ()
@@ -117,6 +121,9 @@ class ReaderContext:
         ctx.fonts = self.fonts.copy()
         ctx.read_streams = self.read_streams.copy()
         ctx.token_registers = self.token_registers.copy()
+        ctx.state_cells = self.state_cells.copy()
+        ctx.after_assignment = self.after_assignment
+        ctx.after_groups = [list(tokens) for tokens in self.after_groups]
         ctx.hooks = self.hooks.copy()
         ctx.recovery_contexts = self.recovery_contexts
         return ctx
@@ -139,6 +146,9 @@ class ReaderContext:
         self.fonts = saved.fonts.copy()
         self.read_streams = saved.read_streams.copy()
         self.token_registers = saved.token_registers.copy()
+        self.state_cells = saved.state_cells.copy()
+        self.after_assignment = saved.after_assignment
+        self.after_groups = [list(tokens) for tokens in saved.after_groups]
         self.hooks = saved.hooks.copy()
         self.recovery_contexts = saved.recovery_contexts
 
@@ -219,6 +229,7 @@ class ReaderContext:
         # retain uncertainty rather than publishing a value after unknown writes.
         if summary.registers:
             changed |= self.fonts.invalidate(span)
+            changed |= self.state_cells.invalidate(span)
         for key in keys:
             previous = self._meanings.get(key)
             if not global_ and self._meaning_scopes:
@@ -282,6 +293,7 @@ class ReaderContext:
         changed |= self.fonts.invalidate(span)
         changed |= self.read_streams.invalidate(span)
         changed |= self.token_registers.invalidate(span)
+        changed |= self.state_cells.invalidate(span)
         for meanings in (self._meanings, *self._meaning_scopes):
             for key, meaning in list(meanings.items()):
                 if isinstance(meaning, (BooleanMeaning, BoundMeaning, CharacterCodeMeaning, TokenListMeaning, UndefinedMeaning, PrimitiveMeaning)) and meaning.uncertain is None:
@@ -365,6 +377,8 @@ class ReaderContext:
         self.configurations.push()
         self.integer_parameters.push()
         self.token_registers.push()
+        self.state_cells.push()
+        self.after_groups.append([])
 
     @property
     def scope_depth(self) -> int:
@@ -390,6 +404,8 @@ class ReaderContext:
         self.configurations.pop()
         self.integer_parameters.pop()
         self.token_registers.pop()
+        self.state_cells.pop()
+        self.after_groups.pop()
         for key, previous in self._meaning_scopes.pop().items():
             if previous is None:
                 self._meanings.pop(key, None)

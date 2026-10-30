@@ -1,0 +1,11 @@
+{
+  "entry": "state-format.tex",
+  "profile": "pdftex",
+  "sources": {
+    "state-format.tex": "state-format.tex",
+    "state-format-source.tex": "state-format-source.tex",
+    "state-format-read.txt": "state-format-read.txt",
+    "state-format-resume.tex": "state-format-resume.tex"
+  },
+  "metrics": {"cmr10.tfm": "cmr10.tfm"}
+}

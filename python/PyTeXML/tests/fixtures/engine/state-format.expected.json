@@ -1,0 +1,21 @@
+{
+  "oracle": "pdfTeX 3.141592653-2.6-1.40.29 (TeX Live 2026), INITEX extended mode, then restored native format",
+  "metric_sha256": "87f2d8981927644cbecaf3d639e96e348ea4e7be49d8804468bd8ba9ff3f5244",
+  "build": [
+    "PYTEXML tables=122,65,1234,28993,1193046,28939",
+    "PYTEXML glue=-4.5pt plus -1.5fill minus -3.0pt;3.0mu plus 2.0fil",
+    "PYTEXML units=4736286,4736274,4736286,35062,1",
+    "PYTEXML after=20",
+    "PYTEXML case=z,A",
+    "PYTEXML parameters=24.0pt;13.0pt;A",
+    "PYTEXML font=262144;786434;64;2.0pt",
+    "PYTEXML readline=macro:->{\\x%#",
+    "PYTEXML trueunits=3946881,54613,0",
+    "PYTEXML write=20"
+  ],
+  "resume": [
+    "PYTEXML everyjob=state-format-resume",
+    "PYTEXML alias=same",
+    "PYTEXML resume=[X]:21;-4.5pt plus -1.5fill minus -3.0pt;2.0pt"
+  ]
+}

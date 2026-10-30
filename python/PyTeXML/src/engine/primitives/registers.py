@@ -1,131 +1,118 @@
-"""Typed count/dimension cells and register aliases share the scope journal."""
+"""Typed registers and parameters share scanning, arithmetic and scoped writes."""
 from dataclasses import dataclass
-from decimal import Decimal, ROUND_HALF_UP
 from ..integers import IntegerScanner
+from ..dimensions import Glue, checked, dimension as scan_dimension, glue, trunc_div
 from ..operations import ExpansionKind, OperationFamily, PrimitiveOperation
 from ..primitive import PrimitiveMeaning
 from ..quantities import InternalQuantity
 from ..transactions import atomic, assignment_global
 from ...reading.assignment_scanner import AssignmentScanner
 from ...reading.contracts import ReadingIssue, SourceCommand
-from ...reading.tex_reader import CatCode, TokenKind
 
 
 @dataclass(frozen=True)
 class Register:
     kind: str
     index: int | None = None
+    parameter: str | None = None
 
 
 def cell(scanner, operand):
+    if operand.parameter is not None:
+        return operand.parameter
     index = scanner.integer() if operand.index is None else operand.index
     if not 0 <= index <= 32767:
         raise ReadingIssue("register_index", "Register index is outside the e-TeX range")
     return f"{operand.kind}:{index}"
 
 
-def value(scanner, meaning):
-    key = cell(scanner, meaning.operand)
-    if meaning.operand.kind == "toks":
-        return InternalQuantity("tokens", scanner.host.context.token_registers.read(key))
-    return InternalQuantity("dimension" if meaning.operand.kind == "dimen" else "integer", read_cell(scanner, key))
-
-
-def read_cell(scanner, key):
-    if key not in scanner.host.context.integer_parameters.values:
-        # A bounded primitive initial state initializes register cells to zero.
-        if not getattr(scanner.host.context, "primitive_initial_state", False):
+def read_cell(scanner, key, kind="count"):
+    context = scanner.host.context
+    if kind == "toks":
+        return context.token_registers.read(key)
+    store = context.state_cells if kind in {"skip", "muskip"} else context.integer_parameters
+    if key not in store.values:
+        if not context.primitive_initial_state:
             raise ReadingIssue("unavailable_integer", "Register has no established initial value")
-        return 0
-    return scanner.host.context.integer_parameters.read(key)
+        return store.initial(Glue()) if kind in {"skip", "muskip"} else 0
+    return store.read(key)
+
+
+def value(scanner, meaning):
+    kind = meaning.operand.kind
+    return InternalQuantity({"count": "integer", "dimen": "dimension", "skip": "glue",
+                             "muskip": "muglue", "toks": "tokens"}[kind],
+                            read_cell(scanner, cell(scanner, meaning.operand), kind))
 
 
 def dimension(scanner):
-    # Unit scanning is deliberately capability-scoped; layout/font-relative units
-    # require services outside this source-bootstrap boundary.
-    parts, sign = [], 1
-    token = scanner.reader.next_expanded()
-    while token is not None:
-        if token.catcode == CatCode.SPACE:
-            pass
-        elif token.catcode == CatCode.OTHER and token.value in "+-":
-            if token.value == "-":
-                sign = -sign
-        else:
-            break
-        token = scanner.reader.next_expanded()
-    if token is not None and token.kind != TokenKind.CHARACTER:
-        quantity = scanner.internal(token)
-        if quantity.kind == "dimension":
-            return sign * quantity.value
-        if quantity.kind != "integer":
-            raise ReadingIssue("dimension_value", "Dimension requires a numeric internal quantity")
-        parts.append(str(quantity.value))
-        token = scanner.reader.next_expanded()
-    if not parts:
-        while token is not None and token.value in "0123456789.," and token.catcode == CatCode.OTHER:
-            parts.append(token.value)
-            token = scanner.reader.next_expanded()
-    while token is not None and token.catcode == CatCode.SPACE:
-        token = scanner.reader.next_expanded()
-    unit = ""
-    for _ in range(2):
-        if token is None or token.catcode not in {CatCode.LETTER, CatCode.OTHER} or len(token.value) != 1:
-            raise ReadingIssue("dimension_unit", "Missing dimension unit")
-        unit += token.value.lower()
-        token = scanner.reader.next_expanded()
-    if token is not None and token.catcode != CatCode.SPACE:
+    return scan_dimension(scanner)[0]
+
+
+def scan_value(scanner, kind):
+    if kind == "count":
+        return scanner.integer()
+    if kind == "dimen":
+        return dimension(scanner)
+    if kind in {"skip", "muskip"}:
+        return glue(scanner, mu=kind == "muskip")
+    from .conversions import group, is_opening_group
+    token = scanner._nonspace()
+    if is_opening_group(scanner.reader, token):
         scanner.reader.unread_token(token)
-    if unit not in {"pt", "sp"}:
-        raise ReadingIssue("dimension_unit", "Only explicit pt and sp units are established")
-    try:
-        number = Decimal("".join(parts).replace(",", "."))
-        scaled = sign * (int(number) if unit == "sp" else
-                         int((number * 65536).to_integral_value(rounding=ROUND_HALF_UP)))
-    except Exception as error:
-        raise ReadingIssue("dimension_value", "Invalid explicit dimension") from error
-    if abs(scaled) > 1073741823:
-        raise ReadingIssue("dimension_value", "Dimension exceeds TeX's range")
-    return scaled
+        return tuple(group(scanner.reader))
+    if token is not None:
+        quantity = scanner.internal(token)
+        if quantity.kind == "tokens":
+            return quantity.value
+    raise ReadingIssue("token_register_assignment", "Expected a group or token register")
+
+
+def publish(host, opening, scanner, key, kind, result):
+    scanner.finish()
+    span = host.reader.source_span(opening.span.start, host.reader.position)
+    store = (host.context.token_registers if kind == "toks" else
+             host.context.state_cells if kind in {"skip", "muskip"} else host.context.integer_parameters)
+    store.assign(key, result, span, global_=assignment_global(host))
+    if key == "endlinechar":
+        host.context.assign_endlinechar(result, global_=assignment_global(host))
+        host.reader.endline_char = result
+    return SourceCommand(span, opening.token.value,
+                         "token_register_assignment" if kind == "toks" else "integer_parameter_assignment",
+                         metadata={"parameter": key, "value": result,
+                                   "trailing_control_word": scanner.ends_control_word})
 
 
 @atomic
-def advance(host, opening, meaning):
+def arithmetic(host, opening, meaning):
     scanner = IntegerScanner(host)
     token = scanner._nonspace()
-    if token is None:
-        raise ReadingIssue("arithmetic_target", "Advance requires an assignable register")
-    resolved = scanner._meaning(token)
+    resolved = scanner._meaning(token) if token is not None else None
     if not isinstance(resolved, tuple):
-        raise ReadingIssue("arithmetic_target", "Advance requires an assignable register")
+        raise ReadingIssue("arithmetic_target", "Arithmetic requires an assignable register")
     target = resolved[1]
-    if target.operation == "register.assign":
-        if target.operand.kind == "toks":
-            raise ReadingIssue("arithmetic_target", "Token registers do not support arithmetic")
-        key = cell(scanner, target.operand)
-        kind = target.operand.kind
-        previous = read_cell(scanner, key)
+    if target.operation == "register.assign" and target.operand.kind != "toks":
+        key, kind = cell(scanner, target.operand), target.operand.kind
+        previous = read_cell(scanner, key, kind)
     elif target.operation == "parameter.assign_integer":
         key, kind = target.operand, "count"
-        previous = (host.context.endlinechar if key == "endlinechar" else
-                    host.context.integer_parameters.read(key))
+        from .parameters import internal_value
+        previous = internal_value(scanner, target).value
     else:
-        raise ReadingIssue("arithmetic_target", "Advance requires an integer or dimension register")
+        raise ReadingIssue("arithmetic_target", "Arithmetic requires a numeric register or parameter")
     scanner.keyword("by")
-    increment = scanner.integer() if kind == "count" else dimension(scanner)
-    result = previous + increment
-    if abs(result) > (2147483647 if kind == "count" else 1073741823):
-        raise ReadingIssue("arithmetic_overflow", "Advance exceeds the register range")
-    scanner.finish()
-    span = host.reader.source_span(opening.span.start, host.reader.position)
-    global_ = assignment_global(host)
-    host.context.integer_parameters.assign(key, result, span, global_=global_)
-    if key == "endlinechar":
-        host.context.assign_endlinechar(result, global_=global_)
-        host.reader.endline_char = result
-    return SourceCommand(span, opening.token.value, "integer_parameter_assignment",
-                         metadata={"parameter": key, "value": result,
-                                   "trailing_control_word": scanner.ends_control_word})
+    if meaning.operand == "advance":
+        amount = scan_value(scanner, kind)
+        result = previous.plus(amount) if isinstance(previous, Glue) else previous + amount
+    else:
+        amount = scanner.integer()
+        if isinstance(previous, Glue):
+            result = previous.scaled(amount, divide=meaning.operand == "divide")
+        else:
+            result = trunc_div(previous, amount) if meaning.operand == "divide" else previous * amount
+    if not isinstance(result, Glue):
+        checked(result, 2147483647 if kind == "count" else 1073741823)
+    return publish(host, opening, scanner, key, kind, result)
 
 
 @atomic
@@ -133,31 +120,7 @@ def assign(host, opening, meaning):
     scanner = IntegerScanner(host)
     key = cell(scanner, meaning.operand)
     scanner.optional_equals()
-    if meaning.operand.kind == "toks":
-        from .conversions import group, is_opening_group
-        token = scanner._nonspace()
-        if is_opening_group(scanner.reader, token):
-            scanner.reader.unread_token(token)
-            result = tuple(group(scanner.reader))
-        elif token is not None:
-            quantity = scanner.internal(token)
-            if quantity.kind != "tokens":
-                raise ReadingIssue("token_register_assignment", "Expected a group or token register")
-            result = quantity.value
-        else:
-            raise ReadingIssue("token_register_assignment", "Missing token register contents")
-        scanner.finish()
-        span = host.reader.source_span(opening.span.start, host.reader.position)
-        host.context.token_registers.assign(key, result, span, global_=assignment_global(host))
-        return SourceCommand(span, opening.token.value, "token_register_assignment",
-                             metadata={"register": key, "trailing_control_word": scanner.ends_control_word})
-    result = scanner.integer() if meaning.operand.kind == "count" else dimension(scanner)
-    scanner.finish()
-    span = host.reader.source_span(opening.span.start, host.reader.position)
-    host.context.integer_parameters.assign(key, result, span, global_=assignment_global(host))
-    return SourceCommand(span, opening.token.value, "integer_parameter_assignment",
-                         metadata={"parameter": key, "value": result,
-                                   "trailing_control_word": scanner.ends_control_word})
+    return publish(host, opening, scanner, key, meaning.operand.kind, scan_value(scanner, meaning.operand.kind))
 
 
 @atomic
@@ -176,11 +139,20 @@ def define(host, opening, meaning):
                          metadata={"donor_resolved": True, "trailing_control_word": scanner.ends_control_word})
 
 
+DIMENSIONS = "parindent mathsurround lineskiplimit hsize vsize maxdepth splitmaxdepth boxmaxdepth hfuzz vfuzz delimitershortfall nulldelimiterspace scriptspace predisplaysize displaywidth displayindent overfullrule hangindent hoffset voffset emergencystretch".split()
+GLUES = "lineskip baselineskip parskip abovedisplayskip belowdisplayskip abovedisplayshortskip belowdisplayshortskip leftskip rightskip topskip splittopskip tabskip spaceskip xspaceskip parfillskip".split()
+MUGLUES = "thinmuskip medmuskip thickmuskip".split()
+TOKENS = "output everypar everymath everydisplay everyhbox everyvbox everyjob everycr errhelp".split()
+
 ASSIGN = PrimitiveOperation("register.assign", ExpansionKind.UNEXPANDABLE, assign, value,
     operand_type=Register, accepted_prefixes=frozenset({"global"}))
 DEFINE = PrimitiveOperation("register.define", ExpansionKind.UNEXPANDABLE, define,
     operand_type=str, accepted_prefixes=frozenset({"global"}))
-ADVANCE = PrimitiveOperation("register.advance", ExpansionKind.UNEXPANDABLE, advance,
-    operand_type=type(None), accepted_prefixes=frozenset({"global"}))
-FAMILY = OperationFamily((ASSIGN, DEFINE, ADVANCE), tuple(ASSIGN.declare(k, Register(k)) for k in ("count", "dimen", "toks")) +
-    tuple(DEFINE.declare(k + "def", k) for k in ("count", "dimen", "toks")) + (ADVANCE.declare("advance", None),))
+ARITHMETIC = PrimitiveOperation("register.arithmetic", ExpansionKind.UNEXPANDABLE, arithmetic,
+    operand_type=str, accepted_prefixes=frozenset({"global"}))
+KINDS = ("count", "dimen", "skip", "muskip", "toks")
+FAMILY = OperationFamily((ASSIGN, DEFINE, ARITHMETIC), tuple(ASSIGN.declare(k, Register(k)) for k in KINDS) +
+    tuple(DEFINE.declare(k + "def", k) for k in KINDS) +
+    tuple(ARITHMETIC.declare(name, name) for name in ("advance", "multiply", "divide")) +
+    tuple(ASSIGN.declare(name, Register(kind, parameter=name)) for kind, names in
+          (("dimen", DIMENSIONS), ("skip", GLUES), ("muskip", MUGLUES), ("toks", TOKENS)) for name in names))

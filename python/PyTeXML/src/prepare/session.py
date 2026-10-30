@@ -890,7 +890,7 @@ class PreparationSession:
         if (not command.arguments and action in {"opaque", "biblatex_print", "reading_noop", "process_options", "declared_effects"}
                 or action == "boolean_declaration" and command.metadata["unbraced"]
                 or action == "setup_program" and command.metadata["trailing_control_word"]
-                or action in {"character_code_assignment", "reading_assignment", "integer_parameter_assignment", "font_parameter_assignment", "input_stream_assignment", "token_register_assignment"} and command.metadata.get("trailing_control_word")
+                or action in {"character_code_assignment", "reading_assignment", "integer_parameter_assignment", "font_parameter_assignment", "input_stream_assignment", "token_register_assignment", "state_transformation"} and command.metadata.get("trailing_control_word")
                 or action in {"conditional_test", "meaning_assignment"} and command.metadata["trailing_control_word"]):
             self.emit(command.span.basis.span(command.span.end, command.span.end), " ", operation="SYNTHETIC_SEPARATOR")
 
@@ -987,7 +987,7 @@ class PreparationSession:
                      or isinstance(item, SourceCommand)
                      and (item.metadata.get("expanded_invocation")
                           or item.action in {"reading_assignment", "character_code_assignment", "integer_parameter_assignment",
-                                             "font_parameter_assignment", "input_stream_assignment", "token_register_assignment"})
+                                             "font_parameter_assignment", "input_stream_assignment", "token_register_assignment", "state_transformation"})
                      and item.metadata.get("trailing_control_word"))
                     and self.context.catcodes[" "] != CatCode.SPACE):
                 # Publication cannot use its usual control-word separator.

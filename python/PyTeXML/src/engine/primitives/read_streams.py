@@ -64,7 +64,7 @@ def read(host, opening, meaning):
     if not 0 <= index <= 15:
         raise ReadingIssue("terminal_input", "This read stream number requires terminal input")
     try:
-        tokens = host.context.read_streams.read(index, host.context)
+        tokens = host.context.read_streams.read(index, host.context, raw=meaning.operand)
     except InvalidCharacterError as error:
         # The command belongs to the caller's source; its failure cause belongs
         # to the supplied file. Do not fabricate a caller span from file offsets.
@@ -78,7 +78,7 @@ def read(host, opening, meaning):
 
 
 LIFECYCLE = PrimitiveOperation("input.stream", ExpansionKind.UNEXPANDABLE, lifecycle, operand_type=str)
-READ = PrimitiveOperation("input.read", ExpansionKind.UNEXPANDABLE, read, operand_type=type(None),
+READ = PrimitiveOperation("input.read", ExpansionKind.UNEXPANDABLE, read, operand_type=bool,
                           accepted_prefixes=frozenset({"global"}))
 FAMILY = OperationFamily((LIFECYCLE, READ), (LIFECYCLE.declare("openin", "open"),
-    LIFECYCLE.declare("closein", "close"), READ.declare("read", None)))
+    LIFECYCLE.declare("closein", "close"), READ.declare("read", False), READ.declare("readline", True)))

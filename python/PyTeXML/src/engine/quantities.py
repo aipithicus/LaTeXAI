@@ -1,13 +1,16 @@
 """Typed internal values shared by scanners and expandable conversions."""
+from __future__ import annotations
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, TYPE_CHECKING
 from ..reading.tex_reader import Token
+if TYPE_CHECKING:
+    from .dimensions import Glue
 
 
 @dataclass(frozen=True, slots=True)
 class InternalQuantity:
-    kind: Literal["integer", "dimension", "tokens", "font"]
-    value: int | tuple[Token, ...] | str
+    kind: Literal["integer", "dimension", "glue", "muglue", "tokens", "font"]
+    value: int | tuple[Token, ...] | str | "Glue"
 
 
 def print_scaled(value):

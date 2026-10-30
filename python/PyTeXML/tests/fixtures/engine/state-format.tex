@@ -1,0 +1,13 @@
+\catcode123=1 \catcode125=2 \catcode35=6 \catcode94=7 \newlinechar=10
+\input state-format-source.tex
+\message{PYTEXML tables=\tables}
+\message{PYTEXML glue=\glues}
+\message{PYTEXML units=\units}
+\message{PYTEXML after=\after}
+\message{PYTEXML case=\lower,\upper}
+\message{PYTEXML parameters=\parameters}
+\message{PYTEXML font=\fontvalues}
+\message{PYTEXML readline=\rawtext}
+\message{PYTEXML trueunits=\trueunits}
+\immediate\write16{PYTEXML write=\the\count0}
+\dump

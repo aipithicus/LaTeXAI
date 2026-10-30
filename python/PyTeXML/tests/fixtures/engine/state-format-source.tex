@@ -1,0 +1,26 @@
+\lccode65=122 \uccode122=65 \sfcode65=1234 \mathcode65="7141 \delcode65="123456
+\mathchardef\alpha="710B
+\edef\tables{\the\lccode65,\the\uccode122,\the\sfcode65,\the\mathcode65,\the\delcode65,\number\alpha}
+\skipdef\s=3 \s=1pt plus 2fil minus 3pt
+\advance\s by 2pt plus 1fill minus -1pt \multiply\s by 3 \divide\s by -2
+\muskipdef\ms=1 \ms=3mu plus 2fil
+\edef\glues{\the\s;\the\ms}
+\dimen0=1in \dimen1=2.54cm \dimen2=72bp \dimen3=.5dd \dimen4=1.25sp
+\edef\units{\number\dimen0,\number\dimen1,\number\dimen2,\number\dimen3,\number\dimen4}
+\count0=0 \def\a{\global\advance\count0 by 1 }\def\b{\global\multiply\count0 by 10 }
+\afterassignment\b\afterassignment\a\count1=2
+{\aftergroup\a\aftergroup\b}\edef\after{\the\count0}
+\lowercase{\def\lower{A}}\uppercase{\def\upper{z}}
+\parindent=2pc \baselineskip=12pt plus 1pt \everypar={A}
+{\global\baselineskip=13pt \everypar={B}}
+\edef\parameters{\the\parindent;\the\baselineskip;\the\everypar}
+\font\f=cmr10 at 12pt \f\textfont2=\f
+{\hyphenchar\f=64 \fontdimen7\f=2pt}\dimen5=1em
+\edef\fontvalues{\number\fontdimen2\f;\number\dimen5;\number\hyphenchar\f;\the\fontdimen7\f}
+\def\macro#1{[#1]}\let\alias\macro
+\patterns{a1b}\hyphenation{ab-cd}
+\endlinechar=-1 \openin0=state-format-read.txt \readline0 to\raw\closein0 \endlinechar=13
+\edef\rawtext{\meaning\raw}
+\everyjob={\message{PYTEXML everyjob=\jobname}}
+\mag=1200 \dimen6=1truein \dimen7=1truept \dimen8=1truesp
+\edef\trueunits{\number\dimen6,\number\dimen7,\number\dimen8}

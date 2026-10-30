@@ -92,7 +92,10 @@ class IntegerScanner:
             if (token is None or token.kind != TokenKind.CHARACTER
                     or token.catcode not in {CatCode.LETTER, CatCode.OTHER}
                     or token.value.lower() != letter.lower()):
-                self.reader.push(tuple(seen))
+                if len(seen) == 1:
+                    self.reader.unread_token(seen[0])
+                else:
+                    self.reader.push(tuple(seen))
                 return False
         return True
 
