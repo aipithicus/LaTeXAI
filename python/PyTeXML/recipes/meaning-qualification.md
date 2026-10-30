@@ -30,6 +30,25 @@ for each example to block a document. Label hypotheses separately from qualified
 rules. Workload evidence prioritizes implementation; broader exception study
 informs architecture and anticipatory regression tests.
 
+The study also asks what becomes possible through PyTeXML's staged architecture.
+Preserved source and context can prevent ambiguities introduced by a printed
+dump; provisional inspection can look ahead, discover constraints and defer a
+decision; later evidence can trigger selective rereading and reevaluation.
+Recovery may produce useful content from input on which native TeX errors.
+Native behavior qualifies faithful execution, while recovered interpretations
+carry their assumptions and consequences. Neither category should be described
+as the other.
+
+The next spacing witnesses should therefore exercise original source, generated
+names, semantic space tokens, local reading-context changes and delayed
+prerequisites, rather than only improve dump reconstruction. Distinguish later
+discovery of an earlier applicable context from applying a later declaration
+retroactively. Preserve committed token identities and revisit only provisional
+readings. The staged-pipeline brief §5.1 owns this proposed shared reconsideration
+mechanism and its gates; the current reader/checkpoints are supporting pieces,
+not evidence that a general second-pass resolver is implemented. No new reader
+behavior or tests are introduced by this design clarification.
+
 ## Display differences: 2026-10-29 triage
 
 The 533 records classified `python_meaning_display_differs` were reconstructed
