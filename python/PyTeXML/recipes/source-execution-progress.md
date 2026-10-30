@@ -4,6 +4,34 @@ This file records implementation and qualification evidence. Current priorities
 live in the [working queue](../../../../aipithicus-issues/LaTeXAI/briefs/pytexml-language-core/working-queue.md);
 dated next-step statements below describe their checkpoint, not current dispatch.
 
+## 2026-10-29: qualify the assay as an oracle for source-derived meanings
+
+The user clarified that engine work must derive meanings through reusable
+language mechanisms, not hardcode the entire kernel vocabulary. The
+[assay recipe](meaning-assay.md#qualification-the-engine-derives-meanings-from-source)
+now separates reconstruction evidence from source execution, semantic coverage
+and workload cost. Its 15,552 generated fixtures are reference/regression data;
+the 1,994 reconstruction exceptions are not 1,994 implementation requirements.
+The 69.76 MiB measurement materializes the accepted corpus and is not a required
+production footprint. Static fan-in alone does not select intrinsics.
+
+The existing kernel-source fixture is the concrete qualifying pattern: upstream
+definitions construct ordinary public/hidden meanings; real etoolbox definitions
+then patch them. The current rerun passes all **three tests**, including all 19
+pinned native observations and direct optional-wrapper behavior. Output is
+retained under repository `temp/meaning-assay-source-qualification-receipt`.
+This rerun checks the existing bounded capability, not full startup or normal
+preparation integration. No engine code or native assay artifact changed.
+
+The current plan now prioritizes source families and the shared primitives/state
+operations they require across the workloads. A derived-state cache is optional
+after source execution is qualified; the engine must still handle new computed
+names and declarations. Existing Python declarator adaptations remain implemented
+behavior, while source-bootstrap integration and any later intrinsic replacement
+need their own witnesses. The newest L14 entry and semantic-engine contract
+supersede earlier production-table/adapt-every-routine wording. Historical
+checkpoints below retain their original evidence and then-current plans.
+
 ## 2026-10-29: frontloaded native knowledge assay and generated fixture corpus
 
 The user's assay is now executable ahead of Q4 implementation. See the

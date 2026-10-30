@@ -6,6 +6,57 @@ macro reconstructions, a static reference graph, individually recorded
 exceptions, generated fixtures, and CPU/memory receipts. It does not install
 meanings into production or implement intrinsic dispatch.
 
+## Qualification: the engine derives meanings from source
+
+The user's subsequent clarification makes this census a reference instrument,
+not a list of meanings to hardcode or a production table-installation objective.
+PyTeXML's reusable language machinery must execute declarations and derive their
+meanings, including names absent from any inventory. The meaning table remains
+ordinary mutable engine state populated by those operations. A saved bootstrap
+state may cache their result once source execution and restoration are qualified;
+it cannot substitute for the ability to execute new declarations.
+
+This matches the distinction between primitive implementation and format source:
+LaTeX and l3kernel are programs layered on the engine, and l3kernel is loaded
+into the format (see the [LaTeX Project's source organization](https://www.latex-project.org/latex3/code/)).
+Reading a native dump is useful for independent comparison. It does not establish
+that PyTeXML executed the program which constructed that dump.
+
+| Assay observation | What it qualifies | What it does not qualify |
+| --- | --- | --- |
+| 15,552 native-equal candidates | Reconstruction from native display under two explicit lexical regimes | Derivation from original kernel/expl3 source, execution or document extraction |
+| 1,994 unresolved macros | Limits of this reconstruction procedure | 1,994 missing engine capabilities or automatic implementation tickets |
+| 40 target-defined names missing from Lua | An incompleteness in cross-engine enumeration | A requirement to implement every omitted name |
+| Static references and fan-in | Candidates for tracing helper dependencies | Observed calls, necessary dependencies or optimization priority |
+| 69.76 MiB retained allocations | Cost of materializing this entire accepted corpus in current objects | Minimum engine memory or memory needed by any selected workload |
+
+The implementation unit is a reusable mechanism or coherent source family.
+Candidate mechanisms include lexical state, definition/parameter scanning,
+expansion order, computed control-sequence names, conditional evaluation,
+assignments, grouping/restoration and token-form data operations. Prioritize a
+mechanism by what manuscript/package behavior it enables across the gauntlet,
+with a bounded source witness for its actual contract. A source occurrence is
+only candidate demand; retain the distinction from an executed call. Conversely,
+unexercised failure branches and state transitions needed by the claimed contract
+must be tested rather than discarded because one document did not reach them.
+
+For each selected family, record the source and initialization boundary, package
+consumers, prerequisites, created meanings and document effect. Execute the
+declarations through PyTeXML; compare resulting typed state, expansion and
+observable behavior with native witnesses. Include newly computed names,
+redefinitions, aliases and group restoration without adding entries to a lookup
+catalog. The gauntlet-master sequence/declaration block is a concrete next
+witness, not the sole definition of useful coverage. A complete kernel census
+or complete format startup is not the admission gate for such a boundary.
+
+The existing [kernel-source fixture](../tests/fixtures/engine/kernel-optional/README.md)
+already follows this method: upstream definitions construct public/hidden
+optional-command meanings and etoolbox source patches them. Its three tests
+were rerun after this clarification: all pass, checking the 19 pinned native
+observations plus direct wrapper behavior. This remains a bounded fixture;
+normal preparation still has Python declaration adaptations and no complete
+kernel/expl3 source bootstrap. The frozen census remains useful regression data.
+
 ## Reproduce
 
 Run through the repository PowerShell MCP from `python/PyTeXML`, using the
@@ -190,10 +241,17 @@ limitation, not evidence that the upstream functions fail when executed.
 
 ## Remaining implementation decisions
 
-Use this inventory and its exceptions to choose Q4's first coherent family and
-its helper/state closure. A generic token-aware extraction path, stronger
-target-only census coverage, precise per-entry source locations, non-macro
-initialization, runtime table installation, interned identity, dependency
-invalidation and intrinsic behavior still require implementation and witnesses.
-The assay moves acquisition evidence ahead of those decisions; it does not
-require every exception to be resolved before a bounded family can be qualified.
+Use workload requirements to choose Q4's first coherent source family, then
+qualify the shared engine mechanisms and initialization needed to derive its
+meanings. Match against native observations where available; obtain a targeted
+token-aware or source-backed oracle when the dump procedure cannot reconstruct
+a demanded meaning. Broader census repair is triggered by a concrete comparison
+need, not by the inventory's exception total. Whole-corpus reconstruction is not
+a completion metric for the engine.
+
+Production bootstrap integration and any reusable cache remain future work.
+Intrinsics are optional optimizations, gated by observed cost and equivalence
+to source-derived behavior, including helper/state dependencies. No production
+native-dump installation or one-implementation-per-name backlog follows from
+this assay. The earlier proposal to make such a table Q4's starting implementation
+is superseded by the source-derivation direction above.
