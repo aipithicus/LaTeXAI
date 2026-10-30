@@ -1,0 +1,20 @@
+\font\f=cmr10 \f
+\boxmaxdepth=100pt \baselineskip=12pt \lineskip=1pt \lineskiplimit=0pt
+\setbox0=\hbox{AVoffice}\observe{ligkern}
+\def\word{office}\setbox0=\hbox{AV\word}\observe{macro}
+\setbox0=\hbox{of\char102 ice}\observe{char}
+\setbox0=\hbox{of{}fice}\observe{group}
+\setbox0=\hbox{of\relax fice}\observe{command}
+\setbox0=\hbox{A B}\observe{space}
+\sfcode46=3000 \setbox0=\hbox{a. B}\observe{sentence}
+\setbox0=\hbox{\spaceskip=2pt plus1pt minus1pt \spacefactor=2000 \ B}\observe{controlspace}
+\setbox0=\hbox{f\/}\observe{italic}
+\setbox1=\hbox{fi}\setbox0=\hbox{\unhcopy1\unhcopy1}\observe{unbox}
+\setbox0=\hbox{A\raise2pt\hbox{g}\lower1pt\hbox{A}}\observe{shift}
+\setbox0=\vbox{\hbox{A}\hbox{g}}\observe{baseline}
+\setbox0=\vbox{\hbox{A}\hrule height1pt\hbox{g}}\observe{rule}
+\setbox0=\vtop{\hbox{A}\hbox{g}}\observe{vtop}
+\setbox0=\vbox to30pt{\hbox{A}\hbox{g}}\observe{vto}
+\font\small=cmr10 at7pt \small
+\setbox0=\hbox{AVoffice}\observe{scaled}
+\message{OBS:DONE}

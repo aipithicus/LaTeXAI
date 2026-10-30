@@ -5,3 +5,5 @@
 * text=auto eol=lf
 t/capture/crlf.tex text eol=crlf
 t/capture/positions.tex whitespace=-trailing-space
+# Byte-pinned upstream driver fixture; preserve docstrip's comment whitespace.
+python/PyTeXML/tests/fixtures/engine/drivers/hpdftex.def whitespace=-trailing-space

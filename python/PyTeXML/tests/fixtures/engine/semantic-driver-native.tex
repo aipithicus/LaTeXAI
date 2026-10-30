@@ -1,0 +1,10 @@
+\documentclass{article}
+\usepackage[hidelinks]{hyperref}
+\begin{document}
+\makeatletter
+\PyTraceOn
+\setbox0=\hbox{\input semantic-driver-source.tex }
+\showbox0
+\setbox2=\hbox{$x_1^2\showlists$}
+\PyTraceOff
+\end{document}

@@ -135,7 +135,10 @@ def unbox(host, opening, meaning):
     if node is not None:
         if (node.kind == "hbox") != horizontal:
             raise ReadingIssue("box_kind", "Cannot unbox a list of the other orientation")
+        run_id = content.work
         for child in node.children:
+            if child.kind == "character":
+                child = child.with_value("run", (opening.span, run_id, child.get("run")))
             content.emit(child)
     return result(host, opening)
 
@@ -192,14 +195,29 @@ def list_operation(host, opening, meaning):
         was_horizontal = content.frame.mode == "h"
         content.horizontal(host, span, indent=command == "indent")
         if command == "indent" and was_horizontal:
-            content.emit(content.node(host, "indent", span, width=None))
+            from ..measurement import parameter
+            content.emit(content.node(host, "indent", span, width=parameter(host.context, "parindent")))
     elif command == "space":
         content.space(host, span, explicit=True)
     elif command == "italic":
         if content.frame.mode != "h":
             raise ReadingIssue("content_mode", "Italic correction requires horizontal mode")
         if content.frame.nodes and content.frame.nodes[-1].kind == "character":
-            content.emit(content.node(host, "italic_correction", span, width=None))
+            from ..measurement import horizontal
+            last = content.frame.nodes[-1]
+            start = len(content.frame.nodes) - 1
+            while start and content.frame.nodes[start - 1].kind == "character" and content.frame.nodes[start - 1].get("run") == last.get("run"):
+                start -= 1
+            shaped = horizontal(host.context, content.frame.nodes[start:]).glyphs
+            width = None
+            if shaped:
+                font, run = shaped[-1]
+                glyph = next((item[1] for item in reversed(run) if item[0] == "glyph"), None)
+                if glyph is not None:
+                    width = host.context.fonts.metrics(font).glyphs[glyph].italic
+            if last.get("font") == "nullfont":
+                width = 0
+            content.emit(content.node(host, "italic_correction", span, width=width))
     elif command in {"unskip", "unkern", "unpenalty"}:
         if content.frame.kind == "document":
             raise ReadingIssue("outer_vertical_tail", "The outer vertical tail belongs to the unimplemented page builder")
@@ -236,6 +254,8 @@ def list_operation(host, opening, meaning):
             values[key] = dimension(scanner)[0]
         scanner.finish()
         content.emit(content.node(host, "rule", span, **values))
+        if command == "hrule":
+            content.frame.info["prev_depth"] = -65536000
     else:
         vertical, mu = command.startswith("v"), command == "mskip"
         if mu and content.frame.mode != "m":
@@ -265,18 +285,42 @@ def last_value(scanner, meaning):
         raise ReadingIssue("outer_vertical_tail", "Outer tail queries require the page builder")
     node = content.frame.nodes[-1] if content.frame.nodes else None
     if meaning.operand == "lastskip":
-        if node is not None and node.kind == "space":
-            raise ReadingIssue("unknown_space_glue", "Interword glue requires font spacing and space factor")
-        value = node.get("value") if node and node.kind == "glue" else node.get("glue") if node and node.kind == "leaders" else Glue()
+        value = node.get("value") if node and node.kind in {"glue", "space"} else node.get("glue") if node and node.kind == "leaders" else Glue()
         return InternalQuantity("muglue" if node and node.get("mu") else "glue", value)
     kind, attr = ("kern", "width") if meaning.operand == "lastkern" else ("penalty", "value")
     if kind == "kern" and node and node.kind == "italic_correction":
-        raise ReadingIssue("unknown_italic_correction", "Italic correction requires glyph metrics")
+        if node.get("width") is None:
+            raise ReadingIssue("unknown_italic_correction", "Italic correction requires glyph metrics")
+        return InternalQuantity("dimension", node.get("width"))
     return InternalQuantity("dimension" if kind == "kern" else "integer", node.get(attr) if node and node.kind == kind else 0)
 
 
 def last_execute(host, opening, meaning):
     raise ReadingIssue("internal_quantity", "A list-tail quantity requires a value consumer")
+
+
+def list_state_value(scanner, meaning):
+    content = owner(scanner.host)
+    key, mode, default = (("space_factor", "h", 1000) if meaning.operand == "spacefactor"
+                          else ("prev_depth", "v", -65536000))
+    if content.frame.mode != mode:
+        raise ReadingIssue("content_mode", meaning.operand + " is unavailable in this mode")
+    value = content.frame.info.get(key, default)
+    if value is None:
+        raise ReadingIssue("unknown_list_dimension", "The preceding box depth requires layout")
+    return InternalQuantity("integer" if mode == "h" else "dimension", value)
+
+
+def list_state(host, opening, meaning):
+    scanner = IntegerScanner(host)
+    list_state_value(scanner, meaning)
+    scanner.optional_equals()
+    value = scanner.integer() if meaning.operand == "spacefactor" else dimension(scanner)[0]
+    scanner.finish()
+    if meaning.operand == "spacefactor" and not 1 <= value <= 32767:
+        raise ReadingIssue("space_factor", "Space factor must lie in 1..32767")
+    owner(host).frame.info["space_factor" if meaning.operand == "spacefactor" else "prev_depth"] = value
+    return result(host, opening)
 
 
 BOX = PrimitiveOperation("content.box", ExpansionKind.UNEXPANDABLE, box, operand_type=str)
@@ -286,7 +330,8 @@ UNBOX = PrimitiveOperation("content.unbox", ExpansionKind.UNEXPANDABLE, unbox, o
 BOXDIM = PrimitiveOperation("content.box_dimension", ExpansionKind.UNEXPANDABLE, box_dimension, box_value, operand_type=str, accepted_prefixes=frozenset({"global"}))
 LIST = PrimitiveOperation("content.list", ExpansionKind.UNEXPANDABLE, list_operation, operand_type=str)
 LAST = PrimitiveOperation("content.last", ExpansionKind.UNEXPANDABLE, last_execute, last_value, operand_type=str)
-FAMILY = OperationFamily((BOX, SETBOX, MOVE, UNBOX, BOXDIM, LIST, LAST),
+STATE = PrimitiveOperation("content.list_state", ExpansionKind.UNEXPANDABLE, list_state, list_state_value, operand_type=str)
+FAMILY = OperationFamily((BOX, SETBOX, MOVE, UNBOX, BOXDIM, LIST, LAST, STATE),
     tuple(BOX.declare(k, k) for k in "hbox vbox vtop box copy lastbox".split()) +
     (SETBOX.declare("setbox", None),) +
     tuple(MOVE.declare(k, k) for k in "raise lower moveleft moveright shipout leaders cleaders xleaders vcenter".split()) +
@@ -294,4 +339,5 @@ FAMILY = OperationFamily((BOX, SETBOX, MOVE, UNBOX, BOXDIM, LIST, LAST),
     tuple(BOXDIM.declare(k, v) for k, v in (("wd", "width"), ("ht", "height"), ("dp", "depth"))) +
     tuple(LIST.declare(k, k) for k in "char indent noindent hskip vskip mskip hfil hfill hss hfilneg vfil vfill vss vfilneg kern mkern penalty hrule vrule unskip unkern unpenalty".split()) +
     (LIST.declare(" ", "space"), LIST.declare("/", "italic")) +
-    tuple(LAST.declare(k, k) for k in "lastskip lastkern lastpenalty".split()))
+    tuple(LAST.declare(k, k) for k in "lastskip lastkern lastpenalty".split()) +
+    tuple(STATE.declare(k, k) for k in "spacefactor prevdepth".split()))

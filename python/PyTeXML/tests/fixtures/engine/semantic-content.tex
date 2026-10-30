@@ -1,0 +1,9 @@
+\catcode123=1 \catcode125=2 \catcode35=6 \catcode64=11
+\font\f=cmr10 \f
+\input hpdftex.def
+\setbox0=\hbox{\input semantic-driver-source.tex }
+\copy0
+\insert254{Footnote body\par}
+\setbox3=\vbox{Float body\par}
+\input lifecycle-source.tex
+\end

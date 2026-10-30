@@ -1,0 +1,94 @@
+{
+  "schema": "pytexml-semantic-native/1",
+  "status": "matched",
+  "differences": [],
+  "driver_boundary": null,
+  "lifecycle_boundary": null,
+  "actual": {
+    "driver": {
+      "messages": [
+        "OBS:ALIAS:7",
+        "OBS:NUMBER:7",
+        "OBS:ANCHOR:1",
+        "OBS:ANCHOR:0",
+        "OBS:SCOPE:1",
+        "OBS:DONE"
+      ],
+      "anchors": [
+        "sec.one"
+      ],
+      "links": [
+        "https://example.org",
+        "sec.one"
+      ]
+    },
+    "writes": [
+      "OBS:WRITE:B",
+      "OBS:WRITE:C",
+      "OBS:WRITE:now"
+    ],
+    "auxiliary": "\\newlabel{eq.one}{9}\n",
+    "reference": [
+      "OBS:REFERENCE:eq.one:9"
+    ]
+  },
+  "expected": {
+    "driver": {
+      "messages": [
+        "OBS:ALIAS:7",
+        "OBS:NUMBER:7",
+        "OBS:ANCHOR:1",
+        "OBS:ANCHOR:0",
+        "OBS:SCOPE:1",
+        "OBS:DONE"
+      ],
+      "anchors": [
+        "sec.one"
+      ],
+      "links": [
+        "https://example.org",
+        "sec.one"
+      ]
+    },
+    "writes": [
+      "OBS:WRITE:B",
+      "OBS:WRITE:C",
+      "OBS:WRITE:now"
+    ],
+    "auxiliary": "\\newlabel{eq.one}{9}\n",
+    "reference": [
+      "OBS:REFERENCE:eq.one:9"
+    ]
+  },
+  "native_version": "This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex)",
+  "driver_sha256": "db41df0ca7a5001e76ef891d741ea634b9dd175c6a4f6f0ee7cd483755d3ff51",
+  "executables": {
+    "pdftex.exe": "4b582d0be712b74ae5090aba2d7338f185082f6446cbee7b26115e8ab6e21184",
+    "pdflatex.exe": "4b582d0be712b74ae5090aba2d7338f185082f6446cbee7b26115e8ab6e21184"
+  },
+  "sources": {
+    "semantic-driver-native.tex": "9f437c013ea71fa2b9c6f5369d5900a10ae34650d060395c39c99434d49f31b5",
+    "semantic-driver-source.tex": "c1847475cd2d255f62e40fc99514a54e4ce80770fb91571699733e01623048ba",
+    "lifecycle-source.tex": "f77f949edf5210c127f77da218f29977d64823bc3008ebc4bb9d861012d6a8ec",
+    "lifecycle.tex": "be98a316699ce9f8e74908040519e6425e36a88d2860b5ae52e8a9584f885224",
+    "probe.sty": "6f9543ac556ed5a80b782bedb0e4736680df88edb5a58b0e95f826d53ee4a1d2"
+  },
+  "logs": {
+    "driver": "d89fb880a3bb685207aabaf017b3abff6391b4fa887809f12d363f216030d54f",
+    "lifecycle": "3ceade855e6248c6224653487c350d317918b73888bb7eeada985b8292faf1a6"
+  },
+  "trace_counts": {
+    "commands": 1232,
+    "macro_calls": 86,
+    "boxes": 1,
+    "lists": 4,
+    "conditional_outcomes": 224
+  },
+  "trace_coverage": {
+    "canonical_count_alias": true,
+    "canonical_number_alias": true,
+    "the_inside_message_reported": false,
+    "complete_primitive_census": false
+  },
+  "scope": "plain links/anchors, active-anchor state, grouping, alias reports and selected write timing; not full hyperref or page-layout compatibility"
+}

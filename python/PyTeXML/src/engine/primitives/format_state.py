@@ -61,11 +61,14 @@ def immediate(host, opening, meaning):
     scanner = IntegerScanner(host)
     token = scanner._nonspace()
     resolved = scanner._meaning(token) if token is not None else None
-    if not isinstance(resolved, tuple) or resolved[1].operation != "format.write":
+    if not isinstance(resolved, tuple) or resolved[1].operation not in {"format.write", "content.output_stream"}:
         raise ReadingIssue("immediate_operation", "This consumer supports immediate write diagnostics")
     scanner.finish()
     host.immediate_write = True
     try:
+        if resolved[1].operation == "content.output_stream":
+            from .content_events import output_stream
+            return output_stream(host, opening, resolved[1])
         return write(host, opening, resolved[1])
     finally:
         host.immediate_write = False

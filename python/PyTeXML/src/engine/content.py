@@ -20,6 +20,7 @@ class Node:
     span: SourceSpan
     children: tuple = ()
     attributes: tuple = ()
+    payload: tuple = ()  # Frozen execution input; public token children carry its provenance.
     size: int = field(init=False, compare=False)
 
     def __post_init__(self):
@@ -76,25 +77,28 @@ def content_request(host, event, definition):
 
 
 class ContentState:
-    def __init__(self, span, *, limit=100000):
+    def __init__(self, span, *, limit=100000, insertion_roles=None, box_roles=None):
+        from .lifecycle import Lifecycle
         self.frames = [Frame("document", "v", span)]
         self.limit, self.work = limit, 0
+        self.lifecycle = Lifecycle(insertion_roles, box_roles)
 
     @property
     def frame(self):
         return self.frames[-1]
 
     def checkpoint(self):
-        return [f.copy() for f in self.frames]
+        return [f.copy() for f in self.frames], self.lifecycle.checkpoint()
 
     def restore(self, saved):
-        self.frames = [f.copy() for f in saved]
+        self.frames = [f.copy() for f in saved[0]]
+        self.lifecycle.restore(saved[1])
 
-    def node(self, host, kind, span, children=(), **attributes):
+    def node(self, host, kind, span, children=(), *, payload=(), **attributes):
         self.work += 1
         if self.work > self.limit:
             raise ReadingIssue("content_budget", "Content construction exhausted its node budget")
-        return Node(kind, source_origin(host.program_sources, span), tuple(children), tuple(attributes.items()))
+        return Node(kind, source_origin(host.program_sources, span), tuple(children), tuple(attributes.items()), tuple(payload))
 
     def emit(self, node):
         # Immutable sharing must not hide exponential copy expansion from the
@@ -108,6 +112,11 @@ class ContentState:
         tokens = host.context.token_registers.read(name)
         if tokens:
             evaluate(host, tokens, span, policy=CONTENT)
+
+    def break_text(self):
+        if self.frame.mode == "h":
+            self.work += 1
+            self.frame.info["text_run"] = self.work
 
     def horizontal(self, host, span, *, indent=True):
         if self.frame.mode == "v":
@@ -124,8 +133,12 @@ class ContentState:
             # TeX removes final interword glue before line breaking.
             if frame.nodes and frame.nodes[-1].kind == "space":
                 frame.nodes.pop()
+            from .measurement import parameter
+            parameters = tuple((key, parameter(host.context, key, glue=key != "hsize"))
+                               for key in ("hsize", "leftskip", "rightskip", "parfillskip"))
             self.emit(self.node(host, "paragraph", frame.span, frame.nodes,
-                                indent=frame.info["indent"], layout="unbroken"))
+                                indent=frame.info["indent"], layout="unbroken", layout_parameters=parameters))
+            self.frame.info["prev_depth"] = None
         # par is inert in restricted horizontal mode and vertical mode.
 
     def character(self, host, char, span, *, explicit=False):
@@ -139,16 +152,25 @@ class ContentState:
             self.math_character(host, code, span)
             return
         self.horizontal(host, span)
+        if "text_run" not in self.frame.info:
+            self.break_text()
         font = host.context.state_cells.read("current_font")
+        from .primitives.code_tables import read
+        factor, previous = read(host.context, "sfcode", ord(char)), self.frame.info.get("space_factor", 1000)
+        if factor:
+            self.frame.info["space_factor"] = 1000 if factor > 1000 and previous < 1000 else factor
         self.emit(self.node(host, "character", span, text=char, code=ord(char), font=font,
-                            shaping="pending", explicit=explicit))
+                            shaping="pending", explicit=explicit, run=self.frame.info.get("text_run", 0)))
 
     def space(self, host, span, *, explicit=False):
         if explicit:
             self.horizontal(host, span)
         if self.frame.mode == "h" or explicit and self.frame.mode == "m":
+            from .measurement import interword
+            font = host.context.state_cells.read("current_font")
+            amount = interword(host.context, font, 1000 if explicit else self.frame.info.get("space_factor", 1000))
             self.emit(self.node(host, "space", span, font=host.context.state_cells.read("current_font"),
-                                explicit=explicit, width=None))
+                                explicit=explicit, value=amount, width=amount.width))
 
     def token(self, host, event):
         token, category = event.token, event.token.catcode
@@ -157,11 +179,13 @@ class ContentState:
         elif category == CatCode.MATH_SHIFT:
             self.math_shift(host, event.span)
         elif category == CatCode.BEGIN_GROUP:
+            self.break_text()
             if self.frame.mode == "m":
                 self.start_field(host, event.span, ("class", "ord"))
             else:
                 host.begin_group("simple", event.span)
         elif category == CatCode.END_GROUP:
+            self.break_text()
             if host._groups and host._groups[-1].kind in {"content:math", "content:left", "content:cell"}:
                 raise ReadingIssue("content_group", "A brace cannot close this math or alignment context")
             if host._groups and host._groups[-1].kind.startswith("content:"):
@@ -274,6 +298,10 @@ class ContentState:
         frame = self.frame
         if not host._groups or host._groups[-1].kind != "content:" + frame.kind:
             raise ReadingIssue("content_group", "Content frame does not own the closing group")
+        measured = None
+        if frame.kind in {"hbox", "vbox", "vtop"}:
+            from .measurement import box
+            measured = box(host.context, frame)
         after = host.end_group("content:" + frame.kind, deliver=False)
         self.frames.pop()
         if frame.kind == "math":
@@ -302,24 +330,21 @@ class ContentState:
                                            left=frame.info["left"], right=frame.info["right"]),), class_="inner"))
         elif frame.kind in {"hbox", "vbox", "vtop"}:
             size = frame.info.get("size")
-            width = size if frame.kind == "hbox" and frame.info.get("spec") == "to" else None
-            height = size if frame.kind == "vbox" and frame.info.get("spec") == "to" else None
-            if not frame.nodes:
-                width = width if width is not None else (size or 0) if frame.kind == "hbox" else 0
-                height = height if height is not None else (size or 0) if frame.kind != "hbox" else 0
-            depth = 0 if not frame.nodes else None
-            if frame.kind == "vtop" and not frame.nodes:
-                height, depth = 0, size or 0
-            node = self.node(host, frame.kind, frame.span, frame.nodes, width=width, height=height,
-                             depth=depth, spec=frame.info.get("spec"), size=size,
-                             packing="pending" if frame.nodes else "empty")
+            node = self.node(host, frame.kind, frame.span, frame.nodes,
+                             width=measured.width, height=measured.height, depth=measured.depth,
+                             spec=frame.info.get("spec"), size=size,
+                             measurement_requirements=measured.requirements, glyph_runs=measured.glyphs,
+                             packing="measured" if all(v is not None for v in (measured.width, measured.height, measured.depth)) else "pending")
             self.deliver_box(host, node, frame.info["target"], frame.span)
         elif frame.kind == "alignment":
             self.emit(self.node(host, "alignment", frame.span, frame.nodes,
                 columns=len(frame.info["columns"]), tabskip=frame.info["tabskip"],
                 spec=frame.info["spec"], size=frame.info["size"], packing="pending"))
         elif frame.kind in {"insert", "vadjust", "noalign"}:
-            self.emit(self.node(host, frame.kind, frame.span, frame.nodes, **frame.info))
+            node = self.node(host, frame.kind, frame.span, frame.nodes, **frame.info)
+            if frame.kind == "insert":
+                node = node.with_value("role", self.lifecycle.insertion_roles.get(frame.info["class_"], "unclassified"))
+            self.emit(node)
         else:
             raise ReadingIssue("content_group", "Unsupported content group")
         if after:
@@ -348,9 +373,13 @@ class ContentState:
     def deliver_box(self, host, node, target, span):
         if target[0] == "register":
             host.context.state_cells.assign("box:" + str(target[1]), node, span, global_=target[2])
+            if node is not None and target[1] in self.lifecycle.box_roles:
+                self.lifecycle.record(self.node(host, "stored_content", span, (node,), register=target[1],
+                    role=self.lifecycle.box_roles[target[1]], placement="unresolved"), self)
         elif node is not None:
             if target[0] == "shipout":
-                self.emit(self.node(host, "shipout", span, (node,), execution="issued"))
+                self.lifecycle.shipout(self, host, node, span)
+                self.emit(self.node(host, "shipout", span, (node,), execution="observed"))
             elif target[0] == "leaders":
                 from .primitives.content import finish_leaders
                 finish_leaders(host, node, target[1], span)
@@ -361,15 +390,43 @@ class ContentState:
                     node = node.with_value("shift", target[1])
                 if self.frame.mode == "m":
                     node = self.node(host, "noad", span, (node,), class_="ord")
+                elif self.frame.mode == "h":
+                    self.frame.info["space_factor"] = 1000
+                elif self.frame.mode == "v":
+                    self.append_baseline(host, node, span)
                 self.emit(node)
+
+    def append_baseline(self, host, node, span):
+        from .measurement import parameter
+        from .dimensions import checked
+        previous = self.frame.info.get("prev_depth", -65536000)
+        height = node.get("height")
+        if previous is not None and previous <= -65536000:
+            pass
+        elif previous is None or height is None:
+            self.emit(self.node(host, "baseline_glue", span, width=None,
+                                measurement_requirements=(("baseline_dimensions", span),)))
+        elif previous > -65536000:
+            baseline = parameter(host.context, "baselineskip", glue=True)
+            distance = checked(baseline.width - previous - height)
+            amount = (parameter(host.context, "lineskip", glue=True)
+                      if distance < parameter(host.context, "lineskiplimit") else replace(baseline, width=distance))
+            self.emit(self.node(host, "glue", span, value=amount, implicit="baseline"))
+        self.frame.info["prev_depth"] = node.get("depth")
 
     def finish(self, host, span):
         self.paragraph(host, span)
         if len(self.frames) != 1 or host._groups:
             raise ReadingIssue("content_unclosed", "Content execution ended with an open group or list")
+        if self.lifecycle.links or self.lifecycle.anchors:
+            raise ReadingIssue("driver_unclosed", "Content execution ended with an open link or anchor")
 
     def as_dict(self):
         return {"schema": "pytexml-content/1", "stage": "pre_layout",
+                "lifecycle": [n.as_dict() for n in self.lifecycle.records],
+                "drivers": list(self.lifecycle.drivers),
+                "virtual_outputs": {name: {"text": "".join(text + "\n" for text, _ in lines),
+                    "sources": [location(span) for _, span in lines]} for name, lines in self.lifecycle.outputs.items()},
                 "children": [n.as_dict() for n in self.frames[0].nodes],
                 "open_lists": [{"kind": f.kind, "mode": f.mode, "source": location(f.span),
                                 "children": [n.as_dict() for n in f.nodes]} for f in self.frames[1:]]}

@@ -1,0 +1,11 @@
+\let\mycount=\count \let\mythe=\the
+\mycount1=7 \message{OBS:ALIAS:\mythe\mycount1}
+\let\mynumber=\number \message{OBS:NUMBER:\mynumber\mycount1}
+\def\wrap#1{#1}\wrap{TEXT}
+\hyper@anchorstart{sec.one}\ifHy@activeanchor\message{OBS:ANCHOR:1}\fi
+\hyper@anchorend\ifHy@activeanchor\else\message{OBS:ANCHOR:0}\fi
+\count0=1
+\hyper@linkurl{\count0=2 URL}{https://example.org}
+\message{OBS:SCOPE:\the\count0}
+\hyper@linkstart{link}{sec.one}LINK\hyper@linkend
+\message{OBS:DONE}

@@ -1,0 +1,13 @@
+{
+  "entry": "semantic-content.tex",
+  "sources": {
+    "semantic-content.tex": "semantic-content.tex",
+    "semantic-driver-source.tex": "semantic-driver-source.tex",
+    "lifecycle-source.tex": "lifecycle-source.tex",
+    "hpdftex.def": "drivers/hpdftex.def"
+  },
+  "metrics": {"cmr10.tfm": "cmr10.tfm"},
+  "semantic_drivers": {"hpdftex.def": "hyperref-hpdftex-7.01s"},
+  "insertion_roles": {"254": "footnote"},
+  "box_roles": {"3": "float"}
+}

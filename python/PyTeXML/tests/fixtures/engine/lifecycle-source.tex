@@ -1,0 +1,13 @@
+\def\word{A}
+\setbox0=\hbox{\write16{OBS:WRITE:\word}}
+\def\word{B}\shipout\copy0
+\def\word{C}\shipout\box0
+\setbox1=\hbox{\write16{OBS:WRITE:discarded}\immediate\write16{OBS:WRITE:now}}
+\shipout\hbox{\leaders\hbox{\write16{OBS:WRITE:leader}}\hskip2pt}
+\immediate\openout1=references.aux
+\count0=8 \setbox2=\hbox{\write1{\string\newlabel{eq.one}{\the\count0}}}
+\count0=9 \shipout\box2
+\immediate\closeout1
+\def\newlabel#1#2{\message{OBS:REFERENCE:#1:#2}}
+\input references.aux
+\message{OBS:DONE}

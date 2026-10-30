@@ -42,6 +42,13 @@ class FormatBuild:
 
 
 class FormatBuilder:
+    def content_state(self, span):
+        from .content import ContentState
+        return ContentState(span)
+
+    def adapt_input(self, host, name, span):
+        return False
+
     def __init__(self, sources, *, metrics=None, initialization=None, profile="pdftex", budget=10000):
         if type(budget) is not int or budget <= 0:
             raise ValueError("Format execution needs a positive step budget")
@@ -94,6 +101,7 @@ class FormatBuilder:
             context.integer_parameters.values.pop(name, None)
             if name in self.initialization:
                 context.integer_parameters.assign(name, self.initialization[name], None, global_=True)
+        content_owner = None
         def reader(name):
             nonlocal occurrence
             source = self.sources[name]
@@ -103,8 +111,8 @@ class FormatBuilder:
             return result
         host = StructuralDispatcher(reader(root), context, self.resolver, preparation=True, source_commands=True)
         if construct_content:
-            from .content import ContentState
-            host.content = ContentState(host.reader.basis.span(0, 0))
+            host.content = self.content_state(host.reader.basis.span(0, 0))
+            content_owner = host.content
         for basis, text, tokens, anchor, relation in origins:
             frozen = TokenCursor(ScannedArgument("program", basis.whole, tokens), text, context)
             host.program_sources.append(ProgramSource(frozen, anchor, relation))
@@ -128,12 +136,24 @@ class FormatBuilder:
                         name = item.metadata["filename"]
                         relative = str(PurePosixPath(host.reader.basis.source_id).parent / name)
                         candidates = (relative, relative + ".tex", name, name + ".tex")
-                        found = next((path for path in candidates if path in self.sources), None)
+                        virtual = content_owner.lifecycle.outputs if content_owner is not None else {}
+                        found = next((path for path in candidates if path in virtual or path in self.sources), None)
                         if found is None:
                             raise ReadingIssue("input_inventory", f"Input {name!r} is absent from the inventory")
+                        if construct_content and self.adapt_input(host, found, item.span):
+                            continue
                         if len(host._parents) >= 64:
                             raise ReadingIssue("input_budget", "Input nesting exceeds 64 sources")
-                        host.enter_source(reader(found))
+                        if found in virtual:
+                            if found in content_owner.lifecycle.streams.values():
+                                raise ReadingIssue("output_input_timing", "Reinput of an open virtual output needs a flush contract")
+                            text = "".join(line + "\n" for line, _ in virtual[found])
+                            source = TexReader(text, source_id=found, occurrence_id=occurrence,
+                                               catcodes=context.catcodes, endline_char=context.endlinechar)
+                            occurrence += 1
+                            host.enter_source(source)
+                        else:
+                            host.enter_source(reader(found))
                     elif item.action == "format_dump":
                         if construct_content:
                             raise ReadingIssue("content_dump", "Content execution does not dump a format")

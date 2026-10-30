@@ -79,7 +79,7 @@ class ContentTests(unittest.TestCase):
     def test_box_dimensions_unknown_and_explicit(self):
         r = self.build(r"\setbox0=\hbox to 10pt{A}\message{\the\wd0}\wd0=12pt\message{\the\wd0}\end")
         self.assertEqual(r.messages, ("10.0pt", "12.0pt"))
-        r = self.build(r"\hbox{X}\setbox0=\hbox{A}\message{\the\wd0}Z", status="boundary")
+        r = self.build(r"\hbox{X}\setbox0=\hbox{$A$}\message{\the\wd0}Z", status="boundary")
         self.assertEqual(r.boundary["reason"], "unknown_box_dimension")
         self.assertEqual(text(r), "X")
 
@@ -194,8 +194,7 @@ class ContentTests(unittest.TestCase):
                                (r"\halign{#\cr A&B\cr}", "alignment_columns"),
                                (r"\hbox{\vskip1pt}", "content_mode"),
                                (r"$x}", "content_group"),
-                               (r'\delcode40="028300 $\left(x}', "content_group"),
-                               (r"\hbox{A\/\message{\the\lastkern}}", "unknown_italic_correction")]:
+                               (r'\delcode40="028300 $\left(x}', "content_group")]:
             with self.subTest(source=source):
                 self.assertEqual(self.build(source, status="boundary").boundary["reason"], reason)
 

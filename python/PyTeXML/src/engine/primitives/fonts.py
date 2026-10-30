@@ -57,7 +57,7 @@ def define(host, opening, meaning):
     identity = f"{name.removesuffix('.tfm')}@{size}"
     span = host.reader.source_span(opening.span.start, host.reader.position)
     if identity not in fonts.values:
-        fonts.establish(identity, values)
+        fonts.establish(identity, values, metric=(name, size))
         fonts.identifiers[identity] = target.value
         for key, parameter in (("hyphenchar", "defaulthyphenchar"), ("skewchar", "defaultskewchar")):
             from .parameters import internal_value

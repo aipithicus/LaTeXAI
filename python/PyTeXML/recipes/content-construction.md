@@ -6,6 +6,11 @@ physical input owner, current-meaning dispatcher, scanners and token programs.
 It returns structured content and a build receipt. It does not typeset pages or
 claim general-document coverage.
 
+The subsequent [semantic content checkpoint](semantic-content.md) adds local
+measurements, bounded semantic drivers, virtual streams and auxiliary reinput.
+Its qualification owns those additions; the original evidence below remains a
+selected pre-layout structural comparison.
+
 ## Implemented behavior
 
 | Family | Constructed behavior |
@@ -55,7 +60,9 @@ Without a restored format, execution starts in the format builder's explicit
 INITEX state; LaTeX meanings and category codes are not silently assumed.
 
 The output has a `pytexml-content-build/1` receipt and a `pytexml-content/1` tree.
-Characters are unshaped, paragraphs unbroken, boxes unpacked and math unconverted.
+Characters retain logical source identity, paragraphs remain unbroken and math
+unconverted. Boxes now carry separate local measurement and glyph-run projections
+where the semantic content checkpoint can establish them.
 Unknown dimensions serialize as `null`. The context also retains unshipped box
 registers. This strict bounded runner is a development API/CLI; production
 preparation and best-effort extraction retain their separate ownership contracts.
@@ -115,8 +122,10 @@ target handling in `font` definitions followed immediately by font selection.
 
 ## Remaining boundaries
 
-This checkpoint does not implement ligatures, kerning, glyph metrics, interword
-space-factor measurement, line/page breaking, output routines or PDF generation.
+The original checkpoint did not implement glyph measurement. The subsequent
+semantic content checkpoint supplies bounded TFM ligature/kern measurement and
+space-factor handling. Line/page breaking, output routines and PDF generation
+remain absent.
 Character/font identity is captured before shaping, including characters which a
 later missing-glyph check may reject. Outer vertical tail queries stop because
 their answer depends on the absent page builder. Natural box geometry is not
@@ -128,9 +137,10 @@ numbers, generalized fractions, active math characters, discretionary lists,
 rule leaders and other unsupported mode operations remain open. Math-choice
 alternatives are retained rather than selected before a style/layout consumer.
 
-PDF links/destinations/outlines/info/color stacks and pinned semantic drivers
-remain L16 work. Marks and writes are issuance events, not page-selected marks or
-completed auxiliary files. There is no output stream or shell execution here.
+The semantic content checkpoint adds pinned plain links/destinations and raw
+metadata, plus virtual output streams and explicit shipout writes. Broader L16
+drivers, outlines and colour stacks remain open. Marks are not page-selected;
+there is no shell execution or production filesystem output.
 
 The existing execution-continuation limits still apply: an operand that needs to
 cross from a bounded inserted program into unread physical input can stop rather

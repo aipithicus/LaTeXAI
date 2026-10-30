@@ -462,6 +462,9 @@ class StructuralDispatcher:
                                                     causes=(meaning.uncertain,))
                 raise ReadingIssue("uncertain_meaning", "Primitive meaning may have changed", causes=(meaning.uncertain,))
             operation = self.operations[meaning.operation]
+            if self.content is not None and operation.unexpandable and not (
+                    meaning.operation == "content.list" and meaning.operand == "char"):
+                self.content.break_text()
             if operation.expansion is not None and operation.handler is None:
                 return self.execute_continuation(event)
             return operation.execute(self, event, meaning)

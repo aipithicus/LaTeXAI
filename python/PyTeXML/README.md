@@ -103,8 +103,14 @@ source-linked paragraphs, boxes, math lists and finite alignments through the
 same execution engine. It captures insertion/mark/write/shipout events and
 preserves unknown geometry explicitly. A pinned native showbox/showlists witness
 matches its selected content observations. The API/CLI accepts explicit source
-inventories and restored Python formats; page layout, PDF drivers and general
-document coverage remain open.
+inventories and restored Python formats.
+
+The [semantic content checkpoint](recipes/semantic-content.md) adds local TFM
+measurements, a pinned plain-link/anchor driver adapter, virtual output streams
+and auxiliary-file reinput, and explicit paragraph/page dependencies. Native
+command/macro traces and list dumps qualify bounded witnesses; they are not a
+complete primitive census. General page layout, full package startup and broad
+driver compatibility remain open.
 
 [engine/format.py](src/engine/format.py) installs the supported LaTeX-format
 meanings in each document's mutable state. The initial entry is `\active`, the

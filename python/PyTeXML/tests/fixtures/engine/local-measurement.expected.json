@@ -1,0 +1,52 @@
+{
+  "schema": "pytexml-local-measurement/1",
+  "status": "matched",
+  "boundary": null,
+  "expected": [
+    "OBS:ligkern:2311967,455111,0",
+    "OBS:macro:2311967,455111,0",
+    "OBS:char:1456358,455111,0",
+    "OBS:group:1474563,455111,0",
+    "OBS:command:1474563,455111,0",
+    "OBS:space:1174189,447828,0",
+    "OBS:sentence:1265212,447828,0",
+    "OBS:controlspace:595287,447828,0",
+    "OBS:italic:251223,455111,0",
+    "OBS:unbox:728180,455111,0",
+    "OBS:shift:1310723,447828,65536",
+    "OBS:baseline:491521,1234260,127431",
+    "OBS:rule:491521,795532,127431",
+    "OBS:vtop:491521,447828,913863",
+    "OBS:vto:491521,1966080,127431",
+    "OBS:scaled:1618375,318577,0",
+    "OBS:DONE"
+  ],
+  "actual": [
+    "OBS:ligkern:2311967,455111,0",
+    "OBS:macro:2311967,455111,0",
+    "OBS:char:1456358,455111,0",
+    "OBS:group:1474563,455111,0",
+    "OBS:command:1474563,455111,0",
+    "OBS:space:1174189,447828,0",
+    "OBS:sentence:1265212,447828,0",
+    "OBS:controlspace:595287,447828,0",
+    "OBS:italic:251223,455111,0",
+    "OBS:unbox:728180,455111,0",
+    "OBS:shift:1310723,447828,65536",
+    "OBS:baseline:491521,1234260,127431",
+    "OBS:rule:491521,795532,127431",
+    "OBS:vtop:491521,447828,913863",
+    "OBS:vto:491521,1966080,127431",
+    "OBS:scaled:1618375,318577,0",
+    "OBS:DONE"
+  ],
+  "native_version": "This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (INITEX)",
+  "executable_sha256": "4b582d0be712b74ae5090aba2d7338f185082f6446cbee7b26115e8ab6e21184",
+  "sources": {
+    "local-measurement-source.tex": "8f5d8cf70bc2d50fa3fee859dbdb88503cc76b2842f7018ff789ef9e4bc11048",
+    "local-measurement.tex": "b2c7aa85d9743e69dcc56b30572aff912e1a92340221b6ef232ba66a37db181e",
+    "cmr10.tfm": "87f2d8981927644cbecaf3d639e96e348ea4e7be49d8804468bd8ba9ff3f5244"
+  },
+  "log_sha256": "448d06f37771e97334d09c7aad9717d9f5fccd1873c3cfb8baa32076e660e8ec",
+  "scope": "selected local dimensions; no paragraph, page, math-layout or rendering equivalence"
+}

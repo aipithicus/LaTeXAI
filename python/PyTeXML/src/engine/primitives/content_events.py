@@ -6,6 +6,7 @@ from .content import owner, result
 from .conversions import group, is_opening_group
 from .format_state import expanded_group
 from ...reading.contracts import ReadingIssue
+from ..transactions import atomic
 
 
 def token_nodes(content, host, tokens):
@@ -16,6 +17,8 @@ def token_nodes(content, host, tokens):
 def write(host, opening, meaning):
     content, scanner = owner(host), IntegerScanner(host)
     number = scanner.integer()
+    if number == 18:
+        raise ReadingIssue("shell_write", "This content consumer does not execute shell-write requests")
     scanner.finish()
     immediate = getattr(host, "immediate_write", False)
     if immediate:
@@ -24,9 +27,37 @@ def write(host, opening, meaning):
         scanner = IntegerScanner(host)
         tokens = group(scanner.reader)
         scanner.finish()
-    content.emit(content.node(host, "write", opening.span, token_nodes(content, host, tokens), stream=number,
+    node = content.node(host, "write", opening.span, token_nodes(content, host, tokens), stream=number,
+                              payload=tokens, write_id=content.lifecycle.identifier(),
                               timing="immediate" if immediate else "shipout",
-                              execution="issued", expansion="captured" if immediate else "deferred"))
+                              execution="issued", expansion="captured" if immediate else "deferred")
+    content.emit(node)
+    if immediate:
+        content.lifecycle.write(content, host, node)
+    return result(host, opening)
+
+
+@atomic
+def output_stream(host, opening, meaning):
+    from .read_streams import filename
+    from pathlib import PurePosixPath
+    content, scanner = owner(host), IntegerScanner(host)
+    number = scanner.integer()
+    if not 0 <= number <= 15:
+        raise ReadingIssue("output_stream_index", "Output stream number must lie in 0..15")
+    name = None
+    if meaning.operand == "open":
+        scanner.optional_equals()
+        name = filename(scanner)
+        if not PurePosixPath(name).suffix:
+            name += ".tex"
+    scanner.finish()
+    immediate = getattr(host, "immediate_write", False)
+    node = content.node(host, "output_stream", opening.span, stream=number, filename=name,
+                        operation=meaning.operand, timing="immediate" if immediate else "shipout")
+    content.emit(node)
+    if immediate:
+        content.lifecycle.stream(node)
     return result(host, opening)
 
 
@@ -56,4 +87,6 @@ def execute(host, opening, meaning):
 
 
 EFFECT = PrimitiveOperation("content.effect", ExpansionKind.UNEXPANDABLE, execute, operand_type=str)
-FAMILY = OperationFamily((EFFECT,), tuple(EFFECT.declare(k, k) for k in "insert vadjust mark marks special".split()))
+STREAM = PrimitiveOperation("content.output_stream", ExpansionKind.UNEXPANDABLE, output_stream, operand_type=str)
+FAMILY = OperationFamily((EFFECT, STREAM), tuple(EFFECT.declare(k, k) for k in "insert vadjust mark marks special".split()) +
+                        (STREAM.declare("openout", "open"), STREAM.declare("closeout", "close")))

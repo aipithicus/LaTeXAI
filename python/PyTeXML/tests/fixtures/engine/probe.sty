@@ -1,0 +1,5 @@
+\ProvidesPackage{probe}[2026/10/30 PyTeXML bounded trace observer]
+\newcommand\PyTraceOn{\tracingcommands=3 \tracingmacros=1 \tracingonline=0
+  \showboxbreadth=1000 \showboxdepth=1000 \message{PYTEXML:BEGIN}}
+\newcommand\PyTraceOff{\message{PYTEXML:END}\tracingcommands=0 \tracingmacros=0}
+\endinput
