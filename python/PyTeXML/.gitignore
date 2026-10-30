@@ -23,3 +23,6 @@
 
 # Native census, reconstruction probes and cost receipts (frozen fixtures are tracked).
 /temp/meaning-assays/
+
+# Behavioral atlas verification and bounded-witness cost receipts.
+/temp/behavioral-atlas/

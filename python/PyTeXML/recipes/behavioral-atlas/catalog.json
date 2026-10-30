@@ -1,0 +1,757 @@
+{
+  "schema": "pytexml-behavioral-atlas/1",
+  "source_snapshot": {
+    "repository": "LaTeXAI",
+    "commit": "76ec22884dd5d1736d5ee027b852a92adbd94aae",
+    "upstream_base": "ee4b3640a26d1ba359670b3304e07678d4d1e87e",
+    "date": "2026-10-29",
+    "scope": "Selected local fixtures only; source hashes and byte spans are authoritative."
+  },
+  "sources": {
+    "trailing": {
+      "path": "t/tokenize/trailingspaces.tex",
+      "sha256": "d87d7e7b120b8f563fb24b329fb0552d139704ac5ac2c9c613a416ece0c46326"
+    },
+    "trailing_xml": {
+      "path": "t/tokenize/trailingspaces.xml",
+      "sha256": "f73af6cf58ddc9d385ad60b56f3906f0a63a9712cf6cf75af0696a90bd840e4e"
+    },
+    "newlines": {
+      "path": "t/tokenize/newlines.tex",
+      "sha256": "cad91fa9f4d7866c764b211aeb32870672ff454d49dacb9d7994abc616156937"
+    },
+    "newlines_input": {
+      "path": "t/tokenize/newlines-input.tex",
+      "sha256": "5986d7b38cd81af3a40068a6e861e52448205ccfc3c1a4a5ab3085220b1dc089"
+    },
+    "equality": {
+      "path": "t/tokenize/equality.tex",
+      "sha256": "45267ad55c01cc3f7e8ca0ec93c119e2089c100c98976133208ba130de53456a"
+    },
+    "meaning": {
+      "path": "t/expansion/meaning.tex",
+      "sha256": "8310d0b224d5458e7f3ad29ef9f7b15e4012d6f4dc8afd4788c3c6a17a309053"
+    },
+    "escapechar": {
+      "path": "t/expansion/escapechar.tex",
+      "sha256": "17cd15f7824c2201fcd8cb11b1eb357861ad09f083db47d188bba7904056ec16"
+    },
+    "escapechar_xml": {
+      "path": "t/expansion/escapechar.xml",
+      "sha256": "45b141eaaf6b25ee99bd4e08d6a2819732396ee1f9d6cd9f1bd2dbc3e4e9300e"
+    },
+    "roundtrip": {
+      "path": "t/expansion/multi_escaped_param.tex",
+      "sha256": "9c9c1d6fec36c3679426b7bb856e0dc4a171c6d459f0f01b7506956622b8a448"
+    },
+    "roundtrip_xml": {
+      "path": "t/expansion/multi_escaped_param.xml",
+      "sha256": "23e7f6bee0faed708a45ae6279348034c3390d8599b61903d7584480681b60c2"
+    },
+    "expanded": {
+      "path": "t/expansion/pdftex_expanded.tex",
+      "sha256": "899f692a5940cac331f4060806564a89e4cd2e2b73f9011b8564a6fa584be084"
+    },
+    "expanded_xml": {
+      "path": "t/expansion/pdftex_expanded.xml",
+      "sha256": "0868a7fdf838c2ca0133d25a92f0868827e1cb24d70eb9a236fcd7a7ad5255c6"
+    },
+    "generator": {
+      "path": "t/expansion/pass_param_toks_in_gen_macros.tex",
+      "sha256": "5c68ffac09465ed6d3a32d3045def75a6f58e629086291b7173288d44f5de6f4"
+    },
+    "generator_xml": {
+      "path": "t/expansion/pass_param_toks_in_gen_macros.xml",
+      "sha256": "b4068093dcef34d3079ff55ca21385edd137793af55d43a7f56269fe69a8b338"
+    },
+    "tokenize_driver": {
+      "path": "t/05_tokenize.t",
+      "sha256": "c900421496fd90ddab500c5754e9b17120bafd733e67cc78a051fc1281940673"
+    },
+    "expansion_driver": {
+      "path": "t/10_expansion.t",
+      "sha256": "20dd822e9b628677fc629290ea5ea4dac590fcf36e8c4570df151bd8d7abbeb4"
+    },
+    "harness": {
+      "path": "lib/LaTeXML/Util/Test.pm",
+      "sha256": "91ade202921a5568a5350c0d506ff2e78d538e7f5aaf904f60a6efb423303fcd"
+    }
+  },
+  "fragments": {
+    "trailing_body": {
+      "source": "trailing",
+      "line_start": 4,
+      "line_end": 9,
+      "byte_start": 57,
+      "byte_end": 255,
+      "sha256": "198a718f6ad87721b5a4b8c8f02e9baa0274dcaf80bfb5fe45d4798b8dc91e34"
+    },
+    "trailing_join": {
+      "source": "trailing",
+      "line_start": 4,
+      "line_end": 6,
+      "byte_start": 57,
+      "byte_end": 90,
+      "sha256": "0eae0d53416e0aff723b09e072c244a91cbc1b15e291ece7ef547dff09ea78da"
+    },
+    "trailing_golden": {
+      "source": "trailing_xml",
+      "line_start": 1,
+      "line_end": 10,
+      "byte_start": 0,
+      "byte_end": 492,
+      "sha256": "f73af6cf58ddc9d385ad60b56f3906f0a63a9712cf6cf75af0696a90bd840e4e"
+    },
+    "newlines_document": {
+      "source": "newlines",
+      "line_start": 1,
+      "line_end": 11,
+      "byte_start": 0,
+      "byte_end": 393,
+      "sha256": "cad91fa9f4d7866c764b211aeb32870672ff454d49dacb9d7994abc616156937"
+    },
+    "newlines_helper": {
+      "source": "newlines_input",
+      "line_start": 1,
+      "line_end": 2,
+      "byte_start": 0,
+      "byte_end": 69,
+      "sha256": "5986d7b38cd81af3a40068a6e861e52448205ccfc3c1a4a5ab3085220b1dc089"
+    },
+    "equality_cases": {
+      "source": "equality",
+      "line_start": 1,
+      "line_end": 131,
+      "byte_start": 0,
+      "byte_end": 2248,
+      "sha256": "45267ad55c01cc3f7e8ca0ec93c119e2089c100c98976133208ba130de53456a"
+    },
+    "meaning_cases": {
+      "source": "meaning",
+      "line_start": 1,
+      "line_end": 63,
+      "byte_start": 0,
+      "byte_end": 838,
+      "sha256": "8310d0b224d5458e7f3ad29ef9f7b15e4012d6f4dc8afd4788c3c6a17a309053"
+    },
+    "escapechar_cases": {
+      "source": "escapechar",
+      "line_start": 1,
+      "line_end": 41,
+      "byte_start": 0,
+      "byte_end": 1167,
+      "sha256": "17cd15f7824c2201fcd8cb11b1eb357861ad09f083db47d188bba7904056ec16"
+    },
+    "escapechar_golden": {
+      "source": "escapechar_xml",
+      "line_start": 1,
+      "line_end": 37,
+      "byte_start": 0,
+      "byte_end": 1568,
+      "sha256": "45b141eaaf6b25ee99bd4e08d6a2819732396ee1f9d6cd9f1bd2dbc3e4e9300e"
+    },
+    "roundtrip_definition": {
+      "source": "roundtrip",
+      "line_start": 1,
+      "line_end": 16,
+      "byte_start": 0,
+      "byte_end": 430,
+      "sha256": "f1dae9566308d3ced878b7f5844dd52f3eac851c25326d72727ad044166e2255"
+    },
+    "roundtrip_invocation": {
+      "source": "roundtrip",
+      "line_start": 17,
+      "line_end": 18,
+      "byte_start": 430,
+      "byte_end": 479,
+      "sha256": "342b6dc12a04e4d26ac93fa3bebec43eab33a50f422142f267279b7e4b0177f9"
+    },
+    "roundtrip_golden": {
+      "source": "roundtrip_xml",
+      "line_start": 1,
+      "line_end": 10,
+      "byte_start": 0,
+      "byte_end": 233,
+      "sha256": "23e7f6bee0faed708a45ae6279348034c3390d8599b61903d7584480681b60c2"
+    },
+    "constructed_parameter": {
+      "source": "expanded",
+      "line_start": 26,
+      "line_end": 28,
+      "byte_start": 536,
+      "byte_end": 649,
+      "sha256": "25630c1f46adbfa6e64a6282cd7d644693369bc8e9f410d978f1abfd26fd165c"
+    },
+    "expansion_barriers": {
+      "source": "expanded",
+      "line_start": 29,
+      "line_end": 63,
+      "byte_start": 649,
+      "byte_end": 1407,
+      "sha256": "66bcded7769d02f9116da36dfd31292f1c424eaed05218b2a04259bae4c0d6e7"
+    },
+    "expanded_golden": {
+      "source": "expanded_xml",
+      "line_start": 1,
+      "line_end": 70,
+      "byte_start": 0,
+      "byte_end": 972,
+      "sha256": "0868a7fdf838c2ca0133d25a92f0868827e1cb24d70eb9a236fcd7a7ad5255c6"
+    },
+    "conditional_generator": {
+      "source": "generator",
+      "line_start": 1,
+      "line_end": 89,
+      "byte_start": 0,
+      "byte_end": 2086,
+      "sha256": "0a6511300f867b57611674967980bd1bcd533bbc985bbe88efd8703f8e2e116e"
+    },
+    "generator_observation": {
+      "source": "generator",
+      "line_start": 90,
+      "line_end": 91,
+      "byte_start": 2086,
+      "byte_end": 2116,
+      "sha256": "fa3000624fe7ace422e3e9a86bb5394f41429d144b5b7d212470d73473afd658"
+    },
+    "generator_golden": {
+      "source": "generator_xml",
+      "line_start": 1,
+      "line_end": 8,
+      "byte_start": 0,
+      "byte_end": 351,
+      "sha256": "b4068093dcef34d3079ff55ca21385edd137793af55d43a7f56269fe69a8b338"
+    },
+    "tokenize_harness": {
+      "source": "tokenize_driver",
+      "line_start": 1,
+      "line_end": 7,
+      "byte_start": 0,
+      "byte_end": 240,
+      "sha256": "c900421496fd90ddab500c5754e9b17120bafd733e67cc78a051fc1281940673"
+    },
+    "expansion_harness": {
+      "source": "expansion_driver",
+      "line_start": 1,
+      "line_end": 11,
+      "byte_start": 0,
+      "byte_end": 413,
+      "sha256": "20dd822e9b628677fc629290ea5ea4dac590fcf36e8c4570df151bd8d7abbeb4"
+    },
+    "comparison_harness": {
+      "source": "harness",
+      "line_start": 31,
+      "line_end": 81,
+      "byte_start": 818,
+      "byte_end": 3500,
+      "sha256": "f7872f729a5bf80dde23bd2ba5e31a60cfca891395cccbb28cb804788f89cd62"
+    }
+  },
+  "checks": {
+    "physical_spaces": {
+      "path": "python/PyTeXML/tests/test_behavioral_atlas_witnesses.py",
+      "test": "AtlasWitnessTests.test_physical_spaces_and_tabs_from_source",
+      "role": "bounded_derived_check_not_original_fixture_execution"
+    },
+    "revised_reading": {
+      "path": "python/PyTeXML/tests/test_behavioral_atlas_witnesses.py",
+      "test": "AtlasWitnessTests.test_provisional_reading_replayed_with_refined_context",
+      "role": "bounded_derived_check_not_original_fixture_execution"
+    },
+    "display_identity": {
+      "path": "python/PyTeXML/tests/test_behavioral_atlas_witnesses.py",
+      "test": "AtlasWitnessTests.test_generated_name_display_is_not_token_serialization",
+      "role": "bounded_derived_check_not_original_fixture_execution"
+    },
+    "constructed_parameter": {
+      "path": "python/PyTeXML/tests/test_behavioral_atlas_witnesses.py",
+      "test": "AtlasWitnessTests.test_constructed_parameter_from_upstream_fragment",
+      "role": "bounded_derived_check_not_original_fixture_execution"
+    }
+  },
+  "cases": [
+    {
+      "id": "S01",
+      "family": "spacing",
+      "title": "Physical trailing spaces, tabs and disabled endline insertion",
+      "fragments": [
+        "trailing_body",
+        "trailing_join",
+        "trailing_golden"
+      ],
+      "mechanisms": [
+        "physical_line_normalization",
+        "semantic_space",
+        "source_provenance"
+      ],
+      "prerequisites": [
+        "LaTeX wrapper for the original; the derived reader check supplies latex_ascii categories and endlinechar=-1.",
+        "Read raw bytes: trimming the fixture during import destroys the subject."
+      ],
+      "observations": [
+        {
+          "authority": "fixture_intent",
+          "claim": "The split Supercalifragilisticexpialidocious must join; a trailing tab must still yield a separating space.",
+          "evidence": [
+            "trailing_body"
+          ]
+        },
+        {
+          "authority": "latexml_golden",
+          "claim": "The XML contains the joined word and the separate following words; it does not expose token categories or spans.",
+          "evidence": [
+            "trailing_golden"
+          ]
+        }
+      ],
+      "limits": [
+        "The reader check excludes documentclass and endlinechar assignment execution.",
+        "Endlinechar is captured at physical-line load; its refinement may require an earlier checkpoint than the next token."
+      ],
+      "staged_experiment": {
+        "trigger": "An earlier applicable reading context becomes known after provisional reading.",
+        "action": "Replay from before the affected physical line was loaded; retain the raw whitespace and replace dependent observations.",
+        "assertions": [
+          "Match immediate-context reading token-for-token and preserve source intervals.",
+          "Do not apply whitespace normalization to stored token lists or literal regions."
+        ],
+        "unresolved": "Keep the source and its context obligation; another pass without new evidence changes no status."
+      },
+      "checks": [
+        "physical_spaces"
+      ],
+      "qualification": {
+        "original_fixture": "not_run",
+        "native": "not_run",
+        "staged_resolver": "proposed"
+      }
+    },
+    {
+      "id": "S02",
+      "family": "spacing",
+      "title": "Mixed physical line endings and included-file boundary",
+      "fragments": [
+        "newlines_document",
+        "newlines_helper"
+      ],
+      "mechanisms": [
+        "physical_line_normalization",
+        "input_stack",
+        "paragraph_state",
+        "source_provenance"
+      ],
+      "prerequisites": [
+        "Article/verb support for the original document.",
+        "Include the raw newlines-input.tex helper and distinguish EOF from a physical line delimiter."
+      ],
+      "observations": [
+        {
+          "authority": "fixture_intent",
+          "claim": "LF, CRLF, CRCRLF and CR boundaries exercise space versus paragraph production; the included file ends in two CR bytes.",
+          "evidence": [
+            "newlines_document",
+            "newlines_helper"
+          ]
+        }
+      ],
+      "limits": [
+        "A helper is not an independent root test.",
+        "No derived execution check or new native run is claimed for this entry."
+      ],
+      "staged_experiment": {
+        "trigger": "An input edge or its decoding/reading context is resolved after surrounding source was inspected.",
+        "action": "Revisit the include boundary with a fresh input-stack context, invalidating affected paragraph observations.",
+        "assertions": [
+          "Keep parent and child source occurrences distinct.",
+          "Compare physical-line events as well as rendered text.",
+          "Preserve bytes through import; copying with newline conversion is a changed experiment."
+        ],
+        "unresolved": "Retain the missing or opaque include and any assumed boundary state."
+      },
+      "checks": [],
+      "qualification": {
+        "original_fixture": "not_run",
+        "native": "not_run",
+        "staged_resolver": "proposed"
+      }
+    },
+    {
+      "id": "S03",
+      "family": "spacing",
+      "title": "Category changes, aliases and frozen token identity",
+      "fragments": [
+        "equality_cases"
+      ],
+      "mechanisms": [
+        "state_dependent_reading",
+        "token_identity",
+        "alias_identity",
+        "scope",
+        "invalidation"
+      ],
+      "prerequisites": [
+        "Local catcode changes, ifx, let and group restoration.",
+        "The full document also uses math behavior and a format-private active-prime helper."
+      ],
+      "observations": [
+        {
+          "authority": "fixture_intent",
+          "claim": "Equal categories do not erase character identity; let can copy a character meaning, while changing later source catcodes changes subsequent tokenization.",
+          "evidence": [
+            "equality_cases"
+          ]
+        }
+      ],
+      "limits": [
+        "The derived check manually restores a reader checkpoint and refines context. It is not the proposed dependency scheduler.",
+        "Full math-active behavior is outside the derived check."
+      ],
+      "staged_experiment": {
+        "trigger": "A provisional source read used an incomplete category table.",
+        "action": "Restore a checkpoint and publish a revised reading under the context applicable at that position.",
+        "assertions": [
+          "Match a fresh correct-context read.",
+          "Previously returned immutable token objects retain their categories and source identity.",
+          "Never retokenize a committed macro body when its current context changes."
+        ],
+        "unresolved": "Mark provisional tokens and their dependent observations as unresolved."
+      },
+      "checks": [
+        "revised_reading"
+      ],
+      "qualification": {
+        "original_fixture": "not_run",
+        "native": "not_run",
+        "staged_resolver": "proposed"
+      }
+    },
+    {
+      "id": "M01",
+      "family": "meaning",
+      "title": "Display operations observe current context without replacing token identity",
+      "fragments": [
+        "meaning_cases"
+      ],
+      "mechanisms": [
+        "meaning_display",
+        "token_identity",
+        "active_character_identity",
+        "parameter_layering"
+      ],
+      "prerequisites": [
+        "meaning, string, detokenize, expansion control, active characters and local category changes.",
+        "The original expansion driver requires t1enc.def for meaning.tex."
+      ],
+      "observations": [
+        {
+          "authority": "fixture_intent",
+          "claim": "The same tester compares string, meaning, meaning-of-string and detokenize for characters, active characters, definitions and undefined names.",
+          "evidence": [
+            "meaning_cases"
+          ]
+        }
+      ],
+      "limits": [
+        "Displayed text is one observation; equality of displays does not establish typed meaning equality.",
+        "The 533-case assay triage is related evidence, not execution of this fixture."
+      ],
+      "staged_experiment": {
+        "trigger": "Display context (such as escapechar or a single-character name's category) becomes known.",
+        "action": "Recompute dependent display observations from preserved typed meanings.",
+        "assertions": [
+          "Preserve the original semantic descriptor.",
+          "Keep display output and a later deliberate rescan as distinct operations."
+        ],
+        "unresolved": "Retain the typed meaning where known and a separate unresolved display requirement."
+      },
+      "checks": [],
+      "qualification": {
+        "original_fixture": "not_run",
+        "native": "not_run",
+        "staged_resolver": "proposed"
+      }
+    },
+    {
+      "id": "M02",
+      "family": "meaning",
+      "title": "Meaning-based reconstruction is an executable protocol",
+      "fragments": [
+        "roundtrip_definition",
+        "roundtrip_invocation",
+        "roundtrip_golden"
+      ],
+      "mechanisms": [
+        "meaning_display",
+        "retokenization",
+        "parameter_layering",
+        "expansion_order",
+        "scope"
+      ],
+      "prerequisites": [
+        "protected definitions, nested edef, noexpand, detokenize, string, scantokens, ifx and group restoration.",
+        "The original is a plain-format-style root ending in bye."
+      ],
+      "observations": [
+        {
+          "authority": "fixture_intent",
+          "claim": "ifscanable rebuilds a definition from its displayed meaning and tests it with ifx.",
+          "evidence": [
+            "roundtrip_definition",
+            "roundtrip_invocation"
+          ]
+        },
+        {
+          "authority": "latexml_golden",
+          "claim": "The recorded LaTeXML result is 1 for firstoftwo.",
+          "evidence": [
+            "roundtrip_golden"
+          ]
+        }
+      ],
+      "limits": [
+        "Success for firstoftwo is not a universal inverse for meaning.",
+        "No new native or PyTeXML execution of this whole protocol is claimed."
+      ],
+      "staged_experiment": {
+        "trigger": "The reconstructed body has an unresolved reading regime or name boundary.",
+        "action": "Keep candidate reconstructions separate, resolve source/context constraints, then compare typed meanings and behavior.",
+        "assertions": [
+          "Require semantic comparison in addition to display equality.",
+          "Separate a proven source-derived meaning from an assumed reconstruction.",
+          "If scantokens intentionally rescans characters, preserve that operation's own context and provenance."
+        ],
+        "unresolved": "Report ambiguity or failure of reconstruction; do not silently install the best-looking string."
+      },
+      "checks": [],
+      "qualification": {
+        "original_fixture": "not_run",
+        "native": "not_run",
+        "staged_resolver": "proposed"
+      }
+    },
+    {
+      "id": "M03",
+      "family": "meaning",
+      "title": "Generated names and escapechar-dependent text",
+      "fragments": [
+        "escapechar_cases",
+        "escapechar_golden"
+      ],
+      "mechanisms": [
+        "computed_names",
+        "meaning_display",
+        "token_identity",
+        "scope"
+      ],
+      "prerequisites": [
+        "csname, string, numeric escapechar state, argument scanning and helper definitions for the full source.",
+        "The bounded derived check uses a synthetic T1-cmd name motivated by the assay, not a copied substring of this fixture."
+      ],
+      "observations": [
+        {
+          "authority": "fixture_intent",
+          "claim": "The chomper generates different names with escapechar=-1 and the normal backslash setting.",
+          "evidence": [
+            "escapechar_cases"
+          ]
+        },
+        {
+          "authority": "latexml_golden",
+          "claim": "The target contains Foo/Bar and A Foo/A Bar for the two calls.",
+          "evidence": [
+            "escapechar_golden"
+          ]
+        },
+        {
+          "authority": "proposed_assertion",
+          "claim": "A generated name containing nonletters remains one control-sequence token; reading its display as source can split it.",
+          "evidence": [
+            "escapechar_cases"
+          ]
+        }
+      ],
+      "limits": [
+        "Computed name spelling can intentionally depend on display state; the engine must execute that dependency.",
+        "A name inventory cannot uniquely recover all token boundaries from display text."
+      ],
+      "staged_experiment": {
+        "trigger": "An input to computed-name construction becomes known.",
+        "action": "Resolve the name-producing expression in its invocation context and invalidate only dependent name lookups.",
+        "assertions": [
+          "Store the resulting name independently of how a source lexer would spell it.",
+          "A missing lookup may be retried after a justified namespace revision, without applying later definitions retroactively."
+        ],
+        "unresolved": "Keep a computed-name obligation rather than inventing a literal name or binding."
+      },
+      "checks": [
+        "display_identity"
+      ],
+      "qualification": {
+        "original_fixture": "not_run",
+        "native": "not_run",
+        "staged_resolver": "proposed"
+      }
+    },
+    {
+      "id": "P01",
+      "family": "parameters",
+      "title": "Parameter marker and digit assembled across expansion",
+      "fragments": [
+        "constructed_parameter",
+        "expanded_golden"
+      ],
+      "mechanisms": [
+        "parameter_layering",
+        "expansion_order",
+        "definition_scanning"
+      ],
+      "prerequisites": [
+        "expanded, expandafter, def, number, signed integer scanning and parameter token recognition.",
+        "The bounded Python check supplies an initialized reader context; it does not run the full torture fixture."
+      ],
+      "observations": [
+        {
+          "authority": "fixture_intent",
+          "claim": "A literal parameter marker and expanded digit 1 form the parameter of a newly constructed identity macro.",
+          "evidence": [
+            "constructed_parameter"
+          ]
+        },
+        {
+          "authority": "latexml_golden",
+          "claim": "The displayed ddd meaning has parameter #1 and replacement #1 (XML uses font-converted glyphs for the arrow).",
+          "evidence": [
+            "expanded_golden"
+          ]
+        }
+      ],
+      "limits": [
+        "Do not copy the XML's rendered punctuation as native meaning text.",
+        "A scanner limited to contiguous source characters cannot cover generated parameter syntax."
+      ],
+      "staged_experiment": {
+        "trigger": "An expansion producing definition syntax was deferred.",
+        "action": "Resume through the shared expansion/scanning machinery with preserved token categories and expansion-frame provenance.",
+        "assertions": [
+          "Create one parameter and one parameter reference, then exercise the resulting macro on an argument.",
+          "Checkpoint replay must not install the definition twice or consume following source twice."
+        ],
+        "unresolved": "Retain the incomplete definition and identify the prerequisite expansion; do not guess arity."
+      },
+      "checks": [
+        "constructed_parameter"
+      ],
+      "qualification": {
+        "original_fixture": "not_run",
+        "native": "not_run",
+        "staged_resolver": "proposed"
+      }
+    },
+    {
+      "id": "P02",
+      "family": "parameters",
+      "title": "Expansion barriers and literal parameter tokens",
+      "fragments": [
+        "expansion_barriers",
+        "expanded_golden"
+      ],
+      "mechanisms": [
+        "expansion_order",
+        "expansion_suppression",
+        "parameter_layering",
+        "token_registers"
+      ],
+      "prerequisites": [
+        "expanded, noexpand, unexpanded, detokenize, edef, token registers and group-token aliases."
+      ],
+      "observations": [
+        {
+          "authority": "fixture_intent",
+          "claim": "T5.1-T5.9 contrast suppression, nested expansion, token-register insertion and doubled parameter characters.",
+          "evidence": [
+            "expansion_barriers"
+          ]
+        }
+      ],
+      "limits": [
+        "The commented torture expression is inactive source, not an exercised case.",
+        "Each T5 label needs its own observation before it can count as a qualified behavioral check."
+      ],
+      "staged_experiment": {
+        "trigger": "A suspended expansion frame becomes ready after a prerequisite resolves.",
+        "action": "Resume with frame-local suppression and parameter context intact.",
+        "assertions": [
+          "Compare with uninterrupted execution at multiple suspension points.",
+          "Noexpand suppression must not become a permanent token property.",
+          "Separate literal parameter tokens from compiled argument references."
+        ],
+        "unresolved": "Retain frame state and unconsumed input; do not flatten through a display string."
+      },
+      "checks": [],
+      "qualification": {
+        "original_fixture": "not_run",
+        "native": "not_run",
+        "staged_resolver": "proposed"
+      }
+    },
+    {
+      "id": "P03",
+      "family": "parameters",
+      "title": "Source-derived expl3 conditional generator",
+      "fragments": [
+        "conditional_generator",
+        "generator_observation",
+        "generator_golden"
+      ],
+      "mechanisms": [
+        "computed_names",
+        "parameter_layering",
+        "state_dependent_reading",
+        "expansion_order",
+        "conditional_skipping"
+      ],
+      "prerequisites": [
+        "The source's own helper definitions and typed chardefs, plus protected/edef/def, csname, expansion barriers, number, string, detokenize, conditionals and endline/category assignments.",
+        "Source comments attribute this extracted/adapted program to expl3 from TeX Live 2019; it is not the current pinned kernel release."
+      ],
+      "observations": [
+        {
+          "authority": "fixture_intent",
+          "claim": "The source creates mytest:NF from helper macros while switching colon categories and treating spaces/tilde specially.",
+          "evidence": [
+            "conditional_generator",
+            "generator_observation"
+          ]
+        },
+        {
+          "authority": "latexml_golden",
+          "claim": "The existing target displays a one-argument generated macro with its conditional body; it does not exercise both branches of that macro.",
+          "evidence": [
+            "generator_golden"
+          ]
+        }
+      ],
+      "limits": [
+        "Executing this reduced source would qualify its mechanisms, not the whole current expl3 release.",
+        "Add invocation witnesses for defined, undefined and relax operands; do not infer them from the displayed body.",
+        "This entry does not authorize a Python intrinsic named after the helper."
+      ],
+      "staged_experiment": {
+        "trigger": "A helper definition or reading-state prerequisite becomes available.",
+        "action": "Derive the computed definition through the same engine; compare uninterrupted and selectively resumed runs.",
+        "assertions": [
+          "Match generated parameter/body descriptors and definition provenance.",
+          "Invoke the generated function across branch outcomes, then redefine helpers and check invalidation.",
+          "Preserve category differences established at each definition position."
+        ],
+        "unresolved": "Expose the first actual missing mechanism with its dependency path rather than importing the golden meaning."
+      },
+      "checks": [],
+      "qualification": {
+        "original_fixture": "not_run",
+        "native": "not_run",
+        "staged_resolver": "proposed"
+      }
+    }
+  ]
+}

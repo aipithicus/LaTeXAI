@@ -49,6 +49,15 @@ mechanism and its gates; the current reader/checkpoints are supporting pieces,
 not evidence that a general second-pass resolver is implemented. No new reader
 behavior or tests are introduced by this design clarification.
 
+The subsequent [behavioral atlas](behavioral-atlas.md) now supplies a first
+source-backed slice: nine cases, including physical spacing, display/reconstruction
+and generated parameters. Four bounded checks exercise current reader/engine
+mechanisms; the full reconstruction protocol and conditional generator remain
+unexecuted entries. Its manual reader replay is supporting evidence for the
+staged proposal, not implementation of an automatic resolver. Exact source spans,
+prerequisites and observation authority prevent case names or XML goldens from
+becoming unqualified semantic coverage claims.
+
 ## Display differences: 2026-10-29 triage
 
 The 533 records classified `python_meaning_display_differs` were reconstructed

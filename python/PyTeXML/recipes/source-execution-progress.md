@@ -4,6 +4,42 @@ This file records implementation and qualification evidence. Current priorities
 live in the [working queue](../../../../aipithicus-issues/LaTeXAI/briefs/pytexml-language-core/working-queue.md);
 dated next-step statements below describe their checkpoint, not current dispatch.
 
+## 2026-10-29: behavioral atlas from existing LaTeXML fixtures
+
+The [behavioral atlas](behavioral-atlas.md) adds nine cases across spacing,
+meaning reconstruction and generated parameters, with 17 source-file hashes,
+21 exact byte ranges, prerequisites, observation authority and staged-resolution
+experiments. Existing sources and XML targets are preserved in place. The
+catalog/receipt checker verifies identity, locations and supporting test methods;
+it does not install meanings or import LaTeXML output as engine behavior.
+
+Four new bounded checks pass: physical trailing spaces/tabs with exact source
+excerpts; manual checkpoint rereading after a category refinement; a source-derived
+generated name whose display reconstruction changes token identity; and an
+upstream expansion fragment that constructs an identity macro's parameter from
+separate tokens. Six integrity tests reject source/fragment drift, missing test
+references, duplicate/unlocated cases and unsupported qualification, and preserve
+the mixed-newline helper bytes. No engine runtime changed, no complete original
+document was run, and no new native comparison was acquired. Manual reader replay
+does not establish the proposed general staged resolver.
+
+The first failed receipt is retained separately from qualification: test-authoring
+errors concerned endlinechar setup, a span field, and a tab already skipped after
+a space. Correcting the harness required no production-engine fix. Raw failures
+remain in repository `temp/behavioral-atlas-initial-receipt` and the atlas's
+`20261029-initial.json`; they are not counted as engine gaps.
+
+The qualified atlas receipt is PyTeXML
+`temp/behavioral-atlas/20261029-qualified.json`; the outer receipt, including the
+six integrity tests, is repository `temp/behavioral-atlas-qualified-receipt`.
+The atlas verification/exercise process records **1.933 s wall, 1.438 s CPU and
+39,817,216 bytes peak RSS (37.97 MiB)**. Per-check wall/CPU and cumulative process
+high-water values are recorded separately; these do not establish per-check
+allocations or a controlled performance baseline under the user's competing
+Monte Carlo workloads. All ten checks pass. The reduced expl3 conditional
+generator and meaning/scantokens reconstruction protocol remain source-backed
+research entries awaiting complete prerequisite and invocation witnesses.
+
 ## 2026-10-29: display triage and census comparison of source-derived state
 
 The [qualification follow-up](meaning-qualification.md) owns details and commands.
