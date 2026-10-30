@@ -510,7 +510,7 @@
       ],
       "limits": [
         "Success for firstoftwo is not a universal inverse for meaning.",
-        "No new native or PyTeXML execution of this whole protocol is claimed."
+        "The definition fragment and eight added observations match the pinned native reference; the original complete document remains unrun. See ../behavioral-atlas.md#pinned-native-program-comparisons."
       ],
       "staged_experiment": {
         "trigger": "The reconstructed body has an unresolved reading regime or name boundary.",
@@ -733,7 +733,7 @@
       ],
       "limits": [
         "Executing this reduced source would qualify its mechanisms, not the whole current expl3 release.",
-        "Add invocation witnesses for defined, undefined and relax operands; do not infer them from the displayed body.",
+        "Pinned native defined/undefined/relax and helper-redefinition witnesses are captured. Python stops during generation at unexpanded parameter-token insertion; branch execution is not qualified. See ../behavioral-atlas.md#pinned-native-program-comparisons.",
         "This entry does not authorize a Python intrinsic named after the helper."
       ],
       "staged_experiment": {

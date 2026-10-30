@@ -1,0 +1,14 @@
+% Each call executes the original ifscanable protocol, including scantokens.
+\edef\AtlasTraceA{\meaning\ifscanable}
+\def\resrvd{OUTSIDE}
+\ifscanable\firstoftwo{\def\AtlasTraceB{1}}{\def\AtlasTraceB{0}}
+\ifscanable\secondoftwo{\def\AtlasTraceC{1}}{\def\AtlasTraceC{0}}
+\def\AtlasLiteral#1{##:#1}
+\ifscanable\AtlasLiteral{\def\AtlasTraceD{1}}{\def\AtlasTraceD{0}}
+\protected\long\def\AtlasFlagged#1{#1}
+\ifscanable\AtlasFlagged{\def\AtlasTraceE{1}}{\def\AtlasTraceE{0}}
+\expandafter\def\csname T1-cmd\endcsname{X}
+\expandafter\def\expandafter\AtlasNamed\expandafter{\csname T1-cmd\endcsname}
+\ifscanable\AtlasNamed{\def\AtlasTraceF{1}}{\def\AtlasTraceF{0}}
+\edef\AtlasTraceG{\meaning\resrvd}
+\edef\AtlasTraceH{\meaning\AtlasNamed}

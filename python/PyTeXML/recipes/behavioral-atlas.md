@@ -17,18 +17,19 @@ The original files remain in place and are never newline-normalized by the atlas
 | S02 | [Mixed newlines](../../../t/tokenize/newlines.tex) and its [included input](../../../t/tokenize/newlines-input.tex) | Physical-line events, paragraph state and input-stack boundaries | Raw-byte preservation checked; execution remains open |
 | S03 | [Equality under category changes](../../../t/tokenize/equality.tex) | Character identity, aliases, scoped reading state and frozen tokens | Synthetic provisional read restored and reread under corrected catcodes; old tokens remain unchanged |
 | M01 | [Meaning, string and detokenize](../../../t/expansion/meaning.tex) | Typed identity and context-dependent display are separate observations | Whole fixture not run |
-| M02 | [Meaning-based reconstruction](../../../t/expansion/multi_escaped_param.tex) | Nested parameter escaping, expansion order, deliberate rescanning and semantic comparison | Whole protocol not run |
+| M02 | [Meaning-based reconstruction](../../../t/expansion/multi_escaped_param.tex) | Nested parameter escaping, expansion order, deliberate rescanning and semantic comparison | Definition fragment plus eight observations match pinned native execution |
 | M03 | [Escapechar and generated names](../../../t/expansion/escapechar.tex) | Name construction consumes state; a generated name survives independently of source spelling | Synthetic `T1-cmd` definition derives one control-sequence token; display reconstruction splits it and changes its typed descriptor |
 | P01 | [Constructed parameter, test 4](../../../t/expansion/pdftex_expanded.tex) | Definition scanning consumes tokens across expansion boundaries | Unchanged construction excerpt produces `macro:#1->#1`; invoking the new macro returns its argument |
 | P02 | [Expansion barriers, T5.1–T5.9](../../../t/expansion/pdftex_expanded.tex) | Frame-local suppression, token-register insertion and literal versus compiled parameters | Individual observations still to qualify |
-| P03 | [Extracted expl3 conditional generator](../../../t/expansion/pass_param_toks_in_gen_macros.tex) | Source-derived computed names, category changes, protected expansion and conditional skipping | Source and golden inspected; execution and branch witnesses remain open |
+| P03 | [Extracted expl3 conditional generator](../../../t/expansion/pass_param_toks_in_gen_macros.tex) | Source-derived computed names, category changes, protected expansion and conditional skipping | Native definition and nine observations qualified; Python blocked at unexpanded parameter insertion |
 
 Each case records prerequisites, mechanisms, located expectations, limitations,
 supporting Python checks and a proposed staged experiment. Its three baseline
-qualification fields deliberately remain `not_run`, `not_run`, `proposed` for
-the original fixture, a new native run and the general staged resolver. Separate
-run receipts establish supporting-check results; a catalog edit cannot promote
-an XML golden into a native observation.
+qualification fields retain the first-slice baseline `not_run`, `not_run`,
+`proposed`. Current native/Python comparisons are recorded separately below and
+in a checked reference fixture; the complete original documents and general
+staged resolver remain unqualified. A catalog edit cannot promote an XML golden
+into a native observation.
 
 ## What the first slice establishes
 
@@ -40,17 +41,107 @@ distinction and may lose the source occurrence that produced the token.
 M03 supplies a small witness for the assay's reconstruction lesson. The shared
 engine creates the generated name from source. Its original replacement is one
 control-sequence token; reconstructing its display under ordinary letter catcodes
-creates a different token sequence. This check establishes that local mechanism,
-not successful execution of M02 or a repair of every census exception.
+creates a different token sequence. M02 now supplies a native-matched execution
+of the reconstruction protocol, including this negative outcome; neither check
+repairs every census exception.
 
 P01 shows that the existing expansion and definition machinery can assemble a
 parameter from distinct contributions. The derived check removes only the
 original `meaning` output command, inspects the definition directly and invokes
-it with `OK`. No engine primitive was added. P03 is a larger follow-up candidate:
-its own source creates a previously unseeded name, but its existing golden only
-displays that definition. Add defined/undefined/relax branch calls before claiming
-its invocation behavior. It is adapted from 2019 expl3, not the current pinned
-release; later source-family qualification must preserve that distinction.
+it with `OK`. No engine primitive was added. P03 is a larger witness: its native
+execution derives the name and exercises defined/undefined/relax branches, while
+Python's first mechanism gap remains explicit below. It is adapted from 2019
+expl3, not the current pinned release; later source-family qualification must
+preserve that distinction.
+
+## Pinned native program comparisons
+
+The [probe manifest](../tests/fixtures/engine/atlas-native/cases.json) and
+[frozen native reference](../tests/fixtures/engine/atlas-native/native-reference.json)
+record P03, M02 and a minimal P03 insertion contrast. The native basis is
+[root-a-pdftex-20261029](oracle-pins/root-a-pdftex-20261029.json): pdfTeX 1.40.29,
+LaTeX 2026-06-01 and expl3 2026-09-09. The runner checks the archived inventory,
+selected binary/format/source hashes and recorded TeX input files. No ambient
+TeX installation or LaTeXML XML target supplies an expected result.
+
+The unchanged P03 definition fragment is lines 1–89; M02 is lines 1–16. Each
+receives explicit observation probes. Original document output and `bye` are
+excluded; the native wrapper runs in the pinned **pdflatex format**, writes
+hex-framed traces and terminates through that format. Python starts with the
+pdfTeX primitive profile, known initial undefined state, and the fragment's own
+definitions. This is a bounded source-execution comparison, not full format
+startup or original/prepared-document equivalence.
+
+Each target's displayed definition is reconstructed as a candidate. A second
+fresh native process repeats all observations and must find that candidate
+equal to the original with `ifx` before its typed descriptor becomes a reference.
+Printed equality alone cannot qualify it. The tracked reference contains source,
+probe, replay and basis identities; ordinary tests verify those identities and
+replay the successful Python protocol without requiring native TeX.
+
+| Program | Native observations | Python result |
+| --- | --- | --- |
+| M02 | Ordinary selectors, a literal parameter marker and protected/long flags reconstruct; a body containing the single generated name `T1-cmd` does not; the scratch definition is restored | All eight observations and the protocol's typed descriptor match |
+| P03 | Defined operand skips the F branch; undefined/relax take it; defining the operand later changes subsequent calls; locally redefining `returnfalse` changes behavior, then group exit restores it; generated definition is unchanged | Stops during generation at `invalid_definition_parameter`; generated target and nine branch/display observations are missing, never counted as passes |
+| P03 insertion contrast | `edef` with `unexpanded{#1}` has meaning `macro:->##1`, equal by `ifx` to an authored `##1` replacement | Authored control installs; insertion fails with the same parameter error |
+
+The failed Python operation reports:
+
+```text
+invalid_definition_parameter: Replacement text requires a declared parameter or doubled marker
+```
+
+The implicated shared path is `expanded_body` in
+[definition operations](../src/engine/primitives/definitions.py): it applies
+ordinary replacement-parameter validation to tokens returned by the expansion
+cursor, including the inserted unexpanded list. The contrast establishes that
+the definition consumer needs to distinguish this insertion from freshly scanned
+parameter syntax. It is the first demonstrated P03 blocker, not proof that no
+further gaps remain. No engine implementation changed in this increment.
+
+**Next mechanism gate:** specify and implement token-list insertion at the
+expanded-definition boundary, using P02's individual cases to distinguish
+`unexpanded`, token-register insertion, `noexpand`, protected expansion and nested
+parameter depth. Preserve token identity, scope, provenance and rollback. Then
+rerun the whole P03 program and all branch/helper-state observations. Do not
+install `mytest:NF` or any helper as a shortcut.
+
+The Python runner reads physical source lazily so category/endline assignments
+apply at their original positions. A strict diagnostic dispatcher uses the
+shared expansion and setup evaluator but exposes the original failure instead
+of preparation's deferred-source fallback. Probe token lists are frozen only
+after the fragment has established their reading context. This adapter does not
+qualify normal preparation routing, a general `scantokens` implementation, or
+automatic staged resolution.
+
+These results sharpen the staged design. M02's negative reconstruction is loss
+of token identity, not a whitespace defect to normalize away; retained typed
+source or additional justified context may resolve it. P03's current blocker is
+an unavailable engine rule, not a missing declaration that another pass can
+supply. Native helper-redefinition behavior also shows why a cached evaluation
+depends on current helper meanings even when the generated macro body is stable.
+Selective invalidation/replay remains proposed.
+
+From `python/PyTeXML`:
+
+```powershell
+& ../.venv/Scripts/python.exe -B -m src.validation.atlas_native `
+  --oracle ../../temp/texlive-oracle `
+  --inventory ../../temp/oracle-root-a/20261029/oracle-files.json `
+  --output temp/behavioral-atlas/<new-native-run> --timeout 60 `
+  --workload-note '<host workload>'
+& ../.venv/Scripts/python.exe -B -m unittest discover -s tests -p test_atlas_native.py -v
+```
+
+The run writes a summary and candidate frozen reference without overwriting an
+earlier run. A completed survey can contain explicit blocked comparisons; its
+completion is not an all-pass claim. Native executions and each Python specimen
+run in fresh processes with wall/CPU and peak-RSS receipts. Python case timing
+starts after runner imports; peak RSS includes those imports. Orchestrator CPU
+and memory exclude child processes; do not add process peaks or confuse them
+with retained engine-object sizes. Costs and qualification are in the newest
+[checkpoint](source-execution-progress.md). Competing Monte Carlo workloads
+preclude a controlled throughput conclusion.
 
 ## Staged-resolution opportunities
 
@@ -77,10 +168,11 @@ contracts to investigate, not special handlers for atlas names.
 - **Fixture intent:** comments and program structure state a claim to investigate.
 - **LaTeXML golden:** records that engine's XML projection; it may include font
   conversions. The arrow in P01's golden is not a native `meaning` string.
-- **Native observation:** acquire under a pinned profile with exact source,
-  initialization and probe transformations. None was newly acquired in this slice.
-- **PyTeXML observation:** four supporting checks below; none runs a complete
-  original document or establishes general staged resolution.
+- **Native observation:** the P03/M02 comparisons above pin source,
+  initialization and probe transformations separately from the first slice.
+- **PyTeXML observation:** four first-slice checks and the native-matched M02
+  protocol; none runs a complete original document or establishes general staged
+  resolution. P03 remains an explicit execution gap.
 
 The ordinary LaTeXML harness selects `.tex` files with matching `.xml` targets,
 checks requirements, converts and compares XML. It also has separate post/daemon

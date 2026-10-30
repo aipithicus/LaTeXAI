@@ -1,0 +1,1557 @@
+{
+  "schema": "pytexml-atlas-native-reference/1",
+  "basis": {
+    "inventory_sha256": "e477567821917a9b0116f55833dfff79333363a1187a2dd6a641242bb19805b4",
+    "selected_files": [
+      {
+        "path": "bin/windows/lualatex.exe",
+        "sha256": "cc944a1db010b47fcf5ccb5d1b184cba208fe7fea9f18bec414940e6fd3e24a6"
+      },
+      {
+        "path": "bin/windows/pdflatex.exe",
+        "sha256": "4b582d0be712b74ae5090aba2d7338f185082f6446cbee7b26115e8ab6e21184"
+      },
+      {
+        "path": "texmf-var/web2c/luahbtex/lualatex.fmt",
+        "sha256": "1645531801b9c2dfd4b9b35b3d409ae3dadc7f744546258b65cb6f4843ab08d5"
+      },
+      {
+        "path": "texmf-var/web2c/pdftex/pdflatex.fmt",
+        "sha256": "0a87849b8a9dea495227b1be22352277fefd90ccd3d3fed02c872391206bd910"
+      },
+      {
+        "path": "texmf-dist/tex/latex/base/latex.ltx",
+        "sha256": "19d3b75884681539e1ef7a427af472bfe80d9ff214b84b9ca45e790d3e89c5c4"
+      },
+      {
+        "path": "texmf-dist/tex/latex/l3kernel/expl3-code.tex",
+        "sha256": "94e9290b44e99ff164fad5cd4274eaebba8b325e434827b10a4fd86c86203ee9"
+      }
+    ]
+  },
+  "native_inputs": {
+    "texmf.cnf": "013dd0a453877818b1b4fad2705461c39d20080dc8a12d3ef6df0e54d29dced7",
+    "texmf-dist/web2c/texmf.cnf": "4bd26d87206b846ecacb4f4db844332c0e3fd3022f45b287883e5db95f489abc",
+    "texmf-var/web2c/pdftex/pdflatex.fmt": "0a87849b8a9dea495227b1be22352277fefd90ccd3d3fed02c872391206bd910"
+  },
+  "code": {
+    "sha256": "15b3e39a9830bcc30fa9e229a27223e9b1e25eb4b0e0d1e9d023260f1654c4f3",
+    "files": [
+      {
+        "path": "requirements.txt",
+        "sha256": "5bbda5d4406f8600a3a1f75cedeccd937b30acff0450600f269a7ead57b65cfc",
+        "bytes": 181
+      },
+      {
+        "path": "resources/bindings/engine/core_latex.yaml",
+        "sha256": "d0b5536184eba4e53913c1c7943cb4eb5c8df0a710481ac6f571d6f956e181b8",
+        "bytes": 9000
+      },
+      {
+        "path": "resources/bindings/engine/source_traversal.yaml",
+        "sha256": "2c1ae8dc4f6979526433acf0e680f5c784121833e9fd7e207bafbb2ddfa4fddd",
+        "bytes": 10027
+      },
+      {
+        "path": "resources/bindings/engine/verbatim.yaml",
+        "sha256": "846cf208d3fcb5ea848df708766a36362de300b85f8b746290d284a931c62dbc",
+        "bytes": 4958
+      },
+      {
+        "path": "resources/bindings/packages/alltt.yaml",
+        "sha256": "de94d58b220030fb3b6af110da1444358b5f72633070bfad1aafecda025b2436",
+        "bytes": 1639
+      },
+      {
+        "path": "resources/bindings/packages/comment.yaml",
+        "sha256": "d1f02ee2ffd1a0ad61ab1f93133b419c503ee6c8ef1d36c20fba78ee7def18be",
+        "bytes": 3499
+      },
+      {
+        "path": "resources/bindings/packages/environ.yaml",
+        "sha256": "53ff8f42938d3f366e1be71a3d3a667321cb5351a3280e6e34da5d90b8c1b736",
+        "bytes": 2077
+      },
+      {
+        "path": "resources/bindings/packages/fancyvrb.yaml",
+        "sha256": "44258cf476515f8d690a65e456cd6acf74d2f73c10ebbb58a3827fe3dc542878",
+        "bytes": 6225
+      },
+      {
+        "path": "resources/bindings/packages/geometry.yaml",
+        "sha256": "f559a88213a4995aaab7185f55addea906c7fb6c21f79f0950f664e748c4827c",
+        "bytes": 1368
+      },
+      {
+        "path": "resources/bindings/packages/graphicx.yaml",
+        "sha256": "0cf799dfda7fa87fc015898eb46d2d0e2980ef526197c278c8601348c4212a44",
+        "bytes": 811
+      },
+      {
+        "path": "resources/bindings/packages/iftex.yaml",
+        "sha256": "60a1799dc1fbb73689365de58f5b294451d6973a58beb5d798027333de9b5a7b",
+        "bytes": 2658
+      },
+      {
+        "path": "resources/bindings/packages/import.yaml",
+        "sha256": "7d51dcbeeb4d6c17f4e80b24c331b64dfcdbb50f14657d6630389ec507227845",
+        "bytes": 553
+      },
+      {
+        "path": "resources/bindings/packages/listings.yaml",
+        "sha256": "86708ccb0e56d0bd9827caabeb669cdd145d38f4aa713ef8456ce72421f23057",
+        "bytes": 5755
+      },
+      {
+        "path": "resources/bindings/packages/natbib.yaml",
+        "sha256": "374405baa8fe867d427a221531d1bbc03adebeb7a0e49231cdc4fcc3fd439045",
+        "bytes": 2237
+      },
+      {
+        "path": "resources/bindings/packages/verbatim.yaml",
+        "sha256": "9cfb41b16a2e5af0db9a95ec33375b4a4a028cd7b48455a98a560f1ae6cd387f",
+        "bytes": 4182
+      },
+      {
+        "path": "resources/engine_profiles/etex.yaml",
+        "sha256": "9f98e800bdf3067074f17112af7867ebe8e5db64b54ee7dc7d48312e461c1ef6",
+        "bytes": 1026
+      },
+      {
+        "path": "resources/engine_profiles/pdftex.yaml",
+        "sha256": "8493face33d48a7ce4cfa8bc450367c0097aeb95f9f57af25843c3683724f95a",
+        "bytes": 798
+      },
+      {
+        "path": "resources/experimental/policies/lossless.yaml",
+        "sha256": "7682e8c654d11a26304bcff0be48ad293eee2755db9e6002bffbb00f43b57024",
+        "bytes": 2743
+      },
+      {
+        "path": "resources/experimental/policies/prose_extraction.yaml",
+        "sha256": "12dddb6a8c8d125004477de06baa484c46a716ddf1808322dd93cb1dff3a1660",
+        "bytes": 2739
+      },
+      {
+        "path": "resources/experimental/projections/latexml/engine/verbatim.yaml",
+        "sha256": "43a401e9c54489a5f6466b23183aa6ccc7f8a8b527e6b38a5e8c1873eae1d570",
+        "bytes": 1241
+      },
+      {
+        "path": "resources/experimental/projections/latexml/packages/alltt.yaml",
+        "sha256": "d11d335013903e05a42de4419dc7ca06b4164913b7765a34ccba7f1ecedb47fa",
+        "bytes": 674
+      },
+      {
+        "path": "resources/experimental/projections/latexml/packages/comment.yaml",
+        "sha256": "313765afdc4179e9306e06096310c1ec1bdb2aa8f5d735d82d2519cd4814f263",
+        "bytes": 650
+      },
+      {
+        "path": "resources/experimental/projections/latexml/packages/fancyvrb.yaml",
+        "sha256": "e740ac6f80d7c57d94085101eb31251f2f81988a481427a0e7ca0ebcb200ee86",
+        "bytes": 1259
+      },
+      {
+        "path": "resources/experimental/projections/latexml/packages/listings.yaml",
+        "sha256": "a49c181b92ac1308d764024e4a929ea6060411ac6e09dbe013c70d94555777e8",
+        "bytes": 973
+      },
+      {
+        "path": "resources/experimental/projections/latexml/packages/verbatim.yaml",
+        "sha256": "22591f6c8fff404af9f4b77d28640af9c8a8a80bfc7777afed6682e4efc73f8b",
+        "bytes": 861
+      },
+      {
+        "path": "resources/lint/preparation.yaml",
+        "sha256": "a463c50410a2a1bc03bcf3ea3e650cb695ec6d776047284ec6375df5c35ac3cd",
+        "bytes": 2681
+      },
+      {
+        "path": "resources/policies/prepare.yaml",
+        "sha256": "fc568cb6551524163f4d7aca8e92d99affd93079ed94abe164438e9e68accde4",
+        "bytes": 3170
+      },
+      {
+        "path": "resources/profiles/mouth/discard_block.yaml",
+        "sha256": "fe42ce04108dbdfee26696323dd8b98908812d347cd0225da99994a6a0fdca83",
+        "bytes": 613
+      },
+      {
+        "path": "resources/profiles/mouth/inline_braced.yaml",
+        "sha256": "ca41c4a3f83adcb456e55f1e386346f0a23e47f04c9fef6fc3329f67dc0c9fb7",
+        "bytes": 782
+      },
+      {
+        "path": "resources/profiles/mouth/inline_delimited.yaml",
+        "sha256": "dc7c8bf5796c5cc7b4aadc573cf6b2e29e96449799de7cc2c98fb90547938e36",
+        "bytes": 934
+      },
+      {
+        "path": "resources/profiles/mouth/interpolated_verbatim_block.yaml",
+        "sha256": "c0c52f6ff2c6bbb5686d19a3b3a7e55228822e018c61412a6072108f0a99cba4",
+        "bytes": 693
+      },
+      {
+        "path": "resources/profiles/mouth/latex_ascii.yaml",
+        "sha256": "ea8c8e12e7b9de999b0c6223cbfd3126d48ce040eff36b44de93ef9738a5e13a",
+        "bytes": 2019
+      },
+      {
+        "path": "resources/profiles/mouth/raw_block.yaml",
+        "sha256": "29a31308ce8c752b3fc489a95d90b5152c68d3df66e4fd6fe04b6696c8b7bf50",
+        "bytes": 1171
+      },
+      {
+        "path": "resources/profiles/mouth/semi_verbatim_block.yaml",
+        "sha256": "462be7648f27729585a69c9aaa40b0a6fd673a8bb3d901ac48aaaa75f561789c",
+        "bytes": 1198
+      },
+      {
+        "path": "resources/registries/reading_handlers.yaml",
+        "sha256": "2473c205ea2d56c2863610119adcfd6fd2c121b53c87206d01093b5bdefa6195",
+        "bytes": 8678
+      },
+      {
+        "path": "resources/validation/diagnostics/relocation.yaml",
+        "sha256": "7d8c917697b45e920ba135dcad2e59a6ca6514ae5eaf305e7ea2ec1213b80504",
+        "bytes": 1721
+      },
+      {
+        "path": "resources/validation/diagnostics/tectonic.yaml",
+        "sha256": "404d2c3067e8c4008bbbbe1e9c63d637ef45be483e238ea78d7274494100a4e8",
+        "bytes": 3326
+      },
+      {
+        "path": "src/__init__.py",
+        "sha256": "c7fd34203b9ddd75e3cefb9669e2073eb713de6ae80e7bcb47c6a12c3bdd0994",
+        "bytes": 171
+      },
+      {
+        "path": "src/assets.py",
+        "sha256": "ef4e1847988daed17305cdbfe57f3dd8b57a93abfda3939891fb6c8df3fbedeb",
+        "bytes": 8948
+      },
+      {
+        "path": "src/bibtex.py",
+        "sha256": "8ec0a6896e09b67fae1d2dba797c8798ca185e125ec3285168b467adc17cd256",
+        "bytes": 10674
+      },
+      {
+        "path": "src/bindings/__init__.py",
+        "sha256": "1d1de29f607e35c8a4864c9779a1f4e42fa87b237ec5fbf5ac1ead3e91bd3884",
+        "bytes": 80
+      },
+      {
+        "path": "src/bindings/catalog.py",
+        "sha256": "670be01b49dc8544d658f85eef21776db77a7bce7d067096736a5d166858c343",
+        "bytes": 38669
+      },
+      {
+        "path": "src/bindings/resolver.py",
+        "sha256": "0114eb875b3870fe348a41a41997f15f8cd6a9458881b97cd8005d5ceba55808",
+        "bytes": 21860
+      },
+      {
+        "path": "src/engine/__init__.py",
+        "sha256": "c25f09549996f2b81f25375ecd7fc31ae260a89d8fac3a33932e0c94fd1b0c01",
+        "bytes": 80
+      },
+      {
+        "path": "src/engine/catalog.py",
+        "sha256": "5523fbf08664c31e4433cf5a87d85e90d4abb7b9882dd4e0854963aa13773e22",
+        "bytes": 881
+      },
+      {
+        "path": "src/engine/checkpoints.py",
+        "sha256": "4526f341859af63347a125ce23c1a5ff8b4118efdfb2420004fba887df1ee60a",
+        "bytes": 6981
+      },
+      {
+        "path": "src/engine/conditional_values.py",
+        "sha256": "10fa355827fcbc64679a1521722f892b3a0fc869f5d44ac29969eb739d3c7327",
+        "bytes": 4994
+      },
+      {
+        "path": "src/engine/continuation.py",
+        "sha256": "537fc9329179b3b98060453c733d6a592c4c94e225e06674f841e400ca6d4f80",
+        "bytes": 4740
+      },
+      {
+        "path": "src/engine/expansion.py",
+        "sha256": "bac452bebc77aa9e3ee1099103df18156f68d9f41d1fe1c8497c4a7f1c731aee",
+        "bytes": 8775
+      },
+      {
+        "path": "src/engine/file_events.py",
+        "sha256": "0d190b19dd02aa7458ee26693a2b00c62974a1bcc7e13e62b61299794196c44c",
+        "bytes": 4803
+      },
+      {
+        "path": "src/engine/file_hooks.py",
+        "sha256": "50273ffacb7429e8524c0621a3807af7b09417155f79d2c701add201c531cbd8",
+        "bytes": 5539
+      },
+      {
+        "path": "src/engine/format.py",
+        "sha256": "b4700eb7015e097d7d370a4d21006d0e0afabbc87283d6a2db25a069d308e78d",
+        "bytes": 1543
+      },
+      {
+        "path": "src/engine/hooks.py",
+        "sha256": "c72f8b292e1470019442f86cfb71d3d37461f67ebf245ba7caeaca5898c97001",
+        "bytes": 2591
+      },
+      {
+        "path": "src/engine/input_boundaries.py",
+        "sha256": "05c5186c4d3f299c7cd40ee0ea4196cabbcd2fcec07e127ba54f9324d084aa66",
+        "bytes": 1059
+      },
+      {
+        "path": "src/engine/integers.py",
+        "sha256": "a800065227c3a87cda4a5752df7e34ad26b1e6d3cc8dce24b519406d3c96cdf0",
+        "bytes": 7074
+      },
+      {
+        "path": "src/engine/latex/__init__.py",
+        "sha256": "f70234ee56329d324e8e52dace3f31de4a849d57a0c0d7c47859c3c1fc6ae1b1",
+        "bytes": 226
+      },
+      {
+        "path": "src/engine/latex/construction.py",
+        "sha256": "7bceb0096a187c4eb666a64cc177702d06e0bd801514a9d5f77d8a7822ea86fc",
+        "bytes": 1585
+      },
+      {
+        "path": "src/engine/latex/declarations.py",
+        "sha256": "a18e97079040645c92c8553e50db7d783c96368c7ed35dac6a868c0b2c6da909",
+        "bytes": 6092
+      },
+      {
+        "path": "src/engine/latex/files.py",
+        "sha256": "c03ed3b800722a6ebf7c7d8e636f5f6e83afd705dce895412b711091c50e8f4e",
+        "bytes": 1958
+      },
+      {
+        "path": "src/engine/latex/lookahead.py",
+        "sha256": "236fcfe16b45f71b6aead7f826307b592da2c6c90138d614b4c43ea07fd0f31e",
+        "bytes": 4301
+      },
+      {
+        "path": "src/engine/latex/registry.py",
+        "sha256": "2d23b3bf6823877063ca2199b201d579b57444d4cab79c97a0e092101a4b34b5",
+        "bytes": 517
+      },
+      {
+        "path": "src/engine/macro_arguments.py",
+        "sha256": "0827d6aa1c0f8abdd2a6d0621469542c3301a84ed2d5f6f196f138f21c355d3a",
+        "bytes": 2864
+      },
+      {
+        "path": "src/engine/meanings.py",
+        "sha256": "b47e17ec8fc71c3e580d430bb0f5a9a6d2c23617cbc969ba9786eed2543f3aba",
+        "bytes": 4494
+      },
+      {
+        "path": "src/engine/observation.py",
+        "sha256": "d268d17367a424c07fc342adf87f7117f83c30a18a30a84591df5a87e5badc25",
+        "bytes": 748
+      },
+      {
+        "path": "src/engine/operations.py",
+        "sha256": "54ce6635a8c0d5bba71f2ad367ba26cb5ac39473686e4ddbd03a8ce42ec57577",
+        "bytes": 9603
+      },
+      {
+        "path": "src/engine/parameters.py",
+        "sha256": "ef1f1ac3d4baf5ade7d63eb7800a37b4172b3cbe9a110932869f066735a55b58",
+        "bytes": 3175
+      },
+      {
+        "path": "src/engine/primitive.py",
+        "sha256": "9e2431bdb99923330f4cf3d0bea1332f95fe4575459290d295f709e0fdcce590",
+        "bytes": 708
+      },
+      {
+        "path": "src/engine/primitives/__init__.py",
+        "sha256": "4eded46530c14df5c4abecab3260154a598b745e6793ed8787e6bd9953993f1f",
+        "bytes": 70
+      },
+      {
+        "path": "src/engine/primitives/assignments.py",
+        "sha256": "6d4c9a86384df92ae0e6b5cfdd4ef5fde134c081c9452a42317fa02474d9cf3b",
+        "bytes": 3651
+      },
+      {
+        "path": "src/engine/primitives/conditionals.py",
+        "sha256": "0b55c5b3b8476ce086bd63c71c14b57297f0bdbfe77670cce12e62a6a18c7e76",
+        "bytes": 8229
+      },
+      {
+        "path": "src/engine/primitives/conversions.py",
+        "sha256": "40068a53090d4c36af3757f4eee754c6bd2c841f8edf7ae8bdc0c1046d3cd6cd",
+        "bytes": 4455
+      },
+      {
+        "path": "src/engine/primitives/definitions.py",
+        "sha256": "f7a9da2f988d4b4a7db58671e7501c3ccb21603068a76babb0f3de0abc771dac",
+        "bytes": 10659
+      },
+      {
+        "path": "src/engine/primitives/expansion.py",
+        "sha256": "85f290a67e8a4c3720801a08fbffe6e5634ff271973b2b1e49eb2f5a0f80b486",
+        "bytes": 9377
+      },
+      {
+        "path": "src/engine/primitives/grouping.py",
+        "sha256": "c2d6f2bd6c82778b917ca0b6126b937b137ee05447e6bdae9e79a19de1a6c77d",
+        "bytes": 2789
+      },
+      {
+        "path": "src/engine/primitives/input.py",
+        "sha256": "b6de02e397a750d7bbf06ffb0400b1507d5792c0b9d3449130d3b3642f176513",
+        "bytes": 783
+      },
+      {
+        "path": "src/engine/primitives/lookahead.py",
+        "sha256": "b61e407e46a4e4da3898dcbf85a83bce8df3e1dddd1b3e8f9525b033952ef475",
+        "bytes": 1818
+      },
+      {
+        "path": "src/engine/primitives/modes.py",
+        "sha256": "59660634fb36cd384642e9cf6d33adde24bc7dc06480cdd9a3ce82008da281ff",
+        "bytes": 1287
+      },
+      {
+        "path": "src/engine/primitives/parameters.py",
+        "sha256": "68ef25c23a57238b712518f1f2e5cb8ac702aef2743633f873373d37f8cf667e",
+        "bytes": 2863
+      },
+      {
+        "path": "src/engine/primitives/registers.py",
+        "sha256": "8b090817e9300bbdffdb5772f8cb01d1dd3e2eb46c8c917ff201c22a17434317",
+        "bytes": 5155
+      },
+      {
+        "path": "src/engine/primitives/rescanning.py",
+        "sha256": "2a92113edbe2f20e3bb165c51051a382f4c0885204434a135e9a2342fa0dcc2f",
+        "bytes": 3142
+      },
+      {
+        "path": "src/engine/profiles.py",
+        "sha256": "3e0245798f4c11bd02f0ca005b505851966a863eaa8c648981bde5bb0ad8be68",
+        "bytes": 4758
+      },
+      {
+        "path": "src/engine/programs.py",
+        "sha256": "33052c534a3fd15ff0693875f98427d81719325fa401c7e72450f7a433156f5c",
+        "bytes": 14853
+      },
+      {
+        "path": "src/engine/requests.py",
+        "sha256": "e7e6c96c726d102f8a98f5619771ee78cf430c821d2cf61f9ff6c0e6d0d0ed7d",
+        "bytes": 4687
+      },
+      {
+        "path": "src/engine/resolution.py",
+        "sha256": "f2a42948b5faa6fd86f41fc179e95f7d308ae891432f658e5187c618cfd2e470",
+        "bytes": 1281
+      },
+      {
+        "path": "src/engine/resources.py",
+        "sha256": "7e60aa0200a849f4ab2ef89d3188d7ee008663068782620d6a7a0e11d98acf31",
+        "bytes": 3521
+      },
+      {
+        "path": "src/engine/token_text.py",
+        "sha256": "18b742db59762d57ecd0f0e388bc3407535f50c4907e868e7ce94faebeaa24b3",
+        "bytes": 3057
+      },
+      {
+        "path": "src/engine/transactions.py",
+        "sha256": "197a7a9ef70d19a00250f4de225d97c01c68283ff7020e59f54151754496a286",
+        "bytes": 1427
+      },
+      {
+        "path": "src/event_log.py",
+        "sha256": "ea957b2b6971ccee0d5ea31206691bcd4b6a88f939d5b4cfe924e6d730acde77",
+        "bytes": 12439
+      },
+      {
+        "path": "src/prepare/__init__.py",
+        "sha256": "25636c95675d85feb171a79840fd6c612e37e158f5d734c26c5a3ebeb334e3d9",
+        "bytes": 80
+      },
+      {
+        "path": "src/prepare/assets.py",
+        "sha256": "b3dded8e1eb1bb68547a5ec9919bf7cc939adb1cc149b0622b2a1ea80dd6afe6",
+        "bytes": 8990
+      },
+      {
+        "path": "src/prepare/bibliography.py",
+        "sha256": "70660da5a5043b5238b33f68a5c4566a823bf2ce745adb40a86262c6aa728ae0",
+        "bytes": 18388
+      },
+      {
+        "path": "src/prepare/checkpoints.py",
+        "sha256": "56fb79a59ba2f5948b840f1775e4802b0873df1f9025c5e124778583554f4081",
+        "bytes": 4114
+      },
+      {
+        "path": "src/prepare/citations.py",
+        "sha256": "e679129296b049ba0da35481d70b5cb25d3ec002d57d2e1441d535bf0963a771",
+        "bytes": 4294
+      },
+      {
+        "path": "src/prepare/deferred.py",
+        "sha256": "4ea9ad8f431752434f98efb3e119b295b801d693aa70f422e241d8a565b3b6f0",
+        "bytes": 12549
+      },
+      {
+        "path": "src/prepare/discovery.py",
+        "sha256": "dff61c83e40addc6d9b4ab85615b8b46830723e15fa3512d5922675248aaddfe",
+        "bytes": 3068
+      },
+      {
+        "path": "src/prepare/emission.py",
+        "sha256": "2d43346e66a9965a97c69b930f1184fb813853865f50c124a209ef6c7989cd1b",
+        "bytes": 7369
+      },
+      {
+        "path": "src/prepare/events.py",
+        "sha256": "3a4fce9ad84c9b125affb7e4a5a4f7e9df121a6d0e9e8d11f2512c080498e57a",
+        "bytes": 3770
+      },
+      {
+        "path": "src/prepare/file_tests.py",
+        "sha256": "2883f40cb97fcde1e5b4a664f3acdfcb074a5b5e9c469fffb655d6e952c50584",
+        "bytes": 5683
+      },
+      {
+        "path": "src/prepare/inlining.py",
+        "sha256": "ea06cc46c039c6b8ba7398fae5fee069d17da2322463f0d24b815bc06d48e9c6",
+        "bytes": 3836
+      },
+      {
+        "path": "src/prepare/inventory.py",
+        "sha256": "e7b0f110ca603730afa4e6fec2e57bbb33d3d7cf584edd19b4d39e149ef6e65f",
+        "bytes": 886
+      },
+      {
+        "path": "src/prepare/lint.py",
+        "sha256": "5a490d7f27ea1825fef20773a5c65a22ed99f5f5d7497bd0c761978352e1ef7f",
+        "bytes": 9599
+      },
+      {
+        "path": "src/prepare/locations.py",
+        "sha256": "0cad6af0d51ab2961b4daa4b0b3e56e82564729aafa59b1b19c0ba58a63a98dc",
+        "bytes": 8317
+      },
+      {
+        "path": "src/prepare/manifest.py",
+        "sha256": "2ae713c3ad68b75bfcb1add259f0e8ff0a836ec3901e3188db1ca374dad417e4",
+        "bytes": 12677
+      },
+      {
+        "path": "src/prepare/pipeline.py",
+        "sha256": "eceaa7a909cbc22c05409a56d4184bafda3b0b9b684561e990ac73f02688fa10",
+        "bytes": 17445
+      },
+      {
+        "path": "src/prepare/policy.py",
+        "sha256": "1f7e3ba100654b631b3e5af52cbac1ba88cdd8710b20424779968f1d03b75223",
+        "bytes": 7330
+      },
+      {
+        "path": "src/prepare/preservation.py",
+        "sha256": "3d9a8c20881a791a9aaa31fd1d1e04186e87c082e99104b3fe513320528caf6a",
+        "bytes": 7735
+      },
+      {
+        "path": "src/prepare/provenance.py",
+        "sha256": "24f5d1e52db502b4bccb44e340441e3452bdfa09430e71b23c8d78f7b15ac461",
+        "bytes": 18008
+      },
+      {
+        "path": "src/prepare/publication.py",
+        "sha256": "7008c76755409c88eb37c62d14fb2435b2b03b0af0890dabde0dd63fc3845dc0",
+        "bytes": 5242
+      },
+      {
+        "path": "src/prepare/records.py",
+        "sha256": "7662ecb5178d755c7d379c71a1bc66903567022909a242aaaa7976d75799091f",
+        "bytes": 3708
+      },
+      {
+        "path": "src/prepare/recovery.py",
+        "sha256": "519a32e58437945755c623bcf2368f3a7816815da56a7f17d01c36e4f4db281f",
+        "bytes": 16698
+      },
+      {
+        "path": "src/prepare/resources.py",
+        "sha256": "a7b50849429ce1d6b8c36494da8f8cf3c5961c467760d6089bd3a124df495486",
+        "bytes": 4754
+      },
+      {
+        "path": "src/prepare/session.py",
+        "sha256": "7f9e3a9ae36b4bf531bed3000b6042a8d17ae4dd9271ad25c62337cb7d5bb3a5",
+        "bytes": 77792
+      },
+      {
+        "path": "src/prepare/survey.py",
+        "sha256": "07b5612de9ecc4fe4da73fb8f420f59d8d2864ee9e16445605d5c227bcd51ffe",
+        "bytes": 8803
+      },
+      {
+        "path": "src/reading/__init__.py",
+        "sha256": "459990a19f2405885cc1c9a5adf914a573e4369a874622224a5956abc3454f68",
+        "bytes": 79
+      },
+      {
+        "path": "src/reading/argument_scanner.py",
+        "sha256": "232eae43f4acb9b56ec576c09124394bd93a33c84335e6f42c341f13a4069d1f",
+        "bytes": 12417
+      },
+      {
+        "path": "src/reading/assignment_scanner.py",
+        "sha256": "f88ea72a67767b03d8a49bfaca25032263d07e7d0a30b5dce336674e81a94c37",
+        "bytes": 4051
+      },
+      {
+        "path": "src/reading/boolean_scanner.py",
+        "sha256": "e7b11734857a6004f72e8dff45af768494311e2a2f11b7cc64945b2c433bcdf6",
+        "bytes": 1980
+      },
+      {
+        "path": "src/reading/character_rules.py",
+        "sha256": "8c27ee2a978a5e126bfdf83bfd581c0ff36208f39e6853b425f5e3d01b3c4661",
+        "bytes": 6741
+      },
+      {
+        "path": "src/reading/conditional_scanner.py",
+        "sha256": "4b2d44c2fa3cb61fe3b70b72af3568860cf0f66e64da5a97d3cd6c981fc15d72",
+        "bytes": 6101
+      },
+      {
+        "path": "src/reading/configuration.py",
+        "sha256": "5f02dc8af74e9a8d20757a486812e50d2c26376b3ed55324d847af2675a51805",
+        "bytes": 8540
+      },
+      {
+        "path": "src/reading/context.py",
+        "sha256": "5e06c9a299dfecd1d46b5dfd4e410079951bac6c3a50b7ddf5db4ae392ec3599",
+        "bytes": 22966
+      },
+      {
+        "path": "src/reading/contracts.py",
+        "sha256": "5bfd08788d1371deadaf7faa9b8805a8204af77d4b03864dffc1972e4a6fcc0a",
+        "bytes": 16497
+      },
+      {
+        "path": "src/reading/coverage.py",
+        "sha256": "1161055df7ca02de2ebe711b2079488f362f7f304c2bc451bc8be02ca4d9baf3",
+        "bytes": 9696
+      },
+      {
+        "path": "src/reading/deferred_scanner.py",
+        "sha256": "e7562325ea2af162b95b4b2f80f7fbff5fe6836aed72622dd695edb7a8d58ce6",
+        "bytes": 6481
+      },
+      {
+        "path": "src/reading/definition_scanner.py",
+        "sha256": "9aa6030a3c681a327f19dc7d1c23eb538f129c6af1b736ab1b83e5484a0edbd7",
+        "bytes": 12452
+      },
+      {
+        "path": "src/reading/dependencies.py",
+        "sha256": "51f1146296c7fa704270b758bedf5fd2f46814820a016a1c35bc364c7447d845",
+        "bytes": 8245
+      },
+      {
+        "path": "src/reading/dispatcher.py",
+        "sha256": "9c024692b98531497fc0dd30165636873afe3a53d9a4f717ad84a8654292a219",
+        "bytes": 65470
+      },
+      {
+        "path": "src/reading/edit_map.py",
+        "sha256": "9d7a02665a0b8f883e677a0f18d56dbd60fe2452e30d2affab570f064206f3f9",
+        "bytes": 6011
+      },
+      {
+        "path": "src/reading/effect_summary.py",
+        "sha256": "4bf467462be3933e605ba2e6ffcf5763b90d6e60391721ffdabc1f5bb91034dd",
+        "bytes": 4370
+      },
+      {
+        "path": "src/reading/effects.py",
+        "sha256": "02fa43c95c1ef6ea880b59cb5a4cc7d624193ab5d72d7dbb8083be374cd6caed",
+        "bytes": 10475
+      },
+      {
+        "path": "src/reading/environment_registry.py",
+        "sha256": "d048eb87ee5accb8675aeb752fb4696d7bfe9cb5a3a519be124ef727b806975c",
+        "bytes": 2697
+      },
+      {
+        "path": "src/reading/environment_scanner.py",
+        "sha256": "4dfcabb7be06dbf497db57de161627c8d8b44b4a375acd4cb331f1209c259569",
+        "bytes": 8333
+      },
+      {
+        "path": "src/reading/input_scanner.py",
+        "sha256": "a0423bc0d7044dc3888eca02da3a03f4b919c006fb46563922e109c2f90f6410",
+        "bytes": 3633
+      },
+      {
+        "path": "src/reading/literal_scanner.py",
+        "sha256": "61641931280dec41211e901d286f0be28689158274ef65e2d66954bc0a9f1d1c",
+        "bytes": 16437
+      },
+      {
+        "path": "src/reading/loads.py",
+        "sha256": "18b9f05afb6106af8687918b14a368ce777120c7713659ccf6d6284c6ff40b56",
+        "bytes": 2368
+      },
+      {
+        "path": "src/reading/mouth_profiles.py",
+        "sha256": "510f9ebd66a299190abcd2fd2b54832aab404c5c6bd0655eb12457aefd1ddc41",
+        "bytes": 4838
+      },
+      {
+        "path": "src/reading/observer.py",
+        "sha256": "6f207d496efa6e7e9a57416a5a2f8fba5730d2140a73ab0a772245f2c52bd72c",
+        "bytes": 4994
+      },
+      {
+        "path": "src/reading/operations.py",
+        "sha256": "aea8b9d92013ada3372aa7de3bd26f2dfbb062276a2e8423c41a5b452cca3b37",
+        "bytes": 1272
+      },
+      {
+        "path": "src/reading/options.py",
+        "sha256": "f6ddb29a5e5dd98f05b160e8289a619355e995679827b364cbc13c73da58f72f",
+        "bytes": 4820
+      },
+      {
+        "path": "src/reading/predicates.py",
+        "sha256": "ba408f6d987d7f7f5e329c3066fc383f0e015debae029293988ea29835c7692b",
+        "bytes": 2439
+      },
+      {
+        "path": "src/reading/skipped_scanner.py",
+        "sha256": "b3c7b3468c1a224cc0f9061b76aea542a6c3dcdfbb2a39f82088afb2e8fea1ee",
+        "bytes": 2920
+      },
+      {
+        "path": "src/reading/spans.py",
+        "sha256": "ae00dd487081f4ced0bf05070e32ff8407d0a77c0225e5a8436e63409e0a08c0",
+        "bytes": 7290
+      },
+      {
+        "path": "src/reading/tex_reader.py",
+        "sha256": "f72b37982596f5de46c030ad0cef031a65aebeb622bf33cf24ea0633fd8dc83e",
+        "bytes": 25809
+      },
+      {
+        "path": "src/reading/token_cursor.py",
+        "sha256": "e1338ab472efc4bf2a5b02575b79abd3c936da658fbb40e54132c59c867a4cc7",
+        "bytes": 2670
+      },
+      {
+        "path": "src/reading/units.py",
+        "sha256": "9409380b77ca4ca6fa7813d27f551da7868d1ad932aac7fee948cf42a238610f",
+        "bytes": 5751
+      },
+      {
+        "path": "src/source_io.py",
+        "sha256": "629c7c2778da666b5252de7c47229e0df1ff659a2406a7aa10d37e7fcc33a749",
+        "bytes": 4858
+      },
+      {
+        "path": "src/validation/__init__.py",
+        "sha256": "a8a9190bfe70baab5689e4357846cf85890f694f2d9f90e3150ab41b629e67f8",
+        "bytes": 70
+      },
+      {
+        "path": "src/validation/assessment.py",
+        "sha256": "f8e2b7fd30cb545665cf9a4948c2f0e458a0d04c98f732ba5be6500b047102ef",
+        "bytes": 5516
+      },
+      {
+        "path": "src/validation/assets.py",
+        "sha256": "167288eed8ef00711fa33b8ac7c07df998ca371bc3abb7798c084b4fc208f6fc",
+        "bytes": 2493
+      },
+      {
+        "path": "src/validation/atlas_native.py",
+        "sha256": "bce34fbd777859484b62088a9b52d873ce1b6d951dd4bf398dea5d0ea47ab81c",
+        "bytes": 16945
+      },
+      {
+        "path": "src/validation/behavioral_atlas.py",
+        "sha256": "dedae1e4831928aad917509d41101e0fbfdece2bcd2dfe869e9c6837b4762282",
+        "bytes": 8831
+      },
+      {
+        "path": "src/validation/compilers.py",
+        "sha256": "00656f02d8411ee67696925feb3ab133a0b0c2da326d9146ecfdcb54a1fe8047",
+        "bytes": 5089
+      },
+      {
+        "path": "src/validation/diagnostics.py",
+        "sha256": "0df2c3e19ded1e6e369d963a412a97467c1a202d645eaf435bb60b26f2ef3e31",
+        "bytes": 9691
+      },
+      {
+        "path": "src/validation/file_hooks.py",
+        "sha256": "fd2c0f557d7b659792de1882fce23cf03ef3cb4cbd7f5becf4fe7cf89be7587a",
+        "bytes": 4436
+      },
+      {
+        "path": "src/validation/meaning_assay/__init__.py",
+        "sha256": "32517688a5f7fc3946eb55d4b1fb05504b678f5237ec6f001facd44317f0ef98",
+        "bytes": 86
+      },
+      {
+        "path": "src/validation/meaning_assay/__main__.py",
+        "sha256": "9143e4a3af5a8d1dc60d8c687e37563d2f73462bca0dcf10c9bb22292f149149",
+        "bytes": 19808
+      },
+      {
+        "path": "src/validation/meaning_assay/compare.py",
+        "sha256": "b78c8bb7653a16769342474f01dc8b488a9acc28e148f31b23de5ca25b8bf9f3",
+        "bytes": 4216
+      },
+      {
+        "path": "src/validation/meaning_assay/fixtures.py",
+        "sha256": "72665442edf5530eadef4aef7fca370d8bcf8c590cedcfe8eab23a45804bb4ed",
+        "bytes": 3613
+      },
+      {
+        "path": "src/validation/meaning_assay/model.py",
+        "sha256": "047bd1ec6d6008233c42240bedfa4d65514c00c1b5ea8d2ce3b69f2a7a43c515",
+        "bytes": 6205
+      },
+      {
+        "path": "src/validation/meaning_assay/native.py",
+        "sha256": "bc48b6df7161f98b2ca1969ef96de6894025f3812b181dfa09011ba1e662fcd2",
+        "bytes": 8595
+      },
+      {
+        "path": "src/validation/meaning_assay/triage.py",
+        "sha256": "b03a2f63ee888ba056b145882bd8c96e35f67801fdaccf6eedeec0238c173344",
+        "bytes": 8587
+      },
+      {
+        "path": "src/validation/measured_prepare.py",
+        "sha256": "c1cfd5209824d1c11cc1f012e0fbe3cc781e4d47f3544d916b3bfccb31ff7bda",
+        "bytes": 7517
+      },
+      {
+        "path": "src/validation/relocation.py",
+        "sha256": "5deb6a76fd8bd10260589ae7b42050c19858e9ed8efd7472aace69737245f7e9",
+        "bytes": 8328
+      },
+      {
+        "path": "src/validation/render.py",
+        "sha256": "a81f2ed2a195962474d32158e3048537457dd7b97279260c94933a11747658fa",
+        "bytes": 21978
+      },
+      {
+        "path": "src/validation/specimens.py",
+        "sha256": "5041696299711586533c91f1263b66ca6dfdbafa97e6511d8eb7ca2f2c223ee9",
+        "bytes": 30171
+      },
+      {
+        "path": "src/yaml_io.py",
+        "sha256": "5e9356f8e6b06be7d6e00d00a3c95970631df3a199751860f4a95d09d1c2957f",
+        "bytes": 3117
+      }
+    ],
+    "python": "3.14.8 (main, Oct  3 2026, 01:05:10) [MSC v.1944 64 bit (AMD64)]",
+    "dependencies": {
+      "PyYAML": "6.0.3",
+      "Pillow": "12.3.0",
+      "PyMuPDF": "1.28.2"
+    },
+    "commit": "0d815ee116771f10b406afa5bed535ad3989c17f",
+    "working_changes": "?? python/PyTeXML/src/validation/atlas_native.py"
+  },
+  "run_receipt_sha256": "73ff914f3a60a1c46ef608d208afa8333527a7badd6769f2a373806333aa9a49",
+  "cases": {
+    "P03": {
+      "case": "P03",
+      "identity": {
+        "catalog_sha256": "2e1ca3f978d2db9729d33cfa7d1c2867eafc2f0c65d7b5b1609990fdcb665a99",
+        "cases_sha256": "acbcd7709ba2a03debd43f7c6802a6ac335d4353a42f6a8ee306c99af16fe06e",
+        "source_fragment": {
+          "source": "generator",
+          "line_start": 1,
+          "line_end": 89,
+          "byte_start": 0,
+          "byte_end": 2086,
+          "sha256": "0a6511300f867b57611674967980bd1bcd533bbc985bbe88efd8703f8e2e116e"
+        },
+        "source_file": {
+          "path": "t/expansion/pass_param_toks_in_gen_macros.tex",
+          "sha256": "5c68ffac09465ed6d3a32d3045def75a6f58e629086291b7173288d44f5de6f4"
+        },
+        "definition_sha256": "0a6511300f867b57611674967980bd1bcd533bbc985bbe88efd8703f8e2e116e",
+        "probe_sha256": "6a00a3e29ade07766ce994d83926ae8d8ca10cd323d16690938027ccca7b189d"
+      },
+      "status": "qualified",
+      "trace": {
+        "A": "macro:#1->\\ifx #1\\relax \\returnfalse \\else \\ifdefined #1\\returntrue \\else \\returnfalse \\fi \\fi \\expend {}",
+        "B": "SKIP",
+        "C": "F",
+        "D": "F",
+        "E": "SKIP",
+        "F": "SKIP",
+        "G": "F",
+        "H": "macro:#1->\\ifx #1\\relax \\returnfalse \\else \\ifdefined #1\\returntrue \\else \\returnfalse \\fi \\fi \\expend {}",
+        "I": "RESTORED"
+      },
+      "target": {
+        "semantic_key": [
+          "macro",
+          false,
+          [
+            [
+              "match",
+              "#"
+            ]
+          ],
+          [
+            [
+              "control",
+              "control_sequence",
+              "ifx"
+            ],
+            [
+              "out_parameter",
+              1
+            ],
+            [
+              "control",
+              "control_sequence",
+              "relax"
+            ],
+            [
+              "control",
+              "control_sequence",
+              "returnfalse"
+            ],
+            [
+              "control",
+              "control_sequence",
+              "else"
+            ],
+            [
+              "control",
+              "control_sequence",
+              "ifdefined"
+            ],
+            [
+              "out_parameter",
+              1
+            ],
+            [
+              "control",
+              "control_sequence",
+              "returntrue"
+            ],
+            [
+              "control",
+              "control_sequence",
+              "else"
+            ],
+            [
+              "control",
+              "control_sequence",
+              "returnfalse"
+            ],
+            [
+              "control",
+              "control_sequence",
+              "fi"
+            ],
+            [
+              "control",
+              "control_sequence",
+              "fi"
+            ],
+            [
+              "control",
+              "control_sequence",
+              "expend"
+            ],
+            [
+              "character",
+              1,
+              "{"
+            ],
+            [
+              "character",
+              2,
+              "}"
+            ]
+          ],
+          false,
+          false
+        ],
+        "semantic_sha256": "ed788b25e3f725958a671766159a1f10b16eda0fa35642002a8b9e4ebc88e63c",
+        "parameter_tokens": 2,
+        "body_tokens": 17,
+        "parameter_count": 1
+      },
+      "runs": [
+        {
+          "folder": "P03-native-0",
+          "probe_sha256": "56546c44f886f6b08bf0b76a26a4a31310a98b40e72845f36c709505ddccd1fb",
+          "returncode": 0,
+          "trace": {
+            "A": "macro:#1->\\ifx #1\\relax \\returnfalse \\else \\ifdefined #1\\returntrue \\else \\returnfalse \\fi \\fi \\expend {}",
+            "B": "SKIP",
+            "C": "F",
+            "D": "F",
+            "E": "SKIP",
+            "F": "SKIP",
+            "G": "F",
+            "H": "macro:#1->\\ifx #1\\relax \\returnfalse \\else \\ifdefined #1\\returntrue \\else \\returnfalse \\fi \\fi \\expend {}",
+            "I": "RESTORED"
+          }
+        },
+        {
+          "folder": "P03-native-1",
+          "probe_sha256": "8823a8dfd0b0fb130d72c115f02de6ede9213a42b87cad039f4b6e39d63ea904",
+          "returncode": 0,
+          "trace": {
+            "A": "macro:#1->\\ifx #1\\relax \\returnfalse \\else \\ifdefined #1\\returntrue \\else \\returnfalse \\fi \\fi \\expend {}",
+            "B": "SKIP",
+            "C": "F",
+            "D": "F",
+            "E": "SKIP",
+            "F": "SKIP",
+            "G": "F",
+            "H": "macro:#1->\\ifx #1\\relax \\returnfalse \\else \\ifdefined #1\\returntrue \\else \\returnfalse \\fi \\fi \\expend {}",
+            "I": "RESTORED",
+            "IFX": "1"
+          }
+        }
+      ]
+    },
+    "P03-insertion": {
+      "case": "P03-insertion",
+      "identity": {
+        "catalog_sha256": "2e1ca3f978d2db9729d33cfa7d1c2867eafc2f0c65d7b5b1609990fdcb665a99",
+        "cases_sha256": "acbcd7709ba2a03debd43f7c6802a6ac335d4353a42f6a8ee306c99af16fe06e",
+        "derived_witness": "P03-insertion-source.tex",
+        "parent": "P03",
+        "definition_sha256": "dc311e5032e3c666f3898e5a65ea69c06066481d612fd8f7c79c7219a720470d",
+        "probe_sha256": "54816c8d27599edb644589ca45b15595cf51983ad33fc7ef833403b3bba7b3c5"
+      },
+      "status": "qualified",
+      "trace": {
+        "A": "macro:->##1",
+        "B": "macro:->##1",
+        "C": "1"
+      },
+      "target": {
+        "semantic_key": [
+          "macro",
+          false,
+          [],
+          [
+            [
+              "character",
+              6,
+              "#"
+            ],
+            [
+              "character",
+              12,
+              "1"
+            ]
+          ],
+          false,
+          false
+        ],
+        "semantic_sha256": "6a25a6904d63bd2bbbdcf12a0257ad4734ed75fcedcb85e7b19a07175c7c1d69",
+        "parameter_tokens": 0,
+        "body_tokens": 3,
+        "parameter_count": 0
+      },
+      "runs": [
+        {
+          "folder": "P03-insertion-native-0",
+          "probe_sha256": "2b5464f37a1a4a572a2ab90799cf8ba76828df8d7328f7492452d13c56d62d17",
+          "returncode": 0,
+          "trace": {
+            "A": "macro:->##1",
+            "B": "macro:->##1",
+            "C": "1"
+          }
+        },
+        {
+          "folder": "P03-insertion-native-1",
+          "probe_sha256": "5a6d03e9497cacc5c44b04b6be0a33862ca528ff0df0f39ca3b90bcf24ff904b",
+          "returncode": 0,
+          "trace": {
+            "A": "macro:->##1",
+            "B": "macro:->##1",
+            "C": "1",
+            "IFX": "1"
+          }
+        }
+      ]
+    },
+    "M02": {
+      "case": "M02",
+      "identity": {
+        "catalog_sha256": "2e1ca3f978d2db9729d33cfa7d1c2867eafc2f0c65d7b5b1609990fdcb665a99",
+        "cases_sha256": "acbcd7709ba2a03debd43f7c6802a6ac335d4353a42f6a8ee306c99af16fe06e",
+        "source_fragment": {
+          "source": "roundtrip",
+          "line_start": 1,
+          "line_end": 16,
+          "byte_start": 0,
+          "byte_end": 430,
+          "sha256": "f1dae9566308d3ced878b7f5844dd52f3eac851c25326d72727ad044166e2255"
+        },
+        "source_file": {
+          "path": "t/expansion/multi_escaped_param.tex",
+          "sha256": "9c9c1d6fec36c3679426b7bb856e0dc4a171c6d459f0f01b7506956622b8a448"
+        },
+        "definition_sha256": "f1dae9566308d3ced878b7f5844dd52f3eac851c25326d72727ad044166e2255",
+        "probe_sha256": "9711bc613393fd543eb109bcd12e296f49046047739bf9ccdc799488f1b3c937"
+      },
+      "status": "qualified",
+      "trace": {
+        "A": "\\protected macro:#1-> \\begingroup \\edef \\resrvd {\\def \\noexpand \\resrvd ####1\\detokenize {macro}:####2->####3&{####1\\def \\string \\resrvd ####2{####3}}\\edef \\noexpand \\resrvd {\\noexpand \\resrvd \\meaning #1&}}\\resrvd \\scantokens \\expandafter {\\resrvd }\\expandafter \\endgroup \\ifx #1\\resrvd \\expandafter \\firstoftwo \\else \\expandafter \\secondoftwo \\fi ",
+        "B": "1",
+        "C": "1",
+        "D": "1",
+        "E": "1",
+        "F": "0",
+        "G": "macro:->OUTSIDE",
+        "H": "macro:->\\T1-cmd "
+      },
+      "target": {
+        "semantic_key": [
+          "macro",
+          false,
+          [
+            [
+              "match",
+              "#"
+            ]
+          ],
+          [
+            [
+              "character",
+              10,
+              " "
+            ],
+            [
+              "control",
+              "control_sequence",
+              "begingroup"
+            ],
+            [
+              "control",
+              "control_sequence",
+              "edef"
+            ],
+            [
+              "control",
+              "control_sequence",
+              "resrvd"
+            ],
+            [
+              "character",
+              1,
+              "{"
+            ],
+            [
+              "control",
+              "control_sequence",
+              "def"
+            ],
+            [
+              "control",
+              "control_sequence",
+              "noexpand"
+            ],
+            [
+              "control",
+              "control_sequence",
+              "resrvd"
+            ],
+            [
+              "character",
+              6,
+              "#"
+            ],
+            [
+              "character",
+              6,
+              "#"
+            ],
+            [
+              "character",
+              12,
+              "1"
+            ],
+            [
+              "control",
+              "control_sequence",
+              "detokenize"
+            ],
+            [
+              "character",
+              1,
+              "{"
+            ],
+            [
+              "character",
+              11,
+              "m"
+            ],
+            [
+              "character",
+              11,
+              "a"
+            ],
+            [
+              "character",
+              11,
+              "c"
+            ],
+            [
+              "character",
+              11,
+              "r"
+            ],
+            [
+              "character",
+              11,
+              "o"
+            ],
+            [
+              "character",
+              2,
+              "}"
+            ],
+            [
+              "character",
+              12,
+              ":"
+            ],
+            [
+              "character",
+              6,
+              "#"
+            ],
+            [
+              "character",
+              6,
+              "#"
+            ],
+            [
+              "character",
+              12,
+              "2"
+            ],
+            [
+              "character",
+              12,
+              "-"
+            ],
+            [
+              "character",
+              12,
+              ">"
+            ],
+            [
+              "character",
+              6,
+              "#"
+            ],
+            [
+              "character",
+              6,
+              "#"
+            ],
+            [
+              "character",
+              12,
+              "3"
+            ],
+            [
+              "character",
+              4,
+              "&"
+            ],
+            [
+              "character",
+              1,
+              "{"
+            ],
+            [
+              "character",
+              6,
+              "#"
+            ],
+            [
+              "character",
+              6,
+              "#"
+            ],
+            [
+              "character",
+              12,
+              "1"
+            ],
+            [
+              "control",
+              "control_sequence",
+              "def"
+            ],
+            [
+              "control",
+              "control_sequence",
+              "string"
+            ],
+            [
+              "control",
+              "control_sequence",
+              "resrvd"
+            ],
+            [
+              "character",
+              6,
+              "#"
+            ],
+            [
+              "character",
+              6,
+              "#"
+            ],
+            [
+              "character",
+              12,
+              "2"
+            ],
+            [
+              "character",
+              1,
+              "{"
+            ],
+            [
+              "character",
+              6,
+              "#"
+            ],
+            [
+              "character",
+              6,
+              "#"
+            ],
+            [
+              "character",
+              12,
+              "3"
+            ],
+            [
+              "character",
+              2,
+              "}"
+            ],
+            [
+              "character",
+              2,
+              "}"
+            ],
+            [
+              "control",
+              "control_sequence",
+              "edef"
+            ],
+            [
+              "control",
+              "control_sequence",
+              "noexpand"
+            ],
+            [
+              "control",
+              "control_sequence",
+              "resrvd"
+            ],
+            [
+              "character",
+              1,
+              "{"
+            ],
+            [
+              "control",
+              "control_sequence",
+              "noexpand"
+            ],
+            [
+              "control",
+              "control_sequence",
+              "resrvd"
+            ],
+            [
+              "control",
+              "control_sequence",
+              "meaning"
+            ],
+            [
+              "out_parameter",
+              1
+            ],
+            [
+              "character",
+              4,
+              "&"
+            ],
+            [
+              "character",
+              2,
+              "}"
+            ],
+            [
+              "character",
+              2,
+              "}"
+            ],
+            [
+              "control",
+              "control_sequence",
+              "resrvd"
+            ],
+            [
+              "control",
+              "control_sequence",
+              "scantokens"
+            ],
+            [
+              "control",
+              "control_sequence",
+              "expandafter"
+            ],
+            [
+              "character",
+              1,
+              "{"
+            ],
+            [
+              "control",
+              "control_sequence",
+              "resrvd"
+            ],
+            [
+              "character",
+              2,
+              "}"
+            ],
+            [
+              "control",
+              "control_sequence",
+              "expandafter"
+            ],
+            [
+              "control",
+              "control_sequence",
+              "endgroup"
+            ],
+            [
+              "control",
+              "control_sequence",
+              "ifx"
+            ],
+            [
+              "out_parameter",
+              1
+            ],
+            [
+              "control",
+              "control_sequence",
+              "resrvd"
+            ],
+            [
+              "control",
+              "control_sequence",
+              "expandafter"
+            ],
+            [
+              "control",
+              "control_sequence",
+              "firstoftwo"
+            ],
+            [
+              "control",
+              "control_sequence",
+              "else"
+            ],
+            [
+              "control",
+              "control_sequence",
+              "expandafter"
+            ],
+            [
+              "control",
+              "control_sequence",
+              "secondoftwo"
+            ],
+            [
+              "control",
+              "control_sequence",
+              "fi"
+            ]
+          ],
+          false,
+          true
+        ],
+        "semantic_sha256": "bbc7a7e75409deb32d68c99432852c8a6f9cc5463bad2118a3e62c3812d5b1d5",
+        "parameter_tokens": 2,
+        "body_tokens": 87,
+        "parameter_count": 1
+      },
+      "runs": [
+        {
+          "folder": "M02-native-0",
+          "probe_sha256": "1a2ecf295794ef220f11de08b1826ee75423baf94c2a02652dedccab28b0b20d",
+          "returncode": 0,
+          "trace": {
+            "A": "\\protected macro:#1-> \\begingroup \\edef \\resrvd {\\def \\noexpand \\resrvd ####1\\detokenize {macro}:####2->####3&{####1\\def \\string \\resrvd ####2{####3}}\\edef \\noexpand \\resrvd {\\noexpand \\resrvd \\meaning #1&}}\\resrvd \\scantokens \\expandafter {\\resrvd }\\expandafter \\endgroup \\ifx #1\\resrvd \\expandafter \\firstoftwo \\else \\expandafter \\secondoftwo \\fi ",
+            "B": "1",
+            "C": "1",
+            "D": "1",
+            "E": "1",
+            "F": "0",
+            "G": "macro:->OUTSIDE",
+            "H": "macro:->\\T1-cmd "
+          }
+        },
+        {
+          "folder": "M02-native-1",
+          "probe_sha256": "3c06ac46bd08326ffbd3ab910f74a2098e3c805d0ec70dffba3a7a21b880a552",
+          "returncode": 0,
+          "trace": {
+            "A": "\\protected macro:#1-> \\begingroup \\edef \\resrvd {\\def \\noexpand \\resrvd ####1\\detokenize {macro}:####2->####3&{####1\\def \\string \\resrvd ####2{####3}}\\edef \\noexpand \\resrvd {\\noexpand \\resrvd \\meaning #1&}}\\resrvd \\scantokens \\expandafter {\\resrvd }\\expandafter \\endgroup \\ifx #1\\resrvd \\expandafter \\firstoftwo \\else \\expandafter \\secondoftwo \\fi ",
+            "B": "1",
+            "C": "1",
+            "D": "1",
+            "E": "1",
+            "F": "0",
+            "G": "macro:->OUTSIDE",
+            "H": "macro:->\\T1-cmd ",
+            "IFX": "1"
+          }
+        }
+      ]
+    }
+  }
+}

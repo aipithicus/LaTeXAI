@@ -1,0 +1,44 @@
+{
+  "P03": {
+    "fragment": "conditional_generator",
+    "target": "mytest:NF",
+    "probe": "P03.tex",
+    "trace_labels": {
+      "A": "generated_definition",
+      "B": "defined_operand",
+      "C": "undefined_operand",
+      "D": "relax_operand",
+      "E": "operand_defined_later",
+      "F": "local_helper_redefinition",
+      "G": "helper_restored_behavior",
+      "H": "generated_definition_after_helper_changes",
+      "I": "helper_alias_restored"
+    }
+  },
+  "P03-insertion": {
+    "parent": "P03",
+    "source": "P03-insertion-source.tex",
+    "target": "AtlasInserted",
+    "probe": "P03-insertion.tex",
+    "trace_labels": {
+      "A": "inserted_parameter_definition",
+      "B": "authored_doubled_parameter_definition",
+      "C": "inserted_equals_authored"
+    }
+  },
+  "M02": {
+    "fragment": "roundtrip_definition",
+    "target": "ifscanable",
+    "probe": "M02.tex",
+    "trace_labels": {
+      "A": "protocol_definition",
+      "B": "firstoftwo_reconstructs",
+      "C": "secondoftwo_reconstructs",
+      "D": "literal_parameter_reconstructs",
+      "E": "protected_long_flags_reconstruct",
+      "F": "generated_name_body_reconstructs",
+      "G": "reserved_name_restored",
+      "H": "generated_name_body_display"
+    }
+  }
+}

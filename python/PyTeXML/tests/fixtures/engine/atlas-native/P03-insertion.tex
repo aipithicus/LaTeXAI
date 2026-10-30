@@ -1,0 +1,7 @@
+\edef\AtlasTraceA{\meaning\AtlasInserted}
+\edef\AtlasTraceB{\meaning\AtlasControl}
+\ifx\AtlasInserted\AtlasControl
+  \def\AtlasTraceC{1}
+\else
+  \def\AtlasTraceC{0}
+\fi

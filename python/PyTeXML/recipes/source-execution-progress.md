@@ -4,6 +4,69 @@ This file records implementation and qualification evidence. Current priorities
 live in the [working queue](../../../../aipithicus-issues/LaTeXAI/briefs/pytexml-language-core/working-queue.md);
 dated next-step statements below describe their checkpoint, not current dispatch.
 
+## 2026-10-29: pinned P03/M02 program comparisons
+
+The [atlas comparison instrument](behavioral-atlas.md#pinned-native-program-comparisons)
+now executes exact definition fragments plus explicit probes in the pinned
+pdfTeX/LaTeX format and in PyTeXML's shared engine. Six fresh native processes
+capture and replay **20 observations** across P03, M02 and a minimal insertion
+contrast. Three native `ifx` checks independently qualify their reconstructed
+typed target references. Source, probe, binary/format and recorded-input hashes
+are retained in the tracked reference fixture; they are test data, not bindings.
+
+**M02 matches:** all eight observations and the protocol's typed definition.
+Ordinary selectors, literal parameter markers and protected/long flags reconstruct;
+the generated-name body correctly fails equality; the scratch definition restores.
+**P03 remains blocked:** native branches distinguish defined/undefined/relax
+operands and observe local helper redefinition/restoration without changing the
+generated macro. Python fails during generation, before installing `mytest:NF`.
+Its target and branch observations are missing, not mismatches or passes.
+
+The minimal contrast isolates the first shared mechanism gap:
+`\edef\AtlasInserted{\unexpanded{#1}}` is native-equal to the authored `##1`
+replacement, whereas Python rejects it with
+`invalid_definition_parameter: Replacement text requires a declared parameter or doubled marker`.
+The authored control installs in Python. The expanded-definition consumer currently
+revalidates inserted tokens as fresh parameter syntax. Its insertion contract,
+including the P02 barrier/token-register cases, is the next engine investigation;
+later P03 gaps remain unknown until that gate passes. No engine runtime changed.
+
+The runner reads physical fragments lazily and uses a strict diagnostic adapter
+over the shared expansion/setup evaluator. It neither imports expected meanings
+nor qualifies normal preparation integration, complete original documents,
+current-release expl3 bootstrap, general rescanning or automatic staged replay.
+Initial runner failures are retained in `20261029-native-initial` and
+`20261029-native-second`: freezing physical source in program mode, rejecting
+blank-line paragraph events and rejecting `SourceEnd` were harness defects.
+Only the corrected run supplies final qualification.
+
+Verification passes **six native-reference/comparison tests, six catalog integrity
+tests and four existing bounded atlas checks**. The tests reject source identity
+drift, missing observations, incomplete execution, changed typed meanings and
+failed native equality even with matching displays. P03's blocked status is not
+an expected-failure test counted as passing engine behavior.
+
+The final native/Python receipt is PyTeXML
+`temp/behavioral-atlas/20261029-native-qualified/summary.json`; the outer receipt
+is repository `temp/atlas-native-qualified-receipt`. The test receipt is
+`temp/atlas-native-tests-receipt`, with atlas check details in PyTeXML
+`temp/behavioral-atlas/20261029-with-native-checks.json`. Final engine/validation
+source fingerprint: `15b3e39a9830bcc30fa9e229a27223e9b1e25eb4b0e0d1e9d023260f1654c4f3`.
+
+| Fresh Python specimen | Outcome | Wall seconds | CPU seconds | Peak RSS MiB |
+| --- | --- | ---: | ---: | ---: |
+| P03 | Blocked in definitions | 0.481 | 0.375 | 37.18 |
+| P03 insertion contrast | Blocked in definitions | 0.463 | 0.313 | 36.52 |
+| M02 | Native match | 0.458 | 0.359 | 37.46 |
+
+Case timers start after runner imports; peak memory includes imports and is a
+process high-water, not retained engine-object memory. The orchestrator records
+8.746 s wall, 1.484 s CPU and 44,183,552 bytes peak RSS; its CPU/memory exclude
+children. Six native process receipts total 1.038 s wall and 0.594 s CPU, with
+individual peaks about 29.1–29.2 MiB. These scopes differ and are not an engine
+speed comparison. Concurrent Bayesian/Monte Carlo workloads remain recorded;
+no regression or throughput improvement is inferred.
+
 ## 2026-10-29: behavioral atlas from existing LaTeXML fixtures
 
 The [behavioral atlas](behavioral-atlas.md) adds nine cases across spacing,

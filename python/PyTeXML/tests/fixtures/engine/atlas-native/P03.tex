@@ -1,0 +1,27 @@
+% Probe under the category regime left by the unmodified generator source.
+\edef\AtlasTraceA{\meaning\mytest:NF}
+\def\AtlasDefined{X}
+\let\AtlasRelax\relax
+\def\AtlasResult{SKIP}
+\mytest:NF\AtlasDefined{\def\AtlasResult{F}}
+\edef\AtlasTraceB{\AtlasResult}
+\def\AtlasResult{SKIP}
+\mytest:NF\AtlasUndefined{\def\AtlasResult{F}}
+\edef\AtlasTraceC{\AtlasResult}
+\def\AtlasResult{SKIP}
+\mytest:NF\AtlasRelax{\def\AtlasResult{F}}
+\edef\AtlasTraceD{\AtlasResult}
+\def\AtlasUndefined{LATE}
+\def\AtlasResult{SKIP}
+\mytest:NF\AtlasUndefined{\def\AtlasResult{F}}
+\edef\AtlasTraceE{\AtlasResult}
+\let\AtlasSaved\returnfalse
+{\def\returnfalse{\returntrue}
+\def\AtlasResult{SKIP}
+\mytest:NF\AtlasRelax{\def\AtlasResult{F}}
+\xdef\AtlasTraceF{\AtlasResult}}
+\def\AtlasResult{SKIP}
+\mytest:NF\AtlasRelax{\def\AtlasResult{F}}
+\edef\AtlasTraceG{\AtlasResult}
+\edef\AtlasTraceH{\meaning\mytest:NF}
+\ifx\AtlasSaved\returnfalse\def\AtlasTraceI{RESTORED}\else\def\AtlasTraceI{CHANGED}\fi
