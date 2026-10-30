@@ -7,7 +7,7 @@ from dataclasses import dataclass, replace
 
 from ..operations import ExecutableOperation, ExpansionKind, OperationFamily, PrimitiveOperation
 from ..primitive import PrimitiveMeaning
-from ..expansion import ExpansionCursor
+from ..expansion import ExpansionCursor, TokenListInsertion
 from ..transactions import atomic, meaning_assignment_scope
 from ...reading.assignment_scanner import AssignmentScanner
 from ...reading.argument_scanner import ArgumentScanner
@@ -98,7 +98,18 @@ def expanded_body(host, scanner, count):
     cursor = ExpansionCursor(host.reader, host.context, host.knowledge, host.operations, host=host, protect_macros=True)
     cursor.allow_name_assignment = True  # The definition request owns rollback.
     tokens, depth = [], 1
-    while (token := cursor.next_expanded()) is not None:
+    while (token := cursor.next_expanded(copy_token_lists=True)) is not None:
+        if isinstance(token, TokenListInsertion):
+            # pdfTeX scan_toks copies the_toks without interpreting parameter
+            # syntax. StoredDefinition uses lexical ## pairs rather than native
+            # compiled literal-parameter tokens, so encode each literal marker.
+            # Reuse its occurrence: this is representation, not source repair.
+            cursor._charge(sum(part.catcode == CatCode.PARAMETER for part in token.tokens))
+            for part in token.tokens:
+                tokens.append(part)
+                if part.catcode == CatCode.PARAMETER:
+                    tokens.append(part)
+            continue
         if token.catcode == CatCode.BEGIN_GROUP:
             depth += 1
         elif token.catcode == CatCode.END_GROUP:

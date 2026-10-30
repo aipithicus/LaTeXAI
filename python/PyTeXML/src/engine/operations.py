@@ -12,7 +12,7 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING, Protocol, TypeVar
 
 if TYPE_CHECKING:
-    from .expansion import ExpansionCursor
+    from .expansion import ExpansionCursor, TokenListInsertion
     from .integers import IntegerScanner
 
 from ..reading.context import ExecutionMode, ReaderContext
@@ -31,7 +31,7 @@ CaptureResult = SourceCommand | StoredDefinition | AssignmentTarget | None
 
 type ExecutionHandler[M] = Callable[[OperationHost, ReadEvent, M], OperationResult]
 type IntegerValueHandler[M] = Callable[[IntegerScanner, M], int]
-type ExpansionHandler[M] = Callable[[ExpansionCursor, Token, M], Token | None]
+type ExpansionHandler[M] = Callable[[ExpansionCursor, Token, M], Token | TokenListInsertion | None]
 type CaptureHandler[M] = Callable[[TexReader | TokenCursor, ReaderContext, Token, M], CaptureResult]
 
 

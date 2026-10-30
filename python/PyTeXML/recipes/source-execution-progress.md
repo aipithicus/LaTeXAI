@@ -4,6 +4,106 @@ This file records implementation and qualification evidence. Current priorities
 live in the [working queue](../../../../aipithicus-issues/LaTeXAI/briefs/pytexml-language-core/working-queue.md);
 dated next-step statements below describe their checkpoint, not current dispatch.
 
+## 2026-10-30: expanded-list insertion and generated-definition qualification
+
+The [shared insertion implementation](behavioral-atlas.md#expanded-list-insertion-implementation)
+distinguishes a `the_toks`-style token-list result from an ordinary expanded token.
+Expanded-definition/list consumers copy it; ordinary expansion reinserts it as
+input. The definition consumer encodes literal parameter markers in its existing
+lexical representation while preserving original token occurrences and authored
+capture. Work remains budgeted and publication uses the existing transaction.
+A parameter-number scan inside `edef` uses ordinary expansion, not list copying.
+No permanent suppression flag, helper intrinsic or native-answer installation is
+used for this behavior. A pinned pdfTeX 1.40.29 source reference records the
+`the_toks`/`scan_toks` algorithm separately from native binary qualification.
+
+P03 exposed a second general issue: a valid bounded program ended by expanding
+its recursion tail to nothing. Rejecting the absent executable token rolled back
+the definition already created. The program continuation now accepts that empty
+completion; a minimal native `P03-tail` witness matches. Physical-source and
+suppressed-token continuation admission are unchanged.
+
+**Current qualification:** 14 programs produce 40 native observations and five
+native-`ifx`-qualified target descriptors, captured/replayed in 28 fresh native
+processes. Python completes 11 comparisons and 29 observations, with all five
+typed targets matching. P03 now derives the native-equal `mytest:NF` definition
+from the original generator source. M02 still matches all eight observations.
+Seven of P02's nine numbered expressions match, including T5.4, which previously
+returned `\aaa ` where native returned `x`. Additional insertion contrasts cover
+aliases/shadowing, protected tokens, nested definitions, local/global scope and
+expanded parameter-number scanning. Observation-only cases are explicitly
+separate from typed-target qualification; full original documents remain unrun.
+
+Three execution boundaries remain, with literal harness diagnostics:
+
+```text
+P02-7: undefined_control_sequence: 'toks' is established undefined
+P02-8: expanded_argument: expanded requires a balanced group
+P03: undefined_control_sequence: 'romannumeral' is established undefined
+```
+
+The native primitives `toks` and `romannumeral` are absent from the implemented
+Python profile; the current established-undefined report is an exposure gap,
+not the native truth. P02-8 reaches a begin-group character alias. P03's failure
+is now in invocation, after definition generation, and its probe transaction
+rolls back all nine observations. None is counted as matching. Next gates are
+general roman conversion and P03 invocation, typed token registers/`the`, and
+group-opening aliases. No automatic staged resolver or full bootstrap is claimed.
+
+The 23 focused macro-expansion tests pass, including original-occurrence checks,
+bounded insertion work and rollback when a later raw parameter is invalid. A
+test-authoring error initially read nonexistent `SourceSpan.text`; the corrected
+test slices the reader's source at the retained span. The failed test receipt is
+repository `temp/atlas-insertion-qualified-receipt`; it never ran native probes.
+The pre-change native acquisition is PyTeXML
+`temp/behavioral-atlas/20261029-insertion-before`, retained separately from the
+final `temp/behavioral-atlas/20261029-insertion-qualified` receipt. Final outer
+native/focused-test receipt: repository `temp/atlas-insertion-qualified-rerun`.
+The run identifiers retain the start date; work completed across local midnight.
+
+The full Python suite completed **1,229 tests: 1,226 passed and three skipped**
+in 675.745 s. The skips are the optional live compiler-backend, relocation and
+graphics-render adapter checks, whose explicit tool configuration was absent.
+The dedicated pinned native program comparisons above did run independently.
+Raw full-suite receipt: repository `temp/atlas-insertion-full-suite-receipt`.
+
+The ad hoc measurement wrapper failed **after** the passing test result because
+it attempted to serialize the skipped tests as Python objects. Literal output:
+
+```text
+Ran 1229 tests in 675.745s
+OK (skipped=3)
+TypeError: Object of type CompilerBackendTests is not JSON serializable
+when serializing dict item 'skipped'
+```
+
+The audited recovery receipt is PyTeXML
+`temp/behavioral-atlas/20261029-insertion-full-suite.json`. It records the raw-log
+hash, parsed test result/skips and wall time; **full-suite CPU and peak RSS are
+unavailable**, not zero or inferred. The outer invocation remains failed after
+tests. Per-specimen native/Python measurements below are unaffected. Source
+identity was checked again after the suite and matches final native qualification.
+No second full-suite run was needed to establish an unchanged test result.
+
+Final engine/validation source fingerprint:
+`a8b8d3fa074714035cee2ab2ea7cefdc0e5cde3d0caaa60841f23f79b31a2bcf`.
+
+| Fresh Python specimen | Outcome | Wall seconds | CPU seconds | Peak RSS MiB |
+| --- | --- | ---: | ---: | ---: |
+| P02 insertion contract | Match, nine observations | 0.840 | 0.609 | 37.26 |
+| P03 empty tail | Match, two observations | 0.713 | 0.516 | 36.96 |
+| P03 | Definition match; invocation blocked | 0.726 | 0.422 | 37.13 |
+| P03 insertion contrast | Match, three observations | 0.437 | 0.375 | 37.30 |
+| M02 | Match, eight observations | 0.547 | 0.391 | 37.60 |
+
+All nine numbered P02 cases have separate worker receipts as well (0.342–0.941 s
+wall, 0.281–0.453 s CPU, 36.96–37.30 MiB peak RSS). These are fresh-process peaks
+including imports; case timers start after runner imports. Orchestration reports
+39.995 s wall, 2.953 s CPU and 45,391,872 bytes peak RSS, excluding child CPU/memory.
+The 28 native processes total 5.030 s wall and 3.125 s CPU; their largest individual
+peak is 30,830,592 bytes. Do not sum peaks or compare these unequal scopes as
+engine throughput. The competing Bayesian/Monte Carlo workloads remain recorded.
+
 ## 2026-10-29: pinned P03/M02 program comparisons
 
 The [atlas comparison instrument](behavioral-atlas.md#pinned-native-program-comparisons)

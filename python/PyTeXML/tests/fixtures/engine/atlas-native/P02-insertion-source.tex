@@ -1,0 +1,16 @@
+\def\donor{OLD}
+\protected\def\guard{G}
+\let\savedunexpanded\unexpanded
+\def\unexpanded#1{SHADOW}
+\edef\AtlasInserted#1{\savedunexpanded{#1\donor\guard}{#1}}
+\let\unexpanded\savedunexpanded
+\def\donor{NEW}
+\edef\AtlasMaker{\unexpanded{\def\AtlasInner#1{#1}}}
+\AtlasMaker
+\def\AtlasLocal{OUTSIDE}
+\begingroup
+\edef\AtlasLocal{\unexpanded{#1}}
+\xdef\AtlasGlobal{\unexpanded{#2}}
+\endgroup
+\edef\AtlasGuarded{\guard}
+\edef\AtlasParameter#1{#\unexpanded{1}}

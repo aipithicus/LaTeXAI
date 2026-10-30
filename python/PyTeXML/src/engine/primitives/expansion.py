@@ -1,5 +1,6 @@
 """Expansion controls are Python operations with raw operand grammars."""
 from ..operations import ExpansionKind, OperationFamily, PrimitiveOperation
+from ..expansion import TokenListInsertion
 from ...reading.contracts import ReadingIssue, SourceCommand
 from ...reading.tex_reader import CatCode, Token, TokenKind
 from ..primitive import PrimitiveMeaning
@@ -75,7 +76,10 @@ def expand_after(cursor, token, meaning: PrimitiveMeaning[None]):
     if first is None or second is None:
         raise ReadingIssue("expansion_operand", "expandafter requires two tokens")
     result = cursor.expand_once(second)
-    if result is not None:
+    if isinstance(result, TokenListInsertion):
+        # expandafter expands once in ordinary input; it is not scan_toks.
+        cursor.push(result.tokens)
+    elif result is not None:
         if cursor.suppressed:
             from dataclasses import replace
             result = replace(result, expansion_suppressed=True)
@@ -140,7 +144,10 @@ def expanded_list(cursor):
         raise ReadingIssue("expanded_argument", "expanded requires a balanced group")
     result: list[Token] = []
     depth = 1
-    while (part := cursor.next_expanded()) is not None:
+    while (part := cursor.next_expanded(copy_token_lists=True)) is not None:
+        if isinstance(part, TokenListInsertion):
+            result.extend(part.tokens)
+            continue
         if part.catcode == CatCode.BEGIN_GROUP:
             depth += 1
         elif part.catcode == CatCode.END_GROUP:

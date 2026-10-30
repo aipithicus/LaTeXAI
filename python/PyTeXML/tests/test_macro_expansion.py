@@ -155,6 +155,45 @@ class MacroExpansionTests(unittest.TestCase):
         self.declarations(host, 2)
         self.assertEqual("".join(t.value for t in self.expanded(self.cursor(host))), "VALUE")
 
+    def test_inserted_literal_parameter_keeps_occurrence_and_authored_capture(self):
+        host = self.host(r"\edef\held{\unexpanded{#1}}")
+        definition, = self.declarations(host, 1)
+        marker = next(t for t in definition.body_tokens if t.catcode == CatCode.PARAMETER)
+        self.assertEqual([t.value for t in definition.expanded_tokens], ["#", "#", "1"])
+        self.assertIs(definition.expanded_tokens[0], marker)
+        self.assertIs(definition.expanded_tokens[1], marker)
+        self.assertIs(marker.span.basis, host.reader.basis)
+        self.assertEqual(host.reader.text[marker.span.start:marker.span.end], "#")
+        self.assertEqual([t.value for t in definition.body_tokens], ["unexpanded", "{", "#", "1", "}"])
+
+    def test_inserted_tokens_do_not_make_a_later_raw_parameter_valid(self):
+        host = self.host(r"\def\held{OLD}\edef\held{\unexpanded{#1}#9}")
+        original, = self.declarations(host, 1)
+        boundary = host.next_item()
+        self.assertIsInstance(boundary, ReadingBoundary)
+        self.assertEqual(boundary.reason, "invalid_definition_parameter")
+        self.assertIs(host.context.lookup_definition("held"), original)
+
+    def test_insertion_uses_ordinary_expansion_outside_a_list_consumer(self):
+        host = self.host(r"\def\a{A}\unexpanded{\a}%")
+        self.declarations(host, 1)
+        self.assertEqual([t.value for t in self.expanded(self.cursor(host))], ["A"])
+
+    def test_copying_a_literal_parameter_list_is_budgeted_before_publication(self):
+        from src.engine.expansion import TokenListInsertion
+        host = self.host(r"\unexpanded{###}%")
+        cursor = self.cursor(host, budget=7)
+        with self.assertRaises(ReadingIssue) as caught:
+            cursor.next_expanded(copy_token_lists=True)
+        self.assertEqual(caught.exception.reason, "expansion_budget")
+        self.assertFalse(cursor.pending)
+        # A separate admitted request returns a transient insertion, retaining
+        # the original tokens; it does not mark them permanently unexpandable.
+        host = self.host(r"\unexpanded{###}%")
+        result = self.cursor(host).next_expanded(copy_token_lists=True)
+        self.assertIsInstance(result, TokenListInsertion)
+        self.assertTrue(all(not t.expansion_suppressed for t in result.tokens))
+
     def test_failed_edef_preserves_old_meaning(self):
         host = self.host(r"\def\a{OLD}\edef\a{\unknown}")
         original, = self.declarations(host, 1)

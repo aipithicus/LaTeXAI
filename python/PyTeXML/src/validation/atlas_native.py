@@ -98,7 +98,7 @@ def python_case(case):
         definition = context.lookup_definition("AtlasTrace" + label)
         if definition is not None:
             result["trace"][label] = "".join(token.value for token in definition.replacement_tokens)
-    definition = context.lookup_definition(settings["target"])
+    definition = context.lookup_definition(settings["target"]) if settings.get("target") else None
     result["target"] = None if definition is None else {
         "meaning": meaning_text(definition, context), **descriptor(definition)}
     result["installed_definitions"] = sorted(name for name in context.meaning_names()
@@ -145,9 +145,9 @@ def native_case(native, case):
                 trace[key] = bytes.fromhex(value).decode("latin-1")
         records.append({"folder": folder.name, "probe_sha256": sha(folder / "probe.tex"),
                         "returncode": code, "trace": trace})
-        if code or set(trace) != set(settings["trace_labels"]) | ({"IFX"} if attempt else set()):
+        if code or set(trace) != set(settings["trace_labels"]) | ({"IFX"} if candidate else set()):
             return {"case": case, "identity": identity, "status": "native_failed", "runs": records}
-        if attempt == 0:
+        if attempt == 0 and settings.get("target"):
             try:
                 candidate, parsed = Candidates().parse(trace["A"], "latex", f"native:{case}")
                 flags, _, _ = macro_parts(trace["A"])
@@ -156,10 +156,11 @@ def native_case(native, case):
             except Exception as error:
                 return {"case": case, "identity": identity, "status": "trace_only", "runs": records,
                         "reconstruction_error": f"{type(error).__name__}: {error}"}
-        elif {key: value for key, value in trace.items() if key != "IFX"} != records[0]["trace"]:
+        elif attempt and {key: value for key, value in trace.items() if key != "IFX"} != records[0]["trace"]:
             raise ValueError(f"Native replay observations changed: {case}")
-    return {"case": case, "identity": identity, "status": "qualified" if trace["IFX"] == "1" else "trace_only",
-            "trace": records[0]["trace"], "target": reference if trace["IFX"] == "1" else None, "runs": records}
+    qualified = not settings.get("target") or trace["IFX"] == "1"
+    return {"case": case, "identity": identity, "status": "qualified" if qualified else "trace_only",
+            "trace": records[0]["trace"], "target": reference if qualified else None, "runs": records}
 
 
 def compare(native, python):
@@ -170,9 +171,9 @@ def compare(native, python):
     trace = {label: "missing" if label not in python["trace"] else
              "match" if python["trace"][label] == value else "mismatch"
              for label, value in native["trace"].items()}
-    target = "missing" if python["target"] is None else (
+    target = "not_requested" if native["target"] is None else "missing" if python["target"] is None else (
         "match" if python["target"]["semantic_key"] == native["target"]["semantic_key"] else "mismatch")
-    return {"status": "match" if python["status"] == "completed" and target == "match"
+    return {"status": "match" if python["status"] == "completed" and target in {"match", "not_requested"}
             and all(value == "match" for value in trace.values()) else "not_qualified",
             "target": target, "observations": trace}
 
@@ -202,13 +203,17 @@ def load_reference(path=REFERENCE):
             raise ValueError(f"Unqualified native reference: {case}")
         if set(row["trace"]) != set(settings["trace_labels"]):
             raise ValueError(f"Incomplete native trace: {case}")
-        candidate, parsed = Candidates().parse(row["trace"]["A"], "latex", f"reference:{case}")
-        flags, _, _ = macro_parts(row["trace"]["A"])
-        candidate = "".join("\\" + flag for flag in flags) + candidate
-        if descriptor(parsed) != row["target"]:
-            raise ValueError(f"Reference typed descriptor differs: {case}")
+        candidate = None
+        if settings.get("target"):
+            candidate, parsed = Candidates().parse(row["trace"]["A"], "latex", f"reference:{case}")
+            flags, _, _ = macro_parts(row["trace"]["A"])
+            candidate = "".join("\\" + flag for flag in flags) + candidate
+            if descriptor(parsed) != row["target"]:
+                raise ValueError(f"Reference typed descriptor differs: {case}")
+        elif row["target"] is not None:
+            raise ValueError(f"Unexpected typed reference: {case}")
         for attempt, run in enumerate(row["runs"]):
-            expected = {**row["trace"], **({"IFX": "1"} if attempt else {})}
+            expected = {**row["trace"], **({"IFX": "1"} if attempt and candidate else {})}
             text = native_text(settings, source, probe, candidate if attempt else None)
             if (run["returncode"] or run["trace"] != expected
                     or run["probe_sha256"] != digest(text.encode("ascii"))):

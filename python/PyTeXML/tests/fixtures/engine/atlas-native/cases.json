@@ -1,4 +1,103 @@
 {
+  "P02-1": {
+    "parent": "P02",
+    "source": "P02-1-source.tex",
+    "probe": "P02-observe.tex",
+    "trace_labels": {
+      "A": "T5.1_output"
+    }
+  },
+  "P02-2": {
+    "parent": "P02",
+    "source": "P02-2-source.tex",
+    "probe": "P02-observe.tex",
+    "trace_labels": {
+      "A": "T5.2_output"
+    }
+  },
+  "P02-3": {
+    "parent": "P02",
+    "source": "P02-3-source.tex",
+    "probe": "P02-observe.tex",
+    "trace_labels": {
+      "A": "T5.3_output"
+    }
+  },
+  "P02-4": {
+    "parent": "P02",
+    "source": "P02-4-source.tex",
+    "probe": "P02-observe.tex",
+    "trace_labels": {
+      "A": "T5.4_output"
+    }
+  },
+  "P02-5": {
+    "parent": "P02",
+    "source": "P02-5-source.tex",
+    "probe": "P02-observe.tex",
+    "trace_labels": {
+      "A": "T5.5_output"
+    }
+  },
+  "P02-6": {
+    "parent": "P02",
+    "source": "P02-6-source.tex",
+    "probe": "P02-observe.tex",
+    "trace_labels": {
+      "A": "T5.6_output"
+    }
+  },
+  "P02-7": {
+    "parent": "P02",
+    "source": "P02-7-source.tex",
+    "probe": "P02-observe.tex",
+    "trace_labels": {
+      "A": "T5.7_output"
+    }
+  },
+  "P02-8": {
+    "parent": "P02",
+    "source": "P02-8-source.tex",
+    "probe": "P02-observe.tex",
+    "trace_labels": {
+      "A": "T5.8_output"
+    }
+  },
+  "P02-9": {
+    "parent": "P02",
+    "source": "P02-9-source.tex",
+    "probe": "P02-observe.tex",
+    "trace_labels": {
+      "A": "T5.9_output"
+    }
+  },
+  "P02-insertion": {
+    "parent": "P02",
+    "source": "P02-insertion-source.tex",
+    "probe": "P02-insertion.tex",
+    "target": "AtlasInserted",
+    "trace_labels": {
+      "A": "mixed_literal_and_argument",
+      "B": "nested_definition",
+      "C": "nested_invocation",
+      "D": "local_restored",
+      "E": "global_insertion",
+      "F": "inserted_tokens_after_invocation",
+      "G": "protected_definition",
+      "H": "expanded_parameter_number",
+      "I": "expanded_parameter_invocation"
+    }
+  },
+  "P03-tail": {
+    "parent": "P03",
+    "source": "P03-tail-source.tex",
+    "probe": "P03-tail.tex",
+    "target": "AtlasDone",
+    "trace_labels": {
+      "A": "definition_before_empty_tail",
+      "B": "definition_invoked"
+    }
+  },
   "P03": {
     "fragment": "conditional_generator",
     "target": "mytest:NF",

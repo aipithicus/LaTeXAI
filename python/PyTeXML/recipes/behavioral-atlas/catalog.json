@@ -675,7 +675,7 @@
       ],
       "limits": [
         "The commented torture expression is inactive source, not an exercised case.",
-        "Each T5 label needs its own observation before it can count as a qualified behavioral check."
+        "T5.1-T5.9 now have individual pinned native observations. Python matches seven; T5.7 needs token registers and T5.8 needs opening-group alias handling. See ../behavioral-atlas.md#expanded-list-insertion-implementation."
       ],
       "staged_experiment": {
         "trigger": "A suspended expansion frame becomes ready after a prerequisite resolves.",
@@ -733,7 +733,7 @@
       ],
       "limits": [
         "Executing this reduced source would qualify its mechanisms, not the whole current expl3 release.",
-        "Pinned native defined/undefined/relax and helper-redefinition witnesses are captured. Python stops during generation at unexpanded parameter-token insertion; branch execution is not qualified. See ../behavioral-atlas.md#pinned-native-program-comparisons.",
+        "Pinned native defined/undefined/relax and helper-redefinition witnesses are captured. Python now derives the matching definition; branch execution reaches the unavailable romannumeral primitive. See ../behavioral-atlas.md#expanded-list-insertion-implementation.",
         "This entry does not authorize a Python intrinsic named after the helper."
       ],
       "staged_experiment": {

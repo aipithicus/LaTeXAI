@@ -1,16 +1,19 @@
 """Expandable conversions create character tokens without re-tokenizing them."""
 from ..conditional_values import integer_scanner
+from ..expansion import TokenListInsertion
 from ..operations import ExpansionKind, OperationFamily, PrimitiveOperation
 from ...reading.contracts import ReadingIssue
 from ...reading.tex_reader import CatCode, Token, TokenKind
 from ..token_text import escape, token_text, meaning_text
-from dataclasses import replace
 
 
-def characters(cursor, text, span):
+def characters(cursor, text, span, *, insertion=False):
     cursor._charge(len(text))
-    cursor.push(Token(TokenKind.CHARACTER, c, CatCode.SPACE if c == " " else CatCode.OTHER,
-                      span, transformed=True) for c in text)
+    tokens = tuple(Token(TokenKind.CHARACTER, c, CatCode.SPACE if c == " " else CatCode.OTHER,
+                         span, transformed=True) for c in text)
+    if insertion:
+        return TokenListInsertion(tokens)
+    cursor.push(tokens)
 
 
 def string(cursor, token, meaning):
@@ -43,11 +46,11 @@ def group(cursor):
 
 def detokenize(cursor, token, meaning):
     text = "".join(token_text(t, cursor.context, double_parameters=True) for t in group(cursor))
-    characters(cursor, text, token.span)
+    return characters(cursor, text, token.span, insertion=True)
 
 
 def unexpanded(cursor, token, meaning):
-    cursor.push(replace(t, expansion_suppressed=True) for t in group(cursor))
+    return TokenListInsertion(tuple(group(cursor)))
 
 
 def meaning(cursor, token, profile):
@@ -73,7 +76,7 @@ def the(cursor, token, meaning):
     value = resolved[0].integer_value(scanner, resolved[1])
     if resolved[1].operation == "register.assign" and resolved[1].operand.kind == "dimen":
         raise ReadingIssue("dimension_display", "Dimension display conversion is not established")
-    characters(cursor, str(value), token.span)
+    return characters(cursor, str(value), token.span, insertion=True)
 
 
 STRING = PrimitiveOperation("conversion.string", ExpansionKind.EXPANDABLE, operand_type=type(None), expansion=string)

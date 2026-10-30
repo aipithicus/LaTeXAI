@@ -8,7 +8,7 @@ from dataclasses import replace
 
 from .expansion import ExpansionCursor
 from .primitive import PrimitiveMeaning
-from ..reading.contracts import BoundMeaning, ReadingIssue
+from ..reading.contracts import BoundMeaning, ReadingIssue, SourceCommand
 from ..reading.tex_reader import EventKind, ReadEvent, ReaderState
 
 
@@ -80,6 +80,12 @@ def execute(host, opening):
         operation = FAMILY_OPERATIONS.get(profile.family)
         return operation is not None and operation.continuation
     token = cursor.next_expanded(stop_operation=lambda op: op.continuation or (host.program and op.unexpandable), stop=admitted)
+    if token is None and host.program:
+        # A bounded program may legitimately finish by expanding to nothing
+        # (for example a recursion-tail gobbler). Its prior effects are valid;
+        # requiring another executable token would roll them back spuriously.
+        return SourceCommand(source.source_span(opening.span.start, source.position),
+                             opening.token.value, "reading_noop")
     if token is None or cursor.suppressed:
         raise ReadingIssue("expansion_continuation", "Expansion has no supported execution result")
     if host.program:

@@ -14,6 +14,17 @@ from ..reading.tex_reader import CatCode, Token, TokenKind
 
 
 @dataclass(frozen=True, slots=True)
+class TokenListInsertion:
+    """A the_toks result, copied by scan_toks but expanded in ordinary input.
+
+    This is an ephemeral expansion result, not a flag on stored tokens. The
+    consuming scan decides whether to copy it; nested scans do not inherit that
+    decision. Tokens retain their original categories and occurrence spans.
+    """
+    tokens: tuple[Token, ...]
+
+
+@dataclass(frozen=True, slots=True)
 class MacroCall:
     invocation: Token
     definition: StoredDefinition
@@ -172,7 +183,10 @@ class ExpansionCursor:
                         raise ReadingIssue("expansion_budget", "Expansion nesting exhausted its work budget")
                     self._depth += 1
                     try:
-                        return operation.expansion(self, token, meaning)
+                        result = operation.expansion(self, token, meaning)
+                        if isinstance(result, TokenListInsertion):
+                            self._charge(len(result.tokens))
+                        return result
                     finally:
                         self._depth -= 1
                 if operation.unexpandable:
@@ -182,13 +196,23 @@ class ExpansionCursor:
                 return token
         raise ReadingIssue("expansion_required", f"No established expansion behavior for {token.value!r}")
 
-    def next_expanded(self, *, stop=None, stop_operation=None):
+    def next_expanded(self, *, stop=None, stop_operation=None, copy_token_lists=False):
+        """Return a token, or a whole insertion to an expanded-list consumer.
+
+        A parameter-number scan uses the default get_x_token behavior even
+        inside an edef; it must not copy an insertion past parameter validation.
+        """
         self.suppressed = False
         while (token := self.next_token()) is not None:
             if token.expansion_suppressed:
                 self.suppressed = True
                 return replace(token, expansion_suppressed=False)
             result = self.expand_once(token, stop=stop, stop_operation=stop_operation)
+            if isinstance(result, TokenListInsertion):
+                if copy_token_lists:
+                    return result
+                self.push(result.tokens)
+                continue
             if result is not None:
                 return result
         return None

@@ -35,7 +35,7 @@
     "texmf-var/web2c/pdftex/pdflatex.fmt": "0a87849b8a9dea495227b1be22352277fefd90ccd3d3fed02c872391206bd910"
   },
   "code": {
-    "sha256": "15b3e39a9830bcc30fa9e229a27223e9b1e25eb4b0e0d1e9d023260f1654c4f3",
+    "sha256": "a8b8d3fa074714035cee2ab2ea7cefdc0e5cde3d0caaa60841f23f79b31a2bcf",
     "files": [
       {
         "path": "requirements.txt",
@@ -274,13 +274,13 @@
       },
       {
         "path": "src/engine/continuation.py",
-        "sha256": "537fc9329179b3b98060453c733d6a592c4c94e225e06674f841e400ca6d4f80",
-        "bytes": 4740
+        "sha256": "59c8aca5779d0a27fcda566724aae87db939acf448d1fcc72a0df0aebab1d894",
+        "bytes": 5179
       },
       {
         "path": "src/engine/expansion.py",
-        "sha256": "bac452bebc77aa9e3ee1099103df18156f68d9f41d1fe1c8497c4a7f1c731aee",
-        "bytes": 8775
+        "sha256": "f6b15828c067a3fa62b62a069c09cd5a280cc6f9161ef61ac7a76bee6f60602b",
+        "bytes": 9819
       },
       {
         "path": "src/engine/file_events.py",
@@ -359,8 +359,8 @@
       },
       {
         "path": "src/engine/operations.py",
-        "sha256": "54ce6635a8c0d5bba71f2ad367ba26cb5ac39473686e4ddbd03a8ce42ec57577",
-        "bytes": 9603
+        "sha256": "c4be06ff9d2f63b6ce6bc4cf6eec62aca3d19b30e21896b90b6199b5dd2e868b",
+        "bytes": 9644
       },
       {
         "path": "src/engine/parameters.py",
@@ -389,18 +389,18 @@
       },
       {
         "path": "src/engine/primitives/conversions.py",
-        "sha256": "40068a53090d4c36af3757f4eee754c6bd2c841f8edf7ae8bdc0c1046d3cd6cd",
-        "bytes": 4455
+        "sha256": "d29e0c4615d7f80d34e1275ec3ff82c53a721bad267c7b210195a711a322578a",
+        "bytes": 4596
       },
       {
         "path": "src/engine/primitives/definitions.py",
-        "sha256": "f7a9da2f988d4b4a7db58671e7501c3ccb21603068a76babb0f3de0abc771dac",
-        "bytes": 10659
+        "sha256": "115ba11caa756ad6cf0cf4b1fc46eb4790ff7459aed8d62abd0831649fe5a442",
+        "bytes": 11348
       },
       {
         "path": "src/engine/primitives/expansion.py",
-        "sha256": "85f290a67e8a4c3720801a08fbffe6e5634ff271973b2b1e49eb2f5a0f80b486",
-        "bytes": 9377
+        "sha256": "fbb3afd81c673535b33ecdad53fd74b008b8c927a7c54a225fb6cef82ac635bb",
+        "bytes": 9709
       },
       {
         "path": "src/engine/primitives/grouping.py",
@@ -784,8 +784,8 @@
       },
       {
         "path": "src/validation/atlas_native.py",
-        "sha256": "bce34fbd777859484b62088a9b52d873ce1b6d951dd4bf398dea5d0ea47ab81c",
-        "bytes": 16945
+        "sha256": "6809d0b376adfea868c892b1e7fc1c1272bc370e04e17f359c8f6089cbc945d4",
+        "bytes": 17338
       },
       {
         "path": "src/validation/behavioral_atlas.py",
@@ -874,16 +874,506 @@
       "Pillow": "12.3.0",
       "PyMuPDF": "1.28.2"
     },
-    "commit": "0d815ee116771f10b406afa5bed535ad3989c17f",
-    "working_changes": "?? python/PyTeXML/src/validation/atlas_native.py"
+    "commit": "3929182fc0b232c55cf4fc19911f05022176421d",
+    "working_changes": "M python/PyTeXML/src/engine/continuation.py\n M python/PyTeXML/src/engine/expansion.py\n M python/PyTeXML/src/engine/operations.py\n M python/PyTeXML/src/engine/primitives/conversions.py\n M python/PyTeXML/src/engine/primitives/definitions.py\n M python/PyTeXML/src/engine/primitives/expansion.py\n M python/PyTeXML/src/validation/atlas_native.py"
   },
-  "run_receipt_sha256": "73ff914f3a60a1c46ef608d208afa8333527a7badd6769f2a373806333aa9a49",
+  "run_receipt_sha256": "0ffe91fe98d7776a57f84fb206fd231e8fb539a19c261768ee5fed3c613da62d",
   "cases": {
+    "P02-1": {
+      "case": "P02-1",
+      "identity": {
+        "catalog_sha256": "31573c67434ffc55048b33790759a80fdbc316ec21bcb6ba33ec71d03adfe06b",
+        "cases_sha256": "7441fb38d5421e62fdbf703cbb8a61e8954a0cdda58bea57ab1580aae4f33398",
+        "derived_witness": "P02-1-source.tex",
+        "parent": "P02",
+        "definition_sha256": "60af1fb4d4ea314dfd5ea7af863e4dbb2d819629ac26c002f651cee11ebd95cc",
+        "probe_sha256": "fcfc1b94569479f8a5b39e0124b556a234edf05c9d7ab81632d0531b6be4d74e"
+      },
+      "status": "qualified",
+      "trace": {
+        "A": "##,\\aaa ,\\aaa "
+      },
+      "target": null,
+      "runs": [
+        {
+          "folder": "P02-1-native-0",
+          "probe_sha256": "5885a316d4f8325d773d5fa1367ef276a74cfb273fd114368a5c0315d445abe8",
+          "returncode": 0,
+          "trace": {
+            "A": "##,\\aaa ,\\aaa "
+          }
+        },
+        {
+          "folder": "P02-1-native-1",
+          "probe_sha256": "5885a316d4f8325d773d5fa1367ef276a74cfb273fd114368a5c0315d445abe8",
+          "returncode": 0,
+          "trace": {
+            "A": "##,\\aaa ,\\aaa "
+          }
+        }
+      ]
+    },
+    "P02-2": {
+      "case": "P02-2",
+      "identity": {
+        "catalog_sha256": "31573c67434ffc55048b33790759a80fdbc316ec21bcb6ba33ec71d03adfe06b",
+        "cases_sha256": "7441fb38d5421e62fdbf703cbb8a61e8954a0cdda58bea57ab1580aae4f33398",
+        "derived_witness": "P02-2-source.tex",
+        "parent": "P02",
+        "definition_sha256": "4918d9dcf4f1e67205b80dc3aff0ec3e4dc74fdc6f87eed984f361927bb7536e",
+        "probe_sha256": "fcfc1b94569479f8a5b39e0124b556a234edf05c9d7ab81632d0531b6be4d74e"
+      },
+      "status": "qualified",
+      "trace": {
+        "A": "##,##"
+      },
+      "target": null,
+      "runs": [
+        {
+          "folder": "P02-2-native-0",
+          "probe_sha256": "6b231576cc0642a6527f0dc95ffd3d194476889e19e1c7c555538208d2073e4b",
+          "returncode": 0,
+          "trace": {
+            "A": "##,##"
+          }
+        },
+        {
+          "folder": "P02-2-native-1",
+          "probe_sha256": "6b231576cc0642a6527f0dc95ffd3d194476889e19e1c7c555538208d2073e4b",
+          "returncode": 0,
+          "trace": {
+            "A": "##,##"
+          }
+        }
+      ]
+    },
+    "P02-3": {
+      "case": "P02-3",
+      "identity": {
+        "catalog_sha256": "31573c67434ffc55048b33790759a80fdbc316ec21bcb6ba33ec71d03adfe06b",
+        "cases_sha256": "7441fb38d5421e62fdbf703cbb8a61e8954a0cdda58bea57ab1580aae4f33398",
+        "derived_witness": "P02-3-source.tex",
+        "parent": "P02",
+        "definition_sha256": "28f27bc84c41cec846aed95e839c565dd6019bf917d6c7f4e444768a8a1238f1",
+        "probe_sha256": "fcfc1b94569479f8a5b39e0124b556a234edf05c9d7ab81632d0531b6be4d74e"
+      },
+      "status": "qualified",
+      "trace": {
+        "A": "\\aaa "
+      },
+      "target": null,
+      "runs": [
+        {
+          "folder": "P02-3-native-0",
+          "probe_sha256": "6dafecd25fdcb6794fb95e8e14aff6e7f555ab7ba619d5fff7f149255d511fe2",
+          "returncode": 0,
+          "trace": {
+            "A": "\\aaa "
+          }
+        },
+        {
+          "folder": "P02-3-native-1",
+          "probe_sha256": "6dafecd25fdcb6794fb95e8e14aff6e7f555ab7ba619d5fff7f149255d511fe2",
+          "returncode": 0,
+          "trace": {
+            "A": "\\aaa "
+          }
+        }
+      ]
+    },
+    "P02-4": {
+      "case": "P02-4",
+      "identity": {
+        "catalog_sha256": "31573c67434ffc55048b33790759a80fdbc316ec21bcb6ba33ec71d03adfe06b",
+        "cases_sha256": "7441fb38d5421e62fdbf703cbb8a61e8954a0cdda58bea57ab1580aae4f33398",
+        "derived_witness": "P02-4-source.tex",
+        "parent": "P02",
+        "definition_sha256": "0ad7e967a9ec034ec7e287d4ab6239b8313218a1fe0812b963b74563fb6da274",
+        "probe_sha256": "fcfc1b94569479f8a5b39e0124b556a234edf05c9d7ab81632d0531b6be4d74e"
+      },
+      "status": "qualified",
+      "trace": {
+        "A": "x"
+      },
+      "target": null,
+      "runs": [
+        {
+          "folder": "P02-4-native-0",
+          "probe_sha256": "241e5edb33d7a6cd9693ee67e85d8ecd4807653f73a8202e1757ed5eb218dabc",
+          "returncode": 0,
+          "trace": {
+            "A": "x"
+          }
+        },
+        {
+          "folder": "P02-4-native-1",
+          "probe_sha256": "241e5edb33d7a6cd9693ee67e85d8ecd4807653f73a8202e1757ed5eb218dabc",
+          "returncode": 0,
+          "trace": {
+            "A": "x"
+          }
+        }
+      ]
+    },
+    "P02-5": {
+      "case": "P02-5",
+      "identity": {
+        "catalog_sha256": "31573c67434ffc55048b33790759a80fdbc316ec21bcb6ba33ec71d03adfe06b",
+        "cases_sha256": "7441fb38d5421e62fdbf703cbb8a61e8954a0cdda58bea57ab1580aae4f33398",
+        "derived_witness": "P02-5-source.tex",
+        "parent": "P02",
+        "definition_sha256": "103d97e4b3d6ddfcf66283ad6fc89dab2a971472cec421a03227d85ba5d0351d",
+        "probe_sha256": "fcfc1b94569479f8a5b39e0124b556a234edf05c9d7ab81632d0531b6be4d74e"
+      },
+      "status": "qualified",
+      "trace": {
+        "A": "x\\aaa \\noexpand \\aaa "
+      },
+      "target": null,
+      "runs": [
+        {
+          "folder": "P02-5-native-0",
+          "probe_sha256": "a3e6f0f158a5f93a4a731dcd2d6f8cfdebd242c495082ff9166816f4046e9386",
+          "returncode": 0,
+          "trace": {
+            "A": "x\\aaa \\noexpand \\aaa "
+          }
+        },
+        {
+          "folder": "P02-5-native-1",
+          "probe_sha256": "a3e6f0f158a5f93a4a731dcd2d6f8cfdebd242c495082ff9166816f4046e9386",
+          "returncode": 0,
+          "trace": {
+            "A": "x\\aaa \\noexpand \\aaa "
+          }
+        }
+      ]
+    },
+    "P02-6": {
+      "case": "P02-6",
+      "identity": {
+        "catalog_sha256": "31573c67434ffc55048b33790759a80fdbc316ec21bcb6ba33ec71d03adfe06b",
+        "cases_sha256": "7441fb38d5421e62fdbf703cbb8a61e8954a0cdda58bea57ab1580aae4f33398",
+        "derived_witness": "P02-6-source.tex",
+        "parent": "P02",
+        "definition_sha256": "402d77a14e7fe60c8b51ad7607a6ba0f686c66cc30d1d516525d5fc15ae6386e",
+        "probe_sha256": "fcfc1b94569479f8a5b39e0124b556a234edf05c9d7ab81632d0531b6be4d74e"
+      },
+      "status": "qualified",
+      "trace": {
+        "A": "xx\\aaa "
+      },
+      "target": null,
+      "runs": [
+        {
+          "folder": "P02-6-native-0",
+          "probe_sha256": "dc2e886905fad0cfb38ec479c16c21e3f0eebd32bd53d0238ddbbed54b8e7bc9",
+          "returncode": 0,
+          "trace": {
+            "A": "xx\\aaa "
+          }
+        },
+        {
+          "folder": "P02-6-native-1",
+          "probe_sha256": "dc2e886905fad0cfb38ec479c16c21e3f0eebd32bd53d0238ddbbed54b8e7bc9",
+          "returncode": 0,
+          "trace": {
+            "A": "xx\\aaa "
+          }
+        }
+      ]
+    },
+    "P02-7": {
+      "case": "P02-7",
+      "identity": {
+        "catalog_sha256": "31573c67434ffc55048b33790759a80fdbc316ec21bcb6ba33ec71d03adfe06b",
+        "cases_sha256": "7441fb38d5421e62fdbf703cbb8a61e8954a0cdda58bea57ab1580aae4f33398",
+        "derived_witness": "P02-7-source.tex",
+        "parent": "P02",
+        "definition_sha256": "a639fc28094fdc9d7547519e3b8637328076fbd02d88ffbc33f5110c7d1737bc",
+        "probe_sha256": "fcfc1b94569479f8a5b39e0124b556a234edf05c9d7ab81632d0531b6be4d74e"
+      },
+      "status": "qualified",
+      "trace": {
+        "A": "\\aaa "
+      },
+      "target": null,
+      "runs": [
+        {
+          "folder": "P02-7-native-0",
+          "probe_sha256": "d65e01523b272272c29a9ae6a66d0909c1c2cc5cce4c5e5331c343055ac5d02f",
+          "returncode": 0,
+          "trace": {
+            "A": "\\aaa "
+          }
+        },
+        {
+          "folder": "P02-7-native-1",
+          "probe_sha256": "d65e01523b272272c29a9ae6a66d0909c1c2cc5cce4c5e5331c343055ac5d02f",
+          "returncode": 0,
+          "trace": {
+            "A": "\\aaa "
+          }
+        }
+      ]
+    },
+    "P02-8": {
+      "case": "P02-8",
+      "identity": {
+        "catalog_sha256": "31573c67434ffc55048b33790759a80fdbc316ec21bcb6ba33ec71d03adfe06b",
+        "cases_sha256": "7441fb38d5421e62fdbf703cbb8a61e8954a0cdda58bea57ab1580aae4f33398",
+        "derived_witness": "P02-8-source.tex",
+        "parent": "P02",
+        "definition_sha256": "284dae28621e75da5a921e312595c4cf8eefe0074c5a180ee75932e4423fcc23",
+        "probe_sha256": "fcfc1b94569479f8a5b39e0124b556a234edf05c9d7ab81632d0531b6be4d74e"
+      },
+      "status": "qualified",
+      "trace": {
+        "A": "end-group character }"
+      },
+      "target": null,
+      "runs": [
+        {
+          "folder": "P02-8-native-0",
+          "probe_sha256": "1260d0cfe9d43fa2e8bc0b5eb364872ce7fea1fc706fdff0af292125ef094b84",
+          "returncode": 0,
+          "trace": {
+            "A": "end-group character }"
+          }
+        },
+        {
+          "folder": "P02-8-native-1",
+          "probe_sha256": "1260d0cfe9d43fa2e8bc0b5eb364872ce7fea1fc706fdff0af292125ef094b84",
+          "returncode": 0,
+          "trace": {
+            "A": "end-group character }"
+          }
+        }
+      ]
+    },
+    "P02-9": {
+      "case": "P02-9",
+      "identity": {
+        "catalog_sha256": "31573c67434ffc55048b33790759a80fdbc316ec21bcb6ba33ec71d03adfe06b",
+        "cases_sha256": "7441fb38d5421e62fdbf703cbb8a61e8954a0cdda58bea57ab1580aae4f33398",
+        "derived_witness": "P02-9-source.tex",
+        "parent": "P02",
+        "definition_sha256": "35d150ec1d2e727fcd63d5beb1676bfc8129fbc0fea2b890c9f91bdd40a74ec9",
+        "probe_sha256": "fcfc1b94569479f8a5b39e0124b556a234edf05c9d7ab81632d0531b6be4d74e"
+      },
+      "status": "qualified",
+      "trace": {
+        "A": "macro:->##"
+      },
+      "target": null,
+      "runs": [
+        {
+          "folder": "P02-9-native-0",
+          "probe_sha256": "6119dd2805527e173b92afad9ff3bcb0d281c2c078f3f3cff3073ca4b115c8f8",
+          "returncode": 0,
+          "trace": {
+            "A": "macro:->##"
+          }
+        },
+        {
+          "folder": "P02-9-native-1",
+          "probe_sha256": "6119dd2805527e173b92afad9ff3bcb0d281c2c078f3f3cff3073ca4b115c8f8",
+          "returncode": 0,
+          "trace": {
+            "A": "macro:->##"
+          }
+        }
+      ]
+    },
+    "P02-insertion": {
+      "case": "P02-insertion",
+      "identity": {
+        "catalog_sha256": "31573c67434ffc55048b33790759a80fdbc316ec21bcb6ba33ec71d03adfe06b",
+        "cases_sha256": "7441fb38d5421e62fdbf703cbb8a61e8954a0cdda58bea57ab1580aae4f33398",
+        "derived_witness": "P02-insertion-source.tex",
+        "parent": "P02",
+        "definition_sha256": "6ed998fce9076fd22b1295f0e00703002ec55e5da268164f996b6fe92dbbdf57",
+        "probe_sha256": "a61333e7a318bd37a7399acff3c60d4a50e580fe28e7ad9ecda15167b86cad45"
+      },
+      "status": "qualified",
+      "trace": {
+        "A": "macro:#1->##1\\donor \\guard {#1}",
+        "B": "macro:#1->#1",
+        "C": "VALUE",
+        "D": "macro:->OUTSIDE",
+        "E": "macro:->##2",
+        "F": "##1\\donor \\guard {VALUE}",
+        "G": "macro:->\\guard ",
+        "H": "macro:#1->#1",
+        "I": "VALUE"
+      },
+      "target": {
+        "semantic_key": [
+          "macro",
+          false,
+          [
+            [
+              "match",
+              "#"
+            ]
+          ],
+          [
+            [
+              "character",
+              6,
+              "#"
+            ],
+            [
+              "character",
+              12,
+              "1"
+            ],
+            [
+              "control",
+              "control_sequence",
+              "donor"
+            ],
+            [
+              "control",
+              "control_sequence",
+              "guard"
+            ],
+            [
+              "character",
+              1,
+              "{"
+            ],
+            [
+              "out_parameter",
+              1
+            ],
+            [
+              "character",
+              2,
+              "}"
+            ]
+          ],
+          false,
+          false
+        ],
+        "semantic_sha256": "6ff4f7e74f82f3bf1db4fb53bb00e2b9130c87e2b631eb50591bea43a922a42a",
+        "parameter_tokens": 2,
+        "body_tokens": 9,
+        "parameter_count": 1
+      },
+      "runs": [
+        {
+          "folder": "P02-insertion-native-0",
+          "probe_sha256": "30d1880502a6085e481e7adff39b7efb2ad6c4f06ce4a2e9fceeba42a2ce6558",
+          "returncode": 0,
+          "trace": {
+            "A": "macro:#1->##1\\donor \\guard {#1}",
+            "B": "macro:#1->#1",
+            "C": "VALUE",
+            "D": "macro:->OUTSIDE",
+            "E": "macro:->##2",
+            "F": "##1\\donor \\guard {VALUE}",
+            "G": "macro:->\\guard ",
+            "H": "macro:#1->#1",
+            "I": "VALUE"
+          }
+        },
+        {
+          "folder": "P02-insertion-native-1",
+          "probe_sha256": "5204177e7a76b1da22214c70bd88a872c164352cf2ec7fcbeb4c3bf497fe8512",
+          "returncode": 0,
+          "trace": {
+            "A": "macro:#1->##1\\donor \\guard {#1}",
+            "B": "macro:#1->#1",
+            "C": "VALUE",
+            "D": "macro:->OUTSIDE",
+            "E": "macro:->##2",
+            "F": "##1\\donor \\guard {VALUE}",
+            "G": "macro:->\\guard ",
+            "H": "macro:#1->#1",
+            "I": "VALUE",
+            "IFX": "1"
+          }
+        }
+      ]
+    },
+    "P03-tail": {
+      "case": "P03-tail",
+      "identity": {
+        "catalog_sha256": "31573c67434ffc55048b33790759a80fdbc316ec21bcb6ba33ec71d03adfe06b",
+        "cases_sha256": "7441fb38d5421e62fdbf703cbb8a61e8954a0cdda58bea57ab1580aae4f33398",
+        "derived_witness": "P03-tail-source.tex",
+        "parent": "P03",
+        "definition_sha256": "fa0b334c99481d439cea2b4bbb08afb74db6308d06953d226bd269437da44761",
+        "probe_sha256": "1287a4b657efcc4c0242a002fa5c3ebf83908deed046f0d689a03092a2446f02"
+      },
+      "status": "qualified",
+      "trace": {
+        "A": "macro:->DONE",
+        "B": "DONE"
+      },
+      "target": {
+        "semantic_key": [
+          "macro",
+          false,
+          [],
+          [
+            [
+              "character",
+              11,
+              "D"
+            ],
+            [
+              "character",
+              11,
+              "O"
+            ],
+            [
+              "character",
+              11,
+              "N"
+            ],
+            [
+              "character",
+              11,
+              "E"
+            ]
+          ],
+          false,
+          false
+        ],
+        "semantic_sha256": "2ddaaeb335bbc2d257c2660503a786243fbb69c780bb6612ab08520065f63fba",
+        "parameter_tokens": 0,
+        "body_tokens": 4,
+        "parameter_count": 0
+      },
+      "runs": [
+        {
+          "folder": "P03-tail-native-0",
+          "probe_sha256": "58016ef4275fbb3dc595a4ff214e10446e2976a5cc0e174934320fb81d8a442a",
+          "returncode": 0,
+          "trace": {
+            "A": "macro:->DONE",
+            "B": "DONE"
+          }
+        },
+        {
+          "folder": "P03-tail-native-1",
+          "probe_sha256": "e84bb21f886307f677df2c48882b08f1f21df792f07212d295db1ee148858417",
+          "returncode": 0,
+          "trace": {
+            "A": "macro:->DONE",
+            "B": "DONE",
+            "IFX": "1"
+          }
+        }
+      ]
+    },
     "P03": {
       "case": "P03",
       "identity": {
-        "catalog_sha256": "2e1ca3f978d2db9729d33cfa7d1c2867eafc2f0c65d7b5b1609990fdcb665a99",
-        "cases_sha256": "acbcd7709ba2a03debd43f7c6802a6ac335d4353a42f6a8ee306c99af16fe06e",
+        "catalog_sha256": "31573c67434ffc55048b33790759a80fdbc316ec21bcb6ba33ec71d03adfe06b",
+        "cases_sha256": "7441fb38d5421e62fdbf703cbb8a61e8954a0cdda58bea57ab1580aae4f33398",
         "source_fragment": {
           "source": "generator",
           "line_start": 1,
@@ -1043,8 +1533,8 @@
     "P03-insertion": {
       "case": "P03-insertion",
       "identity": {
-        "catalog_sha256": "2e1ca3f978d2db9729d33cfa7d1c2867eafc2f0c65d7b5b1609990fdcb665a99",
-        "cases_sha256": "acbcd7709ba2a03debd43f7c6802a6ac335d4353a42f6a8ee306c99af16fe06e",
+        "catalog_sha256": "31573c67434ffc55048b33790759a80fdbc316ec21bcb6ba33ec71d03adfe06b",
+        "cases_sha256": "7441fb38d5421e62fdbf703cbb8a61e8954a0cdda58bea57ab1580aae4f33398",
         "derived_witness": "P03-insertion-source.tex",
         "parent": "P03",
         "definition_sha256": "dc311e5032e3c666f3898e5a65ea69c06066481d612fd8f7c79c7219a720470d",
@@ -1108,8 +1598,8 @@
     "M02": {
       "case": "M02",
       "identity": {
-        "catalog_sha256": "2e1ca3f978d2db9729d33cfa7d1c2867eafc2f0c65d7b5b1609990fdcb665a99",
-        "cases_sha256": "acbcd7709ba2a03debd43f7c6802a6ac335d4353a42f6a8ee306c99af16fe06e",
+        "catalog_sha256": "31573c67434ffc55048b33790759a80fdbc316ec21bcb6ba33ec71d03adfe06b",
+        "cases_sha256": "7441fb38d5421e62fdbf703cbb8a61e8954a0cdda58bea57ab1580aae4f33398",
         "source_fragment": {
           "source": "roundtrip",
           "line_start": 1,

@@ -1,0 +1,14 @@
+{
+  "schema": "pytexml-engine-source-reference/1",
+  "repository": "https://github.com/TeX-Live/texlive-source",
+  "revision": "2d38d53fe0f1c916bdef1858bc28af82e6a9c2ee",
+  "path": "texk/web2c/pdftexdir/pdftex.web",
+  "sha256": "38537f10300d66d790a39ed3e55bda01fb5daf1155c2ed6d5925e7983a419c07",
+  "declared_version": "1.40.29",
+  "sections": [
+    {"name": "the_toks and ins_the_toks", "line_start": 10747, "line_end": 10793},
+    {"name": "scan_toks expanded-list insertion and parameter-number scan", "line_start": 11520, "line_end": 11568},
+    {"name": "unexpanded and detokenize general text", "line_start": 37686, "line_end": 37696}
+  ],
+  "scope": "Algorithm reference pinned independently of the binary archive; not a source-to-binary build attestation. Native behavior remains qualified against root-a-pdftex-20261029."
+}
