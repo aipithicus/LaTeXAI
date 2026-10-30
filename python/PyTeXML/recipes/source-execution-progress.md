@@ -4,6 +4,39 @@ This file records implementation and qualification evidence. Current priorities
 live in the [working queue](../../../../aipithicus-issues/LaTeXAI/briefs/pytexml-language-core/working-queue.md);
 dated next-step statements below describe their checkpoint, not current dispatch.
 
+## 2026-10-29: display triage and census comparison of source-derived state
+
+The [qualification follow-up](meaning-qualification.md) owns details and commands.
+Native diagnostic support now prints the reconstructed candidate separately from
+comparing it with the original target. All **533 display-difference records** were
+checked in both regimes: **1,066 Python/native candidate displays agree**, and
+all 1,066 candidates remain native-unequal to the target. The first-regime diffs
+remove spaces in 367 records, add them in 146, and do both in 20. No formatter
+defect was found in this group; no engine display behavior changed.
+
+A reusable checksum/basis-checked comparator now reports semantic hashes and
+typed descriptors for source-derived final bindings. The kernel-source witness
+creates 54 new/changed bindings: **41 qualified macro references match**, with
+five reconstruction exceptions and eight non-macro meanings reported as lacking
+a qualified reference. No missing/uncertain/uncomparable item is counted as a
+match. Its progress fraction is 41/15,552 qualified macros, with explicit family
+and state boundaries; this is not whole-format completion or behavior coverage.
+
+Qualification passes **58 meaning tests plus four kernel-source tests**. The
+native triage run `20261029-display-triage-qualified` and the fresh source-state
+comparison receipt are identified by repository
+`temp/meaning-followup-qualified-receipt`. No runtime engine source changed and
+no new all-nine extraction equivalence is claimed.
+
+Planning now requires representation compaction before broad source bootstrap
+and a qualified derived-state snapshot before collection-scale bootstrap runs.
+The 214.43-byte/token figure is an amortized object-graph ratio; the 16-second
+traced pass includes scanning/allocation. 15,552 names have 11,401 distinct macro
+descriptors. The named primitive-alias layer includes 442 undefined entries, and
+`exp_args:Nc` is a macro. These facts constrain the interpretation of cost and
+coverage without changing the raw assay. Workload-selected Q4 family gates remain;
+static exception frontiers inform their investigation rather than defining it.
+
 ## 2026-10-29: qualify the assay as an oracle for source-derived meanings
 
 The user clarified that engine work must derive meanings through reusable

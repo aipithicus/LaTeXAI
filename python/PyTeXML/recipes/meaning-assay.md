@@ -6,6 +6,12 @@ macro reconstructions, a static reference graph, individually recorded
 exceptions, generated fixtures, and CPU/memory receipts. It does not install
 meanings into production or implement intrinsic dispatch.
 
+The [qualification follow-up](meaning-qualification.md) triages all 533 display
+differences against native displays of the same candidates, compares the existing
+source-derived kernel state with the census, and records the representation and
+snapshot prerequisites. It refines the interpretation of the measurements below;
+the original assay artifacts remain unchanged.
+
 ## Qualification: the engine derives meanings from source
 
 The user's subsequent clarification makes this census a reference instrument,

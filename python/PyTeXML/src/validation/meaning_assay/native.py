@@ -123,7 +123,7 @@ def probe(native, names, number):
     return result
 
 
-def validate(native, entries, regime, number):
+def validate(native, entries, regime, number, *, candidate_displays=None):
     """A fatal record is isolated and reported; subsequent records get a fresh process."""
     from .model import REGIMES
     outcomes = {}
@@ -136,8 +136,17 @@ def validate(native, entries, regime, number):
         assignments = "".join(f"\\catcode{ord(char)}={cat} " for char, cat in REGIMES[regime].items())
         for index, (name, source) in enumerate(pending):
             # The caller supplies the flags on the already-scanned definition.
-            lines += [f"\\immediate\\write\\AssayOut{{S|{index}}}\n", "\\begingroup\n", assignments + "\n",
-                      source + "\n", r"\expandafter\ifx" + cs(name) + r"\AssayCandidate"
+            lines += [f"\\immediate\\write\\AssayOut{{S|{index}}}\n", "\\begingroup\n", assignments + "\n", source + "\n"]
+            if candidate_displays is not None:
+                # Compare displays in the assay's default pdfTeX context, not
+                # the reconstruction regime (single-letter CS spacing depends
+                # on current catcodes). Do not expose an outer macro as a raw
+                # token while scanning the write's argument.
+                lines.append("\\begingroup\\catcode95=8 \\catcode58=12 \\catcode64=12 "
+                    + r"\immediate\write\AssayOut{D|" + str(index)
+                    + r"|\pdfescapehex{\expandafter\meaning" + cs("AssayCandidate")
+                    + "}}\\endgroup\n")
+            lines += [r"\expandafter\ifx" + cs(name) + r"\AssayCandidate"
                       + f"\\immediate\\write\\AssayOut{{R|{index}|1}}"
                       + f"\\else\\immediate\\write\\AssayOut{{R|{index}|0}}\\fi\n", "\\endgroup\n"]
         lines.append(END)
@@ -150,6 +159,8 @@ def validate(native, entries, regime, number):
                 started.append(int(fields[1]))
             elif fields[0] == "R":
                 completed[int(fields[1])] = fields[2] == "1"
+            elif fields[0] == "D" and candidate_displays is not None:
+                candidate_displays[pending[int(fields[1])][0]] = bytes.fromhex(fields[2]).decode("latin-1")
         for index, value in completed.items():
             outcomes[pending[index][0]] = "equal" if value else "unequal"
         if code:

@@ -4,12 +4,15 @@ import json
 import re
 from pathlib import Path
 import unittest
+import tempfile
 
 from src.bindings.resolver import BindingResolver
 from src.engine.programs import evaluate, SETUP
 from src.reading.context import ReaderContext
 from src.reading.dispatcher import StructuralDispatcher
 from src.reading.tex_reader import TexReader
+from src.validation.meaning_assay.compare import compare_derived, load_reference
+from src.validation.specimens import code_identity
 
 PROJECT = Path(__file__).resolve().parents[1]
 ORACLE = PROJECT.parents[1] / "temp/texlive-oracle"
@@ -35,6 +38,7 @@ class KernelSourceTests(unittest.TestCase):
         reader = TexReader('', catcodes=context.catcodes, endline_char=context.endlinechar)
         self.host = StructuralDispatcher(reader, context, resolver, preparation=True, source_commands=True)
         self.run_source(r'\dimendef\z@=12 \dimen12=0pt ', 'initial-typed-dimension')
+        self.initial_meanings = {n: context.lookup_meaning(n) for n in context.meaning_names()}
         boundary = json.loads((FIXTURE / 'source-boundary.json').read_text())
         source = (ORACLE / boundary['fragments'][0]['source']).read_bytes()
         self.assertEqual(hashlib.sha256(source).hexdigest(), boundary['source_sha256'])
@@ -42,6 +46,33 @@ class KernelSourceTests(unittest.TestCase):
             part = source[fragment['byte_start']:fragment['byte_end']]
             self.assertEqual(hashlib.sha256(part).hexdigest(), fragment['sha256'])
             self.run_source(part.decode(), fragment['file'])
+
+    def test_source_family_against_native_meaning_corpus(self):
+        reference = load_reference(PROJECT / 'tests/fixtures/engine/native-meanings/root-a-20261029')
+        manifest, _ = reference
+        boundary = json.loads((FIXTURE / 'source-boundary.json').read_text())
+        source_pin = next(r for r in manifest['basis']['selected_files'] if r['path'].endswith('/latex.ltx'))
+        self.assertEqual(source_pin['sha256'], boundary['source_sha256'])
+        names = {n for n in self.host.context.meaning_names()
+                 if self.host.context.lookup_meaning(n) is not self.initial_meanings.get(n)}
+        result = compare_derived({n: self.host.context.lookup_meaning(n) for n in names}, reference,
+            inventory_sha256=manifest['basis']['inventory_sha256'], state_boundary='kernel-optional-after-source')
+        result.update(code=code_identity(), source_boundary_sha256=hashlib.sha256(
+            (FIXTURE / 'source-boundary.json').read_bytes()).hexdigest())
+        output = PROJECT / 'temp/tests'
+        output.mkdir(parents=True, exist_ok=True)
+        with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8', newline='\n', delete=False,
+                                        prefix='kernel-source-census-', suffix='.json', dir=output) as stream:
+            json.dump(result, stream, indent=2)
+            stream.write('\n')
+            print('CENSUS:', json.dumps({'receipt': stream.name, 'counts': result['counts'],
+                'derived_names': result['derived_names'], 'qualified_reference_macros': result['qualified_reference_macros']}))
+        statuses = {r['name']: r['status'] for r in result['records']}
+        self.assertNotIn('mismatch', result['counts'], result['records'])
+        self.assertNotIn('uncertain', result['counts'], result['records'])
+        self.assertNotIn('uncomparable', result['counts'], result['records'])
+        for name in ('@firstofone', '@firstoftwo', '@secondoftwo', '@namedef', '@nameuse'):
+            self.assertEqual(statuses[name], 'match', name)
 
     def test_real_optional_public_and_hidden_meanings(self):
         self.run_source(r'\newcommand{\gmopt}[1][dflt]{\gdef\Observed{(#1)}}\relax', 'declaration')

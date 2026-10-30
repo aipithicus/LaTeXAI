@@ -1,5 +1,6 @@
 """Offline assay boundaries and generated fixture consumption."""
 import json
+from dataclasses import replace
 from pathlib import Path
 import sys
 import tempfile
@@ -12,12 +13,16 @@ from src.validation.meaning_assay.model import (Candidates, check_fixtures, desc
     active_references, exception_reason, kind, layer, references)
 from src.validation.meaning_assay.native import cs, name_hex
 from src.validation.meaning_assay.fixtures import freeze
+from src.validation.meaning_assay.compare import compare_derived, load_reference
+from src.validation.meaning_assay.triage import conclusion, differences, pattern, spacing_direction
+from src.reading.contracts import UncertainMeaning
 
 
 class MeaningAssayTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.candidates = Candidates()
+        cls.reference = load_reference(PROJECT / "tests/fixtures/engine/native-meanings/root-a-20261029")
 
     def test_typed_descriptor_preserves_flags_parameters_and_references(self):
         _, definition = self.candidates.parse(r"\protected\long macro:#1,#2;->\__foo:n {#2}##:#1", "l3", "test")
@@ -40,6 +45,32 @@ class MeaningAssayTests(unittest.TestCase):
     def test_exception_reports_furthest_gate(self):
         self.assertEqual(exception_reason({"l3": "unequal", "latex": "ReadingIssue: invalid"}), "native_unequal")
         self.assertEqual(exception_reason({"l3": "ValueError: non_ascii_or_control_input"}), "non_ascii_or_control_input")
+
+    def test_display_triage_requires_same_candidate_native_comparison(self):
+        edits = differences(r"macro:->\T1-cmd ", r"macro:->\T 1-cmd ")
+        self.assertEqual(pattern(edits), "spaces_only")
+        self.assertEqual(spacing_direction(edits), "spaces_added")
+        self.assertEqual(conclusion([]), "incomplete_native_comparison")
+        self.assertEqual(conclusion([{}]), "incomplete_native_comparison")
+        self.assertEqual(conclusion([{"native_display": "x", "python_matches_native_candidate": True}]),
+                         "candidate_displays_agree_reconstruction_loss")
+        self.assertEqual(conclusion([{"native_display": "x", "python_matches_native_candidate": False}]),
+                         "candidate_display_discrepancy")
+
+    def test_census_comparison_preserves_basis_and_unknown_boundaries(self):
+        manifest, rows = self.reference
+        expected = rows["@firstofone"]
+        _, definition = self.candidates.parse(expected["meaning"], expected["regime"], "derived")
+        def compare(values, basis=manifest["basis"]["inventory_sha256"]):
+            return compare_derived(values, self.reference, inventory_sha256=basis, state_boundary="test")
+        result = compare({"@firstofone": definition, "new-generated-name": definition})
+        self.assertEqual(result["counts"], {"match": 1, "no_qualified_reference": 1})
+        self.assertEqual(result["matched_share_of_qualified_reference"], 1 / manifest["count"])
+        self.assertEqual(compare({"@firstofone": replace(definition, long=not definition.long)})["counts"], {"mismatch": 1})
+        self.assertEqual(compare({"@firstofone": UncertainMeaning(definition.span)})["counts"], {"uncertain": 1})
+        self.assertEqual(compare({"@firstofone": None})["counts"], {"missing": 1})
+        with self.assertRaisesRegex(ValueError, "bases differ"):
+            compare({"@firstofone": definition}, basis="wrong-basis")
 
     def test_delimited_parameter_does_not_merge_with_candidate_name(self):
         _, definition = self.candidates.parse("macro:a#1b->#1", "l3", "test")
