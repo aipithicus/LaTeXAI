@@ -88,6 +88,28 @@ code iterations separately. Fingerprinting is an intentional additional read at
 the validation checkpoint; it is not part of preparation's single-read cache.
 Do not modify source or runtime code while a batch is running.
 
+Every new specimen result also carries `performance` (`pytexml-specimen-performance/1`).
+`wall_seconds` measures the preparation subprocess from launch through exit or
+timeout, using a monotonic clock. It excludes parent-side source fingerprinting,
+output deduplication, comparison and index generation. `worker-performance.json`
+preserves the worker's measurement; `result.json`, the batch receipt, the batch
+table and subsequent change receipts expose the same evidence.
+
+`peak_rss_bytes` is the preparation worker process's resident-memory high-water
+mark, including native libraries in that process but excluding child processes.
+Windows uses [GetProcessMemoryInfo's PeakWorkingSetSize](https://learn.microsoft.com/windows/win32/api/psapi/ns-psapi-process_memory_counters);
+Linux/macOS use [getrusage(RUSAGE_SELF)](https://docs.python.org/3/library/resource.html#resource.getrusage),
+normalizing platform units to bytes. The receipt records the platform and method.
+A normal failed preparation still reports its peak. A forcibly killed worker,
+launch failure, unsupported adapter or unavailable reading records `null` with
+an explicit reason; missing evidence is never zero. Historical receipts remain
+unmeasured. Cross-platform values are not interchangeable memory-accounting
+contracts, and these are preparation measurements, not native-render timings.
+
+Use these receipts at each checkpoint, including Q2–Q5. Compare code, source and
+resource environment as well as time and memory. Record concurrent load or
+profiling when relevant; one timing is an observation, not a performance gate.
+
 Identical generated SVG, bibliography and local-style resources share a read-only
 hard link to a content-addressed pool within the run collection. This keeps normal
 filenames in each standalone prepared package without storing the same resource

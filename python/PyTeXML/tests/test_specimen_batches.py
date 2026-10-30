@@ -67,6 +67,13 @@ class SpecimenBatchTests(unittest.TestCase):
         item = result["results"]["one"]
         self.assertTrue(item["master"])
         self.assertEqual(item["summary"]["svg_assets"], 1)
+        performance = item["performance"]
+        self.assertGreater(performance["wall_seconds"], 0)
+        if sys.platform in {"win32", "linux", "darwin"}:
+            self.assertEqual(performance["memory_status"], "measured")
+            self.assertGreater(performance["peak_rss_bytes"], 0)
+        self.assertEqual(read_json(self.runs / "baseline/one/result.json")["performance"], performance)
+        self.assertIn("Peak worker MiB", (self.runs / "baseline/README.md").read_text(encoding="utf-8"))
         self.assertEqual(source_fingerprint(source), before)
         self.assertIn("baseline/README.md", (self.runs / "INDEX.md").read_text(encoding="utf-8"))
         self.assertIn("one/prepared/master.tex", (self.runs / "baseline/README.md").read_text(encoding="utf-8"))
@@ -121,6 +128,20 @@ class SpecimenBatchTests(unittest.TestCase):
         self.assertEqual([r["status"] for r in result["results"].values()], ["failed", "timeout", "partial"])
         self.assertIn("REAL FAILURE", (self.runs / "mixed/one/console.log").read_text())
         self.assertTrue((self.runs / "mixed/three/prepared/master.tex").is_file())
+        for item in result["results"].values():
+            self.assertGreater(item["performance"]["wall_seconds"], 0)
+            self.assertEqual(item["performance"]["memory_status"], "unavailable")
+            self.assertIsNone(item["performance"]["peak_rss_bytes"])
+
+    def test_failed_worker_keeps_its_measured_peak(self):
+        (self.specimens / "one/paper.tex").write_bytes(b"\xff")
+        result = run_batch(self.catalog, self.runs, "failed-worker", "Measure a real failed preparation")
+        item = result["results"]["one"]
+        self.assertEqual(item["status"], "failed")
+        self.assertGreater(item["performance"]["wall_seconds"], 0)
+        if sys.platform in {"win32", "linux", "darwin"}:
+            self.assertEqual(item["performance"]["memory_status"], "measured")
+            self.assertGreater(item["performance"]["peak_rss_bytes"], 0)
 
     def test_subset_runs_keep_unselected_specimens_visible_in_index_and_preserve_notes(self):
         self.add_specimen("two")

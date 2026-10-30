@@ -18,6 +18,7 @@ import re
 import stat
 import subprocess
 import sys
+from time import perf_counter
 
 from ..source_io import SourceStore
 from ..yaml_io import load_mapping
@@ -152,8 +153,8 @@ def refresh_index(runs):
                  f"Batch status: **{batch['status']}**. Started: {batch['started']}.", "",
                  f"Code commit: `{batch['code']['commit']}`. Code fingerprint: `{batch['code']['sha256']}`.", "",
                  "[Receipt](run.json) · [Investigation notes](NOTES.md)", "",
-                 "| Specimen | Preparation | Master | SVGs | Bibliography items | Requirements: prep / binding / interpretation | Evidence |",
-                 "| --- | --- | --- | ---: | ---: | --- | --- |"]
+                 "| Specimen | Preparation | Master | SVGs | Bibliography items | Requirements: prep / binding / interpretation | Wall seconds | Peak worker MiB | Evidence |",
+                 "| --- | --- | --- | ---: | ---: | --- | ---: | ---: | --- |"]
         renders = []
         for specimen, item in batch["results"].items():
             latest[specimen] = (name, item)
@@ -166,8 +167,12 @@ def refresh_index(runs):
                 evidence += f" · [changes]({specimen}/changes.json)"
             if (runs / name / specimen / "master.diff").is_file():
                 evidence += f" · [master diff]({specimen}/master.diff)"
+            performance = item.get("performance", {})
+            wall, peak = performance.get("wall_seconds"), performance.get("peak_rss_bytes")
+            wall = "—" if wall is None else f"{wall:.3f}"
+            peak = "—" if peak is None else f"{peak / 1024 ** 2:.2f}"
             lines.append(f"| {specimen} — {md(item['title'])} | {item['status']} | {master} | "
-                         f"{summary.get('svg_assets', '—')} | {summary.get('bibitems', '—')} | {counts} | {evidence} |")
+                         f"{summary.get('svg_assets', '—')} | {summary.get('bibitems', '—')} | {counts} | {wall} | {peak} | {evidence} |")
             for render in sorted((runs / name / specimen / "renders").glob("*/comparison.json")):
                 receipt = read_json(render)
                 relative = render.parent.relative_to(runs / name).as_posix()
@@ -183,7 +188,8 @@ def refresh_index(runs):
         if renders:
             lines += ["", *renders]
         lines += ["", "Partial means a master was emitted with outstanding preparation requirements; it is not a failed run.",
-                  "Requirement counts are occurrences, not independent bugs. Rendering is separate evidence.", ""]
+                  "Requirement counts are occurrences, not independent bugs. Rendering is separate evidence.",
+                  "Timing covers the preparation process, including startup; memory is its process peak, excluding child processes. Missing measurements are not zero.", ""]
         (runs / name / "README.md").write_text("\n".join(lines), encoding="utf-8", newline="\n")
     lines = ["# Specimen iterations", "", "Latest attempt for each specimen (including failures):", "",
              "| Specimen | Latest batch | Preparation |", "| --- | --- | --- |"]
@@ -255,7 +261,8 @@ def record_changes(runs, batch, specimen, item, previous):
                        "same_source": prior.get("source_fingerprint", {}).get("sha256") == item["source_fingerprint"]["sha256"],
                        "added": sorted(new.keys() - old.keys()), "removed": sorted(old.keys() - new.keys()),
                        "changed": sorted(p for p in old.keys() & new.keys() if old[p] != new[p]),
-                       "previous_summary": prior.get("summary"), "current_summary": item["summary"]}
+                       "previous_summary": prior.get("summary"), "current_summary": item["summary"],
+                       "previous_performance": prior.get("performance"), "current_performance": item.get("performance")}
     folder = runs / batch / specimen
     write_json(folder / "changes.json", item["changes"])
     old_master = runs / prior_name / specimen / "prepared/master.tex"
@@ -302,6 +309,10 @@ def run_batch(catalog, runs, name, note, selected=(), timeout=180, engine_profil
             folder.mkdir()
             prepared = folder / "prepared"
             item = {**record, "status": "failed", "master": False, "started": utc_now()}
+            item["performance"] = {"schema": "pytexml-specimen-performance/1", "wall_seconds": None,
+                "wall_scope": "preparation_process_including_startup_and_exit",
+                "peak_rss_bytes": None, "memory_status": "unavailable",
+                "memory_scope": "preparation_worker_process", "memory_detail": "Worker was not started"}
             batch["results"][specimen] = item
             try:
                 item["source_fingerprint"] = source_fingerprint(Path(record["source"]))
@@ -309,9 +320,22 @@ def run_batch(catalog, runs, name, note, selected=(), timeout=180, engine_profil
                     search_args = ([] if tex_resource_roots is None else
                         [arg for root in tex_resource_roots for arg in ("--tex-resource-root", str(root))]
                         if tex_resource_roots else ["--project-only-resources"])
-                    proc = subprocess.run([sys.executable, "-B", "-m", "src.prepare.pipeline",
-                        "--engine-profile", engine_profile, *search_args, record["source"], str(prepared), record["main"]], cwd=PROJECT,
-                        stdout=log, stderr=subprocess.STDOUT, timeout=timeout, check=False)
+                    performance = item["performance"]
+                    telemetry = folder / "worker-performance.json"
+                    started = perf_counter()
+                    try:
+                        proc = subprocess.run([sys.executable, "-B", "-m", "src.validation.measured_prepare", str(telemetry),
+                            "--engine-profile", engine_profile, *search_args, record["source"], str(prepared), record["main"]], cwd=PROJECT,
+                            stdout=log, stderr=subprocess.STDOUT, timeout=timeout, check=False)
+                    finally:
+                        performance["wall_seconds"] = perf_counter() - started
+                        performance["memory_detail"] = "Worker did not publish a final peak (timeout, abrupt exit or launch failure)"
+                        if telemetry.is_file():
+                            measured = read_json(telemetry)
+                            if measured.pop("schema") != "pytexml-worker-performance/1":
+                                raise ValueError("Unrecognized worker performance receipt")
+                            performance.pop("memory_detail", None)
+                            performance.update(measured)
                 item["returncode"] = proc.returncode
                 item["summary"] = summarize(prepared)
                 item["master"] = (prepared / "master.tex").is_file()
