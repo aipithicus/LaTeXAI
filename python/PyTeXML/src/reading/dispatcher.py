@@ -41,6 +41,7 @@ from .options import OptionBody, OptionScope, option_items
 from .operations import EFFECT_OPERATIONS, FAMILY_OPERATIONS
 from ..engine.catalog import CORE_OPERATIONS
 from ..engine.primitive import PrimitiveMeaning
+from ..engine.checkpoints import Attempt, Checkpoint, ContinuationPoint, LanguageState, language_checkpoint
 from ..engine.observation import capture_primitive
 from .token_cursor import TokenCursor
 from .tex_reader import CatCode, EventKind, InvalidCharacterError, ReadEvent, TexReader, TokenKind
@@ -72,17 +73,11 @@ class _BranchStart:
 class InputRecovery:
     """Preparation-only resumption point; abandoning input is not TeX execution."""
     owner: object
-    reader: TexReader
-    context: ReaderContext
-    parents: tuple
-    groups: tuple
-    conditionals: tuple
-    environments: tuple
-    replays: dict
-    options: OptionScope | None
-    pending: tuple
-    branch_replays: dict
-    active_branches: tuple
+    checkpoint: object
+
+    @property
+    def context(self):
+        return self.checkpoint.participants[0].context
 
 
 class StructuralDispatcher:
@@ -142,11 +137,7 @@ class StructuralDispatcher:
         """Snapshot only at an active handoff, before entering retained code."""
         if not self.preparation or self.halted or self._finished or self._pending_skip or self._skip_start is not None:
             raise ValueError("Recovery requires an active preparation handoff")
-        parents, options = self._copy_option_stack(self._parents, self.options)
-        return InputRecovery(self, self.reader, self.context.copy(), parents,
-                             tuple(self._groups), tuple(replace(f) for f in self._conditionals),
-                             tuple(self._environment_stack), dict(self._replays),
-                             options, tuple(self._pending), dict(self._branch_replays), tuple(self._active_branches))
+        return InputRecovery(self, language_checkpoint(self, observations=False, boundary="caller_after_input"))
 
     @staticmethod
     def _copy_option_stack(parents, options):
@@ -168,19 +159,7 @@ class StructuralDispatcher:
         """
         if not self.preparation or saved.owner is not self or not self.halted:
             raise ValueError("Invalid preparation recovery")
-        self.context.restore_from(saved.context)
-        parents, self.options = self._copy_option_stack(saved.parents, saved.options)
-        self._parents = list(parents)
-        self._groups = list(saved.groups)
-        self._conditionals = [replace(f) for f in saved.conditionals]
-        self._environment_stack = list(saved.environments)
-        self._replays = dict(saved.replays)
-        self._pending = deque(saved.pending)
-        self._branch_replays = dict(saved.branch_replays)
-        self._active_branches = list(saved.active_branches)
-        self._skip_start = self._pending_skip = None
-        self.halted = self._finished = False
-        self._set_reader(saved.reader)
+        saved.checkpoint.rollback()
 
     def _set_reader(self, reader: TexReader) -> None:
         self.reader = reader
@@ -192,22 +171,8 @@ class StructuralDispatcher:
     def execute_continuation(self, opening):
         """Commit one admitted operation only after its pending input is settled."""
         from ..engine.continuation import execute
-        reader, saved_cursor = self.reader, self.reader.checkpoint()
-        saved_context, saved_units = self.context.copy(), self.units.checkpoint()
-        conditionals = [replace(frame) for frame in self._conditionals]
-        decisions, conditional_units = list(self.decisions), dict(self._conditional_units)
-        skipped, pending_skip = self._skip_start, self._pending_skip
-        try:
+        with language_checkpoint(self, boundary="expansion_and_operation"):
             return execute(self, opening)
-        except (ReadingIssue, InvalidCharacterError):
-            self.context.restore_from(saved_context)
-            self.units.restore(saved_units)
-            self._conditionals, self.decisions = conditionals, decisions
-            self._conditional_units = conditional_units
-            self._skip_start, self._pending_skip = skipped, pending_skip
-            self._set_reader(reader)
-            reader.restore(saved_cursor)
-            raise
 
     def enter_source(self, reader: TexReader, *, catcode_overrides: dict[str, int] | None = None,
                      options: OptionScope | None = None) -> None:
@@ -242,6 +207,9 @@ class StructuralDispatcher:
             raise ReadingIssue(reason, detail)
 
     def next_item(self) -> ReadEvent | LiteralRegion | StoredDefinition | EnvironmentDefinition | SkippedRegion | ReadingBoundary | SourceCommand | SourceEnd | DeferredRegion | None:
+        if getattr(self, "command_attempt", None) is not None:
+            self.command_attempt.commit()
+            self.command_attempt = None
         item = self._next_item()
         return self.identify(item) if item is not None and not isinstance(item, ReadEvent) else item
 
@@ -408,237 +376,264 @@ class StructuralDispatcher:
         if token.catcode in {CatCode.MATH_SHIFT, CatCode.ALIGNMENT_TAB} and not self.preparation:
             return self.halt(event.span, "unsupported_structure",
                                   "Math and alignment require their own mode and scope handling")
+        # Plain text has no language effects and needs no state snapshot.
+        if (token.kind == TokenKind.CHARACTER and token.catcode not in {
+                CatCode.BEGIN_GROUP, CatCode.END_GROUP, CatCode.MATH_SHIFT, CatCode.ALIGNMENT_TAB}
+                and not isinstance(reader, TokenCursor)):
+            return event
+        state = LanguageState(self)
+        participant = getattr(self, "command_participant", None)
+        checkpoint = Checkpoint(state, *([participant()] if participant else []), boundary="command")
+        attempt = Attempt(checkpoint)
+        attempt.opening = event  # The fetched token is part of the request, before any expansion.
         try:
-            deferred = DeferredScanner(reader, context)
-            if isinstance(meaning, PrimitiveMeaning):
-                if meaning.uncertain is not None:
-                    if (self.preparation and meaning.operation == "conditional.route"
-                            and meaning.operand.evaluation in {"always_true", "always_false"}):
-                        return self.capture_conditional(token, ConditionalRule("opener", "deferred", 0),
-                                                        causes=(meaning.uncertain,))
-                    raise ReadingIssue("uncertain_meaning", "Primitive meaning may have changed", causes=(meaning.uncertain,))
-                operation = self.operations[meaning.operation]
-                if operation.expansion is not None and operation.handler is None:
-                    return self.execute_continuation(event)
-                return operation.execute(self, event, meaning)
-            if isinstance(meaning, UndefinedMeaning):
-                if meaning.uncertain is not None:
-                    raise ReadingIssue("uncertain_meaning", "Undefined state may have changed", causes=(meaning.uncertain,))
-                if self.preparation and token.value in context.engine_profile.capture_integer_setup:
-                    from ..engine.catalog import EXTENSIONS
-                    captured = capture_primitive(reader, context, token, EXTENSIONS[token.value])
-                    return replace(captured, action="external_engine_setup",
-                                   metadata={**captured.metadata, "engine_profile": context.engine_profile.name,
-                                             "exposed": False, "executed": False})
-                raise ReadingIssue("undefined_control_sequence", f"{token.value!r} is established undefined")
-            if isinstance(meaning, TokenListMeaning):
-                if meaning.uncertain is not None:
-                    raise ReadingIssue("uncertain_meaning", "Token-list meaning may have changed", causes=(meaning.uncertain,))
-                if self.program:
-                    from ..engine.programs import expand_call
-                    return expand_call(self, event, meaning)
-                if self.preparation:
-                    return self._deferred(deferred.command(token, "stored_macro", "Token-list content requires interpretation"))
-                raise ReadingIssue("stored_macro", "Token-list content requires interpretation")
-            if isinstance(meaning, CharacterCodeMeaning):
-                if meaning.uncertain is not None:
-                    raise ReadingIssue("uncertain_meaning", "Character code may have been redefined", causes=(meaning.uncertain,))
-                if self.preparation:
-                    return DeferredRegion(event.span, "character_interpretation",
-                                          "Character-code content requires interpretation", (token,))
-                raise ReadingIssue("character_interpretation", "Character-code content requires interpretation")
-            if isinstance(meaning, UncertainMeaning):
-                raise ReadingIssue("uncertain_meaning", f"{token.value!r} may have been redefined at {meaning.span}", causes=(meaning.span,))
-            if isinstance(meaning, BoundMeaning):
-                if meaning.uncertain is not None:
-                    raise ReadingIssue("uncertain_meaning", f"Copied meaning of {token.value!r} may have changed at {meaning.uncertain}", causes=(meaning.uncertain,))
-                self._require(meaning.profile is not None, "character_meaning",
-                              "A character meaning is captured; its execution needs a downstream token interpreter")
-            if (isinstance(reader, TokenCursor) and not self.program and reader not in self._branch_replays and token.kind == TokenKind.CHARACTER
-                    and token.catcode not in {CatCode.SPACE, CatCode.BEGIN_GROUP, CatCode.END_GROUP}):
-                raise ReadingIssue("option_body", "Option text requires interpretation beyond reading effects")
-            if isinstance(meaning, BooleanMeaning):
-                if self.preparation and meaning.uncertain is not None and meaning.target is None:
-                    return self.capture_conditional(token, ConditionalRule("opener", "deferred", 0), causes=(meaning.uncertain,))
-                if meaning.uncertain is not None:
-                    raise ReadingIssue("uncertain_boolean", f"Meaning of {token.value!r} may have changed in unexecuted source at {meaning.uncertain}", causes=(meaning.uncertain,))
-                if meaning.target is not None:
-                    truth = boolean_value(context, self.knowledge, meaning.source)
-                    context.record_meaning(meaning.target, BooleanMeaning(event.span, truth))
-                else:
-                    self.route_conditional(context.conditional_rule(token.value, self.knowledge), event.span,
-                                      metadata={"predicate": "established_boolean"})
-                return event
-            if definition is not None:
-                if self.program:
-                    from ..engine.programs import expand_call
-                    return expand_call(self, event, definition)
-                if self.source_commands:
-                    from ..engine.programs import setup_request
-                    request = setup_request(self, event, definition)
-                    if request is not None:
-                        return request
-                if self.source_commands and (request := package_request(self, event)) is not None:
-                    return request
-                summary = definition_summary(definition, context, self.knowledge)
-                detail = f"Unexpanded {token.value!r}; definition at {definition.span.basis.source_id}:{definition.span.start}"
-                # A completely bounded argument-free body consumes no following
-                # groups. Those groups still belong to ordinary source execution.
-                region = (DeferredRegion(event.span, "stored_macro", detail, (token,)) if summary.selective
-                          else deferred.command(token, "stored_macro", detail))
-                return self._deferred(replace(region, effect_summary=summary))
-            if token.kind == TokenKind.ACTIVE_CHARACTER:
-                return self._deferred(DeferredRegion(event.span, "active_character", "Active character retained without expansion", (token,)))
-            if self.preparation and token.catcode == CatCode.MATH_SHIFT:
-                return self._deferred(deferred.math(token))
-            if self.preparation and token.catcode == CatCode.ALIGNMENT_TAB:
-                return DeferredRegion(event.span, "alignment_interpretation", "Alignment retained without interpretation", (token,))
-            if token.catcode in {CatCode.BEGIN_GROUP, CatCode.END_GROUP}:
-                identity = "scope.begin" if token.catcode == CatCode.BEGIN_GROUP else "scope.end"
-                return self.operations[identity].execute(self, event, PrimitiveMeaning(identity, "simple"))
-            if token.kind != TokenKind.CONTROL_SEQUENCE:
-                return event
-            resolved = meaning.profile if isinstance(meaning, BoundMeaning) else self.knowledge.resolve_command(token.value)
-            if self.preparation and isinstance(resolved, UnresolvedBindingResult):
-                if resolved.reason == UnresolvedReason.UNKNOWN_CONSTRUCT:
-                    return self._deferred(deferred.command(token, resolved.reason.value, resolved.detail))
-                if resolved.reason == UnresolvedReason.PACKAGE_NOT_LOADED:
-                    syntax = self.knowledge.source_command_syntax(token.value)
-                    if syntax is not None:
-                        command = ArgumentScanner(reader, context).read(event.span, syntax)
-                        return self._deferred(DeferredRegion(command.span, resolved.reason.value, resolved.detail,
-                                              (token,) + tuple(t for arg in command.arguments for t in arg.tokens),
-                                              command, syntax.binding_id))
-                    # An inactive literal binding can require a different mouth.
-                    # Do not treat its body as ordinary executed TeX.
-            profile = require_resolved(resolved)
-            operation = FAMILY_OPERATIONS.get(profile.family)
-            if operation is not None:
-                return operation.execute(self, event, profile)
-            if profile.family == "assignment_prefix":
-                raise ReadingIssue("assignment_prefix", "Prefixed assignments require explicit scope and prefix resolution")
-            if profile.family == "configuration_command":
-                return self._configuration(event.span, profile)
-            if profile.family == "option_control":
-                self._require(not isinstance(reader, TokenCursor), "option_body",
-                              "Nested option declarations/processing require further resolution")
-                command = ArgumentScanner(reader, context).read(event.span, profile)
-                return self._options(command)
-            if profile.family == "source_command":
-                self._require(self.source_commands or profile.action in {"reading_noop", "capture_setting"}
-                              or profile.action == "pass_options" and self.option_forwarder is not None,
-                              "unsupported_operation", "Source commands require an input owner")
-                checkpoint = reader.checkpoint()
-                try:
-                    command = ArgumentScanner(reader, context).read(event.span, profile)
-                except ReadingIssue:
-                    if not self.preparation or profile.action not in {"opaque", "metadata", "citation"}:
-                        raise
-                    # Source packages may overload a data command's signature.
-                    # Preserve the complete observational envelope without applying
-                    # the mismatched argument grammar or hiding later source.
-                    reader.restore(checkpoint)
-                    return self._deferred(deferred.command(token, "argument_behavior",
-                        "Entry argument grammar does not match this reached data command"))
-                if command.action == "capture_setting":
-                    value = command.argument("value")
-                    if command.metadata["value_kind"] == "tokens":
-                        self.environments.validate_final(value)
-                    context.record_capture_setting(command.metadata["key"], value)
-                    return command
-                if command.action == "pass_options":
-                    return forwarding_request(self, command)
-                if command.action == "branch_test":
-                    return self._branch_test(command)
-                if command.action == "declared_effects":
-                    declared_effects(command, context, self.knowledge)
-                if command.action == "summarized_effects":
-                    for argument in command.arguments:
-                        argument.literal()
-                    return self._deferred(DeferredRegion(command.span, "summarized_effects",
-                        "Bounded writes retained without computing the operation's values", command=command,
-                        binding_id=profile.binding_id, effect_summary=command_summary(command.metadata, context)))
-                if command.action in {"opaque", "metadata", "citation"} and any(
-                        t.kind in {TokenKind.CONTROL_SEQUENCE, TokenKind.ACTIVE_CHARACTER}
-                        for arg in command.arguments if arg.role not in {"data", "diagnostic", "stored"} for t in arg.tokens):
-                    self.defer_effects(command.span)
-                if command.action == "environment_end":
-                    name = command.value("name")
-                    self._require(bool(self._environment_stack) and self._environment_stack[-1] == name
-                                  and bool(self._groups) and self._groups[-1].kind == "environment:" + name,
-                                  "mismatched_environment", f"No matching environment group for {name}")
-                    self._environment_stack.pop()
-                    self._groups.pop()
-                    context.pop_scope()
-                    reader.endline_char = context.endlinechar
-                    env = require_resolved(self.knowledge.resolve_environment(name))
-                    command = SourceCommand(command.span, command.name, command.action, command.arguments, env.tex_mechanics)
-                return command
-            if profile.action is not None:
-                operation = EFFECT_OPERATIONS.get(profile.action)
-                self._require(operation is not None, "unsupported_operation", f"No execution route for {profile.action!r}")
-                return operation.execute(self, event, profile)
-            if profile.family in {"grouping", "catcode_mutator"}:
-                raise ReadingIssue("unsupported_operation", "Reading effect has no executable action")
-            self._require(not isinstance(reader, TokenCursor), "option_body",
-                          "Literal and environment reading requires a character-input contract")
-            configuration_gaps = ()
-            if profile.grammar.get("handler") == "environment_name":
-                self._require(profile.grammar.get("argument") == "braced_literal_name",
-                              "unsupported_literal_grammar", "Only literal braced environment names are supported")
-                with context.argument_scanning():
-                    name = self._environment_name()
-                declaration = context.lookup_environment(name)
-                # The direct environment route must respect author redefinitions
-                # of the entry/exit commands as well as of the opener itself.
-                for command in (name, "end" + name):
-                    meaning = context.lookup_meaning(command)
-                    self._require(meaning is None or (isinstance(declaration, EnvironmentDefinition) and meaning is declaration), "stored_macro",
-                                  f"Environment command {command!r} has a stored definition")
-                if isinstance(declaration, EnvironmentDefinition):
-                    return self._deferred(self.environments.collect(event.span, declaration))
-                resolved = resolve_environment(name, None, context, self.knowledge)
-                if (self.preparation and isinstance(resolved, UnresolvedBindingResult)
-                        and resolved.reason == UnresolvedReason.UNKNOWN_CONSTRUCT):
-                    return self._deferred(deferred.environment(event.span, name, protect=self._protect_deferred_environment))
-                profile = require_resolved(resolved)
-                if profile.grammar.get("has_optional_arguments"):
-                    with context.argument_scanning():
-                        options = ArgumentScanner(reader, context).group("options", optional=True)
-                    profile, configuration_gaps = self._configured_environment(name, profile, options)
-                elif profile.configuration:
-                    profile, configuration_gaps = self._configured_environment(name, profile, None)
-                if profile.family == "structural_environment" and self.source_commands:
-                    header = ArgumentScanner(reader, context).read(event.span, profile)
-                    context.push_scope()
-                    self._groups.append(_GroupFrame("environment:" + name, event.span))
-                    self._environment_stack.append(name)
-                    return SourceCommand(header.span, name, "environment_begin", header.arguments, profile.tex_mechanics)
-                self._require(profile.grammar.get("handler") in {"token_delimited", "physical_line_literal"}
-                              and profile.grammar.get("arity") == 0,
-                              "unsupported_literal_grammar", "Environment requires an unsupported header or body handler")
-            region = self.literals.read(event.span.start, profile, defer_interpolation=self.preparation)
-            if profile.grammar.get("handler") in {"token_delimited", "physical_line_literal"} and configuration_gaps:
-                return self._deferred(DeferredRegion(region.span, "literal_configuration",
-                    self._configuration_detail(configuration_gaps), binding_id=profile.binding_id))
-            for interpolation in region.interpolations:
-                self.defer_effects(interpolation.span)
-            if region.classification.category == "transparent_block":
-                self._require(profile.grammar.get("body_start") == "next_physical_line"
-                              and profile.terminator.requires_column_zero
-                              and not profile.terminator.trailing_content_allowed,
-                              "unsupported_literal_grammar", "Transparent replay needs whole physical lines")
-                replay = reader.line_window(region.body)
-                metadata = {"semantic_role": region.classification.semantic_role,
-                            "closing_source": reader.source_slice(region.closing)}
-                self._replays[replay] = (reader, region.closing, region.name, metadata)
-                self._set_reader(replay)
-                return SourceCommand(region.opening, region.name, "transparent_begin", (), metadata)
-            return region
+            item = self._dispatch_event(event, reader, context, token, meaning, definition)
         except ReadingIssue as error:
+            attempt.rollback()
             return self.halt(event.span, error.reason, error.detail, causes=error.causes)
         except InvalidCharacterError as error:
+            attempt.rollback()
             return self.halt(error.span, "invalid_character", str(error), remainder_start=event.span.start)
+        except Exception:
+            attempt.rollback()
+            raise
+        if isinstance(item, SourceCommand) and not self.program:
+            if self.reader is state.reader and [p[0] for p in self._parents] == [p[0] for p in state.parents]:
+                attempt.continuation = ContinuationPoint(self)
+            else:
+                attempt.retention_required = True
+            self.command_attempt = attempt
+        else:
+            attempt.commit()
+        return item
+
+    def _dispatch_event(self, event, reader, context, token, meaning, definition):
+        deferred = DeferredScanner(reader, context)
+        if isinstance(meaning, PrimitiveMeaning):
+            if meaning.uncertain is not None:
+                if (self.preparation and meaning.operation == "conditional.route"
+                        and meaning.operand.evaluation in {"always_true", "always_false"}):
+                    return self.capture_conditional(token, ConditionalRule("opener", "deferred", 0),
+                                                    causes=(meaning.uncertain,))
+                raise ReadingIssue("uncertain_meaning", "Primitive meaning may have changed", causes=(meaning.uncertain,))
+            operation = self.operations[meaning.operation]
+            if operation.expansion is not None and operation.handler is None:
+                return self.execute_continuation(event)
+            return operation.execute(self, event, meaning)
+        if isinstance(meaning, UndefinedMeaning):
+            if meaning.uncertain is not None:
+                raise ReadingIssue("uncertain_meaning", "Undefined state may have changed", causes=(meaning.uncertain,))
+            if self.preparation and token.value in context.engine_profile.capture_integer_setup:
+                from ..engine.catalog import EXTENSIONS
+                captured = capture_primitive(reader, context, token, EXTENSIONS[token.value])
+                return replace(captured, action="external_engine_setup",
+                               metadata={**captured.metadata, "engine_profile": context.engine_profile.name,
+                                         "exposed": False, "executed": False})
+            raise ReadingIssue("undefined_control_sequence", f"{token.value!r} is established undefined")
+        if isinstance(meaning, TokenListMeaning):
+            if meaning.uncertain is not None:
+                raise ReadingIssue("uncertain_meaning", "Token-list meaning may have changed", causes=(meaning.uncertain,))
+            if self.program:
+                from ..engine.programs import expand_call
+                return expand_call(self, event, meaning)
+            if self.preparation:
+                return self._deferred(deferred.command(token, "stored_macro", "Token-list content requires interpretation"))
+            raise ReadingIssue("stored_macro", "Token-list content requires interpretation")
+        if isinstance(meaning, CharacterCodeMeaning):
+            if meaning.uncertain is not None:
+                raise ReadingIssue("uncertain_meaning", "Character code may have been redefined", causes=(meaning.uncertain,))
+            if self.preparation:
+                return DeferredRegion(event.span, "character_interpretation",
+                                      "Character-code content requires interpretation", (token,))
+            raise ReadingIssue("character_interpretation", "Character-code content requires interpretation")
+        if isinstance(meaning, UncertainMeaning):
+            raise ReadingIssue("uncertain_meaning", f"{token.value!r} may have been redefined at {meaning.span}", causes=(meaning.span,))
+        if isinstance(meaning, BoundMeaning):
+            if meaning.uncertain is not None:
+                raise ReadingIssue("uncertain_meaning", f"Copied meaning of {token.value!r} may have changed at {meaning.uncertain}", causes=(meaning.uncertain,))
+            self._require(meaning.profile is not None, "character_meaning",
+                          "A character meaning is captured; its execution needs a downstream token interpreter")
+        if (isinstance(reader, TokenCursor) and not self.program and reader not in self._branch_replays and token.kind == TokenKind.CHARACTER
+                and token.catcode not in {CatCode.SPACE, CatCode.BEGIN_GROUP, CatCode.END_GROUP}):
+            raise ReadingIssue("option_body", "Option text requires interpretation beyond reading effects")
+        if isinstance(meaning, BooleanMeaning):
+            if self.preparation and meaning.uncertain is not None and meaning.target is None:
+                return self.capture_conditional(token, ConditionalRule("opener", "deferred", 0), causes=(meaning.uncertain,))
+            if meaning.uncertain is not None:
+                raise ReadingIssue("uncertain_boolean", f"Meaning of {token.value!r} may have changed in unexecuted source at {meaning.uncertain}", causes=(meaning.uncertain,))
+            if meaning.target is not None:
+                truth = boolean_value(context, self.knowledge, meaning.source)
+                context.record_meaning(meaning.target, BooleanMeaning(event.span, truth))
+            else:
+                self.route_conditional(context.conditional_rule(token.value, self.knowledge), event.span,
+                                  metadata={"predicate": "established_boolean"})
+            return event
+        if definition is not None:
+            if self.program:
+                from ..engine.programs import expand_call
+                return expand_call(self, event, definition)
+            if self.source_commands:
+                from ..engine.programs import setup_request
+                request = setup_request(self, event, definition)
+                if request is not None:
+                    return request
+            if self.source_commands and (request := package_request(self, event)) is not None:
+                return request
+            summary = definition_summary(definition, context, self.knowledge)
+            detail = f"Unexpanded {token.value!r}; definition at {definition.span.basis.source_id}:{definition.span.start}"
+            # A completely bounded argument-free body consumes no following
+            # groups. Those groups still belong to ordinary source execution.
+            region = (DeferredRegion(event.span, "stored_macro", detail, (token,)) if summary.selective
+                      else deferred.command(token, "stored_macro", detail))
+            return self._deferred(replace(region, effect_summary=summary))
+        if token.kind == TokenKind.ACTIVE_CHARACTER:
+            return self._deferred(DeferredRegion(event.span, "active_character", "Active character retained without expansion", (token,)))
+        if self.preparation and token.catcode == CatCode.MATH_SHIFT:
+            return self._deferred(deferred.math(token))
+        if self.preparation and token.catcode == CatCode.ALIGNMENT_TAB:
+            return DeferredRegion(event.span, "alignment_interpretation", "Alignment retained without interpretation", (token,))
+        if token.catcode in {CatCode.BEGIN_GROUP, CatCode.END_GROUP}:
+            identity = "scope.begin" if token.catcode == CatCode.BEGIN_GROUP else "scope.end"
+            return self.operations[identity].execute(self, event, PrimitiveMeaning(identity, "simple"))
+        if token.kind != TokenKind.CONTROL_SEQUENCE:
+            return event
+        resolved = meaning.profile if isinstance(meaning, BoundMeaning) else self.knowledge.resolve_command(token.value)
+        if self.preparation and isinstance(resolved, UnresolvedBindingResult):
+            if resolved.reason == UnresolvedReason.UNKNOWN_CONSTRUCT:
+                return self._deferred(deferred.command(token, resolved.reason.value, resolved.detail))
+            if resolved.reason == UnresolvedReason.PACKAGE_NOT_LOADED:
+                syntax = self.knowledge.source_command_syntax(token.value)
+                if syntax is not None:
+                    command = ArgumentScanner(reader, context).read(event.span, syntax)
+                    return self._deferred(DeferredRegion(command.span, resolved.reason.value, resolved.detail,
+                                          (token,) + tuple(t for arg in command.arguments for t in arg.tokens),
+                                          command, syntax.binding_id))
+                # An inactive literal binding can require a different mouth.
+                # Do not treat its body as ordinary executed TeX.
+        profile = require_resolved(resolved)
+        operation = FAMILY_OPERATIONS.get(profile.family)
+        if operation is not None:
+            return operation.execute(self, event, profile)
+        if profile.family == "assignment_prefix":
+            raise ReadingIssue("assignment_prefix", "Prefixed assignments require explicit scope and prefix resolution")
+        if profile.family == "configuration_command":
+            return self._configuration(event.span, profile)
+        if profile.family == "option_control":
+            self._require(not isinstance(reader, TokenCursor), "option_body",
+                          "Nested option declarations/processing require further resolution")
+            command = ArgumentScanner(reader, context).read(event.span, profile)
+            return self._options(command)
+        if profile.family == "source_command":
+            self._require(self.source_commands or profile.action in {"reading_noop", "capture_setting"}
+                          or profile.action == "pass_options" and self.option_forwarder is not None,
+                          "unsupported_operation", "Source commands require an input owner")
+            checkpoint = reader.checkpoint()
+            try:
+                command = ArgumentScanner(reader, context).read(event.span, profile)
+            except ReadingIssue:
+                if not self.preparation or profile.action not in {"opaque", "metadata", "citation"}:
+                    raise
+                # Source packages may overload a data command's signature.
+                # Preserve the complete observational envelope without applying
+                # the mismatched argument grammar or hiding later source.
+                reader.restore(checkpoint)
+                return self._deferred(deferred.command(token, "argument_behavior",
+                    "Entry argument grammar does not match this reached data command"))
+            if command.action == "capture_setting":
+                value = command.argument("value")
+                if command.metadata["value_kind"] == "tokens":
+                    self.environments.validate_final(value)
+                context.record_capture_setting(command.metadata["key"], value)
+                return command
+            if command.action == "pass_options":
+                return forwarding_request(self, command)
+            if command.action == "branch_test":
+                return self._branch_test(command)
+            if command.action == "declared_effects":
+                declared_effects(command, context, self.knowledge)
+            if command.action == "summarized_effects":
+                for argument in command.arguments:
+                    argument.literal()
+                return self._deferred(DeferredRegion(command.span, "summarized_effects",
+                    "Bounded writes retained without computing the operation's values", command=command,
+                    binding_id=profile.binding_id, effect_summary=command_summary(command.metadata, context)))
+            if command.action in {"opaque", "metadata", "citation"} and any(
+                    t.kind in {TokenKind.CONTROL_SEQUENCE, TokenKind.ACTIVE_CHARACTER}
+                    for arg in command.arguments if arg.role not in {"data", "diagnostic", "stored"} for t in arg.tokens):
+                self.defer_effects(command.span)
+            if command.action == "environment_end":
+                name = command.value("name")
+                self._require(bool(self._environment_stack) and self._environment_stack[-1] == name
+                              and bool(self._groups) and self._groups[-1].kind == "environment:" + name,
+                              "mismatched_environment", f"No matching environment group for {name}")
+                self._environment_stack.pop()
+                self._groups.pop()
+                context.pop_scope()
+                reader.endline_char = context.endlinechar
+                env = require_resolved(self.knowledge.resolve_environment(name))
+                command = SourceCommand(command.span, command.name, command.action, command.arguments, env.tex_mechanics)
+            return command
+        if profile.action is not None:
+            operation = EFFECT_OPERATIONS.get(profile.action)
+            self._require(operation is not None, "unsupported_operation", f"No execution route for {profile.action!r}")
+            return operation.execute(self, event, profile)
+        if profile.family in {"grouping", "catcode_mutator"}:
+            raise ReadingIssue("unsupported_operation", "Reading effect has no executable action")
+        self._require(not isinstance(reader, TokenCursor), "option_body",
+                      "Literal and environment reading requires a character-input contract")
+        configuration_gaps = ()
+        if profile.grammar.get("handler") == "environment_name":
+            self._require(profile.grammar.get("argument") == "braced_literal_name",
+                          "unsupported_literal_grammar", "Only literal braced environment names are supported")
+            with context.argument_scanning():
+                name = self._environment_name()
+            declaration = context.lookup_environment(name)
+            # The direct environment route must respect author redefinitions
+            # of the entry/exit commands as well as of the opener itself.
+            for command in (name, "end" + name):
+                meaning = context.lookup_meaning(command)
+                self._require(meaning is None or (isinstance(declaration, EnvironmentDefinition) and meaning is declaration), "stored_macro",
+                              f"Environment command {command!r} has a stored definition")
+            if isinstance(declaration, EnvironmentDefinition):
+                return self._deferred(self.environments.collect(event.span, declaration))
+            resolved = resolve_environment(name, None, context, self.knowledge)
+            if (self.preparation and isinstance(resolved, UnresolvedBindingResult)
+                    and resolved.reason == UnresolvedReason.UNKNOWN_CONSTRUCT):
+                return self._deferred(deferred.environment(event.span, name, protect=self._protect_deferred_environment))
+            profile = require_resolved(resolved)
+            if profile.grammar.get("has_optional_arguments"):
+                with context.argument_scanning():
+                    options = ArgumentScanner(reader, context).group("options", optional=True)
+                profile, configuration_gaps = self._configured_environment(name, profile, options)
+            elif profile.configuration:
+                profile, configuration_gaps = self._configured_environment(name, profile, None)
+            if profile.family == "structural_environment" and self.source_commands:
+                header = ArgumentScanner(reader, context).read(event.span, profile)
+                context.push_scope()
+                self._groups.append(_GroupFrame("environment:" + name, event.span))
+                self._environment_stack.append(name)
+                return SourceCommand(header.span, name, "environment_begin", header.arguments, profile.tex_mechanics)
+            self._require(profile.grammar.get("handler") in {"token_delimited", "physical_line_literal"}
+                          and profile.grammar.get("arity") == 0,
+                          "unsupported_literal_grammar", "Environment requires an unsupported header or body handler")
+        region = self.literals.read(event.span.start, profile, defer_interpolation=self.preparation)
+        if profile.grammar.get("handler") in {"token_delimited", "physical_line_literal"} and configuration_gaps:
+            return self._deferred(DeferredRegion(region.span, "literal_configuration",
+                self._configuration_detail(configuration_gaps), binding_id=profile.binding_id))
+        for interpolation in region.interpolations:
+            self.defer_effects(interpolation.span)
+        if region.classification.category == "transparent_block":
+            self._require(profile.grammar.get("body_start") == "next_physical_line"
+                          and profile.terminator.requires_column_zero
+                          and not profile.terminator.trailing_content_allowed,
+                          "unsupported_literal_grammar", "Transparent replay needs whole physical lines")
+            replay = reader.line_window(region.body)
+            metadata = {"semantic_role": region.classification.semantic_role,
+                        "closing_source": reader.source_slice(region.closing)}
+            self._replays[replay] = (reader, region.closing, region.name, metadata)
+            self._set_reader(replay)
+            return SourceCommand(region.opening, region.name, "transparent_begin", (), metadata)
+        return region
 
     def _configuration(self, opening, profile):
         # Some package headers establish catcodes before collecting arguments.

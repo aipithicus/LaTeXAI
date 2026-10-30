@@ -14,7 +14,7 @@ from .assets import batch_convert_assets_to_svg, rewrite_image_references
 from .locations import finalize_locations
 from .publication import OutputTransaction
 from .events import JOURNAL, RETAINED_HISTORY, log_manifest
-from .recovery import project_recoveries, ResourceFailure, recover_resource
+from .recovery import project_recoveries, ResourceFailure
 
 
 class PreparationRejected(PreparationUnresolved):
@@ -178,10 +178,10 @@ def _prepare_paper(request: _PreparationRequest, out_dir: Path, *,
             raise ValueError("Referenced images require SVG conversion for a standalone extraction package")
         if images:
             uses = session.surviving_assets(pieces)
-            def asset_failure(use, error):
+            def asset_failure(attempt, use, error):
                 previous = next((r for r in manifest.dependencies if r["unit_id"] == use.command.unit_id
                                  and r["kind"] == "asset"), None)
-                recover_resource(session, use.command, ResourceFailure("asset_conversion", str(error),
+                session.recovery.recover(attempt, use.command, ResourceFailure("asset_conversion", str(error),
                     requested=use.command.value("target"), resolved=session.name(use.path), outcome=error.outcome),
                     kind="asset", record=previous)
             mapping = batch_convert_assets_to_svg(uses, out_dir, p_dir, on_failure=asset_failure)

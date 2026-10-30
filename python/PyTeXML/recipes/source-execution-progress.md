@@ -4,6 +4,97 @@ This file records implementation and qualification evidence. Current priorities
 live in the [working queue](../../../../aipithicus-issues/LaTeXAI/briefs/pytexml-language-core/working-queue.md);
 dated next-step statements below describe their checkpoint, not current dispatch.
 
+## 2026-10-29: Q1 shared checkpoints and early Q6 measurement
+
+The first Q1 gate is now consolidated around `engine.checkpoints.Checkpoint`
+and preparation's `RecoveryCoordinator`. Command dispatch, bounded token
+programs, input retention and materialization requests share rollback ordering.
+The opening token is captured before expansion; direct readers retain their
+operand-cursor contract. Preparation keeps the checkpoint open through owner
+acceptance, covering language state, pending work, options/loads, file events,
+resource records and staged output. Failed-attempt facts are committed after
+rollback and survive enclosing retention. Repeated recovery of one request is
+idempotent. Resume needs an established continuation; otherwise the containing
+source is retained. See [resource recovery](resource-recovery.md).
+
+The strengthened gate covers partial mutations before failure, expansion-created
+meanings, earlier completed effects, pending packages/actions, nested rollback,
+assumption propagation, retained replay boundaries and file-hook observations.
+A failed asset conversion removes its partial staged file while a later asset
+can succeed. Bibliography requests use the same protocol without rewinding the
+completed language pass. Arbitrary implementation/publication errors still
+propagate. The general segment outcome/retry API remains planned work.
+
+Q6's timing receipt was brought forward at the user's request. All subsequent
+specimen batches record preparation wall time and worker peak resident memory,
+with platform/method/scope and explicit unavailable measurements. A real failed
+worker is tested; timeouts do not fabricate a zero peak. The batch table, per-run
+receipt and comparisons expose the evidence. See [specimen iterations](specimen-iterations.md).
+
+The measurements exposed excessive checkpoint copying. The first consolidated
+all-nine run (`20261029-q1-checkpoints-profile`) took 404 seconds in its outer
+receipt; copying immutable output containers reduced the next run to 206 seconds.
+Completed manifest fact rows are now treated as append-only during reading, with
+container snapshots; mutable summaries remain independently copied. Later
+projection occurs outside that reading checkpoint. These ownership rules must
+be preserved when introducing new mutations. The initial timing run overlapped
+focused tests briefly; these are observed runs, not a controlled speedup claim.
+
+The final full suite ran **1,191 tests: 1,188 passed and three skipped**, in
+311.931 seconds. The preceding Q1 suite ran in 210.319 seconds; the broader
+checkpoint coverage still has observable cost. Keep timing receipts at every
+increment and investigate regressions before compounding them with new package
+execution. The focused recovery gate passes all 29 tests; a preceding 194-test
+check also covered reader contracts, definitions, conditions, hooks and timing.
+
+Earlier failing runs are retained under repository `temp/q1-checkpoints/`,
+including the corrected cursor/retention regressions and the initial invocation
+of unavailable pytest. The repository's unittest discovery is the full-suite
+driver; focused modules that import `reader_support` also need the tests directory
+on their import path. `qualification-final` owns the final sequential suite,
+specimen and copied-payload reread output.
+
+The final batch `20261029-q1-checkpoints-qualified` uses the same explicit native
+resource root as the earlier Q1 comparison. All nine payloads remain partial.
+Their master lengths, SVG counts and bibliography entry counts match that
+checkpoint. 2405's binding requirements rise from 8 to 20: retaining an unfinished
+package input now also rolls back its `natbib` activation, so twelve later
+citations no longer inherit that speculative fact. Root A gains two typed
+preparation requirements for retained commands, without changing its four legacy
+unresolved diagnostics or 754-character master. These are consequence accounting
+changes, not new closure or native-render claims.
+
+| Specimen | Preparation wall seconds | Peak worker MiB |
+| --- | ---: | ---: |
+| 2306.01911v1 | 29.480 | 163.07 |
+| 2405.15943v3 | 21.875 | 117.13 |
+| 2412.11340v4 | 11.500 | 76.62 |
+| 2512.18792v1 | 66.882 | 588.68 |
+| 2608.28281v2 | 22.611 | 127.67 |
+| Root A | 6.383 | 72.04 |
+| Root B | 6.110 | 72.14 |
+| Root C | 6.893 | 72.63 |
+| Root D | 8.160 | 71.53 |
+
+All nine memory readings were measured on Windows using the worker's peak working
+set. Batch start-to-finish was 192.122 seconds, including parent bookkeeping;
+the preceding Q1 outer receipt was 64.980 seconds. The initial consolidated
+2306 request took 201.519 seconds; the final one takes 29.480. Run conditions were
+not controlled enough to claim a general speedup or throughput parity. Repeated
+matched measurements and profiling remain required before expanding package
+execution. The receipts expose that issue instead of hiding it behind successful
+extraction.
+
+All nine final `master.tex` hashes match the preceding Q1 checkpoint exactly.
+All nine copied-payload rereads also finish partial, with measured time and peak
+memory, under the identical code fingerprint
+`d6a298c9216c87491246d79c9be33ffbec27a91431caaf471c6b46e012f00a84`.
+The rereads still do not import recovery-state/item lineage from the prior
+manifest: 2306/BFPCA expose later package failures and 2512 gains an unresolved
+reading boundary. Marker survival therefore remains distinct from replay
+equivalence. Receipts and isolated copied sources are under repository
+`temp/q1-checkpoints/payload-rereads/`. No new native render equivalence is claimed.
+
 ## 2026-10-29: Q1 resource failures and continued recovery
 
 The first Q1 gate is implemented in the existing preparation traversal, request

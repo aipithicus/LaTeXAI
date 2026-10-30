@@ -5,6 +5,7 @@ from typing import Dict, List
 from collections import Counter
 from dataclasses import dataclass
 from ..assets import convert_asset_to_svg, AssetConversionError
+from ..engine.checkpoints import ArtifactState, Attempt, Checkpoint
 from ..reading.contracts import ReadingIssue, SourceCommand
 from ..reading.spans import SourceSpan
 from ..reading.argument_scanner import key_value_items
@@ -161,18 +162,23 @@ def batch_convert_assets_to_svg(
         # Create output destination preserving relative subdirectory
         rel_svg = destinations[src_path, page]
         dest_svg_path = (output_dir / rel_svg).resolve()
-
+        attempt = Attempt(Checkpoint(ArtifactState(dest_svg_path), boundary="asset_conversion"))
         try:
             success = convert_asset_to_svg(src_path, dest_svg_path, page_index=page - 1)
             if not success:
                 raise AssetConversionError(f"SVG conversion failed for {src_path}; no admitted converter")
         except AssetConversionError as error:
+            attempt.rollback()
             if on_failure is None:
                 raise
             for use in uses:
                 if (use.path, use.page) == (src_path, page):
-                    on_failure(use, error)
+                    on_failure(attempt, use, error)
+        except Exception:
+            attempt.rollback()
+            raise
         else:
+            attempt.commit()
             completed.add((src_path, page))
     return {use.command.unit_id: destinations[use.path, use.page] for use in uses
             if (use.path, use.page) in completed}

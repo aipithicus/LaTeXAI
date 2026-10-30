@@ -39,19 +39,52 @@ class UnitRegistry:
         self.children: dict[str, list[str]] = {}
         self.uncertainty: dict[SourceSpan, UncertaintyCause] = {}
         self._by_span: dict[SourceSpan, str] = {}
+        self._serial = 0
+        self._cause_serial = 0
 
     def checkpoint(self):
         return (dict(self.records), {key: list(values) for key, values in self.children.items()},
                 dict(self.uncertainty), dict(self._by_span))
 
     def restore(self, saved):
-        self.records, self.children, self.uncertainty, self._by_span = saved
+        records, children, uncertainty, by_span = saved
+        self.records, self.children = dict(records), {key: list(value) for key, value in children.items()}
+        self.uncertainty, self._by_span = dict(uncertainty), dict(by_span)
+
+    def evidence(self, identifier):
+        """Capture a request's identity graph independently of speculative state."""
+        selected = set()
+        def include(key):
+            if key is None or key in selected:
+                return
+            selected.add(key)
+            unit = self.records[key]
+            include(unit.parent_id)
+            for field in ("owner_unit_id", "decision_unit_id"):
+                include(unit.activity_evidence.get(field))
+        include(identifier)
+        def descendants(key):
+            for child in self.children.get(key, ()):
+                include(child)
+                descendants(child)
+        descendants(identifier)
+        return tuple(unit for key, unit in self.records.items() if key in selected)
+
+    def retain_evidence(self, records):
+        for unit in records:
+            self.records.setdefault(unit.id, unit)
+            self._by_span.setdefault(unit.span, unit.id)
+            if unit.parent_id is not None:
+                children = self.children.setdefault(unit.parent_id, [])
+                if unit.id not in children:
+                    children.append(unit.id)
 
     def uncertainty_cause(self, span, reason="unresolved_reading", detail="Reading effects remain unresolved", *, evidence=None):
         """Retain the first witnessed cause for this exact source occurrence."""
         if span not in self.uncertainty:
             unit_id = self._by_span.get(span) or self.add(span, "uncertainty_origin", activity="reached", evidence=evidence)
-            self.uncertainty[span] = UncertaintyCause(f"cause-{len(self.uncertainty) + 1}", unit_id, reason, detail)
+            self._cause_serial += 1
+            self.uncertainty[span] = UncertaintyCause(f"cause-{self._cause_serial}", unit_id, reason, detail)
         return self.uncertainty[span]
 
     def add(self, span: SourceSpan, kind: str, parent_id: str | None = None, *, activity: str | None = None,
@@ -68,7 +101,8 @@ class UnitRegistry:
         for key in ("owner_unit_id", "decision_unit_id"):
             if evidence.get(key) is not None and evidence[key] not in self.records:
                 raise ValueError("Unknown activity evidence unit")
-        identifier = f"unit-{len(self.records) + 1}"
+        self._serial += 1  # Attempt identities are never recycled by rollback.
+        identifier = f"unit-{self._serial}"
         self.records[identifier] = ReadingUnit(identifier, span, kind, parent_id, activity, evidence)
         self._by_span.setdefault(span, identifier)
         if parent_id:

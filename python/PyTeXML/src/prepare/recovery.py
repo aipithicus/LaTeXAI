@@ -5,10 +5,12 @@ only keeps source spans for final emission, so rolling back a speculative splice
 cannot erase an observed failure or strand its output marker.
 """
 from ..reading.contracts import ReadingIssue, ScannedArgument
+from ..engine.checkpoints import Attempt, Checkpoint, LanguageState
+from .checkpoints import PreparationState, snapshot
 from .records import source_reference
 
 
-PROGRAM_KINDS = {"input", "package", "class", "formatted_bibliography"}
+PROGRAM_KINDS = {"input", "package", "class", "formatted_bibliography", "source_command"}
 RESOURCE_ACTIONS = {
     "source_input": "input", "source_include": "input",
     "source_import": "input", "source_subimport": "input",
@@ -28,13 +30,120 @@ class ResourceFailure(ReadingIssue):
         self.search, self.resolved = search or {}, resolved
 
 
+class RecoveryCoordinator:
+    """Rollback, commit failure evidence, then resume at an established boundary.
+
+    Handlers report failures. This owner alone decides whether to replace a
+    fully scanned request or preserve its source. Later materialization uses
+    request-owned participants and never rewinds the completed language pass.
+    """
+    def __init__(self, session):
+        self.session = session
+        self.serial = 0
+        self.committed = []
+
+    def next_identity(self):
+        self.serial += 1
+        return f"resource-{self.serial}"
+
+    def begin(self, *participants, language=False, preparation=False, boundary="resource_request"):
+        return Attempt(Checkpoint(*([LanguageState(self.session.dispatcher)] if language else []),
+            *([PreparationState(self.session)] if preparation else []), *participants, boundary=boundary))
+
+    def recover(self, attempt, command, error, **options):
+        if command.unit_id in attempt.recoveries:
+            return attempt.recoveries[command.unit_id]
+        session = self.session
+        evidence = session.units.evidence(command.unit_id)
+        record = options.pop("record", None)
+        if record is None:
+            resolved = getattr(error, "resolved", None) or getattr(getattr(error, "file_event", None), "resolved", None)
+            record = next((r for r in reversed(session.manifest.dependencies)
+                           if r["unit_id"] == command.unit_id and r.get("outcome") == "present"
+                           and (resolved is not None and r.get("target") == resolved
+                                or getattr(error, "requested", None) is not None
+                                and r.get("requested") == error.requested)
+                           and (options.get("kind") is None or r["kind"] == options["kind"])), None)
+        record = snapshot(record)
+        attempt.rollback()
+        session.units.retain_evidence(evidence)
+        # A caller must supply a continuation only after scanning the complete
+        # request. Unknown boundaries are handled by whole-input retention.
+        attempt.resume()
+        if attempt.retention_required:
+            options["retain"] = True
+        if not isinstance(error, ResourceFailure) or (command.action not in RESOURCE_ACTIONS and "kind" not in options):
+            session.diagnose(command.span, error.reason, error.detail, unit_id=command.unit_id,
+                causes=error.causes, evidence=getattr(error, "evidence", None))
+            if command.action not in RESOURCE_ACTIONS:
+                options.setdefault("kind", "source_command")
+            options["retain"] = True
+            failure = ResourceFailure(error.reason, error.detail, resolved=getattr(error, "resolved", None))
+        else:
+            failure = error
+        if record is not None:
+            existing = next((r for r in session.manifest.dependencies if r["item_id"] == record["item_id"]), None)
+            if existing is None:
+                session.manifest.dependencies.append(record)
+            else:
+                record = existing
+        result = _record_recovery(session, command, failure, record=record, **options)
+        result["recovery"]["checkpoint"] = attempt.checkpoint.boundary
+        event = getattr(error, "file_event", None)
+        if event is not None:
+            from .preservation import retain_source
+            retain_source(session, session.store.root / event.resolved,
+                          import_dir=getattr(error, "import_dir", None))
+            event.invalidate_retained_effects(session.dispatcher)
+            session.manifest.file_events.append({**event.record("retained"), "reason": error.reason})
+        elif not isinstance(error, ResourceFailure) and failure.resolved is not None:
+            from .preservation import retain_source
+            retain_source(session, session.store.root / failure.resolved,
+                          import_dir=getattr(error, "import_dir", None))
+        attempt.recoveries[command.unit_id] = result
+        requirement = next(r for r in session.manifest.requirements if r.get("item_id") == result["item_id"])
+        causes = {span: cause for span, cause in session.units.uncertainty.items()
+                  if cause.id in result["cause_ids"]}
+        units = {unit.id: unit for unit in session.units.evidence(command.unit_id)}
+        for cause in causes.values():
+            units.update((unit.id, unit) for unit in session.units.evidence(cause.unit_id))
+        self.committed.append((command, result, requirement, tuple(units.values()), causes,
+            tuple(c for c in session.manifest.recovery_contexts
+                  if c["id"] in result["recovery"]["assumptions"])))
+        return result
+
+    def restore_committed(self):
+        """Reconcile durable failures after an enclosing speculative rollback."""
+        session = self.session
+        def keep(rows, record, key):
+            index = next((i for i, row in enumerate(rows) if row.get(key) == record[key]), None)
+            if index is None:
+                rows.append(record)
+            else:
+                rows[index] = record
+        for command, record, requirement, units, causes, assumptions in self.committed:
+            keep(session.manifest.dependencies, record, "item_id")
+            keep(session.manifest.requirements, requirement, "id")
+            session.units.retain_evidence(units)
+            session.units.uncertainty.update(causes)
+            for assumption in assumptions:
+                keep(session.manifest.recovery_contexts, assumption, "id")
+            ids = tuple(a["id"] for a in assumptions)
+            if any(identifier not in session.context.recovery_contexts for identifier in ids):
+                session.context.invalidate_meanings(session.context.meaning_names(), command.span)
+                session.dispatcher.defer_effects(command.span, reason=record["causes"][0]["reason"],
+                                                detail=record["causes"][0]["detail"])
+                session.dispatcher.loads.invalidate(command.unit_id)
+                session.context.recovery_contexts = tuple(dict.fromkeys((*session.context.recovery_contexts, *ids)))
+
+
 def resource_record(session, command, kind, *, requested=None, target=None,
                     outcome="present", purpose="consume", search=None):
     unit = session.units.records[command.unit_id]
     evidence = dict(unit.activity_evidence)
     if session.context.recovery_contexts:
         evidence["recovery_context_ids"] = list(session.context.recovery_contexts)
-    record = {**source_reference(unit), "item_id": f"resource-{len(session.manifest.dependencies) + 1}",
+    record = {**source_reference(unit), "item_id": session.recovery.next_identity(),
         "kind": kind, "requested": requested, "target": target, "purpose": purpose,
         "outcome": outcome, "activity": unit.activity,
         "activity_evidence": evidence, "search": search or {},
@@ -59,7 +168,7 @@ def recovery_context(session, span, unit_id, item_id, domains, *, boundary="afte
     return assumption["id"]
 
 
-def recover_resource(session, command, error, *, kind=None, record=None, program_effects=True, retain=False,
+def _record_recovery(session, command, error, *, kind=None, record=None, program_effects=True, retain=False,
                      purpose="consume"):
     """Record a failed consumption, then continue at the already-scanned boundary."""
     kind = kind or (record["kind"] if record else RESOURCE_ACTIONS[command.action])

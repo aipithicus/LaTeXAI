@@ -11,7 +11,7 @@ from ..reading.contracts import SourceCommand, SourceEnd, ReadingBoundary, Defer
 from .emission import SourcePiece
 from .citations import discover_citations
 from ..source_io import SourceDecodingError
-from .recovery import ResourceFailure, recover_resource, resource_record
+from .recovery import ResourceFailure, resource_record
 
 
 def _preserve_declarations(pieces, session, command, reason, detail):
@@ -52,6 +52,7 @@ def prepare_bibliography(pieces, session, output_dir: Path):
         target = name.strip()
         if not target.endswith(".bib"):
             target += ".bib"
+        attempt = session.recovery.begin(boundary="bibliography_source")
         try:
             path = session.resolve(target, [""], command.span,
                 directories=[session.root.parent, store.root, origin.parent])
@@ -66,13 +67,15 @@ def prepare_bibliography(pieces, session, output_dir: Path):
             if error.outcome == "absent":
                 manifest.bibliography.missing_bib_files.append(target)
             if existing:
+                attempt.rollback()
                 observation = resource_record(session, command, "bibliography", requested=target,
                     outcome=error.outcome, purpose="source_for_reformatting", search=error.search)
                 observation["recovery"] = {"disposition": "supplied_bibliography", "original_resource": "not_required"}
             else:
-                recover_resource(session, command, error, kind="bibliography")
+                session.recovery.recover(attempt, command, error, kind="bibliography")
                 resource_failed = True
             continue
+        attempt.commit()
         if path not in resources:
             resources.append(path)
             texts.append(text)
@@ -100,6 +103,7 @@ def prepare_bibliography(pieces, session, output_dir: Path):
         backend = "existing-bbl"
     else:
         database = Database()
+        attempt = session.recovery.begin(boundary="bibliography_formatting")
         try:
             for resource, text in zip(resources, texts):
                 database.read(text, str(resource))
@@ -114,6 +118,7 @@ def prepare_bibliography(pieces, session, output_dir: Path):
             # discovery retains the whole database for later enrichment instead.
             bbl = extraction_bbl(database, keys)
         except BibTeXConflictError as error:
+            attempt.rollback()
             # Preserve every variant in one payload resource. Choosing a winner
             # is semantic resolution, not a reason to discard the prepared master.
             (output_dir / "bibliography.bib").write_text(canonical, encoding="utf-8", newline="\n")
@@ -126,11 +131,12 @@ def prepare_bibliography(pieces, session, output_dir: Path):
             return [piece.edit_source(arg.span, "bibliography", "REBASE_BIBLIOGRAPHY") if piece is declaration else piece
                     for piece in retained]
         except BibTeXError as error:
-            recover_resource(session, command, ResourceFailure("bibliography_processing", str(error),
+            session.recovery.recover(attempt, command, ResourceFailure("bibliography_processing", str(error),
                 requested=command.value("names"), outcome="failed"), kind="bibliography")
             for path in resources:
                 session.retained_resources[session.name(path)] = path
             return session.discard_bibliography(pieces)
+        attempt.commit()
         backend = "native-bibtex"
         manifest.bibliography.preparation_warnings = database.diagnostics
         if session.bibliography_observed:
@@ -152,6 +158,7 @@ def prepare_bibliography(pieces, session, output_dir: Path):
         entry_keys = {entry.key for entry in database.selected(keys)}
         basis = _audit_generated(bbl, session)
     if existing:
+        attempt = session.recovery.begin(boundary="supplied_bibliography_structure")
         environments = {c.action for c in commands if c.metadata.get("bibliography")}
         if not {"environment_begin", "environment_end"} <= environments:
             if any(r['source'] == session.name(existing) for r in manifest.unresolved):
@@ -160,25 +167,29 @@ def prepare_bibliography(pieces, session, output_dir: Path):
                 # jobname resource instead of requiring a partial traversal to
                 # prove its complete environment and key set.
                 session.retained_resources['master.bbl'] = existing
+                attempt.commit()
                 info.preparation_backend = 'deferred-reading'
                 retained = _preserve_declarations(pieces, session, command, 'bibliography_reading',
                     'The supplied BBL was retained at a reading boundary; its complete entry set is unresolved')
                 return [p for p in retained if p is declaration or not (p.command and p.command.action == 'bibliography')]
-            recover_resource(session, command, ResourceFailure("bibliography_structure",
+            session.recovery.recover(attempt, command, ResourceFailure("bibliography_structure",
                 "Prepared .bbl does not contain a complete thebibliography environment",
                 requested=session.name(existing), outcome="failed"), kind="formatted_bibliography", program_effects=False)
             session.retained_resources['master.bbl'] = existing
             return session.discard_bibliography(pieces)
         entry_keys = {c.value(c.metadata["bibliography_key"]) for c in commands if c.metadata.get("bibliography_key")}
+        attempt.commit()
+    attempt = session.recovery.begin(boundary="bibliography_entries")
     missing = [key for key in keys if key != "*" and key not in entry_keys
                and key in selection.established_keys]
     if missing:
         assumed = bool(session.units.records[command.unit_id].activity_evidence.get("recovery_context_ids"))
-        recover_resource(session, command, ResourceFailure("bibliography_entries",
+        session.recovery.recover(attempt, command, ResourceFailure("bibliography_entries",
             ("Bibliography entry reading remains conditional under a recovery context: " if assumed else
              "Bibliography entries missing for citation keys: ") + ", ".join(missing),
             requested=", ".join(missing), outcome="unresolved" if assumed else "absent"), kind="bibliography_entry")
         return pieces  # Keep any already-read entries alongside the typed marker.
+    attempt.commit()
     if existing:
         for key in keys:
             if key != "*" and key not in entry_keys and key not in selection.established_keys:

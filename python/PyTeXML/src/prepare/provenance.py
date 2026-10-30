@@ -26,7 +26,7 @@ class SourceLine:
     payload: Optional[str] = None
 
 
-@dataclass
+@dataclass(frozen=True)
 class Tombstone:
     """Records deleted/pruned ranges of source code that produce no output."""
     src_file: str

@@ -37,7 +37,8 @@ from .preservation import retain_candidate_input, retain_source, retain_survey_i
 from .provenance import Tombstone
 from .manifest import PreflightManifest, BibliographyInfo, PackageUsage, StyleFileInfo, ImplicitGraphicInfo
 from .records import source_reference, pending_location
-from .recovery import ResourceFailure, RESOURCE_ACTIONS, recover_resource, resource_record, recovery_context
+from .recovery import RecoveryCoordinator, ResourceFailure, RESOURCE_ACTIONS, resource_record, recovery_context
+from .checkpoints import PreparationState
 from ..reading.effect_summary import EffectSummary
 from ..engine.file_events import FileInput
 from .inlining import check_context as check_file_context, wrappers as file_wrappers
@@ -51,7 +52,7 @@ class _PreserveRemainder(Exception):
     """Stop justified edits, while allowing publication of preserved source."""
 
 
-class _DeferredCommand(Exception):
+class _DeferredCommand(ReadingIssue):
     """One fully scanned command needs resolution; later source remains readable."""
 
 
@@ -141,6 +142,8 @@ class PreparationSession:
         self.frames.append(_Input(self.root, first, True))
         self.dispatcher = StructuralDispatcher(first, self.context, self.resolver,
             source_commands=True, preparation=True, units=self.units, option_forwarder=self._forward_options)
+        self.recovery = RecoveryCoordinator(self)
+        self.dispatcher.command_participant = lambda: PreparationState(self)
         self.manifest.reading_assumptions = [
             "Source-visible preparation does not generally expand manuscript macros; bounded reading predicates may resolve captured single-token constants. Unbound commands and packages are not assumed to generate inputs or change entry catcodes.",
             "Uninterpreted math, environments and adjacent command groups retain their source; their contents are not executed.",
@@ -236,8 +239,9 @@ class PreparationSession:
             record["cause_ids"] = list(dict.fromkeys(self.units.uncertainty_cause(span).id for span in spans))
 
     def defer(self, span, reason, detail, *, evidence=None):
-        self.diagnose(span, reason, detail, evidence=evidence)
-        raise _DeferredCommand
+        error = _DeferredCommand(reason, detail)
+        error.evidence = evidence
+        raise error
 
     def _preserve_remainder(self, checkpoint):
         # Do not concatenate an unread child suffix with its parent's suffix:
@@ -353,11 +357,7 @@ class PreparationSession:
                 if event.required:
                     check_file_context(self.context)
             except ReadingIssue as error:
-                self.dispatcher.halted = True
-                self.dispatcher.resume_input(recovery)
-                event.invalidate_retained_effects(self.dispatcher)
-                retain_source(self, path, import_dir=import_dir)
-                self.manifest.file_events.append({**event.record("retained"), "reason": error.reason})
+                error.file_event, error.import_dir = event, import_dir
                 raise
         self.frames.append(_Input(path, reader, emit, import_dir, include=include, recovery=recovery,
             replacement=command.span if emit and command.action != "bibliography" else None,
@@ -558,9 +558,9 @@ class PreparationSession:
         return self.resolve(name, [""] if Path(name).suffix else exts, command.span,
             directories=[frame.import_dir or self.root.parent, self.store.root, *paths], provisional=provisional)
 
-    def _package(self):
+    def _package(self, request):
         frame = self.frames[-1]
-        name, options, command, is_class = frame.packages.pop(0)
+        name, options, command, is_class = request
         key = ("class:" if is_class else "package:") + name
         items = list(self.forwarded_options.get(key, ())) + options
         options = [option.name for option in items]
@@ -769,15 +769,16 @@ class PreparationSession:
                     for name in self.context.hooks.code.keys() | self.context.hooks.uncertain.keys()):
                 # Include/import own extra load semantics. Until those events
                 # are implemented, preserve the original entrypoint and file.
-                retain_source(self, path, import_dir=imported)
-                self.context.invalidate_meanings(self.context.meaning_names(), command.span)
-                self.dispatcher.defer_effects(command.span)
-                raise ReadingIssue("file_hook_entrypoint", "Hook-aware rewriting does not yet cover this input protocol")
+                error = ReadingIssue("file_hook_entrypoint", "Hook-aware rewriting does not yet cover this input protocol")
+                error.resolved, error.import_dir = self.name(path), imported
+                raise error
             emit = frame.emit and path.suffix.lower() not in {".sty", ".cls"}
             if not emit:
                 self.code.add(path)
                 if imported:
-                    self.defer(command.span, "package_import", "Import rebasing inside retained local code needs a payload contract")
+                    error = ReadingIssue("package_import", "Import rebasing inside retained local code needs a payload contract")
+                    error.resolved, error.import_dir = self.name(path), imported
+                    raise error
                 replacement = "\\include{" + self.name(path.with_suffix("")) + "}" if include else "\\input{" + self.name(path) + "}"
                 if frame.emit:
                     self.emit(command.span, replacement, operation="REBASE_CODE_INPUT")
@@ -916,25 +917,38 @@ class PreparationSession:
         return self
 
     def _traverse(self):
+        pending_boundary = None
         while self.frames and not self._ended_document:
+            failed_file_event = None
             if self.frames[-1].packages:
-                name, _, command, is_class = self.frames[-1].packages[0]
+                request = self.frames[-1].packages.pop(0)
+                name, _, command, is_class = request
                 kind = "class" if is_class else "package"
                 conditional = self.dispatcher.loads.query(kind, name, self.context).truth is None
+                attempt = self.recovery.begin(language=True, preparation=True, boundary="queued_package")
                 try:
-                    self._package()
-                except ResourceFailure as error:
-                    recover_resource(self, command, error, kind=kind, retain=conditional,
+                    self._package(request)
+                except ReadingIssue as error:
+                    self.recovery.recover(attempt, command, error, kind=kind, retain=conditional,
                         purpose="conditional_consume" if conditional else "consume")
+                except Exception:
+                    attempt.rollback()
+                    raise
+                else:
+                    attempt.commit()
                 continue
             if len(self.frames) == 1 and self.dispatcher.reader is self._root_reader and not self.dispatcher.branch_in_progress:
                 self._checkpoint = (self.frames[0].reader.position, len(self.pieces),
                                     len(self.tombstones), len(self.commands))
-            item = self.dispatcher.next_item()
+            if pending_boundary is None:
+                item = self.dispatcher.next_item()
+            else:
+                item, pending_boundary = pending_boundary, None
             if item is None:
                 break
             if isinstance(item, SourceEnd) and self.frames[-1].file_event is not None:
                 frame = self.frames[-1]
+                attempt = self.recovery.begin(language=True, preparation=True, boundary="file_after_hooks")
                 try:
                     frame.file_event.leave(self.dispatcher)
                     if frame.emit and frame.file_event.required:
@@ -947,8 +961,15 @@ class PreparationSession:
                     self.manifest.file_events.append(frame.file_event.record())
                     self.dispatcher.reader.endline_char = self.context.endlinechar
                 except ReadingIssue as error:
+                    failed_file_event = frame.file_event.record("retained")
+                    attempt.rollback()
                     item = self.dispatcher.halt(item.span, error.reason, error.detail,
                         remainder_start=self.dispatcher.reader.position, causes=error.causes)
+                except Exception:
+                    attempt.rollback()
+                    raise
+                else:
+                    attempt.commit()
             for source in self.dispatcher.program_sources:
                 if source.reader.basis not in self.generated_sources:
                     self.register_generated_source(source.reader)
@@ -978,6 +999,13 @@ class PreparationSession:
                     "A trailing control word requires a proven output separator under the current catcodes",
                     unit_id=item.unit_id)
             if isinstance(item, ReadingBoundary):
+                attempt = getattr(self.dispatcher, "command_attempt", None)
+                if attempt is not None:
+                    evidence = self.units.evidence(item.unit_id)
+                    attempt.rollback()
+                    self.units.retain_evidence(evidence)
+                    self.dispatcher.command_attempt = None
+                    self.dispatcher.halted = True
                 recovery = self.lint.repair_boundary(self, item)
                 if recovery is not None:
                     self.observe(recovery)
@@ -1020,6 +1048,7 @@ class PreparationSession:
                         materialization="prepared", causes=item.causes)
                     assumptions = self.context.recovery_contexts
                     self.dispatcher.resume_input(frame.recovery)
+                    self.dispatcher.loads.invalidate(item.unit_id)
                     self.context.recovery_contexts = tuple(dict.fromkeys((*self.context.recovery_contexts, *assumptions)))
                     context_id = recovery_context(self, frame.command.span, frame.command.unit_id,
                         retained["id"], ["content", "control_state"], boundary="caller_after_retained_input")
@@ -1030,7 +1059,7 @@ class PreparationSession:
                         recovery={"disposition": "retained_source", "assumptions": [context_id]})
                     if frame.file_event is not None:
                         frame.file_event.invalidate_retained_effects(self.dispatcher)
-                        self.manifest.file_events.append({**frame.file_event.record("retained"),
+                        self.manifest.file_events.append({**(failed_file_event or frame.file_event.record("retained")),
                                                          "reason": item.reason})
                     self.dispatcher.defer_effects(item.span, reason=item.reason, detail=item.detail)
                     del self.frames[recoverable:]
@@ -1064,8 +1093,11 @@ class PreparationSession:
                 continue
             try:
                 if isinstance(item, SourceCommand):
-                    checkpoint = (len(self.pieces), len(self.tombstones))
+                    attempt = getattr(self.dispatcher, "command_attempt", None) or self.recovery.begin(
+                        language=True, preparation=True, boundary="scanned_request")
                     self._command(item)
+                    attempt.commit()
+                    self.dispatcher.command_attempt = None
                 elif isinstance(item, DeferredRegion):
                     dependency = item.command is not None and item.command.action in DEPENDENCY_ACTIONS
                     requirement = self.require(item.span, item.reason, item.detail,
@@ -1133,20 +1165,21 @@ class PreparationSession:
                             self.styles[self.frames[-1].path].declared_commands.extend((item.name, "end" + item.name))
                     if isinstance(item, StoredDefinition) and self.frames[-1].path in self.styles:
                         self.styles[self.frames[-1].path].declared_commands.append(item.target.value)
-            except (ReadingIssue, _DeferredCommand) as error:
-                if isinstance(error, ResourceFailure) and isinstance(item, SourceCommand) and item.action in RESOURCE_ACTIONS:
-                    previous = next((r for r in reversed(self.manifest.dependencies)
-                                     if r["unit_id"] == item.unit_id and r.get("outcome") == "present"), None)
-                    recover_resource(self, item, error, record=previous)
-                elif isinstance(error, ReadingIssue):
-                    self.diagnose(item.span, error.reason, error.detail, causes=error.causes)
-                    if isinstance(item, SourceCommand) and item.action in RESOURCE_ACTIONS:
-                        recover_resource(self, item, ResourceFailure(error.reason, error.detail), retain=True)
-                # Only undo the current command's attempted emission. Previous
-                # children and subsequent source remain part of the new master.
-                del self.pieces[checkpoint[0]:]
-                del self.tombstones[checkpoint[1]:]
+            except ReadingIssue as error:
+                if not isinstance(item, SourceCommand):
+                    raise
+                self.recovery.recover(attempt, item, error)
+                self.dispatcher.command_attempt = None
+                if attempt.retention_required:
+                    pending_boundary = self.dispatcher.halt(item.span, error.reason, error.detail,
+                        causes=error.causes, unit_id=item.unit_id)
+                    continue
                 self.emit(item.span, command=item, operation="DEFER_RESOLUTION")
+            except Exception:
+                if isinstance(item, SourceCommand):
+                    attempt.rollback()
+                    self.dispatcher.command_attempt = None
+                raise
             depth = self.context.scope_depth
             self.graphic_paths = {k: v for k, v in self.graphic_paths.items() if k <= depth}
             self.graphic_extensions = {k: v for k, v in self.graphic_extensions.items() if k <= depth}

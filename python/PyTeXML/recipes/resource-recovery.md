@@ -45,6 +45,40 @@ unnecessary for this extraction. Gauntlet-master's deliberately absent
 
 ## Program state and continued discovery
 
+The shared `engine.checkpoints.Checkpoint` owns completion and rollback order.
+Before command expansion/dispatch, the dispatcher saves the language state and
+the preparation owner's private work. The fetched opening token belongs to the
+attempt; the mouth checkpoint points just after that token, preserving the
+direct-reader operand-cursor contract. Expansion, operands and operation effects
+are inside the checkpoint. A returned source request keeps it open until its
+owner accepts the request.
+
+The language participant covers contexts and saved scopes, suspended readers,
+options, conditions, pending inputs/actions, load facts and generated programs.
+The preparation participant covers staged output, resource/dependency records,
+file events and pending package work. Immutable output pieces use container
+copies. Completed manifest fact rows are append-only during reading; their list
+membership is checkpointed while mutable owner summaries are copied independently.
+Later location/materialization projection runs outside that reading checkpoint.
+Token budgets and attempt identity
+counters are not refunded. Token programs, command handlers and retained-input
+resumption use this same protocol.
+
+`RecoveryCoordinator` captures failed-attempt evidence, rolls back, commits one
+typed record per failed consumption, and resumes only at an established request
+boundary. Repeated recovery of the same attempt does not duplicate the item.
+Committed failures survive enclosing rollback; their source identities, cause,
+requirement, assumptions and eventual marker/log projection remain correlated.
+Handlers report failure facts. File-entry retention and context consequences
+belong to the coordinator. If dispatch changed input ownership without a proven
+caller continuation, recovery retains the containing input or root suffix.
+
+Later bibliography and asset processing have their own request checkpoints.
+They do not rewind the completed language pass. Failed conversion removes only
+that request's staged artifact; later assets can succeed. Output publication is
+still a separate boundary. This covers the admitted paths, not general TeX
+retries or arbitrary resynchronization.
+
 An unavailable input/package/class is not successful empty execution. Captured
 author meanings, registers, hooks and load evidence acquire uncertainty. Reading
 continues through the same dispatcher using the caller's lexical and structural
@@ -84,6 +118,10 @@ failures, content on both sides, authored fallback, state consequences, rollback
 unreadable/ambiguous/computed names and strict rejection after discovery. The
 execution checkpoint records actual test and specimen results; the broader
 staged-pipeline contract must not be read as implemented coverage.
+
+`tests/test_command_recovery.py` extends that gate with failures after language
+and owner mutations, expansion-created names, earlier completed effects, nested
+rollback, duplicate recovery, unsafe replay boundaries and partial asset writes.
 
 A fresh preparation of a recovered payload currently reads the markers as text.
 It does not import the earlier manifest's typed state consequences or item

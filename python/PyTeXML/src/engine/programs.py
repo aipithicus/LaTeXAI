@@ -189,10 +189,12 @@ def evaluate(host, tokens, anchor, *, policy=None, budget=10000, return_lookahea
     depth = getattr(host, "program_depth", 0)
     if depth >= 48:
         raise ReadingIssue("program_budget", "Token program nesting exhausted its budget")
-    saved_context, saved_units = host.context.copy(), host.units.checkpoint()
+    from .checkpoints import language_checkpoint
+    checkpoint = language_checkpoint(host, boundary="token_program")
+    saved_context = checkpoint.participants[0].context
     fuel = getattr(host, "program_budget", None) or ProgramBudget(budget)
-    saved_sources, saved_serial = len(host.program_sources), host.program_serial
     parent_groups, parent_conditionals = list(host._groups), [replace(c) for c in host._conditionals]
+    child = None
     try:
         reader = frozen_reader(host, tokens, anchor)
         child = StructuralDispatcher(reader, host.context, host.knowledge, preparation=True,
@@ -233,8 +235,11 @@ def evaluate(host, tokens, anchor, *, policy=None, budget=10000, return_lookahea
         host._groups = child._groups
         host.program_serial = child.program_serial
         host.reader.endline_char = host.context.endlinechar
+        checkpoint.commit()
         return tuple(results)
-    except (ReadingIssue, ValueError) as error:
+    except Exception as error:
+        if child is not None:
+            host.program_serial = max(host.program_serial, child.program_serial)
         if isinstance(error, ReadingIssue):
             error.causes = tuple(dict.fromkeys(source_origin(host.program_sources, span) for span in error.causes))
         current, previous = host.context.hooks, saved_context.hooks
@@ -242,11 +247,7 @@ def evaluate(host, tokens, anchor, *, policy=None, budget=10000, return_lookahea
                                                  | current.uncertain.keys() | previous.uncertain.keys())
             if current.code.get(name) != previous.code.get(name)
             or current.uncertain.get(name) != previous.uncertain.get(name))
-        host.context.restore_from(saved_context)
-        host.units.restore(saved_units)
-        host._groups, host._conditionals = parent_groups, parent_conditionals
-        del host.program_sources[saved_sources:]
-        host.program_serial = saved_serial
+        checkpoint.rollback()
         if isinstance(error, ReadingIssue):
             error.possible_hooks = tuple(dict.fromkeys((*getattr(error, "possible_hooks", ()), *possible_hooks)))
         raise
@@ -256,7 +257,6 @@ def setup_request(host, event, definition):
     """Execute a complete bounded setup invocation, preserving its runtime source."""
     from .transactions import transaction
     from .input_boundaries import require_inert_barrier
-    saved = host.reader.checkpoint()
     try:
         with transaction(host):
             invocation = expand_call(host, event, definition)
@@ -273,7 +273,6 @@ def setup_request(host, event, definition):
                       if isinstance(r, SourceCommand) and "hook" in r.metadata],
             "definition": origin(definition.span)})
     except ReadingIssue as error:
-        host.reader.restore(saved)
         if error.reason in {"argument_lookahead", "input_return_barrier"}:
             # The invocation's end is not established. Ordinary deferral may
             # otherwise route caller tokens that still belong to its operands.
