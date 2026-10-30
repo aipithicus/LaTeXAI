@@ -4,6 +4,9 @@ from ...reading.contracts import ReadingIssue, SourceCommand
 
 
 def paragraph(host, opening, meaning):
+    if getattr(host, "content", None) is not None:
+        host.content.paragraph(host, opening.span)
+        return SourceCommand(opening.span, opening.token.value, "content")
     if host.preparation and not host.program:
         return SourceCommand(opening.span, opening.token.value, "opaque", metadata={"execution": "deferred_layout"})
     policy = getattr(host, "program_policy", None)

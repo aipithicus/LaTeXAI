@@ -98,6 +98,14 @@ shared aliases and provenance. Thirteen observations match native build/restore
 witnesses. Full LaTeX startup and collection-scale snapshot qualification remain
 open; terminal input and layout are not implemented by this consumer.
 
+The [content-construction checkpoint](recipes/content-construction.md) builds
+source-linked paragraphs, boxes, math lists and finite alignments through the
+same execution engine. It captures insertion/mark/write/shipout events and
+preserves unknown geometry explicitly. A pinned native showbox/showlists witness
+matches its selected content observations. The API/CLI accepts explicit source
+inventories and restored Python formats; page layout, PDF drivers and general
+document coverage remain open.
+
 [engine/format.py](src/engine/format.py) installs the supported LaTeX-format
 meanings in each document's mutable state. The initial entry is `\active`, the
 kernel's character-code constant 13. It carries a format-source reference and no

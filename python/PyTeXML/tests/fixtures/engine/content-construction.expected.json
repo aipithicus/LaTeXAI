@@ -1,0 +1,106 @@
+{
+  "schema": "pytexml-content-native/1",
+  "status": "matched",
+  "native_version": "This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (INITEX)",
+  "executable_sha256": "4b582d0be712b74ae5090aba2d7338f185082f6446cbee7b26115e8ab6e21184",
+  "log_sha256": "f9a432a306937503da1c86879b0fa2dab846279bc1c1d82072ca9633a73a1214",
+  "sources": {
+    "content-construction-native.tex": "736e5e5c51fbc01a7149a150b608216c4b1384a64891ca28812f2bf45f19166d",
+    "content-construction-source.tex": "4959e385346955c34fb872a45d82e2b28b378e0e39a2ba4049c693ee11a7aa66",
+    "content-construction.tex": "420224d95586efe98eb974f5e2eed62280ade6687c06267b610ae7eeeeef8f71"
+  },
+  "expected": {
+    "messages": [
+      "OBS:WIDTH:10.0pt",
+      "OBS:WIDTH-SCOPE:12.0pt",
+      "OBS:DONE"
+    ],
+    "boxes": {
+      "0": "AB",
+      "2": "LARBCD",
+      "3": "A",
+      "5": "AEB"
+    },
+    "table": [
+      [
+        "LAR",
+        "B"
+      ],
+      [
+        "C",
+        "D"
+      ]
+    ],
+    "math": [
+      {
+        "class": "ord",
+        "nucleus": [
+          [
+            1,
+            120
+          ]
+        ],
+        "sup": [
+          [
+            1,
+            97
+          ],
+          [
+            1,
+            98
+          ]
+        ],
+        "sub": [
+          [
+            0,
+            49
+          ]
+        ],
+        "limits": null
+      },
+      {
+        "class": "bin",
+        "nucleus": [
+          [
+            0,
+            43
+          ]
+        ],
+        "sup": [],
+        "sub": [],
+        "limits": null
+      },
+      {
+        "class": "op",
+        "nucleus": [
+          [
+            1,
+            102
+          ]
+        ],
+        "sup": [],
+        "sub": [
+          [
+            0,
+            48
+          ]
+        ],
+        "limits": "limits"
+      }
+    ],
+    "box0_tail": [
+      "character",
+      "glue",
+      "kern",
+      "penalty",
+      "character"
+    ],
+    "glue": [
+      131072,
+      1
+    ],
+    "kern": 196608,
+    "penalty": 7
+  },
+  "scope": "selected box contents, quantities, table cells, math atoms and scripts; no geometry or rendering equivalence"
+}

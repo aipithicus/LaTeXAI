@@ -73,7 +73,7 @@ class ProgramPolicy:
 
     def accept(self, item, host):
         if isinstance(item, SourceCommand):
-            accepted = item.action in PROGRAM_ACTIONS
+            accepted = item.action in PROGRAM_ACTIONS or self.content and item.action == "content"
         elif (not self.content and isinstance(item, (StoredDefinition, EnvironmentDefinition))
               and getattr(item, "target_check", None) == "unverified"):
             # Top-level declarations carry a separate target-existence
@@ -91,6 +91,7 @@ class ProgramPolicy:
 
 HOOK_BODY = ProgramPolicy("Hook body", content=True, balanced_groups=False)
 SETUP = ProgramPolicy("Setup invocation", content=False, balanced_groups=True)
+CONTENT = ProgramPolicy("Content invocation", content=True, balanced_groups=False)
 
 
 def _setup_event(item, host):
@@ -199,7 +200,7 @@ def evaluate(host, tokens, anchor, *, policy=None, budget=10000, return_lookahea
     try:
         reader = frozen_reader(host, tokens, anchor)
         child = StructuralDispatcher(reader, host.context, host.knowledge, preparation=True,
-            source_commands=True, units=host.units, program=True)
+            source_commands=True, units=host.units, program=True, content=getattr(host, "content", None))
         child._base_scope_depth = host._base_scope_depth
         child.program_depth = depth + 1
         child.program_budget = fuel

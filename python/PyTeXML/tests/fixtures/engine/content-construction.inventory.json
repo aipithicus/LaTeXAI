@@ -1,0 +1,9 @@
+{
+  "entry": "content-construction.tex",
+  "sources": {
+    "content-construction.tex": "content-construction.tex",
+    "content-construction-source.tex": "content-construction-source.tex"
+  },
+  "metrics": {"cmr10.tfm": "cmr10.tfm"},
+  "profile": "pdftex"
+}

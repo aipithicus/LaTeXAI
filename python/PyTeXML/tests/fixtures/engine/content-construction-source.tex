@@ -1,0 +1,19 @@
+\font\f=cmr10 \f
+\fontdimen22\f=0pt
+\textfont0=\f \scriptfont0=\f \scriptscriptfont0=\f
+\textfont1=\f \scriptfont1=\f \scriptscriptfont1=\f
+\textfont2=\f \scriptfont2=\f \scriptscriptfont2=\f
+\textfont3=\f \scriptfont3=\f \scriptscriptfont3=\f
+\mathcode43="202B
+\setbox0=\hbox to 10pt{A\hskip2pt plus1fil\kern3pt\penalty7B}
+\observe0
+\message{OBS:WIDTH:\the\wd0}
+{\wd0=12pt}\message{OBS:WIDTH-SCOPE:\the\wd0}
+\setbox1=\hbox{$x_1^{ab}+\mathop{f}\limits_0\peek$}
+\setbox2=\vbox{\halign{L#R&#\cr A&B\cr\omit C&D\cr}}
+\observe2
+\setbox3=\hbox{\hbox{A}\setbox4=\lastbox\copy4}
+\observe3
+\everyhbox{E}\afterassignment A\setbox5=\hbox{B}
+\observe5
+\message{OBS:DONE}

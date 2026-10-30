@@ -42,6 +42,19 @@ def test(cursor, rule):
     if rule.evaluation in {"always_true", "always_false"}:
         return rule.evaluation == "always_true"
     predicate = rule.predicate
+    if predicate in {"ifvmode", "ifhmode", "ifmmode", "ifinner", "ifvoid", "ifhbox", "ifvbox"}:
+        content = getattr(cursor.host, "content", None)
+        if content is None:
+            return None
+        if predicate in {"ifvoid", "ifhbox", "ifvbox"}:
+            from .primitives.content import index
+            box = content.read_box(cursor.host, index(integer_scanner(cursor)))
+            return box is None if predicate == "ifvoid" else box is not None and (
+                box.kind == "hbox" if predicate == "ifhbox" else box.kind in {"vbox", "vtop"})
+        if predicate == "ifinner":
+            return content.frame.kind not in {"document", "paragraph"} and not (
+                content.frame.kind == "math" and content.frame.info["display"])
+        return content.frame.mode == {"ifvmode": "v", "ifhmode": "h", "ifmmode": "m"}[predicate]
     if predicate == "stream_eof":
         from .primitives.read_streams import stream_number
         return cursor.context.read_streams.eof(stream_number(integer_scanner(cursor)))
@@ -71,9 +84,11 @@ def test(cursor, rule):
         if left is None or right is None:
             raise ReadingIssue("conditional_operand", "ifx requires two raw tokens")
         return compare_tokens(left, right, cursor.context, cursor.knowledge, cursor.operations)
-    if predicate in {"integer_compare", "integer_abs_compare", "integer_odd", "integer_case"}:
+    if predicate in {"integer_compare", "integer_abs_compare", "integer_odd", "integer_case", "dimension_compare"}:
         scanner = integer_scanner(cursor)
-        left = scanner.integer()
+        from .dimensions import dimension
+        number = (lambda: dimension(scanner)[0]) if predicate == "dimension_compare" else scanner.integer
+        left = number()
         if predicate == "integer_case":
             return left
         if predicate == "integer_odd":
@@ -83,7 +98,7 @@ def test(cursor, rule):
             relation = cursor.next_expanded()
         if relation is None or relation.catcode != CatCode.OTHER or relation.value not in "<=>":
             raise ReadingIssue("conditional_relation", "Integer test requires <, = or >")
-        right = scanner.integer()
+        right = number()
         if predicate == "integer_abs_compare":
             left, right = abs(left), abs(right)
         return {"<": left < right, "=": left == right, ">": left > right}[relation.value]

@@ -95,16 +95,20 @@ class ConditionalTests(unittest.TestCase):
                 self.setup_reader("\\iffalse A\\" + name + r" invalid\or B\else C\fi D\else E\fi F")
                 self.assertEqual(self.chars(self.scan()), "EF")
 
-    def test_unsupported_predicate_stops_before_arguments(self):
-        for name in ("ifdim", "ifx"):
+    def test_unresolved_operand_or_predicate_restores_arguments(self):
+        for name, reason in (("ifdim", "expansion_required"), ("ifx", "unsupported_conditional")):
             source = "A\\" + name + r"\makeatletter\fi"
             with self.subTest(name=name):
                 self.setup_reader(source)
                 boundary = self.scan(complete=False)[-1]
-                self.assertEqual(boundary.reason, "unsupported_conditional")
+                self.assertEqual(boundary.reason, reason)
                 self.assertEqual(self.reader.source_slice(boundary.remainder), source[1:])
                 self.assertEqual(self.context.catcodes["@"], CatCode.OTHER)
                 self.assertEqual(self.reader.position, 2 + len(name))
+
+    def test_dimension_predicate_uses_established_scaled_values(self):
+        self.setup_reader(r"\ifdim1pt<2pt YES\else NO\fi")
+        self.assertEqual(self.chars(self.scan()), "YES")
 
     def test_inert_skipped_content_has_no_execution_or_full_resolution(self):
         source = (r"\iffalse }{\endgroup\begingroup\def\x{body}\makeatletter\ExplSyntaxOn"

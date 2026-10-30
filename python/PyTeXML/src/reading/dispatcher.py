@@ -107,7 +107,7 @@ class StructuralDispatcher:
                  *, source_commands: bool = False, preparation: bool = False, units: UnitRegistry | None = None,
                  options: OptionScope | None = None, loads: SourceLoadState | None = None,
                  option_forwarder: Callable[[tuple[SourceCommand, ...]], None] | None = None,
-                 program: bool = False):
+                 program: bool = False, content=None):
         self.literals = LiteralScanner(reader, context, knowledge)
         self.environments = EnvironmentScanner(reader, context)
         self.skipped = SkippedBranchScanner(reader, context, knowledge)
@@ -142,6 +142,7 @@ class StructuralDispatcher:
         self.program = program
         self.program_sources = []
         self.program_serial = 0
+        self.content = content
 
     def input_recovery(self) -> InputRecovery:
         """Snapshot only at an active handoff, before entering retained code."""
@@ -190,13 +191,13 @@ class StructuralDispatcher:
         A frozen program owns its whole tail. Physical input admits a complete
         bounded setup insertion; cross-frame operands remain explicit boundaries.
         """
-        from ..engine.programs import evaluate, frozen_reader, SETUP
+        from ..engine.programs import evaluate, frozen_reader, SETUP, CONTENT
         if self.program:
             tail = tuple(iter(self.reader.next_token, None))
             self.program_budget.charge(len(tokens) + len(tail))
             self._set_reader(frozen_reader(self, (*tokens, *tail), anchor))
         else:
-            evaluate(self, tokens, anchor, policy=SETUP)
+            evaluate(self, tokens, anchor, policy=CONTENT if self.content is not None else SETUP)
 
     def enter_source(self, reader: TexReader, *, catcode_overrides: dict[str, int] | None = None,
                      options: OptionScope | None = None) -> None:
@@ -391,7 +392,7 @@ class StructuralDispatcher:
             return self.halt(event.span, "stored_macro",
                                   f"Stored macro {token.value!r} requires interpretation; defined at "
                                   f"{definition.span.basis.source_id}:{definition.span.start}")
-        if event.kind != EventKind.TOKEN:
+        if event.kind != EventKind.TOKEN and self.content is None:
             # Implicit paragraph tokens normally pass through, but a stored
             # redefinition must block that route just like an explicit command.
             return event
@@ -403,7 +404,7 @@ class StructuralDispatcher:
         # Plain text has no language effects and needs no state snapshot.
         if (token.kind == TokenKind.CHARACTER and token.catcode not in {
                 CatCode.BEGIN_GROUP, CatCode.END_GROUP, CatCode.MATH_SHIFT, CatCode.ALIGNMENT_TAB}
-                and not isinstance(reader, TokenCursor)):
+                and not isinstance(reader, TokenCursor) and self.content is None):
             return event
         state = LanguageState(self)
         participant = getattr(self, "command_participant", None)
@@ -433,6 +434,26 @@ class StructuralDispatcher:
 
     def _dispatch_event(self, event, reader, context, token, meaning, definition):
         deferred = DeferredScanner(reader, context)
+        if self.content is not None:
+            from ..engine.primitives.alignments import before_event
+            if before_event(self, event):
+                return event
+            meaning = context.resolve_meaning(self.knowledge, token.value, token.kind)
+            definition = context.lookup_definition(token.value, token.kind)
+            from ..engine.content import content_request
+            if isinstance(meaning, (TokenListMeaning, StoredDefinition)) or definition is not None:
+                if getattr(meaning, "uncertain", None) is not None:
+                    raise ReadingIssue("uncertain_meaning", "Content invocation has an uncertain meaning", causes=(meaning.uncertain,))
+                if not self.program:
+                    return content_request(self, event, definition or meaning)
+            if isinstance(meaning, CharacterCodeMeaning) and meaning.uncertain is None:
+                self.content.character(self, chr(meaning.value), event.span, explicit=True)
+                return event
+            if isinstance(meaning, BoundMeaning) and meaning.uncertain is None and meaning.token is not None:
+                token = replace(meaning.token, span=event.span)
+                event = replace(event, token=token)
+            if token.kind == TokenKind.CHARACTER:
+                return self.content.token(self, event)
         if isinstance(meaning, PrimitiveMeaning):
             if meaning.uncertain is not None:
                 if (self.preparation and meaning.operation == "conditional.route"
@@ -1036,10 +1057,12 @@ class StructuralDispatcher:
 
     def begin_group(self, kind: str, span: SourceSpan) -> None:
         """Own the execution frame; the shared state owns scope restoration."""
+        if self.content is not None and len(self._groups) >= 64:
+            raise ReadingIssue("content_budget", "Content execution exceeds 64 nested groups")
         self.context.push_scope()
         self._groups.append(_GroupFrame(kind, span))
 
-    def end_group(self, kind: str) -> None:
+    def end_group(self, kind: str, *, deliver=True):
         self._require(bool(self._groups), "unmatched_group", "No source group is available to close")
         self._require(self._groups[-1].kind == kind, "mismatched_group",
                       f"Cannot close {self._groups[-1].kind} group with {kind} closer")
@@ -1048,8 +1071,9 @@ class StructuralDispatcher:
         self.context.pop_scope()
         self._groups.pop()
         self.reader.endline_char = self.context.endlinechar
-        if after:
+        if after and deliver:
             self.insert_tokens(after, anchor)
+        return after
 
     def _environment_name(self) -> str:
         """Read a non-expanding argument; braces here are not execution groups."""

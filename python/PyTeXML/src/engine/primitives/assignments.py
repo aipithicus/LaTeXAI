@@ -76,6 +76,9 @@ def define_math_character(host, opening, meaning):
 
 
 def math_character(host, opening, meaning):
+    if getattr(host, "content", None) is not None:
+        host.content.math_character(host, meaning.operand, opening.span)
+        return SourceCommand(opening.span, opening.token.value, "content")
     raise ReadingIssue("math_character", "Math character execution requires a math list consumer")
 
 

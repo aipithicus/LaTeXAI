@@ -161,9 +161,10 @@ FAMILY = OperationFamily(
         ROUTE.declare("ifcase", ConditionalRule("opener", "deferred", None, "integer_case")),
         ROUTE.declare("ifeof", ConditionalRule("opener", "deferred", None, "stream_eof")),
         ROUTE.declare("ifpdfabsnum", ConditionalRule("opener", "deferred", None, "integer_abs_compare"), extension=True),
-        *(ROUTE.declare(name, ConditionalRule("opener", "deferred")) for name in
-          ("ifdim", "ifvoid", "ifhbox", "ifvbox")),
-        *(ROUTE.declare(name, ConditionalRule("opener", "deferred", 0)) for name in
+        ROUTE.declare("ifdim", ConditionalRule("opener", "deferred", None, "dimension_compare")),
+        *(ROUTE.declare(name, ConditionalRule("opener", "deferred", None, name)) for name in
+          ("ifvoid", "ifhbox", "ifvbox")),
+        *(ROUTE.declare(name, ConditionalRule("opener", "deferred", 0, name)) for name in
           ("ifvmode", "ifhmode", "ifmmode", "ifinner")),
         ROUTE.declare("else", ConditionalRule("alternative")),
         ROUTE.declare("or", ConditionalRule("case_alternative")),

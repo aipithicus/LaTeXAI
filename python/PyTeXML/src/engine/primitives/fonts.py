@@ -36,7 +36,7 @@ def define(host, opening, meaning):
     from .read_streams import filename
     from ..tfm import parameters
     target = AssignmentScanner(host.reader, host.context).target()
-    scanner = IntegerScanner(host)
+    scanner = IntegerScanner(host, relaxed_target=(target.kind, target.value))
     scanner.optional_equals()
     name = filename(scanner)
     at, scaled = None, 1000

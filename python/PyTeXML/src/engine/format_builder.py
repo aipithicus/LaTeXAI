@@ -31,9 +31,10 @@ class FormatBuild:
     steps: int
     boundary: dict | None = None
     snapshot: str | None = None
+    content: dict | None = None
 
     def receipt(self):
-        return {"schema": "pytexml-format-build/1", "status": self.status, "steps": self.steps,
+        return {"schema": "pytexml-content-build/1" if self.content is not None else "pytexml-format-build/1", "status": self.status, "steps": self.steps,
                 "messages": self.messages, "sources": self.sources, "boundary": self.boundary,
                 "snapshot_sha256": hashlib.sha256(self.snapshot.encode()).hexdigest() if self.snapshot else None,
                 "meanings": len(self.context._meanings), "integer_cells": len(self.context.integer_parameters.values),
@@ -79,7 +80,7 @@ class FormatBuilder:
     def restore(self, snapshot):
         return format_snapshot.restore(snapshot, sources=self.manifest)
 
-    def build(self, root, *, restored=None, require_dump=True):
+    def build(self, root, *, restored=None, require_dump=True, construct_content=False):
         from ..reading.dispatcher import StructuralDispatcher
         if root not in self.sources:
             raise ValueError("Root is absent from the source inventory")
@@ -101,6 +102,9 @@ class FormatBuilder:
             occurrence += 1
             return result
         host = StructuralDispatcher(reader(root), context, self.resolver, preparation=True, source_commands=True)
+        if construct_content:
+            from .content import ContentState
+            host.content = ContentState(host.reader.basis.span(0, 0))
         for basis, text, tokens, anchor, relation in origins:
             frozen = TokenCursor(ScannedArgument("program", basis.whole, tokens), text, context)
             host.program_sources.append(ProgramSource(frozen, anchor, relation))
@@ -109,10 +113,10 @@ class FormatBuilder:
         item = SourceCommand(host.reader.basis.span(0, 0), "", "format_start")
         try:
             if restored is not None:
-                from .programs import evaluate, SETUP
+                from .programs import evaluate, SETUP, CONTENT
                 everyjob = context.token_registers.read("everyjob")
                 if everyjob:
-                    evaluate(host, everyjob, item.span, policy=SETUP)
+                    evaluate(host, everyjob, item.span, policy=CONTENT if construct_content else SETUP)
             while (item := host.next_item()) is not None:
                 steps += 1
                 if steps > self.budget:
@@ -131,6 +135,8 @@ class FormatBuilder:
                             raise ReadingIssue("input_budget", "Input nesting exceeds 64 sources")
                         host.enter_source(reader(found))
                     elif item.action == "format_dump":
+                        if construct_content:
+                            raise ReadingIssue("content_dump", "Content execution does not dump a format")
                         saved_origins = tuple((s.reader.basis, s.reader.text, tuple(s.reader.tokens), s.anchor, s.origins)
                                               for s in host.program_sources)
                         snapshot = format_snapshot.save(context, sources=self.manifest, origins=saved_origins,
@@ -140,11 +146,13 @@ class FormatBuilder:
                     elif item.action == "format_end":
                         status = "missing_dump" if require_dump else "completed"
                         break
+                    elif item.action == "content" and construct_content:
+                        pass
                     elif item.action not in PROGRAM_ACTIONS | {"setup_program", "end_input"}:
                         raise ReadingIssue("format_effect", f"Format owner cannot execute {item.action!r}")
                 elif isinstance(item, ReadEvent):
                     token = item.token
-                    if token is not None and token.kind == TokenKind.CHARACTER and token.catcode not in {
+                    if not construct_content and token is not None and token.kind == TokenKind.CHARACTER and token.catcode not in {
                             CatCode.SPACE, CatCode.BEGIN_GROUP, CatCode.END_GROUP}:
                         raise ReadingIssue("format_content", "Format build reached typeset content")
                 elif not isinstance(item, (StoredDefinition, SourceEnd, SkippedRegion)):
@@ -152,10 +160,18 @@ class FormatBuilder:
             else:
                 if not require_dump:
                     status = "completed"
+            if construct_content:
+                host.content.finish(host, item.span if item is not None else host.reader.basis.whole)
         except ReadingIssue as error:
-            span = item.span
+            span = item.span if item is not None else host.reader.basis.whole
             boundary = {"reason": error.reason, "detail": error.detail, "source": span.basis.source_id,
                         "occurrence": span.basis.occurrence_id, "start": span.start, "end": span.end}
+            if construct_content:
+                from .content import location
+                remainder = (item.remainder if isinstance(item, ReadingBoundary) else
+                    host.reader.source_span(span.start if span.basis == host.reader.basis else host.reader.position,
+                                            len(host.reader.text)))
+                boundary["remainder"] = location(remainder)
             status = "boundary"
         except ValueError as error:
             # A rejected snapshot is a build failure, never a successful dump.
@@ -164,7 +180,8 @@ class FormatBuilder:
             status, boundary = "boundary", {"reason": "format_snapshot", "detail": str(error),
                                             "source": item.span.basis.source_id, "start": item.span.start, "end": item.span.end}
         messages = context.state_cells.read("format_messages") if "format_messages" in context.state_cells.values else ()
-        return FormatBuild(status, context, messages, self.manifest, steps, boundary, snapshot)
+        return FormatBuild(status, context, messages, self.manifest, steps, boundary, snapshot,
+                           host.content.as_dict() if construct_content else None)
 
 
 def main():

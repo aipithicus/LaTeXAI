@@ -364,12 +364,6 @@ reading:
     grammar:
       handler: source_arguments
       arguments: []
-  - name: \noindent
-    family: source_command
-    action: opaque
-    grammar:
-      handler: source_arguments
-      arguments: []
   - name: \centering
     family: source_command
     action: opaque

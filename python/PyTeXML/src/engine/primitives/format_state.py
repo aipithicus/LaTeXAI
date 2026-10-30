@@ -42,6 +42,9 @@ def message(host, opening, meaning):
 
 @atomic
 def write(host, opening, meaning):
+    if getattr(host, "content", None) is not None:
+        from .content_events import write as content_write
+        return content_write(host, opening, meaning)
     if not getattr(host, "immediate_write", False):
         raise ReadingIssue("deferred_write", "Deferred write requires a shipout consumer")
     scanner = IntegerScanner(host)

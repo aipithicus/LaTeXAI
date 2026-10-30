@@ -55,6 +55,7 @@ Neither route restores fuel: an attempted operation has spent its budget.
         self.host, self.observations = host, observations
         self.reader = host.reader
         self.context = host.context.copy()
+        self.content = host.content.checkpoint() if getattr(host, "content", None) is not None else None
         self.parents, self.options = host._copy_option_stack(host._parents, host.options)
         readers = {host.reader, *(entry[0] for entry in host._parents)}
         for mapping in (host._replays, host._branch_replays):
@@ -81,6 +82,8 @@ Neither route restores fuel: an attempted operation has spent its budget.
     def restore(self):
         host = self.host
         host.context.restore_from(self.context)
+        if self.content is not None:
+            host.content.restore(self.content)
         for reader, saved, endline in self.readers:
             reader.restore(saved)
             reader.endline_char = endline

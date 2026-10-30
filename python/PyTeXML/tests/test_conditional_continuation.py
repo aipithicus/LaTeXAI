@@ -118,7 +118,7 @@ class ConditionalCaptureTests(unittest.TestCase):
 
     def test_unsupported_operand_grammar_is_explicit(self):
         self.assertEqual(self.scan(r"\ifnum\x=1 A\fi")[-1].reason, "expansion_required")
-        self.assertEqual(self.scan(r"\ifdim\x=1pt A\fi")[-1].reason, "conditional_header")
+        self.assertEqual(self.scan(r"\ifdim\x=1pt A\fi")[-1].reason, "expansion_required")
 
     def test_overloaded_metadata_signature_is_preserved_without_guessing(self):
         source = r"\if0\blind{\author[1]{Author\thanks{Grant}}}\fi\input{tail}"
