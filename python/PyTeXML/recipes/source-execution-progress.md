@@ -4,6 +4,65 @@ This file records implementation and qualification evidence. Current priorities
 live in the [working queue](../../../../aipithicus-issues/LaTeXAI/briefs/pytexml-language-core/working-queue.md);
 dated next-step statements below describe their checkpoint, not current dispatch.
 
+## 2026-10-29: CPU and memory footprints with workload context
+
+Specimen receipts now use `pytexml-specimen-performance/2`: elapsed preparation
+time, worker CPU time (including a user/system split), peak resident memory,
+measurement scopes/methods and explicit absent readings. Host description,
+logical CPU count, workload note and instrumentation mode travel with each result
+and its comparison receipt. Historical receipts are not rewritten or backfilled.
+The ordinary mode adds only process counters to the existing memory receipt.
+See [specimen iterations](specimen-iterations.md) for the CLI and metric contracts.
+
+Optional `--profile-cpu` records main-thread function costs and call counts, with
+a readable report, complete JSON rows and a raw caller graph. It uses thread CPU
+time rather than elapsed time, excludes other threads/child processes, and has
+explicit instrumentation overhead. Worker totals still cover all its threads.
+Profile export occurs after the total/peak readings. Both normal success and
+normal failure publish receipts; interrupted workers retain unavailable metrics.
+Neither shared engine functions nor whole-process peaks establish a particular
+TeX package's cost. Package-level attribution, Python allocation tracing,
+process-tree memory/CPU and performance budgets remain unimplemented.
+
+The user reported two concurrent heavy Bayesian regression/Monte Carlo sessions
+straining the laptop. New measurements carry that note. The earlier Q1 wall-time
+comparisons below are uncontrolled observations and cannot attribute a regression
+to checkpoint changes. CPU time is more useful under scheduling contention, but
+can still change with CPU frequency, cache/memory contention and paging. No
+speedup, slowdown or throughput parity is qualified by this checkpoint.
+
+Verification: **16 specimen-harness tests pass**, covering real preparation,
+failed-worker counters/profile export, missing timeout counters, profile files,
+workload/history propagation and unmodified historical receipts. The all-nine
+batch `20261029-resource-footprints` records both CPU and resident peaks for every
+specimen. Source fingerprints, emitted master hashes and preparation summaries
+match `20261029-q1-checkpoints-qualified`; all nine remain partial. This is
+reporting qualification, with no new native-render or recovery-equivalence claim.
+
+| Specimen | Wall seconds | Worker CPU seconds | Peak resident MiB |
+| --- | ---: | ---: | ---: |
+| 2306.01911v1 | 30.411 | 17.844 | 163.40 |
+| 2405.15943v3 | 16.969 | 9.469 | 115.97 |
+| 2412.11340v4 | 22.175 | 6.766 | 76.63 |
+| 2512.18792v1 | 97.218 | 50.109 | 588.11 |
+| 2608.28281v2 | 28.361 | 13.922 | 128.59 |
+| Root A | 4.005 | 1.531 | 71.53 |
+| Root B | 4.187 | 1.734 | 71.52 |
+| Root C | 4.157 | 1.781 | 71.70 |
+| Root D | 4.340 | 1.750 | 72.65 |
+
+The separate `20261029-root-a-cpu-profile` run preserves Root A's master and
+summary. Its instrumented receipt records 19.895 elapsed seconds, 10.516 worker
+CPU seconds and 76.57 MiB peak resident memory. The main-thread profile records
+224,663 calls each to the character-rule `fullmatch` and `_bounds` helpers; these
+are concrete investigation candidates, not a demonstrated optimization or a
+package-cost allocation. The large instrumentation overhead reinforces keeping
+these diagnostic runs separate from ordinary counter-only measurements. Small
+or zero function times can reflect clock granularity rather than free work.
+Full test/batch output is retained under repository
+`temp/footprint-reporting/qualification/`; the normal and profiled batches live
+in the existing specimen run collection.
+
 ## 2026-10-29: Q1 shared checkpoints and early Q6 measurement
 
 The first Q1 gate is now consolidated around `engine.checkpoints.Checkpoint`

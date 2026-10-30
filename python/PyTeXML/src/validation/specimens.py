@@ -14,6 +14,7 @@ import importlib.metadata
 import json
 import os
 from pathlib import Path
+import platform
 import re
 import stat
 import subprocess
@@ -153,8 +154,10 @@ def refresh_index(runs):
                  f"Batch status: **{batch['status']}**. Started: {batch['started']}.", "",
                  f"Code commit: `{batch['code']['commit']}`. Code fingerprint: `{batch['code']['sha256']}`.", "",
                  "[Receipt](run.json) · [Investigation notes](NOTES.md)", "",
-                 "| Specimen | Preparation | Master | SVGs | Bibliography items | Requirements: prep / binding / interpretation | Wall seconds | Peak worker MiB | Evidence |",
-                 "| --- | --- | --- | ---: | ---: | --- | ---: | ---: | --- |"]
+                 f"Workload context: {md(batch.get('performance_context', {}).get('workload_note', 'Not recorded'))}",
+                 f"Instrumentation: {batch.get('performance_context', {}).get('instrumentation', 'Not recorded')}", "",
+                 "| Specimen | Preparation | Master | SVGs | Bibliography items | Requirements: prep / binding / interpretation | Wall seconds | CPU seconds | Peak worker MiB | Evidence |",
+                 "| --- | --- | --- | ---: | ---: | --- | ---: | ---: | ---: | --- |"]
         renders = []
         for specimen, item in batch["results"].items():
             latest[specimen] = (name, item)
@@ -169,10 +172,14 @@ def refresh_index(runs):
                 evidence += f" · [master diff]({specimen}/master.diff)"
             performance = item.get("performance", {})
             wall, peak = performance.get("wall_seconds"), performance.get("peak_rss_bytes")
+            cpu = performance.get("cpu_seconds")
+            cpu = "—" if cpu is None else f"{cpu:.3f}"
             wall = "—" if wall is None else f"{wall:.3f}"
             peak = "—" if peak is None else f"{peak / 1024 ** 2:.2f}"
+            if performance.get("cpu_profile", {}).get("status") == "measured":
+                evidence += f" · [CPU profile]({specimen}/cpu-profile.md)"
             lines.append(f"| {specimen} — {md(item['title'])} | {item['status']} | {master} | "
-                         f"{summary.get('svg_assets', '—')} | {summary.get('bibitems', '—')} | {counts} | {wall} | {peak} | {evidence} |")
+                         f"{summary.get('svg_assets', '—')} | {summary.get('bibitems', '—')} | {counts} | {wall} | {cpu} | {peak} | {evidence} |")
             for render in sorted((runs / name / specimen / "renders").glob("*/comparison.json")):
                 receipt = read_json(render)
                 relative = render.parent.relative_to(runs / name).as_posix()
@@ -189,7 +196,8 @@ def refresh_index(runs):
             lines += ["", *renders]
         lines += ["", "Partial means a master was emitted with outstanding preparation requirements; it is not a failed run.",
                   "Requirement counts are occurrences, not independent bugs. Rendering is separate evidence.",
-                  "Timing covers the preparation process, including startup; memory is its process peak, excluding child processes. Missing measurements are not zero.", ""]
+                  "Wall time includes worker startup and exit. CPU covers all worker threads during the CLI; memory is the process resident high-water mark. Child processes are excluded from CPU and memory.",
+                  "Competing workloads and profiling affect measurements; these receipts do not establish a performance regression. Missing measurements are not zero.", ""]
         (runs / name / "README.md").write_text("\n".join(lines), encoding="utf-8", newline="\n")
     lines = ["# Specimen iterations", "", "Latest attempt for each specimen (including failures):", "",
              "| Specimen | Latest batch | Preparation |", "| --- | --- | --- |"]
@@ -274,7 +282,8 @@ def record_changes(runs, batch, specimen, item, previous):
         (folder / "master.diff").write_text("".join(diff), encoding="utf-8", newline="\n")
 
 
-def run_batch(catalog, runs, name, note, selected=(), timeout=180, engine_profile="etex", tex_resource_roots=None):
+def run_batch(catalog, runs, name, note, selected=(), timeout=180, engine_profile="etex", tex_resource_roots=None,
+              *, workload_note=None, profile_cpu=False):
     catalog, runs = Path(catalog).resolve(), Path(runs).resolve()
     identifier(name)
     if name.casefold() == "resources":
@@ -295,8 +304,13 @@ def run_batch(catalog, runs, name, note, selected=(), timeout=180, engine_profil
             previous[specimen] = (old["name"], item)
     batch_dir = runs / name
     batch_dir.mkdir(parents=True, exist_ok=False)
+    performance_context = {"workload_note": workload_note or "Not recorded",
+        "instrumentation": "cpu_profile" if profile_cpu else "counters_only",
+        "host": {"platform": platform.platform(), "machine": platform.machine(),
+                 "processor": platform.processor(), "logical_cpu_count": os.cpu_count()}}
     batch = {"schema": SCHEMA, "name": name, "note": note, "started": utc_now(), "status": "running",
              "catalog": str(catalog), "catalog_sha256": digest(catalog), "code": code_identity(),
+             "performance_context": performance_context,
              "selected": chosen, "timeout_seconds": timeout, "engine_profile": engine_profile,
              "tex_resource_roots": None if tex_resource_roots is None else list(map(str, tex_resource_roots)), "results": {}}
     (batch_dir / "NOTES.md").write_text(f"# Investigation notes\n\nPurpose: {note}\n\n", encoding="utf-8", newline="\n")
@@ -309,8 +323,13 @@ def run_batch(catalog, runs, name, note, selected=(), timeout=180, engine_profil
             folder.mkdir()
             prepared = folder / "prepared"
             item = {**record, "status": "failed", "master": False, "started": utc_now()}
-            item["performance"] = {"schema": "pytexml-specimen-performance/1", "wall_seconds": None,
+            item["performance"] = {"schema": "pytexml-specimen-performance/2", "wall_seconds": None,
                 "wall_scope": "preparation_process_including_startup_and_exit",
+                "context": performance_context, "worker_wall_seconds": None,
+                "cpu_seconds": None, "cpu_user_seconds": None, "cpu_system_seconds": None,
+                "cpu_seconds_per_wall_second": None, "cpu_status": "unavailable",
+                "cpu_scope": "preparation_worker_all_threads_during_cli", "cpu_detail": "Worker was not started",
+                "cpu_profile": {"status": "unavailable" if profile_cpu else "not_requested"},
                 "peak_rss_bytes": None, "memory_status": "unavailable",
                 "memory_scope": "preparation_worker_process", "memory_detail": "Worker was not started"}
             batch["results"][specimen] = item
@@ -325,16 +344,19 @@ def run_batch(catalog, runs, name, note, selected=(), timeout=180, engine_profil
                     started = perf_counter()
                     try:
                         proc = subprocess.run([sys.executable, "-B", "-m", "src.validation.measured_prepare", str(telemetry),
+                            *(["--profile-cpu"] if profile_cpu else []),
                             "--engine-profile", engine_profile, *search_args, record["source"], str(prepared), record["main"]], cwd=PROJECT,
                             stdout=log, stderr=subprocess.STDOUT, timeout=timeout, check=False)
                     finally:
                         performance["wall_seconds"] = perf_counter() - started
                         performance["memory_detail"] = "Worker did not publish a final peak (timeout, abrupt exit or launch failure)"
+                        performance["cpu_detail"] = "Worker did not publish final CPU counters (timeout, abrupt exit or launch failure)"
                         if telemetry.is_file():
                             measured = read_json(telemetry)
-                            if measured.pop("schema") != "pytexml-worker-performance/1":
+                            if measured.pop("schema") != "pytexml-worker-performance/2":
                                 raise ValueError("Unrecognized worker performance receipt")
                             performance.pop("memory_detail", None)
+                            performance.pop("cpu_detail", None)
                             performance.update(measured)
                 item["returncode"] = proc.returncode
                 item["summary"] = summarize(prepared)
@@ -439,6 +461,8 @@ def main():
     run.add_argument("--note", required=True)
     run.add_argument("--specimen", action="append", default=[])
     run.add_argument("--timeout", type=float, default=180)
+    run.add_argument("--workload-note", help="Concurrent load and other measurement conditions; absence means unknown")
+    run.add_argument("--profile-cpu", action="store_true", help="Record function-level main-thread CPU profiles (adds overhead)")
     run.add_argument("--engine-profile", choices=("etex", "pdftex"), default="etex")
     search = run.add_mutually_exclusive_group()
     search.add_argument("--tex-resource-root", type=Path, action="append", default=None)
@@ -469,7 +493,8 @@ def main():
     args = parser.parse_args()
     if args.command == "run":
         result = run_batch(args.catalog, args.runs, args.name, args.note, args.specimen, args.timeout, args.engine_profile,
-                           () if args.project_only_resources else args.tex_resource_root)
+                           () if args.project_only_resources else args.tex_resource_root,
+                           workload_note=args.workload_note, profile_cpu=args.profile_cpu)
         return 0 if result["status"] == "finished" else 1
     if args.command == "render":
         from .render import RenderConfig

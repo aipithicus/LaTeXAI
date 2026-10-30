@@ -69,11 +69,20 @@ class SpecimenBatchTests(unittest.TestCase):
         self.assertEqual(item["summary"]["svg_assets"], 1)
         performance = item["performance"]
         self.assertGreater(performance["wall_seconds"], 0)
+        self.assertEqual(performance["cpu_status"], "measured")
+        self.assertGreater(performance["cpu_seconds"], 0)
+        self.assertGreaterEqual(performance["cpu_user_seconds"], 0)
+        self.assertGreaterEqual(performance["cpu_system_seconds"], 0)
+        self.assertAlmostEqual(performance["cpu_seconds_per_wall_second"],
+                               performance["cpu_seconds"] / performance["worker_wall_seconds"])
+        self.assertEqual(performance["cpu_profile"]["status"], "not_requested")
+        self.assertFalse((self.runs / "baseline/one/cpu-profile.prof").exists())
         if sys.platform in {"win32", "linux", "darwin"}:
             self.assertEqual(performance["memory_status"], "measured")
             self.assertGreater(performance["peak_rss_bytes"], 0)
         self.assertEqual(read_json(self.runs / "baseline/one/result.json")["performance"], performance)
         self.assertIn("Peak worker MiB", (self.runs / "baseline/README.md").read_text(encoding="utf-8"))
+        self.assertIn("CPU seconds", (self.runs / "baseline/README.md").read_text(encoding="utf-8"))
         self.assertEqual(source_fingerprint(source), before)
         self.assertIn("baseline/README.md", (self.runs / "INDEX.md").read_text(encoding="utf-8"))
         self.assertIn("one/prepared/master.tex", (self.runs / "baseline/README.md").read_text(encoding="utf-8"))
@@ -132,16 +141,58 @@ class SpecimenBatchTests(unittest.TestCase):
             self.assertGreater(item["performance"]["wall_seconds"], 0)
             self.assertEqual(item["performance"]["memory_status"], "unavailable")
             self.assertIsNone(item["performance"]["peak_rss_bytes"])
+            self.assertEqual(item["performance"]["cpu_status"], "unavailable")
+            self.assertIsNone(item["performance"]["cpu_seconds"])
 
     def test_failed_worker_keeps_its_measured_peak(self):
         (self.specimens / "one/paper.tex").write_bytes(b"\xff")
-        result = run_batch(self.catalog, self.runs, "failed-worker", "Measure a real failed preparation")
+        result = run_batch(self.catalog, self.runs, "failed-worker", "Measure a real failed preparation", profile_cpu=True)
         item = result["results"]["one"]
         self.assertEqual(item["status"], "failed")
         self.assertGreater(item["performance"]["wall_seconds"], 0)
+        self.assertEqual(item["performance"]["cpu_status"], "measured")
+        self.assertGreater(item["performance"]["cpu_seconds"], 0)
+        self.assertEqual(item["performance"]["cpu_profile"]["status"], "measured")
         if sys.platform in {"win32", "linux", "darwin"}:
             self.assertEqual(item["performance"]["memory_status"], "measured")
             self.assertGreater(item["performance"]["peak_rss_bytes"], 0)
+
+    def test_cpu_profile_and_load_context_survive_receipts_and_history(self):
+        import pstats
+        self.run_fake("unmeasured")
+        note = "Two competing Monte Carlo sessions; wall timings are contended"
+        result = run_batch(self.catalog, self.runs, "profiled", "Diagnose CPU costs",
+                           workload_note=note, profile_cpu=True)
+        item = result["results"]["one"]
+        performance = item["performance"]
+        self.assertEqual(performance["context"]["workload_note"], note)
+        self.assertEqual(performance["context"]["instrumentation"], "cpu_profile")
+        self.assertEqual(performance["cpu_profile"]["status"], "measured")
+        folder = self.runs / "profiled/one"
+        profile = read_json(folder / "cpu-profile.json")
+        self.assertEqual(profile["method"], "cProfile(time.thread_time)")
+        functions = profile["functions"]
+        self.assertTrue(any(row["file"].startswith("src/") and row["self_cpu_seconds"] > 0 for row in functions))
+        self.assertEqual([r["self_cpu_seconds"] for r in functions], sorted((r["self_cpu_seconds"] for r in functions), reverse=True))
+        self.assertGreater(len(pstats.Stats(str(folder / "cpu-profile.prof")).stats), 0)
+        self.assertEqual(read_json(folder / "changes.json")["current_performance"], performance)
+        self.assertIsNone(read_json(folder / "changes.json")["previous_performance"]["cpu_seconds"])
+        page = (self.runs / "profiled/README.md").read_text(encoding="utf-8")
+        self.assertIn(note, page)
+        self.assertIn("one/cpu-profile.md", page)
+        self.assertTrue((folder / "cpu-profile.md").is_file())
+
+    def test_old_receipt_is_not_backfilled_when_index_is_refreshed(self):
+        self.run_fake("historical")
+        path = self.runs / "historical/run.json"
+        old = read_json(path)
+        del old["performance_context"]
+        del old["results"]["one"]["performance"]
+        write_json(path, old)
+        before = path.read_bytes()
+        refresh_index(self.runs)
+        self.assertEqual(path.read_bytes(), before)
+        self.assertIn("Workload context: Not recorded", (path.parent / "README.md").read_text(encoding="utf-8"))
 
     def test_subset_runs_keep_unselected_specimens_visible_in_index_and_preserve_notes(self):
         self.add_specimen("two")

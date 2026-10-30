@@ -67,6 +67,8 @@ run-collection/
     paper-v1/
       result.json
       console.log
+      worker-performance.json   # CPU, elapsed time and peak resident memory
+      cpu-profile.{json,md,prof} # only with --profile-cpu
       prepared/                 # master, manifest, provenance and required resources
       changes.json              # on later attempts: file changes and metric summaries
       master.diff               # when both attempts have a master
@@ -88,12 +90,24 @@ code iterations separately. Fingerprinting is an intentional additional read at
 the validation checkpoint; it is not part of preparation's single-read cache.
 Do not modify source or runtime code while a batch is running.
 
-Every new specimen result also carries `performance` (`pytexml-specimen-performance/1`).
+Every new specimen result also carries `performance` (`pytexml-specimen-performance/2`).
 `wall_seconds` measures the preparation subprocess from launch through exit or
 timeout, using a monotonic clock. It excludes parent-side source fingerprinting,
 output deduplication, comparison and index generation. `worker-performance.json`
 preserves the worker's measurement; `result.json`, the batch receipt, the batch
 table and subsequent change receipts expose the same evidence.
+
+`cpu_seconds` measures CPU consumed by all threads in the preparation worker
+during the public CLI, using [time.process_time](https://docs.python.org/3.14/library/time.html#time.process_time).
+It excludes interpreter/wrapper startup, receipt export and child processes.
+The user/system split uses [os.times](https://docs.python.org/3.14/library/os.html#os.times);
+these independently sampled counters have different precision and need not sum
+exactly to the higher-resolution total. `worker_wall_seconds` covers the same CLI
+interval. `cpu_seconds_per_wall_second` divides these two counters: it measures
+average CPU cores consumed during that interval, not utilization of the whole
+machine. It can exceed one with several active threads. A low ratio alone cannot
+distinguish contention, I/O or waiting for a child process. It is not a FLOP,
+instruction, GPU-work or energy measurement.
 
 `peak_rss_bytes` is the preparation worker process's resident-memory high-water
 mark, including native libraries in that process but excluding child processes.
@@ -107,8 +121,40 @@ unmeasured. Cross-platform values are not interchangeable memory-accounting
 contracts, and these are preparation measurements, not native-render timings.
 
 Use these receipts at each checkpoint, including Q2–Q5. Compare code, source and
-resource environment as well as time and memory. Record concurrent load or
-profiling when relevant; one timing is an observation, not a performance gate.
+resource environment as well as time and memory. Add `--workload-note "..."` to
+record concurrent load, power settings or other known measurement conditions.
+Absent context is reported as "Not recorded", never assumed idle. Platform,
+processor description and logical CPU count are also retained in the batch and
+each specimen's performance context so change receipts carry that context.
+No unrelated process inventory is collected. CPU time avoids counting time
+descheduled from the CPU, but frequency changes, cache/memory contention and
+paging can still affect it. A peak working set is not a measure of total allocated
+memory. Repeated matched runs under comparable conditions are needed for budgets;
+one loaded-laptop timing is an observation, not a performance regression verdict.
+
+For diagnosis, use `--profile-cpu` on a selected specimen. This opts into
+[cProfile](https://docs.python.org/3.14/library/profile.html) with `time.thread_time`,
+recording main-thread CPU costs by Python function or exposed native call. The
+Markdown report ranks self and inclusive costs; JSON retains every function and
+call count, and `.prof` retains the caller graph for `pstats`. Inclusive costs
+overlap and must not be added. Other threads, child processes and internal native
+call detail are outside this profile. Profile collection affects CPU, memory and
+wall measurements, so its instrumentation mode is explicit; profile timings are
+not directly comparable with ordinary counter-only checkpoints. Counters and
+memory peak are captured before profile export. A normal failed CLI still exports
+its profile; a forcibly killed worker has no final counters/profile receipt.
+
+```text
+python -B -m src.validation.specimens --runs <run-collection> run --catalog <catalog.yaml> --name 20261029-cost-probe --note "Locate engine costs" --specimen <id> --workload-note "Two concurrent Monte Carlo sessions; contended laptop" --profile-cpu
+```
+
+These measurements can guide engine optimization and matched comparisons of
+package implementations. They do not attribute a document's peak memory or a
+shared engine function's cost to an individual TeX package. Package-specific
+attribution, Python allocation profiling and process-tree accounting remain
+future work; neither recovery counts nor package names imply a measured cost.
+Historical receipts retain their original schema and missing counters. Rebuilding
+the index updates navigation only, without backfilling measurements.
 
 Identical generated SVG, bibliography and local-style resources share a read-only
 hard link to a content-addressed pool within the run collection. This keeps normal
