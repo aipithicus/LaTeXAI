@@ -82,6 +82,29 @@ class IntegerScanner:
         if token is not None and not self._other(token, "="):
             self.reader.unread_token(token)
 
+    def keyword(self, word):
+        """scan_keyword: expand letters, restoring unsuccessful lookahead."""
+        seen = []
+        for index, letter in enumerate(word):
+            token = self._nonspace() if index == 0 else self._next()
+            if token is not None:
+                seen.append(token)
+            if (token is None or token.kind != TokenKind.CHARACTER
+                    or token.catcode not in {CatCode.LETTER, CatCode.OTHER}
+                    or token.value.lower() != letter.lower()):
+                self.reader.push(tuple(seen))
+                return False
+        return True
+
+    def internal(self, token):
+        meaning = self._meaning(token)
+        if isinstance(meaning, CharacterCodeMeaning):
+            from .quantities import InternalQuantity
+            return InternalQuantity("integer", meaning.value)
+        if isinstance(meaning, tuple) and meaning[0].internal_value is not None:
+            return meaning[0].internal_value(self, meaning[1])
+        raise ReadingIssue("computed_assignment", "Expected an established internal quantity")
+
     def _optional_space(self):
         token = self._next()
         if token is not None and token.catcode != CatCode.SPACE:
@@ -125,14 +148,11 @@ class IntegerScanner:
             self.ends_control_word = character.control_word
             self._optional_space()
         elif token is not None and token.kind != TokenKind.CHARACTER:
-            meaning = self._meaning(token)
-            if isinstance(meaning, CharacterCodeMeaning):
-                value = meaning.value
-                self.ends_control_word = token.control_word
-            elif isinstance(meaning, tuple) and meaning[0].integer_value is not None:
-                value = meaning[0].integer_value(self, meaning[1])
-            else:
-                raise ReadingIssue("computed_assignment", "Expected an integer, found an unexpandable command")
+            quantity = self.internal(token)
+            if quantity.kind not in {"integer", "dimension"}:
+                raise ReadingIssue("computed_assignment", "Expected an integer-compatible internal quantity")
+            value = quantity.value
+            self.ends_control_word = token.control_word
         else:
             radix = 10
             if self._other(token, "'\""):

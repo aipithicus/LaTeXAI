@@ -78,8 +78,17 @@ Complete deferred-write summaries invalidate only their named cells.
 
 These assignments remain authored TeX in the payload. Recording `\pdfoutput`
 does not select a compiler, infer engine identity, or execute PDF backend
-operations. General register allocation/arithmetic, global parameter prefixes
-and reader parameters such as `\endlinechar` remain separate work.
+operations. Count/dimension cells, their aliases, `advance`, global assignment
+prefixes and `endlinechar` now share this state. General register allocation and
+the remaining arithmetic operations are later increments.
+
+The [expansion-core checkpoint](recipes/expansion-core.md) implements the 31
+named operations selected in the document trace, within the existing bounded
+execution framework. It adds Roman conversion, case and absolute-integer tests,
+typed `the` values, token registers, font parameter arrays and snapshot-backed
+`read`/`ifeof`. Font loading, general dimension units, terminal input and full
+format startup are outside this checkpoint's qualification. Input files must be
+supplied explicitly by their source owner; the core does not search the host.
 
 [engine/format.py](src/engine/format.py) installs the supported LaTeX-format
 meanings in each document's mutable state. The initial entry is `\active`, the

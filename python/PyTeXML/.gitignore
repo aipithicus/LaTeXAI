@@ -26,3 +26,6 @@
 
 # Behavioral atlas verification and bounded-witness cost receipts.
 /temp/behavioral-atlas/
+
+# Expansion-core native comparisons and test receipts.
+/temp/expansion-core-20261030/

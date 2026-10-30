@@ -10,6 +10,7 @@ from ...reading.contracts import ReadingIssue, SourceCommand
 from ..integers import IntegerScanner
 from ..operations import ExpansionKind, OperationFamily, PrimitiveOperation
 from ..primitive import PrimitiveMeaning
+from ..quantities import InternalQuantity
 from ...reading.assignment_scanner import AssignmentScanner
 from ..transactions import atomic, assignment_global
 
@@ -18,10 +19,10 @@ def parameter_key(profile: PrimitiveMeaning[str]) -> str:
     return profile.operand
 
 
-def integer_value(scanner, profile: PrimitiveMeaning[str]):
+def internal_value(scanner, profile: PrimitiveMeaning[str]):
     if profile.operand == "endlinechar":
-        return scanner.host.context.endlinechar
-    return scanner.host.context.integer_parameters.read(parameter_key(profile))
+        return InternalQuantity("integer", scanner.host.context.endlinechar)
+    return InternalQuantity("integer", scanner.host.context.integer_parameters.read(parameter_key(profile)))
 
 
 @atomic
@@ -51,7 +52,7 @@ def capture(reader, context, token, meaning: PrimitiveMeaning[str]):
 
 
 ASSIGN = PrimitiveOperation("parameter.assign_integer", ExpansionKind.UNEXPANDABLE, assign_integer,
-                            integer_value, operand_type=str, capture=capture,
+                            internal_value, operand_type=str, capture=capture,
                             accepted_prefixes=frozenset({"global"}))
 
 FAMILY = OperationFamily(

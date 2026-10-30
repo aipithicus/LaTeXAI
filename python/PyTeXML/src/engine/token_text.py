@@ -44,7 +44,8 @@ def meaning_text(meaning, context):
             if primitive.identity == meaning.identity:
                 return escape(context) + name
     if isinstance(meaning, BoundMeaning) and meaning.token is not None:
-        descriptions = {CatCode.SPACE: "blank space ", CatCode.LETTER: "the letter ", CatCode.OTHER: "the character "}
+        descriptions = {CatCode.SPACE: "blank space ", CatCode.LETTER: "the letter ", CatCode.OTHER: "the character ",
+                        CatCode.BEGIN_GROUP: "begin-group character ", CatCode.END_GROUP: "end-group character "}
         if meaning.token.catcode in descriptions:
             return descriptions[meaning.token.catcode] + meaning.token.value
     raise ReadingIssue("meaning_unavailable", "This meaning has no established TeX display conversion")

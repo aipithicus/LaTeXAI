@@ -96,7 +96,7 @@ class ConditionalTests(unittest.TestCase):
                 self.assertEqual(self.chars(self.scan()), "EF")
 
     def test_unsupported_predicate_stops_before_arguments(self):
-        for name in ("ifdim", "ifx", "ifcase"):
+        for name in ("ifdim", "ifx"):
             source = "A\\" + name + r"\makeatletter\fi"
             with self.subTest(name=name):
                 self.setup_reader(source)

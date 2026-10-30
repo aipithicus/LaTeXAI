@@ -3,7 +3,7 @@ identity: {name: etex}
 description: e-TeX language baseline with modern shared expansion support.
 base: etex
 extensions: [expanded]
-absent: [pdfoutput, XeTeXversion, luatexversion, directlua]
+absent: [pdfoutput, ifpdfabsnum, XeTeXversion, luatexversion, directlua]
 preparation:
   capture_integer_setup: [pdfoutput]
 oracle:

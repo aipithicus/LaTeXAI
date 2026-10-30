@@ -4,6 +4,7 @@ from ...reading.contracts import CharacterCodeMeaning, ReadingIssue, ScannedArgu
 from ..integers import IntegerScanner
 from ..operations import ExpansionKind, OperationFamily, PrimitiveOperation
 from ..primitive import AssignmentTarget, PrimitiveMeaning
+from ..quantities import InternalQuantity
 from ..transactions import atomic, assignment_global
 
 
@@ -17,7 +18,7 @@ def character_index(scanner):
 
 
 def catcode_value(scanner, profile: PrimitiveMeaning[None]):
-    return int(scanner.host.context.catcodes[character_index(scanner)])
+    return InternalQuantity("integer", int(scanner.host.context.catcodes[character_index(scanner)]))
 
 
 @atomic

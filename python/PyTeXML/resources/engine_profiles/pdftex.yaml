@@ -2,7 +2,7 @@ schema: pytexml-engine-profile/1
 identity: {name: pdftex}
 description: e-TeX language baseline with modern expansion and pdfTeX setup.
 base: etex
-extensions: [expanded, pdfoutput]
+extensions: [expanded, pdfoutput, ifpdfabsnum]
 absent: [XeTeXversion, luatexversion, directlua]
 preparation:
   capture_integer_setup: []
@@ -19,5 +19,5 @@ oracle:
 targets:
   expl3: partial
   note: >-
-    expanded and pdfoutput are included. The remaining expl3 utility primitives
+    expanded, pdfoutput and ifpdfabsnum are included. The remaining expl3 utility primitives
     and pdfTeX backend operations are future capabilities.

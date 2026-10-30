@@ -12,7 +12,7 @@ behavior by the original control-sequence spelling.
 1. Select its owning family. Define an immutable operand type there if an
    existing type does not express the meaning; `DefinitionSpec` is an example.
 2. Register a `PrimitiveOperation[Operand]` with an explicit `ExpansionKind`
-   and concrete `operand_type`. Its execution, expansion, internal-integer and
+   and concrete `operand_type`. Its execution, expansion, typed internal-value and
    raw-capture callbacks have separate signatures in `operations.py`.
 3. Declare the spelling using that operation object's `declare(name, operand)`
    method and include the declaration in the family's `FAMILY`. The assembled
@@ -26,8 +26,8 @@ behavior by the original control-sequence spelling.
 
 `ExpansionKind.EXPANDABLE` requires an expansion callback or explicit
 `expansion_unavailable=True`. The latter preserves a known capability boundary;
-it does not grant expansion support. Conditionals currently have an execution
-route but retain this boundary for general expansion. An unexpandable primitive
+it does not grant expansion support. Implemented conditionals share the execution
+owner's frame stack in ordinary and expanded input. An unexpandable primitive
 requires an execution handler and cannot have an expansion callback. Unsupported
 execution uses an explicit boundary handler, with distinct operands preserving
 the affected primitive identities.
@@ -39,8 +39,15 @@ still supplied by prototype reading profiles.
 
 The file-hook bridge declares its format profiles in Python beside the family
 handler. An internal operation may opt into execution after expansion; this
-does not grant a native primitive declaration, integer-value role or expansion
+does not grant a native primitive declaration, internal-value role or expansion
 callback. Ordinary current-meaning resolution still precedes that dispatch.
+
+An `internal_value` callback returns an `InternalQuantity`: integer, scaled-point
+dimension, token list or font identity. Integer scanning permits TeX's dimension
+to scaled-point downgrade. `the` formats dimensions with `print_scaled` and
+returns token lists through the shared insertion result; it never executes the
+quantity's assignment handler. Token cells, input-stream positions and global
+font arrays live in `ReaderContext` and participate in its transaction copies.
 
 `src/engine/latex/` owns the Python adaptations of kernel declaration and optional
 dispatch routines. Its explicit family list assembles one immutable name index;

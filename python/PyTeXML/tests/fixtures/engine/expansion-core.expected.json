@@ -1,0 +1,18 @@
+{
+  "engine": "pdfTeX 3.141592653-2.6-1.40.29 (TeX Live 2026), INITEX extended mode",
+  "command": "pdftex -ini -etex -interaction=nonstopmode -halt-on-error expansion-core.tex",
+  "observations": {
+    "CoreRoman": "mcmxciv;X;Y",
+    "CoreArithmetic": "7,2,1.49998pt,98303",
+    "CoreFontArray": "13,0.00023pt",
+    "CoreBranches": "C;D;Y",
+    "CoreExisting": "Y;Y;N",
+    "CoreConditions": "Y;Y;Y;Y",
+    "CoreTokenMeaning": "macro:->\\CoreName ##1",
+    "CoreExpansionMeaning": "macro:->A;\\CoreName;##1;\\CoreName ",
+    "CoreReadMeaning": "macro:->{A B} ##1 ",
+    "CoreBeforeEOF": "N",
+    "CoreLastMeaning": "macro:->\\par ",
+    "CoreAfterEOF": "Y"
+  }
+}

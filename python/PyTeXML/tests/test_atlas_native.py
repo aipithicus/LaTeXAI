@@ -38,18 +38,15 @@ class AtlasNativeTests(unittest.TestCase):
         self.assertEqual(insertion, {"A": "macro:->##1", "B": "macro:->##1", "C": "1"})
 
     def test_source_generator_derives_the_native_definition(self):
-        # Definition qualification is distinct from the still-incomplete branch
-        # program. Do not count its unavailable observations as matching.
         native = self.native("P03")
         actual = python_case("P03")
         self.assertIsNotNone(actual["target"], actual)
         self.assertEqual(actual["target"]["semantic_key"], native["target"]["semantic_key"])
+        self.assertEqual(compare(native, actual)["status"], "match", actual)
 
     def test_insertion_and_individual_expansion_barriers_match_native(self):
-        cases = [*(f"P02-{n}" for n in (1, 2, 3, 4, 5, 6, 9)),
+        cases = [*(f"P02-{n}" for n in range(1, 10)),
                  "P02-insertion", "P03-insertion", "P03-tail"]
-        # P02-7 (token registers) and P02-8 (opening-group aliases) remain
-        # explicit gaps in survey receipts, not expected-failure passes here.
         for case in cases:
             with self.subTest(case=case):
                 actual = python_case(case)

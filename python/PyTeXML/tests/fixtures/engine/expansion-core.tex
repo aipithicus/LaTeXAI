@@ -1,0 +1,16 @@
+% Run with pdftex -ini -etex. Use the primitive initial font state.
+\catcode123=1 \catcode125=2 \catcode35=6 \catcode94=7 \newlinechar=10
+\input expansion-core-source.tex
+\message{^^JPYTEXML roman=\CoreRoman^^J}
+\message{PYTEXML arithmetic=\CoreArithmetic^^J}
+\message{PYTEXML font=\CoreFontArray^^J}
+\message{PYTEXML branches=\CoreBranches^^J}
+\message{PYTEXML existing=\CoreExisting^^J}
+\message{PYTEXML conditions=\CoreConditions^^J}
+\message{PYTEXML tokens=\CoreTokenMeaning^^J}
+\message{PYTEXML expansion=\CoreExpansionMeaning^^J}
+\message{PYTEXML read=\CoreReadMeaning^^J}
+\message{PYTEXML before=\CoreBeforeEOF^^J}
+\message{PYTEXML last=\CoreLastMeaning^^J}
+\message{PYTEXML after=\CoreAfterEOF^^J}
+\end

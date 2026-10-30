@@ -137,10 +137,11 @@ def expanded(cursor, token, meaning: PrimitiveMeaning[None]):
 
 
 def expanded_list(cursor):
+    from .conversions import is_opening_group
     opening = cursor.next_expanded()
     while opening is not None and opening.catcode == CatCode.SPACE:
         opening = cursor.next_expanded()
-    if opening is None or opening.catcode != CatCode.BEGIN_GROUP:
+    if not is_opening_group(cursor, opening):
         raise ReadingIssue("expanded_argument", "expanded requires a balanced group")
     result: list[Token] = []
     depth = 1

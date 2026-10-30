@@ -14,6 +14,9 @@ from .spans import SourceSpan
 from ..engine.parameters import IntegerParameters
 from ..engine.primitive import PrimitiveMeaning
 from ..engine.hooks import HookState
+from ..engine.fonts import FontState
+from ..engine.read_streams import ReadStreams
+from ..engine.token_registers import TokenRegisters
 
 
 DefinitionKey = tuple[TokenKind, str]
@@ -78,6 +81,9 @@ class ReaderContext:
         self._capture_setting_scopes: list[dict[str, ScannedArgument | None]] = []
         self.configurations = ConfigurationState()
         self.integer_parameters = IntegerParameters()
+        self.fonts = FontState(initial=primitive_initial_state)
+        self.read_streams = ReadStreams(initial=primitive_initial_state)
+        self.token_registers = TokenRegisters(initial=primitive_initial_state)
         self.hooks = HookState()
         # Preparation assumptions are derivations, not TeX state assignments.
         self.recovery_contexts: tuple[str, ...] = ()
@@ -108,6 +114,9 @@ class ReaderContext:
         ctx._capture_setting_scopes = [dict(saved) for saved in self._capture_setting_scopes]
         ctx.configurations = self.configurations.copy()
         ctx.integer_parameters = self.integer_parameters.copy()
+        ctx.fonts = self.fonts.copy()
+        ctx.read_streams = self.read_streams.copy()
+        ctx.token_registers = self.token_registers.copy()
         ctx.hooks = self.hooks.copy()
         ctx.recovery_contexts = self.recovery_contexts
         return ctx
@@ -127,6 +136,9 @@ class ReaderContext:
         self._capture_setting_scopes = [dict(state) for state in saved._capture_setting_scopes]
         self.configurations = saved.configurations.copy()
         self.integer_parameters = saved.integer_parameters.copy()
+        self.fonts = saved.fonts.copy()
+        self.read_streams = saved.read_streams.copy()
+        self.token_registers = saved.token_registers.copy()
         self.hooks = saved.hooks.copy()
         self.recovery_contexts = saved.recovery_contexts
 
@@ -202,6 +214,11 @@ class ReaderContext:
             return value if isinstance(value, UncertainMeaning) else UncertainMeaning(span)
 
         changed = self.integer_parameters.invalidate(span, names=summary.registers, global_=global_)
+        changed |= self.token_registers.invalidate(span, names=summary.registers, global_=global_)
+        # Register summaries currently have no font identity domain. Conservatively
+        # retain uncertainty rather than publishing a value after unknown writes.
+        if summary.registers:
+            changed |= self.fonts.invalidate(span)
         for key in keys:
             previous = self._meanings.get(key)
             if not global_ and self._meaning_scopes:
@@ -262,6 +279,9 @@ class ReaderContext:
         This is a bounded guard, not a general context dependency analysis.
         """
         changed = self.integer_parameters.invalidate(span)
+        changed |= self.fonts.invalidate(span)
+        changed |= self.read_streams.invalidate(span)
+        changed |= self.token_registers.invalidate(span)
         for meanings in (self._meanings, *self._meaning_scopes):
             for key, meaning in list(meanings.items()):
                 if isinstance(meaning, (BooleanMeaning, BoundMeaning, CharacterCodeMeaning, TokenListMeaning, UndefinedMeaning, PrimitiveMeaning)) and meaning.uncertain is None:
@@ -344,6 +364,7 @@ class ReaderContext:
         self._capture_setting_scopes.append({})
         self.configurations.push()
         self.integer_parameters.push()
+        self.token_registers.push()
 
     @property
     def scope_depth(self) -> int:
@@ -368,6 +389,7 @@ class ReaderContext:
         self._restore(self._scope_stack.pop())
         self.configurations.pop()
         self.integer_parameters.pop()
+        self.token_registers.pop()
         for key, previous in self._meaning_scopes.pop().items():
             if previous is None:
                 self._meanings.pop(key, None)

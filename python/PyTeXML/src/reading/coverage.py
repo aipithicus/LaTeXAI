@@ -156,9 +156,10 @@ class ReadingCoverage:
                         previous = child.span.end
                         deferred.append(child)
             if isinstance(item, SkippedRegion):
+                case_branch = item.branch.startswith("case:") and item.branch[5:].isascii() and item.branch[5:].isdigit()
                 if ((item.conditional.basis is basis and item.conditional.end > item.span.start)
-                        or item.branch not in ("then", "else")):
-                    raise ValueError("Skipped region requires an earlier conditional and a then/else branch")
+                        or not (case_branch or item.branch in ("then", "else", "remaining_cases"))):
+                    raise ValueError("Skipped region requires an earlier conditional and a valid branch")
                 skipped.append(item)
             if item.span.start == item.span.end:
                 continue

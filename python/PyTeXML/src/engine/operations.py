@@ -1,6 +1,6 @@
 """Executable operation contract and explicit, immutable catalog assembly.
 
-Execution and internal integer values are separate roles. Both use the reader's
+Execution and typed internal values are separate roles. Both use the reader's
 live state; requesting a value never executes an assignment.
 """
 from __future__ import annotations
@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING, Protocol, TypeVar
 if TYPE_CHECKING:
     from .expansion import ExpansionCursor, TokenListInsertion
     from .integers import IntegerScanner
+    from .quantities import InternalQuantity
 
 from ..reading.context import ExecutionMode, ReaderContext
 from ..reading.contracts import (ConditionalRegion, ConditionalRule, EffectiveReadingProfile, EnvironmentDefinition,
@@ -30,7 +31,7 @@ OperationResult = ReadEvent | SourceCommand | StoredDefinition | EnvironmentDefi
 CaptureResult = SourceCommand | StoredDefinition | AssignmentTarget | None
 
 type ExecutionHandler[M] = Callable[[OperationHost, ReadEvent, M], OperationResult]
-type IntegerValueHandler[M] = Callable[[IntegerScanner, M], int]
+type InternalValueHandler[M] = Callable[[IntegerScanner, M], InternalQuantity]
 type ExpansionHandler[M] = Callable[[ExpansionCursor, Token, M], Token | TokenListInsertion | None]
 type CaptureHandler[M] = Callable[[TexReader | TokenCursor, ReaderContext, Token, M], CaptureResult]
 
@@ -64,7 +65,7 @@ class ExecutableOperation[Meaning]:
     identity: str
     expansion_kind: ExpansionKind
     handler: ExecutionHandler[Meaning] | None = None
-    integer_value: IntegerValueHandler[Meaning] | None = None
+    internal_value: InternalValueHandler[Meaning] | None = None
     expansion: ExpansionHandler[Meaning] | None = None
     capture: CaptureHandler[Meaning] | None = None
     continuation: bool = False
@@ -78,7 +79,7 @@ class ExecutableOperation[Meaning]:
             raise ValueError("Operation requires a nonempty identity")
         if not isinstance(self.expansion_kind, ExpansionKind):
             raise ValueError(f"{self.identity}: explicit expansion classification required")
-        for name in ("handler", "integer_value", "expansion", "capture"):
+        for name in ("handler", "internal_value", "expansion", "capture"):
             callback = getattr(self, name)
             if callback is not None and not callable(callback):
                 raise TypeError(f"{self.identity}: {name} must be callable")
@@ -87,15 +88,15 @@ class ExecutableOperation[Meaning]:
         if self.expansion_kind == ExpansionKind.EXPANDABLE:
             if (self.expansion is None) != self.expansion_unavailable:
                 raise ValueError(f"{self.identity}: expandable operation needs a callback or explicit unavailability")
-            if self.integer_value is not None:
-                raise ValueError(f"{self.identity}: expandable operation cannot supply an internal integer")
+            if self.internal_value is not None:
+                raise ValueError(f"{self.identity}: expandable operation cannot supply an internal value")
         else:
             if self.expansion is not None or self.expansion_unavailable:
                 raise ValueError(f"{self.identity}: expansion capability conflicts with classification")
             if self.handler is None:
                 raise ValueError(f"{self.identity}: execution handler required")
         if self.expansion_kind == ExpansionKind.INTERNAL and (
-                self.integer_value is not None or self.capture is not None):
+                self.internal_value is not None or self.capture is not None):
             raise ValueError(f"{self.identity}: kernel bridge cannot declare native capabilities")
         if self.continuation and self.handler is None:
             raise ValueError(f"{self.identity}: continuation requires an execution handler")

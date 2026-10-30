@@ -1,0 +1,31 @@
+\let\CoreRomanOp\romannumeral
+\edef\CoreRoman{\CoreRomanOp1994 ;\romannumeral0 X;\romannumeral-3 Y}
+\countdef\CoreCount=23
+\CoreCount=5 {\advance\CoreCount by 2 \xdef\CoreInner{\the\CoreCount}}
+\advance\CoreCount -3
+\dimen0=1.5pt \advance\dimen0 by -1sp
+\edef\CoreArithmetic{\CoreInner,\the\CoreCount,\the\dimen0,\number\dimen0}
+\let\CoreFont\nullfont
+{\fontdimen8\CoreFont=13sp}
+\dimen0=\fontdimen8\CoreFont \advance\dimen0 by 2sp
+\edef\CoreFontArray{\number\fontdimen8\CoreFont,\the\dimen0}
+\edef\CoreBranches{\ifcase2 A\or B\or C\else D\fi;\ifcase-1 A\or B\else D\fi;\ifpdfabsnum-12>3 Y\else N\fi}
+\long\def\CoreFirst#1#2{#1}
+\expandafter\gdef\csname CoreName\endcsname{N}
+\edef\CoreExisting{\ifcsname CoreName\endcsname Y\else N\fi;\ifdefined\CoreFirst Y\else N\fi;\ifx\CoreName\CoreFirst Y\else N\fi}
+\edef\CoreConditions{\ifnum2<3 Y\else N\fi;\ifodd-3 Y\else N\fi;\iffalse BAD\else Y\fi;\if aaY\else N\fi}
+\toks7={\CoreName#1}
+\toks8=\toks7
+{\global\toks9={KEPT}}
+\edef\CoreTokens{\the\toks8}
+\edef\CoreTokenMeaning{\meaning\CoreTokens}
+\edef\CoreExpansion{\expanded{\CoreFirst{A}{B}};\string\CoreName;\detokenize{#1};\noexpand\CoreName}
+\edef\CoreExpansionMeaning{\meaning\CoreExpansion}
+\openin0=expansion-core-data.txt
+\read0 to\CoreRead
+\edef\CoreReadMeaning{\meaning\CoreRead}
+\edef\CoreBeforeEOF{\ifeof0 Y\else N\fi}
+\read0 to\CoreLast
+\edef\CoreLastMeaning{\meaning\CoreLast}
+\edef\CoreAfterEOF{\ifeof0 Y\else N\fi}
+\closein0

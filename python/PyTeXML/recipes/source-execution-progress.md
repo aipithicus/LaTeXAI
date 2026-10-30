@@ -4,6 +4,48 @@ This file records implementation and qualification evidence. Current priorities
 live in the [working queue](../../../../aipithicus-issues/LaTeXAI/briefs/pytexml-language-core/working-queue.md);
 dated next-step statements below describe their checkpoint, not current dispatch.
 
+## 2026-10-30: bounded expansion core
+
+The [expansion-core recipe](expansion-core.md) records the implemented scope,
+source-owner interfaces and reproduction commands for the 31 operations named
+in the document trace. New behavior includes general Roman conversion, case
+selection, pdfTeX absolute-number tests, typed internal quantities, token
+registers, count/dimension advancement, established font parameter arrays and
+transactional read streams. Case evidence retains the selected ordinal.
+
+All 14 behavioral-atlas programs now match their pinned native references:
+40 observations and five typed targets. This closes P02-7, P02-8 and the nine
+P03 invocation observations, including helper redefinition/restoration. A new
+shared core program matches 12 observations from pdfTeX 1.40.29 INITEX extended
+mode. The 25 focused core tests cover aliases, scope, provenance, uncertainty,
+overflow, EOF, preparation separators and rollback. Registry type checking passes
+for 20 source files. These are bounded language observations, not rendering or
+complete format-startup qualification.
+
+The initial full run found two stale test expectations after primitive exposure
+and case support changed. Its retained harness output includes:
+
+```text
+test_profile_probe_observes_absence_and_does_not_mask_primitives ... FAIL
+{'ifpdfabsnum': {'expected': False, 'observed': None}, ...}
+test_unsupported_predicate_stops_before_arguments (name='ifcase') ... FAIL
+AssertionError: 'expansion_required' != 'unsupported_conditional'
+```
+
+The profile mock now supplies the added exposure observation, and the unsupported
+predicate test no longer asserts that `ifcase` is unimplemented. The final broad
+run (`suite-qualified`) completed **1,253 tests: 1,250 passed and three optional
+native checks skipped**, in 552.619 seconds. The final error-only file-provenance
+guard and its additional test were qualified separately by all **25 focused
+tests** (`focused-qualified`). No speed comparison is inferred from these timings.
+Receipts, including the initial Python-environment failure and native transcript,
+are retained under `temp/expansion-core-20261030/`.
+
+Font loading, automatic construction of the read-file inventory, general units,
+glue arithmetic, terminal input and format dumping remain later work. No format
+reached-line result or full bootstrap completion is claimed; the queue's compact
+representation prerequisite remains in force.
+
 ## 2026-10-30: expanded-list insertion and generated-definition qualification
 
 The [shared insertion implementation](behavioral-atlas.md#expanded-list-insertion-implementation)

@@ -42,6 +42,9 @@ def test(cursor, rule):
     if rule.evaluation in {"always_true", "always_false"}:
         return rule.evaluation == "always_true"
     predicate = rule.predicate
+    if predicate == "stream_eof":
+        from .primitives.read_streams import stream_number
+        return cursor.context.read_streams.eof(stream_number(integer_scanner(cursor)))
     if predicate in {"character_equal", "category_equal"}:
         def character():
             token = cursor.next_expanded()
@@ -68,9 +71,11 @@ def test(cursor, rule):
         if left is None or right is None:
             raise ReadingIssue("conditional_operand", "ifx requires two raw tokens")
         return compare_tokens(left, right, cursor.context, cursor.knowledge, cursor.operations)
-    if predicate in {"integer_compare", "integer_odd"}:
+    if predicate in {"integer_compare", "integer_abs_compare", "integer_odd", "integer_case"}:
         scanner = integer_scanner(cursor)
         left = scanner.integer()
+        if predicate == "integer_case":
+            return left
         if predicate == "integer_odd":
             return bool(left % 2)
         relation = cursor.next_expanded()
@@ -79,6 +84,8 @@ def test(cursor, rule):
         if relation is None or relation.catcode != CatCode.OTHER or relation.value not in "<=>":
             raise ReadingIssue("conditional_relation", "Integer test requires <, = or >")
         right = scanner.integer()
+        if predicate == "integer_abs_compare":
+            left, right = abs(left), abs(right)
         return {"<": left < right, "=": left == right, ">": left > right}[relation.value]
     return None
 
@@ -99,6 +106,6 @@ def skip(cursor, *, alternative):
             if depth == 0:
                 return token, rule
             depth -= 1
-        elif depth == 0 and alternative and rule.role == "alternative":
+        elif depth == 0 and alternative and rule.role in {"alternative", "case_alternative"}:
             return token, rule
     raise ReadingIssue("unclosed_conditional", "EOF in skipped conditional text")

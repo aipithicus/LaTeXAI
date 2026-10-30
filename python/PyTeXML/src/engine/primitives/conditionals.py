@@ -57,14 +57,16 @@ def expansion_predicate(host, opening, rule):
     try:
         with transaction(host):
             cursor = ExpansionCursor(host.reader, host.context, host.knowledge, host.operations, host=host)
-            truth = test(cursor, rule)
-            if truth is None:
+            result = test(cursor, rule)
+            if result is None:
                 raise _UnresolvedPredicate
+            truth = result == 0 if rule.predicate == "integer_case" else result
             if cursor.pending:
                 raise ReadingIssue("conditional_continuation", "Predicate leaves replacement input pending")
             last = cursor.source_tokens[-1] if cursor.source_tokens else opening
             return SourceCommand(host.reader.source_span(opening.span.start, host.reader.position), opening.value,
                 "conditional_test", metadata={"predicate": rule.predicate, "truth": truth, "definition_unit_ids": [],
+                    **({"case_index": result} if rule.predicate == "integer_case" else {}),
                     "trailing_control_word": last.control_word and last.span.end == host.reader.position})
     except _UnresolvedPredicate:
         return None
@@ -78,13 +80,16 @@ def expand_route(cursor, token, meaning):
     host, rule = cursor.host, meaning.operand
     if host is None:
         raise ReadingIssue("conditional_context", "Conditional expansion requires its execution owner")
+    metadata = None
     if rule.role == "opener":
-        truth = test(cursor, rule)
-        if truth is None:
+        result = test(cursor, rule)
+        if result is None:
             raise ReadingIssue("unsupported_conditional", "Conditional predicate is not established")
+        truth = result == 0 if rule.predicate == "integer_case" else result
+        metadata = {"case_index": result} if rule.predicate == "integer_case" else None
         rule = ConditionalRule("opener", "always_true" if truth else "always_false")
-    host.route_conditional(rule, token.span)
-    if host._skip_start is not None:
+    host.route_conditional(rule, token.span, metadata=metadata)
+    while host._skip_start is not None:
         host._skip_start = None
         delimiter, end_rule = skip(cursor, alternative=not host._conditionals[-1].in_alternative)
         host.route_conditional(end_rule, delimiter.span)
@@ -153,8 +158,11 @@ FAMILY = OperationFamily(
         ROUTE.declare("ifcsname", ConditionalRule("opener", "deferred", None, "name_defined")),
         ROUTE.declare("ifnum", ConditionalRule("opener", "deferred", None, "integer_compare")),
         ROUTE.declare("ifodd", ConditionalRule("opener", "deferred", None, "integer_odd")),
+        ROUTE.declare("ifcase", ConditionalRule("opener", "deferred", None, "integer_case")),
+        ROUTE.declare("ifeof", ConditionalRule("opener", "deferred", None, "stream_eof")),
+        ROUTE.declare("ifpdfabsnum", ConditionalRule("opener", "deferred", None, "integer_abs_compare"), extension=True),
         *(ROUTE.declare(name, ConditionalRule("opener", "deferred")) for name in
-          ("ifdim", "ifvoid", "ifhbox", "ifvbox", "ifeof", "ifcase")),
+          ("ifdim", "ifvoid", "ifhbox", "ifvbox")),
         *(ROUTE.declare(name, ConditionalRule("opener", "deferred", 0)) for name in
           ("ifvmode", "ifhmode", "ifmmode", "ifinner")),
         ROUTE.declare("else", ConditionalRule("alternative")),

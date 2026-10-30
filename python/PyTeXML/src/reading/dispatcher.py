@@ -59,6 +59,16 @@ class _ConditionalFrame:
     truth: bool
     in_alternative: bool = False
     unit_id: str | None = None
+    case_remaining: int | None = None
+    case_branch: int = 0
+
+    @property
+    def branch(self):
+        if self.case_remaining is None:
+            return "else" if self.in_alternative else "then"
+        if self.in_alternative:
+            return "remaining_cases" if self.truth else "else"
+        return f"case:{self.case_branch}"
 
 
 @dataclass(frozen=True, slots=True)
@@ -234,7 +244,7 @@ class StructuralDispatcher:
     def _activity_evidence(self):
         recovery = ({"recovery_context_ids": list(self.context.recovery_contexts)}
                     if self.context.recovery_contexts else {})
-        guards = [(f.unit_id, "else" if f.in_alternative else "then") for f in self._conditionals]
+        guards = [(f.unit_id, f.branch) for f in self._conditionals]
         guards.extend(self._active_branches)
         if guards:
             identifier, branch = max(guards, key=lambda g: int(g[0].split("-")[-1]))
@@ -966,7 +976,8 @@ class StructuralDispatcher:
             self._conditional_units[span] = identifier
             self.decisions.append({"unit_id": identifier, "predicate": "constant", "truth": truth,
                                    "definition_unit_ids": [], **(metadata or {})})
-            self._conditionals.append(_ConditionalFrame(span, truth, unit_id=identifier))
+            self._conditionals.append(_ConditionalFrame(span, truth, unit_id=identifier,
+                case_remaining=(metadata or {}).get("case_index")))
             if not truth:
                 self._skip_start = span.end
             return identifier
@@ -984,6 +995,16 @@ class StructuralDispatcher:
             frame.in_alternative = True
             if frame.truth:
                 self._skip_start = span.end
+        elif frame.case_remaining is not None and not frame.in_alternative:
+            if frame.truth:
+                frame.in_alternative = True
+                self._skip_start = span.end
+            else:
+                frame.case_remaining -= 1
+                frame.case_branch += 1
+                frame.truth = frame.case_remaining == 0
+                if not frame.truth:
+                    self._skip_start = span.end
         else:
             raise ReadingIssue("unexpected_case_alternative", "A case alternative cannot branch this boolean conditional")
 
@@ -997,7 +1018,7 @@ class StructuralDispatcher:
             return self.halt(error.span, "invalid_character", str(error), remainder_start=self._skip_start)
         self._skip_start = None
         self._pending_skip = scanned
-        return SkippedRegion(scanned.span, frame.opening, "else" if frame.in_alternative else "then")
+        return SkippedRegion(scanned.span, frame.opening, frame.branch)
 
     def begin_group(self, kind: str, span: SourceSpan) -> None:
         """Own the execution frame; the shared state owns scope restoration."""

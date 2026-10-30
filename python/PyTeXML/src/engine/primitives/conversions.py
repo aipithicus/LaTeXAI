@@ -5,6 +5,7 @@ from ..operations import ExpansionKind, OperationFamily, PrimitiveOperation
 from ...reading.contracts import ReadingIssue
 from ...reading.tex_reader import CatCode, Token, TokenKind
 from ..token_text import escape, token_text, meaning_text
+from ..quantities import print_scaled
 
 
 def characters(cursor, text, span, *, insertion=False):
@@ -29,11 +30,42 @@ def number(cursor, token, meaning):
     characters(cursor, str(scanner.integer()), token.span)
 
 
+def roman_numeral(cursor, token, meaning):
+    """TeX's print_roman_int, with allocation charged before constructing output."""
+    value = integer_scanner(cursor).integer()
+    if value <= 0:
+        return
+    parts = []
+    for magnitude, spelling in ((1000, "m"), (900, "cm"), (500, "d"), (400, "cd"),
+                                (100, "c"), (90, "xc"), (50, "l"), (40, "xl"),
+                                (10, "x"), (9, "ix"), (5, "v"), (4, "iv"), (1, "i")):
+        count, value = divmod(value, magnitude)
+        # characters() charges the final token allocation. Check the bound here
+        # so a large legal integer cannot allocate millions of characters first.
+        if sum(map(len, parts)) + count * len(spelling) > cursor.remaining:
+            raise ReadingIssue("expansion_budget", "Roman conversion exceeds the expansion budget")
+        parts.append(spelling * count)
+    characters(cursor, "".join(parts), token.span)
+
+
+def is_opening_group(cursor, token):
+    from ...reading.contracts import BoundMeaning
+    if token is None:
+        return False
+    if token.catcode == CatCode.BEGIN_GROUP:
+        return True
+    if token.kind != TokenKind.CHARACTER:
+        value = cursor.context.resolve_meaning(cursor.knowledge, token.value, token.kind)
+        return (isinstance(value, BoundMeaning) and value.uncertain is None and value.token is not None
+                and value.token.catcode == CatCode.BEGIN_GROUP)
+    return False
+
+
 def group(cursor):
     opening = cursor.next_expanded()
     while opening is not None and opening.catcode == CatCode.SPACE:
         opening = cursor.next_expanded()
-    if opening is None or opening.catcode != CatCode.BEGIN_GROUP:
+    if not is_opening_group(cursor, opening):
         raise ReadingIssue("conversion_argument", "Expected an opening group")
     tokens, depth = [], 1
     while (token := cursor.next_token()) is not None:
@@ -70,21 +102,24 @@ def the(cursor, token, meaning):
     operand = cursor.next_expanded()
     if operand is None:
         raise ReadingIssue("conversion_argument", "the requires an internal quantity")
-    resolved = scanner._meaning(operand)
-    if not isinstance(resolved, tuple) or resolved[0].integer_value is None:
-        raise ReadingIssue("conversion_argument", "the requires a supported internal quantity")
-    value = resolved[0].integer_value(scanner, resolved[1])
-    if resolved[1].operation == "register.assign" and resolved[1].operand.kind == "dimen":
-        raise ReadingIssue("dimension_display", "Dimension display conversion is not established")
-    return characters(cursor, str(value), token.span, insertion=True)
+    quantity = scanner.internal(operand)
+    if quantity.kind == "tokens":
+        cursor._charge(len(quantity.value))
+        return TokenListInsertion(quantity.value)
+    if quantity.kind == "font":
+        raise ReadingIssue("conversion_argument", "Font token conversion requires a font selector")
+    text = print_scaled(quantity.value) if quantity.kind == "dimension" else str(quantity.value)
+    return characters(cursor, text, token.span, insertion=True)
 
 
 STRING = PrimitiveOperation("conversion.string", ExpansionKind.EXPANDABLE, operand_type=type(None), expansion=string)
 NUMBER = PrimitiveOperation("conversion.number", ExpansionKind.EXPANDABLE, operand_type=type(None), expansion=number)
+ROMAN = PrimitiveOperation("conversion.roman", ExpansionKind.EXPANDABLE, operand_type=type(None), expansion=roman_numeral)
 DETOKENIZE = PrimitiveOperation("conversion.detokenize", ExpansionKind.EXPANDABLE, operand_type=type(None), expansion=detokenize)
 UNEXPANDED = PrimitiveOperation("expansion.unexpanded", ExpansionKind.EXPANDABLE, operand_type=type(None), expansion=unexpanded)
 MEANING = PrimitiveOperation("conversion.meaning", ExpansionKind.EXPANDABLE, operand_type=type(None), expansion=meaning)
 THE = PrimitiveOperation("conversion.the", ExpansionKind.EXPANDABLE, operand_type=type(None), expansion=the)
-FAMILY = OperationFamily((STRING, NUMBER, DETOKENIZE, UNEXPANDED, MEANING, THE),
+FAMILY = OperationFamily((STRING, NUMBER, ROMAN, DETOKENIZE, UNEXPANDED, MEANING, THE),
     (STRING.declare("string", None), NUMBER.declare("number", None), DETOKENIZE.declare("detokenize", None),
-     UNEXPANDED.declare("unexpanded", None), MEANING.declare("meaning", None), THE.declare("the", None)))
+     ROMAN.declare("romannumeral", None), UNEXPANDED.declare("unexpanded", None),
+     MEANING.declare("meaning", None), THE.declare("the", None)))

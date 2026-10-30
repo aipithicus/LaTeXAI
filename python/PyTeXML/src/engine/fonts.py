@@ -1,0 +1,59 @@
+"""Established font parameter arrays, independent of layout and font loading.
+
+The source/format owner supplies metrics through establish(). TeX font parameters
+are global even inside a group; transactions still restore failed requests.
+"""
+from dataclasses import dataclass, replace
+from ..reading.contracts import ReadingIssue
+
+
+@dataclass(frozen=True, slots=True)
+class FontParameters:
+    dimensions: tuple[int, ...]
+    uncertain: object = None
+
+
+class FontState:
+    def __init__(self, *, initial=False):
+        self.values = {"nullfont": FontParameters((0,) * 7)} if initial else {}
+        self.latest = "nullfont" if initial else None
+
+    def copy(self):
+        result = FontState()
+        result.values, result.latest = dict(self.values), self.latest
+        return result
+
+    def establish(self, identity, dimensions):
+        if identity in self.values:
+            raise ValueError("Font identity is already established")
+        values = tuple(dimensions)
+        if len(values) > 10000 or any(type(v) is not int or abs(v) > 1073741823 for v in values):
+            raise ValueError("Invalid or excessive font parameter array")
+        self.values[identity] = FontParameters(values)
+        self.latest = identity
+
+    def parameters(self, identity):
+        value = self.values.get(identity)
+        if value is None:
+            raise ReadingIssue("unavailable_font", "Font parameters have not been established")
+        if value.uncertain is not None:
+            raise ReadingIssue("uncertain_font", "Retained code may have changed font parameters", causes=(value.uncertain,))
+        return value.dimensions
+
+    def cell(self, identity, index, *, writing=False):
+        values = self.parameters(identity)
+        if index <= 0 or (index > len(values) and (not writing or identity != self.latest)):
+            raise ReadingIssue("font_parameter_index", "Only the most recently loaded font can extend its parameters")
+        if index > 10000:
+            raise ReadingIssue("font_parameter_budget", "Font parameter array exceeds the bounded state budget")
+        return values
+
+    def assign(self, identity, index, value):
+        values = self.cell(identity, index, writing=True)
+        values += (0,) * max(0, index - len(values))
+        self.values[identity] = FontParameters(values[:index - 1] + (value,) + values[index:])
+
+    def invalidate(self, span):
+        changed = any(v.uncertain is None for v in self.values.values())
+        self.values = {k: replace(v, uncertain=v.uncertain or span) for k, v in self.values.items()}
+        return changed

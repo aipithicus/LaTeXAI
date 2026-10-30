@@ -51,7 +51,7 @@ class EngineRegistrationTests(unittest.TestCase):
             (expansion.RELAX, {"expansion_unavailable": True}),
             (expansion.NOEXPAND, {"expansion": None}),
             (expansion.NOEXPAND, {"expansion_unavailable": True}),
-            (expansion.NOEXPAND, {"integer_value": parameters.integer_value}),
+            (expansion.NOEXPAND, {"internal_value": parameters.internal_value}),
             (expansion.NOEXPAND, {"continuation": True}),
             (expansion.RELAX, {"capture": "handler.location"}),
             (expansion.RELAX, {"expansion_kind": "unexpandable"}),

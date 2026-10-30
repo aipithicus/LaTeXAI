@@ -64,6 +64,7 @@ class CompilerBackendTests(unittest.TestCase):
     def test_profile_probe_observes_absence_and_does_not_mask_primitives(self):
         transcript = b"\n".join(b"PYTEXML-PROFILE " + name + b"=" + value for name, value in [
             (b"eTeXversion", b"present"), (b"expanded", b"present"), (b"pdfoutput", b"present"),
+            (b"ifpdfabsnum", b"absent"),
             (b"XeTeXversion", b"absent"), (b"luatexversion", b"absent"), (b"directlua", b"absent")])
         with patch("src.validation.compilers.subprocess.run",
                    return_value=subprocess.CompletedProcess([], 0, transcript, b"")):
