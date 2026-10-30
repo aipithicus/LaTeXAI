@@ -28,6 +28,9 @@
   "boolean_true": "true",
   "conditional_operands": "false",
   "frozen_catcodes": "false",
+  "meaning_text_collision": "true",
+  "helper_caller_unchanged": "true",
+  "helper_result_unchanged": "false",
   "match_character": "false",
   "active_meaning": "true",
   "active_identity": "false"

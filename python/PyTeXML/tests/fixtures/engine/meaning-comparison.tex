@@ -42,7 +42,13 @@
 \ifx\ifPyflag\iftrue\gdef\PyWitnessbooleantrue{true}\else\gdef\PyWitnessbooleantrue{false}\fi
 \ifx\fi\else\gdef\PyWitnessconditionaloperands{true}\else\gdef\PyWitnessconditionaloperands{false}\fi
 {\def\PyA{!}\catcode33=11 \def\PyB{!}
-\ifx\PyA\PyB\gdef\PyWitnessfrozencatcodes{true}\else\gdef\PyWitnessfrozencatcodes{false}\fi}
+\ifx\PyA\PyB\gdef\PyWitnessfrozencatcodes{true}\else\gdef\PyWitnessfrozencatcodes{false}\fi
+\edef\PyTextA{\meaning\PyA}\edef\PyTextB{\meaning\PyB}
+\ifx\PyTextA\PyTextB\gdef\PyWitnessmeaningtextcollision{true}\else\gdef\PyWitnessmeaningtextcollision{false}\fi}
+\def\PyHelper{first}\def\PyCaller{\PyHelper}\let\PySavedCaller\PyCaller
+\edef\PyBefore{\PyCaller}\def\PyHelper{second}\edef\PyAfter{\PyCaller}
+\ifx\PyCaller\PySavedCaller\gdef\PyWitnesshelpercallerunchanged{true}\else\gdef\PyWitnesshelpercallerunchanged{false}\fi
+\ifx\PyBefore\PyAfter\gdef\PyWitnesshelperresultunchanged{true}\else\gdef\PyWitnesshelperresultunchanged{false}\fi
 {\def\PyA#1{#1}\catcode33=6 \def\PyB!1{!1}
 \ifx\PyA\PyB\gdef\PyWitnessmatchcharacter{true}\else\gdef\PyWitnessmatchcharacter{false}\fi}
 {\def~{X}\def\PyA{X}
@@ -78,6 +84,9 @@
 \typeout{PYTEXML boolean_true=\PyWitnessbooleantrue}
 \typeout{PYTEXML conditional_operands=\PyWitnessconditionaloperands}
 \typeout{PYTEXML frozen_catcodes=\PyWitnessfrozencatcodes}
+\typeout{PYTEXML meaning_text_collision=\PyWitnessmeaningtextcollision}
+\typeout{PYTEXML helper_caller_unchanged=\PyWitnesshelpercallerunchanged}
+\typeout{PYTEXML helper_result_unchanged=\PyWitnesshelperresultunchanged}
 \typeout{PYTEXML match_character=\PyWitnessmatchcharacter}
 \typeout{PYTEXML active_meaning=\PyWitnessactivemeaning}
 \typeout{PYTEXML active_identity=\PyWitnessactiveidentity}

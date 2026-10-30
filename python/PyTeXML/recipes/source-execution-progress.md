@@ -4,6 +4,37 @@ This file records implementation and qualification evidence. Current priorities
 live in the [working queue](../../../../aipithicus-issues/LaTeXAI/briefs/pytexml-language-core/working-queue.md);
 dated next-step statements below describe their checkpoint, not current dispatch.
 
+## 2026-10-29: Q4 acquisition proposal and meaning-identity counterexamples
+
+Q4 now proposes offline extraction through the pinned native engine/format,
+with typed data installed during preparation. This avoids requiring PyTeXML to
+execute expl3 in order to obtain the meanings needed to execute expl3. The
+[semantic-engine contract](../../../../aipithicus-issues/LaTeXAI/briefs/pytexml-language-core/pytexml-semantic-engine.md#61-bootstrap-contract-and-lexical-evidence)
+and [L14](../../../../aipithicus-issues/LaTeXAI/briefs/pytexml-language-core/decisions/L14-kernel-bootstrap.md)
+specify inventory, complete basis/environment identity, native reconstruction
+checks and dependency-aware intrinsic eligibility. Q2 remains the next increment.
+
+The [meaning-comparison witness](../tests/fixtures/engine/meaning-comparison.tex)
+adds three observations to the existing independent fixture:
+
+- Macros containing `!` with catcodes 12 and 11 have different native meanings
+  (`ifx` false), but their `meaning` texts are equal. Printing a retokenized body
+  back cannot establish catcode fidelity; native candidate reconstruction and
+  `ifx` equality are the proposed stronger gate.
+- A caller and its saved alias remain `ifx` equal after a helper is redefined.
+- Their caller's expansion before/after the helper change differs. An unchanged
+  caller stamp cannot justify an intrinsic that assumes the old helper behavior.
+
+The native pdfTeX 1.40.29 / LaTeX2e 2026-06-01 / expl3 2026-09-09 run matches
+all **35 expected observations**. The compiler and format SHA-256 values were
+checked against the existing oracle pin. The Python meaning-comparison suite
+passes **34 tests**, including the extended fixture. Receipts are retained under
+repository `temp/q4-meaning-gates/`. No engine code changed; these are validation
+witnesses and a revised plan. The extractor, full l3 inventory/table, native
+candidate serializer/validator, stamps and intrinsic eligibility mechanism remain
+unimplemented. The small witnesses do not establish extraction completeness,
+table installation cost or native equivalence of future intrinsics.
+
 ## 2026-10-29: CPU and memory footprints with workload context
 
 Specimen receipts now use `pytexml-specimen-performance/2`: elapsed preparation
