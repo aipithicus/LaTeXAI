@@ -1,0 +1,20 @@
+{
+  "checkpoints": ["before", "inside", "after"],
+  "fields": [
+    {"id": "local", "kind": "count", "index": 20},
+    {"id": "global", "kind": "count", "index": 21},
+    {"id": "width", "kind": "dimen", "index": 20},
+    {"id": "catcode", "kind": "catcode", "index": 64},
+    {"id": "mathcode", "kind": "mathcode", "index": 65},
+    {"id": "lccode", "kind": "lccode", "index": 65},
+    {"id": "uccode", "kind": "uccode", "index": 97},
+    {"id": "sfcode", "kind": "sfcode", "index": 65},
+    {"id": "delcode", "kind": "delcode", "index": 65},
+    {"id": "fontspace", "kind": "fontdimen", "index": 2, "target": "observedfont"},
+    {"id": "macro", "kind": "meaning", "target": "thing"},
+    {"id": "alias", "kind": "meaning", "target": "alias"},
+    {"id": "tokens", "kind": "toks", "index": 20},
+    {"id": "glue", "kind": "skip", "index": 20},
+    {"id": "muglue", "kind": "muskip", "index": 20}
+  ]
+}

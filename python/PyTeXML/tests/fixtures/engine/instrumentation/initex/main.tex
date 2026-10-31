@@ -1,0 +1,13 @@
+\catcode123=1 \catcode125=2 \catcode35=6 \catcode94=7 \newlinechar=10
+\input pytexml-observe.tex
+\font\observedfont=cmr10
+\count20=7 \dimen20=123sp \catcode64=12
+\mathcode65="7141 \lccode65=97 \uccode97=65 \sfcode65=999 \delcode65=-1
+\skip20=1pt plus 2fil minus 3sp \muskip20=2mu plus 1fill
+\def\thing{old}\let\alias=\thing \toks20={\thing}
+\PyTeXMLCheckpoint{before}
+{\count20=9 \dimen20=-11sp \catcode64=11 \def\thing{new}\toks20={new}
+ \global\count21=42 \fontdimen2\observedfont=456sp
+ \PyTeXMLCheckpoint{inside}}
+\PyTeXMLCheckpoint{after}
+\end

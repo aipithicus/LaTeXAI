@@ -1,0 +1,7 @@
+{
+  "checkpoints": ["preamble", "body", "afterlastpage", "afteraux", "end"],
+  "fields": [
+    {"id": "count", "kind": "count", "index": 250},
+    {"id": "alias", "kind": "meaning", "target": "countalias"}
+  ]
+}

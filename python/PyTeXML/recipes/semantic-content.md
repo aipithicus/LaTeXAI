@@ -156,6 +156,11 @@ Consequently the receipt explicitly says `complete_primitive_census: false`.
 Macro calls and list nodes are separate observations; a measured/discarded/copied
 box prevents a general one-call/one-node correspondence.
 
+The [reusable instrumentation follow-up](instrumentation.md) generalizes the
+runner and phase counts, strengthens native list parsing, and adds selected
+state comparisons at matched execution cuts. The original fixed probes above
+remain regression witnesses.
+
 Mechanism references are [TeX82 source](https://github.com/TeX-Live/texlive-source/blob/trunk/texk/web2c/tex.web)
 (`read_font_info`, `main_loop`, `app_space`, `hpack`, `vpackage`,
 `append_to_vlist`, `write_out`, `out_what`) and the

@@ -1,0 +1,9 @@
+\documentclass{article}
+\let\countalias\count
+\let\numberalias\number
+\begin{document}
+\countalias250=7
+\message{Observed number: \numberalias\count250}
+\section{Observed section}\label{sec:observed}
+See section~\ref{sec:observed}.
+\end{document}

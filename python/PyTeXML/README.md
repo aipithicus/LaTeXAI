@@ -112,6 +112,12 @@ command/macro traces and list dumps qualify bounded witnesses; they are not a
 complete primitive census. General page layout, full package startup and broad
 driver compatibility remain open.
 
+The [reusable instrumentation tools](recipes/instrumentation.md) add paired
+native probe runs, streamed phase counts, explicit incomplete trace records and
+matched-checkpoint state comparisons. Shared observers capture selected state
+inside groups; missing observations cannot pass. Full format/bootstrap and
+causal macro-to-node recording remain separate work.
+
 [engine/format.py](src/engine/format.py) installs the supported LaTeX-format
 meanings in each document's mutable state. The initial entry is `\active`, the
 kernel's character-code constant 13. It carries a format-source reference and no

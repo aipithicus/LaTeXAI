@@ -1,0 +1,14 @@
+\catcode123=1 \catcode125=2 \catcode35=6 \catcode94=7 \catcode95=8
+\catcode36=3 \newlinechar=10
+\input pytexml-observe.tex
+\font\f=cmr10 \f \textfont0=\f \scriptfont0=\f \scriptscriptfont0=\f
+\font\mi=cmmi10 \textfont1=\mi \scriptfont1=\mi \scriptscriptfont1=\mi
+\font\sy=cmsy10 \textfont2=\sy \scriptfont2=\sy \scriptscriptfont2=\sy
+\font\ex=cmex10 \textfont3=\ex \scriptfont3=\ex \scriptscriptfont3=\ex
+\showboxdepth=1000 \showboxbreadth=1000
+\PyTeXMLCheckpoint{before}
+\setbox0=\hbox{\discretionary{a}{b}{c}}
+\showbox0
+\setbox1=\hbox{$\mathchoice{a}{b}{c}{d}{1\over2}x^2_3\showlists$}
+\PyTeXMLCheckpoint{after}
+\end
