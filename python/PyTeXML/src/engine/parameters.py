@@ -8,6 +8,7 @@ from dataclasses import dataclass, replace
 
 from ..reading.contracts import ReadingIssue
 from ..reading.spans import SourceSpan
+from .causal import cell_read, cell_write
 
 
 @dataclass(frozen=True, slots=True)
@@ -40,6 +41,7 @@ class IntegerParameters:
                 self.values.pop(key, None)
             else:
                 self.values[key] = previous
+            cell_write(self, key, previous.value if previous is not None else None, restore=True)
 
     def assign(self, key, value, span, *, global_=False):
         if global_:
@@ -48,6 +50,7 @@ class IntegerParameters:
         elif self.scopes:
             self.scopes[-1].setdefault(key, self.values.get(key))
         self.values[key] = IntegerValue(value, span)
+        cell_write(self, key, value, global_=global_)
 
     def read(self, key):
         current = self.values.get(key)
@@ -56,7 +59,7 @@ class IntegerParameters:
         if current.uncertain is not None:
             raise ReadingIssue("uncertain_integer", f"Parameter {key!r} may have changed",
                                causes=(current.uncertain,))
-        return current.value
+        return cell_read(self, key, current.value)
 
     def invalidate(self, span, *, names=None, global_=True):
         keys = set(self.values)

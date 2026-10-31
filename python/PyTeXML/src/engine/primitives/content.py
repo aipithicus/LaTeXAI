@@ -6,7 +6,6 @@ from ..dimensions import Glue, dimension, glue
 from ..integers import IntegerScanner
 from ..operations import ExpansionKind, OperationFamily, PrimitiveOperation
 from ..primitive import PrimitiveMeaning
-from ..state_cells import Cell
 from ..quantities import InternalQuantity
 from ..transactions import assignment_global
 from .conversions import is_opening_group, group
@@ -162,7 +161,7 @@ def box_dimension(host, opening, meaning):
     if node is not None:
         # Box dimensions mutate the current box without saving/restoring the
         # register. Existing save entries from setbox still restore normally.
-        host.context.state_cells.values["box:" + str(number)] = Cell(node.with_value(meaning.operand, value), opening.span)
+        host.context.state_cells.update_current("box:" + str(number), node.with_value(meaning.operand, value), opening.span)
     return result(host, opening)
 
 

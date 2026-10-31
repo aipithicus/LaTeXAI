@@ -53,6 +53,7 @@ Neither route restores fuel: an attempted operation has spent its budget.
 
     def __init__(self, host, *, observations=True):
         self.host, self.observations = host, observations
+        self.recording = host.context.recorder.checkpoint() if getattr(host.context, "recorder", None) is not None else None
         self.reader = host.reader
         self.context = host.context.copy()
         self.content = host.content.checkpoint() if getattr(host, "content", None) is not None else None
@@ -108,6 +109,8 @@ Neither route restores fuel: an attempted operation has spent its budget.
             host.program_sources[:] = self.sources
             host.program_serial = max(host.program_serial, self.serial)
         host._set_reader(self.reader)
+        if self.recording is not None:
+            host.context.recorder.rollback(self.recording)
 
 
 def language_checkpoint(host, *, observations=True, boundary="command"):

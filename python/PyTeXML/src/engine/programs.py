@@ -129,6 +129,10 @@ def frozen_reader(host, tokens, anchor):
     basis = SourceBasis(f"@evaluation/{host.program_serial}/{anchor.basis.source_id}",
                         -host.program_serial, position)
     rebased = tuple(replace(t, span=basis.span(a, b)) for t, (a, b) in zip(tokens, offsets))
+    recorder = getattr(host.context, "recorder", None)
+    if recorder is not None:
+        for old, new in zip(tokens, rebased):
+            recorder.rebase(old, new)
     reader = TokenCursor(ScannedArgument("program", basis.whole, rebased), "".join(parts), host.context)
     host.program_sources.append(ProgramSource(reader, anchor, tuple(t.span for t in tokens)))
     return reader

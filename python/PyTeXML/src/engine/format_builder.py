@@ -32,6 +32,7 @@ class FormatBuild:
     boundary: dict | None = None
     snapshot: str | None = None
     content: dict | None = None
+    record: dict | None = None
 
     def receipt(self):
         return {"schema": "pytexml-content-build/1" if self.content is not None else "pytexml-format-build/1", "status": self.status, "steps": self.steps,
@@ -49,7 +50,7 @@ class FormatBuilder:
     def adapt_input(self, host, name, span):
         return False
 
-    def __init__(self, sources, *, metrics=None, initialization=None, profile="pdftex", budget=10000):
+    def __init__(self, sources, *, metrics=None, initialization=None, profile="pdftex", budget=10000, record=False):
         if type(budget) is not int or budget <= 0:
             raise ValueError("Format execution needs a positive step budget")
         self.sources = {name: value if isinstance(value, ReadSource) else ReadSource.from_text(name, value)
@@ -57,6 +58,7 @@ class FormatBuilder:
         if sum(len(value.text) for value in self.sources.values()) > 4000000:
             raise ValueError("Format inventory exceeds the bounded source budget")
         self.metrics, self.profile, self.budget = dict(metrics or {}), profile, budget
+        self.record = record
         self.initialization = dict(initialization or {})
         if (self.initialization.keys() - CLOCK_PARAMETERS or
                 any(type(v) is not int or abs(v) > 2147483647 for v in self.initialization.values())):
@@ -110,8 +112,16 @@ class FormatBuilder:
             occurrence += 1
             return result
         host = StructuralDispatcher(reader(root), context, self.resolver, preparation=True, source_commands=True)
+        recorder = recording = None
+        if self.record:
+            from .causal import Recorder, attach
+            recorder = Recorder()
+            attach(context, recorder)
+            recorder.seed(context)
+            recording = recorder.begin("run", {"profile": self.profile, "content": construct_content})
         if construct_content:
             host.content = self.content_state(host.reader.basis.span(0, 0))
+            host.content.recorder = recorder
             content_owner = host.content
         for basis, text, tokens, anchor, relation in origins:
             frozen = TokenCursor(ScannedArgument("program", basis.whole, tokens), text, context)
@@ -200,8 +210,24 @@ class FormatBuilder:
             status, boundary = "boundary", {"reason": "format_snapshot", "detail": str(error),
                                             "source": item.span.basis.source_id, "start": item.span.start, "end": item.span.end}
         messages = context.state_cells.read("format_messages") if "format_messages" in context.state_cells.values else ()
+        record = None
+        if recorder is not None:
+            from .causal import selected_state
+            output = {"messages": messages}
+            if construct_content:
+                output.update(nodes=host.content.frames[0].nodes, lifecycle=host.content.lifecycle.records,
+                              virtual_outputs={name: [text for text, _ in lines]
+                                               for name, lines in host.content.lifecycle.outputs.items()})
+                for node in (*host.content.frames[0].nodes, *host.content.lifecycle.records):
+                    recorder.output_node(node)
+            recorder.end(recording, "committed" if status in {"completed", "dumped"} else "incomplete")
+            record = recorder.receipt(status=status, output=output, state=selected_state(context))
+            record["inputs"] = self.manifest
+            record["boundary"] = boundary
+            from .causal import attach
+            attach(context, None)
         return FormatBuild(status, context, messages, self.manifest, steps, boundary, snapshot,
-                           host.content.as_dict() if construct_content else None)
+                           host.content.as_dict() if construct_content else None, record)
 
 
 def main():
@@ -218,6 +244,7 @@ def main():
     parser.add_argument("--receipt", type=Path)
     parser.add_argument("--no-dump", action="store_true", help="Allow a completed execution without dump")
     parser.add_argument("--budget", type=int, default=10000)
+    parser.add_argument("--record", type=Path, help="Write an opt-in causal execution record")
     args = parser.parse_args()
     start, cpu = time.perf_counter(), time.process_time()
     config = json.loads(args.inventory.read_text(encoding="utf-8"))
@@ -225,10 +252,13 @@ def main():
     sources = {name: (base / path).read_bytes().decode("utf-8") for name, path in config["sources"].items()}
     metrics = {name: (base / path).read_bytes() for name, path in config.get("metrics", {}).items()}
     builder = FormatBuilder(sources, metrics=metrics, initialization=config.get("initialization"),
-                            profile=config.get("profile", "pdftex"), budget=args.budget)
+                            profile=config.get("profile", "pdftex"), budget=args.budget, record=args.record is not None)
     restored = builder.restore(args.restore.read_text(encoding="utf-8")) if args.restore else None
     result = builder.build(args.entry or config["entry"], restored=restored, require_dump=not args.no_dump)
     receipt = result.receipt()
+    if args.record is not None:
+        args.record.parent.mkdir(parents=True, exist_ok=True)
+        args.record.write_text(json.dumps(result.record, indent=2) + "\n", encoding="utf-8", newline="\n")
     receipt["timing"] = {"wall_seconds": time.perf_counter() - start, "cpu_seconds": time.process_time() - cpu,
                          "instrumentation": "counters; includes inventory and resolver construction"}
     from ..validation.measured_prepare import peak_memory

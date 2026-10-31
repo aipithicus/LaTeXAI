@@ -1,0 +1,4 @@
+{
+  "preamble": "\\def\\frac#1#2{{#1\\over#2}}\\def\\sq#1{#1^2}\\def\\ratio#1{\\frac{\\sq{#1}}{2}}",
+  "formula": "\\ratio{x}+y_1"
+}

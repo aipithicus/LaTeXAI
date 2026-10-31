@@ -126,6 +126,9 @@ class ReaderContext:
         ctx.after_groups = [list(tokens) for tokens in self.after_groups]
         ctx.hooks = self.hooks.copy()
         ctx.recovery_contexts = self.recovery_contexts
+        if getattr(self, "recorder", None) is not None:
+            from ..engine.causal import attach
+            attach(ctx, self.recorder)
         return ctx
 
     def restore_from(self, saved: ReaderContext) -> None:
@@ -151,6 +154,9 @@ class ReaderContext:
         self.after_groups = [list(tokens) for tokens in saved.after_groups]
         self.hooks = saved.hooks.copy()
         self.recovery_contexts = saved.recovery_contexts
+        if getattr(self, "recorder", None) is not None:
+            from ..engine.causal import attach
+            attach(self, self.recorder)
 
     def lookup_environment(self, name: str) -> EnvironmentDeclaration | EnvironmentDefinition | None:
         return self._environments.get(name)
@@ -199,6 +205,8 @@ class ReaderContext:
     def resolve_meaning(self, knowledge, name, kind=TokenKind.CONTROL_SEQUENCE):
         from ..engine.resolution import resolve_meaning
         meaning = resolve_meaning(self, knowledge, name, kind)
+        if getattr(self, "recorder", None) is not None:
+            self.recorder.read("meaning:" + str(kind.value) + ":" + name, meaning)
         if (isinstance(meaning, TokenListMeaning) and meaning.span is not None
                 and meaning.format_origin == "latex-file-hooks/2026-06-01"):
             self.hooks.context_reads.add(meaning.span.basis.occurrence_id)
@@ -325,6 +333,9 @@ class ReaderContext:
         elif self._meaning_scopes:
             self._meaning_scopes[-1].setdefault(key, self._meanings.get(key))
         self._meanings[key] = meaning
+        if getattr(self, "recorder", None) is not None:
+            self.recorder.write("meaning:" + str(kind.value) + ":" + name, meaning,
+                                scope="global" if global_ else "local")
 
     def record_definition(self, definition: StoredDefinition, *, global_: bool = False,
                           scope_cause: SourceSpan | None = None) -> None:
@@ -370,6 +381,9 @@ class ReaderContext:
             yield
 
     def push_scope(self) -> None:
+        if getattr(self, "recorder", None) is not None:
+            self.recorder.scopes.append({})
+            self.recorder.point("scope_push", {"depth": self.scope_depth + 1})
         self._scope_stack.append(self._snapshot())
         self._meaning_scopes.append({})
         self._environment_scopes.append({})
@@ -387,6 +401,8 @@ class ReaderContext:
 
     def assign_catcode(self, character, category, *, global_=False):
         self.catcodes[character] = category
+        if getattr(self, "recorder", None) is not None:
+            self.recorder.write("catcode:" + str(ord(character)), category, scope="global" if global_ else "local")
         if global_:
             for saved in self._scope_stack:
                 saved.catcodes[character] = category
@@ -401,6 +417,10 @@ class ReaderContext:
         if not self._scope_stack:
             return False
         self._restore(self._scope_stack.pop())
+        if getattr(self, "recorder", None) is not None:
+            for key in tuple(self.recorder.scopes[-1]):
+                if key.startswith("catcode:"):
+                    self.recorder.write(key, self.catcodes[chr(int(key.split(":")[1]))], scope="restore", relation="restores_after")
         self.configurations.pop()
         self.integer_parameters.pop()
         self.token_registers.pop()
@@ -411,6 +431,9 @@ class ReaderContext:
                 self._meanings.pop(key, None)
             else:
                 self._meanings[key] = previous
+            if getattr(self, "recorder", None) is not None:
+                self.recorder.write("meaning:" + str(key[0].value) + ":" + key[1], previous,
+                                    scope="restore", relation="restores_after")
         for name, previous in self._environment_scopes.pop().items():
             if previous is None:
                 self._environments.pop(name, None)
@@ -421,6 +444,9 @@ class ReaderContext:
                 self._capture_settings.pop(name, None)
             else:
                 self._capture_settings[name] = previous
+        if getattr(self, "recorder", None) is not None:
+            self.recorder.scopes.pop()
+            self.recorder.point("scope_pop", {"depth": self.scope_depth})
         return True
 
     @contextmanager

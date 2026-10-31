@@ -8,7 +8,6 @@ from dataclasses import dataclass, field, replace
 from .dimensions import Glue
 from .primitive import PrimitiveMeaning
 from .programs import CONTENT, evaluate, expand_call, source_origin
-from .state_cells import Cell
 from ..reading.contracts import ReadingIssue, SourceCommand
 from ..reading.spans import SourceSpan
 from ..reading.tex_reader import CatCode, TokenKind
@@ -21,6 +20,7 @@ class Node:
     children: tuple = ()
     attributes: tuple = ()
     payload: tuple = ()  # Frozen execution input; public token children carry its provenance.
+    origin_event: str | None = field(default=None, compare=False, repr=False, kw_only=True)
     size: int = field(init=False, compare=False)
 
     def __post_init__(self):
@@ -44,6 +44,7 @@ class Node:
                 return [value(v) for v in item]
             return item
         return {"kind": self.kind, "source": location(self.span),
+                **({"origin_event": self.origin_event} if self.origin_event is not None else {}),
                 "attributes": {k: value(v) for k, v in self.attributes},
                 "children": [n.as_dict() for n in self.children]}
 
@@ -82,6 +83,7 @@ class ContentState:
         self.frames = [Frame("document", "v", span)]
         self.limit, self.work = limit, 0
         self.lifecycle = Lifecycle(insertion_roles, box_roles)
+        self.recorder = None
 
     @property
     def frame(self):
@@ -98,7 +100,14 @@ class ContentState:
         self.work += 1
         if self.work > self.limit:
             raise ReadingIssue("content_budget", "Content construction exhausted its node budget")
-        return Node(kind, source_origin(host.program_sources, span), tuple(children), tuple(attributes.items()), tuple(payload))
+        origin = None
+        if self.recorder is not None:
+            producer = self.recorder.stack[-1] if self.recorder.stack else None
+            origin = self.recorder.point("construct_node", {"kind": kind, "attributes": attributes, "payload": payload}, span)
+            self.recorder.edge(origin, "constructed_by", producer)
+            for child in children:
+                self.recorder.edge(origin, "node_contains", child.origin_event)
+        return Node(kind, source_origin(host.program_sources, span), tuple(children), tuple(attributes.items()), tuple(payload), origin_event=origin)
 
     def emit(self, node):
         # Immutable sharing must not hide exponential copy expansion from the
@@ -107,6 +116,9 @@ class ContentState:
         if self.work > self.limit:
             raise ReadingIssue("content_budget", "Expanded content references exhausted the node budget")
         self.frame.nodes.append(node)
+        if self.recorder is not None:
+            emission = self.recorder.point("append_node", {"list_kind": self.frame.kind, "node_kind": node.kind}, node.span)
+            self.recorder.edge(emission, "appends", node.origin_event)
 
     def hook(self, host, name, span):
         tokens = host.context.token_registers.read(name)
@@ -367,7 +379,7 @@ class ContentState:
         if take and box is not None:
             # Taking a box changes the current slot without making a new save
             # entry. An existing local assignment still restores on group exit.
-            cells.values[key] = Cell(None, cells.values[key].span)
+            cells.update_current(key, None, cells.values[key].span)
         return box
 
     def deliver_box(self, host, node, target, span):
@@ -423,6 +435,7 @@ class ContentState:
 
     def as_dict(self):
         return {"schema": "pytexml-content/1", "stage": "pre_layout",
+                **({"causal_record": self.recorder.run_id} if self.recorder is not None else {}),
                 "lifecycle": [n.as_dict() for n in self.lifecycle.records],
                 "drivers": list(self.lifecycle.drivers),
                 "virtual_outputs": {name: {"text": "".join(text + "\n" for text, _ in lines),

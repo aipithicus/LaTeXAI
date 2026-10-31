@@ -1,6 +1,7 @@
 """Scoped immutable state values for glue, font selections and format data."""
 from dataclasses import dataclass, replace
 from ..reading.contracts import ReadingIssue
+from .causal import cell_read, cell_write
 
 
 @dataclass(frozen=True, slots=True)
@@ -31,6 +32,7 @@ class StateCells:
                 self.values.pop(key, None)
             else:
                 self.values[key] = value
+            cell_write(self, key, value.value if value is not None else None, restore=True)
 
     def assign(self, key, value, span, *, global_=False):
         if global_:
@@ -39,6 +41,12 @@ class StateCells:
         elif self.scopes:
             self.scopes[-1].setdefault(key, self.values.get(key))
         self.values[key] = Cell(value, span)
+        cell_write(self, key, value, global_=global_)
+
+    def update_current(self, key, value, span):
+        """Replace a current value without altering existing group save entries."""
+        self.values[key] = Cell(value, span)
+        cell_write(self, key, value, update=True)
 
     def read(self, key):
         value = self.values.get(key)
@@ -46,7 +54,7 @@ class StateCells:
             raise ReadingIssue("unavailable_state", f"No established state for {key!r}")
         if value.uncertain is not None:
             raise ReadingIssue("uncertain_state", f"State {key!r} may have changed", causes=(value.uncertain,))
-        return value.value
+        return cell_read(self, key, value.value)
 
     def initial(self, value):
         if self.default_uncertain is not None:

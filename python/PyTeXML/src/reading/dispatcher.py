@@ -13,6 +13,7 @@ from collections import deque
 from typing import Callable, Iterator
 
 from ..engine.primitives.definitions import boolean_value
+from ..engine.causal import dispatch_record
 from ..engine.requests import package_request, expand_literal_argument, forwarding_request, origin
 from .context import ExecutionMode, ReaderContext
 from .contracts import (
@@ -432,6 +433,7 @@ class StructuralDispatcher:
             attempt.commit()
         return item
 
+    @dispatch_record
     def _dispatch_event(self, event, reader, context, token, meaning, definition):
         deferred = DeferredScanner(reader, context)
         if self.content is not None:

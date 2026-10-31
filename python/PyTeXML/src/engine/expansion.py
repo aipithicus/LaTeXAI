@@ -6,6 +6,7 @@ This module never serializes tokens as TeX or dispatches an executable command.
 """
 from dataclasses import dataclass, replace
 from .primitive import PrimitiveMeaning
+from .causal import expansion_record
 
 from ..reading.contracts import (BoundMeaning, CharacterCodeMeaning, CommandDefinition,
                                  ReadingIssue, StoredDefinition,
@@ -60,8 +61,11 @@ class ExpansionCursor:
         self.optional_return_used = True
         return True
 
-    def push(self, tokens):
+    def push(self, tokens, *, reason="expansion"):
         tokens = tuple(tokens)
+        recorder = getattr(self.context, "recorder", None)
+        if recorder is not None:
+            tokens = recorder.insert(tokens, reason=reason)
         if tokens:
             self.frames.append((tokens, 0))
 
@@ -96,7 +100,7 @@ class ExpansionCursor:
             self.source.unread_token(token)
             self.source_tokens.pop()
         else:
-            self.push((token,))
+            self.push((token,), reason="pushback")
         self._last = None
         self._last_from_source = False
 
@@ -116,11 +120,15 @@ class ExpansionCursor:
     def pending(self):
         return any(index < len(tokens) for tokens, index in self.frames)
 
+    @expansion_record
     def expand_macro(self, token, definition, *, execution=False):
         if isinstance(definition, CommandDefinition):
             raise ReadingIssue('declaration_observation', 'A declaration capture is not an executable meaning')
         from .macro_arguments import arguments as scan_arguments
         arguments = scan_arguments(self, token, definition)
+        recorder = getattr(self.context, "recorder", None)
+        if recorder is not None:
+            recorder.arguments(arguments)
         replacement, index = [], 0
         body = definition.replacement_tokens
         self._charge(len(body))
@@ -183,7 +191,18 @@ class ExpansionCursor:
                         raise ReadingIssue("expansion_budget", "Expansion nesting exhausted its work budget")
                     self._depth += 1
                     try:
-                        result = operation.expansion(self, token, meaning)
+                        from contextlib import nullcontext
+                        recorder = getattr(self.context, "recorder", None)
+                        recording = recorder.event("primitive_expand", {"operation": meaning.operation, "operand": meaning.operand},
+                                                    token.span, cause=recorder.token(token)) if recorder is not None else nullcontext()
+                        with recording:
+                            result = operation.expansion(self, token, meaning)
+                            if recorder is not None and isinstance(result, TokenListInsertion):
+                                result = TokenListInsertion(recorder.insert(result.tokens, reason="token_list_insertion"))
+                            elif recorder is not None and isinstance(result, Token):
+                                # noexpand returns the cursor's actual last token;
+                                # cloning it would break the unread identity guard.
+                                recorder.edge(recorder.stack[-1], "returns_token", recorder.token(result))
                         if isinstance(result, TokenListInsertion):
                             self._charge(len(result.tokens))
                         return result

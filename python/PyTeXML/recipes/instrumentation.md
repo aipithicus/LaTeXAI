@@ -156,8 +156,10 @@ tests and two existing trace tests**, with output in
 probe's regression receipt is under `temp/instrumentation/semantic-regression/`.
 The capture/compare CLI also completed with a matched result.
 
-No broad format-state, package-startup, page-layout, vocabulary-roundtrip or
-causal-recording qualification is implied.
+The [causal recording follow-up](causal-recording.md) qualifies one vocabulary
+round trip and selected causal relationships with Merkle comparison. Broad
+format-state, package-startup, page-layout and complete dependency qualification
+remain open.
 
 Printer/scanner mechanisms are grounded in the
 [TeX source](https://github.com/TeX-Live/texlive-source/blob/trunk/texk/web2c/tex.web)

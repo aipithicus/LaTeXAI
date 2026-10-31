@@ -38,6 +38,7 @@ def main():
     parser.add_argument("--restore", type=Path)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--budget", type=int, default=10000)
+    parser.add_argument("--record", type=Path, help="Write an opt-in causal execution record")
     args = parser.parse_args()
     config = json.loads(args.inventory.read_text(encoding="utf-8"))
     base = args.inventory.resolve().parent
@@ -45,10 +46,13 @@ def main():
         metrics={name: (base / path).read_bytes() for name, path in config.get("metrics", {}).items()},
         initialization=config.get("initialization"), profile=config.get("profile", "pdftex"), budget=args.budget,
         semantic_drivers=config.get("semantic_drivers"), insertion_roles=config.get("insertion_roles"),
-        box_roles=config.get("box_roles"))
+        box_roles=config.get("box_roles"), record=args.record is not None)
     restored = builder.restore(args.restore.read_text(encoding="utf-8")) if args.restore else None
     result = builder.build(args.entry or config["entry"], restored=restored)
     payload = {"receipt": result.receipt(), "content": result.content}
+    if args.record is not None:
+        args.record.parent.mkdir(parents=True, exist_ok=True)
+        args.record.write_text(json.dumps(result.record, indent=2) + "\n", encoding="utf-8", newline="\n")
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(payload, ensure_ascii=True, indent=2) + "\n", encoding="utf-8", newline="\n")
     print(json.dumps({"status": result.status, "boundary": result.boundary, "output": str(args.output)}))

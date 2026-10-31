@@ -114,11 +114,16 @@ class ExecutableOperation[Meaning]:
             raise ReadingIssue("inactive_context", "Operation requires active execution")
         if host.reader.catcodes is not host.context.catcodes or host.reader.endline_char != host.context.endlinechar:
             raise ReadingIssue("context_changed", "Operation requires a shared reader state")
-        result = self.handler(host, opening, profile)
-        if "global" in self.accepted_prefixes and host.context.after_assignment is not None:
-            token, host.context.after_assignment = host.context.after_assignment, None
-            host.insert_tokens((token,), opening.span)
-        return result
+        from contextlib import nullcontext
+        recorder = getattr(host.context, "recorder", None)
+        recording = recorder.event("operation_execute", {"operation": self.identity, "profile": profile},
+                                   opening.span, cause=recorder.token(opening.token)) if recorder is not None else nullcontext()
+        with recording:
+            result = self.handler(host, opening, profile)
+            if "global" in self.accepted_prefixes and host.context.after_assignment is not None:
+                token, host.context.after_assignment = host.context.after_assignment, None
+                host.insert_tokens((token,), opening.span)
+            return result
 
 
 @dataclass(frozen=True, slots=True)

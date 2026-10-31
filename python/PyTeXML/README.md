@@ -115,8 +115,10 @@ driver compatibility remain open.
 The [reusable instrumentation tools](recipes/instrumentation.md) add paired
 native probe runs, streamed phase counts, explicit incomplete trace records and
 matched-checkpoint state comparisons. Shared observers capture selected state
-inside groups; missing observations cannot pass. Full format/bootstrap and
-causal macro-to-node recording remain separate work.
+inside groups; missing observations cannot pass. The [causal recording and
+vocabulary checkpoint](recipes/causal-recording.md) adds opt-in execution graphs,
+explicit state/token/content relationships, a trusted math round trip and Merkle
+comparison. Full bootstrap and complete dependency coverage remain open.
 
 [engine/format.py](src/engine/format.py) installs the supported LaTeX-format
 meanings in each document's mutable state. The initial entry is `\active`, the
